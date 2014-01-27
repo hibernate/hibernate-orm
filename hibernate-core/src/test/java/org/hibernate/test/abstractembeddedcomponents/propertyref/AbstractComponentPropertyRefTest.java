@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class AbstractComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "abstractembeddedcomponents/propertyref/Mappings.hbm.xml" };

@@ -45,17 +45,14 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Widgets widget = new Widgets();
 		widget.setName("hammer");
 		set.add(widget);
-		s.persist(widget);
 
 		widget = new Widgets();
 		widget.setName("axel");
 		set.add(widget);
-		s.persist(widget);
 
 		widget = new Widgets();
 		widget.setName("screwdriver");
 		set.add(widget);
-		s.persist(widget);
 
 		p.setWidgets(set);
 		s.persist(p);
@@ -129,8 +126,10 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 			Products.class,
-			Widgets.class,
-			BugSystem.class
+			BugSystem.class,
+			Bug.class,
+			Person.class,
+			Widgets.class
 		};
 	}
 

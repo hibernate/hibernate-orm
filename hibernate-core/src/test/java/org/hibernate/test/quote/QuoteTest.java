@@ -43,6 +43,10 @@ import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -68,7 +72,14 @@ public class QuoteTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
 		String role = User.class.getName() + ".roles";
-		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+		if ( isMetadataUsed() ) {
+			AttributeBinding attributeBinding = metadata().getEntityBinding( User.class.getName() ).locateAttributeBinding( "roles" );
+			PluralAttributeKeyBinding keyBinding = ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeKeyBinding();
+			assertEquals( "User_Role", ( (Table) keyBinding.getCollectionTable() ).getPhysicalName().getText() );
+		}
+		else {
+			assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+		}
 		s.close();
 	}
 	

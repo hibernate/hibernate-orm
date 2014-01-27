@@ -48,9 +48,12 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
+import org.hibernate.property.IndexPropertyAccessor;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
@@ -116,8 +119,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super( entityMetamodel, mappedEntity );
 		this.mappedClass = mappedEntity.getEntity().getClassReference();
-		this.proxyInterface = mappedEntity.getProxyInterfaceType().getValue();
-		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
+		this.proxyInterface = mappedEntity.getProxyInterfaceType() == null ? null : mappedEntity.getProxyInterfaceType().getValue();		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
 		this.isInstrumented = entityMetamodel.isInstrumented();
 
 		for ( AttributeBinding property : mappedEntity.getAttributeBindingClosure() ) {
@@ -259,10 +261,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	protected ProxyFactory buildProxyFactory(EntityBinding entityBinding, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
 		// determine all interfaces needed by the resulting proxy
-		HashSet<Class> proxyInterfaces = new HashSet<Class>();
-		proxyInterfaces.add( HibernateProxy.class );
+		Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
 
-		Class mappedClass = entityBinding.getEntity().getClassReference();
+		Class mappedClass = entityBinding.getClassReference();
 		Class proxyInterface = entityBinding.getProxyInterfaceType().getValue();
 
 		if ( proxyInterface!=null && !mappedClass.equals( proxyInterface ) ) {
@@ -290,6 +291,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 				proxyInterfaces.add( subclassProxy );
 			}
 		}
+
+		proxyInterfaces.add( HibernateProxy.class );
 
 		for ( AttributeBinding property : entityBinding.attributeBindings() ) {
 			Method method = getGetter( property ).getMethod();
@@ -320,11 +323,11 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 					proxyInterfaces,
 					proxyGetIdentifierMethod,
 					proxySetIdentifierMethod,
-					entityBinding.getHierarchyDetails().getEntityIdentifier().isEmbedded()
+					entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper()
 							? ( CompositeType ) entityBinding
 									.getHierarchyDetails()
 									.getEntityIdentifier()
-									.getValueBinding()
+									.getAttributeBinding()
 									.getHibernateTypeDescriptor()
 									.getResolvedTypeMapping()
 							: null
@@ -441,7 +444,21 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	private PropertyAccessor getPropertyAccessor(AttributeBinding mappedProperty) throws MappingException {
-		// TODO: Fix this then backrefs are working in new metamodel
+		if ( mappedProperty.isBackRef() ) {
+			BackRefAttributeBinding backRefAttributeBinding = (BackRefAttributeBinding) mappedProperty;
+			if ( backRefAttributeBinding.isIndexBackRef() ) {
+				return new IndexPropertyAccessor(
+						backRefAttributeBinding.getCollectionRole(),
+						backRefAttributeBinding.getEntityName()
+				);
+			}
+			else {
+				return new BackrefPropertyAccessor(
+						backRefAttributeBinding.getCollectionRole(),
+						backRefAttributeBinding.getEntityName()
+				);
+			}
+		}
 		return PropertyAccessorFactory.getPropertyAccessor(
 				mappedProperty.getContainer().getClassReference(),
 				mappedProperty.getPropertyAccessorName()

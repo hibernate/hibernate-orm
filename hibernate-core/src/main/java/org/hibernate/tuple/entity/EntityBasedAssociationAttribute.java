@@ -93,7 +93,7 @@ public class EntityBasedAssociationAttribute
 
 		final Joinable joinable = type.getAssociatedJoinable( sessionFactory() );
 
-		if ( type.getForeignKeyDirection() == ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT ) {
+		if ( type.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
 			final String lhsTableName;
 			final String[] lhsColumnNames;
 

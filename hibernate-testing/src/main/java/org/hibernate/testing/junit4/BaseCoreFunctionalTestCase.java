@@ -47,9 +47,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -59,8 +61,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
+import org.hibernate.metamodel.SessionFactoryBuilder;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
@@ -80,14 +83,14 @@ import static org.junit.Assert.fail;
 @SuppressWarnings( {"deprecation"} )
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
-	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
 
 	public static final Dialect DIALECT = Dialect.getDialect();
 
-	private boolean isMetadataUsed;
 	private Configuration configuration;
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
+	private MetadataImplementor metadataImplementor;
+	private final boolean isMetadataUsed;
 
 	protected Session session;
 
@@ -95,11 +98,38 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return DIALECT;
 	}
 
+	protected BaseCoreFunctionalTestCase() {
+		// configure(Configuration) may add a setting for using the new metamodel, so,  for now,
+		// build a dummy configuration to get all the property settings.
+		final Configuration dummyConfiguration = constructAndConfigureConfiguration();
+
+		// Can't build the ServiceRegistry until after the constructor executes
+		// (otherwise integrators don't get added).
+		// Create a dummy ConfigurationService just to find out if the new metamodel will be used.
+		final ConfigurationService dummyConfigurationService = new ConfigurationServiceImpl(
+				dummyConfiguration.getProperties()
+		);
+		isMetadataUsed = dummyConfigurationService.getSetting(
+				MetadataSources.USE_NEW_METADATA_MAPPINGS,
+				new ConfigurationService.Converter<Boolean>() {
+					@Override
+					public Boolean convert(Object value) {
+						return Boolean.parseBoolean( ( String ) value );
+					}
+				},
+				DEFAULT_USE_NEW_METAMODEL
+		);
+	}
+
 	protected Configuration configuration() {
 		return configuration;
 	}
 
-	protected StandardServiceRegistryImpl serviceRegistry() {
+	protected MetadataImplementor metadata() {
+		return metadataImplementor;
+	}
+
+	protected final StandardServiceRegistryImpl serviceRegistry() {
 		return serviceRegistry;
 	}
 
@@ -123,24 +153,18 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
-		// for now, build the configuration to get all the property settings
-		configuration = constructAndConfigureConfiguration();
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
+		configuration = constructAndConfigureConfiguration();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
-		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				USE_NEW_METADATA_MAPPINGS,
-				new ConfigurationService.Converter<Boolean>() {
-					@Override
-					public Boolean convert(Object value) {
-						return Boolean.parseBoolean( ( String ) value );
-					}
-				},
-				false
-		);
+
 		if ( isMetadataUsed ) {
-			MetadataImplementor metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
+			metadataImplementor = buildMetadata();
 			afterConstructAndConfigureMetadata( metadataImplementor );
-			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
+			final SessionFactoryBuilder sessionFactoryBuilder = metadataImplementor.getSessionFactoryBuilder();
+			if ( configuration.getInterceptor() != null ) {
+				sessionFactoryBuilder.with( configuration.getInterceptor() );
+			}
+			sessionFactory = (SessionFactoryImpl) sessionFactoryBuilder.build();
 		}
 		else {
 			// this is done here because Configuration does not currently support 4.0 xsd
@@ -148,6 +172,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
 		}
 		afterSessionFactoryBuilt();
+	}
+
+	protected boolean isMetadataUsed() {
+		return isMetadataUsed;
 	}
 
 	protected void rebuildSessionFactory() {
@@ -168,10 +196,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	}
 
-	private MetadataImplementor buildMetadata(
-			BootstrapServiceRegistry bootRegistry,
-			StandardServiceRegistryImpl serviceRegistry) {
-		MetadataSources sources = new MetadataSources( bootRegistry );
+	private MetadataImplementor buildMetadata() {
+		assert BootstrapServiceRegistry.class.isInstance( serviceRegistry.getParentServiceRegistry() );
+		MetadataSources sources = new MetadataSources( serviceRegistry.getParentServiceRegistry() );
 		addMappings( sources );
 		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
 	}

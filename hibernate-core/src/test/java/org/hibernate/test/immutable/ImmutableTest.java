@@ -35,6 +35,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -51,6 +52,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();

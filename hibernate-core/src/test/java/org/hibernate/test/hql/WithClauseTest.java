@@ -36,6 +36,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.hql.internal.ast.InvalidWithClauseException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -51,6 +52,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWithClauseFailsWithFetch() {
 		TestData data = new TestData();
 		data.prepare();
@@ -106,6 +108,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWithClause() {
 		TestData data = new TestData();
 		data.prepare();

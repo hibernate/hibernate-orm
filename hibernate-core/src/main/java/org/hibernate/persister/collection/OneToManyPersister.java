@@ -50,6 +50,10 @@ import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectOneToManyLoader;
 import org.hibernate.loader.entity.CollectionElementLoader;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
@@ -92,6 +96,29 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		keyIsNullable = collection.getKey().isNullable();
 		keyIsUpdateable = collection.getKey().isUpdateable();
 	}
+
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public OneToManyPersister(
+			AbstractPluralAttributeBinding collection,
+			CollectionRegionAccessStrategy cacheAccessStrategy,
+			MetadataImplementor metadataImplementor,
+			SessionFactoryImplementor factory) throws MappingException, CacheException {
+		super( collection, cacheAccessStrategy, metadataImplementor, factory );
+		if ( collection.getPluralAttributeElementBinding().getNature() !=
+				PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+			throw new AssertionError(
+					String.format( "Unexpected plural attribute nature; expected=(%s), actual=(%s)",
+							PluralAttributeElementBinding.Nature.ONE_TO_MANY,
+							collection.getPluralAttributeElementBinding().getNature()
+					)
+			);
+		}
+		final PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
+		cascadeDeleteEnabled = keyBinding.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete();
+		keyIsNullable = keyBinding.isNullable();
+		keyIsUpdateable = keyBinding.isUpdatable();
+	}
+
 
 	/**
 	 * Generate the SQL UPDATE that updates all the foreign keys to null

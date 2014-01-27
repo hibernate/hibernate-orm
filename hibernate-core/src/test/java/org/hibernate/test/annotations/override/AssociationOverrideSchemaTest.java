@@ -7,7 +7,9 @@ import org.junit.Test;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -17,6 +19,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @RequiresDialect({ H2Dialect.class })
 @TestForIssue(jiraKey = "HHH-6662")
+@FailureExpectedWithNewMetamodel
 public class AssociationOverrideSchemaTest extends BaseCoreFunctionalTestCase {
 	public static final String SCHEMA_NAME = "OTHER_SCHEMA";
 	public static final String TABLE_NAME = "BLOG_TAGS";
@@ -35,24 +38,41 @@ public class AssociationOverrideSchemaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testJoinTableSchemaName() {
-		Iterator<Table> tableIterator = configuration().getTableMappings();
-		while ( tableIterator.hasNext() ) {
-			Table table = tableIterator.next();
-			if ( TABLE_NAME.equals( table.getName() ) ) {
-				Assert.assertEquals( SCHEMA_NAME, table.getSchema() );
-				return;
-			}
+		if ( isMetadataUsed() ) {
+			TableSpecification table = SchemaUtil.getTable( TABLE_NAME, metadata() );
+			Assert.assertNotNull( table );
+			Assert.assertEquals( SCHEMA_NAME, table.getSchema().getName().getSchema().getText());
 		}
-		Assert.fail();
+		else {
+			Iterator<Table> tableIterator = configuration().getTableMappings();
+			while ( tableIterator.hasNext() ) {
+				Table table = tableIterator.next();
+				if ( TABLE_NAME.equals( table.getName() ) ) {
+					Assert.assertEquals( SCHEMA_NAME, table.getSchema() );
+					return;
+				}
+			}
+			Assert.fail();
+		}
 	}
 
 	@Test
 	public void testJoinTableJoinColumnName() {
-		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, configuration() ) );
+		if ( isMetadataUsed() ) {
+			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, metadata() ) );
+		}
+		else {
+			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, configuration() ) );
+		}
 	}
 
 	@Test
 	public void testJoinTableColumnName() {
-		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, configuration() ) );
+		if ( isMetadataUsed() ) {
+			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, metadata() ) );
+		}
+		else {
+			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, configuration() ) );
+		}
 	}
 }

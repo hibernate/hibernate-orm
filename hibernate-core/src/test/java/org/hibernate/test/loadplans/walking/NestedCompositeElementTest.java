@@ -28,6 +28,7 @@ import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
 
+import org.hibernate.test.loadplans.process.EncapsulatedCompositeAttributeResultSetProcessorTest;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.loadplans.process.EncapsulatedCompositeAttributeResultSetProcessorTest.Person;
 import org.hibernate.test.loadplans.process.EncapsulatedCompositeAttributeResultSetProcessorTest.Customer;
@@ -38,7 +39,14 @@ import org.hibernate.test.loadplans.process.EncapsulatedCompositeAttributeResult
 public class NestedCompositeElementTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Customer.class };
+		return new Class[] {
+				Person.class,
+				Customer.class,
+				EncapsulatedCompositeAttributeResultSetProcessorTest.Address.class,
+				EncapsulatedCompositeAttributeResultSetProcessorTest.AddressType.class,
+				EncapsulatedCompositeAttributeResultSetProcessorTest.Investment.class,
+				EncapsulatedCompositeAttributeResultSetProcessorTest.MonetaryAmount.class
+		};
 	}
 
 	@Test

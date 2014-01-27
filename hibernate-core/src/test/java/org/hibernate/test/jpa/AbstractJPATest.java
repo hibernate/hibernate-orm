@@ -44,7 +44,7 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEventListener;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

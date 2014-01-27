@@ -16,12 +16,12 @@
 * limitations under the License.
 */
 package org.hibernate.test.annotations.derivedidentities;
+import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 
-import org.hibernate.annotations.Entity;
 
 /**
  * @author Hardy Ferentschik

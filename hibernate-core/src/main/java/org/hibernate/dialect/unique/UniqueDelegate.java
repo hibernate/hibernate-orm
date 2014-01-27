@@ -20,9 +20,9 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 
 /**
  * Dialect-level delegate in charge of applying "uniqueness" to a column.  Uniqueness can be defined

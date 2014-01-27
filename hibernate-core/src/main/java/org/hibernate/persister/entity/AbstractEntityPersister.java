@@ -68,6 +68,7 @@ import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -105,13 +106,21 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metamodel.binding.AssociationAttributeBinding;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.SimpleValueBinding;
-import org.hibernate.metamodel.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.Value;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.Fetchable;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -127,6 +136,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.tool.schema.internal.TemporaryTableExporter;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
@@ -178,7 +188,7 @@ public abstract class AbstractEntityPersister
 	private final boolean hasSubselectLoadableCollections;
 	protected final String rowIdName;
 
-	private final Set lazyProperties;
+	private final Set<String> lazyProperties;
 
 	// The optional SQL string defined in the where attribute
 	private final String sqlWhereString;
@@ -238,8 +248,8 @@ public abstract class AbstractEntityPersister
 
 	private final Set<String> affectingFetchProfileNames = new HashSet<String>();
 
-	private final Map uniqueKeyLoaders = new HashMap();
-	private final Map lockers = new HashMap();
+	private final Map<String, EntityLoader> uniqueKeyLoaders = new HashMap<String, EntityLoader>();
+	private final Map<LockMode, LockingStrategy> lockers = new HashMap<LockMode, LockingStrategy>();
 	private final Map loaders = new HashMap();
 
 	// SQL strings
@@ -281,8 +291,8 @@ public abstract class AbstractEntityPersister
 	private final String temporaryIdTableName;
 	private final String temporaryIdTableDDL;
 
-	private final Map subclassPropertyAliases = new HashMap();
-	private final Map subclassPropertyColumnNames = new HashMap();
+	private final Map<String, String[]> subclassPropertyAliases = new HashMap<String, String[]>();
+	private final Map<String, String[]> subclassPropertyColumnNames = new HashMap<String, String[]>();
 
 	protected final BasicEntityPropertyMapping propertyMapping;
 
@@ -392,6 +402,19 @@ public abstract class AbstractEntityPersister
 			result[i] = sqlLazyUpdateStrings[i];
 		}
 		return result;
+	}
+
+	protected static void initializeCustomSql(
+			CustomSQL customSql,
+			int i,
+			String[] sqlStrings,
+			boolean[] callable,
+			ExecuteUpdateResultCheckStyle[] checkStyles) {
+		sqlStrings[i] = customSql != null ?  customSql.getSql(): null;
+		callable[i] = customSql != null && customSql.isCallable();
+		checkStyles[i] = customSql != null && customSql.getCheckStyle() != null ?
+				customSql.getCheckStyle() :
+				ExecuteUpdateResultCheckStyle.determineDefault( sqlStrings[i], callable[i] );
 	}
 
 	protected String getSQLSnapshotSelectString() {
@@ -585,13 +608,13 @@ public abstract class AbstractEntityPersister
 		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
-		HashSet thisClassProperties = new HashSet();
+		HashSet<Property> thisClassProperties = new HashSet<Property>();
 
-		lazyProperties = new HashSet();
-		ArrayList lazyNames = new ArrayList();
-		ArrayList lazyNumbers = new ArrayList();
-		ArrayList lazyTypes = new ArrayList();
-		ArrayList lazyColAliases = new ArrayList();
+		lazyProperties = new HashSet<String>();
+		ArrayList<String> lazyNames = new ArrayList<String>();
+		ArrayList<Integer> lazyNumbers = new ArrayList<Integer>();
+		ArrayList<Type> lazyTypes = new ArrayList<Type>();
+		ArrayList<String[]> lazyColAliases = new ArrayList<String[]>();
 
 		iter = persistentClass.getPropertyClosureIterator();
 		i = 0;
@@ -844,8 +867,7 @@ public abstract class AbstractEntityPersister
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		this.isLazyPropertiesCacheable =
-				entityBinding.getHierarchyDetails().getCaching() == null ?
-						false :
+				entityBinding.getHierarchyDetails().getCaching() == null ||
 						entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
 		this.entityMetamodel = new EntityMetamodel( entityBinding, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
@@ -860,7 +882,7 @@ public abstract class AbstractEntityPersister
 
 		// IDENTIFIER
 
-		identifierColumnSpan = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding().getSimpleValueSpan();
+		identifierColumnSpan = entityBinding.getHierarchyDetails().getEntityIdentifier().getColumnCount();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
 		rootTableKeyColumnReaders = new String[identifierColumnSpan];
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
@@ -870,9 +892,12 @@ public abstract class AbstractEntityPersister
 
 		loaderName = entityBinding.getCustomLoaderName();
 
-		int i = 0;
-		for ( org.hibernate.metamodel.relational.Column col : entityBinding.getPrimaryTable().getPrimaryKey().getColumns() ) {
-			rootTableKeyColumnNames[i] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+		for ( int i = 0; i < identifierColumnSpan; i++ ) {
+			org.hibernate.metamodel.spi.relational.Column col = entityBinding.getHierarchyDetails().getRootEntityBinding().getPrimaryTable()
+					.getPrimaryKey()
+					.getColumns()
+					.get( i );
+			rootTableKeyColumnNames[i] = col.getColumnName().getText( factory.getDialect() );
 			if ( col.getReadFragment() == null ) {
 				rootTableKeyColumnReaders[i] = rootTableKeyColumnNames[i];
 				rootTableKeyColumnReaderTemplates[i] = getTemplateFromColumn( col, factory );
@@ -881,19 +906,29 @@ public abstract class AbstractEntityPersister
 				rootTableKeyColumnReaders[i] = col.getReadFragment();
 				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( rootTableKeyColumnReaders[i], factory );
 			}
-			identifierAliases[i] = col.getAlias( factory.getDialect() );
-			i++;
+			identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getHierarchyDetails().getRootEntityBinding().getPrimaryTable() );
 		}
 
 		// VERSION
 
 		if ( entityBinding.isVersioned() ) {
-			final Value versioningValue = entityBinding.getHierarchyDetails().getVersioningAttributeBinding().getValue();
-			if ( ! org.hibernate.metamodel.relational.Column.class.isInstance( versioningValue ) ) {
-				throw new AssertionFailure( "Bad versioning attribute binding : " + versioningValue );
+			final BasicAttributeBinding versionAttributeBinding =  entityBinding.getHierarchyDetails()
+					.getEntityVersion()
+					.getVersioningAttributeBinding();
+			if ( versionAttributeBinding.getRelationalValueBindings().size() > 1 ) {
+				throw new AssertionFailure(
+						"Bad versioning attribute binding, expecting single column but found " +
+								versionAttributeBinding.getRelationalValueBindings().size()
+				);
 			}
-			org.hibernate.metamodel.relational.Column versionColumn = org.hibernate.metamodel.relational.Column.class.cast( versioningValue );
-			versionColumnName = versionColumn.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			final Value versioningValue = versionAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
+			if ( ! org.hibernate.metamodel.spi.relational.Column.class.isInstance( versioningValue ) ) {
+				throw new AssertionFailure(
+						"Bad versioning attribute binding, expecting column but found [" + versioningValue + "]"
+				);
+			}
+			org.hibernate.metamodel.spi.relational.Column versionColumn = org.hibernate.metamodel.spi.relational.Column.class.cast( versioningValue );
+			versionColumnName = versionColumn.getColumnName().getText( factory.getDialect() );
 		}
 		else {
 			versionColumnName = null;
@@ -920,34 +955,24 @@ public abstract class AbstractEntityPersister
 		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
-		HashSet thisClassProperties = new HashSet();
+		HashSet<AttributeBinding> thisClassProperties = new HashSet<AttributeBinding>();
 
 		lazyProperties = new HashSet();
-		ArrayList lazyNames = new ArrayList();
-		ArrayList lazyNumbers = new ArrayList();
-		ArrayList lazyTypes = new ArrayList();
-		ArrayList lazyColAliases = new ArrayList();
+		ArrayList<String> lazyNames = new ArrayList<String>();
+		ArrayList<Integer> lazyNumbers = new ArrayList<Integer>();
+		ArrayList<Type> lazyTypes = new ArrayList<Type>();
+		ArrayList<String[]> lazyColAliases = new ArrayList<String[]>();
 
-		i = 0;
+		int i = 0;
 		boolean foundFormula = false;
-		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
-				// entity identifier is not considered a "normal" property
-				continue;
-			}
+		for ( AttributeBinding attributeBinding : entityBinding.getNonIdAttributeBindingClosure() ) {
+			thisClassProperties.add( attributeBinding );
 
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				// collections handled separately
-				continue;
-			}
+			propertySubclassNames[i] = attributeBinding.getContainer().seekEntityBinding().getEntity().getName();
 
-			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
-			thisClassProperties.add( singularAttributeBinding );
-
-			propertySubclassNames[i] = ( (EntityBinding) singularAttributeBinding.getContainer() ).getEntity().getName();
-
-			int span = singularAttributeBinding.getSimpleValueSpan();
+			int span = attributeBinding.getAttribute().isSingular() ?
+					( (SingularAttributeBinding) attributeBinding).getRelationalValueBindings().size() :
+					0;
 			propertyColumnSpans[i] = span;
 
 			String[] colNames = new String[span];
@@ -958,23 +983,30 @@ public abstract class AbstractEntityPersister
 			boolean[] propertyColumnInsertability = new boolean[span];
 			boolean[] propertyColumnUpdatability = new boolean[span];
 
-			int k = 0;
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) attributeBinding;
 
-			for ( SimpleValueBinding valueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
-				colAliases[k] = valueBinding.getSimpleValue().getAlias( factory.getDialect() );
-				if ( valueBinding.isDerived() ) {
-					foundFormula = true;
-					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getSimpleValue() ).getExpression(), factory );
+				int k = 0;
+
+				for ( RelationalValueBinding valueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+					colAliases[k] = valueBinding.getValue().getAlias(
+							factory.getDialect(),
+							valueBinding.getTable()
+					);
+					if ( valueBinding.isDerived() ) {
+						foundFormula = true;
+						formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getValue() ).getExpression(), factory );
+					}
+					else {
+						org.hibernate.metamodel.spi.relational.Column col = (org.hibernate.metamodel.spi.relational.Column) valueBinding.getValue();
+						colNames[k] = col.getColumnName().getText( factory.getDialect() );
+						colReaderTemplates[k] = getTemplateFromColumn( col, factory );
+						colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
+					}
+					propertyColumnInsertability[k] = valueBinding.isIncludeInInsert();
+					propertyColumnUpdatability[k] = valueBinding.isIncludeInUpdate();
+					k++;
 				}
-				else {
-					org.hibernate.metamodel.relational.Column col = ( org.hibernate.metamodel.relational.Column ) valueBinding.getSimpleValue();
-					colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
-					colReaderTemplates[k] = getTemplateFromColumn( col, factory );
-					colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
-				}
-				propertyColumnInsertability[k] = valueBinding.isIncludeInInsert();
-				propertyColumnUpdatability[k] = valueBinding.isIncludeInUpdate();
-				k++;
 			}
 			propertyColumnNames[i] = colNames;
 			propertyColumnFormulaTemplates[i] = formulaTemplates;
@@ -985,25 +1017,24 @@ public abstract class AbstractEntityPersister
 			propertyColumnUpdateable[i] = propertyColumnUpdatability;
 			propertyColumnInsertable[i] = propertyColumnInsertability;
 
-			if ( lazyAvailable && singularAttributeBinding.isLazy() ) {
-				lazyProperties.add( singularAttributeBinding.getAttribute().getName() );
-				lazyNames.add( singularAttributeBinding.getAttribute().getName() );
+			if ( lazyAvailable && attributeBinding.isLazy() ) {
+				lazyProperties.add( attributeBinding.getAttribute().getName() );
+				lazyNames.add( attributeBinding.getAttribute().getName() );
 				lazyNumbers.add( i );
-				lazyTypes.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping());
+				lazyTypes.add( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping());
 				lazyColAliases.add( colAliases );
 			}
 
+			propertySelectable[i] = !attributeBinding.isBackRef();
 
-			// TODO: fix this when backrefs are working
-			//propertySelectable[i] = singularAttributeBinding.isBackRef();
-			propertySelectable[i] = true;
+			propertyUniqueness[i] = attributeBinding.isAlternateUniqueKey();
 
-			propertyUniqueness[i] = singularAttributeBinding.isAlternateUniqueKey();
-			
-			// TODO: Does this need AttributeBindings wired into lobProperties?  Currently in Property only.
+			// TODO: set lobProperties correctly.
+			//if (attributeBinding.isLob() && getFactory().getDialect().forceLobAsLastValue() ) {
+			//	lobProperties.add( i );
+			//}
 
 			i++;
-
 		}
 		hasFormulaProperties = foundFormula;
 		lazyPropertyColumnAliases = ArrayHelper.to2DStringArray( lazyColAliases );
@@ -1036,27 +1067,29 @@ public abstract class AbstractEntityPersister
 		List<Boolean> columnSelectables = new ArrayList<Boolean>();
 		List<Boolean> propNullables = new ArrayList<Boolean>();
 
-		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
-				// entity identifier is not considered a "normal" property
-				continue;
-			}
-
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				// collections handled separately
-				continue;
-			}
-
-			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
-			names.add( singularAttributeBinding.getAttribute().getName() );
-			classes.add( ( (EntityBinding) singularAttributeBinding.getContainer() ).getEntity().getName() );
-			boolean isDefinedBySubclass = ! thisClassProperties.contains( singularAttributeBinding );
+		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
+			names.add( attributeBinding.getAttribute().getName() );
+			classes.add( ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName() );
+			boolean isDefinedBySubclass = ! thisClassProperties.contains( attributeBinding );
 			definedBySubclass.add( isDefinedBySubclass );
-			propNullables.add( singularAttributeBinding.isNullable() || isDefinedBySubclass ); //TODO: is this completely correct?
-			types.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
-
-			final int span = singularAttributeBinding.getSimpleValueSpan();
+			final boolean propIsNullable;
+			final List<RelationalValueBinding> relationalValueBindings;
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				propIsNullable =
+						singularAttributeBinding.isOptional() ||
+								singularAttributeBinding.isNullable() ||
+								isDefinedBySubclass;
+				relationalValueBindings = singularAttributeBinding.getRelationalValueBindings();
+			}
+			else {
+				// plural attributes are considered nullable
+				propIsNullable = true;
+				relationalValueBindings = Collections.emptyList();
+			}
+			propNullables.add( propIsNullable );
+			types.add( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
+			final int span = relationalValueBindings.size();
 			String[] cols = new String[ span ];
 			String[] readers = new String[ span ];
 			String[] readerTemplates = new String[ span ];
@@ -1064,34 +1097,40 @@ public abstract class AbstractEntityPersister
 			int[] colnos = new int[ span ];
 			int[] formnos = new int[ span ];
 			int l = 0;
-			Boolean lazy = singularAttributeBinding.isLazy() && lazyAvailable;
-			for ( SimpleValueBinding valueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
+			Boolean lazy = attributeBinding.isLazy() && lazyAvailable;
+
+			for ( RelationalValueBinding valueBinding : relationalValueBindings ) {
 				if ( valueBinding.isDerived() ) {
-					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getSimpleValue() );
+					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getValue() );
 					String template = getTemplateFromString( derivedValue.getExpression(), factory );
 					formnos[l] = formulaTemplates.size();
 					colnos[l] = -1;
 					formulaTemplates.add( template );
 					forms[l] = template;
+					// TODO: should be derivedValue.getText( factory.getDialect() ).
 					formulas.add( derivedValue.getExpression() );
-					formulaAliases.add( derivedValue.getAlias( factory.getDialect() ) );
+					formulaAliases.add( derivedValue.getAlias( factory.getDialect(), null ) );
 					formulasLazy.add( lazy );
 				}
 				else {
-					org.hibernate.metamodel.relational.Column col = org.hibernate.metamodel.relational.Column.class.cast( valueBinding.getSimpleValue() );
-					String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+					org.hibernate.metamodel.spi.relational.Column col = org.hibernate.metamodel.spi.relational.Column.class.cast( valueBinding.getValue() );
+					String colName = col.getColumnName().getText( factory.getDialect() );
 					colnos[l] = columns.size(); //before add :-)
 					formnos[l] = -1;
 					columns.add( colName );
 					cols[l] = colName;
-					aliases.add( col.getAlias( factory.getDialect() ) );
+					aliases.add(
+							col.getAlias(
+									factory.getDialect(),
+									valueBinding.getTable()
+							)
+					);
 					columnsLazy.add( lazy );
-					// TODO: properties only selectable if they are non-plural???
-					columnSelectables.add( singularAttributeBinding.getAttribute().isSingular() );
+					columnSelectables.add( ! attributeBinding.isBackRef() );
 
 					readers[l] =
 							col.getReadFragment() == null ?
-									col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+									col.getColumnName().getText( factory.getDialect() ) :
 									col.getReadFragment();
 					String readerTemplate = getTemplateFromColumn( col, factory );
 					readerTemplates[l] = readerTemplate;
@@ -1106,14 +1145,26 @@ public abstract class AbstractEntityPersister
 			propColumnNumbers.add( colnos );
 			propFormulaNumbers.add( formnos );
 
-			if ( singularAttributeBinding.isAssociation() ) {
-				AssociationAttributeBinding associationAttributeBinding =
-						( AssociationAttributeBinding ) singularAttributeBinding;
-				cascades.add( associationAttributeBinding.getCascadeStyle() );
-				joinedFetchesList.add( associationAttributeBinding.getFetchMode() );
+			CascadeStyle cascadeStyle = null;
+			if ( attributeBinding.isCascadeable() ) {
+				if ( attributeBinding.getAttribute().isSingular() ) {
+					cascadeStyle = ( (Cascadeable) attributeBinding ).getCascadeStyle();
+				}
+				else {
+					PluralAttributeElementBinding pluralAttributeElementBinding =
+							( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding();
+					cascadeStyle = ( (Cascadeable) pluralAttributeElementBinding).getCascadeStyle();
+				}
+			}
+			if ( cascadeStyle == null ) {
+				cascadeStyle = CascadeStyles.NONE;
+			}
+			cascades.add( cascadeStyle );
+
+			if ( attributeBinding instanceof Fetchable ) {
+				joinedFetchesList.add( ( (Fetchable) attributeBinding ).getFetchMode() );
 			}
 			else {
-				cascades.add( CascadeStyles.NONE );
 				joinedFetchesList.add( FetchMode.SELECT );
 			}
 		}
@@ -1145,15 +1196,25 @@ public abstract class AbstractEntityPersister
 
 		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
 
-		List<FilterConfiguration> filterDefaultConditions = new ArrayList<FilterConfiguration>();
-		for ( FilterDefinition filterDefinition : entityBinding.getFilterDefinitions() ) {
-			filterDefaultConditions.add(new FilterConfiguration(filterDefinition.getFilterName(), 
-						filterDefinition.getDefaultFilterCondition(), true, null, null, null));
-		}
-		filterHelper = new FilterHelper( filterDefaultConditions, factory);
+		filterHelper = new FilterHelper( entityBinding.getFilterConfigurations(), factory);
 
-		temporaryIdTableName = null;
-		temporaryIdTableDDL = null;
+		temporaryIdTableName = TemporaryTableExporter.generateTableName(
+				factory.getDialect(),
+				entityBinding.getPrimaryTable()
+		);
+		TableSpecification primaryTable = entityBinding.getPrimaryTable();
+		if ( factory.getDialect().supportsTemporaryTables() && primaryTable instanceof Table ) {
+			temporaryIdTableDDL = factory
+					.getDialect()
+					.getTemporaryTableExporter()
+					.getSqlCreateStrings(
+							Table.class.cast( primaryTable ),
+							factory.getServiceRegistry().getService( JdbcEnvironment.class )
+					)[0];
+		}
+		else {
+			temporaryIdTableDDL = null;
+		}
 
 		this.cacheEntryHelper = buildCacheEntryHelper();
 	}
@@ -1164,13 +1225,13 @@ public abstract class AbstractEntityPersister
 				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
 	}
 
-	public String getTemplateFromColumn(org.hibernate.metamodel.relational.Column column, SessionFactoryImplementor factory) {
+	public String getTemplateFromColumn(org.hibernate.metamodel.spi.relational.Column column, SessionFactoryImplementor factory) {
 		String templateString;
 		if ( column.getReadFragment() != null ) {
 			templateString = getTemplateFromString( column.getReadFragment(), factory );
 		}
 		else {
-			String columnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			String columnName = column.getColumnName().getText( factory.getDialect() );
 			templateString = Template.TEMPLATE + '.' + columnName;
 		}
 		return templateString;
@@ -2285,12 +2346,11 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Must be called by subclasses, at the end of their constructors
 	 */
-	protected void initSubclassPropertyAliasesMap(EntityBinding model) throws MappingException {
+	protected void initSubclassPropertyAliasesMap(EntityBinding entityBinding) throws MappingException {
 
 		// ALIASES
 
-		// TODO: Fix when subclasses are working (HHH-6337)
-		//internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosureIterator() );
+		internalInitSubclassPropertyAliasesMap( null, entityBinding.getEntitiesAttributeBindingClosure() );
 
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
 		if ( ! entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
@@ -2368,6 +2428,59 @@ public abstract class AbstractEntityPersister
 					Selectable thing = ( Selectable ) colIter.next();
 					aliases[l] = thing.getAlias( getFactory().getDialect(), prop.getValue().getTable() );
 					cols[l] = thing.getText( getFactory().getDialect() ); // TODO: skip formulas?
+					l++;
+				}
+
+				subclassPropertyAliases.put( propname, aliases );
+				subclassPropertyColumnNames.put( propname, cols );
+			}
+		}
+
+	}
+
+	protected static boolean isIdentifierAttributeBinding(final AttributeBinding prop){
+		return prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( prop );
+	}
+
+	private void internalInitSubclassPropertyAliasesMap(String path, AttributeBinding[] attributeBindings) {
+		for ( AttributeBinding prop : attributeBindings ) {
+			if ( isIdentifierAttributeBinding( prop ) ) {
+				// ID propertie aliases are dealt with elsewhere.
+				continue;
+			}
+			if ( ! prop.getAttribute().isSingular() ) {
+				// skip plural attributes
+				continue;
+			}
+			SingularAttributeBinding singularProp = (SingularAttributeBinding) prop;
+			String propname = path == null ? prop.getAttribute().getName() : path + "." + prop.getAttribute().getName();
+			if ( prop instanceof CompositeAttributeBinding ) {
+				CompositeAttributeBinding component = (CompositeAttributeBinding) prop;
+				AttributeBinding[] abs = new AttributeBinding[component.attributeBindingSpan()];
+				int i=0;
+				for(AttributeBinding ab : component.attributeBindings()){
+					abs[i++] = ab;
+				}
+				internalInitSubclassPropertyAliasesMap( propname, abs );
+			}
+			else {
+				int span = singularProp.getRelationalValueBindings().size();
+				String[] aliases = new String[span];
+				String[] cols = new String[span];
+				int l = 0;
+				for ( RelationalValueBinding relationalValueBinding : singularProp.getRelationalValueBindings() ) {
+					aliases[l] = relationalValueBinding.getValue().getAlias(
+							getFactory().getDialect(),
+							relationalValueBinding.getTable()
+					);
+					if ( relationalValueBinding.isDerived() ) {
+						cols[l] = ( (DerivedValue) relationalValueBinding.getValue() ).getExpression(); // TODO: skip formulas?
+					}
+					else {
+						cols[l] =
+								( (org.hibernate.metamodel.spi.relational.Column) relationalValueBinding.getValue() )
+										.getColumnName().getText( getFactory().getDialect() );
+					}
 					l++;
 				}
 

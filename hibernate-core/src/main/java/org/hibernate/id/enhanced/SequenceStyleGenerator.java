@@ -26,8 +26,11 @@ package org.hibernate.id.enhanced;
 import java.io.Serializable;
 import java.util.Properties;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -37,10 +40,10 @@ import org.hibernate.id.Configurable;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * Generates identifier values based on an sequence-style database structure.
@@ -227,11 +230,12 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
+	public void configure(Type type, Properties params, Dialect dialect, ClassLoaderService classLoaderService) throws MappingException {
 		this.identifierType = type;
 		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
 
-		final String sequenceName = determineSequenceName( params, dialect );
+		final ObjectName qualifiedSequenceName = determineSequenceName( params, dialect );
+		final String sequenceNameText = qualifiedSequenceName.toText( dialect );
 
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
@@ -251,7 +255,7 @@ public class SequenceStyleGenerator
 				params,
 				dialect,
 				forceTableUse,
-				sequenceName,
+				qualifiedSequenceName,
 				initialValue,
 				incrementSize
 		);
@@ -259,7 +263,8 @@ public class SequenceStyleGenerator
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
-				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
+				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 ),
+				classLoaderService
 		);
 		this.databaseStructure.prepare( optimizer );
 	}
@@ -274,28 +279,25 @@ public class SequenceStyleGenerator
 	 * @param dialect The dialect in effect
 	 * @return The sequence name
 	 */
-	protected String determineSequenceName(Properties params, Dialect dialect) {
-		final String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+	protected ObjectName determineSequenceName(Properties params, Dialect dialect) {
+		String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
 		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
 		String sequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
 				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix
 				: DEF_SEQUENCE_NAME;
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
-		sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, sequenceName );
+		final ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		sequenceName = normalizer.normalizeIdentifierQuoting(
+				ConfigurationHelper.getString( SEQUENCE_PARAM, params, sequenceName )
+		);
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
-			sequenceName = normalizer.normalizeIdentifierQuoting( sequenceName );
-			final String schemaName = params.getProperty( SCHEMA );
-			final String catalogName = params.getProperty( CATALOG );
-			sequenceName = Table.qualify(
-					dialect.quote( catalogName ),
-					dialect.quote( schemaName ),
-					dialect.quote( sequenceName )
-			);
-		}
-		// if already qualified there is not much we can do in a portable manner so we pass it
-		// through and assume the user has set up the name correctly.
+			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
+			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
 
-		return sequenceName;
+			return new ObjectName( catalogName, schemaName, sequenceName );
+		}
+		else {
+			return ObjectName.parse( sequenceName );
+		}
 	}
 
 	/**
@@ -309,10 +311,10 @@ public class SequenceStyleGenerator
 	 * @param dialect The dialect in effect.
 	 * @return The value column name
 	 */
-	protected String determineValueColumnName(Properties params, Dialect dialect) {
-		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+	protected Identifier determineValueColumnName(Properties params, Dialect dialect) {
+		final ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
-		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
+		return Identifier.toIdentifier( normalizer.normalizeIdentifierQuoting( name ) );
 	}
 
 	/**
@@ -401,7 +403,7 @@ public class SequenceStyleGenerator
 			Properties params,
 			Dialect dialect,
 			boolean forceTableUse,
-			String sequenceName,
+			ObjectName sequenceName,
 			int initialValue,
 			int incrementSize) {
 		final boolean useSequence = dialect.supportsSequences() && !forceTableUse;
@@ -409,7 +411,7 @@ public class SequenceStyleGenerator
 			return new SequenceStructure( dialect, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
 		}
 		else {
-			final String valueColumnName = determineValueColumnName( params, dialect );
+			Identifier valueColumnName = determineValueColumnName( params, dialect );
 			return new TableStructure( dialect, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
 		}
 	}
@@ -428,6 +430,11 @@ public class SequenceStyleGenerator
 	@Override
 	public Object generatorKey() {
 		return databaseStructure.getName();
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		databaseStructure.registerExportables( database );
 	}
 
 	@Override

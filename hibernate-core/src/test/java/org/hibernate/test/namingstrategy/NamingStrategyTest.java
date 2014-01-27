@@ -28,10 +28,18 @@ import org.junit.Test;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -60,18 +68,58 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDatabaseColumnNames() {
-		PersistentClass classMapping = configuration().getClassMapping( Customers.class.getName() );
-		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getColumnIterator().next();
-		assertEquals( "CN_specified_column", stateColumn.getName() );
+		if ( isMetadataUsed() ) {
+			EntityBinding entityBinding = metadata().getEntityBinding( Customers.class.getName() );
+			assertNotNull( entityBinding );
+			AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( "specified_column" );
+			assertNotNull( attributeBinding );
+			assertTrue( SingularAttributeBinding.class.isInstance( attributeBinding ) );
+			SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+			assertEquals( 1, singularAttributeBinding.getRelationalValueBindings().size() );
+			RelationalValueBinding valueBinding = singularAttributeBinding.getRelationalValueBindings().get( 0 );
+			assertFalse( valueBinding.isDerived() );
+			org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) valueBinding
+					.getValue();
+			assertEquals( "CN_specified_column", column.getColumnName().getText() );
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Customers.class.getName() );
+			Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getColumnIterator().next();
+			assertEquals( "CN_specified_column", stateColumn.getName() );
+		}
 	}
 
     @Test
     @TestForIssue(jiraKey = "HHH-5848")
     public void testDatabaseTableNames() {
-        PersistentClass classMapping = configuration().getClassMapping( Item.class.getName() );
-        Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
-        assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
-        Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();
-        assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
+		if ( isMetadataUsed() ) {
+			EntityBinding entityBinding = metadata().getEntityBinding( Item.class.getName() );
+			assertNotNull( entityBinding );
+			AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( "specialPrice" );
+			assertNotNull( attributeBinding );
+			assertTrue( SingularAttributeBinding.class.isInstance( attributeBinding ) );
+			SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+			assertEquals( 1, singularAttributeBinding.getRelationalValueBindings().size() );
+			RelationalValueBinding valueBinding = singularAttributeBinding.getRelationalValueBindings().get( 0 );
+			assertFalse( valueBinding.isDerived() );
+			Table table = (Table)valueBinding.getTable();
+
+			assertEquals( "TAB_ITEMS_SEC", table.getPhysicalName().getText() );
+
+			singularAttributeBinding = (SingularAttributeBinding)entityBinding.locateAttributeBinding( "price" );
+			assertEquals( 1, singularAttributeBinding.getRelationalValueBindings().size() );
+			valueBinding = singularAttributeBinding.getRelationalValueBindings().get( 0 );
+			assertFalse( valueBinding.isDerived() );
+			table = (Table)valueBinding.getTable();
+			assertEquals( "TAB_ITEMS",  table.getPhysicalName().getText());
+
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Item.class.getName() );
+			Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
+			assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
+			Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();
+			assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
+		}
     }
 }

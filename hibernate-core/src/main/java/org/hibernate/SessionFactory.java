@@ -30,6 +30,8 @@ import java.util.Set;
 import javax.naming.Referenceable;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cfg.Settings;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -70,6 +72,12 @@ public interface SessionFactory extends Referenceable, Serializable {
 		 * @return The interceptor to use factory wide.  May be {@code null}
 		 */
 		public Interceptor getInterceptor();
+
+		public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
+		public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+		public SessionFactoryObserver[] getSessionFactoryObservers();
+		public EntityNameResolver[] getEntityNameResolvers();
+		public Settings getSettings();
 
 		/**
 		 * Get the delegate for handling entity-not-found exception conditions.

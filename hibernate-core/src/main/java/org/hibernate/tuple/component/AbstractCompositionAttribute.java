@@ -122,7 +122,7 @@ public abstract class AbstractCompositionAttribute
 										)
 								);
 							}
-							else if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT ) {
+							else if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
 								final String lhsTableName;
 								final String[] lhsColumnNames;
 

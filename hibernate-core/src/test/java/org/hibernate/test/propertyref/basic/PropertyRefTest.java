@@ -37,6 +37,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -101,6 +105,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyPropertyRef() {
 		// prepare some test data relating to the Group->Person many-to-many association
 		Session s = openSession();
@@ -271,24 +276,38 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testForeignKeyCreation() {
-		PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
-		
-		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
 		boolean found = false;
-		while ( foreignKeyIterator.hasNext() ) {
-			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
-			if(element.getReferencedEntityName().equals(Person.class.getName() ) ) {
-				
-				if(!element.isReferenceToPrimaryKey() ) {
-					List referencedColumns = element.getReferencedColumns();
-					Column column = (Column) referencedColumns.get(0);
-					if(column.getName().equals("person_userid") ) {
-						found = true; // extend test to include the columns
-					}				
+		if ( isMetadataUsed() ) {
+			TableSpecification table = SchemaUtil.getTable( Account.class, metadata() );
+			EntityBinding personEntityBinding = metadata().getEntityBinding( Person.class.getName() );
+			for ( org.hibernate.metamodel.spi.relational.ForeignKey element : table.getForeignKeys() ) {
+				if ( element.getTargetTable().equals( personEntityBinding.getPrimaryTable() ) ) {
+					for ( org.hibernate.metamodel.spi.relational.Column column : element.getTargetColumns() ) {
+						if ( column.getColumnName().getText( getDialect() ).equals( "person_userid" ) ) {
+							found = true;
+						}
+					}
 				}
 			}
 		}
-		
+		else {
+			PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
+
+			Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
+			while ( foreignKeyIterator.hasNext() ) {
+				ForeignKey element = (ForeignKey) foreignKeyIterator.next();
+				if(element.getReferencedEntityName().equals(Person.class.getName() ) ) {
+
+					if(!element.isReferenceToPrimaryKey() ) {
+						List referencedColumns = element.getReferencedColumns();
+						Column column = (Column) referencedColumns.get(0);
+						if(column.getName().equals("person_userid") ) {
+							found = true; // extend test to include the columns
+						}
+					}
+				}
+			}
+		}
 		assertTrue("Property ref foreign key not found",found);
 	}
 }

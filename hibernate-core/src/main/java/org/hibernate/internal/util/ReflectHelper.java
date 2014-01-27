@@ -24,10 +24,22 @@
  */
 package org.hibernate.internal.util;
 
+import java.beans.Introspector;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.classmate.members.ResolvedField;
+import com.fasterxml.classmate.members.ResolvedMethod;
+import com.fasterxml.classmate.types.ResolvedArrayType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -59,6 +71,9 @@ public final class ReflectHelper {
 
 	private static final Method OBJECT_EQUALS;
 	private static final Method OBJECT_HASHCODE;
+
+	private static final TypeResolver TYPE_RESOLVER = new TypeResolver();
+	private static final MemberResolver MEMBER_RESOLVER = new MemberResolver( TYPE_RESOLVER );
 
 	static {
 		Method eq;
@@ -378,4 +393,92 @@ public final class ReflectHelper {
 		}
 	}
 
+	/**
+	 * Process bean properties getter by applying the JavaBean naming conventions.
+	 *
+	 * @param member the member for which to get the property name.
+	 *
+	 * @return The bean method name with the "is" or "get" prefix stripped off, {@code null}
+	 *         the method name id not according to the JavaBeans standard.
+	 */
+	public static String getPropertyName(Member member) {
+		String name = null;
+
+		if ( member instanceof Field ) {
+			name = member.getName();
+		}
+
+		if ( member instanceof Method ) {
+			String methodName = member.getName();
+			if ( methodName.startsWith( "is" ) ) {
+				name = Introspector.decapitalize( methodName.substring( 2 ) );
+			}
+			else if ( methodName.startsWith( "has" ) ) {
+				name = Introspector.decapitalize( methodName.substring( 3 ) );
+			}
+			else if ( methodName.startsWith( "get" ) ) {
+				name = Introspector.decapitalize( methodName.substring( 3 ) );
+			}
+		}
+		return name;
+	}
+
+	public static boolean isProperty(Member m) {
+		if ( m instanceof Method ) {
+			Method method = (Method) m;
+			return !method.isSynthetic()
+					&& !method.isBridge()
+					&& !Modifier.isStatic( method.getModifiers() )
+					&& method.getParameterTypes().length == 0
+					&& ( method.getName().startsWith( "get" ) || method.getName().startsWith( "is" ) );
+		}
+		else {
+			return !Modifier.isTransient( m.getModifiers() ) && !m.isSynthetic();
+		}
+	}
+
+	/**
+	 * Returns a Set of field types in the given class.  However, for Collection
+	 * and Map fields, the value and key types are returned instead of the
+	 * Iterable class itself.
+	 *
+	 * @param clazz
+	 * @return Set<Class<?>>
+	 */
+	// TODO: This should be moved out of ReflectHelper.  Partial duplication with
+	// AnnotationBindingContextImpl#resolveMemberTypes
+	public static Set<Class<?>> getMemberTypes( Class<?> clazz ) {
+		Set<Class<?>> fieldTypes = new HashSet<Class<?>>();
+
+		ResolvedType resolvedType = TYPE_RESOLVER.resolve( clazz );
+		ResolvedTypeWithMembers resolvedTypes = MEMBER_RESOLVER.resolve( resolvedType, null, null );
+		ResolvedField[] resolvedFields = resolvedTypes.getMemberFields();
+
+		for ( ResolvedField resolvedField : resolvedFields ) {
+			resolveAllTypes( resolvedField.getType(), fieldTypes );
+		}
+
+		// TODO: This should really just be checking getters, but for now do everything.
+		ResolvedMethod[] resolvedMethods = resolvedTypes.getMemberMethods();
+		for ( ResolvedMethod resolvedMethod : resolvedMethods ) {
+			if ( resolvedMethod.getReturnType() != null ) {
+				resolveAllTypes( resolvedMethod.getReturnType(), fieldTypes );
+			}
+		}
+
+		return fieldTypes;
+	}
+
+	private static void resolveAllTypes(ResolvedType fieldType, Set<Class<?>> fieldTypes) {
+		if ( fieldType instanceof ResolvedArrayType ) {
+			ResolvedArrayType arrayType = (ResolvedArrayType) fieldType;
+			resolveAllTypes( arrayType.getArrayElementType(), fieldTypes );
+		} else {
+			fieldTypes.add( fieldType.getErasedType() );
+		}
+
+		for ( ResolvedType typeParameter : fieldType.getTypeBindings().getTypeParameters() ) {
+			resolveAllTypes( typeParameter, fieldTypes );
+		}
+	}
 }

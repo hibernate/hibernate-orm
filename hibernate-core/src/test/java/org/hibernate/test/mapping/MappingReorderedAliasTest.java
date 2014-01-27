@@ -20,9 +20,12 @@
  */
 package org.hibernate.test.mapping;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class MappingReorderedAliasTest extends AliasTest {
 
 	@Override

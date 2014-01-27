@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -65,6 +66,7 @@ public class AccessMappingTest {
     }
 
     @Test
+	@FailureExpectedWithNewMetamodel
     public void testInconsistentAnnotationPlacement() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course1.class );
@@ -135,6 +137,7 @@ public class AccessMappingTest {
     }
 
     @Test
+	@FailureExpectedWithNewMetamodel
     public void testExplicitPropertyAccessAnnotationsOnField() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course4.class );
@@ -176,6 +179,7 @@ public class AccessMappingTest {
     }
 
     @Test
+	@FailureExpectedWithNewMetamodel
     public void testExplicitPropertyAccessAnnotationsWithJpaStyleOverride() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         Class<?> classUnderTest = Course5.class;
@@ -216,6 +220,7 @@ public class AccessMappingTest {
     }
 
     @Test
+	@FailureExpectedWithNewMetamodel
     public void testDefaultPropertyAccessIsInherited() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Horse.class );
@@ -242,6 +247,7 @@ public class AccessMappingTest {
 
     @TestForIssue(jiraKey = "HHH-5004")
     @Test
+	@FailureExpectedWithNewMetamodel
     public void testAccessOnClassAndId() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course8.class );

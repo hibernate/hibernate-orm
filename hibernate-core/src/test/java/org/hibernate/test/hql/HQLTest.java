@@ -70,6 +70,7 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -88,6 +89,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class HQLTest extends QueryTranslatorTestCase {
 	@Override
 	public boolean createSchema() {

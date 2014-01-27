@@ -25,9 +25,8 @@ package org.hibernate.id.enhanced;
 
 import java.lang.reflect.Constructor;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -61,13 +60,15 @@ public class OptimizerFactory {
 	 * @param type The optimizer type, either a short-hand name or the {@link Optimizer} class name.
 	 * @param returnClass The generated value java type
 	 * @param incrementSize The increment size.
+	 * @param classLoaderService ClassLoaderService
 	 *
 	 * @return The built optimizer
 	 *
 	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
 	 */
 	@Deprecated
-	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
+	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize,
+			ClassLoaderService classLoaderService) {
 		final Class<? extends Optimizer> optimizerClass;
 
 		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
@@ -76,7 +77,7 @@ public class OptimizerFactory {
 		}
 		else {
 			try {
-				optimizerClass = ReflectHelper.classForName( type );
+				optimizerClass = classLoaderService.classForName( type );
 			}
 			catch( Throwable ignore ) {
 				LOG.unableToLocateCustomOptimizerClass( type );
@@ -106,11 +107,12 @@ public class OptimizerFactory {
 	 * @param returnClass The generated value java type
 	 * @param incrementSize The increment size.
 	 * @param explicitInitialValue The user supplied initial-value (-1 indicates the user did not specify).
+	 * @param classLoaderService ClassLoaderService
 	 *
 	 * @return The built optimizer
 	 */
-	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize, long explicitInitialValue) {
-		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize );
+	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize, long explicitInitialValue, ClassLoaderService classLoaderService) {
+		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize, classLoaderService );
 		if ( InitialValueAwareOptimizer.class.isInstance( optimizer ) ) {
 			( (InitialValueAwareOptimizer) optimizer ).injectInitialValue( explicitInitialValue );
 		}

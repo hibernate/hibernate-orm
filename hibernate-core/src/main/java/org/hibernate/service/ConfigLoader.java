@@ -29,9 +29,9 @@ import java.util.Properties;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.SourceType;
-import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.service.internal.JaxbProcessor;

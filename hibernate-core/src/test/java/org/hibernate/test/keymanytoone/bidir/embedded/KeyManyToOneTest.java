@@ -32,6 +32,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class KeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

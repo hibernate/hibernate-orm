@@ -63,6 +63,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
@@ -77,7 +78,14 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Customer.class };
+		return new Class[] {
+				Person.class,
+				Customer.class,
+				Address.class,
+				AddressType.class,
+				Investment.class,
+				MonetaryAmount.class
+		};
 	}
 
 	@Test
@@ -164,6 +172,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNestedCompositeElementCollectionProcessing() throws Exception {
 		// create some test data
 		Session session = openSession();

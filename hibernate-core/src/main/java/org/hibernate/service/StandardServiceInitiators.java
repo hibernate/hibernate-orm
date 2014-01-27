@@ -36,6 +36,7 @@ import org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProvi
 import org.hibernate.engine.jdbc.cursor.internal.RefCursorSupportInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
@@ -47,6 +48,7 @@ import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
+import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
@@ -76,8 +78,11 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( DialectResolverInitiator.INSTANCE );
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
+		serviceInitiators.add( JdbcEnvironmentInitiator.INSTANCE );
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 		serviceInitiators.add( RefCursorSupportInitiator.INSTANCE );
+
+		serviceInitiators.add( SchemaManagementToolInitiator.INSTANCE );
 
 		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
 

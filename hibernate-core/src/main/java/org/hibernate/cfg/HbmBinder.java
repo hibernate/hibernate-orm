@@ -1724,8 +1724,8 @@ public final class HbmBinder {
 		oneToOne.setConstrained( constrained );
 
 		oneToOne.setForeignKeyType( constrained ?
-				ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT :
-				ForeignKeyDirection.FOREIGN_KEY_TO_PARENT );
+				ForeignKeyDirection.FROM_PARENT :
+				ForeignKeyDirection.TO_PARENT );
 
 		initOuterJoinFetchSetting( node, oneToOne );
 		initLaziness( node, oneToOne, mappings, true );

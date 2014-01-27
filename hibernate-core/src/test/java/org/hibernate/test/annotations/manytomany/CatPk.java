@@ -2,10 +2,12 @@
 package org.hibernate.test.annotations.manytomany;
 import java.io.Serializable;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard
  */
+@Embeddable
 public class CatPk implements Serializable {
 	private String name;
 	private String thoroughbred;

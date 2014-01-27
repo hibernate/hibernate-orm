@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNull;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7916")
 public class NotFoundTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {

@@ -28,6 +28,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.Assigned;
@@ -52,7 +54,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -66,6 +67,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
                                                                        DefaultIdentifierGeneratorFactory.class.getName());
 
 	private transient Dialect dialect;
+	private transient ClassLoaderService classLoaderService;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
 
 	/**
@@ -88,7 +90,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		register( "enhanced-sequence", SequenceStyleGenerator.class );
 		register( "enhanced-table", TableGenerator.class );
 	}
-
+	@Override
 	public void register(String strategy, Class generatorClass) {
 		LOG.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class previous = generatorStrategyToClassNameMap.put( strategy, generatorClass );
@@ -114,7 +116,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 			Class clazz = getIdentifierGeneratorClass( strategy );
 			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, dialect );
+				( ( Configurable ) identifierGenerator ).configure( type, config, dialect, classLoaderService );
 			}
 			return identifierGenerator;
 		}
@@ -133,8 +135,18 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
-				generatorClass = ReflectHelper.classForName( strategy );
+				// TODO: Exists purely for testing using the old .mappings.  Eventually remove.
+				if (classLoaderService == null) {
+					generatorClass = ReflectHelper.classForName( strategy );
+				}
+				else {
+					generatorClass = classLoaderService.classForName( strategy );
+				}
+				register( strategy, generatorClass );
 			}
+		}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 		catch ( ClassNotFoundException e ) {
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
@@ -145,5 +157,6 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 }

@@ -36,7 +36,11 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Country;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -51,11 +55,18 @@ import static org.junit.Assert.assertTrue;
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimpleElement() throws Exception {
-		assertEquals(
-				"BoyFavoriteNumbers",
-				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
-						.getCollectionTable().getName()
-		);
+		if ( isMetadataUsed() ) {
+			assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
+					.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
+
+		}
+		else {
+			assertEquals(
+					"BoyFavoriteNumbers",
+					configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+							.getCollectionTable().getName()
+			);
+		}
 		Session s = openSession();
 		s.getTransaction().begin();
 		Boy boy = new Boy();
@@ -161,11 +172,19 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testLazyCollectionofElements() throws Exception {
-		assertEquals(
-				"BoyFavoriteNumbers",
-				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
-						.getCollectionTable().getName()
-		);
+		if ( isMetadataUsed() ) {
+			assertEquals(
+					"BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
+					.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString()
+			);
+		}
+		else {
+			assertEquals(
+					"BoyFavoriteNumbers",
+					configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+							.getCollectionTable().getName()
+			);
+		}
 		Session s = openSession();
 		s.getTransaction().begin();
 		Boy boy = new Boy();
@@ -270,23 +289,40 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void isCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
-		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
-		boolean hasDefault = false;
-		while ( columnIterator.hasNext() ) {
-			Column column = (Column) columnIterator.next();
-			if ( columnName.equals( column.getName() ) ) hasDefault = true;
+		if ( isMetadataUsed() ) {
+			final EntityBinding entityBinding = metadata().getEntityBinding( collectionOwner );
+			final PluralAttributeBinding binding = (PluralAttributeBinding) entityBinding.locateAttributeBinding( propertyName );
+			final TableSpecification table = binding.getPluralAttributeKeyBinding().getCollectionTable();
+
+			boolean hasColumn = table.locateColumn( propertyName ) != null;
+			assertTrue( "Could not find " + columnName, hasColumn );
 		}
-		assertTrue( "Could not find " + columnName, hasDefault );
+		else {
+			final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
+			final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+			boolean hasDefault = false;
+			while ( columnIterator.hasNext() ) {
+				Column column = (Column) columnIterator.next();
+				if ( columnName.equals( column.getName() ) ) hasDefault = true;
+			}
+			assertTrue( "Could not find " + columnName, hasDefault );
+		}
 	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Boy.class,
+				Toy.class,
+				Brand.class,
 				Country.class,
+				CountryAttitude.class,
 				TestCourse.class,
-				Matrix.class
+				Matrix.class,
+				LocalizedString.class,
+				Toy.class,
+				CountryAttitude.class,
+				Brand.class
 		};
 	}
 }

@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
 import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.component.PojoComponentTuplizer;
 
@@ -13,7 +14,17 @@ public class DynamicComponentTuplizer extends PojoComponentTuplizer {
 		super( component );
 	}
 
+	public DynamicComponentTuplizer(CompositeAttributeBindingContainer compositeAttributeBindingContainer, boolean isIdentifierMapper) {
+		super( compositeAttributeBindingContainer, isIdentifierMapper);
+	}
+
 	protected Instantiator buildInstantiator(Component component) {
-		return new DynamicInstantiator( component.getComponentClassName() );	//To change body of overridden methods use File | Settings | File Templates.
+		return new DynamicInstantiator( component.getComponentClassName() );
+	}
+
+	protected Instantiator buildInstantiator(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper) {
+		return new DynamicInstantiator( compositeAttributeBindingContainer.getClassReference().getName() );
 	}
 }

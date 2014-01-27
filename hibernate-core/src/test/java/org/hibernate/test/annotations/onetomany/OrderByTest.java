@@ -47,6 +47,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.SimpleSelect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -58,6 +59,7 @@ import org.junit.Test;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOrderByOnIdClassProperties() throws Exception {

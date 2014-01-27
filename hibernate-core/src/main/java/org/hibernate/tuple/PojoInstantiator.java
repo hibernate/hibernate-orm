@@ -35,7 +35,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 
 import org.jboss.logging.Logger;
 
@@ -71,6 +73,33 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		}
 	}
 
+	public PojoInstantiator(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			ReflectionOptimizer.InstantiationOptimizer optimizer) {
+		if ( isIdentifierMapper ) {
+			final EntityIdentifier entityIdentifier =
+					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+			this.mappedClass = entityIdentifier.getIdClassClass();
+		}
+		else {
+			this.mappedClass = compositeAttributeBindingContainer.getClassReference();
+		}
+		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
+		this.optimizer = optimizer;
+
+		this.proxyInterface = null;
+		this.embeddedIdentifier = false;
+
+		try {
+			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
+		}
+		catch ( PropertyNotFoundException pnfe ) {
+			LOG.noDefaultConstructor(mappedClass.getName());
+			constructor = null;
+		}
+	}
+
 	public PojoInstantiator(PersistentClass persistentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = persistentClass.getMappedClass();
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
@@ -90,8 +119,8 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	public PojoInstantiator(EntityBinding entityBinding, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = entityBinding.getEntity().getClassReference();
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
-		this.proxyInterface = entityBinding.getProxyInterfaceType().getValue();
-		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isEmbedded();
+		this.proxyInterface = entityBinding.getProxyInterfaceType() == null ? null : entityBinding.getProxyInterfaceType().getValue();
+		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite();
 		this.optimizer = optimizer;
 
 		try {

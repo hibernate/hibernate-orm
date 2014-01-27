@@ -33,9 +33,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -45,6 +47,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  *
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewMetamodel
 public class XmlAccessTest extends BaseUnitTestCase {
 	@Test
 	public void testAccessOnBasicXmlElement() throws Exception {
@@ -174,6 +177,9 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	private SessionFactoryImplementor buildSessionFactory(List<Class<?>> classesUnderTest, List<String> configFiles) {
+		if ( isDefaultUseNewMetamodel() ) {
+			throw new NotYetImplementedException( "Not implemented using new metamodel." );
+		}
 		assert classesUnderTest != null;
 		assert configFiles != null;
 		Configuration cfg = new Configuration();

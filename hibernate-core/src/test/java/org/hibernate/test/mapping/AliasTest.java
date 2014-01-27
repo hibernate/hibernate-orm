@@ -30,6 +30,9 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -45,6 +48,7 @@ import org.junit.Test;
  * 
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class AliasTest extends BaseCoreFunctionalTestCase {
 	
 	/**
@@ -57,20 +61,27 @@ public class AliasTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-2448" )
 	public void testAliasOrdering() {
-		Iterator<Table> tables = configuration().getTableMappings();
-		Table table1 = null;
-		Table table2 = null;
-		while ( tables.hasNext() ) {
-			Table table = tables.next();
-			if ( table.getName().equals( "Table1" ) ) {
-				table1 = table;
-			}
-			else if ( table.getName().equals( "Table2" ) ) {
-				table2 = table;
-			}
+		if ( isMetadataUsed() ) {
+			TableSpecification table1 = SchemaUtil.getTable( "Table1", metadata() );
+			TableSpecification table2 = SchemaUtil.getTable( "Table2", metadata() );
+			assertTrue( table1.getTableNumber() < table2.getTableNumber() );
 		}
-		
-		assertTrue( table1.getUniqueInteger() < table2.getUniqueInteger() );
+		else {
+			Iterator<Table> tables = configuration().getTableMappings();
+			Table table1 = null;
+			Table table2 = null;
+			while ( tables.hasNext() ) {
+				Table table = tables.next();
+				if ( table.getName().equals( "Table1" ) ) {
+					table1 = table;
+				}
+				else if ( table.getName().equals( "Table2" ) ) {
+					table2 = table;
+				}
+			}
+
+			assertTrue( table1.getUniqueInteger() < table2.getUniqueInteger() );
+		}
 	}
 	
 	@Test

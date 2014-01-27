@@ -72,13 +72,6 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
     void explodedJarNotDirectory( URL jarUrl );
 
     @LogMessage( level = ERROR )
-    @Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 15007 )
-    void illegalArgumentOnStaticMetamodelFieldInjection( String name,
-                                                         String name2,
-                                                         String name3,
-                                                         String name4 );
-
-    @LogMessage( level = ERROR )
     @Message( value = "Malformed URL: %s", id = 15008 )
     void malformedUrl( URL jarUrl,
                        @Cause URISyntaxException e );
@@ -92,11 +85,6 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
     @Message( value = "Unable to find file (ignored): %s", id = 15010 )
     void unableToFindFile( URL jarUrl,
                            @Cause Exception e );
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Unable to locate static metamodel field : %s#%s", id = 15011 )
-    void unableToLocateStaticMetamodelField( String name,
-                                             String name2 );
 
     @LogMessage( level = INFO )
     @Message( value = "Using provided datasource", id = 15012 )

@@ -523,14 +523,14 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
-		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
+		filters.add(new FilterConfiguration( name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap ) );
 	}
 	public java.util.List getFilters() {
 		return filters;
 	}
 
 	public void addManyToManyFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
-		manyToManyFilters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
+		manyToManyFilters.add(new FilterConfiguration( name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap ) );
 	}
 
 	public java.util.List getManyToManyFilters() {

@@ -50,6 +50,8 @@ import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectCollectionLoader;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Delete;
@@ -75,6 +77,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			Configuration cfg,
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
 		super( collection, cacheAccessStrategy, cfg, factory );
+	}
+
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public BasicCollectionPersister(
+			AbstractPluralAttributeBinding collection,
+			CollectionRegionAccessStrategy cacheAccessStrategy,
+			MetadataImplementor metadataImplementor,
+			SessionFactoryImplementor factory) throws MappingException, CacheException {
+		super( collection, cacheAccessStrategy, metadataImplementor, factory );
 	}
 
 	/**

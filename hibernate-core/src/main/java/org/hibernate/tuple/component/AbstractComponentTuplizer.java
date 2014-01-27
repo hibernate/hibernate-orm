@@ -30,6 +30,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.Instantiator;
@@ -51,6 +53,22 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	protected abstract Getter buildGetter(Component component, Property prop);
 	protected abstract Setter buildSetter(Component component, Property prop);
 
+	protected abstract Instantiator buildInstantiator(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper
+	);
+	protected abstract Getter buildGetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding
+	);
+	protected abstract Setter buildSetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding
+	);
+
+
 	protected AbstractComponentTuplizer(Component component) {
 		propertySpan = component.getPropertySpan();
 		getters = new Getter[propertySpan];
@@ -70,6 +88,33 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 		}
 		hasCustomAccessors = foundCustomAccessor;
 		instantiator = buildInstantiator( component );
+	}
+
+	// TODO: Get rid of the need for isIdentifierMapper arg.
+	// Instead the CompositeAttributeBinding should be wrapped (e.g., by a proxy)
+	// so it can provide the information needed to create getters and setters
+	// for an identifier mapper.
+	protected AbstractComponentTuplizer(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper
+	) {
+		propertySpan = compositeAttributeBindingContainer.attributeBindingSpan();
+		getters = new Getter[propertySpan];
+		setters = new Setter[propertySpan];
+
+		boolean foundCustomAccessor = false;
+
+		int i = 0;
+		for ( AttributeBinding attributeBinding : compositeAttributeBindingContainer.attributeBindings() ) {
+			getters[i] = buildGetter( compositeAttributeBindingContainer, isIdentifierMapper, attributeBinding );
+			setters[i] = buildSetter( compositeAttributeBindingContainer, isIdentifierMapper, attributeBinding );
+			if ( !attributeBinding.isBasicPropertyAccessor() ) {
+				foundCustomAccessor = true;
+			}
+			i++;
+		}
+		hasCustomAccessors = foundCustomAccessor;
+		instantiator = buildInstantiator( compositeAttributeBindingContainer, isIdentifierMapper );
 	}
 
 	public Object getPropertyValue(Object component, int i) throws HibernateException {

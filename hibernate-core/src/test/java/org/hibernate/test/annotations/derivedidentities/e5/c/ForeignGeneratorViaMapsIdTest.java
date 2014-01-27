@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -35,10 +36,17 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class ForeignGeneratorViaMapsIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testForeignGenerator() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", configuration() ) );
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", configuration() ) );
+		}
+
 		Person e = new Person();
 		Session s = openSession(  );
 		s.getTransaction().begin();

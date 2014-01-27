@@ -29,6 +29,7 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -65,6 +66,7 @@ public class IdClassGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
+	@FailureExpectedWithNewMetamodel
 	public void testSingleGeneratedValue() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -90,6 +92,7 @@ public class IdClassGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
+	@FailureExpectedWithNewMetamodel
 	public void testMultipleGeneratedValue() {
 		Session s = openSession();
 		s.beginTransaction();

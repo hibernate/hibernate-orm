@@ -32,6 +32,7 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.InstrumentedClassLoader;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;

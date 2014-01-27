@@ -36,6 +36,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
@@ -309,24 +311,35 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
-		PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
-		Iterator iter = pc.getJoinIterator();
-		Table table = ( ( Join ) iter.next() ).getTable();
-		Iterator columnIter = table.getColumnIterator();
-		boolean fooFound = false;
-		boolean barFound = false;
-		while ( columnIter.hasNext() ) {
-			Column column = ( Column ) columnIter.next();
-			if ( column.getName().equals( "foo" ) ) {
-				fooFound = true;
-			}
-			if ( column.getName().equals( "bar" ) ) {
-				barFound = true;
-			}
+		if ( isMetadataUsed() ) {
+			EntityBinding entityBinding = metadata().getEntityBinding( Son.class.getName() );
+			TableSpecification table = entityBinding.getSecondaryTables().values().iterator().next().getSecondaryTableReference();
+			org.hibernate.metamodel.spi.relational.Column c1= table.locateColumn( "foo" );
+			assertNotNull( c1 );
+			org.hibernate.metamodel.spi.relational.Column c2= table.locateColumn( "bar" );
+			assertNotNull( c2 );
 		}
-		assertTrue(
-				"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
-		);
+		else {
+
+			PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
+			Iterator iter = pc.getJoinIterator();
+			Table table = ( ( Join ) iter.next() ).getTable();
+			Iterator columnIter = table.getColumnIterator();
+			boolean fooFound = false;
+			boolean barFound = false;
+			while ( columnIter.hasNext() ) {
+				Column column = ( Column ) columnIter.next();
+				if ( column.getName().equals( "foo" ) ) {
+					fooFound = true;
+				}
+				if ( column.getName().equals( "bar" ) ) {
+					barFound = true;
+				}
+			}
+			assertTrue(
+					"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
+			);
+		}
 	}
 
 	@Test
@@ -398,6 +411,7 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 				Client.class,
 				Address.class,
 				Computer.class,
+				ComputerPk.class,
 				SerialNumber.class,
 				Body.class,
 				Heart.class,

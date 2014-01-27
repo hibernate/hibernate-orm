@@ -54,6 +54,6 @@ public class NestedEmbeddableAttributeOverrideTest extends BaseCoreFunctionalTes
 	
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityWithNestedEmbeddables.class };
+		return new Class<?>[] { EntityWithNestedEmbeddables.class, EmbeddableA.class, EmbeddableB.class };
 	}
 }

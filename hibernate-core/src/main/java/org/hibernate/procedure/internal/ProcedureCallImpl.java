@@ -38,7 +38,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

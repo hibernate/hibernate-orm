@@ -16,6 +16,7 @@ import org.hibernate.cfg.Ejb3DiscriminatorColumn;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -78,6 +79,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest extends BaseCoreFunctio
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void metadataAssertions() {
 		EntityPersister p = sessionFactory().getEntityPersister( Dog.class.getName() );
 		assertNotNull( p );

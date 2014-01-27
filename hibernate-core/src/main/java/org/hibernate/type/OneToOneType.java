@@ -34,7 +34,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -178,7 +178,7 @@ public class OneToOneType extends EntityType {
 	}
 
 	protected boolean isNullable() {
-		return foreignKeyType==ForeignKeyDirection.FOREIGN_KEY_TO_PARENT;
+		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
 	}
 
 	public boolean useLHSPrimaryKey() {

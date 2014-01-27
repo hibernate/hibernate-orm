@@ -16,6 +16,8 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.test.annotations.enumerated.EntityEnum.Common;
 import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
 import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
@@ -36,33 +38,80 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testTypeDefinition() {
-		Configuration cfg = configuration();
-		PersistentClass pc = cfg.getClassMapping( EntityEnum.class.getName() );
+		if ( isMetadataUsed() ) {
+			EntityBinding binding = metadata().getEntityBinding( EntityEnum.class.getName() );
 
-		// ordinal default of EnumType
-		Type ordinalEnum = pc.getProperty( "ordinal" ).getType();
-		assertEquals( Common.class, ordinalEnum.getReturnedClass() );
-		assertEquals( EnumType.class.getName(), ordinalEnum.getName() );
+			// ordinal default of EnumType
+			HibernateTypeDescriptor ordinalEnum = binding
+					.locateAttributeBinding( "ordinal" )
+					.getHibernateTypeDescriptor();
+			assertEquals( Common.class, ordinalEnum.getResolvedTypeMapping()
+					.getReturnedClass() );
+			assertEquals( EnumType.class.getName(), ordinalEnum.getExplicitTypeName() );
 
-		// string defined by Enumerated(STRING)
-		Type stringEnum = pc.getProperty( "string" ).getType();
-		assertEquals( Common.class, stringEnum.getReturnedClass() );
-		assertEquals( EnumType.class.getName(), stringEnum.getName() );
+			// string defined by Enumerated(STRING)
+			HibernateTypeDescriptor stringEnum = binding
+					.locateAttributeBinding( "string" )
+					.getHibernateTypeDescriptor();
+			assertEquals( Common.class, stringEnum.getResolvedTypeMapping()
+					.getReturnedClass() );
+			assertEquals( EnumType.class.getName(), stringEnum.getExplicitTypeName() );
 
-		// explicit defined by @Type
-		Type first = pc.getProperty( "firstLetter" ).getType();
-		assertEquals( FirstLetter.class, first.getReturnedClass() );
-		assertEquals( FirstLetterType.class.getName(), first.getName() );
+			// explicit defined by @Type
+			HibernateTypeDescriptor first = binding
+					.locateAttributeBinding( "firstLetter" )
+					.getHibernateTypeDescriptor();
+			assertEquals( FirstLetter.class, first.getResolvedTypeMapping()
+					.getReturnedClass() );
+			assertEquals( FirstLetterType.class.getName(), first.getExplicitTypeName() );
 
-		// implicit defined by @TypeDef in somewhere
-		Type last = pc.getProperty( "lastNumber" ).getType();
-		assertEquals( LastNumber.class, last.getReturnedClass() );
-		assertEquals( LastNumberType.class.getName(), last.getName() );
+			// implicit defined by @TypeDef in somewhere
+			HibernateTypeDescriptor last = binding
+					.locateAttributeBinding( "lastNumber" )
+					.getHibernateTypeDescriptor();
+			assertEquals( LastNumber.class, last.getResolvedTypeMapping()
+					.getReturnedClass() );
+			assertEquals( LastNumberType.class.getName(), last.getExplicitTypeName() );
 
-		// implicit defined by @TypeDef in anywhere, but overrided by Enumerated(STRING)
-		Type implicitOverrideExplicit = pc.getProperty( "explicitOverridingImplicit" ).getType();
-		assertEquals( LastNumber.class, implicitOverrideExplicit.getReturnedClass() );
-		assertEquals( EnumType.class.getName(), implicitOverrideExplicit.getName() );
+			// implicit defined by @TypeDef in anywhere, but overrided by Enumerated(STRING)
+			HibernateTypeDescriptor implicitOverrideExplicit = binding
+					.locateAttributeBinding( "explicitOverridingImplicit" )
+					.getHibernateTypeDescriptor();
+			assertEquals( LastNumber.class,
+					implicitOverrideExplicit.getResolvedTypeMapping()
+							.getReturnedClass() );
+			assertEquals( EnumType.class.getName(),
+					implicitOverrideExplicit.getExplicitTypeName() );
+		}
+		else {
+			Configuration cfg = configuration();
+			PersistentClass pc = cfg.getClassMapping( EntityEnum.class.getName() );
+
+			// ordinal default of EnumType
+			Type ordinalEnum = pc.getProperty( "ordinal" ).getType();
+			assertEquals( Common.class, ordinalEnum.getReturnedClass() );
+			assertEquals( EnumType.class.getName(), ordinalEnum.getName() );
+
+			// string defined by Enumerated(STRING)
+			Type stringEnum = pc.getProperty( "string" ).getType();
+			assertEquals( Common.class, stringEnum.getReturnedClass() );
+			assertEquals( EnumType.class.getName(), stringEnum.getName() );
+
+			// explicit defined by @Type
+			Type first = pc.getProperty( "firstLetter" ).getType();
+			assertEquals( FirstLetter.class, first.getReturnedClass() );
+			assertEquals( FirstLetterType.class.getName(), first.getName() );
+
+			// implicit defined by @TypeDef in somewhere
+			Type last = pc.getProperty( "lastNumber" ).getType();
+			assertEquals( LastNumber.class, last.getReturnedClass() );
+			assertEquals( LastNumberType.class.getName(), last.getName() );
+
+			// implicit defined by @TypeDef in anywhere, but overrided by Enumerated(STRING)
+			Type implicitOverrideExplicit = pc.getProperty( "explicitOverridingImplicit" ).getType();
+			assertEquals( LastNumber.class, implicitOverrideExplicit.getReturnedClass() );
+			assertEquals( EnumType.class.getName(), implicitOverrideExplicit.getName() );
+		}
 	}
 
 	@Test

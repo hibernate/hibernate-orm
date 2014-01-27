@@ -48,8 +48,9 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
@@ -242,8 +243,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		this.entityMetamodel = entityMetamodel;
 
 		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-			idGetter = buildPropertyGetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
-			idSetter = buildPropertySetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
+			idGetter = buildPropertyGetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
+			idSetter = buildPropertySetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
 		}
 		else {
 			idGetter = null;
@@ -257,11 +258,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		boolean foundCustomAccessor = false;
 		int i = 0;
-		for ( AttributeBinding property : mappingInfo.getAttributeBindingClosure() ) {
-			if ( property == mappingInfo.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
-				continue; // ID binding processed above
-			}
-
+		for ( AttributeBinding property : mappingInfo.getNonIdAttributeBindingClosure() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
 			getters[ i ] = buildPropertyGetter( property );
 			setters[ i ] = buildPropertySetter( property );
@@ -284,19 +281,23 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			proxyFactory = null;
 		}
 
-
-		// TODO: Fix this when components are working (HHH-6173)
-		//Component mapper = mappingInfo.getEntityIdentifier().getIdentifierMapper();
-		Component mapper = null;
-		if ( mapper == null ) {
+		final EntityIdentifier entityIdentifier = mappingInfo.getHierarchyDetails().getEntityIdentifier();
+		if ( !entityIdentifier.isIdentifierMapper() ) {
 			identifierMapperType = null;
 			mappedIdentifierValueMarshaller = null;
 		}
 		else {
-			identifierMapperType = ( CompositeType ) mapper.getType();
+			identifierMapperType = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
+
+			// TODO: this only deals with normal IdClass; still need to deal with MapsId
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
-					( ComponentType ) entityMetamodel.getIdentifierProperty().getType(),
-					( ComponentType ) identifierMapperType
+					(ComponentType) identifierMapperType,
+					(ComponentType) mappingInfo
+							.getHierarchyDetails()
+							.getEntityIdentifier()
+							.getAttributeBinding()
+							.getHibernateTypeDescriptor()
+							.getResolvedTypeMapping()
 			);
 		}
 	}

@@ -27,14 +27,16 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.binder.JpaCallbackClass;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
@@ -62,47 +64,49 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 	@Override
 	public void processCallbacksForEntity(Object entityObject, CallbackRegistryImpl callbackRegistry) {
 		final EntityBinding entityBinding = (EntityBinding) entityObject;
-		final String entityClassName = entityBinding.getEntity().getClassName();
-		if ( entityClassName == null ) {
+		if ( entityBinding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ) {
 			return;
 		}
-
-		try {
-			final Class entityClass = classLoaderService.classForName( entityClassName );
-			for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
-				callbackRegistry.addEntityCallbacks(
-						entityClass,
-						annotationClass,
-						collectCallbacks( entityBinding, entityClass, annotationClass )
-				);
-			}
-		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( "entity class not found: " + entityClassName, e );
+		final Class entityClass = entityBinding.getEntity().getClassReference();
+		for ( final Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
+			callbackRegistry.addEntityCallbacks(
+					entityClass,
+					annotationClass,
+					collectCallbacks( entityBinding, entityClass, annotationClass )
+			);
 		}
 	}
 
-	private Callback[] collectCallbacks(EntityBinding entityBinding, Class entityClass, Class annotationClass) {
-		final List<Callback> callbacks = new ArrayList<Callback>();
-		for ( JpaCallbackClass jpaCallbackClass : entityBinding.getJpaCallbackClasses() ) {
-			final Class listenerClass = classLoaderService.classForName( jpaCallbackClass.getName() );
-			final String methodName = jpaCallbackClass.getCallbackMethod( annotationClass );
+	private final static Callback[] EMPTY_CALLBACK = new Callback[0];
 
+	private Callback[] collectCallbacks(EntityBinding entityBinding, Class entityClass, Class annotationClass) {
+		final List<JpaCallbackSource> jpaCallbackSources = entityBinding.getJpaCallbackClasses();
+		if ( CollectionHelper.isEmpty( jpaCallbackSources ) ) {
+			return EMPTY_CALLBACK;
+		}
+		final List<Callback> result = new ArrayList<Callback>( jpaCallbackSources.size() );
+		for ( final JpaCallbackSource jpaCallbackSource : entityBinding.getJpaCallbackClasses() ) {
+			final Class listenerClass = classLoaderService.classForName( jpaCallbackSource.getName() );
+			final String methodName = jpaCallbackSource.getCallbackMethod( annotationClass );
+			if ( methodName == null ) {
+				continue;
+			}
 			log.debugf(
-					"Adding $s.%s as %s callback for entity %s",
+					"Adding %s.%s as %s callback for entity %s",
 					listenerClass.getName(),
 					methodName,
 					annotationClass.getName(),
 					entityClass.getName()
 			);
 
-			final Callback callback = jpaCallbackClass.isListener()
+			final Callback callback = jpaCallbackSource.isListener()
 					? createListenerCallback( listenerClass, entityClass, methodName )
 					: createBeanCallback( listenerClass, methodName );
-			assert callback != null;
-			callbacks.add(callback);
+			if ( callback != null ) {
+				result.add( callback );
+			}
 		}
-		return callbacks.toArray(new Callback[callbacks.size()]);
+		return result.toArray( new Callback[result.size()] );
 	}
 
 	private Callback createListenerCallback(

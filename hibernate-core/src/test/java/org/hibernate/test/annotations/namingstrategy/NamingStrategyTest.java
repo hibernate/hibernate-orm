@@ -17,6 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 import static org.junit.Assert.assertFalse;
@@ -59,6 +60,7 @@ public class NamingStrategyTest {
 		}
 	}
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testWithEJB3NamingStrategy() throws Exception {
 		SessionFactory  sf = null;
 		try {

@@ -66,9 +66,11 @@ ext {
             slf4j_log4j:               "org.slf4j:slf4j-log4j12:1.7.5",
 
             // jaxb task
-            jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
-            jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
-            jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
+            jaxb:           'com.sun.xml.bind:jaxb-xjc:2.2.5',
+            jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.3',
+            jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.3',
+            jaxb2_jaxb:     'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb:2.2.4-1',
+            jaxb2_jaxb_xjc: 'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb-xjc:2.2.4-1',
 
             // Animal Sniffer Ant Task and Java 1.6 API signature file
             // not using 1.9 for the time being due to MANIMALSNIFFER-34

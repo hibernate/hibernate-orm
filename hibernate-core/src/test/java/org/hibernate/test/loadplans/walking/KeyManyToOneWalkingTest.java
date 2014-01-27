@@ -28,12 +28,14 @@ import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.onetoone.formula.Address;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class KeyManyToOneWalkingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {

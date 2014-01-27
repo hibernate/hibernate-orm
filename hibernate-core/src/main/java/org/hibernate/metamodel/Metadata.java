@@ -21,25 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.metamodel;
 
+import java.util.List;
 import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
+import org.jboss.jandex.IndexView;
+import org.xml.sax.EntityResolver;
+
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.FetchProfile;
-import org.hibernate.metamodel.binding.IdGenerator;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.binding.TypeDef;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.FetchProfile;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -49,52 +57,67 @@ public interface Metadata {
 	 * Exposes the options used to produce a {@link Metadata} instance.
 	 */
 	public static interface Options {
-		public StandardServiceRegistry getServiceRegistry();
+		StandardServiceRegistry getServiceRegistry();
 
-		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
-		public NamingStrategy getNamingStrategy();
-		public SharedCacheMode getSharedCacheMode();
-		public AccessType getDefaultAccessType();
-		public boolean useNewIdentifierGenerators();
-        public boolean isGloballyQuotedIdentifiers();
-		public String getDefaultSchemaName();
-		public String getDefaultCatalogName();
+		MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
+		NamingStrategy getNamingStrategy();
+		EntityResolver getEntityResolver();
+		SharedCacheMode getSharedCacheMode();
+		AccessType getDefaultAccessType();
+		boolean useNewIdentifierGenerators();
+        boolean isGloballyQuotedIdentifiers();
+		String getDefaultSchemaName();
+		String getDefaultCatalogName();
+		MultiTenancyStrategy getMultiTenancyStrategy();
+		IndexView getJandexView();
+		List<BasicType> getBasicTypeRegistrations();
 	}
 
-	public Options getOptions();
+	/**
+	 * Retrieve the options used to build this {@link Metadata} instance.
+	 *
+	 * @return The options.
+	 */
+	Options getOptions();
 
-	public SessionFactoryBuilder getSessionFactoryBuilder();
+	/**
+	 * Get the builder for {@link SessionFactory} instances based on this metamodel,
+	 *
+	 * @return The builder for {@link SessionFactory} instances.
+	 */
+	SessionFactoryBuilder getSessionFactoryBuilder();
 
-	public SessionFactory buildSessionFactory();
+	/**
+	 * Short-hand form of building a {@link SessionFactory} through the builder without any additional
+	 * option overrides.
+	 *
+	 * @return THe built SessionFactory.
+	 */
+	SessionFactory buildSessionFactory();
 
-	public Iterable<EntityBinding> getEntityBindings();
 
-	public EntityBinding getEntityBinding(String entityName);
+	EntityBinding getEntityBinding(String entityName);
 
 	/**
 	 * Get the "root" entity binding
 	 * @param entityName
 	 * @return the "root entity binding; simply returns entityBinding if it is the root entity binding
 	 */
-	public EntityBinding getRootEntityBinding(String entityName);
+	EntityBinding getRootEntityBinding(String entityName);
+	IdentifierGeneratorDefinition getIdGenerator(String name);
+	boolean hasTypeDefinition(String name);
+	TypeDefinition getTypeDefinition(String name);
 
-	public Iterable<PluralAttributeBinding> getCollectionBindings();
+	Iterable<PluralAttributeBinding> getCollectionBindings();
+	Iterable<EntityBinding> getEntityBindings();
+	Iterable<TypeDefinition> getTypeDefinitions();
+	Iterable<NamedQueryDefinition> getNamedQueryDefinitions();
+	Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
+	Iterable<FetchProfile> getFetchProfiles();
 
-	public TypeDef getTypeDefinition(String name);
-
-	public Iterable<TypeDef> getTypeDefinitions();
-
-	public Iterable<FilterDefinition> getFilterDefinitions();
-
-	public Iterable<NamedQueryDefinition> getNamedQueryDefinitions();
-
-	public Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
-
-	public Iterable<ResultSetMappingDefinition> getResultSetMappingDefinitions();
-
-	public Iterable<Map.Entry<String, String>> getImports();
-
-	public Iterable<FetchProfile> getFetchProfiles();
-
-	public IdGenerator getIdGenerator(String name);
+	Map<Identifier, SecondaryTable> getSecondaryTables();
+	Map<String, FilterDefinition> getFilterDefinitions();
+	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
+	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
+	Map<String,String> getImports();
 }

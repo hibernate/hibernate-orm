@@ -137,6 +137,7 @@ subprojects { subProject ->
 	dependencies {
 		compile( libraries.logging )
 		compile( libraries.logging_annotations )
+		compile( libraries.logging_processor )
 
 		testCompile( libraries.junit )
 		testCompile( libraries.byteman )
@@ -152,8 +153,11 @@ subprojects { subProject ->
 		jaxb( libraries.jaxb ){
 			exclude group: "javax.xml.stream"
 		}
+		jaxb( libraries.jaxb )
 		jaxb( libraries.jaxb2_basics )
 		jaxb( libraries.jaxb2_ant )
+		jaxb( libraries.jaxb2_jaxb )
+		jaxb( libraries.jaxb2_jaxb_xjc )
 
 		animalSniffer ( libraries.animal_sniffer )
 		javaApiSignature ( libraries.java16_signature )

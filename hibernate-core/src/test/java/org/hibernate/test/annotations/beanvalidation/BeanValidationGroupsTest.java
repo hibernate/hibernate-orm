@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,6 +43,8 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
+
 public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testListeners() {

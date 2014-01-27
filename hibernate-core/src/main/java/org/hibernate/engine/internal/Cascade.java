@@ -222,7 +222,7 @@ public final class Cascade {
 							}
 							
 							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
-											ForeignKeyDirection.FOREIGN_KEY_TO_PARENT )) {
+											ForeignKeyDirection.TO_PARENT )) {
 								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.

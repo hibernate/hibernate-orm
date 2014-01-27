@@ -33,6 +33,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -44,7 +45,8 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -73,8 +75,9 @@ import org.jboss.logging.Logger;
  *
  * @see TableHiLoGenerator
  * @author Gavin King
- * 
- * @deprecated use {@link SequenceStyleGenerator} instead.
+ *
+ * @deprecated Going away in 5.0, use {@link org.hibernate.id.enhanced.SequenceStyleGenerator} or
+ * {@link org.hibernate.id.enhanced.TableGenerator} instead
  */
 @Deprecated
 public class TableGenerator implements PersistentIdentifierGenerator, Configurable {
@@ -99,7 +102,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private String query;
 	private String update;
 
-	public void configure(Type type, Properties params, Dialect dialect) {
+	public void configure(Type type, Properties params, Dialect dialect, ClassLoaderService classLoaderService) {
 		identifierType = type;
 
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
@@ -108,11 +111,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		if ( tableName.indexOf( '.' ) < 0 ) {
 			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
-			tableName = Table.qualify(
-					dialect.quote( catalogName ),
-					dialect.quote( schemaName ),
-					dialect.quote( tableName )
-			);
+			tableName = new ObjectName(catalogName, schemaName, tableName).toText( dialect );
 		}
 		else {
 			// if already qualified there is not much we can do in a portable manner so we pass it
@@ -160,40 +159,50 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 						// The loop ensures atomicity of the select + update even for no transaction or
 						// read committed isolation level
 						do {
-							final PreparedStatement qps = prepareStatement( connection, query, statementLogger, listeners );
+							final PreparedStatement qps = prepareStatement(
+									connection,
+									query,
+									statementLogger,
+									listeners
+							);
 							try {
 								ResultSet rs = executeQuery( qps, listeners );
 								if ( !rs.next() ) {
 									String err = "could not read a hi value - you need to populate the table: " + tableName;
-									LOG.error(err);
-									throw new IdentifierGenerationException(err);
+									LOG.error( err );
+									throw new IdentifierGenerationException( err );
 								}
 								value.initialize( rs, 1 );
 								rs.close();
 							}
-							catch (SQLException e) {
-								LOG.error("Could not read a hi value", e);
+							catch ( SQLException e ) {
+								LOG.error( "Could not read a hi value", e );
 								throw e;
 							}
 							finally {
 								qps.close();
 							}
 
-							final PreparedStatement ups = prepareStatement( connection, update, statementLogger, listeners );
+							final PreparedStatement ups = prepareStatement(
+									connection,
+									update,
+									statementLogger,
+									listeners
+							);
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );
 								rows = executeUpdate( ups, listeners );
 							}
-							catch (SQLException sqle) {
-								LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
+							catch ( SQLException sqle ) {
+								LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );
 								throw sqle;
 							}
 							finally {
 								ups.close();
 							}
 						}
-						while (rows==0);
+						while ( rows == 0 );
 						return value;
 					}
 				},
@@ -235,6 +244,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		finally {
 			statsCollector.jdbcExecuteStatementEnd();
 		}
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		// not doing anything here as I expect this to go away
 	}
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {

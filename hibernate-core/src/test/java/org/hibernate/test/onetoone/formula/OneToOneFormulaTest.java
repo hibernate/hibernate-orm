@@ -33,6 +33,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
@@ -48,6 +49,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();

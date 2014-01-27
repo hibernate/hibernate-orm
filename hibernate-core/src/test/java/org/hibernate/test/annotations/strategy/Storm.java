@@ -9,11 +9,13 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Index;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@FailureExpectedWithNewMetamodel
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"start.country", "start.city"})})
 public class Storm {
 	private Integer id;

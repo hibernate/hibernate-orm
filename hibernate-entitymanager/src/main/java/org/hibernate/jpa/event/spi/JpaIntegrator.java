@@ -63,8 +63,8 @@ import org.hibernate.jpa.event.internal.jpa.LegacyCallbackProcessor;
 import org.hibernate.jpa.event.internal.jpa.StandardListenerFactory;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 

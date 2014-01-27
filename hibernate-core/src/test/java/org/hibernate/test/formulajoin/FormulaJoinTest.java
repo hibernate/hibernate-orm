@@ -31,6 +31,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "formulajoin/Master.hbm.xml" };

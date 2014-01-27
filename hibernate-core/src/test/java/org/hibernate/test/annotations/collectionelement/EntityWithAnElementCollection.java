@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.collectionelement;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -55,7 +56,7 @@ public class EntityWithAnElementCollection {
 
 	@ElementCollection
 	// HHH-7732 -- "EntityWithAnElementCollection_someStrings" is too long for Oracle.
-	@JoinTable( 
+	@CollectionTable(
 			name = "SomeStrings", 
 			joinColumns = @JoinColumn( name = "EWAEC_ID") )
 	public Set<String> getSomeStrings() {

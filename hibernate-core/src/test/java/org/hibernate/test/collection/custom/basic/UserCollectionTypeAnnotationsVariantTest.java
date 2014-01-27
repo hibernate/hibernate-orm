@@ -23,9 +23,12 @@
  */
 package org.hibernate.test.collection.custom.basic;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class UserCollectionTypeAnnotationsVariantTest extends UserCollectionTypeTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

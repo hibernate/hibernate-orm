@@ -27,6 +27,7 @@ import javax.transaction.SystemException;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.After;
 import org.junit.Rule;
@@ -44,6 +45,16 @@ import org.jboss.logging.Logger;
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
+
+	public static final boolean DEFAULT_USE_NEW_METAMODEL = Boolean.valueOf(
+			System.getProperty(
+					MetadataSources.USE_NEW_METADATA_MAPPINGS, "true"
+			)
+	);
+
+	public boolean isDefaultUseNewMetamodel() {
+		return DEFAULT_USE_NEW_METAMODEL;
+	}
 
 	@Rule
 	public TestRule globalTimeout= new Timeout(30 * 60 * 1000); // no test should run longer than 30 minutes

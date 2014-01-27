@@ -28,7 +28,6 @@ import java.lang.reflect.Constructor;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -40,17 +39,19 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.binding.AssociationAttributeBinding;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.SimpleValueBinding;
-import org.hibernate.metamodel.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.Cascadeable;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.Fetchable;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
+import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
@@ -117,48 +118,62 @@ public final class PropertyFactory {
 	 * Generates an IdentifierProperty representation of the for a given entity mapping.
 	 *
 	 * @param mappedEntity The mapping definition of the entity.
-	 * @param generator The identifier value generator to use for this identifier.
+	 * @param generator The identifier value generator to use for this identifier
+	 * @param sessionFactory The session factory.
 	 * @return The appropriate IdentifierProperty definition.
+	 *
+	 * TODO: remove session factory parameter.
 	 */
 	public static IdentifierProperty buildIdentifierProperty(
 			EntityBinding mappedEntity,
-			IdentifierGenerator generator) {
+			IdentifierGenerator generator,
+			SessionFactoryImplementor sessionFactory) {
 
-		final BasicAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+		final SingularAttributeBinding attributeBinding =
+				mappedEntity.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
-		//		see org.hibernate.metamodel.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
+		//		see org.hibernate.metamodel.spi.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
 
-		final String mappedUnsavedValue = property.getUnsavedValue();
-		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		final String mappedUnsavedValue = mappedEntity.getHierarchyDetails().getEntityIdentifier().getUnsavedValue();
+		final Type type;
+		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper() ) {
+			type = sessionFactory.getTypeResolver().getTypeFactory().component(
+					new ComponentMetamodel( ( (CompositeAttributeBinding) attributeBinding ), true, true )
+			);
+		}
+		else {
+			type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		}
 
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 				mappedUnsavedValue,
-				getGetter( property ),
+				getGetter( attributeBinding ),
 				type,
 				getConstructor( mappedEntity )
-			);
+		);
 
-		if ( property == null ) {
+		if ( attributeBinding.getAttribute().isSynthetic()  ) {
 			// this is a virtual id property...
 			return new IdentifierProperty(
-			        type,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isEmbedded(),
+					type,
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite() &&
+							mappedEntity.getHierarchyDetails().getEntityIdentifier().getIdClassClass() == null,
 					mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper(),
 					unsavedValue,
 					generator
-				);
+			);
 		}
 		else {
 			return new IdentifierProperty(
-					property.getAttribute().getName(),
+					attributeBinding.getAttribute().getName(),
 					null,
 					type,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isEmbedded(),
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite(),
 					unsavedValue,
 					generator
-				);
+			);
 		}
 	}
 
@@ -211,15 +226,50 @@ public final class PropertyFactory {
 	 * Generates a VersionProperty representation for an entity mapping given its
 	 * version mapping Property.
 	 *
-	 * @param property The version mapping Property.
 	 * @param lazyAvailable Is property lazy loading currently available.
 	 * @return The appropriate VersionProperty definition.
 	 */
 	public static VersionProperty buildVersionProperty(
 			EntityPersister persister,
-			BasicAttributeBinding property,
+			SessionFactoryImplementor sessionFactory,
+			int attributeNumber,
+			EntityBinding entityBinding,
 			boolean lazyAvailable) {
-		throw new NotYetImplementedException();
+		final BasicAttributeBinding property = entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding();
+		final String mappedUnsavedValue = entityBinding.getHierarchyDetails().getEntityVersion().getUnsavedValue();
+		final VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
+				mappedUnsavedValue,
+				getGetter( property ),
+				(VersionType) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
+				getConstructor( (EntityBinding) property.getContainer() )
+		);
+
+		boolean lazy = lazyAvailable && property.isLazy();
+
+		final CascadeStyle cascadeStyle = property.isCascadeable()
+				? ( (Cascadeable) property ).getCascadeStyle()
+				: CascadeStyles.NONE;
+
+		// TODO: set value generation strategy properly
+		return new VersionProperty(
+				persister,
+				sessionFactory,
+				attributeNumber,
+				property.getAttribute().getName(),
+				property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
+				new BaselineAttributeInformation.Builder()
+						.setLazy( lazy )
+						.setInsertable( true )
+						.setUpdateable( true )
+						.setValueGenerationStrategy( null )
+						.setNullable( property.isNullable() || property.isOptional() )
+						.setDirtyCheckable( !lazy )
+						.setVersionable( property.isIncludedInOptimisticLocking() )
+						.setCascadeStyle( cascadeStyle )
+						.createInformation(),
+
+				unsavedValue
+		);
 	}
 
 	public static enum NonIdentifierAttributeNature {
@@ -326,6 +376,109 @@ public final class PropertyFactory {
 		}
 	}
 
+	public static NonIdentifierAttribute buildEntityBasedAttribute(
+			EntityPersister persister,
+			SessionFactoryImplementor sessionFactory,
+			int attributeNumber,
+			AttributeBinding property,
+			boolean lazyAvailable) {
+		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		final NonIdentifierAttributeNature nature = decode( type );
+		final boolean alwaysDirtyCheck = type.isAssociationType() &&
+				( (AssociationType) type ).isAlwaysDirtyChecked();
+		final String name = property.getAttribute().getName();
+		final BaselineAttributeInformation.Builder builder = new BaselineAttributeInformation.Builder();
+		final FetchMode fetchMode = Fetchable.class.isInstance( property )
+				? ( (Fetchable) property ).getFetchMode()
+				: FetchMode.DEFAULT;
+		builder.setFetchMode( fetchMode ).setVersionable( property.isIncludedInOptimisticLocking() )
+				.setLazy( lazyAvailable && property.isLazy() );
+		if ( property.getAttribute().isSingular() ) {
+			//basic, association, composite
+			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) property;
+			final CascadeStyle cascadeStyle = singularAttributeBinding.isCascadeable()
+					? ( (Cascadeable) singularAttributeBinding ).getCascadeStyle()
+					: CascadeStyles.NONE;
+
+			// TODO: set value generation strategy properly
+			builder.setInsertable( singularAttributeBinding.isIncludedInInsert() )
+					.setUpdateable( singularAttributeBinding.isIncludedInUpdate() )
+					.setValueGenerationStrategy( null )
+					.setNullable( singularAttributeBinding.isNullable() || singularAttributeBinding.isOptional() )
+					.setDirtyCheckable(
+							alwaysDirtyCheck || singularAttributeBinding.isIncludedInUpdate()
+					)
+					.setCascadeStyle( cascadeStyle );
+			switch ( nature ) {
+				case BASIC: {
+					return new EntityBasedBasicAttribute(
+							persister,
+							sessionFactory,
+							attributeNumber,
+							name,
+							type,
+							builder.createInformation()
+					);
+				}
+				case COMPOSITE: {
+					return new EntityBasedCompositionAttribute(
+							persister,
+							sessionFactory,
+							attributeNumber,
+							name,
+							(CompositeType) type,
+							builder.createInformation()
+					);
+				}
+				case ENTITY:
+				case ANY: {
+					return new EntityBasedAssociationAttribute(
+							persister,
+							sessionFactory,
+							attributeNumber,
+							name,
+							(AssociationType) type,
+							builder.createInformation()
+					);
+				}
+				default: {
+					throw new HibernateException( "Internal error" );
+				}
+			}
+		}
+		else {
+			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
+			final CascadeStyle cascadeStyle;
+			if ( pluralAttributeBinding.isCascadeable() ) {
+				final Cascadeable elementBinding =
+						(Cascadeable) pluralAttributeBinding.getPluralAttributeElementBinding();
+				cascadeStyle = elementBinding.getCascadeStyle();
+			}
+			else {
+				cascadeStyle = CascadeStyles.NONE;
+			}
+
+			// TODO: set value generation strategy properly
+			builder.setInsertable( pluralAttributeBinding.getPluralAttributeKeyBinding().isInsertable() )
+					.setUpdateable( pluralAttributeBinding.getPluralAttributeKeyBinding().isUpdatable() )
+					.setValueGenerationStrategy( null )
+					.setNullable( true )
+					.setDirtyCheckable(
+							alwaysDirtyCheck || pluralAttributeBinding.getPluralAttributeKeyBinding()
+									.isUpdatable()
+					)
+					.setCascadeStyle( cascadeStyle );
+			return new EntityBasedAssociationAttribute(
+					persister,
+					sessionFactory,
+					attributeNumber,
+					name,
+					(AssociationType) type,
+					builder.createInformation()
+			);
+		}
+	}
+
 	private static NonIdentifierAttributeNature decode(Type type) {
 		if ( type.isAssociationType() ) {
 			AssociationType associationType = (AssociationType) type;
@@ -401,22 +554,23 @@ public final class PropertyFactory {
 
 		if ( property.getAttribute().isSingular() ) {
 			final SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) property;
-			final CascadeStyle cascadeStyle = singularAttributeBinding.isAssociation()
-					? ( (AssociationAttributeBinding) singularAttributeBinding ).getCascadeStyle()
+			final CascadeStyle cascadeStyle = singularAttributeBinding.isCascadeable()
+					? ( (Cascadeable) singularAttributeBinding ).getCascadeStyle()
 					: CascadeStyles.NONE;
 			final FetchMode fetchMode = singularAttributeBinding.isAssociation()
-					? ( (AssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
+					? ( (Fetchable) singularAttributeBinding ).getFetchMode()
 					: FetchMode.DEFAULT;
 
+			// TODO: set value generation strategy properly
 			return new StandardProperty(
 					singularAttributeBinding.getAttribute().getName(),
 					type,
 					lazyAvailable && singularAttributeBinding.isLazy(),
-					true, // insertable
-					true, // updatable
+					singularAttributeBinding.isIncludedInInsert(), // insertable
+					singularAttributeBinding.isIncludedInUpdate(), // updatable
 					null,
-					singularAttributeBinding.isNullable(),
-					alwaysDirtyCheck || areAllValuesIncludedInUpdate( singularAttributeBinding ),
+					singularAttributeBinding.isNullable() || singularAttributeBinding.isOptional(),
+					alwaysDirtyCheck || singularAttributeBinding.isIncludedInUpdate(),
 					singularAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,
 					fetchMode
@@ -424,42 +578,34 @@ public final class PropertyFactory {
 		}
 		else {
 			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
-			final CascadeStyle cascadeStyle = pluralAttributeBinding.isAssociation()
-					? pluralAttributeBinding.getCascadeStyle()
-					: CascadeStyles.NONE;
+			final CascadeStyle cascadeStyle;
+			if ( pluralAttributeBinding.isCascadeable() ) {
+				final Cascadeable elementBinding =
+						(Cascadeable) pluralAttributeBinding.getPluralAttributeElementBinding();
+				cascadeStyle = elementBinding.getCascadeStyle();
+			}
+			else {
+				cascadeStyle = CascadeStyles.NONE;
+			}
 			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
 					? pluralAttributeBinding.getFetchMode()
 					: FetchMode.DEFAULT;
 
+			// TODO: set value generation strategy properly
 			return new StandardProperty(
 					pluralAttributeBinding.getAttribute().getName(),
 					type,
 					lazyAvailable && pluralAttributeBinding.isLazy(),
-					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
-					true, // pluralAttributeBinding.isInsertable(),
-					true, //pluralAttributeBinding.isUpdatable(),
+					pluralAttributeBinding.getPluralAttributeKeyBinding().isInsertable(),
+					pluralAttributeBinding.getPluralAttributeKeyBinding().isUpdatable(),
 					null,
-					false, // nullable - not sure what that means for a collection
-					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
-					//alwaysDirtyCheck || pluralAttributeBinding.isUpdatable(),
-					true,
+					true, // plural attributes are nullable
+					alwaysDirtyCheck || pluralAttributeBinding.getPluralAttributeKeyBinding().isUpdatable(),
 					pluralAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,
 					fetchMode
-				);
+			);
 		}
-	}
-
-	private static boolean areAllValuesIncludedInUpdate(SingularAttributeBinding attributeBinding) {
-		if ( attributeBinding.hasDerivedValue() ) {
-			return false;
-		}
-		for ( SimpleValueBinding valueBinding : attributeBinding.getSimpleValueBindings() ) {
-			if ( ! valueBinding.isIncludeInUpdate() ) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	private static Constructor getConstructor(PersistentClass persistentClass) {

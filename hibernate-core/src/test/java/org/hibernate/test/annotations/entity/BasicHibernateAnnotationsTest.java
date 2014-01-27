@@ -46,6 +46,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -99,6 +100,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+	@FailureExpectedWithNewMetamodel
 	public void testVersioning() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -461,6 +463,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	 * defined on a parent MappedSuperclass(s)
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInheritFiltersFromMappedSuperclass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -709,6 +712,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 				ZipCode.class,
 				Flight.class,
 				Name.class,
+				LastName.class,
 				FormalLastName.class,
 				Car.class,
 				Peugot.class,

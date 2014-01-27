@@ -57,6 +57,6 @@ public class TuplizerTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Cuisine.class };
+		return new Class[] { Cuisine.class, Country.class };
 	}
 }

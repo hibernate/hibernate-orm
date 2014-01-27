@@ -32,9 +32,9 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -60,6 +60,7 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @param model The O/R mapping metamodel definition for the entity
 	 * @param cacheAccessStrategy The caching strategy for this entity
+	 * @param naturalIdAccessStrategy The caching strategy for accessing this entity's natural ID
 	 * @param factory The session factory
 	 * @param cfg The overall mapping
 	 *
@@ -89,6 +90,7 @@ public interface PersisterFactory extends Service {
 	public EntityPersister createEntityPersister(
 			EntityBinding model,
 			EntityRegionAccessStrategy cacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy,
 			SessionFactoryImplementor factory,
 			Mapping cfg) throws HibernateException;
 

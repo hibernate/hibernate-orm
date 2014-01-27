@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.target;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TargetTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTargetOnEmbedded() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -103,6 +105,6 @@ public class TargetTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { LuggageImpl.class, Brand.class };
+		return new Class[] { LuggageImpl.class, Brand.class, OwnerImpl.class };
 	}
 }

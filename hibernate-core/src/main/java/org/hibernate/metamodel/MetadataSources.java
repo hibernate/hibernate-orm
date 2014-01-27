@@ -26,67 +26,84 @@ package org.hibernate.metamodel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.jaxb.JaxbRoot;
-import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.jaxb.SourceType;
-import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.MappingNotFoundException;
-import org.hibernate.metamodel.source.internal.JaxbHelper;
-import org.hibernate.metamodel.source.internal.MetadataBuilderImpl;
+import org.hibernate.boot.spi.CacheRegionDefinition;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.jaxb.internal.JaxbMappingProcessor;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
+import org.hibernate.metamodel.internal.MetadataBuilderImpl;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.spi.source.InvalidMappingException;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
-
+import org.hibernate.type.SerializationException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
-
 import org.w3c.dom.Document;
-import org.xml.sax.EntityResolver;
 
 /**
+ * Entry point into working with sources of metadata information ({@code hbm.xml}, annotations).   Tell Hibernate
+ * about sources and then call {@link #buildMetadata()}.
+ *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class MetadataSources {
-	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
+	public static final String UNKNOWN_FILE_PATH = "<unknown>";
+	
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, MetadataSources.class.getName());
+	
+	/**
+	 * temporary option
+	 */
+	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
 
 	private final ServiceRegistry serviceRegistry;
-	
+	private final JaxbMappingProcessor jaxbProcessor;
+	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
+	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
-	private final JaxbHelper jaxbHelper;
+	private boolean hasOrmXmlJaxbRoots;
 
-	private final EntityResolver entityResolver;
-	private final NamingStrategy namingStrategy;
-
-	private final MetadataBuilderImpl metadataBuilder;
-
+	/**
+	 * Create a metadata sources using the specified service registry.
+	 *
+	 * @param serviceRegistry The service registry to use.
+	 */
 	public MetadataSources(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, EJB3DTDEntityResolver.INSTANCE, EJB3NamingStrategy.INSTANCE );
-	}
-
-	public MetadataSources(ServiceRegistry serviceRegistry, EntityResolver entityResolver, NamingStrategy namingStrategy) {
-		this.serviceRegistry = serviceRegistry;
-		this.entityResolver = entityResolver;
-		this.namingStrategy = namingStrategy;
-
-		this.jaxbHelper = new JaxbHelper( this );
-		this.metadataBuilder = new MetadataBuilderImpl( this );
-		
 		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
 		if ( ! isExpectedServiceRegistryType( serviceRegistry ) ) {
 			LOG.debugf(
@@ -95,6 +112,8 @@ public class MetadataSources {
 					serviceRegistry.getClass().getName()
 			);
 		}
+		this.serviceRegistry = serviceRegistry;
+		this.jaxbProcessor = new JaxbMappingProcessor( serviceRegistry );
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
@@ -114,12 +133,20 @@ public class MetadataSources {
 		return annotatedClasses;
 	}
 
+	public Iterable<String> getAnnotatedClassNames() {
+		return annotatedClassNames;
+	}
+
+	public List<CacheRegionDefinition> getExternalCacheRegionDefinitions() {
+		return externalCacheRegionDefinitions;
+	}
+
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
 
-	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
+	public boolean hasOrmXmlJaxbRoots() {
+		return hasOrmXmlJaxbRoots;
 	}
 
 	/**
@@ -168,6 +195,18 @@ public class MetadataSources {
 	}
 
 	/**
+	 * Read metadata from the annotations attached to the given class.
+	 *
+	 * @param annotatedClassName The name of a class containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public MetadataSources addAnnotatedClassName(String annotatedClassName) {
+		annotatedClassNames.add( annotatedClassName );
+		return this;
+	}
+
+	/**
 	 * Read package-level metadata.
 	 *
 	 * @param packageName java package name without trailing '.', cannot be {@code null}
@@ -211,9 +250,12 @@ public class MetadataSources {
 
 	private JaxbRoot add(InputStream inputStream, Origin origin, boolean close) {
 		try {
-			JaxbRoot jaxbRoot = jaxbHelper.unmarshal( inputStream, origin );
-			jaxbRootList.add( jaxbRoot );
+			JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( inputStream, origin );
+			addJaxbRoot( jaxbRoot );
 			return jaxbRoot;
+		}
+		catch ( Exception e ) {
+			throw new InvalidMappingException( origin, e );
 		}
 		finally {
 			if ( close ) {
@@ -288,7 +330,7 @@ public class MetadataSources {
 	 * @see #addCacheableFile(java.io.File)
 	 */
 	public MetadataSources addCacheableFile(String path) {
-		return this; // todo : implement method body
+		return addCacheableFile( new File( path ) );
 	}
 
 	/**
@@ -305,7 +347,72 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addCacheableFile(File file) {
-		return this; // todo : implement method body
+		Origin origin = new Origin( SourceType.FILE, file.getAbsolutePath() );
+		File cachedFile = determineCachedDomFile( file );
+
+		try {
+			return addCacheableFileStrictly( file );
+		}
+		catch ( SerializationException e ) {
+			LOG.unableToDeserializeCache( cachedFile.getName(), e );
+		}
+		catch ( FileNotFoundException e ) {
+			LOG.cachedFileNotFound( cachedFile.getName(), e );
+		}
+		
+		final FileInputStream inputStream;
+		try {
+			inputStream = new FileInputStream( file );
+		}
+		catch ( FileNotFoundException e ) {
+			throw new MappingNotFoundException( origin );
+		}
+
+		LOG.readingMappingsFromFile( file.getPath() );
+		JaxbRoot metadataXml = add( inputStream, origin, true );
+
+		try {
+			LOG.debugf( "Writing cache file for: %s to: %s", file, cachedFile );
+			SerializationHelper.serialize( ( Serializable ) metadataXml, new FileOutputStream( cachedFile ) );
+		}
+		catch ( Exception e ) {
+			LOG.unableToWriteCachedFile( cachedFile.getName(), e.getMessage() );
+		}
+
+		return this;
+	}
+
+	/**
+	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
+	 * <p/>
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
+	 * the cache version cannot be found or used for whatever reason
+	 *
+	 * @param xmlFile The xml file, not the bin!
+	 *
+	 * @return The dom "deserialized" from the cached file.
+	 *
+	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 */
+	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException, FileNotFoundException {
+		File cachedFile = determineCachedDomFile( file );
+		
+		final boolean useCachedFile = file.exists()
+				&& cachedFile.exists()
+				&& file.lastModified() < cachedFile.lastModified();
+
+		if ( ! useCachedFile ) {
+			throw new FileNotFoundException( "Cached file could not be found or could not be used" );
+		}
+
+		LOG.readingCachedMappings( cachedFile );
+		addJaxbRoot( ( JaxbRoot ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) ) );
+		return this;
+	}
+
+	private File determineCachedDomFile(File xmlFile) {
+		return new File( xmlFile.getAbsolutePath() + ".bin" );
 	}
 
 	/**
@@ -316,7 +423,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
-		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, "<unknown>" ), false );
+		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, UNKNOWN_FILE_PATH ), false );
 		return this;
 	}
 
@@ -349,10 +456,15 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addDocument(Document document) {
-		final Origin origin = new Origin( SourceType.DOM, "<unknown>" );
-		JaxbRoot jaxbRoot = jaxbHelper.unmarshal( document, origin );
-		jaxbRootList.add( jaxbRoot );
+		final Origin origin = new Origin( SourceType.DOM, UNKNOWN_FILE_PATH );
+		JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( document, origin );
+		addJaxbRoot( jaxbRoot );
 		return this;
+	}
+
+	private void addJaxbRoot(JaxbRoot jaxbRoot) {
+		hasOrmXmlJaxbRoots = hasOrmXmlJaxbRoots || JaxbEntityMappings.class.isInstance( jaxbRoot.getRoot() );
+		jaxbRootList.add( jaxbRoot );
 	}
 
 	/**
@@ -412,14 +524,138 @@ public class MetadataSources {
 	 */
 	public MetadataSources addDirectory(File dir) {
 		File[] files = dir.listFiles();
-		for ( File file : files ) {
-			if ( file.isDirectory() ) {
-				addDirectory( file );
-			}
-			else if ( file.getName().endsWith( ".hbm.xml" ) ) {
-				addFile( file );
+		if ( files != null && files.length > 0 ) {
+			for ( File file : files ) {
+				if ( file.isDirectory() ) {
+					addDirectory( file );
+				}
+				else if ( file.getName().endsWith( ".hbm.xml" ) ) {
+					addFile( file );
+				}
 			}
 		}
 		return this;
+	}
+
+	public MetadataSources addCacheRegionDefinitions(List<CacheRegionDefinition> cacheRegionDefinitions) {
+		externalCacheRegionDefinitions.addAll( cacheRegionDefinitions );
+		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public IndexView wrapJandexView(IndexView jandexView) {
+		if ( ! hasOrmXmlJaxbRoots ) {
+			// no need to wrap
+			return jandexView;
+		}
+
+		final List<JaxbEntityMappings> collectedOrmXmlMappings = new ArrayList<JaxbEntityMappings>();
+		for ( JaxbRoot jaxbRoot : getJaxbRootList() ) {
+			if ( JaxbEntityMappings.class.isInstance( jaxbRoot.getRoot() ) ) {
+				collectedOrmXmlMappings.add( ( (JaxbRoot<JaxbEntityMappings>) jaxbRoot ).getRoot() );
+			}
+		}
+
+		if ( collectedOrmXmlMappings.isEmpty() ) {
+			// log a warning or something
+		}
+
+		return new EntityMappingsMocker( collectedOrmXmlMappings, jandexView, serviceRegistry ).mockNewIndex();
+	}
+	
+	public IndexView buildJandexView() {
+		return buildJandexView( false );
+	}
+
+	public IndexView buildJandexView(boolean autoIndexMemberTypes) {
+		// create a jandex index from the annotated classes
+
+		Indexer indexer = new Indexer();
+		
+		Set<Class<?>> processedClasses = new HashSet<Class<?>>();
+		for ( Class<?> clazz : getAnnotatedClasses() ) {
+			indexClass( clazz, indexer, processedClasses, autoIndexMemberTypes );
+		}
+
+		for ( String className : getAnnotatedClassNames() ) {
+			indexResource( className.replace( '.', '/' ) + ".class", indexer );
+		}
+
+		// add package-info from the configured packages
+		for ( String packageName : getAnnotatedPackages() ) {
+			indexResource( packageName.replace( '.', '/' ) + "/package-info.class", indexer );
+		}
+
+		return wrapJandexView( indexer.complete() );
+	}
+
+	private void indexClass(Class clazz, Indexer indexer, Set<Class<?>> processedClasses, boolean autoIndexMemberTypes) {
+		if ( clazz == null || clazz == Object.class
+				|| processedClasses.contains( clazz ) ) {
+			return;
+		}
+		
+		processedClasses.add( clazz );
+
+		ClassInfo classInfo = indexResource(
+				clazz.getName().replace( '.', '/' ) + ".class", indexer );
+
+		// index all super classes of the specified class. Using org.hibernate.cfg.Configuration it was not
+		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
+		// discovered while processing the annotations. To keep this behavior we index all classes in the
+		// hierarchy (see also HHH-7484)
+		indexClass( clazz.getSuperclass(), indexer, processedClasses, autoIndexMemberTypes );
+		
+		// Similarly, index any inner class.
+		for ( Class innerClass : clazz.getDeclaredClasses() ) {
+			indexClass( innerClass, indexer, processedClasses, autoIndexMemberTypes );
+		}
+		
+		if ( autoIndexMemberTypes ) {
+			// If autoIndexMemberTypes, don't require @Embeddable
+			// classes to be explicitly identified.
+			// Automatically find them by checking the fields' types.
+			for ( Class<?> fieldType : ReflectHelper.getMemberTypes( clazz ) ) {		
+				if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
+					try {
+						IndexView fieldIndex = JandexHelper.indexForClass(
+								serviceRegistry.getService( ClassLoaderService.class ),
+								fieldType );
+						if ( !fieldIndex.getAnnotations(
+								JPADotNames.EMBEDDABLE ).isEmpty() ) {
+							indexClass( fieldType, indexer, processedClasses, autoIndexMemberTypes );
+						}
+					} catch ( Exception e ) {
+						// do nothing
+					}
+				}
+			}
+			
+			// Also check for classes within a @Target annotation.
+			for ( AnnotationInstance targetAnnotation : JandexHelper.getAnnotations(
+					classInfo, HibernateDotNames.TARGET ) ) {
+				String targetClassName = targetAnnotation.value().asClass().name()
+						.toString();
+				Class<?> targetClass = serviceRegistry.getService(
+						ClassLoaderService.class ).classForName( targetClassName );
+				indexClass(targetClass, indexer, processedClasses, autoIndexMemberTypes );
+			}
+		}
+	}
+
+	private ClassInfo indexResource(String resourceName, Indexer indexer) {
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		
+		if ( classLoaderService.locateResource( resourceName ) != null ) {
+			InputStream stream = classLoaderService.locateResourceStream( resourceName );
+			try {
+				return indexer.index( stream );
+			}
+			catch ( IOException e ) {
+				throw new HibernateException( "Unable to open input stream for resource " + resourceName, e );
+			}
+		}
+		
+		return null;
 	}
 }

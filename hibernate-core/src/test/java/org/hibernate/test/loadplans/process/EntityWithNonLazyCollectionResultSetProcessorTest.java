@@ -52,6 +52,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
@@ -63,6 +64,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel
 public class EntityWithNonLazyCollectionResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override

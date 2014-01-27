@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.metamodel.spi.binding"
+                   xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <class name="EntityWithUnidirectionalManyToMany">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <bag name="theBag">
+            <key column="theBagOwner"/>
+            <many-to-many class="SimpleEntity"/>
+        </bag>
+        <set name="theSet" lazy="false">
+            <key column="theSetOwner" not-null="true"/>
+            <many-to-many class="SimpleEntity"/>
+        </set>
+        <bag name="thePropertyRefBag" lazy="extra">
+            <key column="ownerName" property-ref="name" not-null="true"/>
+            <many-to-many class="SimpleEntity"/>
+        </bag>
+    </class>
+
+</hibernate-mapping>

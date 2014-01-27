@@ -29,9 +29,6 @@ import org.hibernate.service.ServiceRegistry;
  * Contract for contributing types.
  *
  * @author Steve Ebersole
- * 
- * NOTE: Cherry-pick of HHH-7998 from metamodel.  For merging simplicity, just
- * keep it in the o.h.metamodel.spi package.
  */
 public interface TypeContributor {
 	/**

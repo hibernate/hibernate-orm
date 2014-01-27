@@ -120,6 +120,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		return false;
 	}
 
+	/*
 	@Override
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
@@ -155,4 +156,52 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		}
 		super.cleanupTest();
 	}
+	*/
+
+	@Override
+	protected void prepareTest() throws Exception {
+		super.prepareTest();
+		Connection conn = cp.getConnection();
+		try {
+			if ( isMetadataUsed() ) {
+				new SchemaExport( metadata(), conn ).create( false, true );
+			}
+			else {
+				new SchemaExport( configuration(), conn ).create( false, true );
+			}
+		}
+		finally {
+			if ( conn != null ) {
+				try {
+					cp.closeConnection( conn );
+				}
+				catch( Throwable ignore ) {
+				}
+			}
+		}
+	}
+
+	@Override
+	protected void cleanupTest() throws Exception {
+		Connection conn = cp.getConnection();
+		try {
+			if ( isMetadataUsed() ) {
+				new SchemaExport( metadata(), conn ).drop( false, true );
+			}
+			else {
+				new SchemaExport( configuration(), conn ).drop( false, true );
+			}
+		}
+		finally {
+			if ( conn != null ) {
+				try {
+					cp.closeConnection( conn );
+				}
+				catch( Throwable ignore ) {
+				}
+			}
+		}
+		super.cleanupTest();
+	}
+
 }

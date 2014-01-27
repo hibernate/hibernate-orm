@@ -76,7 +76,8 @@ public class EmbeddedGenericsTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Classes.Book.class,
-				Classes.PopularBook.class
+				Classes.PopularBook.class,
+				Classes.Edition.class
 		};
 	}
 }

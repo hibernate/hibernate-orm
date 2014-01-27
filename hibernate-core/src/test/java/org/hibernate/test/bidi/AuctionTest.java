@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class AuctionTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "bidi/Auction.hbm.xml" };

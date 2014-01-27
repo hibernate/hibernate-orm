@@ -81,6 +81,9 @@ public class GenericsTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Paper.class,
+				Stuff.class,
+				PricedStuff.class,
+				Item.class,
 				PaperType.class,
 				SomeGuy.class,
 				Price.class,

@@ -45,6 +45,7 @@ import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -60,6 +61,7 @@ import static org.junit.Assert.fail;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel(message = "due to derived ids are not supported")
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -284,6 +286,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNativeQueryAndCompositePKAndComponents() throws Exception {
 		Session s;
 		Transaction tx;

@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentIdentifierBag;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( message = "<idbag> not supported" )
 public class PersistentIdBagTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

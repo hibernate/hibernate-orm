@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -54,16 +56,45 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 		super(component);
 	}
 
-	private PropertyAccessor buildPropertyAccessor(Property property) {
+	public DynamicMapComponentTuplizer(
+			CompositeAttributeBindingContainer component,
+			boolean isIdentifierMapper) {
+		super( component, isIdentifierMapper );
+	}
+
+	private PropertyAccessor buildPropertyAccessor() {
 		return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
 	}
 
 	protected Getter buildGetter(Component component, Property prop) {
-		return buildPropertyAccessor(prop).getGetter( null, prop.getName() );
+		return buildPropertyAccessor().getGetter( null, prop.getName() );
 	}
 
 	protected Setter buildSetter(Component component, Property prop) {
-		return buildPropertyAccessor(prop).getSetter( null, prop.getName() );
+		return buildPropertyAccessor().getSetter( null, prop.getName() );
+	}
+
+	@Override
+	protected Instantiator buildInstantiator(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper) {
+		return new DynamicMapInstantiator();
+	}
+
+	@Override
+	protected Getter buildGetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding) {
+		return buildPropertyAccessor().getGetter( null, attributeBinding.getAttribute().getName() );
+	}
+
+	@Override
+	protected Setter buildSetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding) {
+		return buildPropertyAccessor().getSetter( null, attributeBinding.getAttribute().getName() );
 	}
 
 }

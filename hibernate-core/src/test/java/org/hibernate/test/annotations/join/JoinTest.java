@@ -35,6 +35,12 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Join;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -48,11 +54,18 @@ import static org.junit.Assert.fail;
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValue() throws Exception {
-		Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
-		assertEquals( "ExtendedLife", join.getTable().getName() );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "LIFE_ID" );
-		assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		if ( isMetadataUsed() ) {
+			TableSpecification joinTable = metadata().getEntityBinding( Life.class.getName() ).locateTable( "ExtendedLife" );
+			assertNotNull( joinTable );
+			assertTrue( joinTable.getPrimaryKey().hasColumn( "LIFE_ID" ) );
+		}
+		else {
+			Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
+			assertEquals( "ExtendedLife", join.getTable().getName() );
+			org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
+			owner.setName( "LIFE_ID" );
+			assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Life life = new Life();
@@ -73,11 +86,27 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCompositePK() throws Exception {
-		Join join = (Join) configuration().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
-		assertEquals( "DogThoroughbred", join.getTable().getName() );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "OWNER_NAME" );
-		assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		if ( isMetadataUsed() ) {
+			SecondaryTable secondaryTable =
+					metadata().getEntityBinding( Dog.class.getName() ).getSecondaryTables().values().iterator().next();
+			Table table = (Table) secondaryTable.getSecondaryTableReference();
+			assertEquals( "DogThoroughbred", table.getPhysicalName().getText() );
+			PrimaryKey pk = table.getPrimaryKey();
+			assertEquals( 2, pk.getColumnSpan() );
+			Column c0 = pk.getColumns().get( 0 );
+			Column c1 = pk.getColumns().get( 1 );
+			assertTrue(
+					"OWNER_NAME".equals( c0.getColumnName().getText() ) ||
+							"OWNER_NAME".equals( c1.getColumnName().getText() )
+			);
+		}
+		else {
+			Join join = (Join) configuration().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
+			assertEquals( "DogThoroughbred", join.getTable().getName() );
+			org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
+			owner.setName( "OWNER_NAME" );
+			assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Dog dog = new Dog();

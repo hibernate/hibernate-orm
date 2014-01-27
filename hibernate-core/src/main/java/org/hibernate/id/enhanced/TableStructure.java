@@ -42,6 +42,13 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.InitCommand;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
 
 import org.jboss.logging.Logger;
 
@@ -56,8 +63,10 @@ public class TableStructure implements DatabaseStructure {
 			TableStructure.class.getName()
 	);
 
+	private final ObjectName qualifiedTableName;
+	private final Identifier valueColumnName;
+
 	private final String tableName;
-	private final String valueColumnName;
 	private final int initialValue;
 	private final int incrementSize;
 	private final Class numberType;
@@ -69,24 +78,27 @@ public class TableStructure implements DatabaseStructure {
 
 	public TableStructure(
 			Dialect dialect,
-			String tableName,
-			String valueColumnName,
+			ObjectName qualifiedTableName,
+			Identifier valueColumnName,
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
-		this.tableName = tableName;
+		this.qualifiedTableName = qualifiedTableName;
+		this.valueColumnName = valueColumnName;
+		this.tableName = qualifiedTableName.toText( dialect );
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
-		this.valueColumnName = valueColumnName;
 		this.numberType = numberType;
 
-		selectQuery = "select " + valueColumnName + " as id_val" +
+		String valueColumnNameText = valueColumnName.getText( dialect );
+
+		selectQuery = "select " + valueColumnNameText + " as id_val" +
 				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
 				dialect.getForUpdateString();
 
 		updateQuery = "update " + tableName +
-				" set " + valueColumnName + "= ?" +
-				" where " + valueColumnName + "=?";
+				" set " + valueColumnNameText + "= ?" +
+				" where " + valueColumnNameText + "=?";
 	}
 
 	@Override
@@ -222,6 +234,25 @@ public class TableStructure implements DatabaseStructure {
 		finally {
 			statsCollector.jdbcExecuteStatementEnd();
 		}
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final Dialect dialect = database.getJdbcEnvironment().getDialect();
+		final Schema schema = database.getSchemaFor( qualifiedTableName );
+		Table table = schema.locateTable( qualifiedTableName.getName() );
+		if ( table != null ) {
+			return;
+		}
+
+		table = schema.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
+
+		Column valueColumn = table.createColumn( valueColumnName );
+		valueColumn.setSqlType( dialect.getTypeName( Types.BIGINT ) );
+
+		database.addInitCommand(
+				new InitCommand( "insert into " + tableName + " values ( " + initialValue + " )" )
+		);
 	}
 
 	@Override

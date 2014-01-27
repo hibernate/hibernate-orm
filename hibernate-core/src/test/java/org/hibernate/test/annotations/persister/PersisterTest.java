@@ -27,10 +27,12 @@ import org.junit.Test;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Shawn Clowater
@@ -39,25 +41,62 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEntityEntityPersisterAndPersisterSpecified() throws Exception {
 		//checks to see that the persister specified with the @Persister annotation takes precedence if a @Entity.persister() is also specified		
-		PersistentClass persistentClass = configuration().getClassMapping( Deck.class.getName() );
-		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(), EntityPersister.class,
-				persistentClass.getEntityPersisterClass() );
+		if ( isMetadataUsed() ) {
+			Class<? extends org.hibernate.persister.entity.EntityPersister> clazz =
+					metadata().getEntityBinding( Deck.class.getName() ).getCustomEntityPersisterClass();
+			assertEquals( "Incorrect Persister class for " + Deck.class.getName(),
+					org.hibernate.test.annotations.persister.EntityPersister.class, clazz );
+
+		}
+		else {
+			PersistentClass persistentClass = configuration().getClassMapping( Deck.class.getName() );
+			assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(), EntityPersister.class,
+					persistentClass.getEntityPersisterClass() );
+		}
 	}
 
 	@Test
 	public void testEntityEntityPersisterSpecified() throws Exception {
 		//tests the persister specified with an @Entity.persister()		
-		PersistentClass persistentClass = configuration().getClassMapping( Card.class.getName() );
-		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
-				SingleTableEntityPersister.class, persistentClass.getEntityPersisterClass() );
+		if ( isMetadataUsed() ) {
+			Class<? extends  org.hibernate.persister.entity.EntityPersister> clazz =
+					metadata().getEntityBinding( Card.class.getName() ).getCustomEntityPersisterClass();
+			assertEquals( "Incorrect Persister class for " + Card.class.getName(),
+					SingleTableEntityPersister.class, clazz );
+
+		}
+		else {
+			PersistentClass persistentClass = configuration().getClassMapping( Card.class.getName() );
+			assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
+					SingleTableEntityPersister.class, persistentClass.getEntityPersisterClass() );
+		}
 	}
 
 	@Test
 	public void testCollectionPersisterSpecified() throws Exception {
 		//tests the persister specified by the @Persister annotation on a collection
-		Collection collection = configuration().getCollectionMapping( Deck.class.getName() + ".cards" );
-		assertEquals( "Incorrect Persister class for collection " + collection.getRole(), CollectionPersister.class,
-				collection.getCollectionPersisterClass() );
+		if ( isMetadataUsed() ) {
+			String expectedRole = Deck.class.getName() + ".cards";
+			boolean found = false;
+			for ( PluralAttributeBinding attributeBinding : metadata().getCollectionBindings() ) {
+				String role = attributeBinding.getAttribute().getRole();
+				//tests the persister specified by the @Persister annotation on a collection
+				if ( expectedRole.equals( role ) ) {
+					assertEquals(
+							"Incorrect Persister class for collection " + role, CollectionPersister.class,
+							attributeBinding.getExplicitPersisterClass()
+					);
+					found = true;
+					break;
+				}
+			}
+			assertTrue( found );
+		}
+		else {
+			Collection collection = configuration().getCollectionMapping( Deck.class.getName() + ".cards" );
+			assertEquals( "Incorrect Persister class for collection " + collection.getRole(), CollectionPersister.class,
+					collection.getCollectionPersisterClass() );
+		}
 	}
 
 	@Override

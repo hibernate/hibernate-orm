@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,11 +40,18 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", configuration() ) );
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", configuration() ) );
+		}
 		Person e = new Person();
 		e.ssn = "aaa";
 		Session s = openSession(  );
@@ -68,8 +76,14 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends BaseCoreFunc
 
 	@Test
 	public void testManyToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "FK", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", configuration() ) );
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "FK", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "FK", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", configuration() ) );
+		}
 		Person e = new Person();
 		e.ssn = "aaa";
 		Session s = openSession(  );

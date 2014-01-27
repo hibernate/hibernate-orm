@@ -25,6 +25,7 @@ package org.hibernate.id.enhanced;
 
 import org.junit.Test;
 
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -274,7 +275,13 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 			StandardOptimizerDescriptor descriptor,
 			long initial,
 			int increment) {
-		return OptimizerFactory.buildOptimizer( descriptor.getExternalName(), Long.class, increment, initial );
+		return OptimizerFactory.buildOptimizer(
+				descriptor.getExternalName(),
+				Long.class,
+				increment,
+				initial,
+				new ClassLoaderServiceImpl()
+		);
 	}
 
 	private static class SourceMock implements AccessCallback {

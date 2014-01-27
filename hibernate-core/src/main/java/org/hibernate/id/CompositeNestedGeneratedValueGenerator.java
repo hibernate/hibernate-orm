@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -102,7 +102,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List generationPlans = new ArrayList();
+	private List<GenerationPlan> generationPlans = new ArrayList<GenerationPlan>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -115,19 +115,15 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	@Override
 	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
 		final Serializable context = generationContextLocator.locateGenerationContext( session, object );
-
-		for ( Object generationPlan : generationPlans ) {
-			final GenerationPlan plan = (GenerationPlan) generationPlan;
+		for ( final GenerationPlan plan : generationPlans ) {
 			plan.execute( session, object, context );
 		}
-
 		return context;
 	}
 
 	@Override
 	public void registerPersistentGenerators(Map generatorMap) {
-		for ( Object generationPlan : generationPlans ) {
-			final GenerationPlan plan = (GenerationPlan) generationPlan;
+		for(final GenerationPlan plan : generationPlans){
 			plan.registerPersistentGenerators( generatorMap );
 		}
 	}

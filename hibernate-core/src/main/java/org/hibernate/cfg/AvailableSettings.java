@@ -636,7 +636,51 @@ public interface AvailableSettings {
 	 */
 	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
 
-    String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
+	/**
+	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the {@link org.hibernate.SessionFactory}
+	 * Can reference<ul>
+	 *     <li>Interceptor instance</li>
+	 *     <li>Interceptor implementation {@link Class} reference</li>
+	 *     <li>Interceptor implementation class name</li>
+	 * </ul>
+	 *
+	 * @since 5.0
+	 */
+	String INTERCEPTOR = "hibernate.sessionFactory.interceptor";
+
+	/**
+	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
+	 * 3 values:<ul>
+	 *     <li>
+	 *         <b>enabled</b> - Do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>disabled</b> - Do not do the population
+	 *     </li>
+	 *     <li>
+	 *         <b>ignoreUnsupported</b> - Do the population, but ignore any non-JPA features that would otherwise
+	 *         result in the population failing.
+	 *     </li>
+	 * </ul>
+	 */
+	public static final String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaManagementTool} to use for performing
+	 * schema management.  The default is to use {@link org.hibernate.tool.schema.internal.HibernateSchemaManagementTool}
+	 *
+	 * @since 5.0
+	 */
+	String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
+
+	/**
+	 * A constant naming the setting used to identify the {@link org.hibernate.engine.jdbc.spi.SchemaNameResolver} to use
+	 * <p/>
+	 * TODO : add to Environment
+	 */
+	String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
+
+	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
 
@@ -700,6 +744,15 @@ public interface AvailableSettings {
 	 * 			do not attempt to create unique constraints on a schema update
 	 */
 	String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
+
+	/**
+	 * If enabled, an entity's member field types and method return types will automatically be indexed.  This allows,
+	 * for example, auto-discovery of @Embeddables without explicitly listing them in the annotated classes.  This
+	 * setting will also check classes identified by certain annotations (such as @Target).  JPA requires these classes
+	 * to be identified in the annotated classes, however legacy Hibernate behavior was to allow it.  Due to the
+	 * performance hit, disabled by default.
+	 */
+	String ENABLE_AUTO_INDEX_MEMBER_TYPES = "hibernate.enable_auto_index_member_types";
 
 	/**
 	 * A setting to control whether to {@link org.hibernate.engine.internal.StatisticalLoggingSessionEventListener} is

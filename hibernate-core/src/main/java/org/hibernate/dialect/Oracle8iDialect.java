@@ -620,4 +620,9 @@ public class Oracle8iDialect extends Dialect {
 		// Oracle supports returning cursors
 		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
 	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "select sys_context( 'userenv', 'current_schema' ) from dual";
+	}
 }

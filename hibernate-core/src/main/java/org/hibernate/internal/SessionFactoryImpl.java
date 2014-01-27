@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
@@ -66,6 +67,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
@@ -83,7 +85,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
@@ -125,14 +126,16 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
+import org.hibernate.jpa.metamodel.internal.builder.MetamodelBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -216,20 +219,53 @@ public final class SessionFactoryImpl
 	private final transient TypeHelper typeHelper;
 	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
-	private final transient CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
-	private final transient CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private final transient Metamodel jpaMetamodel;
 
 	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
 			final Configuration cfg,
 			Mapping mapping,
 			final ServiceRegistry serviceRegistry,
-			Settings settings,
-			SessionFactoryObserver observer) throws HibernateException {
+			final Settings settings,
+			final SessionFactoryObserver userObserver) throws HibernateException {
 			LOG.debug( "Building session factory" );
 
 		sessionFactoryOptions = new SessionFactoryOptions() {
-			private EntityNotFoundDelegate entityNotFoundDelegate;
+			private final Interceptor interceptor;
+			private final CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+			private final CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+			private final EntityNotFoundDelegate entityNotFoundDelegate;
+
+			{
+				interceptor = cfg.getInterceptor();
+
+				customEntityDirtinessStrategy = serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+						CustomEntityDirtinessStrategy.class,
+						cfg.getProperties().get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
+						DefaultCustomEntityDirtinessStrategy.INSTANCE
+				);
+
+				if ( cfg.getCurrentTenantIdentifierResolver() != null ) {
+					currentTenantIdentifierResolver = cfg.getCurrentTenantIdentifierResolver();
+				}
+				else {
+					currentTenantIdentifierResolver =serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
+							CurrentTenantIdentifierResolver.class,
+							cfg.getProperties().get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER )
+					);
+				}
+
+				if ( cfg.getEntityNotFoundDelegate() != null ) {
+					entityNotFoundDelegate = cfg.getEntityNotFoundDelegate();
+				}
+				else {
+					entityNotFoundDelegate = new EntityNotFoundDelegate() {
+						public void handleEntityNotFound(String entityName, Serializable id) {
+							throw new ObjectNotFoundException( id, entityName );
+						}
+					};
+				}
+			}
 
 			@Override
 			public StandardServiceRegistry getServiceRegistry() {
@@ -238,22 +274,39 @@ public final class SessionFactoryImpl
 
 			@Override
 			public Interceptor getInterceptor() {
-				return cfg.getInterceptor();
+				return interceptor;
+			}
+
+			@Override
+			public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
+				return customEntityDirtinessStrategy;
+			}
+
+			@Override
+			public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+				return currentTenantIdentifierResolver;
+			}
+
+			@Override
+			public SessionFactoryObserver[] getSessionFactoryObservers() {
+				return userObserver == null
+						? new SessionFactoryObserver[0]
+						: new SessionFactoryObserver[] { userObserver };
+			}
+
+			@Override
+			public EntityNameResolver[] getEntityNameResolvers() {
+				return new EntityNameResolver[0];
+			}
+
+			@Override
+			public Settings getSettings() {
+				return settings;
 			}
 
 			@Override
 			public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 				if ( entityNotFoundDelegate == null ) {
-					if ( cfg.getEntityNotFoundDelegate() != null ) {
-						entityNotFoundDelegate = cfg.getEntityNotFoundDelegate();
-					}
-					else {
-						entityNotFoundDelegate = new EntityNotFoundDelegate() {
-							public void handleEntityNotFound(String entityName, Serializable id) {
-								throw new ObjectNotFoundException( id, entityName );
-							}
-						};
-					}
 				}
 				return entityNotFoundDelegate;
 			}
@@ -272,7 +325,7 @@ public final class SessionFactoryImpl
         this.dialect = this.jdbcServices.getDialect();
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
-		if ( observer != null ) {
+		for ( SessionFactoryObserver observer : sessionFactoryOptions.getSessionFactoryObservers() ) {
 			this.observer.addObserver( observer );
 		}
 
@@ -481,6 +534,12 @@ public final class SessionFactoryImpl
 			persister.postInstantiate();
 			registerEntityNameResolvers( persister );
 		}
+		if ( sessionFactoryOptions.getEntityNameResolvers() != null ) {
+			for ( EntityNameResolver resolver : sessionFactoryOptions.getEntityNameResolvers() ) {
+				registerEntityNameResolver( resolver );
+			}
+		}
+
 		for ( CollectionPersister persister : collectionPersisters.values() ) {
 			persister.postInstantiate();
 		}
@@ -582,10 +641,20 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy();
-		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( cfg.getCurrentTenantIdentifierResolver() );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
+		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
+			this.jpaMetamodel = org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl.buildMetamodel(
+					cfg.getClassMappings(),
+					this,
+					jpaMetaModelPopulationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED
+			);
+		}
+		else {
+			jpaMetamodel = null;
+		}
 	}
 
 	private Map<String, ProcedureCallMemento> toProcedureCallMementos(
@@ -626,59 +695,16 @@ public final class SessionFactoryImpl
 		};
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy() {
-		CustomEntityDirtinessStrategy defaultValue = new CustomEntityDirtinessStrategy() {
-			@Override
-			public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
-				return false;
-			}
 
-			@Override
-			public boolean isDirty(Object entity, EntityPersister persister, Session session) {
-				return false;
-			}
-
-			@Override
-			public void resetDirty(Object entity, EntityPersister persister, Session session) {
-			}
-
-			@Override
-			public void findDirty(
-					Object entity,
-					EntityPersister persister,
-					Session session,
-					DirtyCheckContext dirtyCheckContext) {
-				// todo : implement proper method body
-			}
-		};
-		return serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY,
-				CustomEntityDirtinessStrategy.class,
-				defaultValue
-		);
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private CurrentTenantIdentifierResolver determineCurrentTenantIdentifierResolver(
-			CurrentTenantIdentifierResolver explicitResolver) {
-		if ( explicitResolver != null ) {
-			return explicitResolver;
-		}
-		return serviceRegistry.getService( ConfigurationService.class )
-				.getSetting(
-						AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
-						CurrentTenantIdentifierResolver.class,
-						null
-				);
-
+	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
+		final String setting = cfg.getProperties().getProperty( AvailableSettings.JPA_METAMODEL_POPULATION );
+		return JpaMetaModelPopulationSetting.parse( setting );
 	}
 
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
 			MetadataImplementor metadata,
-			SessionFactoryOptions sessionFactoryOptions,
-			SessionFactoryObserver observer) throws HibernateException {
+			SessionFactoryOptions providedSessionFactoryOptions) throws HibernateException {
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		final boolean debugEnabled = traceEnabled || LOG.isDebugEnabled();
@@ -686,17 +712,13 @@ public final class SessionFactoryImpl
 			LOG.debug( "Building session factory" );
 		}
 
-		this.sessionFactoryOptions = sessionFactoryOptions;
+		this.sessionFactoryOptions = providedSessionFactoryOptions;
 
 		this.properties = createPropertiesFromMap(
 				metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings()
 		);
 
-		// TODO: these should be moved into SessionFactoryOptions
-		this.settings = new SettingsFactory().buildSettings(
-				properties,
-				metadata.getServiceRegistry()
-		);
+		this.settings = sessionFactoryOptions.getSettings();
 
 		this.serviceRegistry =
 				sessionFactoryOptions.getServiceRegistry()
@@ -714,17 +736,16 @@ public final class SessionFactoryImpl
 		// TODO: get SQL functions from a new service
 		// this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 
-		if ( observer != null ) {
-			this.observer.addObserver( observer );
+		if ( sessionFactoryOptions.getSessionFactoryObservers() != null ) {
+			for ( SessionFactoryObserver observer : sessionFactoryOptions.getSessionFactoryObservers() ) {
+				this.observer.addObserver( observer );
+			}
 		}
 
 		this.typeResolver = metadata.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
-		this.filters = new HashMap<String, FilterDefinition>();
-		for ( FilterDefinition filterDefinition : metadata.getFilterDefinitions() ) {
-			filters.put( filterDefinition.getFilterName(), filterDefinition );
-		}
+		this.filters = Collections.unmodifiableMap( metadata.getFilterDefinitions() );
 
 		if ( debugEnabled ) {
 			LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
@@ -772,14 +793,21 @@ public final class SessionFactoryImpl
 		// Prepare persisters and link them up with their cache
 		// region/access-strategy
 
+		final MetamodelBuilder jpaMetamodelBuilder = new MetamodelBuilder(
+				this,
+				JpaMetaModelPopulationSetting.parse(
+						properties.getProperty( AvailableSettings.JPA_METAMODEL_POPULATION )
+				)
+		);
+
 		StringBuilder stringBuilder = new StringBuilder();
 		if ( settings.getCacheRegionPrefix() != null) {
 			stringBuilder
 					.append( settings.getCacheRegionPrefix() )
 					.append( '.' );
 		}
+		RegionFactory regionFactory = cacheAccess.getRegionFactory();
 		final String cacheRegionPrefix = stringBuilder.toString();
-
 		entityPersisters = new HashMap<String,EntityPersister>();
 		Map<String, RegionAccessStrategy> entityAccessStrategies = new HashMap<String, RegionAccessStrategy>();
 		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
@@ -791,16 +819,18 @@ public final class SessionFactoryImpl
 			EntityRegionAccessStrategy accessStrategy = null;
 			if ( settings.isSecondLevelCacheEnabled() &&
 					rootEntityBinding.getHierarchyDetails().getCaching() != null &&
-					model.getHierarchyDetails().getCaching() != null &&
-					model.getHierarchyDetails().getCaching().getAccessType() != null ) {
+					model.getHierarchyDetails().getCaching() != null  ) {
 				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails().getCaching().getRegion();
 				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
 				if ( accessStrategy == null ) {
-					final AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
+					AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
+					if ( accessType == null ) {
+						accessType = regionFactory.getDefaultAccessType();
+					}
 					if ( traceEnabled ) {
 						LOG.tracev( "Building cache for entity data [{0}]", model.getEntity().getName() );
 					}
-					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion(
+					EntityRegion entityRegion = regionFactory.buildEntityRegion(
 							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
 					);
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
@@ -808,11 +838,47 @@ public final class SessionFactoryImpl
 					cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
 				}
 			}
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy = null;
+			if ( settings.isSecondLevelCacheEnabled() &&
+					rootEntityBinding.getHierarchyDetails().getNaturalIdCaching() != null &&
+					model.getHierarchyDetails().getNaturalIdCaching() != null ) {
+				final String naturalIdCacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails()
+						.getNaturalIdCaching()
+						.getRegion();
+				naturalIdAccessStrategy = (NaturalIdRegionAccessStrategy) entityAccessStrategies.get(
+						naturalIdCacheRegionName
+				);
+				if ( naturalIdAccessStrategy == null ) {
+					final CacheDataDescriptionImpl naturaIdCacheDataDescription = CacheDataDescriptionImpl.decode( model );
+					NaturalIdRegion naturalIdRegion = null;
+					try {
+						naturalIdRegion = regionFactory.buildNaturalIdRegion(
+										naturalIdCacheRegionName,
+										properties,
+										naturaIdCacheDataDescription
+								);
+					}
+					catch ( UnsupportedOperationException e ) {
+						LOG.warnf(
+								"Shared cache region factory [%s] does not support natural id caching; " +
+										"shared NaturalId caching will be disabled for not be enabled for %s",
+								regionFactory.getClass().getName(),
+								model.getEntity().getName()
+						);
+					}
+					if ( naturalIdRegion != null ) {
+						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( regionFactory.getDefaultAccessType() );
+						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+						cacheAccess.addCacheRegion( naturalIdCacheRegionName, naturalIdRegion );
+					}
+				}
+			}
 			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
-					model, accessStrategy, this, metadata
+					model, accessStrategy, naturalIdAccessStrategy, this, metadata
 			);
 			entityPersisters.put( model.getEntity().getName(), cp );
 			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );
+			jpaMetamodelBuilder.add( model );
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
@@ -828,19 +894,32 @@ public final class SessionFactoryImpl
 						"AbstractPluralAttributeBinding has a Singular attribute defined: " + model.getAttribute().getName()
 				);
 			}
-			final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
-			final AccessType accessType = model.getCaching().getAccessType();
 			CollectionRegionAccessStrategy accessStrategy = null;
-			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				if ( traceEnabled ) {
-					LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
+			if ( settings.isSecondLevelCacheEnabled() &&
+					model.getCaching() != null ) {
+
+				final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
+				AccessType accessType = model.getCaching().getAccessType();
+				if( accessType == null ){
+					accessType = regionFactory.getDefaultAccessType();
 				}
-				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
+				if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
+					if ( traceEnabled ) {
+						LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
+					}
+					CollectionRegion collectionRegion = regionFactory.buildCollectionRegion(
+							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+					);
+					accessStrategy = collectionRegion.buildAccessStrategy( accessType );
+					entityAccessStrategies.put( cacheRegionName, accessStrategy );
+					cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
+				}
+				CollectionRegion collectionRegion = regionFactory.buildCollectionRegion(
 						cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
 				);
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
-				cacheAccess.addCacheRegion(  cacheRegionName, collectionRegion );
+				cacheAccess.addCacheRegion( cacheRegionName, collectionRegion );
 			}
 			CollectionPersister persister = serviceRegistry
 					.getService( PersisterFactory.class )
@@ -879,26 +958,32 @@ public final class SessionFactoryImpl
 		namedQueryRepository = new NamedQueryRepository(
 				metadata.getNamedQueryDefinitions(),
 				metadata.getNamedNativeQueryDefinitions(),
-				metadata.getResultSetMappingDefinitions(),
+				metadata.getResultSetMappingDefinitions().values(),
 				new HashMap<String, ProcedureCallMemento>(  )
 		);
 
 		imports = new HashMap<String,String>();
-		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
+		for ( Map.Entry<String,String> importEntry : metadata.getImports().entrySet() ) {
 			imports.put( importEntry.getKey(), importEntry.getValue() );
 		}
 
 		// after *all* persisters and named queries are registered
-		Iterator iter = entityPersisters.values().iterator();
-		while ( iter.hasNext() ) {
-			final EntityPersister persister = ( ( EntityPersister ) iter.next() );
+		for ( EntityPersister persister : entityPersisters.values() ) {
+			persister.generateEntityDefinition();
+		}
+
+		for ( EntityPersister persister : entityPersisters.values() ) {
 			persister.postInstantiate();
 			registerEntityNameResolvers( persister );
-
 		}
-		iter = collectionPersisters.values().iterator();
-		while ( iter.hasNext() ) {
-			final CollectionPersister persister = ( ( CollectionPersister ) iter.next() );
+
+		if ( sessionFactoryOptions.getEntityNameResolvers() != null ) {
+			for ( EntityNameResolver resolver : sessionFactoryOptions.getEntityNameResolvers() ) {
+				registerEntityNameResolver( resolver );
+			}
+		}
+
+		for ( CollectionPersister persister : collectionPersisters.values() ) {
 			persister.postInstantiate();
 		}
 
@@ -923,12 +1008,29 @@ public final class SessionFactoryImpl
 			LOG.debug("Instantiated session factory");
 		}
 
+		// TODO: FIX this
+		//settings.getMultiTableBulkIdStrategy().prepare(
+		//		jdbcServices,
+		//		buildLocalConnectionAccess(),
+		//		mapp,
+		//		metadata,
+		//		properties
+		//);
+
+
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( metadata )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
 					.create( false, true );
 		}
 
+		// TODO: implement these for new metamodel
+		//if ( settings.isAutoUpdateSchema() ) {
+		//	new SchemaUpdate( metadata ).execute( false, true );
+		//}
+		//if ( settings.isAutoValidateSchema() ) {
+		//	new SchemaValidator( metadata ).validate();
+		//}
 		if ( settings.isAutoDropSchema() ) {
 			schemaExport = new SchemaExport( metadata )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
@@ -953,9 +1055,9 @@ public final class SessionFactoryImpl
 
 		// this needs to happen after persisters are all ready to go...
 		this.fetchProfiles = new HashMap<String,FetchProfile>();
-		for ( org.hibernate.metamodel.binding.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
+		for ( org.hibernate.metamodel.spi.binding.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
 			final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
-			for ( org.hibernate.metamodel.binding.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
+			for ( org.hibernate.metamodel.spi.binding.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 				// resolve the persister owning the fetch
 				final String entityName = getImportedClassName( mappingFetch.getEntity() );
 				final EntityPersister owner = entityName == null ? null : entityPersisters.get( entityName );
@@ -982,10 +1084,10 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy();
-		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( null );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+
+		this.jpaMetamodel = jpaMetamodelBuilder.buildMetamodel();
 	}
 
 	@SuppressWarnings( {"unchecked"} )
@@ -1708,12 +1810,12 @@ public final class SessionFactoryImpl
 
 	@Override
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
-		return customEntityDirtinessStrategy;
+		return sessionFactoryOptions.getCustomEntityDirtinessStrategy();
 	}
 
 	@Override
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
-		return currentTenantIdentifierResolver;
+		return sessionFactoryOptions.getCurrentTenantIdentifierResolver();
 	}
 
 

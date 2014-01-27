@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,14 +37,24 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class DerivedIdentityEmbeddedIdParentIdClassTest  extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "dep_name", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", configuration() ) );
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", metadata() ) );
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", metadata() ) );
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "dep_name", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", configuration() ) );
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", configuration() ) );
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "dep_name", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", configuration() ) );
+		}
 		Employee e = new Employee();
 		e.empId = new EmployeeId();
 		e.empId.firstName = "Emmanuel";
@@ -76,7 +87,8 @@ public class DerivedIdentityEmbeddedIdParentIdClassTest  extends BaseCoreFunctio
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Dependent.class,
-				Employee.class
+				Employee.class,
+				EmployeeId.class
 		};
 	}
 }

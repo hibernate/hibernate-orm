@@ -156,7 +156,11 @@ public final class CollectionHelper {
         return collection == null || collection.isEmpty();
     }
 
-    public static boolean isEmpty(Map map) {
+	public static boolean isEmpty(Iterable iterable){
+		return iterable == null || !iterable.iterator().hasNext();
+	}
+
+	public static boolean isEmpty(Map map) {
         return map == null || map.isEmpty();
     }
 
@@ -170,6 +174,23 @@ public final class CollectionHelper {
 
 	public static boolean isEmpty(Object[] objects){
 		return objects == null || objects.length==0;
+	}
+
+	public static boolean isCollectionOrArray(Class clazz) {
+		if ( clazz == null ) {
+			return false;
+		}
+		if ( Collection.class.isAssignableFrom( clazz ) ) {
+			return true;
+		}
+		if ( Map.class.isAssignableFrom( clazz ) ) {
+			return true;
+		}
+		// TODO: why is the next block commented out???
+//		if ( clazz.isArray() ) {
+//			return true;
+//		}
+		return false;
 	}
 
 	public static <X,Y> Map<X, Y> makeCopy(Map<X, Y> map) {

@@ -27,6 +27,8 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -36,9 +38,13 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7129" )
+@FailureExpectedWithNewMetamodel
 public class SpreadNaturalIdTest extends BaseUnitTestCase {
 	@Test
 	public void testSpreadNaturalIdDeclarationGivesMappingException() {
+		if ( isDefaultUseNewMetamodel() ) {
+			throw new NotYetImplementedException( "Not implemented using new metamodel." );
+		}
 		Configuration cfg = new Configuration()
 				.addAnnotatedClass( Principal.class )
 				.addAnnotatedClass( User.class );

@@ -25,7 +25,7 @@ package org.hibernate.service.spi;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.Service;
 
 /**

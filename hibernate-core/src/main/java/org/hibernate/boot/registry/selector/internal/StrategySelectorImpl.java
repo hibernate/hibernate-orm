@@ -126,7 +126,8 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 		catch (ClassLoadingException e) {
 			throw new StrategySelectionException(
-					"Unable to resolve name [" + name + "] as strategy [" + strategy.getName() + "]"
+					"Unable to resolve name [" + name + "] as strategy [" + strategy.getName() + "]",
+					name
 			);
 		}
 	}
@@ -161,7 +162,8 @@ public class StrategySelectorImpl implements StrategySelector {
 		catch (Exception e) {
 			throw new StrategySelectionException(
 					String.format( "Could not instantiate named strategy class [%s]", implementationClass.getName() ),
-					e
+					e,
+					implementationClass.getName()
 			);
 		}
 	}

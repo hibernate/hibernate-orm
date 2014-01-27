@@ -25,6 +25,9 @@ package org.hibernate.testing.junit4;
 
 import org.junit.runners.model.Statement;
 
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Steve Ebersole
  */
@@ -39,7 +42,16 @@ public class BeforeClassCallbackHandler extends Statement {
 
 	@Override
 	public void evaluate() throws Throwable {
-		runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
-		wrappedStatement.evaluate();
+		try {
+			runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
+			wrappedStatement.evaluate();
+		} catch ( Throwable error ) {
+			runner.setBeforeClassMethodFailed();
+			if ( runner.getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) == null &&
+					( !runner.useNewMetamodel() ||
+							runner.getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) == null ) ) {
+				throw error;
+			}
+		}
 	}
 }

@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,12 +40,18 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", configuration() ) );
-
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", configuration() ) );
+		}
 		Session s = openSession();
 		s.getTransaction().begin();
 		Employee e = new Employee( 1L, "Emmanuel", "Manu" );

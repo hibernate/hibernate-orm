@@ -34,6 +34,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -47,7 +48,12 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -99,7 +105,12 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private static final String DEFAULT_PK_COLUMN = "sequence_name";
 	private static final String DEFAULT_VALUE_COLUMN = "sequence_next_hi_value";
 
+	private ObjectName qualifiedTableName;
+	private Identifier qualifiedPkColumnName;
+	private Identifier qualifiedValueColumnName;
+
 	private String tableName;
+	private Table table;
 	private String pkColumnName;
 	private String valueColumnName;
 	private String query;
@@ -141,6 +152,15 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	public Object generatorKey() {
 		return tableName;
+	}
+
+	/**
+	 * The bound Table for this generator.
+	 *
+	 * @return The table.
+	 */
+	public final Table getTable() {
+		return table;
 	}
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
@@ -268,35 +288,35 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		}
 	}
 
-	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
+	public void configure(Type type, Properties params, Dialect dialect, ClassLoaderService classLoaderService) throws MappingException {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 
 		tableName = normalizer.normalizeIdentifierQuoting( ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE ) );
 		if ( tableName.indexOf( '.' ) < 0 ) {
-			tableName = dialect.quote( tableName );
-			final String schemaName = dialect.quote(
-					normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
-			);
-			final String catalogName = dialect.quote(
-					normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) )
-			);
-			tableName = Table.qualify( catalogName, schemaName, tableName );
+			final String normalizedTableName = tableName;
+			final String normalizedSchemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
+			final String normalizedCatalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
+			qualifiedTableName = new ObjectName( normalizedCatalogName, normalizedSchemaName, normalizedTableName );
+			tableName = qualifiedTableName.toText( dialect );
 		}
 		else {
-			// if already qualified there is not much we can do in a portable manner so we pass it
-			// through and assume the user has set up the name correctly.
+			qualifiedTableName = ObjectName.parse( tableName );
 		}
 
-		pkColumnName = dialect.quote(
+		qualifiedPkColumnName = Identifier.toIdentifier(
 				normalizer.normalizeIdentifierQuoting(
 						ConfigurationHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
 				)
 		);
-		valueColumnName = dialect.quote(
+		pkColumnName = qualifiedPkColumnName.getText( dialect );
+
+		qualifiedValueColumnName = Identifier.toIdentifier(
 				normalizer.normalizeIdentifierQuoting(
 						ConfigurationHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN )
 				)
 		);
+		valueColumnName = qualifiedValueColumnName.getText( dialect );
+
 		keySize = ConfigurationHelper.getInt(PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH);
 		String keyValue = ConfigurationHelper.getString(PK_VALUE_NAME, params, params.getProperty(TABLE) );
 
@@ -331,5 +351,21 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 		}
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final Dialect dialect = database.getJdbcEnvironment().getDialect();
+
+		final Schema schema = database.getSchemaFor( qualifiedTableName );
+		table = schema.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
+
+		final Column pkColumn = table.createColumn( qualifiedPkColumnName );
+		table.getPrimaryKey().addColumn( pkColumn );
+		// todo : leverage TypeInfo-like info from JdbcEnvironment
+		pkColumn.setSqlType( dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) );
+
+		final Column valueColumn = table.createColumn( qualifiedValueColumnName );
+		valueColumn.setSqlType( dialect.getTypeName( Types.INTEGER ) );
 	}
 }

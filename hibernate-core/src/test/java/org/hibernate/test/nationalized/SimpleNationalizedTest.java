@@ -35,8 +35,10 @@ import javax.persistence.Lob;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.CharacterNCharType;
 import org.hibernate.type.MaterializedNClobType;
@@ -48,6 +50,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class SimpleNationalizedTest extends BaseUnitTestCase {
 
 	@Entity( name="NationalizedEntity")
@@ -78,6 +81,9 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 
 	@Test
 	public void simpleNationalizedTest() {
+		if ( isDefaultUseNewMetamodel() ) {
+			throw new NotYetImplementedException( "Not implemented using new metamodel." );
+		}
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( NationalizedEntity.class );
 		cfg.buildMappings();

@@ -40,6 +40,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -54,6 +55,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel
 public class CMTTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

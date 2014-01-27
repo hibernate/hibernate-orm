@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
@@ -35,6 +36,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
@@ -70,6 +74,52 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 
 		final String parentPropertyName = component.getParentProperty();
+		if ( parentPropertyName == null ) {
+			parentSetter = null;
+			parentGetter = null;
+		}
+		else {
+			PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( null );
+			parentSetter = pa.getSetter( componentClass, parentPropertyName );
+			parentGetter = pa.getGetter( componentClass, parentPropertyName );
+		}
+
+		if ( hasCustomAccessors || !Environment.useReflectionOptimizer() ) {
+			optimizer = null;
+		}
+		else {
+			// TODO: here is why we need to make bytecode provider global :(
+			// TODO : again, fix this after HHH-1907 is complete
+			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
+					componentClass, getterNames, setterNames, propTypes
+			);
+		}
+	}
+
+	public PojoComponentTuplizer(
+			CompositeAttributeBindingContainer component,
+			boolean isIdentifierMapper) {
+		super( component, isIdentifierMapper );
+
+		final EntityIdentifier entityIdentifier =
+				component.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+
+		this.componentClass =
+				isIdentifierMapper ?
+						entityIdentifier.getIdClassClass() :
+						component.getClassReference();
+
+		String[] getterNames = new String[propertySpan];
+		String[] setterNames = new String[propertySpan];
+		Class[] propTypes = new Class[propertySpan];
+		for ( int i = 0; i < propertySpan; i++ ) {
+			getterNames[i] = getters[i].getMethodName();
+			setterNames[i] = setters[i].getMethodName();
+			propTypes[i] = getters[i].getReturnType();
+		}
+
+		final String parentPropertyName =
+				component.getParentReference() == null ? null : component.getParentReference().getName();
 		if ( parentPropertyName == null ) {
 			parentSetter = null;
 			parentGetter = null;
@@ -159,12 +209,97 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		return prop.getSetter( component.getComponentClass() );
 	}
 
+	protected Instantiator buildInstantiator(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper) {
+		if ( !compositeAttributeBindingContainer.isAggregated() &&
+				ReflectHelper.isAbstractClass( compositeAttributeBindingContainer.getClassReference() ) ) {
+			return new ProxiedInstantiator( compositeAttributeBindingContainer );
+		}
+		if ( optimizer == null ) {
+			return new PojoInstantiator( compositeAttributeBindingContainer, isIdentifierMapper, null );
+		}
+		else {
+			return new PojoInstantiator( compositeAttributeBindingContainer, isIdentifierMapper, optimizer.getInstantiationOptimizer() );
+		}
+	}
+
+	@Override
+	protected Getter buildGetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding) {
+		// TODO: when compositeAttributeBinding is wrapped for an identifier mapper
+		//       there will be no need for PropertyFactory.getIdentifierMapperGetter()
+		//       and PropertyFactory.getIdentifierMapperSetter
+		if ( isIdentifierMapper ) {
+			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
+			//             must be completely bound when this method is called.
+			final EntityIdentifier entityIdentifier =
+					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+			return getGetter(
+					entityIdentifier.getIdClassClass(),
+					attributeBinding.getAttribute().getName(),
+					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getIdClassPropertyAccessorName() )
+			);
+		}
+		else {
+			return getGetter(
+					compositeAttributeBindingContainer.getClassReference(),
+					attributeBinding.getAttribute().getName(),
+					PropertyAccessorFactory.getPropertyAccessor( attributeBinding, EntityMode.POJO )
+			);
+		}
+	}
+
+	@Override
+	protected Setter buildSetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding) {
+		if ( isIdentifierMapper ) {
+			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
+			//             must be completely bound when this method is called.
+			final EntityIdentifier entityIdentifier =
+					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+			return getSetter(
+					entityIdentifier.getIdClassClass(),
+					attributeBinding.getAttribute().getName(),
+					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getIdClassPropertyAccessorName() )
+			);
+
+		}
+		else {
+			return getSetter(
+					compositeAttributeBindingContainer.getClassReference(),
+					attributeBinding.getAttribute().getName(),
+					PropertyAccessorFactory.getPropertyAccessor( attributeBinding, EntityMode.POJO )
+			);
+		}
+	}
+
+	private Getter getGetter(Class clazz, String name, PropertyAccessor propertyAccessor) {
+		return propertyAccessor.getGetter( clazz, name );
+	}
+
+	private Setter getSetter(Class clazz, String name, PropertyAccessor propertyAccessor) {
+		return propertyAccessor.getSetter(clazz, name);
+	}
+
 	private static class ProxiedInstantiator implements Instantiator {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
 		public ProxiedInstantiator(Component component) {
-			proxiedClass = component.getComponentClass();
+			this( component.getComponentClass() );
+		}
+
+		public ProxiedInstantiator(CompositeAttributeBindingContainer compositeAttributeBindingContainer) {
+			this( compositeAttributeBindingContainer.getClassReference() );
+		}
+
+		private ProxiedInstantiator(Class<?> proxiedClass) {
+			this.proxiedClass = proxiedClass;
 			if ( proxiedClass.isInterface() ) {
 				factory = Environment.getBytecodeProvider()
 						.getProxyFactoryFactory()
@@ -176,6 +311,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 						.buildBasicProxyFactory( proxiedClass, null );
 			}
 		}
+
 
 		public Object instantiate(Serializable id) {
 			throw new AssertionFailure( "ProxiedInstantiator can only be used to instantiate component" );

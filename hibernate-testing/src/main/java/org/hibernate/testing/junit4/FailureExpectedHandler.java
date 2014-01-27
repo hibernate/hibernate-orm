@@ -35,16 +35,19 @@ import org.jboss.logging.Logger;
 class FailureExpectedHandler extends Statement {
 	private static final Logger log = Logger.getLogger( FailureExpectedHandler.class );
 
+	private final CustomRunner runner;
 	private final TestClassMetadata testClassMetadata;
 	private final ExtendedFrameworkMethod extendedFrameworkMethod;
 	private final Statement realInvoker;
 	private final Object testInstance;
 
 	public FailureExpectedHandler(
+			CustomRunner runner,
 			Statement realInvoker,
 			TestClassMetadata testClassMetadata,
 			ExtendedFrameworkMethod extendedFrameworkMethod,
 			Object testInstance) {
+		this.runner = runner;
 		this.realInvoker = realInvoker;
 		this.testClassMetadata = testClassMetadata;
 		this.extendedFrameworkMethod = extendedFrameworkMethod;
@@ -53,6 +56,9 @@ class FailureExpectedHandler extends Statement {
 
 	@Override
 	public void evaluate() throws Throwable {
+		if ( runner.beforeClassMethodFailed() ) {
+			return;
+		}
 		final FailureExpected failureExpected = extendedFrameworkMethod.getFailureExpectedAnnotation();
 		try {
 			realInvoker.evaluate();

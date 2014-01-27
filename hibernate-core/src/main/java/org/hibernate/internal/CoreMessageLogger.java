@@ -1674,4 +1674,46 @@ public interface CoreMessageLogger extends BasicLogger {
 					"(%2$s=true)"
 	)
 	void applyingExplicitDiscriminatorColumnForJoined(String className, String overrideSetting);
+
+	@Message(value = "@CollectionTable and @JoinTable specified on the same attribute. Check %s#%s", id = 458)
+	String collectionTableAndJoinTableUsedTogether(String entityName, String propertyName);
+
+	@Message(value = "@CollectionTable annotation without a @ElementCollection. Check %s#%s", id = 459)
+	String collectionTableWithoutElementCollection(String entityName, String propertyName);
+
+	@Message(value = "@JoinTable annotation without an association. Check %s#%s", id = 460)
+	String joinTableForNonAssociationAttribute(String entityName, String propertyName);
+
+	@LogMessage( level = ERROR )
+	@Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 461 )
+	void illegalArgumentOnStaticMetamodelFieldInjection( String metamodelClassName,
+														 String attributeName,
+														 String attributeJavaType,
+														 String metamodelFieldJavaType );
+		// moved from EntityManagerMessageLogger w/ id 15007
+
+	@LogMessage( level = ERROR )
+	@Message( value = "Unable to locate static metamodel field : %s#%s", id = 462 )
+	void unableToLocateStaticMetamodelField( String metamodelClassName,
+											 String attributeName );
+	// moved from EntityManagerMessageLogger w/ id 15011
+
+
+	@Message(value = "The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
+			"@Access has to be placed on the property (getter)", id = 463)
+	String accessTypeOverrideShouldBeAnnotatedOnProperty( String className );
+
+	@Message(value = "The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
+			"@Access has to be placed on the property (getter) with an access type of AccessType.PROPERTY. " +
+			"Using AccessType.FIELD on the property has no effect", id = 464)
+	String accessTypeOverrideShouldBeProperty( String className );
+
+	@Message(value = "The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
+			"@Access has to be placed on the field ", id = 465)
+	String accessTypeOverrideShouldBeAnnotatedOnField( String className );
+
+	@Message(value = "The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
+			"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
+			"Using AccessType.PROPERTY on the field has no effect", id = 466)
+	String accessTypeOverrideShouldBeField( String className );
 }

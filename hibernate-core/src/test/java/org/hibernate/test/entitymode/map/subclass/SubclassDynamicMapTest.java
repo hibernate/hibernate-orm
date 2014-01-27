@@ -28,11 +28,13 @@ import java.util.HashMap;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class SubclassDynamicMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

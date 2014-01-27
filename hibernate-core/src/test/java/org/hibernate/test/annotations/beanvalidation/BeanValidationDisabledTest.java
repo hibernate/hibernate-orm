@@ -33,6 +33,9 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertTrue;
@@ -61,9 +64,23 @@ public class BeanValidationDisabledTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDDLDisabled() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
-		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
-		assertTrue( "DDL constraints are applied", countryColumn.isNullable() );
+		final boolean isNullable;
+		if ( isMetadataUsed() ) {
+			final EntityBinding entityBinding = metadata().getEntityBinding( Address.class.getName() );
+			final SingularAttributeBinding attributeBinding =
+					(SingularAttributeBinding) entityBinding.locateAttributeBinding( "country" );
+
+
+			final org.hibernate.metamodel.spi.relational.Column column =
+					(org.hibernate.metamodel.spi.relational.Column) attributeBinding.getValues().get( 0 );
+			isNullable = column.isNullable();
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
+			Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
+			isNullable = countryColumn.isNullable();
+		}
+		assertTrue( "DDL constraints are applied", isNullable );
 	}
 
 	@Override

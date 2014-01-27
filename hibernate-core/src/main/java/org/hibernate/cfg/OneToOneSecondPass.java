@@ -106,8 +106,8 @@ public class OneToOneSecondPass implements SecondPass {
 		if ( !optional ) value.setConstrained( true );
 		value.setForeignKeyType(
 				value.isConstrained() ?
-						ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT :
-						ForeignKeyDirection.FOREIGN_KEY_TO_PARENT
+						ForeignKeyDirection.FROM_PARENT :
+						ForeignKeyDirection.TO_PARENT
 		);
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );

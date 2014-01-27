@@ -14,6 +14,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertTrue;
  * @author MAX
  *
  */
+@FailureExpectedWithNewMetamodel
 public class CustomSQLTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

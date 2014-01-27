@@ -42,6 +42,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -57,13 +59,24 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-7890")
 	public void testQuotedUniqueConstraint() {
-		Iterator<UniqueKey> itr = configuration().getClassMapping( Person.class.getName() )
-				.getTable().getUniqueKeyIterator();
-		while ( itr.hasNext() ) {
-			UniqueKey uk = itr.next();
-			assertEquals( uk.getColumns().size(), 1 );
-			assertEquals( uk.getColumn( 0 ).getName(),  "name");
-			return;
+		if ( isMetadataUsed() ) {
+			Iterable<org.hibernate.metamodel.spi.relational.UniqueKey> uniqueKeys =
+					SchemaUtil.getTable( Person.class, metadata() ).getUniqueKeys();
+			for ( org.hibernate.metamodel.spi.relational.UniqueKey uk : uniqueKeys ) {
+				assertEquals( uk.getColumns().size(), 1 );
+				assertEquals( uk.getColumns().get( 0 ).getColumnName().getText(),  "name");
+				return;
+			}
+		}
+		else {
+			Iterator<UniqueKey> itr = configuration().getClassMapping( Person.class.getName() )
+					.getTable().getUniqueKeyIterator();
+			while ( itr.hasNext() ) {
+				UniqueKey uk = itr.next();
+				assertEquals( uk.getColumns().size(), 1 );
+				assertEquals( uk.getColumn( 0 ).getName(),  "name");
+				return;
+			}
 		}
 		fail( "GLOBALLY_QUOTED_IDENTIFIERS caused the unique key creation to fail." );
 	}
@@ -83,7 +96,13 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
 		String role = User.class.getName() + ".roles";
-		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+
+		if ( isMetadataUsed() ) {
+			assertEquals( "User_Role", SchemaUtil.getCollectionTable( User.class, "roles", metadata() ).getLogicalName().getText() );
+		}
+		else {
+			assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+		}
 		s.close();
 	}
 	
@@ -109,12 +128,24 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	private void doTestHbmQuoting(Class clazz) {
-		Table table = configuration().getClassMapping( clazz.getName() ).getTable();
-		assertTrue( table.isQuoted() );
-		Iterator itr = table.getColumnIterator();
-		while(itr.hasNext()) {
-			Column column = (Column) itr.next();
-			assertTrue( column.isQuoted() );
+		if ( isMetadataUsed() ) {
+			final TableSpecification tableSpecification = SchemaUtil.getTable( clazz, metadata() );
+			assertTrue( tableSpecification.getLogicalName().isQuoted() );
+			for ( org.hibernate.metamodel.spi.relational.Value value : tableSpecification.values() ) {
+				assertTrue( org.hibernate.metamodel.spi.relational.Column.class.isInstance( value ) );
+				org.hibernate.metamodel.spi.relational.Column column =
+						(org.hibernate.metamodel.spi.relational.Column) value;
+				assertTrue( column.getColumnName().isQuoted() );
+			}
+		}
+		else {
+			Table table = configuration().getClassMapping( clazz.getName() ).getTable();
+			assertTrue( table.isQuoted() );
+			Iterator itr = table.getColumnIterator();
+			while(itr.hasNext()) {
+				Column column = (Column) itr.next();
+				assertTrue( column.isQuoted() );
+			}
 		}
 	}
 

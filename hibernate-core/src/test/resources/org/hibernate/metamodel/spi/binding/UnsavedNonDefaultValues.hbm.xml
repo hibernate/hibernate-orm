@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.metamodel.spi.binding" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <class name="AbstractUnsavedValueTests$EntityWithAssignedId">
+        <id name="id" unsaved-value="any"/>
+    </class>
+
+    <class name="AbstractUnsavedValueTests$EntityWithSequenceId">
+        <id name="id" unsaved-value="null">
+            <generator class="increment"/>
+        </id>
+    </class>
+
+    <class name="AbstractUnsavedValueTests$EntityWithVersion">
+        <id name="id"/>
+        <version name="version" unsaved-value="negative"/>
+    </class>
+
+    <class name="AbstractUnsavedValueTests$EntityWithTimestamp">
+        <id name="id"/>
+        <timestamp name="timestamp" unsaved-value="null"/>
+    </class>
+
+
+</hibernate-mapping>

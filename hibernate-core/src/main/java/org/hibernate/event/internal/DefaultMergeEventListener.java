@@ -211,14 +211,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
 		super.cascadeBeforeSave( source, persister, entity, copyCache );
-		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT );
+		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FROM_PARENT );
 
 		saveTransientEntity( copy, entityName, event.getRequestedId(), source, copyCache );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		super.cascadeAfterSave( source, persister, entity, copyCache );
-		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_TO_PARENT );
+		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.TO_PARENT );
 
 		event.setResult( copy );
 	}
@@ -391,7 +391,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 		final Object[] copiedValues;
 
-		if ( foreignKeyDirection == ForeignKeyDirection.FOREIGN_KEY_TO_PARENT ) {
+		if ( foreignKeyDirection == ForeignKeyDirection.TO_PARENT ) {
 			// this is the second pass through on a merge op, so here we limit the
 			// replacement to associations types (value types were already replaced
 			// during the first pass)

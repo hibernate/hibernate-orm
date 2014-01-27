@@ -40,7 +40,7 @@ import org.junit.Test;
 public class DoesNotWorkTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {DoesNotWork.class};
+		return new Class[] { DoesNotWork.class, DoesNotWorkPk.class };
 	}
 
 	@Override

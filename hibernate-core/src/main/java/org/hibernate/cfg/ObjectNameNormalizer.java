@@ -56,6 +56,10 @@ public abstract class ObjectNameNormalizer {
 		public String handleExplicitName(NamingStrategy strategy, String name);
 	}
 
+	public static interface LogicalNamingStrategyHelper extends NamingStrategyHelper{
+		public String getLogicalName(NamingStrategy strategy);
+	}
+
 	/**
 	 * Performs the actual contract of normalizing a database name.
 	 *
@@ -78,7 +82,6 @@ public abstract class ObjectNameNormalizer {
 			//    handle any quoting for consistent handling in naming strategies
 			objectName = normalizeIdentifierQuoting( explicitName );
 			objectName = helper.handleExplicitName( getNamingStrategy(), objectName );
-			return normalizeIdentifierQuoting( objectName );
 		}
         // Conceivable that the naming strategy could return a quoted identifier, or
 			//    that user enabled <delimited-identifiers/>

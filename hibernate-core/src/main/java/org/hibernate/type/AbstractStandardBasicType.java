@@ -40,7 +40,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -359,7 +359,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object owner,
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
-		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT == foreignKeyDirection
+		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
 				? getReplacement( (T) original, (T) target, session )
 				: target;
 	}

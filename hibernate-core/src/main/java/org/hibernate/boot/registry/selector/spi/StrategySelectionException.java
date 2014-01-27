@@ -31,13 +31,16 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class StrategySelectionException extends HibernateException {
+
+	private final String implementationClassName;
 	/**
 	 * Constructs a StrategySelectionException using the specified message.
 	 *
 	 * @param message A message explaining the exception condition.
 	 */
-	public StrategySelectionException(String message) {
+	public StrategySelectionException(String message, String implementationClassName) {
 		super( message );
+		this.implementationClassName = implementationClassName;
 	}
 
 	/**
@@ -46,7 +49,17 @@ public class StrategySelectionException extends HibernateException {
 	 * @param message A message explaining the exception condition.
 	 * @param cause The underlying cause.
 	 */
-	public StrategySelectionException(String message, Throwable cause) {
+	public StrategySelectionException(String message, Throwable cause, String implementationClassName) {
 		super( message, cause );
+		this.implementationClassName = implementationClassName;
+	}
+
+	/**
+	 * Gets the selected implementation class involved with the exception.
+	 *
+	 * @return the implementation class name.
+	 */
+	public String getImplementationClassName() {
+		return implementationClassName;
 	}
 }

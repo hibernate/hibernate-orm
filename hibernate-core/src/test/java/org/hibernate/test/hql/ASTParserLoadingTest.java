@@ -80,6 +80,7 @@ import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -115,6 +116,7 @@ import static org.junit.Assert.fail;
         comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
+@FailureExpectedWithNewMetamodel
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
 

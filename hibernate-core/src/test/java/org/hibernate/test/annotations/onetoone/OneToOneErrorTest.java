@@ -9,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
@@ -16,6 +17,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  */
 public class OneToOneErrorTest {
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testWrongOneToOne() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.addAnnotatedClass( Show.class )

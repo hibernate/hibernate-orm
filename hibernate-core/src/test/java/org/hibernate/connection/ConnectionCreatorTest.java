@@ -27,15 +27,26 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.Set;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverConnectionCreator;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
+import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameSupport;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.ProvidedService;
 
 import org.junit.Test;

@@ -88,6 +88,6 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Pool.class, SwimmingPool.class };
+		return new Class[] { Pool.class, PoolAddress.class, SwimmingPool.class };
 	}
 }

@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneInCompositePk() throws Exception {
@@ -364,9 +366,12 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Parent.class,
+				ParentPk.class,
 				Child.class,
+				ChildPk.class,
 				Channel.class,
 				TvMagazin.class,
+				TvMagazinPk.class,
 				TvProgramIdClass.class,
 				TvProgram.class,
 				Presenter.class,
@@ -376,6 +381,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 				OrderLinePk.class,
 				LittleGenius.class,
 				A.class,
+				AId.class,
 				B.class,
 				C.class,
 				SomeEntity.class

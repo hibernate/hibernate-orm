@@ -41,8 +41,14 @@ import static org.junit.Assert.assertTrue;
 public class DerivedIdentitySimpleParentSimpleDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", configuration() ) );
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", configuration() ) );
+		}
 
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -73,8 +79,14 @@ public class DerivedIdentitySimpleParentSimpleDepTest extends BaseCoreFunctional
 
 	@Test
 	public void testManyToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "patient_ssn", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", configuration() ) );
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "patient_ssn", metadata() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "patient_ssn", configuration() ) );
+			assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", configuration() ) );
+		}
 
 		Session s = openSession();
 		s.getTransaction().begin();

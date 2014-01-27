@@ -34,6 +34,7 @@ import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.DoubleType;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class CriteriaClassicAggregationReturnTest extends QueryTranslatorTestCase {
 	@Override
 	public void configure(Configuration cfg) {

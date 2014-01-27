@@ -53,7 +53,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -366,7 +366,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.FOREIGN_KEY_TO_PARENT;
+		return ForeignKeyDirection.TO_PARENT;
 	}
 
 	/**

@@ -33,6 +33,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 
@@ -82,6 +84,38 @@ public class ComponentMetamodel implements Serializable {
 				entityMode,
 				component
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+	}
+
+	public ComponentMetamodel(
+			CompositeAttributeBindingContainer component,
+			boolean isIdentifierAttributeBinding,
+			boolean isIdentifierMapper) {
+		this.isKey = isIdentifierAttributeBinding;
+		this.role = component.getPathBase();
+		propertySpan = component.attributeBindingSpan();
+		properties = new StandardProperty[propertySpan];
+		int i = 0;
+		for ( AttributeBinding attributeBinding : component.attributeBindings() ) {
+			properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, false );
+			propertyIndexes.put( attributeBinding.getAttribute().getName(), i );
+			i++;
+		}
+
+		entityMode = component.seekEntityBinding().getHierarchyDetails().getEntityMode();
+
+		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
+		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
+		final Class<? extends ComponentTuplizer> tuplizerClass = component.getCustomTuplizerClass();
+		if ( tuplizerClass == null ) {
+			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer(
+					entityMode, component, isIdentifierMapper
+			);
+		}
+		else {
+			componentTuplizer = componentTuplizerFactory.constructTuplizer(
+					tuplizerClass, component, isIdentifierMapper
+			);
+		}
 	}
 
 	public boolean isKey() {

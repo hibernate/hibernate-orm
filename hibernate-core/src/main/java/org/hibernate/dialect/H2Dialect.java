@@ -427,4 +427,9 @@ public class H2Dialect extends Dialect {
 	public boolean supportsTuplesInSubqueries() {
 		return false;
 	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "call schema()";
+	}
 }

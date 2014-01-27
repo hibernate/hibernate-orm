@@ -26,7 +26,7 @@ package org.hibernate.test.annotations.embeddables;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**

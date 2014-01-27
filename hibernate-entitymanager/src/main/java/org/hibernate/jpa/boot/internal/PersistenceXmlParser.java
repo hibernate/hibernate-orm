@@ -50,7 +50,7 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
-import org.hibernate.metamodel.source.XsdException;
+import org.hibernate.metamodel.spi.source.XsdException;
 
 import org.jboss.logging.Logger;
 

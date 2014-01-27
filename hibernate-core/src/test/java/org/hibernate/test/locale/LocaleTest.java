@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
@@ -64,15 +65,20 @@ public class LocaleTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8765")
 	public void testMetadataWithLocale() {
-		SchemaValidator sv = new SchemaValidator( configuration() );
-		try {
-			// Rather than building TableMetadata and checking for ascii values in table/column names, simply
-			// attempt to validate.
-			sv.validate();
+		if ( isMetadataUsed() ) {
+			fail( "SchemaValidator is not supported using new metamodel yet." );
 		}
-		catch (HibernateException e) {
-			fail("Failed with the Turkish locale, most likely due to the use of String#toLowerCase() within hbm2ddl.  "
-					+ "Search for all instaces and replace with StringHelper#toLowerCase(String)!  " + e.getMessage());
+		else {
+			SchemaValidator sv = new SchemaValidator( configuration() );
+			try {
+				// Rather than building TableMetadata and checking for ascii values in table/column names, simply
+				// attempt to validate.
+				sv.validate();
+			}
+			catch (HibernateException e) {
+				fail("Failed with the Turkish locale, most likely due to the use of String#toLowerCase() within hbm2ddl.  "
+						+ "Search for all instaces and replace with StringHelper#toLowerCase(String)!  " + e.getMessage());
+			}
 		}
 	}
 	

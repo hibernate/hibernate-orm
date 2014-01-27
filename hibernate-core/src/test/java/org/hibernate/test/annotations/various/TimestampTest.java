@@ -28,9 +28,11 @@ import org.junit.Test;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.TimestampType;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -57,11 +59,23 @@ public class TimestampTest extends BaseCoreFunctionalTestCase {
 		ClassMetadata meta = sessionFactory().getClassMetadata( clazz );
 		assertTrue( "Entity is annotated with @Timestamp and should hence be versioned", meta.isVersioned() );
 
-		PersistentClass persistentClass = configuration().getClassMapping( clazz.getName() );
-		assertNotNull( persistentClass );
-		Property versionProperty = persistentClass.getVersion();
-		assertNotNull( versionProperty );
-		assertEquals( "Wrong timestamp type", expectedTypeClass, versionProperty.getType().getClass() );
+		if ( isMetadataUsed() ) {
+			EntityBinding binding = metadata().getEntityBinding( clazz.getName() );
+			assertNotNull( binding );
+			Type type = binding.getHierarchyDetails().getEntityVersion()
+					.getVersioningAttributeBinding().getHibernateTypeDescriptor()
+					.getResolvedTypeMapping();
+			assertNotNull( type );
+			assertEquals( "Wrong timestamp type", expectedTypeClass,
+					type.getClass() );
+		}
+		else {
+			PersistentClass persistentClass = configuration().getClassMapping( clazz.getName() );
+			assertNotNull( persistentClass );
+			Property versionProperty = persistentClass.getVersion();
+			assertNotNull( versionProperty );
+			assertEquals( "Wrong timestamp type", expectedTypeClass, versionProperty.getType().getClass() );
+		}
 	}
 
 	@Override

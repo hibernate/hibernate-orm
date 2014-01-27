@@ -50,11 +50,13 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.domain.Aggregate;
+import org.hibernate.metamodel.spi.domain.Attribute;
+import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
@@ -784,33 +786,33 @@ public class EntityMetamodel implements Serializable {
 
 		identifierAttribute = PropertyFactory.buildIdentifierProperty(
 				entityBinding,
-				sessionFactory.getIdentifierGenerator( rootName )
+				sessionFactory.getIdentifierGenerator( rootName ),
+				sessionFactory
 		);
 
 		versioned = entityBinding.isVersioned();
 
-		boolean hasPojoRepresentation = false;
-		Class<?> mappedClass = null;
+		boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
 		Class<?> proxyInterfaceClass = null;
-		if ( entityBinding.getEntity().getClassReferenceUnresolved() != null ) {
-			hasPojoRepresentation = true;
+		Class<?> mappedClass = null;
+		if ( isPOJO ) {
 			mappedClass = entityBinding.getEntity().getClassReference();
-			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getValue();
+			proxyInterfaceClass = entityBinding.getProxyInterfaceType() == null ? null : entityBinding.getProxyInterfaceType().getValue();
+			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 		}
-		instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
+		else {
+			instrumentationMetadata = new NonPojoInstrumentationMetadata( entityBinding.getEntity().getName() );
+		}
 
 		boolean hasLazy = false;
 
 		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
-		BasicAttributeBinding rootEntityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
-		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
-		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
-		propertySpan = rootEntityIdentifier == null ?
-				entityBinding.getAttributeBindingClosureSpan() :
-				entityBinding.getAttributeBindingClosureSpan() - 1;
+
+		final AttributeBinding [] attributeBindings = entityBinding.getNonIdAttributeBindingClosure();
+		propertySpan = attributeBindings.length;
 
 		properties = new NonIdentifierAttribute[propertySpan];
-		List naturalIdNumbers = new ArrayList();
+		List<Integer> naturalIdNumbers = new ArrayList<Integer>();
 		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		propertyNames = new String[propertySpan];
 		propertyTypes = new Type[propertySpan];
@@ -823,7 +825,6 @@ public class EntityMetamodel implements Serializable {
 		propertyLaziness = new boolean[propertySpan];
 		cascadeStyles = new CascadeStyle[propertySpan];
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 		// todo : handle value generations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.hasPreInsertGeneratedValues = false;
@@ -846,31 +847,40 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateGeneratedValue = false;
 		boolean foundUpdateableNaturalIdProperty = false;
 
-		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( attributeBinding == rootEntityIdentifier ) {
-				// skip the identifier attribute binding
-				continue;
-			}
+		for ( AttributeBinding attributeBinding : attributeBindings ) {
 
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getVersioningAttributeBinding() ) {
+			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
 				tempVersionProperty = i;
 				properties[i] = PropertyFactory.buildVersionProperty(
 						persister,
-						entityBinding.getHierarchyDetails().getVersioningAttributeBinding(),
+						sessionFactory,
+						tempVersionProperty,
+						entityBinding,
 						instrumentationMetadata.isInstrumented()
 				);
 			}
 			else {
-				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, instrumentationMetadata.isInstrumented() );
+				properties[i] = PropertyFactory.buildEntityBasedAttribute(
+						persister,
+						sessionFactory,
+						i,
+						attributeBinding,
+						instrumentationMetadata.isInstrumented()
+				);
 			}
 
-			// TODO: fix when natural IDs are added (HHH-6354)
-			//if ( attributeBinding.isNaturalIdentifier() ) {
-			//	naturalIdNumbers.add( i );
-			//	if ( attributeBinding.isUpdateable() ) {
-			//		foundUpdateableNaturalIdProperty = true;
-			//	}
-			//}
+			if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+				SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast(
+						attributeBinding
+				);
+				if ( singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.MUTABLE ) {
+					naturalIdNumbers.add( i );
+					foundUpdateableNaturalIdProperty = true;
+				}
+				else if ( singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE ) {
+					naturalIdNumbers.add( i );
+				}
+			}
 
 			if ( "id".equals( attributeBinding.getAttribute().getName() ) ) {
 				foundNonIdentifierPropertyNamedId = true;
@@ -922,7 +932,7 @@ public class EntityMetamodel implements Serializable {
 		else {
 			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
-			hasCacheableNaturalId = false; //See previous TODO and HHH-6354
+			hasCacheableNaturalId = entityBinding.getHierarchyDetails().getNaturalIdCaching() != null;
 		}
 
 		hasCascades = foundCascade;
@@ -935,18 +945,18 @@ public class EntityMetamodel implements Serializable {
 
 		lazy = entityBinding.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:
-				! hasPojoRepresentation ||
+				! isPOJO ||
 				! ReflectHelper.isFinalClass( proxyInterfaceClass )
 		);
 		mutable = entityBinding.isMutable();
 		if ( entityBinding.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)
-			isAbstract = hasPojoRepresentation &&
+			isAbstract = isPOJO &&
 			             ReflectHelper.isAbstractClass( mappedClass );
 		}
 		else {
-			isAbstract = entityBinding.isAbstract().booleanValue();
-			if ( !isAbstract && hasPojoRepresentation &&
+			isAbstract = entityBinding.isAbstract();
+			if ( !isAbstract && isPOJO &&
 					ReflectHelper.isAbstractClass( mappedClass ) ) {
 				LOG.entityMappedAsNonAbstract(name);
 			}
@@ -979,8 +989,9 @@ public class EntityMetamodel implements Serializable {
 		hasMutableProperties = foundMutable;
 
 		for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
+			// TODO: is the following correct???
 			subclassEntityNames.add( subEntityBinding.getEntity().getName() );
-			if ( subEntityBinding.getEntity().getClassReference() != null ) {
+			if ( isPOJO ) {
 				entityNameByInheritenceClassMap.put(
 						subEntityBinding.getEntity().getClassReference(),
 						subEntityBinding.getEntity().getName() );
@@ -991,9 +1002,9 @@ public class EntityMetamodel implements Serializable {
 			entityNameByInheritenceClassMap.put( mappedClass, name );
 		}
 
-		entityMode = hasPojoRepresentation ? EntityMode.POJO : EntityMode.MAP;
+		entityMode = isPOJO ? EntityMode.POJO : EntityMode.MAP;
 		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
-		Class<? extends EntityTuplizer> tuplizerClass = entityBinding.getCustomEntityTuplizerClass();
+		Class<? extends EntityTuplizer> tuplizerClass = entityBinding.getCustomTuplizerClass();
 
 		if ( tuplizerClass == null ) {
 			entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, entityBinding );
@@ -1100,9 +1111,9 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Attribute attribute, int i) {
 		propertyIndexes.put( attribute.getName(), i );
 		if ( attribute.isSingular() &&
-				( ( SingularAttribute ) attribute ).getSingularAttributeType().isComponent() ) {
-			org.hibernate.metamodel.domain.Component component =
-					( org.hibernate.metamodel.domain.Component ) ( ( SingularAttribute ) attribute ).getSingularAttributeType();
+				( ( SingularAttribute ) attribute ).getSingularAttributeType().isAggregate() ) {
+			Aggregate component =
+					( Aggregate ) ( ( SingularAttribute ) attribute ).getSingularAttributeType();
 			for ( Attribute subAttribute : component.attributes() ) {
 				propertyIndexes.put(
 						attribute.getName() + '.' + subAttribute.getName(),

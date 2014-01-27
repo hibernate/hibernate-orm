@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
@@ -51,8 +52,8 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 
 	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
-		super.configure(type, params, d);
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) throws MappingException {
+		super.configure(type, params, d, classLoaderService );
 
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, 9 );
 

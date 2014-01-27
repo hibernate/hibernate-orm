@@ -340,6 +340,17 @@ public final class ArrayHelper {
 	}
 
 	/**
+	 * Returns {@code true} if the specified array is {@code null} or empty.
+	 *
+	 * @param array the array to check.
+	 * @return {@code true} if the specified array is {@code null} or empty.
+	 */
+
+	public static boolean isEmpty(final Object[] array) {
+		return array == null || array.length == 0;
+	}
+
+	/**
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(Object[] o1, Object[] o2) {

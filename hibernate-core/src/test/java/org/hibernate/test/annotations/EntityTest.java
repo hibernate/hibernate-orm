@@ -40,6 +40,7 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -59,7 +60,15 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		assertEquals( "Flight", configuration().getClassMapping( Flight.class.getName() ).getTable().getName() );
+		if ( isMetadataUsed() ) {
+			assertEquals(
+					"Flight",
+					metadata().getEntityBinding( Flight.class.getName() ).getPrimaryTableName()
+			);
+		}
+		else {
+			assertEquals( "Flight", configuration().getClassMapping( Flight.class.getName() ).getTable().getName() );
+		}
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -314,7 +323,16 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEntityName() throws Exception {
-		assertEquals( "Corporation", configuration().getClassMapping( Company.class.getName() ).getTable().getName() );
+		if ( isMetadataUsed() ) {
+			assertEquals(
+					"Corporation",
+					metadata().getEntityBinding( Company.class.getName() ).getPrimaryTableName()
+			);
+
+		}
+		else {
+			assertEquals( "Corporation", configuration().getClassMapping( Company.class.getName() ).getTable().getName() );
+		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Company comp = new Company();
@@ -436,7 +454,12 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private SchemaExport schemaExport() {
-		return new SchemaExport( serviceRegistry(), configuration() );
+		if ( isMetadataUsed() ) {
+			return new SchemaExport( metadata() );
+		}
+		else {
+			return new SchemaExport( serviceRegistry(), configuration() );
+		}
 	}
 
 	@After

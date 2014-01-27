@@ -140,7 +140,8 @@ public class StrategySelectorBuilder {
 			throw new StrategySelectionException(
 					"Implementation class [" + strategyRegistration.getStrategyImplementation().getName()
 							+ "] does not implement strategy interface ["
-							+ strategyRegistration.getStrategyRole().getName() + "]"
+							+ strategyRegistration.getStrategyRole().getName() + "]",
+					strategyRegistration.getStrategyImplementation().getName()
 			);
 		}
 		explicitStrategyRegistrations.add( strategyRegistration );

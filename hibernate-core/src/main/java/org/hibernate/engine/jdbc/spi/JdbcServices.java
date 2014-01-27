@@ -27,6 +27,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.Service;
 
 /**
@@ -90,4 +92,6 @@ public interface JdbcServices extends Service {
 	 * @return The ResultSet wrapper.
 	 */
 	public ResultSetWrapper getResultSetWrapper();
+
+	public JdbcEnvironment getJdbcEnvironment();
 }

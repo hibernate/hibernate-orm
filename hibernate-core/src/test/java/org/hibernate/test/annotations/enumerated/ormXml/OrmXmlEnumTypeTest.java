@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.enumerated.ormXml;
 
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
@@ -47,9 +48,19 @@ public class OrmXmlEnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testOrmXmlDefinedEnumType() {
-		Type bindingPropertyType = configuration().getClassMapping( BookWithOrmEnum.class.getName() )
-				.getProperty( "bindingStringEnum" )
-				.getType();
+		final Type bindingPropertyType;
+		if ( isMetadataUsed() ) {
+			AttributeBinding attributeBinding = metadata().getEntityBinding( BookWithOrmEnum.class.getName() )
+					.locateAttributeBinding( "bindingStringEnum" );
+			bindingPropertyType =
+					attributeBinding.getHibernateTypeDescriptor()
+							.getResolvedTypeMapping();
+		}
+		else {
+			bindingPropertyType = configuration().getClassMapping( BookWithOrmEnum.class.getName() )
+					.getProperty( "bindingStringEnum" )
+					.getType();
+		}
 		CustomType customType = ExtraAssertions.assertTyping( CustomType.class, bindingPropertyType );
 		EnumType enumType = ExtraAssertions.assertTyping( EnumType.class, customType.getUserType() );
 		assertFalse( enumType.isOrdinal() );

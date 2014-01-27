@@ -36,10 +36,10 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -99,7 +99,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	/**
 	 * The constructor signature for {@link CollectionPersister} implementations using
-	 * a {@link org.hibernate.metamodel.binding.AbstractPluralAttributeBinding}
+	 * a {@link org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding}
 	 *
 	 * @todo still need to make collection persisters EntityMode-aware
 	 * @todo make EntityPersister *not* depend on {@link SessionFactoryImplementor} if possible.
@@ -125,27 +125,29 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	public EntityPersister createEntityPersister(
 			PersistentClass metadata,
 			EntityRegionAccessStrategy cacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy,
 			SessionFactoryImplementor factory,
 			Mapping cfg) {
 		Class<? extends EntityPersister> persisterClass = metadata.getEntityPersisterClass();
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );
 		}
-		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS, metadata, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory, cfg );
+		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS, metadata, cacheAccessStrategy, naturalIdAccessStrategy, factory, cfg );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public EntityPersister createEntityPersister(EntityBinding metadata,
-												 EntityRegionAccessStrategy cacheAccessStrategy,
-												 SessionFactoryImplementor factory,
-												 Mapping cfg) {
+	public EntityPersister createEntityPersister(
+			EntityBinding metadata,
+			EntityRegionAccessStrategy cacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdAccessStrategy,
+			SessionFactoryImplementor factory,
+			Mapping cfg) {
 		Class<? extends EntityPersister> persisterClass = metadata.getCustomEntityPersisterClass();
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );
 		}
-		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, cacheAccessStrategy, null, factory, cfg );
+		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, cacheAccessStrategy, naturalIdAccessStrategy, factory, cfg );
 	}
 
 	// TODO: change metadata arg type to EntityBinding when new metadata is integrated
@@ -208,12 +210,12 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			PluralAttributeBinding collectionMetadata,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException {
-		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getCollectionPersisterClass();
+		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getExplicitPersisterClass();
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
 		}
 
-		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, collectionMetadata, cacheAccessStrategy, factory );
+		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW,  metadata, collectionMetadata, cacheAccessStrategy, factory );
 	}
 
 	// TODO: change collectionMetadata arg type to AbstractPluralAttributeBinding when new metadata is integrated

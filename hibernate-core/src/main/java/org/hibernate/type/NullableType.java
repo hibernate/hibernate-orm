@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.spi.relational.Size;
 
 import org.jboss.logging.Logger;
 

@@ -24,9 +24,12 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.HashedNameUtil;
 
 /**
  * The default <tt>NamingStrategy</tt>
@@ -92,6 +95,22 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 		String header = propertyName != null ? StringHelper.unqualify( propertyName ) : propertyTableName;
 		if (header == null) throw new AssertionFailure("NammingStrategy not properly filled");
 		return columnName( header ); //+ "_" + referencedColumnName not used for backward compatibility
+	}
+	
+	public String foreignKeyName(String sourceTableName, List<String> sourceColumnNames,
+			String targetTableName, List<String> targetColumnNames) {
+		List<String> combinedColumnNames = new ArrayList<String>();
+		combinedColumnNames.addAll( sourceColumnNames );
+		combinedColumnNames.addAll( targetColumnNames );
+		return HashedNameUtil.generateName( "FK_", sourceTableName + "_" + targetTableName, combinedColumnNames );
+	}
+	
+	public String uniqueKeyName(String tableName, List<String> columnNames) {
+		return HashedNameUtil.generateName( "UK_", tableName, columnNames );
+	}
+	
+	public String indexName(String tableName, List<String> columnNames) {
+		return HashedNameUtil.generateName( "IDX_", tableName, columnNames );
 	}
 
 	/**

@@ -224,7 +224,8 @@ public class MappingReader {
 	public static enum SupportedOrmXsdVersion {
 		ORM_1_0( "org/hibernate/jpa/orm_1_0.xsd" ),
 		ORM_2_0( "org/hibernate/jpa/orm_2_0.xsd" ),
-		ORM_2_1( "org/hibernate/jpa/orm_2_1.xsd" );
+		ORM_2_1( "org/hibernate/jpa/orm_2_1.xsd" ),
+		HBM_4_0( "org/hibernate/hibernate-mapping-4.0.xsd");
 
 		private final String schemaResourceName;
 
@@ -241,6 +242,9 @@ public class MappingReader {
 			}
 			else if ( "2.1".equals( name ) ) {
 				return ORM_2_1;
+			}
+			else if ( "4.0".equals( name ) ) {
+				return HBM_4_0;
 			}
 			throw new UnsupportedOrmXsdVersionException( name, origin );
 		}
@@ -264,7 +268,7 @@ public class MappingReader {
 		}
 	}
 
-	private static URL resolveLocalSchemaUrl(String schemaName) {
+	public static URL resolveLocalSchemaUrl(String schemaName) {
 		URL url = MappingReader.class.getClassLoader().getResource( schemaName );
 		if ( url == null ) {
 			throw new XmlInfrastructureException( "Unable to locate schema [" + schemaName + "] via classpath" );
@@ -272,7 +276,11 @@ public class MappingReader {
 		return url;
 	}
 
-	private static Schema resolveLocalSchema(URL schemaUrl) {
+	public static Schema resolveLocalSchema(String schemaName){
+		return resolveLocalSchema( resolveLocalSchemaUrl( schemaName ) );
+	}
+
+	public static Schema resolveLocalSchema(URL schemaUrl) {
 
 		try {
 			InputStream schemaStream = schemaUrl.openStream();
@@ -326,7 +334,7 @@ public class MappingReader {
 			if ( errorHandler.hasErrors() ) {
 				throw errorHandler.getErrors().get( 0 );
 			}
-			return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
+			return new XmlDocumentImpl( document, origin );
 		}
 		catch ( Exception e ) {
 			if ( LOG.isDebugEnabled() ) {
@@ -344,7 +352,7 @@ public class MappingReader {
 						errorHandler.logErrors();
 						throw errorHandler.getErrors().get( 0 );
 					}
-					return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
+					return new XmlDocumentImpl( document, origin );
 				}
 				catch ( Exception e2 ) {
 					if ( LOG.isDebugEnabled() ) {
@@ -361,7 +369,7 @@ public class MappingReader {
 								errorHandler.logErrors();
 								throw errorHandler.getErrors().get( 0 );
 							}
-							return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
+							return new XmlDocumentImpl( document, origin );
 						}
 						catch ( Exception e3 ) {
 							if ( LOG.isDebugEnabled() ) {
@@ -382,13 +390,13 @@ public class MappingReader {
 			if ( "orm_2_1.xsd".equals( xsd ) ) {
 				saxReader.setProperty(
 						"http://apache.org/xml/properties/schema/external-schemaLocation",
-						"http://xmlns.jcp.org/xml/ns/persistence/orm " + xsd
+						LocalXmlResourceResolver.SECOND_JPA_ORM_NS + " " + xsd
 				);
 			}
 			else {
 				saxReader.setProperty(
 						"http://apache.org/xml/properties/schema/external-schemaLocation",
-						"http://java.sun.com/xml/ns/persistence/orm " + xsd
+						LocalXmlResourceResolver.INITIAL_JPA_ORM_NS + " " + xsd
 				);
 			}
 		}

@@ -31,12 +31,14 @@ import org.hibernate.Session;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Elizabeth Chatman
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel // missing unique-constraint default naming
 public class EntityMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

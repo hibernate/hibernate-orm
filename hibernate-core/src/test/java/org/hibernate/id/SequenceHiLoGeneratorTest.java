@@ -32,13 +32,13 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
@@ -87,7 +87,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		Dialect dialect = TestingDatabaseInfo.DIALECT;
 
 		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, dialect );
+		generator.configure( StandardBasicTypes.LONG, properties, dialect, new ClassLoaderServiceImpl() );
 
 		cfg = TestingDatabaseInfo.buildBaseConfiguration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject( generator.sqlCreateStrings( dialect )[0],

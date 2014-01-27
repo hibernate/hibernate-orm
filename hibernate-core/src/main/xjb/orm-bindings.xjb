@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-        version="2.1">
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+               jaxb:extensionBindingPrefixes="inheritance"
+               version="2.1">
 
-    <jaxb:bindings schemaLocation="../resources/org/hibernate/jpa/orm_2_0.xsd" node="/xsd:schema">
+    <jaxb:bindings schemaLocation="../resources/org/hibernate/jpa/orm_2_1.xsd" node="/xsd:schema">
         <jaxb:schemaBindings>
             <jaxb:nameXmlTransform>
                 <jaxb:typeName prefix="Jaxb"/>
@@ -13,6 +15,96 @@
                 <jaxb:anonymousTypeName prefix="Jaxb"/>
             </jaxb:nameXmlTransform>
         </jaxb:schemaBindings>
+        <jaxb:bindings node="//xsd:complexType[@name='secondary-table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='join-table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='collection-table']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='table-generator']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='sequence-generator']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.SchemaAware</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='entity']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='embeddable']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='mapped-superclass']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='id']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='version']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='basic']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='many-to-one']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='one-to-many']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='one-to-one']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='embedded-id']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='embedded']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='many-to-many']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='element-collection']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.PropertyElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='pre-persist']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='pre-remove']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='pre-update']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='post-load']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='post-remove']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='post-update']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='post-persist']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.Listener</inheritance:implements>
+        </jaxb:bindings>
+
+        <jaxb:bindings node="//xsd:complexType[@name='attributes']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.AttributesContainer</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='embeddable-attributes']">
+            <inheritance:implements>org.hibernate.metamodel.internal.source.annotations.xml.mocker.AttributesContainer</inheritance:implements>
+        </jaxb:bindings>
     </jaxb:bindings>
+
+    <!-- All bindings need to be serializable for cached metadata sources. -->
+	<jaxb:globalBindings>
+		<jaxb:serializable />
+	</jaxb:globalBindings>
 
 </jaxb:bindings>

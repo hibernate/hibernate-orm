@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 
 public class DynamicMapInstantiator implements Instantiator {

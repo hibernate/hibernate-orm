@@ -39,6 +39,7 @@ import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Flight;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -49,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEager() throws Exception {

@@ -54,6 +54,7 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
@@ -63,7 +64,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
+@FailureExpectedWithNewMetamodel
 public class ParentChildTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

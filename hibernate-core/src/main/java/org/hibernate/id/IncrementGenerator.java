@@ -31,6 +31,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -71,7 +72,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		return previousValueHolder.makeValueThenIncrement();
 	}
 
-	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
+	public void configure(Type type, Properties params, Dialect dialect, ClassLoaderService classLoaderService) throws MappingException {
 		returnClass = type.getReturnedClass();
 
 		ObjectNameNormalizer normalizer =

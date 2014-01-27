@@ -36,12 +36,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -52,14 +54,15 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.SimpleValueBinding;
-import org.hibernate.metamodel.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
@@ -127,14 +130,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] constraintOrderedKeyColumnNames;
 
 	//private final Map propertyTableNumbersByName = new HashMap();
-	private final Map propertyTableNumbersByNameAndSubclass = new HashMap();
+	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass = new HashMap<String, Integer>();
 	
-	private final Map sequentialSelectStringsByEntityName = new HashMap();
+	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<String, String>();
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject("<null discriminator>");
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
-	private static final String NULL_STRING = "null";
-	private static final String NOT_NULL_STRING = "not null";
 
 	//INITIALIZATION:
 
@@ -475,9 +476,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// CLASS + TABLE
 
-		// TODO: fix when joins are working (HHH-6391)
-		//joinSpan = entityBinding.getJoinClosureSpan() + 1;
-		joinSpan = 1;
+		joinSpan = entityBinding.getSecondaryTableClosureSpan() + 1;
 		qualifiedTableNames = new String[joinSpan];
 		isInverseTable = new boolean[joinSpan];
 		isNullableTable = new boolean[joinSpan];
@@ -507,7 +506,26 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// JOINS
 
-		// TODO: add join stuff when HHH-6391 is working
+		int j = 1;
+		for ( SecondaryTable join : entityBinding.getSecondaryTableClosure() ) {
+			qualifiedTableNames[j] = join.getSecondaryTableReference().getQualifiedName( factory.getDialect() );
+			isInverseTable[j] = join.isInverse();
+			isNullableTable[j] = join.isOptional();
+			cascadeDeleteEnabled[j] = join.isCascadeDeleteEnabled() &&
+					factory.getDialect().supportsCascadeDelete();
+
+			initializeCustomSql( join.getCustomInsert(), j, customSQLInsert, insertCallable, insertResultCheckStyles );
+			initializeCustomSql( join.getCustomUpdate(), j, customSQLUpdate, updateCallable, updateResultCheckStyles );
+			initializeCustomSql( join.getCustomDelete(), j, customSQLDelete, deleteCallable, deleteResultCheckStyles );
+
+			final List<org.hibernate.metamodel.spi.relational.Column> joinColumns = join.getForeignKeyReference().getSourceColumns();
+			keyColumnNames[j] = new String[ joinColumns.size() ];
+			int i = 0;
+			for ( org.hibernate.metamodel.spi.relational.Column joinColumn : joinColumns ) {
+				keyColumnNames[j][i++] = joinColumn.getColumnName().getText( factory.getDialect() );
+			}
+			j++;
+		}
 
 		constraintOrderedTableNames = new String[qualifiedTableNames.length];
 		constraintOrderedKeyColumnNames = new String[qualifiedTableNames.length][];
@@ -518,7 +536,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		spaces = ArrayHelper.join(
 				qualifiedTableNames,
-				ArrayHelper.toStringArray( entityBinding.getSynchronizedTableNames() )
+				entityBinding.getSynchronizedTableNames()
 		);
 
 		final boolean lazyAvailable = isInstrumented();
@@ -539,8 +557,24 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isNullables.add(Boolean.FALSE);
 		isLazies.add(Boolean.FALSE);
 
-		// TODO: add join stuff when HHH-6391 is working
-
+		for ( SecondaryTable join : entityBinding.getEntitiesSecondaryTableClosure() ) {
+			final boolean isConcrete = entityBinding.isClassOrSuperclassSecondaryTable( join );
+			isConcretes.add( isConcrete );
+			final boolean isDeferred = join.getFetchStyle() != FetchStyle.JOIN;
+			isDeferreds.add( isDeferred );
+			isInverses.add( join.isInverse() );
+			isNullables.add( join.isOptional() );
+			isLazies.add( lazyAvailable && join.isLazy() );
+			hasDeferred = isDeferred && !isConcrete;
+			subclassTables.add( join.getSecondaryTableReference().getQualifiedName( factory.getDialect() ) );
+			final List<org.hibernate.metamodel.spi.relational.Column> joinColumns = join.getForeignKeyReference().getSourceColumns();
+			String[] keyCols = new String[ joinColumns.size() ];
+			int i = 0;
+			for ( org.hibernate.metamodel.spi.relational.Column joinColumn : joinColumns ) {
+				keyCols[i++] = joinColumn.getColumnName().getText( factory.getDialect() );
+			}
+			joinKeyColumns.add(keyCols);
+		}
 
 		subclassTableSequentialSelect = ArrayHelper.toBooleanArray(isDeferreds);
 		subclassTableNameClosure = ArrayHelper.toStringArray(subclassTables);
@@ -554,11 +588,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// DISCRIMINATOR
 
 		if ( entityBinding.isPolymorphic() ) {
-			SimpleValue discriminatorRelationalValue = entityBinding.getHierarchyDetails().getEntityDiscriminator().getBoundValue();
+			EntityDiscriminator discriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator();
+			org.hibernate.metamodel.spi.relational.Value discriminatorRelationalValue = discriminator.getRelationalValue();
 			if ( discriminatorRelationalValue == null ) {
 				throw new MappingException("discriminator mapping required for single table polymorphic persistence");
 			}
-			forceDiscriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator().isForced();
+			forceDiscriminator = discriminator.isForced();
 			if ( DerivedValue.class.isInstance( discriminatorRelationalValue ) ) {
 				DerivedValue formula = ( DerivedValue ) discriminatorRelationalValue;
 				discriminatorFormula = formula.getExpression();
@@ -569,39 +604,34 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorAlias = "clazz_";
 			}
 			else {
-				org.hibernate.metamodel.relational.Column column = ( org.hibernate.metamodel.relational.Column ) discriminatorRelationalValue;
-				discriminatorColumnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+				org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) discriminatorRelationalValue;
+				discriminatorColumnName = column.getColumnName().getText( factory.getDialect() );
 				discriminatorColumnReaders =
 						column.getReadFragment() == null ?
-								column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+								column.getColumnName().getText( factory.getDialect() ) :
 								column.getReadFragment();
 				discriminatorColumnReaderTemplate = getTemplateFromColumn( column, factory );
-				discriminatorAlias = column.getAlias( factory.getDialect() );
+				discriminatorAlias = column.getAlias( factory.getDialect(), entityBinding.getPrimaryTable() );
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
 			}
 
-			discriminatorType = entityBinding.getHierarchyDetails()
-					.getEntityDiscriminator()
+			discriminatorType = discriminator
 					.getExplicitHibernateTypeDescriptor()
 					.getResolvedTypeMapping();
-			if ( entityBinding.getDiscriminatorMatchValue() == null ) {
+
+			if ( entityBinding.isDiscriminatorMatchValueNull() ) {
 				discriminatorValue = NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NULL;
 				discriminatorInsertable = false;
 			}
-			else if ( entityBinding.getDiscriminatorMatchValue().equals( NULL_STRING ) ) {
-				discriminatorValue = NOT_NULL_DISCRIMINATOR;
-				discriminatorSQLValue = InFragment.NOT_NULL;
-				discriminatorInsertable = false;
-			}
-			else if ( entityBinding.getDiscriminatorMatchValue().equals( NOT_NULL_STRING ) ) {
+			else if ( entityBinding.isDiscriminatorMatchValueNotNull() ) {
 				discriminatorValue = NOT_NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NOT_NULL;
 				discriminatorInsertable = false;
 			}
 			else {
-				discriminatorInsertable = entityBinding.getHierarchyDetails().getEntityDiscriminator().isInserted()
+				discriminatorInsertable = discriminator.isInserted()
 						&& ! DerivedValue.class.isInstance( discriminatorRelationalValue );
 				try {
 					DiscriminatorType dtype = ( DiscriminatorType ) discriminatorType;
@@ -634,48 +664,50 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		propertyTableNumbers = new int[ getPropertySpan() ];
 		int i=0;
-		for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+		for( AttributeBinding attributeBinding : entityBinding.getNonIdAttributeBindingClosure() ) {
 			// TODO: fix when joins are working (HHH-6391)
 			//propertyTableNumbers[i++] = entityBinding.getJoinNumber( attributeBinding);
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
-				continue; // skip identifier binding
+			final int tableNumber;
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				tableNumber = entityBinding.getSecondaryTableNumber( singularAttributeBinding );
 			}
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				continue;
+			else {
+				tableNumber = 0;
 			}
-			propertyTableNumbers[ i++ ] = 0;
+			propertyTableNumbers[ i++ ] = tableNumber;
 		}
 
 		//TODO: code duplication with JoinedSubclassEntityPersister
 
-		ArrayList columnJoinNumbers = new ArrayList();
-		ArrayList formulaJoinedNumbers = new ArrayList();
-		ArrayList propertyJoinNumbers = new ArrayList();
+		ArrayList<Integer> columnJoinNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> formulaJoinedNumbers = new ArrayList<Integer>();
+		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
 
-		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
-			if ( ! attributeBinding.getAttribute().isSingular() ) {
-				continue;
+		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
+			final String entityName = attributeBinding.getContainer().seekEntityBinding().getEntityName();
+			String path = StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ?
+					entityName + '.' + attributeBinding.getAttribute().getName() :
+					entityName + '.' + attributeBinding.getContainer().getPathBase() + '.' +  attributeBinding.getAttribute().getName();
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				int join = entityBinding.getSecondaryTableNumber( singularAttributeBinding );
+				propertyJoinNumbers.add( join );
+				// We need the name of the actual entity that contains this attribute binding.
+				//TODO it should be folder.children but now it is ".children"
+				propertyTableNumbersByNameAndSubclass.put( path, join );
+				for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
+					if ( relationalValueBinding.isDerived() ) {
+						formulaJoinedNumbers.add( join );
+					}
+					else {
+						columnJoinNumbers.add( join );
+					}
+				}
 			}
-			SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
-			// TODO: fix when joins are working (HHH-6391)
-			//int join = entityBinding.getJoinNumber(singularAttributeBinding);
-			int join = 0;
-			propertyJoinNumbers.add(join);
-
-			//propertyTableNumbersByName.put( singularAttributeBinding.getName(), join );
-			propertyTableNumbersByNameAndSubclass.put(
-					singularAttributeBinding.getContainer().getPathBase() + '.' + singularAttributeBinding.getAttribute().getName(),
-					join
-			);
-
-			for ( SimpleValueBinding simpleValueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
-				if ( DerivedValue.class.isInstance( simpleValueBinding.getSimpleValue() ) ) {
-					formulaJoinedNumbers.add( join );
-				}
-				else {
-					columnJoinNumbers.add( join );
-				}
+			else {
+				propertyJoinNumbers.add( 0 );
+				propertyTableNumbersByNameAndSubclass.put( path, 0 );
 			}
 		}
 		subclassColumnTableNumberClosure = ArrayHelper.toIntArray(columnJoinNumbers);
@@ -723,19 +755,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		initSubclassPropertyAliasesMap( entityBinding );
 
 		postConstruct( mapping );
-	}
-
-	private static void initializeCustomSql(
-			CustomSQL customSql,
-			int i,
-			String[] sqlStrings,
-			boolean[] callable,
-			ExecuteUpdateResultCheckStyle[] checkStyles) {
-		sqlStrings[i] = customSql != null ?  customSql.getSql(): null;
-		callable[i] = sqlStrings[i] != null && customSql.isCallable();
-		checkStyles[i] = customSql != null && customSql.getCheckStyle() != null ?
-				customSql.getCheckStyle() :
-				ExecuteUpdateResultCheckStyle.determineDefault( sqlStrings[i], callable[i] );
 	}
 
 	protected boolean isInverseTable(int j) {

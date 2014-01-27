@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<hibernate-mapping
+        xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+        package="org.hibernate.metamodel.spi.binding.basiccollections">
+
+    <class name="EntityWithBasicCollections">
+
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+
+        <set name="thePropertyRefSet" lazy="true">
+            <key column="pid" property-ref="name"/>
+            <element column="property_ref_set_stuff" type="integer" not-null="true"/>
+        </set>
+
+        <property name="name" unique="true"/>
+
+        <bag name="theBag" lazy="false">
+            <key column="owner_id"/>
+            <element column="bag_stuff" type="string"/>
+        </bag>
+
+        <set name="theSet" lazy="extra">
+            <key column="pid"/>
+            <element column="set_stuff" type="string" not-null="false"/>
+        </set>
+
+        <list name="theList">
+            <key column="pid"/>
+            <list-index column="list_index"/>
+            <element column="list_stuff" type="string"/>
+        </list>
+
+        <map name="theMap">
+            <key column="pid"/>
+            <map-key column="map_key" type="string"/>
+            <element column="map_value" type="string"/>
+        </map>
+
+    </class>
+
+</hibernate-mapping>

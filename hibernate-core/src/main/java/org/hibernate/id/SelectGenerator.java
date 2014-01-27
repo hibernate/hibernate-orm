@@ -32,6 +32,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
@@ -52,7 +53,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 	
 	private String uniqueKeyPropertyName;
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) throws MappingException {
 		uniqueKeyPropertyName = params.getProperty( "key" );
 	}
 

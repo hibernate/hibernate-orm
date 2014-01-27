@@ -35,6 +35,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.RequiresDialects;
@@ -64,6 +65,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	private static final Logger log = Logger.getLogger( CustomRunner.class );
 
 	private TestClassMetadata testClassMetadata;
+	private boolean beforeClassMethodFailed;
 
 	public CustomRunner(Class<?> clazz) throws InitializationError, NoTestsRemainException {
 		super( clazz );
@@ -74,6 +76,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		super.collectInitializationErrors( errors );
 		this.testClassMetadata = new TestClassMetadata( getTestClass().getJavaClass() );
 		testClassMetadata.validate( errors );
+	}
+
+	boolean beforeClassMethodFailed() {
+		return beforeClassMethodFailed;
+	}
+
+	void setBeforeClassMethodFailed() {
+		beforeClassMethodFailed = true;
 	}
 
 	public TestClassMetadata getTestClassMetadata() {
@@ -132,6 +142,11 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	protected Statement classBlock( RunNotifier notifier ) {
 		log.info( BeforeClass.class.getSimpleName() + ": " + getName() );
 
+		if ( getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) != null
+				|| ( useNewMetamodel() && getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) ) {
+			log.info( FailureExpected.class.getSimpleName() );
+		}
+
 		return super.classBlock( notifier );
 	}
 
@@ -139,9 +154,15 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	protected Statement methodBlock(FrameworkMethod method) {
 		log.info( Test.class.getSimpleName() + ": " + method.getName() );
 
+		if ( method.getAnnotation( FailureExpected.class ) != null
+				|| ( useNewMetamodel() && method.getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) ) {
+			log.info( FailureExpected.class.getSimpleName() );
+		}
+
+
 		final Statement originalMethodBlock = super.methodBlock( method );
 		final ExtendedFrameworkMethod extendedFrameworkMethod = (ExtendedFrameworkMethod) method;
-		return new FailureExpectedHandler( originalMethodBlock, testClassMetadata, extendedFrameworkMethod, testInstance );
+		return new FailureExpectedHandler( this, originalMethodBlock, testClassMetadata, extendedFrameworkMethod, testInstance );
 	}
 
 	private Object testInstance;
@@ -193,8 +214,35 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		Ignore virtualIgnore;
 
 		for ( FrameworkMethod frameworkMethod : methods ) {
+			// Convert @FailureExpectedWithNewMetamodel annotations to @FailureExpected annotations
+			FailureExpected failureExpected = null;
+			if ( useNewMetamodel() ) {
+				final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel =
+						Helper.locateAnnotation( FailureExpectedWithNewMetamodel.class, frameworkMethod, getTestClass() );
+				if ( failureExpectedWithNewMetamodel != null ) {
+					failureExpected = new FailureExpected() {
+
+						@Override
+						public Class< ? extends Annotation > annotationType() {
+							return FailureExpected.class;
+						}
+
+						@Override
+						public String message() {
+							return failureExpectedWithNewMetamodel.message();
+						}
+
+						@Override
+						public String jiraKey() {
+							return failureExpectedWithNewMetamodel.jiraKey();
+						}
+					};
+				}
+			}
+			if ( failureExpected == null ) {
+				failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
+			}
 			// potentially ignore based on expected failure
-            final FailureExpected failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
 			if ( failureExpected != null && !doValidation ) {
 				virtualIgnore = new IgnoreImpl( Helper.extractIgnoreMessage( failureExpected, frameworkMethod ) );
 			}
@@ -238,6 +286,19 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			return new Dialect() {
 			};
 		}
+	}
+
+	boolean useNewMetamodel() {
+		try {
+			Object object = getTestInstance();
+			if ( object != null && object instanceof BaseCoreFunctionalTestCase ) {
+				return ( (BaseCoreFunctionalTestCase) object ).isMetadataUsed();
+			}
+		}
+		catch ( Exception e ) {
+
+		}
+		return BaseCoreFunctionalTestCase.DEFAULT_USE_NEW_METAMODEL;
 	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {

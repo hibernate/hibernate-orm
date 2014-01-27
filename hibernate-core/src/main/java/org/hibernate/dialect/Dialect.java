@@ -80,6 +80,11 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.Sequence;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -89,6 +94,13 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
+import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.internal.StandardIndexExporter;
+import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.internal.TemporaryTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -1965,6 +1977,37 @@ public abstract class Dialect implements ConversionContext {
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private StandardTableExporter tableExporter = new StandardTableExporter( this );
+	private StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
+	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
+	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
+	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
+	private TemporaryTableExporter temporaryTableExporter = new TemporaryTableExporter( this );
+
+	public Exporter<Table> getTableExporter() {
+		return tableExporter;
+	}
+
+	public Exporter<Table> getTemporaryTableExporter() {
+		return temporaryTableExporter;
+	}
+
+	public Exporter<Sequence> getSequenceExporter() {
+		return sequenceExporter;
+	}
+
+	public Exporter<Index> getIndexExporter() {
+		return indexExporter;
+	}
+
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		return foreignKeyExporter;
+	}
+
+	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
+		return auxiliaryObjectExporter;
+	}
+
 	/**
 	 * Get the SQL command used to create the named schema
 	 *
@@ -1985,6 +2028,15 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getDropSchemaCommand(String schemaName) {
 		return "drop schema " + schemaName;
+	}
+
+	/**
+	 * Get the SQL command used to retrieve the current schema name
+	 *
+	 * @return The current schema retrieval SQL
+	 */
+	public String getCurrentSchemaCommand() {
+		return null;
 	}
 
 	/**

@@ -37,6 +37,7 @@ import org.hibernate.Transaction;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -153,6 +154,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEmbeddedSuperclass() {
 		Session s;
 		Transaction tx;
@@ -190,6 +192,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDottedProperty() {
 		Session s;
 		Transaction tx;
@@ -405,12 +408,19 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", configuration() ) );
-
+		if ( isMetadataUsed() ) {
+			assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", metadata() ) );
+			assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", metadata() ) );
+			assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", metadata() ) );
+		}
+		else {
+			assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", configuration() ) );
+			assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", configuration() ) );
+			assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", configuration() ) );
+		}
 		//just to make sure, use the mapping
 		Session s;
 		Transaction tx;
@@ -531,7 +541,17 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 				CorpType.class,
 				Nationality.class,
 				Manager.class,
-				FavoriteThings.class
+				FavoriteThings.class,
+				Address.class,
+				Country.class,
+				InternetFavorites.class,
+				FixedLeg.class,
+				FloatLeg.class,
+				Swap.class,
+				RegionalArticlePk.class,
+				LegalStructure.class,
+				Summary.class,
+				URLFavorite.class
 		};
 	}
 }

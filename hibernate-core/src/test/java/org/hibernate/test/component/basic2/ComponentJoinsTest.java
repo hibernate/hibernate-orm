@@ -38,6 +38,7 @@ public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
+				Name.class,
 				Person.class,
 				Component.class,
 				Component.Emb.Stuff.class };

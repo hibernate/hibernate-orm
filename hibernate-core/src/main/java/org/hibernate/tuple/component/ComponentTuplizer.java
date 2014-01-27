@@ -34,8 +34,9 @@ import org.hibernate.tuple.Tuplizer;
  * a mapped components.
  * </p>
  * ComponentTuplizer implementations should have the following constructor signature:
- *      (org.hibernate.mapping.Component)
- * 
+ *      ({@link org.hibernate.mapping.Component})
+ *      ({@link org.hibernate.metamodel.spi.binding.CompositeAttributeBinding}, boolean)
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */

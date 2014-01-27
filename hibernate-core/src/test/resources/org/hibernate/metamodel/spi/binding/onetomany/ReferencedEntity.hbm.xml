@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.metamodel.spi.binding.onetomany" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <class name="ReferencedEntity">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name" unique="true"/>
+    </class>
+
+</hibernate-mapping>

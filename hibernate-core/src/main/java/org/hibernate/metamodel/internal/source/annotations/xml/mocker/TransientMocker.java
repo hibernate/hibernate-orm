@@ -1,0 +1,67 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc..
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
+
+import org.jboss.jandex.ClassInfo;
+
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbTransient;
+
+/**
+ * @author Strong Liu
+ */
+class TransientMocker extends PropertyMocker {
+	private final JaxbTransient transientObj;
+	private final PropertyElement wrapper;
+
+	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, final JaxbTransient transientObj) {
+		super( indexBuilder, classInfo, defaults );
+		this.transientObj = transientObj;
+		this.wrapper = new PropertyElement() {
+			@Override
+			public String getName() {
+				return transientObj.getName();
+			}
+
+			@Override
+			public JaxbAccessType getAccess() {
+				return JaxbAccessType.FIELD;
+			}
+
+			@Override
+			public void setAccess(JaxbAccessType accessType) {
+			}
+		};
+	}
+
+	@Override
+	protected void processExtra() {
+		create( TRANSIENT );
+	}
+
+	@Override
+	protected PropertyElement getPropertyElement() {
+		return wrapper;
+	}
+}

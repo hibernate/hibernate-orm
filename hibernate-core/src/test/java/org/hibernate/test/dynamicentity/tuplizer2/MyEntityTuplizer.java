@@ -26,7 +26,7 @@ package org.hibernate.test.dynamicentity.tuplizer2;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
@@ -57,6 +57,10 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
 
+	protected Instantiator buildInstantiator(EntityBinding persistentClass) {
+		return new MyEntityInstantiator( persistentClass.getEntityName() );
+	}
+
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
 		String entityName = ProxyHelper.extractEntityName( entityInstance );
 		if ( entityName == null ) {
@@ -71,6 +75,14 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		//
 		// Here we simply use the default...
 		return super.buildProxyFactory( persistentClass, idGetter, idSetter );
+	}
+
+	protected ProxyFactory buildProxyFactory(EntityBinding entityBinding, Getter idGetter, Setter idSetter) {
+		// allows defining a custom proxy factory, which is responsible for
+		// generating lazy proxies for a given entity.
+		//
+		// Here we simply use the default...
+		return super.buildProxyFactory( entityBinding, idGetter, idSetter );
 	}
 
 	public static class MyEntityNameResolver implements EntityNameResolver {

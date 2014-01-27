@@ -33,6 +33,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -49,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
+		cfg.setProperty( MetadataSources.USE_NEW_METADATA_MAPPINGS, "true");
 	}
 
 	@Override

@@ -45,6 +45,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
@@ -57,6 +58,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {
@@ -687,6 +689,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUpdateWithWhereExistsSubquery() {
 		// multi-table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Session s = openSession();
@@ -1346,6 +1349,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-8476" )
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyBulkDelete() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

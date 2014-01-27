@@ -27,6 +27,7 @@ import org.hibernate.mapping.RootClass;
 
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -47,12 +48,27 @@ public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTes
 
 	@Test
 	public void testSameMappingValues() {
-		RootClass forest = (RootClass) configuration().getClassMapping( Forest.class.getName() );
-		RootClass forest2 = (RootClass) configuration().getClassMapping( Forest2.class.getName() );
-		assertEquals( forest.useDynamicInsert(), forest2.useDynamicInsert() );
-		assertEquals( forest.useDynamicUpdate(), forest2.useDynamicUpdate() );
-		assertEquals( forest.hasSelectBeforeUpdate(), forest2.hasSelectBeforeUpdate() );
-		assertEquals( forest.getOptimisticLockStyle(), forest2.getOptimisticLockStyle() );
-		assertEquals( forest.isExplicitPolymorphism(), forest2.isExplicitPolymorphism() );
+		if ( isMetadataUsed() ) {
+			EntityBinding forest = metadata().getEntityBinding( Forest.class.getName() );
+			EntityBinding forest2 = metadata().getEntityBinding( Forest2.class.getName() );
+			assertEquals( forest.isDynamicInsert(), forest2.isDynamicInsert() );
+			assertEquals( forest.isDynamicUpdate(), forest2.isDynamicUpdate() );
+			assertEquals( forest.isSelectBeforeUpdate(), forest2.isSelectBeforeUpdate() );
+			assertEquals(
+					forest.getHierarchyDetails().getOptimisticLockStyle(),
+					forest2.getHierarchyDetails().getOptimisticLockStyle()
+			);
+			assertEquals( forest.isPolymorphic(), forest2.isPolymorphic() );
+
+		}
+		else {
+			RootClass forest = (RootClass) configuration().getClassMapping( Forest.class.getName() );
+			RootClass forest2 = (RootClass) configuration().getClassMapping( Forest2.class.getName() );
+			assertEquals( forest.useDynamicInsert(), forest2.useDynamicInsert() );
+			assertEquals( forest.useDynamicUpdate(), forest2.useDynamicUpdate() );
+			assertEquals( forest.hasSelectBeforeUpdate(), forest2.hasSelectBeforeUpdate() );
+			assertEquals( forest.getOptimisticLockStyle(), forest2.getOptimisticLockStyle() );
+			assertEquals( forest.isExplicitPolymorphism(), forest2.isExplicitPolymorphism() );
+		}
 	}
 }

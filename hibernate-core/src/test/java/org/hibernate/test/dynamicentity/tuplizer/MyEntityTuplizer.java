@@ -1,5 +1,6 @@
 package org.hibernate.test.dynamicentity.tuplizer;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
@@ -16,6 +17,10 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		super( entityMetamodel, mappedEntity );
 	}
 
+	public MyEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding entityBinding) {
+		super( entityMetamodel, entityBinding);
+	}
+
 	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
@@ -27,4 +32,15 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 		// Here we simply use the default...
 		return super.buildProxyFactory( persistentClass, idGetter, idSetter );
 	}
+
+	@Override
+	protected Instantiator buildInstantiator(EntityBinding entityBinding) {
+		return new MyEntityInstantiator( entityBinding.getEntityName() );
+	}
+
+	@Override
+	protected ProxyFactory buildProxyFactory(EntityBinding entityBinding, Getter idGetter, Setter idSetter) {
+		return super.buildProxyFactory( entityBinding, idGetter, idSetter );
+	}
+
 }

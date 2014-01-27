@@ -29,6 +29,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -44,58 +49,110 @@ import static org.junit.Assert.assertTrue;
  */
 public class DDLTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBasicDDL() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
-		Column stateColumn = (Column) classMapping.getProperty( "state" ).getColumnIterator().next();
-		assertEquals( stateColumn.getLength(), 3 );
-		Column zipColumn = (Column) classMapping.getProperty( "zip" ).getColumnIterator().next();
-		assertEquals( zipColumn.getLength(), 5 );
-		assertFalse( zipColumn.isNullable() );
+		if ( isMetadataUsed() ) {
+			org.hibernate.metamodel.spi.relational.Column stateColumn = SchemaUtil.getColumn( Address.class, "state", metadata() );
+			assertEquals( stateColumn.getSize().getLength(), 3 );
+			org.hibernate.metamodel.spi.relational.Column zipColumn = SchemaUtil.getColumn( Address.class, "zip", metadata() );
+			assertEquals( zipColumn.getSize().getLength(), 5 );
+			assertFalse( zipColumn.isNullable() );
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
+			Column stateColumn = (Column) classMapping.getProperty( "state" ).getColumnIterator().next();
+			assertEquals( stateColumn.getLength(), 3 );
+			Column zipColumn = (Column) classMapping.getProperty( "zip" ).getColumnIterator().next();
+			assertEquals( zipColumn.getLength(), 5 );
+			assertFalse( zipColumn.isNullable() );
+		}
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testApplyOnIdColumn() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
-		Column serialColumn = (Column) classMapping.getIdentifierProperty().getColumnIterator().next();
-		assertEquals( "Validator annotation not applied on ids", 2, serialColumn.getLength() );
+		if ( isMetadataUsed() ) {
+			PrimaryKey id = SchemaUtil.getPrimaryKey( Tv.class, metadata() );
+			assertEquals( "Validator annotation not applied on ids", 2,
+					id.getColumns().get( 0 ).getSize().getLength() );
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
+			Column serialColumn = (Column) classMapping.getIdentifierProperty().getColumnIterator().next();
+			assertEquals( "Validator annotation not applied on ids", 2, serialColumn.getLength() );
+		}
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5281" )
+	@FailureExpectedWithNewMetamodel
 	public void testLengthConstraint() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
-		Column modelColumn = (Column) classMapping.getProperty( "model" ).getColumnIterator().next();
-		assertEquals( modelColumn.getLength(), 5 );
+		if ( isMetadataUsed() ) {
+			org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( Tv.class, "model", metadata() );
+			assertEquals( column.getSize().getLength(), 5 );
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
+			Column modelColumn = (Column) classMapping.getProperty( "model" ).getColumnIterator().next();
+			assertEquals( modelColumn.getLength(), 5 );
+		}
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testApplyOnManyToOne() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( TvOwner.class.getName() );
-		Column serialColumn = (Column) classMapping.getProperty( "tv" ).getColumnIterator().next();
-		assertEquals( "Validator annotations not applied on associations", false, serialColumn.isNullable() );
+		if ( isMetadataUsed() ) {
+			org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( TvOwner.class, "tv_serial", metadata() );
+			assertEquals( "Validator annotations not applied on associations", false, column.isNullable() );
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( TvOwner.class.getName() );
+			Column serialColumn = (Column) classMapping.getProperty( "tv" ).getColumnIterator().next();
+			assertEquals( "Validator annotations not applied on associations", false, serialColumn.isNullable() );
+		}
 	}
 
 	@Test
 	public void testSingleTableAvoidNotNull() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Rock.class.getName() );
-		Column serialColumn = (Column) classMapping.getProperty( "bit" ).getColumnIterator().next();
-		assertTrue( "Notnull should not be applied on single tables", serialColumn.isNullable() );
+		if ( isMetadataUsed() ) {
+			org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( Rock.class, "bit", metadata() );
+			assertTrue( "Notnull should not be applied on single tables", column.isNullable() );
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Rock.class.getName() );
+			Column serialColumn = (Column) classMapping.getProperty( "bit" ).getColumnIterator().next();
+			assertTrue( "Notnull should not be applied on single tables", serialColumn.isNullable() );
+		}
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() throws Exception {
-		PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
-		Property property = classMapping.getProperty( "tuner.frequency" );
-		Column serialColumn = (Column) property.getColumnIterator().next();
-		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", false, serialColumn.isNullable()
-		);
+		if ( isMetadataUsed() ) {
+			org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( Tv.class, "frequency", metadata() );
+			assertEquals(
+					"Validator annotations are applied on tuner as it is @NotNull", false, column.isNullable()
+			);
 
-		property = classMapping.getProperty( "recorder.time" );
-		serialColumn = (Column) property.getColumnIterator().next();
-		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", true, serialColumn.isNullable()
-		);
+			column = SchemaUtil.getColumn( Tv.class, "`time`", metadata() );
+			assertEquals(
+					"Validator annotations were not applied on recorder", true, column.isNullable()
+			);
+		}
+		else {
+			PersistentClass classMapping = configuration().getClassMapping( Tv.class.getName() );
+			Property property = classMapping.getProperty( "tuner.frequency" );
+			Column serialColumn = (Column) property.getColumnIterator().next();
+			assertEquals(
+					"Validator annotations are applied on tuner as it is @NotNull", false, serialColumn.isNullable()
+			);
+
+			property = classMapping.getProperty( "recorder.time" );
+			serialColumn = (Column) property.getColumnIterator().next();
+			assertEquals(
+					"Validator annotations are applied on tuner as it is @NotNull", true, serialColumn.isNullable()
+			);
+		}
 	}
 
 	@Override

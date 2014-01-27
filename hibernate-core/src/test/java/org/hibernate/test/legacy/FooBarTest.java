@@ -96,6 +96,7 @@ import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -105,6 +106,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
+@FailureExpectedWithNewMetamodel
 public class FooBarTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( FooBarTest.class );
 

@@ -33,7 +33,7 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.secure.internal.DisabledJaccServiceImpl;
 import org.hibernate.secure.internal.JaccPreDeleteEventListener;
 import org.hibernate.secure.internal.JaccPreInsertEventListener;

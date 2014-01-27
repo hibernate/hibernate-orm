@@ -38,6 +38,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
@@ -237,6 +238,9 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 		}
 		else {
 			String enumClassName = (String) parameters.get( ENUM );
+			if( StringHelper.isEmpty( enumClassName )){
+				enumClassName = (String)parameters.get( DynamicParameterizedType.RETURNED_CLASS );
+			}
 			try {
 				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 			}

@@ -51,7 +51,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**

@@ -34,6 +34,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -44,6 +45,7 @@ import static org.junit.Assert.fail;
  * @author Vladimir Klyushnikov
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewMetamodel
 public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)

@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -47,6 +48,7 @@ import org.hibernate.test.annotations.id.sequences.entities.Shoe;
 import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
@@ -314,9 +316,20 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
-				.getIdentifierProperty().getValue().getColumnIterator().next();
-		assertEquals( "ball_id", idCol.getName() );
+		if ( isMetadataUsed() ) {
+			org.hibernate.metamodel.spi.relational.Column idCol = SchemaUtil.getPrimaryKey(
+					Ball.class,
+					metadata()
+			)
+					.getColumns().get( 0 );
+			Assert.assertEquals( "ball_id", idCol.getColumnName().getText() );
+
+		}
+		else {
+			Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
+					.getIdentifierProperty().getValue().getColumnIterator().next();
+			assertEquals( "ball_id", idCol.getName() );
+		}
 	}
 
 	@Test

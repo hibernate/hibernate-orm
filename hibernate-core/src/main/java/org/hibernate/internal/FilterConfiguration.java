@@ -29,9 +29,11 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.persister.entity.Joinable;
 
 /**
+ * Captures all relevant metadata specified as part of defining the filter.
  *
  * @author Rob Worsnop
  */
@@ -42,14 +44,52 @@ public class FilterConfiguration {
 	private final Map<String, String> aliasTableMap;
 	private final Map<String, String> aliasEntityMap;
 	private final PersistentClass persistentClass;
-	
-	public FilterConfiguration(String name, String condition, boolean autoAliasInjection, Map<String, String> aliasTableMap, Map<String, String> aliasEntityMap, PersistentClass persistentClass) {
+	private final EntityBinding entityBinding;
+	public FilterConfiguration(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap){
+		this.name = name;
+		this.condition = condition;
+		this.autoAliasInjection = autoAliasInjection;
+		this.aliasTableMap = aliasTableMap;
+		this.aliasEntityMap = aliasEntityMap;
+		this.entityBinding = null;
+		this.persistentClass = null;
+	}
+
+	public FilterConfiguration(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap,
+			PersistentClass persistentClass) {
 		this.name = name;
 		this.condition = condition;
 		this.autoAliasInjection = autoAliasInjection;
 		this.aliasTableMap = aliasTableMap;
 		this.aliasEntityMap = aliasEntityMap;
 		this.persistentClass = persistentClass;
+		this.entityBinding = null;
+	}
+
+	public FilterConfiguration(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap,
+			EntityBinding entityBinding) {
+		this.name = name;
+		this.condition = condition;
+		this.autoAliasInjection = autoAliasInjection;
+		this.aliasTableMap = aliasTableMap;
+		this.aliasEntityMap = aliasEntityMap;
+		this.persistentClass = null;
+		this.entityBinding = entityBinding;
 	}
 
 	public String getName() {
@@ -65,28 +105,38 @@ public class FilterConfiguration {
 	}
 
 	public Map<String, String> getAliasTableMap(SessionFactoryImplementor factory) {
-		Map<String,String> mergedAliasTableMap = mergeAliasMaps(factory);
-		if (!mergedAliasTableMap.isEmpty()){
+		Map<String, String> mergedAliasTableMap = mergeAliasMaps( factory );
+		if ( !mergedAliasTableMap.isEmpty() ) {
 			return mergedAliasTableMap;
-		} else if (persistentClass != null){
-			String table = persistentClass.getTable().getQualifiedName(factory.getDialect(), 
+		}
+		else if ( persistentClass != null ) {
+			String table = persistentClass.getTable().getQualifiedName(
+					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName());
-			return Collections.singletonMap(null, table);
-		} else{
+					factory.getSettings().getDefaultSchemaName()
+			);
+			return Collections.singletonMap( null, table );
+		}
+		else if ( entityBinding != null ) {
+			String table = entityBinding.getPrimaryTable().getQualifiedName( factory.getDialect() );
+			return Collections.singletonMap( null, table );
+		}
+		else {
 			return Collections.emptyMap();
 		}
 	}
-	
-	private Map<String,String> mergeAliasMaps(SessionFactoryImplementor factory){
-		Map<String,String> ret = new HashMap<String, String>();
-		if (aliasTableMap != null){
-			ret.putAll(aliasTableMap);
+
+	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
+		Map<String, String> ret = new HashMap<String, String>();
+		if ( aliasTableMap != null ) {
+			ret.putAll( aliasTableMap );
 		}
-		if (aliasEntityMap != null){
-			for (Map.Entry<String, String> entry : aliasEntityMap.entrySet()){
-				ret.put(entry.getKey(), 
-						Joinable.class.cast(factory.getEntityPersister(entry.getValue())).getTableName());
+		if ( aliasEntityMap != null ) {
+			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
+				ret.put(
+						entry.getKey(),
+						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
+				);
 			}
 		}
 		return ret;

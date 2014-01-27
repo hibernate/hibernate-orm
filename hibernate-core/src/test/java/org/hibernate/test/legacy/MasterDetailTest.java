@@ -49,13 +49,15 @@ import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipLog;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-
+@FailureExpectedWithNewMetamodel
 public class MasterDetailTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -102,11 +104,20 @@ public class MasterDetailTest extends LegacyTestCase {
 
 	@Test
 	public void testMeta() throws Exception {
-		PersistentClass clazz = configuration().getClassMapping( Master.class.getName() );
-		MetaAttribute meta = clazz.getMetaAttribute("foo");
-		assertTrue( "foo".equals( meta.getValue() ) );
-		meta = clazz.getProperty("name").getMetaAttribute("bar");
-		assertTrue( meta.isMultiValued() );
+		if ( isMetadataUsed() ) {
+			EntityBinding binding = metadata().getEntityBinding( Master.class.getName() );
+			org.hibernate.metamodel.spi.binding.MetaAttribute meta = binding.getMetaAttributeContext().getMetaAttribute("foo");
+			assertTrue( "foo".equals( meta.getValue() ) );
+			meta = binding.getMetaAttributeContext().getMetaAttribute("bar");
+			assertTrue( meta.isMultiValued() );
+		}
+		else {
+			PersistentClass clazz = configuration().getClassMapping( Master.class.getName() );
+			MetaAttribute meta = clazz.getMetaAttribute("foo");
+			assertTrue( "foo".equals( meta.getValue() ) );
+			meta = clazz.getProperty("name").getMetaAttribute("bar");
+			assertTrue( meta.isMultiValued() );
+		}
 	}
 
 	@Test

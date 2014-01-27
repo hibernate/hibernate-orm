@@ -33,8 +33,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -113,13 +113,12 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	private PropertyAccessor buildPropertyAccessor(AttributeBinding mappedProperty) {
-		// TODO: fix when backrefs are working in new metamodel
-		//if ( mappedProperty.isBackRef() ) {
-		//	return mappedProperty.getPropertyAccessor( null );
-		//}
-		//else {
+		if ( mappedProperty.isBackRef() ) {
+			return null;
+		}
+		else {
 			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
-		//}
+		}
 	}
 
 	@Override

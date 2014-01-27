@@ -30,10 +30,12 @@ import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.test.annotations.id.entities.Bunny;
 import org.hibernate.test.annotations.id.entities.PointyTooth;
 import org.hibernate.test.annotations.id.entities.TwinkleToes;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -47,12 +49,17 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class JoinColumnOverrideTest extends BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( JoinColumnOverrideTest.class );
 
 	@Test
 	@TestForIssue( jiraKey = "ANN-748" )
 	public void testBlownPrecision() throws Exception {
+		if ( isDefaultUseNewMetamodel() ) {
+			throw new NotYetImplementedException( "Not implemented using new metamodel." );
+		}
+
 		try {
 			Configuration config = new Configuration();
 			config.addAnnotatedClass(Bunny.class);

@@ -40,7 +40,7 @@ import org.hibernate.tuple.Tuplizer;
  * <p/>
  * EntityTuplizer implementations should have the following constructor signatures:
  *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.mapping.PersistentClass)
- *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.metamodel.binding.EntityBinding)
+ *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.metamodel.spi.binding.EntityBinding)
  *
  * @author Gavin King
  * @author Steve Ebersole

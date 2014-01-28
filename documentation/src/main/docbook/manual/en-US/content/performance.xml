@@ -1459,13 +1459,73 @@ hibernate.cache.use_structured_entries true</programlisting>
 
       <section xml:id="entityentry-lookup-buildtime-instrument">
           <title>Buildtime instrument</title>
-          <para>Besides above two approaches, Hibernate also provides you the third choice, which is an ANT task (
-          <classname>org.hibernate.tool.enhance.EnhancementTask</classname>) that can be used at build time to
-          instrument your entity classes with the required interfaces and methods.
+          <para>Besides above two approaches, Hibernate also provides you the 
+          third choice of build time bytecode enhancement. When all deployments 
+          should use enhanced classes annotated with either <classname>javax.persistence.Entity</classname> or
+          the composite <classname>javax.persistence.Embeddable</classname>.
 
-          Meanwhile, the maven and gradle plugin are still under development and will be available soon.
+          <section xml:id="entityentry-lookup-buildtime-instrument-ant">
+             <title>Ant Task</title>
+             <para>To use the task <classname>org.hibernate.tool.enhance.EnhancementTask</classname> 
+             define a taskdef and call the task as the example shows. This code uses a
+             pre defined classpathref and a property referencing the compiled classes
+             directory.
+             <programlisting role="XML">&lt;taskdef name="enhance" classname="org.hibernate.tool.enhance.EnhancementTask" classpathref="enhancement.classpath" /&gt;
+&lt;enhance&gt;
+    &lt;fileset dir="${ejb-classes}/org/hibernate/auction/model" includes="**/*.class"/&gt;
+&lt;/enhance&gt;</programlisting>
+             </para>
+          </section>
+          <section xml:id="entityentry-lookup-buildtime-instrument-maven">
+          <title>Maven Plugin</title>
+          <para>The Maven Plugin uses a Mojo descriptor to attach the Mojo to the compile 
+          phase for your project.
+          <programlisting role="XML">&lt;dependencies&gt;
+   &lt;dependency&gt;
+      &lt;groupId&gt;org.hibernate.javax.persistence&lt;/groupId&gt;
+      &lt;artifactId&gt;hibernate-jpa-2.0-api&lt;/artifactId&gt;
+      &lt;version&gt;1.0.1.Final&lt;/version&gt;
+      &lt;scope&gt;compile&lt;/scope&gt;
+   &lt;/dependency&gt;
+&lt;/dependencies&gt;
+&lt;plugins&gt;
+&lt;plugin&gt;
+  &lt;groupId&gt;org.hibernate.orm.tooling&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate-enhance-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;VERSION&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;
+        &lt;goal&gt;enhance&lt;/goal&gt;
+      &lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+&lt;/plugin&gt;</programlisting>
           </para>
-
+          </section>
+          <section xml:id="entityentry-lookup-buildtime-instrument-gradle">
+          <title>Gradle Plugin</title>
+          <para>The Gradle plugin adds an enhance task using the output directory of 
+          the compile task as the source location of entity class files to enhance.
+          <programlisting>apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'enhance'
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.hibernate:hibernate-gradle-plugin:VERSION'
+    }
+}
+dependencies {
+   compile group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.0-api', version: '1.0.1.Final'
+   compile group: 'org.hibernate', name: 'hibernate-gradle-plugin', version: 'VERSION'
+}
+          </programlisting>
+          </para>
+          </section>
+          </para>
       </section>
 
   </section>

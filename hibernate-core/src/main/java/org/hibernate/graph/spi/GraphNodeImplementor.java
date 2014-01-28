@@ -32,4 +32,5 @@ import javax.persistence.AttributeNode;
 public interface GraphNodeImplementor {
 	List<AttributeNodeImplementor<?>> attributeImplementorNodes();
 	List<AttributeNode<?>> attributeNodes();
+	boolean containsAttribute(String name);
 }

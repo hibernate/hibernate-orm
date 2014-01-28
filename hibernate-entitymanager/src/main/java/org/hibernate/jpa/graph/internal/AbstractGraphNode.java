@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AttributeNode;
 import javax.persistence.metamodel.Attribute;
 
@@ -36,7 +37,6 @@ import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -44,7 +44,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, HibernateEntityManagerFactoryAware{
+public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, HibernateEntityManagerFactoryAware {
 	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
 
 	private final HibernateEntityManagerFactory entityManagerFactory;
@@ -199,5 +199,10 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName, Class<X> type) {
 		return addAttribute( attributeName ).makeKeySubgraph( type );
+	}
+	
+	@Override
+	public boolean containsAttribute(String name) {
+		return attributeNodeMap != null && attributeNodeMap.containsKey( name );
 	}
 }

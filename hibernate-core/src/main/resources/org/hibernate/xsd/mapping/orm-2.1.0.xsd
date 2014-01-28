@@ -250,6 +250,20 @@
             <xsd:choice>
                 <xsd:element name="id" type="orm:id" minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="embedded-id" type="orm:embedded-id" minOccurs="0"/>
+                <xsd:element name="natural-id" minOccurs="0">
+                    <!-- A natural-id element allows declaration of the unique business key -->
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:choice maxOccurs="unbounded">
+                                <xsd:element name="basic" type="orm:basic" />
+                                <xsd:element name="many-to-one" type="orm:many-to-one"/>
+                                <xsd:element name="embedded" type="orm:embedded"/>
+                                <xsd:element name="any" type="orm:any"/>
+                            </xsd:choice>
+                        </xsd:sequence>
+                        <xsd:attribute name="mutable" default="false" type="xsd:boolean"/>
+                    </xsd:complexType>
+                </xsd:element>
             </xsd:choice>
             <xsd:element name="basic" type="orm:basic" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="version" type="orm:version" minOccurs="0" maxOccurs="unbounded"/>
@@ -272,18 +286,67 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="column" type="orm:column" minOccurs="0"/>
+            <xsd:element name="meta" minOccurs="0" maxOccurs="unbounded" type="orm:tooling-meta-type"/>
+            <xsd:choice>
+                <xsd:element name="column" type="orm:column" minOccurs="0"/>
+                <xsd:element name="formula" type="xsd:string" minOccurs="0"/>
+            </xsd:choice>
             <xsd:choice>
                 <xsd:element name="lob" type="orm:lob" minOccurs="0"/>
                 <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
                 <xsd:element name="enumerated" type="orm:enumerated" minOccurs="0"/>
                 <xsd:element name="convert" type="orm:convert" minOccurs="0"/>
+                <xsd:element name="type" type="orm:hbm-type" minOccurs="0"/>
             </xsd:choice>
+            <xsd:element name="generated" default="never">
+                <!-- todo : account for new generation strategies -->
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:token">
+                        <xsd:enumeration value="always"/>
+                        <xsd:enumeration value="insert"/>
+                        <xsd:enumeration value="never"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+            <xsd:element name="optimistic-lock" type="xsd:boolean" default="true" minOccurs="0" />
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
+    </xsd:complexType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="cache-element">
+        <xsd:annotation>
+            <xsd:documentation>
+                Corresponds to the org.hibernate.annotations.Cache annotation.
+
+                Used to specify Hibernate-specific extra control over the caching
+                of entity and collection state.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="include" default="all">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:token">
+                    <xsd:enumeration value="all"/>
+                    <xsd:enumeration value="non-lazy"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="region" type="xsd:string"/>
+        <xsd:attribute name="usage" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:token">
+                    <xsd:enumeration value="nonstrict-read-write"/>
+                    <xsd:enumeration value="read-only"/>
+                    <xsd:enumeration value="read-write"/>
+                    <xsd:enumeration value="transactional"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
     </xsd:complexType>
 
 
@@ -303,6 +366,34 @@
             <xsd:enumeration value="refresh"/>
         </xsd:restriction>
     </xsd:simpleType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="column">
+        <xsd:annotation>
+            <xsd:documentation>
+                See the javax.persistence.Column annotation.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="comment" type="xsd:string" minOccurs="0" />
+            <xsd:element name="check" type="xsd:string" minOccurs="0" />
+            <xsd:element name="default" type="xsd:string" minOccurs="0" />
+            <xsd:element name="read" type="xsd:string" minOccurs="0" />
+            <xsd:element name="write" type="xsd:string" minOccurs="0" />
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string"/>
+        <xsd:attribute name="unique" type="xsd:boolean"/>
+        <xsd:attribute name="nullable" type="xsd:boolean"/>
+        <xsd:attribute name="insertable" type="xsd:boolean"/>
+        <xsd:attribute name="updatable" type="xsd:boolean"/>
+        <xsd:attribute name="column-definition" type="xsd:string"/>
+        <xsd:attribute name="table" type="xsd:string"/>
+        <xsd:attribute name="length" type="xsd:int"/>
+        <xsd:attribute name="precision" type="xsd:int"/>
+        <xsd:attribute name="scale" type="xsd:int"/>
+    </xsd:complexType>
 
 
     <!-- **************************************************** -->
@@ -388,6 +479,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="meta" minOccurs="0" maxOccurs="unbounded" type="orm:tooling-meta-type"/>
             <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="association-override" type="orm:association-override" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="convert" type="orm:convert" minOccurs="0" maxOccurs="unbounded"/>
@@ -437,10 +529,33 @@
             <xsd:element name="meta" minOccurs="0" maxOccurs="unbounded" type="orm:tooling-meta-type"/>
             <!-- hbm: is the entity considered abstract -->
             <xsd:element name="abstract" type="xsd:boolean"/>
-            <!-- hbm: The size for batch fetching -->
+            <!-- hbm: The size for batch fetching : @BatchSize -->
             <xsd:element name="batch-size" type="xsd:string"/>
-            <!-- hbm : Hibernate specific caching configuration -->
-            <xsd:element name="cache" minOccurs="0" type="orm:cache-element"/>
+            <!-- hbm : Hibernate specific caching configuration : @Cache -->
+            <xsd:element name="cache" type="orm:cache-element" minOccurs="0" />
+            <!-- hbm : should INSERT statements be dynamically generated : @DynamicInsert -->
+            <xsd:element name="dynamic-insert" type="xsd:boolean" default="false" />
+            <!-- hbm : should UPDATE statements be dynamically generated : @DynamicUpdate -->
+            <xsd:element name="dynamic-update" type="xsd:boolean" default="false" />
+            <!-- hbm : should we select the entity state from the database to check dirtiness? @SelectBeforeUpdate -->
+            <xsd:element name="select-before-update" default="false" type="xsd:boolean"/>
+            <!-- hbm : can we generate proxies for this entity? : @Proxy -->
+            <xsd:element name="lazy" type="xsd:boolean"/>
+            <!-- hbm : name the interface/class to act as the proxy contract for this entity  : @Proxy --> 
+            <xsd:element name="proxy" type="xsd:string"/>
+            <!-- hbm : is the state of this entity considered mutable : ! @Immutable -->
+            <xsd:element name="mutable" type="xsd:boolean" default="true" />
+            <!-- hbm : declares the basis for optimistic locking : @OptimisticLocking -->
+            <xsd:element name="optimistic-lock" default="version">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:token">
+                        <xsd:enumeration value="all"/>
+                        <xsd:enumeration value="dirty"/>
+                        <xsd:enumeration value="version"/>
+                        <xsd:enumeration value="none"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
 
             <xsd:choice>
                 <!-- Physical table -->
@@ -448,6 +563,11 @@
                 <!-- hbm : "inline view" -->
                 <xsd:element name="subselect" minOccurs="0" type="xsd:string"/>
             </xsd:choice>
+            <!-- hbm : the database specific way to reference a rowid -->
+            <xsd:element name="rowid" type="xsd:string"/>
+            <!-- hbm : declare a SQL fragment to append to SELECT queries as a filter for this entity : @Where  -->
+            <xsd:attribute name="where" type="xsd:string"/>
+
             <!-- hbm : additional names to synchronize against (partial flush) -->
             <xsd:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="orm:synchronize-type"/>
             <xsd:element name="secondary-table" type="orm:secondary-table" minOccurs="0" maxOccurs="unbounded"/>
@@ -461,6 +581,15 @@
             <xsd:element name="inheritance" type="orm:inheritance" minOccurs="0"/>
             <xsd:element name="discriminator-value" type="orm:discriminator-value" minOccurs="0"/>
             <xsd:element name="discriminator-column" type="orm:discriminator-column" minOccurs="0"/>
+            <!-- hbm : used in query language to control how inherited "abstract schema" references are handled : @Polymorphism -->
+            <xsd:element name="polymorphism" default="implicit">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:token">
+                        <xsd:enumeration value="explicit"/>
+                        <xsd:enumeration value="implicit"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
 
             <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
             <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
@@ -490,13 +619,22 @@
 
             <xsd:element name="named-entity-graph" type="orm:named-entity-graph" minOccurs="0" maxOccurs="unbounded"/>
 
-            <xsd:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="orm:tuplizer-element"/>
+            <xsd:element name="persister" type="xsd:string"/>
+            <xsd:element name="entity-mode">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:token">
+                        <xsd:enumeration value="dynamic-map"/>
+                        <xsd:enumeration value="pojo"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+            <xsd:element name="tuplizer" minOccurs="0" type="xsd:string"/>
 
             <xsd:element name="loader" minOccurs="0" type="orm:loader-element"/>
 
-            <xsd:element name="sql-insert" minOccurs="0" type="orm:sql-insert-element"/>
-            <xsd:element name="sql-update" minOccurs="0" type="orm:sql-update-element"/>
-            <xsd:element name="sql-delete" minOccurs="0" type="orm:sql-delete-element"/>
+            <xsd:element name="sql-insert" minOccurs="0" type="orm:hbm-custom-sql-insert"/>
+            <xsd:element name="sql-update" minOccurs="0" type="orm:hbm-custom-sql-update"/>
+            <xsd:element name="sql-delete" minOccurs="0" type="orm:hbm-custom-sql-delete"/>
 
             <xsd:element name="filter" minOccurs="0" maxOccurs="unbounded" type="orm:filter-element"/>
 
@@ -553,6 +691,48 @@
 
     <!-- **************************************************** -->
 
+    <xsd:simpleType name="enum-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                Enumerated values specified by javax.persistence.EnumType
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="ORDINAL"/>
+            <xsd:enumeration value="STRING"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:simpleType name="enumerated">
+        <xsd:annotation>
+            <xsd:documentation>
+                Corresponds to the javax.persistence.Enumerated annotation.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="orm:enum-type"/>
+    </xsd:simpleType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:simpleType name="fetch-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                Enumerated values specified by javax.persistence.FetchType
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="LAZY"/>
+            <xsd:enumeration value="EAGER"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <!-- **************************************************** -->
+
     <xsd:simpleType name="flush-mode-type">
         <xsd:annotation>
             <xsd:documentation>
@@ -565,6 +745,34 @@
             <xsd:enumeration value="never"/>
         </xsd:restriction>
     </xsd:simpleType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="generated-value">
+        <xsd:annotation>
+            <xsd:documentation>
+                See the javax.persistence.GeneratedValue annotation
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="strategy" type="orm:generation-type"/>
+        <xsd:attribute name="generator" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="generation-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                Enumerated values specified by javax.persistence.GenerationType
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="TABLE"/>
+            <xsd:enumeration value="SEQUENCE"/>
+            <xsd:enumeration value="IDENTITY"/>
+            <xsd:enumeration value="AUTO"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
 
     <!-- **************************************************** -->
 
@@ -579,6 +787,101 @@
         <xsd:attribute name="name" use="required" type="xsd:string"/>
     </xsd:complexType>
 
+    
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="hbm-id-generator">
+        <xsd:annotation>
+            <xsd:documentation>
+                Names a org.hibernate.id.IdentifierGenerator implementation (class attribute)
+                as well as any configuration information need by the implementation (Hibernate
+                will pass it the parameters after instantiation).
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="param" minOccurs="0" maxOccurs="unbounded" type="orm:hbm-param"/>
+        </xsd:sequence>
+        <xsd:attribute name="class" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="hbm-param" mixed="true">
+        <xsd:annotation>
+            <xsd:documentation>
+                Corresponds to the org.hibernate.annotations.Parameter annotation
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="name" use="required" type="xsd:string"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:simpleType name="hbm-custom-sql-check-enum">
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="none"/>
+            <xsd:enumeration value="param"/>
+            <xsd:enumeration value="rowcount"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="hbm-custom-sql-delete" mixed="true">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="callable" type="xsd:boolean" default="false" />
+                <xsd:attribute name="check" type="hbm-custom-sql-check-enum"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="hbm-custom-sql-insert" mixed="true">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="callable" type="xsd:boolean" default="false" />
+                <xsd:attribute name="check" type="hbm-custom-sql-check-enum"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="hbm-custom-sql-update" mixed="true">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="callable" type="xsd:boolean" default="false" />
+                <xsd:attribute name="check" type="hbm-custom-sql-check-enum"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="hbm-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                Corresponds to the org.hibernate.annotations.Type annotation, naming
+                a org.hibernate.type.* or org.hibernate.usertype.* implementation to use.
+
+                name - names the type implementation class
+
+                param - If the type is able to accept parameters (implementation stems from
+                org.hibernate.type.Type, org.hibernate.type.CollectionType, or
+                org.hibernate.usertype.ParameterizedType) the specified parameters will be
+                passed to the type instance after instantiation.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="param" minOccurs="0" maxOccurs="unbounded" type="orm:hbm-param"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
 
     <!-- **************************************************** -->
 
@@ -589,16 +892,24 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="meta" type="orm:tooling-meta-type" minOccurs="0" maxOccurs="unbounded" />
             <xsd:element name="column" type="orm:column" minOccurs="0"/>
-            <xsd:element name="generated-value" type="orm:generated-value" minOccurs="0"/>
+            <xsd:choice>
+                <xsd:element name="generated-value" type="orm:generated-value" minOccurs="0" />
+                <xsd:element name="id-generator" type="orm:hbm-id-generator" minOccurs="0" />
+            </xsd:choice>
             <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
             <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
             <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
+            <xsd:element name="type" minOccurs="0" type="orm:hbm-type" />
+            <!-- todo : consider dropping the ability to specify arbitrary values here and make this an enumeration -->
+            <!-- heck, consider collapsing this up to the entity level -->
+            <xsd:attribute name="unsaved-value" type="xsd:string"/>
+            <!-- todo : Hibernate access strategy -->
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
     </xsd:complexType>
-
 
     <!-- **************************************************** -->
 
@@ -609,6 +920,17 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:attribute name="class" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="lob">
+        <xsd:annotation>
+            <xsd:documentation>
+                Corresponds to javax.persistence.Lob (marker) annotation
+            </xsd:documentation>
+        </xsd:annotation>
     </xsd:complexType>
 
 
@@ -1173,6 +1495,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="meta" minOccurs="0" maxOccurs="unbounded" type="orm:tooling-meta-type"/>
             <xsd:element name="column" type="orm:column" minOccurs="0"/>
             <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
         </xsd:sequence>

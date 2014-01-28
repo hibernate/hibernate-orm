@@ -2,7 +2,7 @@
  * This file is part of Hibernate Spatial, an extension to the
  *  hibernate ORM solution for spatial (geographic) data.
  *
- *  Copyright © 2007-2012 Geovise BVBA
+ *  Copyright © 2007-2014 Geovise BVBA
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -82,7 +82,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		private final int relation;
 
 		private SpatialRelateFunction(final String name, final int relation) {
-			super(name, StandardBasicTypes.BOOLEAN);
+			super(name, isOGCStrict() ? StandardBasicTypes.BOOLEAN : SDOBooleanType.INSTANCE);
 			this.relation = relation;
 		}
 
@@ -233,7 +233,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		//other common functions
 		registerFunction("transform", new StandardSQLFunction("SDO_CS.TRANSFORM",
 				GeometryType.INSTANCE));
-		registerFunction("dwithin", new StandardSQLFunction("SDO_WITHIN_DISTANCE" , new SDOBooleanType()));
+		registerFunction("dwithin", new StandardSQLFunction("SDO_WITHIN_DISTANCE" , SDOBooleanType.INSTANCE));
 
 		// Oracle specific Aggregate functions
 		registerFunction("centroid", new SpatialAggregationFunction("extent",
@@ -306,16 +306,16 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 						"undefined SpatialRelation passed (" + spatialRelation
 								+ ")");
 		}
-		StringBuffer buffer;
-		buffer = new StringBuffer( "CASE SDO_RELATE(" ).append( arg1 )
+		StringBuffer buffer = new StringBuffer();
+		if ( negate ) {
+			buffer.append( "CASE " );
+		}
+		buffer.append( "SDO_RELATE(" ).append( arg1 )
 				.append( "," )
 				.append( arg2 )
 				.append( ",'mask=" + mask + "') " );
-		if ( !negate ) {
-			buffer.append( " WHEN 'TRUE' THEN 1 ELSE 0 END" );
-		}
-		else {
-			buffer.append( " WHEN 'TRUE' THEN 0 ELSE 1 END" );
+		if(negate){
+			buffer.append( " WHEN 'TRUE' THEN 'FALSE' ELSE 'TRUE' END" );
 		}
 		return buffer.toString();
 	}
@@ -403,8 +403,8 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 
 		String sql = ( isOGCStrict() ?
-				getOGCSpatialRelateSQL(columnName,"?",spatialRelation) :
-				 getNativeSpatialRelateSQL( columnName, "?", spatialRelation ) ) + " = 1";
+				getOGCSpatialRelateSQL(columnName,"?",spatialRelation) + " = 1" :
+				 getNativeSpatialRelateSQL( columnName, "?", spatialRelation )  + " = 'TRUE'" );
 		sql += " and " + columnName + " is not null";
 		return sql;
 	}

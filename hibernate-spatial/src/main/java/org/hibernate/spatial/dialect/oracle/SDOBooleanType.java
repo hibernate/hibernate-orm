@@ -21,17 +21,19 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.type.BooleanType;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.BooleanType;
+
 class SDOBooleanType extends BooleanType {
 
 	private static final long serialVersionUID = 1L;
+
+	public static final SDOBooleanType INSTANCE = new SDOBooleanType();
 
 	/**
 	 * <p/>

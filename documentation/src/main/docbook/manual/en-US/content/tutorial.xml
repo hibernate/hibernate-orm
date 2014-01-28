@@ -589,9 +589,8 @@ public class HibernateUtil {
     private static SessionFactory buildSessionFactory() {
         try {
             // Create the SessionFactory from hibernate.cfg.xml
-            Configuration configuration = new Configuration();
-            return configuration.configure().buildSessionFactory(new StandardServiceRegistryBuilder()
-                    .applySettings(configuration.getProperties()).build());
+            new Configuration().configure().buildSessionFactory(
+			    new StandardServiceRegistryBuilder().build() );
         }
         catch (Throwable ex) {
             // Make sure you log the exception, as it might be swallowed

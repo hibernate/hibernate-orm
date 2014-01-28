@@ -445,7 +445,7 @@
             <xsd:choice>
                 <!-- Physical table -->
                 <xsd:element name="table" type="orm:table" minOccurs="0"/>
-                <!-- "inline view" -->
+                <!-- hbm : "inline view" -->
                 <xsd:element name="subselect" minOccurs="0" type="xsd:string"/>
             </xsd:choice>
             <!-- hbm : additional names to synchronize against (partial flush) -->
@@ -462,10 +462,10 @@
             <xsd:element name="discriminator-value" type="orm:discriminator-value" minOccurs="0"/>
             <xsd:element name="discriminator-column" type="orm:discriminator-column" minOccurs="0"/>
 
-            <xsd:element name="sequence-generator" type="orm:sequence-generator-type" minOccurs="0"/>
-            <xsd:element name="table-generator" type="orm:table-generator-type" minOccurs="0"/>
+            <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
+            <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
 
-            <xsd:element name="named-query" type="orm:named-query-type" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="named-query" type="orm:named-query" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="named-native-query" type="orm:named-native-query" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="named-stored-procedure-query" type="orm:named-stored-procedure-query" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="sql-result-set-mapping" type="orm:sql-result-set-mapping" minOccurs="0" maxOccurs="unbounded"/>
@@ -1037,12 +1037,6 @@
         <xsd:attribute name="table" type="xsd:string"/>
     </xsd:complexType>
 
-    <xsd:group name="table-common-extensions">
-        <xsd:sequence>
-            <xsd:element name="comment" type="xsd:string" minOccurs="0" />
-            <xsd:element name="check" type="xsd:string" minOccurs="0" />
-        </xsd:sequence>
-    </xsd:group>
 
     <!-- **************************************************** -->
 
@@ -1061,6 +1055,13 @@
         <xsd:attribute name="catalog" type="xsd:string"/>
         <xsd:attribute name="schema" type="xsd:string"/>
     </xsd:complexType>
+
+    <xsd:group name="table-common-extensions">
+        <xsd:sequence>
+            <xsd:element name="comment" type="xsd:string" minOccurs="0" />
+            <xsd:element name="check" type="xsd:string" minOccurs="0" />
+        </xsd:sequence>
+    </xsd:group>
 
 
     <!-- **************************************************** -->

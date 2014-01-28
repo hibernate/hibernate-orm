@@ -73,7 +73,7 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 			}
 		}
 
-		releaseStatements();
+		getStatements().clear();
 	}
 
 	@Override

@@ -136,10 +136,14 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
    		Bar bar = new Bar();
    		em.persist( bar );
+   		Baz baz = new Baz();
+   		em.persist( baz );
 
    		Foo foo = new Foo();
    		foo.bar = bar;
+   		foo.baz = baz;
         bar.foos.add(foo);
+        baz.foos.add(foo);
    		em.persist( foo );
 
    		em.getTransaction().commit();
@@ -149,7 +153,8 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
    		EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
    		fooGraph.addAttributeNodes("bar");
-        Subgraph barGraph = fooGraph.addSubgraph("bar");
+   		fooGraph.addAttributeNodes("baz");
+        Subgraph<Bar> barGraph = fooGraph.addSubgraph("bar", Bar.class);
         barGraph.addAttributeNodes("foos");
 
    		Map<String, Object> properties = new HashMap<String, Object>();
@@ -160,6 +165,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
    		assertTrue( Hibernate.isInitialized( result ) );
    		assertTrue( Hibernate.isInitialized( result.bar ) );
         assertTrue( Hibernate.isInitialized( result.bar.foos) );
+   		assertTrue( Hibernate.isInitialized( result.baz ) );
+   		// sanity check -- ensure the only bi-directional fetch was the one identified by the graph
+        assertFalse( Hibernate.isInitialized( result.baz.foos) );
 
    		em.getTransaction().commit();
    		em.close();
@@ -248,6 +256,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@Id
 		@GeneratedValue
         public Integer id;
+
+        @OneToMany(mappedBy = "bar")
+        public Set<Foo> foos = new HashSet<Foo>();
 
 	}
 

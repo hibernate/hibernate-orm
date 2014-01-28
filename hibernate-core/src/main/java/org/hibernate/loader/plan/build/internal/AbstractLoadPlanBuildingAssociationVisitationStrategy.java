@@ -138,7 +138,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		return last;
 	}
 
-	private ExpandingFetchSource currentSource() {
+	protected ExpandingFetchSource currentSource() {
 		return fetchSourceStack.peekFirst();
 	}
 

@@ -32,6 +32,7 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.ManyToManyNotAuditedNullEntity;
+import org.hibernate.envers.test.entities.manytoone.unidirectional.ExtManyToOneNotAuditedNullEntity;
 import org.hibernate.envers.test.entities.manytoone.unidirectional.ManyToOneNotAuditedNullEntity;
 import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAuditedEntity;
 import org.hibernate.envers.test.entities.onetomany.OneToManyNotAuditedNullEntity;
@@ -45,6 +46,7 @@ import org.hibernate.testing.TestForIssue;
 public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 	private TargetNotAuditedEntity tnae1 = null;
 	private ManyToOneNotAuditedNullEntity mtonane1 = null;
+	private ExtManyToOneNotAuditedNullEntity emtonane1 = null;
 	private ManyToManyNotAuditedNullEntity mtmnane1 = null;
 	private OneToManyNotAuditedNullEntity otmnane1 = null;
 	private UnversionedStrTestEntity uste1 = null;
@@ -54,7 +56,8 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				TargetNotAuditedEntity.class, ManyToOneNotAuditedNullEntity.class, UnversionedStrTestEntity.class,
-				ManyToManyNotAuditedNullEntity.class, OneToManyNotAuditedNullEntity.class
+				ManyToManyNotAuditedNullEntity.class, OneToManyNotAuditedNullEntity.class,
+				ExtManyToOneNotAuditedNullEntity.class
 		};
 	}
 
@@ -87,9 +90,11 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 		mtmnane1.getReferences().add( uste2 );
 		otmnane1 = new OneToManyNotAuditedNullEntity( 4, "otmnane1" );
 		otmnane1.getReferences().add( uste2 );
+		emtonane1 = new ExtManyToOneNotAuditedNullEntity( 5, "emtonane1", uste2, "extension" );
 		em.persist( mtonane1 );
 		em.persist( mtmnane1 );
 		em.persist( otmnane1 );
+		em.persist( emtonane1 );
 		em.getTransaction().commit();
 
 		em.clear();
@@ -107,6 +112,9 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 		OneToManyNotAuditedNullEntity tmp3 = em.find( OneToManyNotAuditedNullEntity.class, otmnane1.getId() );
 		tmp3.setReferences( null );
 		tmp3 = em.merge( tmp3 );
+		ExtManyToOneNotAuditedNullEntity tmp4 = em.find( ExtManyToOneNotAuditedNullEntity.class, emtonane1.getId() );
+		tmp4.setReference( null );
+		tmp4 = em.merge( tmp4 );
 		em.remove( em.getReference( UnversionedStrTestEntity.class, uste2.getId() ) );
 		em.getTransaction().commit();
 
@@ -146,5 +154,13 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 		OneToManyNotAuditedNullEntity otmRev2 = getAuditReader().find( OneToManyNotAuditedNullEntity.class, otmnane1.getId(), 2 );
 		Assert.assertEquals( otmnane1, otmRev2 );
 		Assert.assertTrue( otmRev2.getReferences().isEmpty() );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8912" )
+	public void testNullReferenceWithNotFoundActionIgnoreInParent() {
+		ExtManyToOneNotAuditedNullEntity emtoRev2 = getAuditReader().find( ExtManyToOneNotAuditedNullEntity.class, emtonane1.getId(), 2 );
+		Assert.assertEquals( emtonane1, emtoRev2 );
+		Assert.assertNull( emtoRev2.getReference() );
 	}
 }

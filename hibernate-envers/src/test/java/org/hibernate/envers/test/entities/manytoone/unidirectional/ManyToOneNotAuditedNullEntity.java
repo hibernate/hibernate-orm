@@ -27,6 +27,8 @@ import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -42,6 +44,7 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 @Audited
 @Entity
 @Table(name = "M2O_N_AUD_NULL")
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class ManyToOneNotAuditedNullEntity implements Serializable {
 	@Id
 	private Integer id;

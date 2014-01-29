@@ -107,7 +107,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 				boolean ignoreNotFound = false;
 				if ( !referencedEntity.isAudited() ) {
 					final String referencingEntityName = verCfg.getEntCfg().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
-					ignoreNotFound = verCfg.getEntCfg().getRelationDescription(referencingEntityName, getPropertyData().getName()).isIgnoreNotFound();
+					ignoreNotFound = verCfg.getEntCfg().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
 				}
 				if ( ignoreNotFound ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)

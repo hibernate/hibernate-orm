@@ -23,6 +23,7 @@ import org.hibernate.test.domain.Item;
 import org.hibernate.test.domain.Person;
 import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -30,6 +31,7 @@ import org.junit.Test;
  * @author Chris Dennis
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 
 	private static final String REGION_PREFIX = "hibernate.test.";

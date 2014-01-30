@@ -7,6 +7,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.SerializableToBlobType;
@@ -21,6 +22,7 @@ import org.junit.Test;
 @RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTypeDefinition() {
 		if ( isMetadataUsed() ) {
 			EntityBinding binding = metadata().getEntityBinding( EntitySerialize.class.getName() );

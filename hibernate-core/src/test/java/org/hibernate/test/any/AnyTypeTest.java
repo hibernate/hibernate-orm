@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -74,6 +75,7 @@ public class AnyTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test( expected = QuerySyntaxException.class )
+	@FailureExpectedWithNewMetamodel
 	public void testJoinFetchOfAnAnyTypeAttribute() {
 		// Query translator should dis-allow join fetching of an <any/> mapping.  Let's make sure it does...
 		Session session = openSession();

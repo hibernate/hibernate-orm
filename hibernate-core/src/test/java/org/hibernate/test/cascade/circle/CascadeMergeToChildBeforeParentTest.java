@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -126,6 +127,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMergeTransientChildBeforeTransientParent() {
 		// This test fails because the merge algorithm tries to save a
 		// transient child (transport) before cascade-merge gets its
@@ -196,6 +198,7 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMergeData3Nodes() {
 
 		Session s = openSession();

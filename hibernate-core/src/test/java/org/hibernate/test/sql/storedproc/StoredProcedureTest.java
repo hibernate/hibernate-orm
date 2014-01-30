@@ -40,6 +40,7 @@ import org.hibernate.dialect.H2Dialect;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -182,6 +183,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGetSingleResultTuple() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -201,6 +203,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGetResultListTuple() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -237,6 +240,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 
 // A warning should be logged if database metadata indicates named parameters are not supported.
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInParametersByName() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -262,6 +266,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInParametersByPosition() {
 		Session session = openSession();
 		session.beginTransaction();

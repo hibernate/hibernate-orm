@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -42,6 +43,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-7193" )
+	@FailureExpectedWithNewMetamodel
 	public void testStatementCaching() {
 		Session session = openSession();
 		session.beginTransaction();

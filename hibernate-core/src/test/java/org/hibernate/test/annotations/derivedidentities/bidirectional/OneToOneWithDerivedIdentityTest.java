@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -37,6 +38,7 @@ import org.junit.Test;
 public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-5695")
+	@FailureExpectedWithNewMetamodel
 	public void testInsertFooAndBarWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -62,6 +64,7 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-6813")
+	@FailureExpectedWithNewMetamodel
 	public void testSelectWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -85,6 +88,7 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6813")
+	@FailureExpectedWithNewMetamodel
 	// Regression test utilizing multiple types of queries.
 	public void testCase() {
 		Session s = openSession();

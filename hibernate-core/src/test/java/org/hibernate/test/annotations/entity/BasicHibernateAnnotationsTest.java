@@ -146,6 +146,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+	@FailureExpectedWithNewMetamodel
 	public void testPolymorphism() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -531,6 +532,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+	@FailureExpectedWithNewMetamodel
 	public void testSerialized() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Shire" );

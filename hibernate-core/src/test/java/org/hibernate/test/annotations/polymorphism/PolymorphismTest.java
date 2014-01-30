@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 public class PolymorphismTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPolymorphism() throws Exception {
 		Car car = new Car();
 		car.setModel( "SUV" );

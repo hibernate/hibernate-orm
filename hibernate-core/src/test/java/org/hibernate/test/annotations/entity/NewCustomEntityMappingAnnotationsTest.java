@@ -28,6 +28,7 @@ import org.hibernate.mapping.RootClass;
 import org.junit.Test;
 
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -47,6 +48,7 @@ public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTes
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSameMappingValues() {
 		if ( isMetadataUsed() ) {
 			EntityBinding forest = metadata().getEntityBinding( Forest.class.getName() );

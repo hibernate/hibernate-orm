@@ -13,6 +13,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.test.annotations.id.sequences.entities.HibernateSequenceEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -44,6 +45,7 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testHibernateSequenceSchema() {
 		EntityPersister persister = sessionFactory().getEntityPersister( HibernateSequenceEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();

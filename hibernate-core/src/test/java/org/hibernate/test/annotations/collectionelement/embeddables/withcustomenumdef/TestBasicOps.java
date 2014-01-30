@@ -36,7 +36,7 @@ import static junit.framework.Assert.assertEquals;
 public class TestBasicOps extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Query.class };
+		return new Class[] { Query.class, Location.class };
 	}
 
 	@Test

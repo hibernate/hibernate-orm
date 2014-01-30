@@ -33,6 +33,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -67,6 +68,7 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDatabaseColumnNames() {
 		if ( isMetadataUsed() ) {
 			EntityBinding entityBinding = metadata().getEntityBinding( Customers.class.getName() );
@@ -91,6 +93,7 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 
     @Test
     @TestForIssue(jiraKey = "HHH-5848")
+	@FailureExpectedWithNewMetamodel
     public void testDatabaseTableNames() {
 		if ( isMetadataUsed() ) {
 			EntityBinding entityBinding = metadata().getEntityBinding( Item.class.getName() );

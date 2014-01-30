@@ -38,6 +38,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -53,6 +54,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefault() throws Exception {

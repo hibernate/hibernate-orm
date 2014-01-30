@@ -29,6 +29,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -56,6 +57,7 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEntityEntityPersisterSpecified() throws Exception {
 		//tests the persister specified with an @Entity.persister()		
 		if ( isMetadataUsed() ) {

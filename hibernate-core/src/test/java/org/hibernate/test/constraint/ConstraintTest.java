@@ -45,6 +45,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -52,6 +53,7 @@ import org.junit.Test;
 /**
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class ConstraintTest extends BaseCoreFunctionalTestCase {
 
 	private static final int MAX_NAME_LENGTH = 30;

@@ -31,6 +31,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -64,6 +65,7 @@ public class LocaleTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-8765")
+	@FailureExpectedWithNewMetamodel
 	public void testMetadataWithLocale() {
 		if ( isMetadataUsed() ) {
 			fail( "SchemaValidator is not supported using new metamodel yet." );

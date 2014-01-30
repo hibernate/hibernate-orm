@@ -71,6 +71,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNonLazyBagKeyPropertyRef() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -146,6 +147,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testOneToOnePropertyRef() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -229,6 +231,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinFetchPropertyRef() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

@@ -45,6 +45,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tuple.ValueGenerator;
@@ -57,6 +58,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
+@FailureExpectedWithNewMetamodel
 public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test

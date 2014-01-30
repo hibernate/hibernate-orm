@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -46,6 +47,7 @@ public class BasicPropertiesTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@TestForIssue(jiraKey = "HHH-8689")
+	@FailureExpectedWithNewMetamodel
 	public void testProperties() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

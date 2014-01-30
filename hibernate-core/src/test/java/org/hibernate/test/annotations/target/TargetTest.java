@@ -34,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class TargetTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel

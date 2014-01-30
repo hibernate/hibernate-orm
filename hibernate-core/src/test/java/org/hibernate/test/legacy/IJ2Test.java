@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +43,7 @@ public class IJ2Test extends LegacyTestCase {
 
 	@SuppressWarnings( {"UnusedAssignment"})
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUnionSubclass() throws Exception {
 		Session s = sessionFactory().openSession();
 		s.beginTransaction();

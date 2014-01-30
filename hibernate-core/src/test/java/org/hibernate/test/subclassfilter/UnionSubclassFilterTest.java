@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +47,7 @@ public class UnionSubclassFilterTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
+	@FailureExpectedWithNewMetamodel
 	public void testFiltersWithUnionSubclass() {
 		Session s = openSession();
 		s.enableFilter( "region" ).setParameter( "userRegion", "US" );

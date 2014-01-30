@@ -86,8 +86,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final ServiceRegistry serviceRegistry;
 	private final Options options;
 
-	private final ValueHolder<ClassLoaderService> classLoaderService;
-	private final ValueHolder<PersisterClassResolver> persisterClassResolverService;
+	private final transient ValueHolder<ClassLoaderService> classLoaderService;
+	private final transient ValueHolder<PersisterClassResolver> persisterClassResolverService;
 
 	private TypeResolver typeResolver = new TypeResolver();
 

@@ -38,7 +38,8 @@ import org.hibernate.type.Type;
 public final class TypedValue implements Serializable {
 	private final Type type;
 	private final Object value;
-	private final ValueHolder<Integer> hashcode;
+	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
+	private final transient ValueHolder<Integer> hashcode;
 
 	public TypedValue(final Type type, final Object value) {
 		this.type = type;

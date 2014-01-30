@@ -107,17 +107,17 @@ public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements 
 
 	@Override
 	public String render(boolean isNegated, RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
 		if ( isJunction() ) {
 			return CompoundPredicate.render( this, renderingContext );
 		}
 		else {
-			return predicate.render( isNegated(), renderingContext );
+			return predicate.render( isNegated, renderingContext );
 		}
+	}
+
+	@Override
+	public String render(RenderingContext renderingContext) {
+		return render( isNegated(), renderingContext );
 	}
 
 	@Override

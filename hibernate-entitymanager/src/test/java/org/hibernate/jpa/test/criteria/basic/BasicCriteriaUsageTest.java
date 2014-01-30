@@ -126,4 +126,59 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		em.getTransaction().commit();
 		em.close();
 	}
+    
+	@Test
+	@TestForIssue( jiraKey = "HHH-8914" )
+	public void testDoubleNegation() {
+		Wall wall1 = new Wall();
+		wall1.setColor( "yellow" );
+		Wall wall2 = new Wall();
+		wall2.setColor( null );
+		
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( wall1 );
+		em.persist( wall2 );
+		em.getTransaction().commit();
+		em.clear();
+		
+		em.getTransaction().begin();
+		
+		// Although the examples are simplified and the usages appear pointless,
+		// double negatives can occur in some dynamic applications (regardless
+		// if it results from bad design or not).  Ensure we handle them as expected.
+		
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
+		Root<Wall> root = query.from( Wall.class );
+		query.select( root ).where(
+				cb.not(
+						cb.isNotNull( root.get( "color" ) ) ) );
+		Wall result = em.createQuery( query ).getSingleResult();
+		assertNotNull( result );
+		assertEquals( null, result.getColor() );
+		
+		query = cb.createQuery( Wall.class );
+		root = query.from( Wall.class );
+		query.select( root ).where(
+				cb.not(
+						cb.not(
+								cb.isNull( root.get( "color" ) ) ) ) );
+		result = em.createQuery( query ).getSingleResult();
+		assertNotNull( result );
+		assertEquals( null, result.getColor() );
+		
+		query = cb.createQuery( Wall.class );
+		root = query.from( Wall.class );
+		query.select( root ).where(
+				cb.not(
+						cb.not(
+								cb.isNotNull( root.get( "color" ) ) ) ) );
+		result = em.createQuery( query ).getSingleResult();
+		assertNotNull( result );
+		assertEquals( "yellow", result.getColor() );
+		
+		em.getTransaction().commit();
+		em.close();
+	}
 }

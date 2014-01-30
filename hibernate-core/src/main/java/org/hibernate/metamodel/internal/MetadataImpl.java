@@ -129,7 +129,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Options options;
 
 	private final ClassLoaderService classLoaderService;
-//	private final ValueHolder<PersisterClassResolver> persisterClassResolverService;
+//	private final transient ValueHolder<PersisterClassResolver> persisterClassResolverService;
 
 	private final TypeResolver typeResolver;
 

@@ -47,6 +47,7 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
+	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
 	private transient ValueHolder<String> toString;
 
 	/**

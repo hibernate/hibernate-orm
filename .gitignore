@@ -42,3 +42,4 @@ ObjectStore
 
 # Maven Enhance Plugin
 hibernate-enhance-maven-plugin/src/main/resources/pom.xml
+hibernate-enhance-maven-plugin/src/main/resources/META-INF/maven/plugin.xml

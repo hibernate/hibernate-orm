@@ -23,32 +23,25 @@
  */
 package org.hibernate.test.quote;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Iterator;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.test.util.SchemaUtil;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.hibernate.test.util.SchemaUtil;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -59,24 +52,12 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-7890")
 	public void testQuotedUniqueConstraint() {
-		if ( isMetadataUsed() ) {
-			Iterable<org.hibernate.metamodel.spi.relational.UniqueKey> uniqueKeys =
-					SchemaUtil.getTable( Person.class, metadata() ).getUniqueKeys();
-			for ( org.hibernate.metamodel.spi.relational.UniqueKey uk : uniqueKeys ) {
-				assertEquals( uk.getColumns().size(), 1 );
-				assertEquals( uk.getColumns().get( 0 ).getColumnName().getText(),  "name");
-				return;
-			}
-		}
-		else {
-			Iterator<UniqueKey> itr = configuration().getClassMapping( Person.class.getName() )
-					.getTable().getUniqueKeyIterator();
-			while ( itr.hasNext() ) {
-				UniqueKey uk = itr.next();
-				assertEquals( uk.getColumns().size(), 1 );
-				assertEquals( uk.getColumn( 0 ).getName(),  "name");
-				return;
-			}
+		Iterable<org.hibernate.metamodel.spi.relational.UniqueKey> uniqueKeys =
+				SchemaUtil.getTable( Person.class, metadata() ).getUniqueKeys();
+		for ( org.hibernate.metamodel.spi.relational.UniqueKey uk : uniqueKeys ) {
+			assertEquals( uk.getColumns().size(), 1 );
+			assertEquals( uk.getColumns().get( 0 ).getColumnName().getText(),  "name");
+			return;
 		}
 		fail( "GLOBALLY_QUOTED_IDENTIFIERS caused the unique key creation to fail." );
 	}
@@ -96,13 +77,7 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
 		String role = User.class.getName() + ".roles";
-
-		if ( isMetadataUsed() ) {
-			assertEquals( "User_Role", SchemaUtil.getCollectionTable( User.class, "roles", metadata() ).getLogicalName().getText() );
-		}
-		else {
-			assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
-		}
+		assertEquals( "User_Role", SchemaUtil.getCollectionTable( User.class, "roles", metadata() ).getLogicalName().getText() );
 		s.close();
 	}
 	
@@ -113,39 +88,28 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		doTestHbmQuoting( AssociatedDataPoint.class );
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-7927")
-	public void testTableGeneratorQuoting() {
-		Configuration configuration = constructAndConfigureConfiguration();
-		configuration.addAnnotatedClass(TestEntity.class);
-		new SchemaExport(configuration).execute( false, true, false, true );
-		try {
-			new SchemaValidator(configuration).validate();
-		}
-		catch (HibernateException e) {
-			fail( "The identifier generator table should have validated.  " + e.getMessage() );
-		}
-	}
+//	@Test
+//	@TestForIssue(jiraKey = "HHH-7927")
+//	public void testTableGeneratorQuoting() {
+//		Configuration configuration = constructAndConfigureConfiguration();
+//		configuration.addAnnotatedClass(TestEntity.class);
+//		new SchemaExport(configuration).execute( false, true, false, true );
+//		try {
+//			new SchemaValidator(configuration).validate();
+//		}
+//		catch (HibernateException e) {
+//			fail( "The identifier generator table should have validated.  " + e.getMessage() );
+//		}
+//	}
 	
 	private void doTestHbmQuoting(Class clazz) {
-		if ( isMetadataUsed() ) {
-			final TableSpecification tableSpecification = SchemaUtil.getTable( clazz, metadata() );
-			assertTrue( tableSpecification.getLogicalName().isQuoted() );
-			for ( org.hibernate.metamodel.spi.relational.Value value : tableSpecification.values() ) {
-				assertTrue( org.hibernate.metamodel.spi.relational.Column.class.isInstance( value ) );
-				org.hibernate.metamodel.spi.relational.Column column =
-						(org.hibernate.metamodel.spi.relational.Column) value;
-				assertTrue( column.getColumnName().isQuoted() );
-			}
-		}
-		else {
-			Table table = configuration().getClassMapping( clazz.getName() ).getTable();
-			assertTrue( table.isQuoted() );
-			Iterator itr = table.getColumnIterator();
-			while(itr.hasNext()) {
-				Column column = (Column) itr.next();
-				assertTrue( column.isQuoted() );
-			}
+		final TableSpecification tableSpecification = SchemaUtil.getTable( clazz, metadata() );
+		assertTrue( tableSpecification.getLogicalName().isQuoted() );
+		for ( org.hibernate.metamodel.spi.relational.Value value : tableSpecification.values() ) {
+			assertTrue( org.hibernate.metamodel.spi.relational.Column.class.isInstance( value ) );
+			org.hibernate.metamodel.spi.relational.Column column =
+					(org.hibernate.metamodel.spi.relational.Column) value;
+			assertTrue( column.getColumnName().isQuoted() );
 		}
 	}
 

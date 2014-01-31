@@ -25,8 +25,6 @@ package org.hibernate.jpa.internal.metamodel;
 
 import javax.persistence.metamodel.MappedSuperclassType;
 
-import org.hibernate.mapping.MappedSuperclass;
-
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
@@ -34,20 +32,18 @@ import org.hibernate.mapping.MappedSuperclass;
 public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassType<X> {
 	public MappedSuperclassTypeImpl(
 			Class<X> javaType,
-			MappedSuperclass mappedSuperclass,
-			AbstractIdentifiableType<? super X> superType) {
-		super(
-				javaType,
-				javaType.getName(),
-				superType,
-				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
-				mappedSuperclass.hasIdentifierProperty(),
-				mappedSuperclass.isVersioned()
-		);
+			AbstractIdentifiableType<? super X> superType,
+			boolean hasIdentifierProperty,
+			boolean versioned) {
+		super( javaType, superType, hasIdentifierProperty, versioned );
+	}
+
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.MAPPED_SUPERCLASS;
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.MAPPED_SUPERCLASS;
+	protected boolean requiresSupertypeForNonDeclaredIdentifier() {
+		return false;
 	}
 }

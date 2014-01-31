@@ -28,7 +28,6 @@ import java.io.InvalidObjectException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +55,6 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -78,11 +76,13 @@ import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
+import org.hibernate.jpa.internal.metamodel.MetamodelImplementor;
+import org.hibernate.jpa.internal.metamodel.builder.JpaMetaModelPopulationSetting;
+import org.hibernate.jpa.internal.metamodel.builder.MetamodelBuilder;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.Metadata;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -104,7 +104,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final transient boolean discardOnClose;
 	private final transient Class sessionInterceptorClass;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
-	private final transient MetamodelImpl metamodel;
+	private final transient MetamodelImplementor metamodel;
 	private final transient HibernatePersistenceUnitUtil util;
 	private final transient Map<String,Object> properties;
 	private final String entityManagerFactoryName;
@@ -112,52 +112,29 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final transient PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 	private final transient Map<String,EntityGraphImpl> entityGraphs = new ConcurrentHashMap<String, EntityGraphImpl>();
 
-	@SuppressWarnings( "unchecked" )
-	public EntityManagerFactoryImpl(
-			PersistenceUnitTransactionType transactionType,
-			boolean discardOnClose,
-			Class sessionInterceptorClass,
-			Configuration cfg,
-			ServiceRegistry serviceRegistry,
-			String persistenceUnitName) {
-		this(
-				persistenceUnitName,
-				(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry ),
-				new SettingsImpl().setReleaseResourcesOnCloseEnabled( discardOnClose ).setSessionInterceptorClass( sessionInterceptorClass ).setTransactionType( transactionType ),
-				cfg.getProperties(),
-				cfg
-		);
-	}
-
 	public EntityManagerFactoryImpl(
 			String persistenceUnitName,
 			SessionFactoryImplementor sessionFactory,
+			Metadata metadata,
 			SettingsImpl settings,
-			Map<?, ?> configurationValues,
-			Configuration cfg) {
+			Map<?, ?> configurationValues) {
 		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
 		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
 
-		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( configurationValues );
 		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
 			this.metamodel = null;
 		}
 		else {
-			this.metamodel = MetamodelImpl.buildMetamodel(
-					cfg.getClassMappings(),
-					cfg.getMappedSuperclassMappingsCopy(),
-					sessionFactory,
-					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
-			);
+			this.metamodel = MetamodelBuilder.oneShot( sessionFactory, metadata, jpaMetaModelPopulationSetting );
 		}
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
 
 		HashMap<String,Object> props = new HashMap<String, Object>();
 		addAll( props, sessionFactory.getProperties() );
-		addAll( props, cfg.getProperties() );
 		addAll( props, configurationValues );
 		maskOutSensitiveInformation( props );
 		this.properties = Collections.unmodifiableMap( props );
@@ -170,37 +147,23 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
 
-		applyNamedEntityGraphs( cfg.getNamedEntityGraphs() );
+		applyNamedEntityGraphs( metadata.getNamedEntityGraphs() );
 
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory( entityManagerFactoryName, this );
 	}
-
-	private enum JpaMetaModelPopulationSetting {
-		ENABLED,
-		DISABLED,
-		IGNORE_UNSUPPORTED;
-		
-		private static JpaMetaModelPopulationSetting parse(String setting) {
-			if ( "enabled".equalsIgnoreCase( setting ) ) {
-				return ENABLED;
-			}
-			else if ( "disabled".equalsIgnoreCase( setting ) ) {
-				return DISABLED;
-			}
-			else {
-				return IGNORE_UNSUPPORTED;
-			}
-		}
-	}
 	
-	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
+	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map<?, ?> configurationValues) {
 		String setting = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
-				cfg.getProperties(),
+				configurationValues,
 				null
 		);
 		if ( setting == null ) {
-			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, cfg.getProperties(), null );
+			setting = ConfigurationHelper.getString(
+					AvailableSettings.JPA_METAMODEL_GENERATION,
+					configurationValues,
+					null
+			);
 			if ( setting != null ) {
 				log.infof( 
 						"Encountered deprecated setting [%s], use [%s] instead",
@@ -232,8 +195,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
-		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
+	private void applyNamedEntityGraphs(Map<String, NamedEntityGraphDefinition> namedEntityGraphs) {
+		for ( NamedEntityGraphDefinition definition : namedEntityGraphs.values() ) {
 			log.debugf(
 					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s",
 					definition.getRegisteredName(),

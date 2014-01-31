@@ -50,7 +50,6 @@ public class PartialComponentPropertyRefTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testComponentPropertyRef() {
 		Session s = openSession();
 		s.beginTransaction();

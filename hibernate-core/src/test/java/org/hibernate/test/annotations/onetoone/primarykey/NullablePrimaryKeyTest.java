@@ -1,55 +1,55 @@
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
 
-import org.jboss.logging.Logger;
-import org.junit.Assert;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.metamodel.spi.relational.Table;
+
+import org.hibernate.test.util.SchemaUtil;
 import org.junit.Test;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.jboss.logging.Logger;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test harness for ANN-742.
  *
  * @author Hardy Ferentschik
- *
  */
 public class NullablePrimaryKeyTest {
 	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
+
     @Test
 	public void testGeneratedSql() {
+		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources()
+				.addAnnotatedClass( Address.class )
+				.addAnnotatedClass( Person.class )
+				.buildMetadata();
 
-		ServiceRegistry serviceRegistry = null;
-		SessionFactory sf = null;
-		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
-			config.addAnnotatedClass(Address.class);
-			config.addAnnotatedClass(Person.class);
-			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-			sf = config.buildSessionFactory( serviceRegistry );
-			String[] schema = config
-					.generateSchemaCreationScript(new SQLServerDialect());
-			for (String s : schema) {
-                log.debug(s);
-			}
-			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0), " +
-					"person_id numeric(19,0) not null, primary key (person_id))";
-            Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, schema[2] );
-		} catch (Exception e) {
-			Assert.fail(e.getMessage());
-		}
-		finally {
-			if ( sf != null ) {
-				sf.close();
-			}
-			if ( serviceRegistry != null ) {
-				ServiceRegistryBuilder.destroy( serviceRegistry );
-			}
+		Table table = (Table) SchemaUtil.getTable( "personAddress", metadata );
+		PrimaryKey pk = table.getPrimaryKey();
+		assertEquals( 1, pk.getColumns().size() );
 
+		boolean foundAddressId = false;
+		boolean foundPersonId = false;
+
+		for ( Column column : table.sortedColumns() ) {
+			if ( "address_id".equals( column.getColumnName().getText() ) ) {
+				foundAddressId = true;
+				assertTrue( column.isNullable() );
+			}
+			else if ( "person_id".equals( column.getColumnName().getText() ) ) {
+				foundPersonId = true;
+				assertFalse( column.isNullable() );
+			}
 		}
+
+		assertTrue( foundAddressId );
+		assertTrue( foundPersonId );
 	}
 }

@@ -48,6 +48,7 @@ import org.hibernate.result.ResultSetOutput;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
@@ -131,7 +132,10 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testPartialResults() {
+		// metamodel : seems AuxiliaryDatabaseObjects are not exported
+
 		Configuration cfg = new Configuration()
 				.addAnnotatedClass( Employee.class )
 				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );

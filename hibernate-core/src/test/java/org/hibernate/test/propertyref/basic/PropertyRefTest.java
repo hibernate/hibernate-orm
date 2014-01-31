@@ -26,22 +26,19 @@ package org.hibernate.test.propertyref.basic;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.test.util.SchemaUtil;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.util.SchemaUtil;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -280,33 +277,13 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testForeignKeyCreation() {
 		boolean found = false;
-		if ( isMetadataUsed() ) {
-			TableSpecification table = SchemaUtil.getTable( Account.class, metadata() );
-			EntityBinding personEntityBinding = metadata().getEntityBinding( Person.class.getName() );
-			for ( org.hibernate.metamodel.spi.relational.ForeignKey element : table.getForeignKeys() ) {
-				if ( element.getTargetTable().equals( personEntityBinding.getPrimaryTable() ) ) {
-					for ( org.hibernate.metamodel.spi.relational.Column column : element.getTargetColumns() ) {
-						if ( column.getColumnName().getText( getDialect() ).equals( "person_userid" ) ) {
-							found = true;
-						}
-					}
-				}
-			}
-		}
-		else {
-			PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
-
-			Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
-			while ( foreignKeyIterator.hasNext() ) {
-				ForeignKey element = (ForeignKey) foreignKeyIterator.next();
-				if(element.getReferencedEntityName().equals(Person.class.getName() ) ) {
-
-					if(!element.isReferenceToPrimaryKey() ) {
-						List referencedColumns = element.getReferencedColumns();
-						Column column = (Column) referencedColumns.get(0);
-						if(column.getName().equals("person_userid") ) {
-							found = true; // extend test to include the columns
-						}
+		TableSpecification table = SchemaUtil.getTable( Account.class, metadata() );
+		EntityBinding personEntityBinding = metadata().getEntityBinding( Person.class.getName() );
+		for ( org.hibernate.metamodel.spi.relational.ForeignKey element : table.getForeignKeys() ) {
+			if ( element.getTargetTable().equals( personEntityBinding.getPrimaryTable() ) ) {
+				for ( org.hibernate.metamodel.spi.relational.Column column : element.getTargetColumns() ) {
+					if ( column.getColumnName().getText( getDialect() ).equals( "person_userid" ) ) {
+						found = true;
 					}
 				}
 			}

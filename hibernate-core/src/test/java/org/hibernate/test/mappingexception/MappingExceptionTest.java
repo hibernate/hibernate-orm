@@ -1,5 +1,6 @@
 // $Id: SQLExceptionConversionTest.java 6847 2005-05-21 15:46:41Z oneovthafew $
 package org.hibernate.test.mappingexception;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,16 +10,17 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.junit.Test;
-
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
-import org.hibernate.InvalidMappingException;
+import org.hibernate.metamodel.spi.source.InvalidMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.MappingNotFoundException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.metamodel.spi.source.MappingNotFoundException;
+import org.hibernate.xml.spi.SourceType;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,8 +42,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
 		}
 
 		try {
@@ -49,17 +50,16 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
 		}
 
 		try {
 			cfg.addClass( Hibernate.class ); // TODO: String.class result in npe, because no classloader exists for it
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "org/hibernate/Hibernate.hbm.xml" );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
+			assertEquals( e.getOrigin().getName(), "org/hibernate/Hibernate.hbm.xml" );
 		}
 
 		try {
@@ -67,53 +67,50 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
 		}
 
 		try {
 			cfg.addFile( new File( "completelybogus.hbm.xml" ) );
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), "completelybogus.hbm.xml" );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
 		}
 
 		try {
 			cfg.addInputStream( new ByteArrayInputStream( new byte[0] ) );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "input stream" );
-			assertEquals( inv.getPath(), null );
+		catch (InvalidMappingException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.INPUT_STREAM );
 		}
 
 		try {
 			cfg.addResource( "nothere" );
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "nothere" );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
+			assertEquals( e.getOrigin().getName(), "nothere" );
 		}
 
 		try {
 			cfg.addResource( "nothere", getClass().getClassLoader() );
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "nothere" );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
+			assertEquals( e.getOrigin().getName(), "nothere" );
 		}
 
 		try {
 			cfg.addURL( new URL( "file://nothere" ) );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "URL" );
-			assertEquals( inv.getPath(), "file://nothere" );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.URL );
+			assertEquals( e.getOrigin().getName(), "file://nothere" );
 		}
 	}
 

@@ -38,8 +38,8 @@ import org.xml.sax.SAXException;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jaxb.spi.JaxbRoot;
-import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.xml.spi.BindResult;
+import org.hibernate.xml.spi.Origin;
 
 /**
  * @author Hardy Ferentschik
@@ -50,7 +50,7 @@ public class XmlHelper {
     private XmlHelper() {
     }
 
-    public static <T> JaxbRoot<T> unmarshallXml(String fileName, String schemaName, Class<T> clazz, ClassLoaderService classLoaderService)
+    public static <T> BindResult<T> unmarshallXml(String fileName, String schemaName, Class<T> clazz, ClassLoaderService classLoaderService)
             throws JAXBException {
         Schema schema = getMappingSchema( schemaName, classLoaderService );
         InputStream in = classLoaderService.locateResourceStream( fileName );
@@ -60,7 +60,7 @@ public class XmlHelper {
         StreamSource stream = new StreamSource( in );
         JAXBElement<T> elem = unmarshaller.unmarshal( stream, clazz );
         Origin origin = new Origin( null, fileName );
-        return new JaxbRoot<T>( elem.getValue(), origin );
+        return new BindResult<T>( elem.getValue(), origin );
     }
 
     private static Schema getMappingSchema(String schemaVersion, ClassLoaderService classLoaderService) {

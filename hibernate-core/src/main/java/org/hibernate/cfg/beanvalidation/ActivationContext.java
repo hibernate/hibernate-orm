@@ -23,10 +23,11 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -48,11 +49,18 @@ public interface ActivationContext {
 	public Set<ValidationMode> getValidationModes();
 
 	/**
-	 * Access the Configuration
+	 * Access the Metadata object (processed mapping information)
 	 *
-	 * @return The Hibernate Configuration object
+	 * @return The Hibernate Metadata object
 	 */
-	public Configuration getConfiguration();
+	public MetadataImplementor getMetadata();
+
+	/**
+	 * Access to all settings
+	 *
+	 * @return The settings
+	 */
+	public Map getSettings();
 
 	/**
 	 * Access the SessionFactory being built to trigger this BV activation

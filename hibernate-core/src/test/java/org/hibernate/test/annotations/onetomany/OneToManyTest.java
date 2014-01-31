@@ -26,34 +26,29 @@ package org.hibernate.test.annotations.onetomany;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
 import org.hibernate.test.annotations.TicketComparator;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -484,26 +479,13 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-4605" )
 	public void testJoinColumnConfiguredInXml() {
 		boolean joinColumnFound = false;
-		if ( isMetadataUsed() ) {
-			EntityBinding entityBinding = metadata().getEntityBinding( Model.class.getName() );
-			TableSpecification table = entityBinding.getPrimaryTable();
-			for ( Value value : table.values() ) {
-				org.hibernate.metamodel.spi.relational.Column column =
-						(org.hibernate.metamodel.spi.relational.Column) value;
-				if(column.getColumnName().getText().equals( "model_manufacturer_join" )) {
-					joinColumnFound = true;
-				}
-			}
-		}
-		else {
-			PersistentClass pc = configuration().getClassMapping( Model.class.getName() );
-			Table table = pc.getRootTable();
-			Iterator iter = table.getColumnIterator();
-			while(iter.hasNext()) {
-				Column column = (Column) iter.next();
-				if(column.getName().equals( "model_manufacturer_join" )) {
-					joinColumnFound = true;
-				}
+		EntityBinding entityBinding = metadata().getEntityBinding( Model.class.getName() );
+		TableSpecification table = entityBinding.getPrimaryTable();
+		for ( Value value : table.values() ) {
+			org.hibernate.metamodel.spi.relational.Column column =
+					(org.hibernate.metamodel.spi.relational.Column) value;
+			if(column.getColumnName().getText().equals( "model_manufacturer_join" )) {
+				joinColumnFound = true;
 			}
 		}
 		assertTrue( "The mapping defines a joing column which could not be found in the metadata.", joinColumnFound );

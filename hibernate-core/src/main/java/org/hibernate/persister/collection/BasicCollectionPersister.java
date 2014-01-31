@@ -71,14 +71,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return false;
 	}
 
-	public BasicCollectionPersister(
-			Collection collection,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
-			Configuration cfg,
-			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, cfg, factory );
-	}
-
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public BasicCollectionPersister(
 			AbstractPluralAttributeBinding collection,

@@ -25,11 +25,13 @@ package org.hibernate.cfg.beanvalidation;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -103,69 +105,7 @@ public class BeanValidationIntegrator implements Integrator {
 			final Configuration configuration,
 			final SessionFactoryImplementor sessionFactory,
 			final SessionFactoryServiceRegistry serviceRegistry) {
-		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
-		final Set<ValidationMode> modes = ValidationMode.getModes( configuration.getProperties().get( MODE_PROPERTY ) );
-		if ( modes.size() > 1 ) {
-			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
-		}
-		if ( modes.size() == 1 && modes.contains( ValidationMode.NONE ) ) {
-			// we have nothing to do; just return
-			return;
-		}
-
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-
-		// see if the Bean Validation API is available on the classpath
-		if ( isBeanValidationApiAvailable( classLoaderService ) ) {
-			// and if so, call out to the TypeSafeActivator
-			try {
-				final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( classLoaderService );
-				@SuppressWarnings("unchecked")
-				final Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD_NAME, ActivationContext.class );
-				final ActivationContext activationContext = new ActivationContext() {
-					@Override
-					public Set<ValidationMode> getValidationModes() {
-						return modes;
-					}
-
-					@Override
-					public Configuration getConfiguration() {
-						return configuration;
-					}
-
-					@Override
-					public SessionFactoryImplementor getSessionFactory() {
-						return sessionFactory;
-					}
-
-					@Override
-					public SessionFactoryServiceRegistry getServiceRegistry() {
-						return serviceRegistry;
-					}
-				};
-
-				try {
-					activateMethod.invoke( null, activationContext );
-				}
-				catch (InvocationTargetException e) {
-					if ( HibernateException.class.isInstance( e.getTargetException() ) ) {
-						throw ( (HibernateException) e.getTargetException() );
-					}
-					throw new IntegrationException( "Error activating Bean Validation integration", e.getTargetException() );
-				}
-				catch (Exception e) {
-					throw new IntegrationException( "Error activating Bean Validation integration", e );
-				}
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException( "Unable to locate TypeSafeActivator#activate method", e );
-			}
-		}
-		else {
-			// otherwise check the validation modes
-			// todo : in many ways this duplicates thew checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
-			validateMissingBeanValidationApi( modes );
-		}
+		throw new HibernateException( "UGH!" );
 	}
 
 	private boolean isBeanValidationApiAvailable(ClassLoaderService classLoaderService) {
@@ -201,13 +141,81 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
-
-
 	@Override
 	public void integrate(
-			MetadataImplementor metadata,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry ) {
+			final MetadataImplementor metadata,
+			final SessionFactoryImplementor sessionFactory,
+			final SessionFactoryServiceRegistry serviceRegistry ) {
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+
+		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
+		final Set<ValidationMode> modes = ValidationMode.getModes( configurationService.getSettings().get( MODE_PROPERTY ) );
+		if ( modes.size() > 1 ) {
+			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
+		}
+		if ( modes.size() == 1 && modes.contains( ValidationMode.NONE ) ) {
+			// we have nothing to do; just return
+			return;
+		}
+
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		// see if the Bean Validation API is available on the classpath
+		if ( isBeanValidationApiAvailable( classLoaderService ) ) {
+			// and if so, call out to the TypeSafeActivator
+			try {
+				final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( classLoaderService );
+				@SuppressWarnings("unchecked")
+				final Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD_NAME, ActivationContext.class );
+				final ActivationContext activationContext = new ActivationContext() {
+					@Override
+					public Set<ValidationMode> getValidationModes() {
+						return modes;
+					}
+
+					@Override
+					public MetadataImplementor getMetadata() {
+						return metadata;
+					}
+
+					@Override
+					public Map getSettings() {
+						return configurationService.getSettings();
+					}
+
+					@Override
+					public SessionFactoryImplementor getSessionFactory() {
+						return sessionFactory;
+					}
+
+					@Override
+					public SessionFactoryServiceRegistry getServiceRegistry() {
+						return serviceRegistry;
+					}
+				};
+
+				try {
+					activateMethod.invoke( null, activationContext );
+				}
+				catch (InvocationTargetException e) {
+					if ( HibernateException.class.isInstance( e.getTargetException() ) ) {
+						throw ( (HibernateException) e.getTargetException() );
+					}
+					throw new IntegrationException( "Error activating Bean Validation integration", e.getTargetException() );
+				}
+				catch (Exception e) {
+					throw new IntegrationException( "Error activating Bean Validation integration", e );
+				}
+			}
+			catch (NoSuchMethodException e) {
+				throw new HibernateException( "Unable to locate TypeSafeActivator#activate method", e );
+			}
+		}
+		else {
+			// otherwise check the validation modes
+			// todo : in many ways this duplicates thew checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
+			validateMissingBeanValidationApi( modes );
+		}
 	}
 
 	@Override

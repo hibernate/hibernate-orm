@@ -23,42 +23,19 @@
  */
 package org.hibernate.test.type;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
-
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.sql.Types;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.IrrelevantEntity;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AttributeConverterDefinition;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.testing.FailureExpected;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.AbstractStandardBasicType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.junit.Test;
 
 /**
@@ -73,21 +50,21 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		SimpleValue simpleValue = new SimpleValue( cfg.createMappings() );
-		simpleValue.setJpaAttributeConverterDefinition(
-				new AttributeConverterDefinition( new StringClobConverter(), true )
-		);
-		simpleValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
-
-		Type type = simpleValue.getType();
-		assertNotNull( type );
-		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-			fail( "AttributeConverter not applied" );
-		}
-		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+//		Configuration cfg = new Configuration();
+//		SimpleValue simpleValue = new SimpleValue( cfg.createMappings() );
+//		simpleValue.setJpaAttributeConverterDefinition(
+//				new AttributeConverterDefinition( new StringClobConverter(), true )
+//		);
+//		simpleValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
+//
+//		Type type = simpleValue.getType();
+//		assertNotNull( type );
+//		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+//			fail( "AttributeConverter not applied" );
+//		}
+//		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+//		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+//		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
 	@Test
@@ -96,19 +73,19 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( NotAutoAppliedConverter.class, false );
-		cfg.addAnnotatedClass( Tester.class );
-		cfg.buildMappings();
-
-		PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
-		Property nameProp = tester.getProperty( "name" );
-		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-		Type type = nameValue.getType();
-		assertNotNull( type );
-		if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-			fail( "AttributeConverter with autoApply=false was auto applied" );
-		}
+//		Configuration cfg = new Configuration();
+//		cfg.addAttributeConverter( NotAutoAppliedConverter.class, false );
+//		cfg.addAnnotatedClass( Tester.class );
+//		cfg.buildMappings();
+//
+//		PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
+//		Property nameProp = tester.getProperty( "name" );
+//		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+//		Type type = nameValue.getType();
+//		assertNotNull( type );
+//		if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+//			fail( "AttributeConverter with autoApply=false was auto applied" );
+//		}
 	}
 
 	@Test
@@ -117,25 +94,25 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( StringClobConverter.class, true );
-		cfg.addAnnotatedClass( Tester.class );
-		cfg.buildMappings();
-
-		{
-			PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
-			assertNotNull( type );
-			assertTyping( BasicType.class, type );
-			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
-		}
+//		Configuration cfg = new Configuration();
+//		cfg.addAttributeConverter( StringClobConverter.class, true );
+//		cfg.addAnnotatedClass( Tester.class );
+//		cfg.buildMappings();
+//
+//		{
+//			PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
+//			Property nameProp = tester.getProperty( "name" );
+//			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+//			Type type = nameValue.getType();
+//			assertNotNull( type );
+//			assertTyping( BasicType.class, type );
+//			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+//				fail( "AttributeConverter not applied" );
+//			}
+//			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+//			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+//			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+//		}
 	}
 
 	@Test
@@ -145,24 +122,24 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( Tester.class );
-		cfg.addURL( ConfigHelper.findAsResource( "org/hibernate/test/type/orm.xml") );
-		cfg.buildMappings();
-
-		{
-			PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
-			assertNotNull( type );
-			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
-		}
+//		Configuration cfg = new Configuration();
+//		cfg.addAnnotatedClass( Tester.class );
+//		cfg.addURL( ConfigHelper.findAsResource( "org/hibernate/test/type/orm.xml") );
+//		cfg.buildMappings();
+//
+//		{
+//			PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
+//			Property nameProp = tester.getProperty( "name" );
+//			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+//			Type type = nameValue.getType();
+//			assertNotNull( type );
+//			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+//				fail( "AttributeConverter not applied" );
+//			}
+//			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
+//			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+//			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+//		}
 	}
 
 	@Test
@@ -171,24 +148,24 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( StringClobConverter.class, true );
-		cfg.addAnnotatedClass( Tester2.class );
-		cfg.buildMappings();
-
-		{
-			PersistentClass tester = cfg.getClassMapping( Tester2.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
-			assertNotNull( type );
-			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter applied (should not have been)" );
-			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
-		}
+//		Configuration cfg = new Configuration();
+//		cfg.addAttributeConverter( StringClobConverter.class, true );
+//		cfg.addAnnotatedClass( Tester2.class );
+//		cfg.buildMappings();
+//
+//		{
+//			PersistentClass tester = cfg.getClassMapping( Tester2.class.getName() );
+//			Property nameProp = tester.getProperty( "name" );
+//			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+//			Type type = nameValue.getType();
+//			assertNotNull( type );
+//			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+//				fail( "AttributeConverter applied (should not have been)" );
+//			}
+//			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+//			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+//			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+//		}
 	}
 
 	@Test
@@ -197,47 +174,47 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( IntegerToVarcharConverter.class, false );
-		cfg.addAnnotatedClass( Tester4.class );
-		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
-			Session session = sf.openSession();
-			session.beginTransaction();
-			session.save( new Tester4( 1L, "steve", 200 ) );
-			session.getTransaction().commit();
-			session.close();
-
-			sf.getStatistics().clear();
-			session = sf.openSession();
-			session.beginTransaction();
-			session.get( Tester4.class, 1L );
-			session.getTransaction().commit();
-			session.close();
-			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
-
-			session = sf.openSession();
-			session.beginTransaction();
-			Tester4 t4 = (Tester4) session.get( Tester4.class, 1L );
-			t4.code = 300;
-			session.getTransaction().commit();
-			session.close();
-
-			session = sf.openSession();
-			session.beginTransaction();
-			t4 = (Tester4) session.get( Tester4.class, 1L );
-			assertEquals( 300, t4.code.longValue() );
-			session.delete( t4 );
-			session.getTransaction().commit();
-			session.close();
-		}
-		finally {
-			sf.close();
-		}
+//		Configuration cfg = new Configuration();
+//		cfg.addAttributeConverter( IntegerToVarcharConverter.class, false );
+//		cfg.addAnnotatedClass( Tester4.class );
+//		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+//		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+//
+//		SessionFactory sf = cfg.buildSessionFactory();
+//
+//		try {
+//			Session session = sf.openSession();
+//			session.beginTransaction();
+//			session.save( new Tester4( 1L, "steve", 200 ) );
+//			session.getTransaction().commit();
+//			session.close();
+//
+//			sf.getStatistics().clear();
+//			session = sf.openSession();
+//			session.beginTransaction();
+//			session.get( Tester4.class, 1L );
+//			session.getTransaction().commit();
+//			session.close();
+//			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
+//
+//			session = sf.openSession();
+//			session.beginTransaction();
+//			Tester4 t4 = (Tester4) session.get( Tester4.class, 1L );
+//			t4.code = 300;
+//			session.getTransaction().commit();
+//			session.close();
+//
+//			session = sf.openSession();
+//			session.beginTransaction();
+//			t4 = (Tester4) session.get( Tester4.class, 1L );
+//			assertEquals( 300, t4.code.longValue() );
+//			session.delete( t4 );
+//			session.getTransaction().commit();
+//			session.close();
+//		}
+//		finally {
+//			sf.close();
+//		}
 	}
 
 	@Test
@@ -246,38 +223,38 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		if ( isDefaultUseNewMetamodel() ) {
 			throw new NotYetImplementedException( "Not implemented using new metamodel." );
 		}
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( InstantConverter.class, false );
-		cfg.addAnnotatedClass( IrrelevantInstantEntity.class );
-		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
-			Session session = sf.openSession();
-			session.beginTransaction();
-			session.save( new IrrelevantInstantEntity( 1L ) );
-			session.getTransaction().commit();
-			session.close();
-
-			sf.getStatistics().clear();
-			session = sf.openSession();
-			session.beginTransaction();
-			IrrelevantInstantEntity e = (IrrelevantInstantEntity) session.get( IrrelevantInstantEntity.class, 1L );
-			session.getTransaction().commit();
-			session.close();
-			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
-
-			session = sf.openSession();
-			session.beginTransaction();
-			session.delete( e );
-			session.getTransaction().commit();
-			session.close();
-		}
-		finally {
-			sf.close();
-		}
+//		Configuration cfg = new Configuration();
+//		cfg.addAttributeConverter( InstantConverter.class, false );
+//		cfg.addAnnotatedClass( IrrelevantInstantEntity.class );
+//		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+//		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+//
+//		SessionFactory sf = cfg.buildSessionFactory();
+//
+//		try {
+//			Session session = sf.openSession();
+//			session.beginTransaction();
+//			session.save( new IrrelevantInstantEntity( 1L ) );
+//			session.getTransaction().commit();
+//			session.close();
+//
+//			sf.getStatistics().clear();
+//			session = sf.openSession();
+//			session.beginTransaction();
+//			IrrelevantInstantEntity e = (IrrelevantInstantEntity) session.get( IrrelevantInstantEntity.class, 1L );
+//			session.getTransaction().commit();
+//			session.close();
+//			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
+//
+//			session = sf.openSession();
+//			session.beginTransaction();
+//			session.delete( e );
+//			session.getTransaction().commit();
+//			session.close();
+//		}
+//		finally {
+//			sf.close();
+//		}
 	}
 	
 	

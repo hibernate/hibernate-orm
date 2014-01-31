@@ -102,4 +102,12 @@ public enum SchemaGenSource {
 
 		throw new IllegalArgumentException( "Unrecognized schema generation source value : " + value );
 	}
+
+	public static SchemaGenSource interpret(Object value) {
+		if ( SchemaGenSource.class.isInstance( value ) ) {
+			return (SchemaGenSource) value;
+		}
+
+		return interpret( value == null ? null : value.toString() );
+	}
 }

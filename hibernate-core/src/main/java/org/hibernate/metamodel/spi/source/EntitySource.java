@@ -29,7 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.xml.spi.Origin;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
 /**

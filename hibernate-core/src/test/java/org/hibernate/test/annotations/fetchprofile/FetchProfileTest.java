@@ -35,6 +35,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -87,6 +89,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWrongAssociationName() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer2.class );
@@ -103,6 +106,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWrongClass() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer3.class );
@@ -119,6 +123,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUnsupportedFetchMode() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer4.class );
@@ -135,6 +140,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testXmlOverride() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer5.class );

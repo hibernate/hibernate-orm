@@ -1,18 +1,17 @@
 package org.hibernate.test.annotations.lob;
 
-import static org.junit.Assert.assertEquals;
-
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.type.SerializableToBlobType;
+import org.hibernate.type.Type;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.SerializableToBlobType;
-import org.hibernate.type.Type;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test type definition for SerializableToBlobType
@@ -24,57 +23,31 @@ public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testTypeDefinition() {
-		if ( isMetadataUsed() ) {
-			EntityBinding binding = metadata().getEntityBinding( EntitySerialize.class.getName() );
+		EntityBinding binding = metadata().getEntityBinding( EntitySerialize.class.getName() );
 
-			// explicitLob of SerializableToBlobType
-			Type explicitLobType = binding.locateAttributeBinding( "explicitLob" )
-					.getHibernateTypeDescriptor().getResolvedTypeMapping();
-			assertEquals( ExplicitSerializable.class, explicitLobType.getReturnedClass() );
-			assertEquals( SerializableToBlobType.class.getName(), explicitLobType.getName() );
+		// explicitLob of SerializableToBlobType
+		Type explicitLobType = binding.locateAttributeBinding( "explicitLob" )
+				.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		assertEquals( ExplicitSerializable.class, explicitLobType.getReturnedClass() );
+		assertEquals( SerializableToBlobType.class.getName(), explicitLobType.getName() );
 
-			// explicit of ExplicitSerializableType
-			Type explicitType = binding.locateAttributeBinding( "explicit" )
-					.getHibernateTypeDescriptor().getResolvedTypeMapping();
-			assertEquals( ExplicitSerializable.class, explicitType.getReturnedClass() );
-			assertEquals( ExplicitSerializableType.class.getName(), explicitType.getName() );
+		// explicit of ExplicitSerializableType
+		Type explicitType = binding.locateAttributeBinding( "explicit" )
+				.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		assertEquals( ExplicitSerializable.class, explicitType.getReturnedClass() );
+		assertEquals( ExplicitSerializableType.class.getName(), explicitType.getName() );
 
-			// implicit of ImplicitSerializableType
-			Type implicitType = binding.locateAttributeBinding( "implicit" )
-					.getHibernateTypeDescriptor().getResolvedTypeMapping();
-			assertEquals( ImplicitSerializable.class, implicitType.getReturnedClass() );
-			assertEquals( ImplicitSerializableType.class.getName(), implicitType.getName() );
+		// implicit of ImplicitSerializableType
+		Type implicitType = binding.locateAttributeBinding( "implicit" )
+				.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		assertEquals( ImplicitSerializable.class, implicitType.getReturnedClass() );
+		assertEquals( ImplicitSerializableType.class.getName(), implicitType.getName() );
 
-			// explicitOverridingImplicit ExplicitSerializableType overrides ImplicitSerializableType
-			Type overrideType = binding.locateAttributeBinding( "explicitOverridingImplicit" )
-					.getHibernateTypeDescriptor().getResolvedTypeMapping();
-			assertEquals( ImplicitSerializable.class, overrideType.getReturnedClass() );
-			assertEquals( ExplicitSerializableType.class.getName(), overrideType.getName() );
-		}
-		else {
-			Configuration cfg = configuration();
-			PersistentClass pc = cfg.getClassMapping( EntitySerialize.class.getName() );
-
-			// explicitLob of SerializableToBlobType
-			Type explicitLobType = pc.getProperty( "explicitLob" ).getType();
-			assertEquals( ExplicitSerializable.class, explicitLobType.getReturnedClass() );
-			assertEquals( SerializableToBlobType.class.getName(), explicitLobType.getName() );
-
-			// explicit of ExplicitSerializableType
-			Type explicitType = pc.getProperty( "explicit" ).getType();
-			assertEquals( ExplicitSerializable.class, explicitType.getReturnedClass() );
-			assertEquals( ExplicitSerializableType.class.getName(), explicitType.getName() );
-
-			// implicit of ImplicitSerializableType
-			Type implicitType = pc.getProperty( "implicit" ).getType();
-			assertEquals( ImplicitSerializable.class, implicitType.getReturnedClass() );
-			assertEquals( ImplicitSerializableType.class.getName(), implicitType.getName() );
-
-			// explicitOverridingImplicit ExplicitSerializableType overrides ImplicitSerializableType
-			Type overrideType = pc.getProperty( "explicitOverridingImplicit" ).getType();
-			assertEquals( ImplicitSerializable.class, overrideType.getReturnedClass() );
-			assertEquals( ExplicitSerializableType.class.getName(), overrideType.getName() );
-		}
+		// explicitOverridingImplicit ExplicitSerializableType overrides ImplicitSerializableType
+		Type overrideType = binding.locateAttributeBinding( "explicitOverridingImplicit" )
+				.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		assertEquals( ImplicitSerializable.class, overrideType.getReturnedClass() );
+		assertEquals( ExplicitSerializableType.class.getName(), overrideType.getName() );
 	}
 
 	@Test

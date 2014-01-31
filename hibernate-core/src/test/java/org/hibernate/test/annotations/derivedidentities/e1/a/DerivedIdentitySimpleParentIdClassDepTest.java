@@ -44,14 +44,9 @@ import static org.junit.Assert.assertTrue;
 public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		if ( isMetadataUsed() ) {
-			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
-			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", metadata() ) );
-		}
-		else {
-			assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
-			assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", configuration() ) );
-		}
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", metadata() ) );
+
 		Session s = openSession();
 		s.getTransaction().begin();
 		Employee e = new Employee( 1L, "Emmanuel", "Manu" );

@@ -33,7 +33,7 @@ import javax.persistence.JoinTable;
 
 import org.junit.Test;
 
-import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.xml.spi.SourceType;
 import org.hibernate.metamodel.spi.binding.BagBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;

@@ -23,7 +23,6 @@
  */
 package org.hibernate.jpa.test.metadata;
 
-import java.util.Collections;
 import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Attribute;
@@ -40,13 +39,14 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.jpa.internal.metamodel.builder.JpaMetaModelPopulationSetting;
+import org.hibernate.jpa.internal.metamodel.builder.MetamodelBuilder;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -105,12 +105,13 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testBuildingMetamodelWithParameterizedCollection() {
-		Configuration cfg = new Configuration( );
-//		configure( cfg );
-		cfg.addAnnotatedClass( WithGenericCollection.class );
-		cfg.buildMappings();
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry() );
-		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), Collections.<MappedSuperclass>emptySet(), sfi, true );
+		MetadataSources sources = new MetadataSources();
+		sources.addAnnotatedClass( WithGenericCollection.class );
+		Metadata metadata = sources.buildMetadata( serviceRegistry() );
+		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
+
+		MetamodelBuilder.oneShot( sfi, metadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
+
 		sfi.close();
 	}
 

@@ -35,7 +35,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.xml.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;

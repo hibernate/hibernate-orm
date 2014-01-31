@@ -25,19 +25,22 @@
 package org.hibernate.tool.hbm2ddl;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -167,7 +170,7 @@ public class SchemaExportTask extends MatchingTask {
 	@Override
     public void execute() throws BuildException {
 		try {
-			getSchemaExport( getConfiguration() ).execute(!quiet, !text, drop, create);
+			buildSchemaExport().execute( !quiet, !text, drop, create );
 		}
 		catch (HibernateException e) {
 			throw new BuildException("Schema text failed: " + e.getMessage(), e);
@@ -183,66 +186,64 @@ public class SchemaExportTask extends MatchingTask {
 		}
 	}
 
+	private SchemaExport buildSchemaExport() throws Exception {
+		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+
+		final MetadataSources metadataSources = new MetadataSources( bsr );
+		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+
+		if ( configurationFile != null ) {
+			ssrBuilder.configure( configurationFile );
+		}
+		if ( propertiesFile != null ) {
+			ssrBuilder.loadProperties( propertiesFile );
+		}
+		ssrBuilder.applySettings( getProject().getProperties() );
+
+		for ( String fileName : getFiles() ) {
+			if ( fileName.endsWith(".jar") ) {
+				metadataSources.addJar( new File( fileName ) );
+			}
+			else {
+				metadataSources.addFile( fileName );
+			}
+		}
+
+
+		final StandardServiceRegistryImpl ssr = (StandardServiceRegistryImpl) ssrBuilder.build();
+		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
+
+		if ( namingStrategy != null ) {
+			final ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
+			final NamingStrategy namingStrategyInstance = (NamingStrategy) classLoaderService.classForName( namingStrategy ).newInstance();
+			metadataBuilder.with( namingStrategyInstance );
+		}
+
+		return new SchemaExport( (MetadataImplementor) metadataBuilder.build() )
+				.setHaltOnError( haltOnError )
+				.setOutputFile( outputFile.getPath() )
+				.setDelimiter( delimiter );
+
+	}
+
 	private String[] getFiles() {
-
-		List files = new LinkedList();
-		for ( Iterator i = fileSets.iterator(); i.hasNext(); ) {
-
-			FileSet fs = (FileSet) i.next();
+		List<String> fileNames = new LinkedList<String>();
+		for ( Object fileSet : fileSets ) {
+			FileSet fs = (FileSet) fileSet;
 			DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
 
 			String[] dsFiles = ds.getIncludedFiles();
-			for (int j = 0; j < dsFiles.length; j++) {
-				File f = new File(dsFiles[j]);
+			for ( int j = 0; j < dsFiles.length; j++ ) {
+				File f = new File( dsFiles[j] );
 				if ( !f.isFile() ) {
 					f = new File( ds.getBasedir(), dsFiles[j] );
 				}
 
-				files.add( f.getAbsolutePath() );
+				fileNames.add( f.getAbsolutePath() );
 			}
 		}
 
-		return ArrayHelper.toStringArray(files);
-	}
-
-	private Configuration getConfiguration() throws Exception {
-		Configuration cfg = new Configuration();
-		if (namingStrategy!=null) {
-			cfg.setNamingStrategy(
-					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
-				);
-		}
-		if (configurationFile != null) {
-			cfg.configure( configurationFile );
-		}
-
-		String[] files = getFiles();
-		for (int i = 0; i < files.length; i++) {
-			String filename = files[i];
-			if ( filename.endsWith(".jar") ) {
-				cfg.addJar( new File(filename) );
-			}
-			else {
-				cfg.addFile(filename);
-			}
-		}
-		return cfg;
-	}
-
-	private SchemaExport getSchemaExport(Configuration cfg) throws HibernateException, IOException {
-		Properties properties = new Properties();
-		properties.putAll( cfg.getProperties() );
-		if (propertiesFile == null) {
-			properties.putAll( getProject().getProperties() );
-		}
-		else {
-			properties.load( new FileInputStream(propertiesFile) );
-		}
-		cfg.setProperties(properties);
-		return new SchemaExport(cfg)
-				.setHaltOnError(haltOnError)
-				.setOutputFile( outputFile.getPath() )
-				.setDelimiter(delimiter);
+		return ArrayHelper.toStringArray( fileNames );
 	}
 
 	public void setNamingStrategy(String namingStrategy) {

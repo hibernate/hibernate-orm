@@ -62,7 +62,7 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.xml.spi.BindResult;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
@@ -258,11 +258,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			contributor.contribute( this, jandexView );
 		}
 
-		final List<JaxbRoot> jaxbRoots = new ArrayList<JaxbRoot>();
+		final List<BindResult> bindResults = new ArrayList<BindResult>();
 		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
-			jaxbRoots.addAll( producer.produceRoots( this, jandexView ) );
+			bindResults.addAll( producer.produceRoots( this, jandexView ) );
 		}
-		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, jaxbRoots );
+		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, bindResults );
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
 		binder.addEntityHierarchies( processor.extractEntityHierarchies() );
 		binder.bindEntityHierarchies();
@@ -299,10 +299,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			}
 		}
 
-		if ( metadataSources.getExternalCacheRegionDefinitions().isEmpty() ) {
+		if ( options.getCacheRegionDefinitions() == null || options.getCacheRegionDefinitions().isEmpty() ) {
 			return;
 		}
-		for ( CacheRegionDefinition cacheRegionDefinition : metadataSources.getExternalCacheRegionDefinitions() ) {
+
+		for ( CacheRegionDefinition cacheRegionDefinition : options.getCacheRegionDefinitions() ) {
 			final String role = cacheRegionDefinition.getRole();
 			if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
 				EntityBinding entityBinding = entityBindingMap.get( role );
@@ -315,7 +316,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 											cacheRegionDefinition.isCacheLazy()
 									)
 							);
-				}else{
+				}
+				else{
 					//logging?
 					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
 				}

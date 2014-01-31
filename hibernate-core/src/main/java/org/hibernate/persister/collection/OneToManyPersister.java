@@ -71,6 +71,28 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final boolean keyIsNullable;
 	private final boolean keyIsUpdateable;
 
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public OneToManyPersister(
+			AbstractPluralAttributeBinding collection,
+			CollectionRegionAccessStrategy cacheAccessStrategy,
+			MetadataImplementor metadataImplementor,
+			SessionFactoryImplementor factory) throws MappingException, CacheException {
+		super( collection, cacheAccessStrategy, metadataImplementor, factory );
+		if ( collection.getPluralAttributeElementBinding().getNature() !=
+				PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+			throw new AssertionError(
+					String.format( "Unexpected plural attribute nature; expected=(%s), actual=(%s)",
+								   PluralAttributeElementBinding.Nature.ONE_TO_MANY,
+								   collection.getPluralAttributeElementBinding().getNature()
+					)
+			);
+		}
+		final PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
+		cascadeDeleteEnabled = keyBinding.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete();
+		keyIsNullable = keyBinding.isNullable();
+		keyIsUpdateable = keyBinding.isUpdatable();
+	}
+
 	@Override
     protected boolean isRowDeleteEnabled() {
 		return keyIsUpdateable && keyIsNullable;
@@ -83,40 +105,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
-	}
-
-	public OneToManyPersister(
-			Collection collection,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
-			Configuration cfg,
-			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, cfg, factory );
-		cascadeDeleteEnabled = collection.getKey().isCascadeDeleteEnabled() &&
-				factory.getDialect().supportsCascadeDelete();
-		keyIsNullable = collection.getKey().isNullable();
-		keyIsUpdateable = collection.getKey().isUpdateable();
-	}
-
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public OneToManyPersister(
-			AbstractPluralAttributeBinding collection,
-			CollectionRegionAccessStrategy cacheAccessStrategy,
-			MetadataImplementor metadataImplementor,
-			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, metadataImplementor, factory );
-		if ( collection.getPluralAttributeElementBinding().getNature() !=
-				PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
-			throw new AssertionError(
-					String.format( "Unexpected plural attribute nature; expected=(%s), actual=(%s)",
-							PluralAttributeElementBinding.Nature.ONE_TO_MANY,
-							collection.getPluralAttributeElementBinding().getNature()
-					)
-			);
-		}
-		final PluralAttributeKeyBinding keyBinding = collection.getPluralAttributeKeyBinding();
-		cascadeDeleteEnabled = keyBinding.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete();
-		keyIsNullable = keyBinding.isNullable();
-		keyIsUpdateable = keyBinding.isUpdatable();
 	}
 
 

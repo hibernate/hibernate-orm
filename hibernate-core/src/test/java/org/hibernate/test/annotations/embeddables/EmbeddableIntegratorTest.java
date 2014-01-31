@@ -24,6 +24,7 @@
 package org.hibernate.test.annotations.embeddables;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,7 +40,13 @@ import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -53,70 +60,34 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	/**
 	 * Throws a mapping exception because DollarValue is not mapped
 	 */
-	@Test(expected = GenericJDBCException.class)
+	@Test
 	public void testWithoutIntegrator() {
-		ServiceRegistry reg = new StandardServiceRegistryBuilder( new BootstrapServiceRegistryImpl() ).build();
-		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" ).buildSessionFactory( reg );
-
 		try {
-			Session sess = sf.openSession();
-			Investor myInv = getInvestor();
-			myInv.setId( 1L );
-
-			sess.save( myInv );
-			sess.flush();
-			sess.clear();
-
-			Investor inv = (Investor) sess.get( Investor.class, 1L );
-			assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
-
-			sess.close();
+			new MetadataSources().addAnnotatedClass( Investor.class ).buildMetadata();
+			fail( "Expecting error" );
 		}
-		finally {
-			sf.close();
-			StandardServiceRegistryBuilder.destroy( reg );
+		catch (Exception expected) {
 		}
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testWithIntegrator() {
-		StandardServiceRegistry reg = new StandardServiceRegistryBuilder(
-				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
-		).build();
-		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" ).buildSessionFactory( reg );
-
-		try {
-			Session sess = sf.openSession();
-			Investor myInv = getInvestor();
-			myInv.setId( 2L );
-
-			sess.save( myInv );
-			sess.flush();
-			sess.clear();
-
-			Investor inv = (Investor) sess.get( Investor.class, 2L );
-			assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
-
-			sess.close();
-		}
-		finally {
-			sf.close();
-			StandardServiceRegistryBuilder.destroy( reg );
-		}
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		SessionFactory sf = new MetadataSources().addAnnotatedClass( Investor.class )
+				.getMetadataBuilder( ssr )
+				.with( new CustomTypeContributor() )
+				.build()
+				.buildSessionFactory();
+		sf.close();
+		StandardServiceRegistryBuilder.destroy( ssr );
 	}
 
-	private Investor getInvestor() {
-		Investor i = new Investor();
-		List<Investment> investments = new ArrayList<Investment>();
-		Investment i1 = new Investment();
-		i1.setAmount( new DollarValue( new BigDecimal( "100" ) ) );
-		i1.setDate( new MyDate( new Date() ) );
-		i1.setDescription( "Test Investment" );
-		investments.add( i1 );
-		i.setInvestments( investments );
-
-		return i;
+	public static class CustomTypeContributor implements TypeContributor {
+		@Override
+		public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+			typeContributions.contributeType( new DollarValueUserType(), new String[] {DollarValue.class.getName()} );
+			typeContributions.contributeType( new MyDateUserType(), new String[] {MyDate.class.getName()} );
+		}
 	}
 }

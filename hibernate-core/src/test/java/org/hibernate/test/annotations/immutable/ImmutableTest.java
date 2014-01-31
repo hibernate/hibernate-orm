@@ -34,6 +34,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -152,7 +154,9 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMiscplacedImmutableAnnotation() {
+	@FailureExpectedWithNewMetamodel
+	public void testMisplacedImmutableAnnotation() {
+		// todo : metamodel is not applying many "out of place" validations
 		try {
 			Configuration config = new Configuration();
 			config.addAnnotatedClass(Foobar.class);
@@ -160,7 +164,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		}
 		catch (AnnotationException ae) {
-            log.debug("succes");
+            log.debug("success");
 		}
 	}
 

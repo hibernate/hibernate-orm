@@ -38,41 +38,18 @@ public class AssociationOverrideSchemaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testJoinTableSchemaName() {
-		if ( isMetadataUsed() ) {
-			TableSpecification table = SchemaUtil.getTable( TABLE_NAME, metadata() );
-			Assert.assertNotNull( table );
-			Assert.assertEquals( SCHEMA_NAME, table.getSchema().getName().getSchema().getText());
-		}
-		else {
-			Iterator<Table> tableIterator = configuration().getTableMappings();
-			while ( tableIterator.hasNext() ) {
-				Table table = tableIterator.next();
-				if ( TABLE_NAME.equals( table.getName() ) ) {
-					Assert.assertEquals( SCHEMA_NAME, table.getSchema() );
-					return;
-				}
-			}
-			Assert.fail();
-		}
+		TableSpecification table = SchemaUtil.getTable( TABLE_NAME, metadata() );
+		Assert.assertNotNull( table );
+		Assert.assertEquals( SCHEMA_NAME, table.getSchema().getName().getSchema().getText());
 	}
 
 	@Test
 	public void testJoinTableJoinColumnName() {
-		if ( isMetadataUsed() ) {
-			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, metadata() ) );
-		}
-		else {
-			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, configuration() ) );
-		}
+		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, ID_COLUMN_NAME, metadata() ) );
 	}
 
 	@Test
 	public void testJoinTableColumnName() {
-		if ( isMetadataUsed() ) {
-			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, metadata() ) );
-		}
-		else {
-			Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, configuration() ) );
-		}
+		Assert.assertTrue( SchemaUtil.isColumnPresent( TABLE_NAME, VALUE_COLUMN_NAME, metadata() ) );
 	}
 }

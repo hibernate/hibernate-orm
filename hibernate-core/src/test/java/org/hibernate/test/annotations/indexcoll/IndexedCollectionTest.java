@@ -26,24 +26,21 @@ package org.hibernate.test.annotations.indexcoll;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.test.util.SchemaUtil;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.util.SchemaUtil;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -77,20 +74,10 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 
 	private boolean isDefaultColumnPresent(Class<?> collectionOwner, String propertyName, String suffix) {
 		boolean hasDefault = false;
-		if ( isMetadataUsed() ) {
-			List<Value> values = SchemaUtil.getCollectionTable( collectionOwner, propertyName, metadata() ).values();
-			for ( Value value : values ) {
-				org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) value;
-				if ( (propertyName + suffix).equals( column.getColumnName().getText() ) ) hasDefault = true;
-			}
-		}
-		else {
-			final Collection collection = configuration().getCollectionMapping( collectionOwner.getName() + "." + propertyName );
-			final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
-			while ( columnIterator.hasNext() ) {
-				Column column = (Column) columnIterator.next();
-				if ( (propertyName + suffix).equals( column.getName() ) ) hasDefault = true;
-			}
+		List<Value> values = SchemaUtil.getCollectionTable( collectionOwner, propertyName, metadata() ).values();
+		for ( Value value : values ) {
+			org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) value;
+			if ( (propertyName + suffix).equals( column.getColumnName().getText() ) ) hasDefault = true;
 		}
 		return hasDefault;
 	}

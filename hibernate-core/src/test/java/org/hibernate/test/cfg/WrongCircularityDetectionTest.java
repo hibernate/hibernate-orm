@@ -1,8 +1,5 @@
 package org.hibernate.test.cfg;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -10,10 +7,16 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.relational.Schema;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test illustrates the problem when two related (in terms of joins)
@@ -26,19 +29,50 @@ public class WrongCircularityDetectionTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNoCircularityDetection() {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass(Entity1.class);
-		cfg.addAnnotatedClass(Entity2.class);
+		MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( Entity1.class )
+				.addAnnotatedClass( Entity2.class );
+		MetadataImplementor metadataImplementor = (MetadataImplementor) metadataSources.buildMetadata();
 
-		cfg.buildMappings();
+		org.hibernate.metamodel.spi.relational.Table entity1Table = null;
+		org.hibernate.metamodel.spi.relational.Table entity2Table = null;
 
-		org.hibernate.mapping.Table entity1Table = cfg.getClassMapping(
-				Entity1.class.getName()).getTable();
-		org.hibernate.mapping.Table entity2Table = cfg.getClassMapping(
-				Entity2.class.getName()).getTable();
+		int schemaNumber = 0;
+		boolean foundSchema1 = false;
+		boolean foundSchema2 = false;
 
-		assertTrue(entity1Table.getName().equals(entity2Table.getName()));
-		assertFalse(entity1Table.getSchema().equals(entity2Table.getSchema()));
+		for ( Schema schema : metadataImplementor.getDatabase().getSchemas() ) {
+			schemaNumber = -1;
+
+			if ( schema.getName().getSchema() == null ) {
+				continue;
+			}
+
+			if ( "schema1".equals( schema.getName().getSchema().getText() ) ) {
+				foundSchema1 = true;
+				schemaNumber = 1;
+			}
+			else if ( "schema2".equals( schema.getName().getSchema().getText() ) ) {
+				foundSchema2 = true;
+				schemaNumber = 2;
+			}
+
+			for ( org.hibernate.metamodel.spi.relational.Table table : schema.getTables() ) {
+				if ( "entity".equals( table.getPhysicalName().getText() ) ) {
+					if ( schemaNumber == 1 ) {
+						entity1Table = table;
+					}
+					else if ( schemaNumber == 2 ) {
+						entity2Table = table;
+					}
+				}
+			}
+		}
+
+		assertTrue( foundSchema1 );
+		assertTrue( foundSchema2 );
+		assertNotNull( entity1Table );
+		assertNotNull( entity2Table );
 	}
 
 	@Entity

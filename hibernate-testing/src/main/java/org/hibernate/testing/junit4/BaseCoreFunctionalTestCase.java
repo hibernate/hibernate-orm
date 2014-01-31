@@ -29,7 +29,6 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -41,6 +40,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -56,14 +56,15 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
-
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.Caching;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.type.Type;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
@@ -157,20 +158,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		configuration = constructAndConfigureConfiguration();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
 
-		if ( isMetadataUsed ) {
-			metadataImplementor = buildMetadata();
-			afterConstructAndConfigureMetadata( metadataImplementor );
-			final SessionFactoryBuilder sessionFactoryBuilder = metadataImplementor.getSessionFactoryBuilder();
-			if ( configuration.getInterceptor() != null ) {
-				sessionFactoryBuilder.with( configuration.getInterceptor() );
-			}
-			sessionFactory = (SessionFactoryImpl) sessionFactoryBuilder.build();
+		metadataImplementor = buildMetadata();
+		afterConstructAndConfigureMetadata( metadataImplementor );
+		final SessionFactoryBuilder sessionFactoryBuilder = metadataImplementor.getSessionFactoryBuilder();
+		if ( configuration.getInterceptor() != null ) {
+			sessionFactoryBuilder.with( configuration.getInterceptor() );
 		}
-		else {
-			// this is done here because Configuration does not currently support 4.0 xsd
-			afterConstructAndConfigureConfiguration( configuration );
-			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
-		}
+		sessionFactory = (SessionFactoryImpl) sessionFactoryBuilder.build();
+
 		afterSessionFactoryBuilt();
 	}
 
@@ -193,7 +188,57 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+		applyCacheSettings( metadataImplementor );
+	}
 
+	public void applyCacheSettings(MetadataImplementor metadataImplementor) {
+		if ( StringHelper.isEmpty( getCacheConcurrencyStrategy() ) ) {
+			return;
+		}
+
+		for ( EntityBinding entityBinding : metadataImplementor.getEntityBindings() ) {
+			boolean hasLob = false;
+			for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+				if ( attributeBinding.getAttribute().isSingular() ) {
+					Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+					String typeName = type.getName();
+					if ( "blob".equals( typeName ) || "clob".equals( typeName ) ) {
+						hasLob = true;
+					}
+					if ( Blob.class.getName().equals( typeName ) || Clob.class.getName().equals( typeName ) ) {
+						hasLob = true;
+					}
+				}
+			}
+			if ( !hasLob && entityBinding.getSuperEntityBinding() == null && overrideCacheStrategy() ) {
+				Caching caching = entityBinding.getHierarchyDetails().getCaching();
+				if ( caching == null ) {
+					caching = new Caching();
+				}
+				caching.setRegion( entityBinding.getEntity().getName() );
+				caching.setCacheLazyProperties( true );
+				caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+				entityBinding.getHierarchyDetails().setCaching( caching );
+			}
+			for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+				if ( !attributeBinding.getAttribute().isSingular() ) {
+					AbstractPluralAttributeBinding binding = AbstractPluralAttributeBinding.class.cast( attributeBinding );
+					Caching caching = binding.getCaching();
+					if ( caching == null ) {
+						caching = new Caching();
+					}
+					caching.setRegion(
+							StringHelper.qualify(
+									entityBinding.getEntity().getName(),
+									attributeBinding.getAttribute().getName()
+							)
+					);
+					caching.setCacheLazyProperties( true );
+					caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+					binding.setCaching( caching );
+				}
+			}
+		}
 	}
 
 	private MetadataImplementor buildMetadata() {
@@ -205,22 +250,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	// TODO: is this still needed?
 	protected Configuration buildConfiguration() {
-		Configuration cfg = constructAndConfigureConfiguration();
-		afterConstructAndConfigureConfiguration( cfg );
-		return cfg;
+		return constructAndConfigureConfiguration();
 	}
 
 	protected Configuration constructAndConfigureConfiguration() {
 		Configuration cfg = constructConfiguration();
 		configure( cfg );
 		return cfg;
-	}
-
-	private void afterConstructAndConfigureConfiguration(Configuration cfg) {
-		addMappings( cfg );
-		cfg.buildMappings();
-		applyCacheSettings( cfg );
-		afterConfigurationBuilt( cfg );
 	}
 
 	protected Configuration constructConfiguration() {
@@ -330,36 +366,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return NO_MAPPINGS;
 	}
 
-	protected void applyCacheSettings(Configuration configuration) {
-		if ( getCacheConcurrencyStrategy() != null ) {
-			Iterator itr = configuration.getClassMappings();
-			while ( itr.hasNext() ) {
-				PersistentClass clazz = (PersistentClass) itr.next();
-				Iterator props = clazz.getPropertyClosureIterator();
-				boolean hasLob = false;
-				while ( props.hasNext() ) {
-					Property prop = (Property) props.next();
-					if ( prop.getValue().isSimpleValue() ) {
-						String type = ( (SimpleValue) prop.getValue() ).getTypeName();
-						if ( "blob".equals(type) || "clob".equals(type) ) {
-							hasLob = true;
-						}
-						if ( Blob.class.getName().equals(type) || Clob.class.getName().equals(type) ) {
-							hasLob = true;
-						}
-					}
-				}
-				if ( !hasLob && !clazz.isInherited() && overrideCacheStrategy() ) {
-					configuration.setCacheConcurrencyStrategy( clazz.getEntityName(), getCacheConcurrencyStrategy() );
-				}
-			}
-			itr = configuration.getCollectionMappings();
-			while ( itr.hasNext() ) {
-				Collection coll = (Collection) itr.next();
-				configuration.setCollectionCacheConcurrencyStrategy( coll.getRole(), getCacheConcurrencyStrategy() );
-			}
-		}
-	}
 
 	protected boolean overrideCacheStrategy() {
 		return true;
@@ -370,7 +376,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void afterConfigurationBuilt(Configuration configuration) {
-		afterConfigurationBuilt( configuration.createMappings(), getDialect() );
+//		afterConfigurationBuilt( configuration.createMappings(), getDialect() );
 	}
 
 	protected void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {

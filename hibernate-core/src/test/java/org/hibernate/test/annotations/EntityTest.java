@@ -30,21 +30,20 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.type.StandardBasicTypes;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,15 +59,10 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		if ( isMetadataUsed() ) {
-			assertEquals(
-					"Flight",
-					metadata().getEntityBinding( Flight.class.getName() ).getPrimaryTableName()
-			);
-		}
-		else {
-			assertEquals( "Flight", configuration().getClassMapping( Flight.class.getName() ).getTable().getName() );
-		}
+		assertEquals(
+				"Flight",
+				metadata().getEntityBinding( Flight.class.getName() ).getPrimaryTableName()
+		);
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -323,16 +317,11 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEntityName() throws Exception {
-		if ( isMetadataUsed() ) {
-			assertEquals(
-					"Corporation",
-					metadata().getEntityBinding( Company.class.getName() ).getPrimaryTableName()
-			);
+		assertEquals(
+				"Corporation",
+				metadata().getEntityBinding( Company.class.getName() ).getPrimaryTableName()
+		);
 
-		}
-		else {
-			assertEquals( "Corporation", configuration().getClassMapping( Company.class.getName() ).getTable().getName() );
-		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Company comp = new Company();
@@ -454,12 +443,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private SchemaExport schemaExport() {
-		if ( isMetadataUsed() ) {
-			return new SchemaExport( metadata() );
-		}
-		else {
-			return new SchemaExport( serviceRegistry(), configuration() );
-		}
+		return new SchemaExport( metadata() );
 	}
 
 	@After

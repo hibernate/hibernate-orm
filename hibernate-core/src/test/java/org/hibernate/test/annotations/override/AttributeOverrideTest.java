@@ -59,12 +59,7 @@ public class AttributeOverrideTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public boolean isColumnPresent(String tableName, String columnName) {
-		if ( isMetadataUsed() ) {
-			return SchemaUtil.isColumnPresent( tableName, columnName, metadata() );
-		}
-		else {
-			return SchemaUtil.isColumnPresent( tableName, columnName, configuration() );
-		}
+		return SchemaUtil.isColumnPresent( tableName, columnName, metadata() );
 	}
 
 	@Override

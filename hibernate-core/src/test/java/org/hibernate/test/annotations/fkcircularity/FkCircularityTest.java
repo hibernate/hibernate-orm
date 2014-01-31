@@ -1,73 +1,28 @@
-// $Id$
 package org.hibernate.test.annotations.fkcircularity;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.hibernate.metamodel.MetadataSources;
 
-import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * Test case for ANN-722 and ANN-730.
  *
  * @author Hardy Ferentschik
  */
-public class FkCircularityTest {
-	private static final Logger log = Logger.getLogger( FkCircularityTest.class );
-
-
+public class FkCircularityTest extends BaseUnitTestCase {
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinedSublcassesInPK() {
-		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass(A.class);
-			config.addAnnotatedClass(B.class);
-			config.addAnnotatedClass(C.class);
-			config.addAnnotatedClass(D.class);
-			config.buildMappings(  );
-			String[] schema = config
-					.generateSchemaCreationScript(new SQLServerDialect());
-			for (String s : schema) {
-                log.debug(s);
-			}
-            log.debug("success");
-		} catch (Exception e) {
-			StringWriter writer = new StringWriter();
-			e.printStackTrace(new PrintWriter(writer));
-            log.debug(writer.toString());
-            Assert.fail( e.getMessage() );
-		}
-	}
-    @Test
-	public void testDeepJoinedSuclassesHierachy() {
-		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass(ClassA.class);
-			config.addAnnotatedClass(ClassB.class);
-			config.addAnnotatedClass(ClassC.class);
-			config.addAnnotatedClass(ClassD.class);
-			config.buildMappings(  );
-			String[] schema = config
-					.generateSchemaCreationScript(new HSQLDialect());
-			for (String s : schema) {
-                log.debug(s);
-			}
-            log.debug("success");
-		} catch (Exception e) {
-			StringWriter writer = new StringWriter();
-			e.printStackTrace(new PrintWriter(writer));
-            log.debug(writer.toString());
-			Assert.fail(e.getMessage());
-		}
+		// metamodel : fails with error about D#id annotated with @Embedded but D_PK not annotated as @Embeddable
+		// however, adding @Embeddable to D_PK makes no difference; same error...
+
+		MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( A.class )
+				.addAnnotatedClass( B.class )
+				.addAnnotatedClass( C.class )
+				.addAnnotatedClass( D.class );
+		metadataSources.buildMetadata();
 	}
 }

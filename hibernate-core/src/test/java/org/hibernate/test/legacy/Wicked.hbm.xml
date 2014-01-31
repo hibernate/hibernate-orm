@@ -62,7 +62,7 @@
    </class>
    
    <class name="org.hibernate.test.legacy.Employee">
-        <composite-id class="X">
+        <composite-id class="org.hibernate.test.legacy.X">
             <key-property name="comp" type="string"/>
         </composite-id>
 		

@@ -38,6 +38,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 import static org.junit.Assert.assertTrue;
@@ -50,7 +52,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings({ "deprecation" })
-public class AccessMappingTest {
+public class AccessMappingTest extends BaseUnitTestCase {
     private ServiceRegistry serviceRegistry;
 
     @Before

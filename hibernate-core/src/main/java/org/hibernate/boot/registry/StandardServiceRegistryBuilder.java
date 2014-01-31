@@ -23,6 +23,8 @@
  */
 package org.hibernate.boot.registry;
 
+import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -106,13 +108,26 @@ public class StandardServiceRegistryBuilder {
 	 * @param resourceName The name by which to perform a resource look up for the properties file.
 	 *
 	 * @return this, for method chaining
-	 *
-	 * @see #configure()
-	 * @see #configure(String)
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryBuilder loadProperties(String resourceName) {
 		settings.putAll( configLoader.loadProperties( resourceName ) );
+		return this;
+	}
+
+	/**
+	 * Read settings from a {@link java.util.Properties} file.
+	 *
+	 * Differs from {@link #configure()} and {@link #configure(String)} in that here we expect to read a
+	 * {@link java.util.Properties} file while for {@link #configure} we read the XML variant.
+	 *
+	 * @param propertyFile The property file reference
+	 *
+	 * @return this, for method chaining
+	 */
+	@SuppressWarnings( {"unchecked"})
+	public StandardServiceRegistryBuilder loadProperties(File propertyFile) {
+		settings.putAll( configLoader.loadProperties( propertyFile ) );
 		return this;
 	}
 
@@ -141,6 +156,44 @@ public class StandardServiceRegistryBuilder {
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryBuilder configure(String resourceName) {
 		final JaxbHibernateConfiguration configurationElement = configLoader.loadConfigXmlResource( resourceName );
+		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
+			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
+		}
+
+		return this;
+	}
+
+	/**
+	 * Read setting information from an XML file using the named resource location.
+	 *
+	 * @param file The config file reference
+	 *
+	 * @return this, for method chaining
+	 *
+	 * @see #loadProperties(String)
+	 */
+	@SuppressWarnings( {"unchecked"})
+	public StandardServiceRegistryBuilder configure(File file) {
+		final JaxbHibernateConfiguration configurationElement = configLoader.loadConfigFile( file );
+		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
+			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
+		}
+
+		return this;
+	}
+
+	/**
+	 * Read setting information from an XML file using the named resource location.
+	 *
+	 * @param configFileUrl The config file url reference
+	 *
+	 * @return this, for method chaining
+	 *
+	 * @see #loadProperties(String)
+	 */
+	@SuppressWarnings( {"unchecked"})
+	public StandardServiceRegistryBuilder configure(URL configFileUrl) {
+		final JaxbHibernateConfiguration configurationElement = configLoader.loadConfig( configFileUrl );
 		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
 			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
 		}

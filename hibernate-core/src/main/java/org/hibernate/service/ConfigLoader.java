@@ -23,14 +23,18 @@
  */
 package org.hibernate.service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.xml.spi.Origin;
+import org.hibernate.xml.spi.SourceType;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
@@ -66,7 +70,53 @@ public class ConfigLoader {
 		if ( stream == null ) {
 			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
 		}
-		return jaxbProcessorHolder.getValue().unmarshal( stream, new Origin( SourceType.RESOURCE, cfgXmlResourceName ) );
+		return unmarshall( stream, new Origin( SourceType.RESOURCE, cfgXmlResourceName ) );
+	}
+
+	private JaxbHibernateConfiguration unmarshall(InputStream stream, Origin origin) {
+		try {
+			return jaxbProcessorHolder.getValue().unmarshal( stream, origin );
+		}
+		finally {
+			try {
+				stream.close();
+			}
+			catch (IOException e) {
+				log.debug( "Unable to close config input stream : " + e.getMessage() );
+			}
+		}
+	}
+
+	public JaxbHibernateConfiguration loadConfigFile(File cfgXmlFile) {
+		final InputStream stream = toStream( cfgXmlFile );
+		return unmarshall( stream, new Origin( SourceType.FILE, cfgXmlFile.getAbsolutePath() ) );
+	}
+
+	private InputStream toStream(File file) {
+		try {
+			return new FileInputStream( file );
+		}
+		catch (FileNotFoundException e) {
+			throw new ConfigurationException(
+					"Could not open input stream from File [" + file.getAbsolutePath() + "]"
+			);
+		}
+	}
+
+	public JaxbHibernateConfiguration loadConfig(URL configFileUrl) {
+		final InputStream stream = toStream( configFileUrl );
+		return unmarshall( stream, new Origin( SourceType.URL, configFileUrl.toExternalForm() ) );
+	}
+
+	private InputStream toStream(URL configFileUrl) {
+		try {
+			return configFileUrl.openStream();
+		}
+		catch (IOException e) {
+			throw new ConfigurationException(
+					"Could not open input stream from config file url [" + configFileUrl.toExternalForm() + "]"
+			);
+		}
 	}
 
 	public Properties loadProperties(String resourceName) {
@@ -86,6 +136,29 @@ public class ConfigLoader {
 			catch (IOException e) {
 				log.debug(
 						String.format( "Unable to close properties file [%s] stream", resourceName ),
+						e
+				);
+			}
+		}
+	}
+
+	public Properties loadProperties(File propertyFile) {
+		final InputStream stream = toStream( propertyFile );
+		try {
+			Properties properties = new Properties();
+			properties.load( stream );
+			return properties;
+		}
+		catch (IOException e) {
+			throw new ConfigurationException( "Unable to apply settings from properties file [" + propertyFile + "]", e );
+		}
+		finally {
+			try {
+				stream.close();
+			}
+			catch (IOException e) {
+				log.debug(
+						String.format( "Unable to close properties file [%s] stream", propertyFile ),
 						e
 				);
 			}

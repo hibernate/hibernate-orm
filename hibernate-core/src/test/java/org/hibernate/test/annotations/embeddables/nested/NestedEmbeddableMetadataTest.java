@@ -23,44 +23,42 @@
  */
 package org.hibernate.test.annotations.embeddables.nested;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.sql.Types;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.type.CustomType;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
 public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEnumTypeInterpretation() {
-		Configuration cfg = new Configuration().addAnnotatedClass( Customer.class );
-		cfg.buildMappings();
-		Mapping mapping = cfg.buildMapping();
-		PersistentClass classMetadata = cfg.getClassMapping( Customer.class.getName() );
-		Property investmentsProperty = classMetadata.getProperty( "investments" );
-		Collection investmentsValue = (Collection) investmentsProperty.getValue();
-		Component investmentMetadata = (Component) investmentsValue.getElement();
-		Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
-		SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
-		CustomType currencyType = (CustomType) currencyMetadata.getType();
-		int[] currencySqlTypes = currencyType.sqlTypes( mapping );
+		Metadata metadata = new MetadataSources().addAnnotatedClass( Customer.class ).buildMetadata();
+		EntityBinding eb = metadata.getEntityBinding( Customer.class.getName() );
+		PluralAttributeBinding investmentsBinding = (PluralAttributeBinding) eb.locateAttributeBinding( "investments" );
+		CompositePluralAttributeElementBinding investmentsElementBinding = (CompositePluralAttributeElementBinding) investmentsBinding.getPluralAttributeElementBinding();
+		CompositeAttributeBinding amountBinding = (CompositeAttributeBinding) investmentsElementBinding.getCompositeAttributeBindingContainer().locateAttributeBinding( "amount" );
+		SingularAttributeBinding currencyBinding = (SingularAttributeBinding) amountBinding.locateAttributeBinding( "currency" );
+
+		CustomType currencyType = (CustomType) currencyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		assertNotNull( currencyType );
+		int[] currencySqlTypes = currencyType.sqlTypes( null );
 		assertEquals( 1, currencySqlTypes.length );
 		assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
 	}

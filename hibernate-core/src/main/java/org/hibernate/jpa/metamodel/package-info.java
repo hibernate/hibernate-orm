@@ -1,1 +1,0 @@
-package org.hibernate.jpa.metamodel;

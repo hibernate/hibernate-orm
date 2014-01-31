@@ -43,16 +43,9 @@ public class DerivedIdentityIdClassParentSameIdTypeIdClassDepTest extends BaseCo
 
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {
-		if ( isMetadataUsed() ) {
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
-			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
-		}
-		else {
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", configuration() ) );
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", configuration() ) );
-			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", configuration() ) );
-		}
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
 
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -80,16 +73,9 @@ public class DerivedIdentityIdClassParentSameIdTypeIdClassDepTest extends BaseCo
 
 	@Test
 	public void testTckLikeBehavior() throws Exception {
-		if ( isMetadataUsed() ) {
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
-			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
-		}
-		else {
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", configuration() ) );
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", configuration() ) );
-			assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", configuration() ) );
-		}
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
 
 		Session s = openSession();
 		s.getTransaction().begin();

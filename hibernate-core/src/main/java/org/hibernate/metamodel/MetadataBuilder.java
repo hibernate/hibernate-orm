@@ -28,8 +28,10 @@ import javax.persistence.SharedCacheMode;
 import org.jboss.jandex.IndexView;
 import org.xml.sax.EntityResolver;
 
+import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -143,6 +145,23 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder with(CompositeUserType type, String[] keys);
+
+	/**
+	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)
+	 *
+	 * @param typeContributor The contributor to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public MetadataBuilder with(TypeContributor typeContributor);
+
+	/**
+	 * Apply a CacheRegionDefinition to be applied to an entity, collection or query while building the
+	 * Metadata object.
+	 *
+	 * @param cacheRegionDefinition The cache region definition to apply
+	 */
+	public void with(CacheRegionDefinition cacheRegionDefinition);
 
 	/**
 	 * Actually build the metamodel

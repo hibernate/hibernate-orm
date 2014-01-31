@@ -27,7 +27,7 @@ import java.io.InputStream;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
+import org.hibernate.xml.internal.stax.UnsupportedOrmXsdVersionException;
 
 import org.junit.Test;
 

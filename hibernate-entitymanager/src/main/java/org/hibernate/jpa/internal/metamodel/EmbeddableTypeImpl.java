@@ -37,11 +37,12 @@ public class EmbeddableTypeImpl<X>
 	private final ComponentType hibernateType;
 
 	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, ComponentType hibernateType) {
-		super( javaType, null, null );
+		super( javaType, null );
 		this.parent = parent;
 		this.hibernateType = hibernateType;
 	}
 
+	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}

@@ -71,18 +71,13 @@ public class QuoteTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
 		String role = User.class.getName() + ".roles";
-		if ( isMetadataUsed() ) {
-			AttributeBinding attributeBinding = metadata().getEntityBinding( User.class.getName() ).locateAttributeBinding( "roles" );
-			PluralAttributeKeyBinding keyBinding = ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeKeyBinding();
-			assertEquals(
-					"User_Role",
-					( (org.hibernate.metamodel.spi.relational.Table) keyBinding.getCollectionTable() )
-							.getPhysicalName().getText()
-			);
-		}
-		else {
-			assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
-		}
+		AttributeBinding attributeBinding = metadata().getEntityBinding( User.class.getName() ).locateAttributeBinding( "roles" );
+		PluralAttributeKeyBinding keyBinding = ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeKeyBinding();
+		assertEquals(
+				"User_Role",
+				( (org.hibernate.metamodel.spi.relational.Table) keyBinding.getCollectionTable() )
+						.getPhysicalName().getText()
+		);
 		s.close();
 	}
 	

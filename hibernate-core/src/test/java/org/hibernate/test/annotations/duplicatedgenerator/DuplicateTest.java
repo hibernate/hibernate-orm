@@ -1,22 +1,25 @@
-//$Id$
 package org.hibernate.test.annotations.duplicatedgenerator;
-import org.junit.Assert;
-import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-public class DuplicateTest  {
+public class DuplicateTest extends BaseUnitTestCase {
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testDuplicateEntityName() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		ServiceRegistry serviceRegistry = null;
 		SessionFactory sf = null;

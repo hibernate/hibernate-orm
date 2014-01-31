@@ -178,7 +178,6 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 	private static final String queryString = "from Item i where i.name='widget'";
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testQueryCacheInvalidation() throws Exception {
 
 		sessionFactory().evictQueries();

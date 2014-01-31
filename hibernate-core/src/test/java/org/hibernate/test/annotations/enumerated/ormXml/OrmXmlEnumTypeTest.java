@@ -49,18 +49,9 @@ public class OrmXmlEnumTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOrmXmlDefinedEnumType() {
 		final Type bindingPropertyType;
-		if ( isMetadataUsed() ) {
-			AttributeBinding attributeBinding = metadata().getEntityBinding( BookWithOrmEnum.class.getName() )
-					.locateAttributeBinding( "bindingStringEnum" );
-			bindingPropertyType =
-					attributeBinding.getHibernateTypeDescriptor()
-							.getResolvedTypeMapping();
-		}
-		else {
-			bindingPropertyType = configuration().getClassMapping( BookWithOrmEnum.class.getName() )
-					.getProperty( "bindingStringEnum" )
-					.getType();
-		}
+		AttributeBinding attributeBinding = metadata().getEntityBinding( BookWithOrmEnum.class.getName() )
+				.locateAttributeBinding( "bindingStringEnum" );
+		bindingPropertyType = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 		CustomType customType = ExtraAssertions.assertTyping( CustomType.class, bindingPropertyType );
 		EnumType enumType = ExtraAssertions.assertTyping( EnumType.class, customType.getUserType() );
 		assertFalse( enumType.isOrdinal() );

@@ -51,7 +51,6 @@ public class CompleteComponentPropertyRefTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testComponentPropertyRef() {
 		Session s = openSession();
 		s.beginTransaction();

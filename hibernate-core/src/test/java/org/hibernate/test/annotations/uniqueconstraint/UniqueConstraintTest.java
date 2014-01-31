@@ -1,12 +1,7 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -23,9 +18,16 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
@@ -76,29 +78,30 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8026" )
 	public void testUnNamedConstraints() {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( UniqueNoNameA.class );
-		cfg.addAnnotatedClass( UniqueNoNameB.class );
-		cfg.buildMappings();
-		Iterator<org.hibernate.mapping.Table> iterator = cfg.getTableMappings();
-		org.hibernate.mapping.Table tableA = null;
-		org.hibernate.mapping.Table tableB = null;
-		while( iterator.hasNext() ) {
-			org.hibernate.mapping.Table table = iterator.next();
-			if ( table.getName().equals( "UniqueNoNameA" ) ) {
+		MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( UniqueNoNameA.class )
+				.addAnnotatedClass( UniqueNoNameB.class );
+		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+
+		org.hibernate.metamodel.spi.relational.Table tableA = null;
+		org.hibernate.metamodel.spi.relational.Table tableB = null;
+
+		for ( org.hibernate.metamodel.spi.relational.Table table : metadata.getDatabase().getDefaultSchema().getTables() ) {
+			if ( table.getPhysicalName().getText().equals( "UniqueNoNameA" ) ) {
 				tableA = table;
 			}
-			else if ( table.getName().equals( "UniqueNoNameB" ) ) {
+			else if ( table.getPhysicalName().getText().equals( "UniqueNoNameB" ) ) {
 				tableB = table;
 			}
 		}
-		
-		if ( tableA == null || tableB == null ) {
-			fail( "Could not find the expected tables." );
-		}
-		
-		assertFalse( tableA.getUniqueKeyIterator().next().getName().equals(
-				tableB.getUniqueKeyIterator().next().getName() ) );
+
+		assertNotNull( "Could not find table A", tableA );
+		assertNotNull( "Could not find table B", tableB );
+
+		assertNotEquals(
+				tableA.getUniqueKeys().iterator().next().getName(),
+				tableB.getUniqueKeys().iterator().next().getName()
+		);
 	}
 	
 	@Test

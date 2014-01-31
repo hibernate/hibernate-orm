@@ -23,8 +23,6 @@
  */
 package org.hibernate.id;
 
-import static org.junit.Assert.assertEquals;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,25 +30,30 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.Session;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.testing.env.TestingDatabaseInfo;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
-import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.type.StandardBasicTypes;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -62,15 +65,14 @@ import org.junit.Test;
 public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
-	private Configuration cfg;
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry ssr;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
-    private SessionImplementor session;
 
 	@Before
 	public void setUp() throws Exception {
 		Properties properties = new Properties();
+		properties.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
 		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
 		properties.put(
@@ -83,50 +85,51 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 					@Override
 					protected NamingStrategy getNamingStrategy() {
-						return cfg.getNamingStrategy();
+						return EJB3NamingStrategy.INSTANCE;
 					}
 				}
 		);
 
-		Dialect dialect = TestingDatabaseInfo.DIALECT;
+		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+		StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+		ssrBuilder.applySettings( properties );
+
+		ssr = ssrBuilder.build();
+
+		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( bsr ).buildMetadata( ssr );
+		Database database = metadata.getDatabase();
 
 		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, dialect, new ClassLoaderServiceImpl() );
-
-		cfg = TestingDatabaseInfo.buildBaseConfiguration()
-				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.addAuxiliaryDatabaseObject(
-				new SimpleAuxiliaryDatabaseObject(
-						generator.sqlCreateStrings( dialect )[0],
-						generator.sqlDropStrings( dialect )[0]
-				)
+		generator.configure(
+				StandardBasicTypes.LONG,
+				properties,
+				database.getJdbcEnvironment().getDialect(),
+				ssr.getService( ClassLoaderService.class )
 		);
+		generator.registerExportables( database );
 
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 	}
+
 
 	@After
 	public void tearDown() throws Exception {
-        if(session != null && !session.isClosed()) {
-            ((Session)session).close();
-        }
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
-		if ( serviceRegistry != null ) {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
+		if ( ssr != null ) {
+			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 
 	@Test
 	public void testHiLoAlgorithm() {
-		session = (SessionImpl) sessionFactory.openSession();
-		((Session)session).beginTransaction();
+		SessionImpl session = (SessionImpl) sessionFactory.openSession();
+		session.beginTransaction();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// initially sequence should be uninitialized
-		assertEquals( 0L, extractSequenceValue( (session) ) );
+		assertEquals( 0L, extractSequenceValue( session ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// historically the hilo generators skipped the initial block of values;
@@ -156,8 +159,8 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 		assertEquals( 5L, generatedValue.longValue() );
 		assertEquals( 5L, extractSequenceValue( (session) ) );
 
-		((Session)session).getTransaction().commit();
-		((Session)session).close();
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	private long extractSequenceValue(final SessionImplementor session) {

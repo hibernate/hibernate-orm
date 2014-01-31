@@ -45,6 +45,8 @@ import static org.junit.Assert.fail;
 public class BeanValidationAutoTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testListeners() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
 		Session s = openSession();

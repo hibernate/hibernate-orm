@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.util.SchemaUtil;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.util.SchemaUtil;
+import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -50,28 +50,16 @@ public class AssociationOverrideTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDottedNotation() throws Exception {
-		if ( isMetadataUsed() ) {
-			assertTrue( SchemaUtil.isTablePresent( "Employee", metadata() ) );
-			assertTrue( "Overridden @JoinColumn fails",
-					SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent( "Employee", metadata() ) );
+		assertTrue( "Overridden @JoinColumn fails",
+				SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", metadata() ) );
 
-			assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", metadata() ) );
-			assertTrue( "Overridden @JoinTable with default @JoinColumn fails",
-					SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", metadata() ) );
-			assertTrue( "Overridden @JoinTable.inverseJoinColumn fails",
-					SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", metadata() ) );
-		}
-		else {
-			assertTrue( SchemaUtil.isTablePresent( "Employee", configuration() ) );
-			assertTrue( "Overridden @JoinColumn fails",
-					SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", configuration() ) );
+		assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", metadata() ) );
+		assertTrue( "Overridden @JoinTable with default @JoinColumn fails",
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", metadata() ) );
+		assertTrue( "Overridden @JoinTable.inverseJoinColumn fails",
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", metadata() ) );
 
-			assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", configuration() ) );
-			assertTrue( "Overridden @JoinTable with default @JoinColumn fails",
-					SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", configuration() ) );
-			assertTrue( "Overridden @JoinTable.inverseJoinColumn fails",
-					SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", configuration() ) );
-		}
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		ContactInfo ci = new ContactInfo();

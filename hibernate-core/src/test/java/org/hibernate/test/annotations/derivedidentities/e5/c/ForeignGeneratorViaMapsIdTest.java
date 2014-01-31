@@ -40,12 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class ForeignGeneratorViaMapsIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testForeignGenerator() throws Exception {
-		if ( isMetadataUsed() ) {
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", metadata() ) );
-		}
-		else {
-			assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", configuration() ) );
-		}
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", metadata() ) );
 
 		Person e = new Person();
 		Session s = openSession(  );

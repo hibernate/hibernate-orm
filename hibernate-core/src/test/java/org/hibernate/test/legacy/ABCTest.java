@@ -25,13 +25,13 @@ package org.hibernate.test.legacy;
 
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -79,26 +79,13 @@ public class ABCTest extends LegacyTestCase {
 	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
 		boolean found = false;
-		if ( isMetadataUsed() ) {
-			for ( Schema schema : metadata().getDatabase().getSchemas() ) {
-				for ( Table table : schema.getTables() ) {
-					for ( Index index : table.getIndexes() ) {
-						if ( index.getName().equals( "indx_a_name" ) ) {
-							found = true;
-							break;
-						}
+		for ( Schema schema : metadata().getDatabase().getSchemas() ) {
+			for ( Table table : schema.getTables() ) {
+				for ( Index index : table.getIndexes() ) {
+					if ( index.getName().equals( "indx_a_name" ) ) {
+						found = true;
+						break;
 					}
-				}
-			}
-		}
-		else {
-			String[] commands = configuration().generateSchemaCreationScript( getDialect() );
-			int max = commands.length;
-			for (int indx = 0; indx < max; indx++) {
-				System.out.println("Checking command : " + commands[indx]);
-				found = commands[indx].indexOf("create index indx_a_name") >= 0;
-				if ( found ) {
-					break;
 				}
 			}
 		}

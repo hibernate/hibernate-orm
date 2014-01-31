@@ -662,7 +662,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		}
 		catch( AnnotationException ex ) {
 			assertEquals(
-					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType", 
+					"Either name or defaultForType (or both) must be set on TypeDefinition [org.hibernate.test.annotations.entity.PhoneNumberType]",
 					ex.getMessage());
 		} finally {
 			if( sf != null){

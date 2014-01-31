@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.xml.spi.BindResult;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -54,18 +54,18 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private final List<EntityHierarchyImpl> entityHierarchies;
 
 	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, MetadataSources metadataSources) {
-		this( metadata, metadataSources.getJaxbRootList() );
+		this( metadata, metadataSources.getBindResultList() );
 	}
 
-	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, List<JaxbRoot> jaxbRoots) {
+	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, List<BindResult> bindResults) {
 		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder( metadata );
 
-		for ( JaxbRoot jaxbRoot : jaxbRoots ) {
-			if ( ! JaxbHibernateMapping.class.isInstance( jaxbRoot.getRoot() ) ) {
+		for ( BindResult bindResult : bindResults ) {
+			if ( ! JaxbHibernateMapping.class.isInstance( bindResult.getRoot() ) ) {
 				continue;
 			}
 
-			final MappingDocument mappingDocument = new MappingDocument( jaxbRoot, metadata );
+			final MappingDocument mappingDocument = new MappingDocument( bindResult, metadata );
 			processors.add( new HibernateMappingProcessor( metadata, mappingDocument ) );
 
 			hierarchyBuilder.processMappingDocument( mappingDocument );

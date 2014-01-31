@@ -26,6 +26,8 @@ package org.hibernate.test.instrument.runtime;
 import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Steve Ebersole
  */

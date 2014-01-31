@@ -51,6 +51,8 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -92,6 +94,14 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	}
 
 	public static class NoopEntityPersister implements EntityPersister {
+		public NoopEntityPersister(
+				EntityBinding entityBinding,
+				EntityRegionAccessStrategy entityRegionAccessStrategy,
+				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				SessionFactoryImplementor sf,
+				Mapping mapping) {
+			throw new GoofyException(NoopEntityPersister.class);
+		}
 
 		public NoopEntityPersister(org.hibernate.mapping.PersistentClass persistentClass,
 								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
@@ -617,6 +627,13 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {
+		public NoopCollectionPersister(
+				AbstractPluralAttributeBinding collectionBinding,
+				CollectionRegionAccessStrategy regionAccessStrategy,
+				MetadataImplementor metadata,
+				SessionFactoryImplementor sf) {
+			throw new GoofyException(NoopCollectionPersister.class);
+		}
 
 		public NoopCollectionPersister(org.hibernate.mapping.Collection collection,
 									   org.hibernate.cache.spi.access.CollectionRegionAccessStrategy strategy,

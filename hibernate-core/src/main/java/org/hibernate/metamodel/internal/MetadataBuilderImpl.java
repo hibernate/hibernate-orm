@@ -37,6 +37,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
@@ -49,6 +50,8 @@ import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeCustomType;
@@ -61,7 +64,7 @@ import org.hibernate.usertype.UserType;
  *
  * @author Steve Ebersole
  */
-public class MetadataBuilderImpl implements MetadataBuilder {
+public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	private static final Logger log = Logger.getLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
@@ -171,6 +174,35 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	}
 
 	@Override
+	public MetadataBuilder with(TypeContributor typeContributor) {
+		typeContributor.contribute( this, options.serviceRegistry );
+		return this;
+	}
+
+	@Override
+	public void contributeType(BasicType type) {
+		options.basicTypeRegistrations.add( type );
+	}
+
+	@Override
+	public void contributeType(UserType type, String[] keys) {
+		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
+	}
+
+	@Override
+	public void contributeType(CompositeUserType type, String[] keys) {
+		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
+	}
+
+	@Override
+	public void with(CacheRegionDefinition cacheRegionDefinition) {
+		if ( options.cacheRegionDefinitions == null ) {
+			options.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+		}
+		options.cacheRegionDefinitions.add( cacheRegionDefinition );
+	}
+
+	@Override
 	public Metadata build() {
 		return new MetadataImpl( sources, options );
 	}
@@ -190,8 +222,9 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private String defaultSchemaName;
 		private String defaultCatalogName;
 		private MultiTenancyStrategy multiTenancyStrategy;
-		public IndexView jandexView;
-		public List<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
+		private IndexView jandexView;
+		private List<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
+		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
 		public OptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -299,6 +332,11 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		@Override
 		public List<BasicType> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
+		}
+
+		@Override
+		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
+			return cacheRegionDefinitions;
 		}
 	}
 }

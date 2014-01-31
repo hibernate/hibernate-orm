@@ -27,7 +27,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.bind.JAXBException;
+
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
+import org.hibernate.xml.spi.BindResult;
+import org.hibernate.xml.spi.Origin;
+import org.hibernate.xml.spi.SourceType;
+
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -35,17 +45,6 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
-
-import org.hibernate.AnnotationException;
-import org.hibernate.HibernateException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jaxb.internal.JaxbMappingProcessor;
-import org.hibernate.jaxb.spi.JaxbRoot;
-import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.jaxb.spi.SourceType;
-import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -74,12 +73,12 @@ public abstract class AbstractMockerTest {
 		ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 		List<JaxbEntityMappings> xmlEntityMappingsList = new ArrayList<JaxbEntityMappings>();
 		for ( String fileName : mappingFiles ) {
-			JaxbMappingProcessor processor = new JaxbMappingProcessor( getServiceRegistry() );
-			JaxbRoot jaxbRoot = processor.unmarshal(
+			MappingXmlBinder processor = new MappingXmlBinder( getServiceRegistry() );
+			BindResult bindResult = processor.bind(
 					classLoaderService.locateResourceStream( packagePrefix + fileName ),
 					new Origin( SourceType.FILE, packagePrefix + fileName )
 			);
-			JaxbEntityMappings entityMappings = (JaxbEntityMappings)jaxbRoot.getRoot();
+			JaxbEntityMappings entityMappings = (JaxbEntityMappings) bindResult.getRoot();
 
 
 			xmlEntityMappingsList.add( entityMappings );

@@ -24,10 +24,7 @@
 package org.hibernate.internal.util.xml;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -36,13 +33,15 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.xml.internal.stax.BufferedXMLEventReader;
+import org.hibernate.xml.internal.stax.FilteringXMLEventReader;
+import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
+import org.hibernate.xml.internal.stax.SupportedOrmXsdVersion;
+import org.hibernate.xml.internal.stax.XmlInfrastructureException;
 
 import org.jboss.logging.Logger;
 
@@ -219,92 +218,6 @@ public class MappingReader {
 		catch (IOException e) {
 			throw new InvalidMappingException( "IOException performing validation", origin, e );
 		}
-	}
-
-	public static enum SupportedOrmXsdVersion {
-		ORM_1_0( "org/hibernate/jpa/orm_1_0.xsd" ),
-		ORM_2_0( "org/hibernate/jpa/orm_2_0.xsd" ),
-		ORM_2_1( "org/hibernate/jpa/orm_2_1.xsd" ),
-		HBM_4_0( "org/hibernate/hibernate-mapping-4.0.xsd");
-
-		private final String schemaResourceName;
-
-		private SupportedOrmXsdVersion(String schemaResourceName) {
-			this.schemaResourceName = schemaResourceName;
-		}
-
-		public static SupportedOrmXsdVersion parse(String name, Origin origin) {
-			if ( "1.0".equals( name ) ) {
-				return ORM_1_0;
-			}
-			else if ( "2.0".equals( name ) ) {
-				return ORM_2_0;
-			}
-			else if ( "2.1".equals( name ) ) {
-				return ORM_2_1;
-			}
-			else if ( "4.0".equals( name ) ) {
-				return HBM_4_0;
-			}
-			throw new UnsupportedOrmXsdVersionException( name, origin );
-		}
-
-		private URL schemaUrl;
-
-		public URL getSchemaUrl() {
-			if ( schemaUrl == null ) {
-				schemaUrl = resolveLocalSchemaUrl( schemaResourceName );
-			}
-			return schemaUrl;
-		}
-
-		private Schema schema;
-
-		public Schema getSchema() {
-			if ( schema == null ) {
-				schema = resolveLocalSchema( getSchemaUrl() );
-			}
-			return schema;
-		}
-	}
-
-	public static URL resolveLocalSchemaUrl(String schemaName) {
-		URL url = MappingReader.class.getClassLoader().getResource( schemaName );
-		if ( url == null ) {
-			throw new XmlInfrastructureException( "Unable to locate schema [" + schemaName + "] via classpath" );
-		}
-		return url;
-	}
-
-	public static Schema resolveLocalSchema(String schemaName){
-		return resolveLocalSchema( resolveLocalSchemaUrl( schemaName ) );
-	}
-
-	public static Schema resolveLocalSchema(URL schemaUrl) {
-
-		try {
-			InputStream schemaStream = schemaUrl.openStream();
-			try {
-				StreamSource source = new StreamSource(schemaUrl.openStream());
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-				return schemaFactory.newSchema(source);
-			}
-			catch ( Exception e ) {
-				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );
-			}
-			finally {
-				try {
-					schemaStream.close();
-				}
-				catch ( IOException e ) {
-					LOG.debugf( "Problem closing schema stream - %s", e.toString() );
-				}
-			}
-		}
-		catch ( IOException e ) {
-			throw new XmlInfrastructureException( "Stream error handling schema url [" + schemaUrl.toExternalForm() + "]" );
-		}
-
 	}
 
 

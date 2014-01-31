@@ -23,32 +23,25 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
-import java.util.Iterator;
-
-import org.junit.Test;
-
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -313,35 +306,12 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
-		if ( isMetadataUsed() ) {
-			EntityBinding entityBinding = metadata().getEntityBinding( Son.class.getName() );
-			TableSpecification table = entityBinding.getSecondaryTables().values().iterator().next().getSecondaryTableReference();
-			org.hibernate.metamodel.spi.relational.Column c1= table.locateColumn( "foo" );
-			assertNotNull( c1 );
-			org.hibernate.metamodel.spi.relational.Column c2= table.locateColumn( "bar" );
-			assertNotNull( c2 );
-		}
-		else {
-
-			PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
-			Iterator iter = pc.getJoinIterator();
-			Table table = ( ( Join ) iter.next() ).getTable();
-			Iterator columnIter = table.getColumnIterator();
-			boolean fooFound = false;
-			boolean barFound = false;
-			while ( columnIter.hasNext() ) {
-				Column column = ( Column ) columnIter.next();
-				if ( column.getName().equals( "foo" ) ) {
-					fooFound = true;
-				}
-				if ( column.getName().equals( "bar" ) ) {
-					barFound = true;
-				}
-			}
-			assertTrue(
-					"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
-			);
-		}
+		EntityBinding entityBinding = metadata().getEntityBinding( Son.class.getName() );
+		TableSpecification table = entityBinding.getSecondaryTables().values().iterator().next().getSecondaryTableReference();
+		org.hibernate.metamodel.spi.relational.Column c1= table.locateColumn( "foo" );
+		assertNotNull( c1 );
+		org.hibernate.metamodel.spi.relational.Column c2= table.locateColumn( "bar" );
+		assertNotNull( c2 );
 	}
 
 	@Test
@@ -430,16 +400,16 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 
 
 /**
- * Verifies that generated 'select' statement has desired number of joins 
- * @author Sharath Reddy
+ * Verifies that generated 'select' statement has desired number of joins
  *
+ * @author Sharath Reddy
  */
 class JoinCounter extends EmptyInterceptor {
-	 
+
 	private static final long serialVersionUID = -3689681272273261051L;
-	
+
 	private int expectedNumberOfJoins = 0;
-			
+
 	public JoinCounter(int val) {
 		super();
 		this.expectedNumberOfJoins = val;
@@ -447,33 +417,32 @@ class JoinCounter extends EmptyInterceptor {
 
 	public String onPrepareStatement(String sql) {
 		int numberOfJoins = 0;
-		if (sql.startsWith("select") & !sql.contains("nextval")) {
-			 numberOfJoins = count(sql, "join");
-			 assertEquals( expectedNumberOfJoins, numberOfJoins );
+		if ( sql.startsWith( "select" ) & !sql.contains( "nextval" ) ) {
+			numberOfJoins = count( sql, "join" );
+			assertEquals( expectedNumberOfJoins, numberOfJoins );
 		}
-						
+
 		return sql;
-	 }
-	
-	 /**
-	   * Count the number of instances of substring within a string.
-	   *
-	   * @param string     String to look for substring in.
-	   * @param substring  Sub-string to look for.
-	   * @return           Count of substrings in string.
-	   */
-	  private int count(final String string, final String substring)
-	  {
-	     int count = 0;
-	     int idx = 0;
+	}
 
-	     while ((idx = string.indexOf(substring, idx)) != -1)
-	     {
-	        idx++;
-	        count++;
-	     }
+	/**
+	 * Count the number of instances of substring within a string.
+	 *
+	 * @param string String to look for substring in.
+	 * @param substring Sub-string to look for.
+	 *
+	 * @return Count of substrings in string.
+	 */
+	private int count(final String string, final String substring) {
+		int count = 0;
+		int idx = 0;
 
-	     return count;
-	  }
-	
+		while ( ( idx = string.indexOf( substring, idx ) ) != -1 ) {
+			idx++;
+			count++;
+		}
+
+		return count;
+	}
+
 }

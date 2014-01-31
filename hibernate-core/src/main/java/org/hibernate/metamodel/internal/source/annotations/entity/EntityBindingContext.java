@@ -25,8 +25,8 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.xml.spi.Origin;
+import org.hibernate.xml.spi.SourceType;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;

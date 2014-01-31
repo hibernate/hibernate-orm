@@ -33,6 +33,7 @@ import org.xml.sax.EntityResolver;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
@@ -46,6 +47,7 @@ import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.type.BasicType;
 
@@ -56,7 +58,7 @@ public interface Metadata {
 	/**
 	 * Exposes the options used to produce a {@link Metadata} instance.
 	 */
-	public static interface Options {
+	public static interface Options extends Database.Defaults {
 		StandardServiceRegistry getServiceRegistry();
 
 		MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
@@ -65,12 +67,10 @@ public interface Metadata {
 		SharedCacheMode getSharedCacheMode();
 		AccessType getDefaultAccessType();
 		boolean useNewIdentifierGenerators();
-        boolean isGloballyQuotedIdentifiers();
-		String getDefaultSchemaName();
-		String getDefaultCatalogName();
 		MultiTenancyStrategy getMultiTenancyStrategy();
 		IndexView getJandexView();
 		List<BasicType> getBasicTypeRegistrations();
+		List<CacheRegionDefinition> getCacheRegionDefinitions();
 	}
 
 	/**

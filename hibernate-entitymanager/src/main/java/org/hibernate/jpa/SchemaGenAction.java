@@ -93,6 +93,14 @@ public enum SchemaGenAction {
 		);
 	}
 
+	public static SchemaGenAction interpret(Object value) {
+		if ( SchemaGenAction.class.isInstance( value ) ) {
+			return (SchemaGenAction) value;
+		}
+
+		return interpret( value == null ? null : value.toString() );
+	}
+
 	/**
 	 * Does this action include creations?
 	 *

@@ -25,7 +25,6 @@ package org.hibernate.tool.hbm2ddl;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,15 +40,15 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -60,9 +59,12 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -112,26 +114,26 @@ public class SchemaExport {
 	private String delimiter;
 	private boolean haltOnError = false;
 
-	public SchemaExport(ServiceRegistry serviceRegistry, Configuration configuration) {
-		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				serviceRegistry.getService( ConnectionProvider.class )
-		);
-		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
-		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
-		
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-
-		this.importFiles = ConfigurationHelper.getString(
-				AvailableSettings.HBM2DDL_IMPORT_FILES,
-				configuration.getProperties(),
-				DEFAULT_IMPORT_FILE
-		);
-
-		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
-		this.dropSQL = configuration.generateDropSchemaScript( dialect );
-		this.createSQL = configuration.generateSchemaCreationScript( dialect );
-	}
+//	public SchemaExport(ServiceRegistry serviceRegistry, Configuration configuration) {
+//		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
+//				serviceRegistry.getService( ConnectionProvider.class )
+//		);
+//		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+//		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+//		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
+//
+//		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+//
+//		this.importFiles = ConfigurationHelper.getString(
+//				AvailableSettings.HBM2DDL_IMPORT_FILES,
+//				configuration.getProperties(),
+//				DEFAULT_IMPORT_FILE
+//		);
+//
+//		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+//		this.dropSQL = configuration.generateDropSchemaScript( dialect );
+//		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+//	}
 
 	public SchemaExport(MetadataImplementor metadata, Connection connection){
 		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
@@ -194,79 +196,79 @@ public class SchemaExport {
 		this(metadata, null);
 	}
 
-	/**
-	 * Create a schema exporter for the given Configuration
-	 *
-	 * @param configuration The configuration from which to build a schema export.
-	 *
-	 * @throws HibernateException Indicates problem preparing for schema export.
-	 */
-	public SchemaExport(Configuration configuration) {
-		this( configuration, configuration.getProperties() );
-	}
+//	/**
+//	 * Create a schema exporter for the given Configuration
+//	 *
+//	 * @param configuration The configuration from which to build a schema export.
+//	 *
+//	 * @throws HibernateException Indicates problem preparing for schema export.
+//	 */
+//	public SchemaExport(Configuration configuration) {
+//		this( configuration, configuration.getProperties() );
+//	}
 
-	/**
-	 * Create a schema exporter for the given Configuration, with the given
-	 * database connection properties.
-	 *
-	 * @param configuration The configuration from which to build a schema export.
-	 * @param properties The properties from which to configure connectivity etc.
-	 *
-	 * @throws HibernateException Indicates problem preparing for schema export.
-	 * @deprecated properties may be specified via the Configuration object
-	 */
-	@Deprecated
-	public SchemaExport(Configuration configuration, Properties properties) throws HibernateException {
-		final Dialect dialect = Dialect.getDialect( properties );
+//	/**
+//	 * Create a schema exporter for the given Configuration, with the given
+//	 * database connection properties.
+//	 *
+//	 * @param configuration The configuration from which to build a schema export.
+//	 * @param properties The properties from which to configure connectivity etc.
+//	 *
+//	 * @throws HibernateException Indicates problem preparing for schema export.
+//	 * @deprecated properties may be specified via the Configuration object
+//	 */
+//	@Deprecated
+//	public SchemaExport(Configuration configuration, Properties properties) throws HibernateException {
+//		final Dialect dialect = Dialect.getDialect( properties );
+//
+//		Properties props = new Properties();
+//		props.putAll( dialect.getDefaultProperties() );
+//		props.putAll( properties );
+//		this.connectionHelper = new ManagedProviderConnectionHelper( props );
+//
+//		this.sqlStatementLogger = new SqlStatementLogger( false, true );
+//		this.formatter = FormatStyle.DDL.getFormatter();
+//		this.sqlExceptionHelper = new SqlExceptionHelper();
+//
+//		this.classLoaderService = new ClassLoaderServiceImpl();
+//
+//		this.importFiles = ConfigurationHelper.getString(
+//				AvailableSettings.HBM2DDL_IMPORT_FILES,
+//				properties,
+//				DEFAULT_IMPORT_FILE
+//		);
+//
+//		this.dropSQL = configuration.generateDropSchemaScript( dialect );
+//		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+//	}
 
-		Properties props = new Properties();
-		props.putAll( dialect.getDefaultProperties() );
-		props.putAll( properties );
-		this.connectionHelper = new ManagedProviderConnectionHelper( props );
-
-		this.sqlStatementLogger = new SqlStatementLogger( false, true );
-		this.formatter = FormatStyle.DDL.getFormatter();
-		this.sqlExceptionHelper = new SqlExceptionHelper();
-		
-		this.classLoaderService = new ClassLoaderServiceImpl();
-
-		this.importFiles = ConfigurationHelper.getString(
-				AvailableSettings.HBM2DDL_IMPORT_FILES,
-				properties,
-				DEFAULT_IMPORT_FILE
-		);
-
-		this.dropSQL = configuration.generateDropSchemaScript( dialect );
-		this.createSQL = configuration.generateSchemaCreationScript( dialect );
-	}
-
-	/**
-	 * Create a schema exporter for the given Configuration, using the supplied connection for connectivity.
-	 *
-	 * @param configuration The configuration to use.
-	 * @param connection The JDBC connection to use.
-	 *
-	 * @throws HibernateException Indicates problem preparing for schema export.
-	 */
-	public SchemaExport(Configuration configuration, Connection connection) throws HibernateException {
-		this.connectionHelper = new SuppliedConnectionHelper( connection );
-
-		this.sqlStatementLogger = new SqlStatementLogger( false, true );
-		this.formatter = FormatStyle.DDL.getFormatter();
-		this.sqlExceptionHelper = new SqlExceptionHelper();
-		
-		this.classLoaderService = new ClassLoaderServiceImpl();
-
-		this.importFiles = ConfigurationHelper.getString(
-				AvailableSettings.HBM2DDL_IMPORT_FILES,
-				configuration.getProperties(),
-				DEFAULT_IMPORT_FILE
-		);
-
-		final Dialect dialect = Dialect.getDialect( configuration.getProperties() );
-		this.dropSQL = configuration.generateDropSchemaScript( dialect );
-		this.createSQL = configuration.generateSchemaCreationScript( dialect );
-	}
+//	/**
+//	 * Create a schema exporter for the given Configuration, using the supplied connection for connectivity.
+//	 *
+//	 * @param configuration The configuration to use.
+//	 * @param connection The JDBC connection to use.
+//	 *
+//	 * @throws HibernateException Indicates problem preparing for schema export.
+//	 */
+//	public SchemaExport(Configuration configuration, Connection connection) throws HibernateException {
+//		this.connectionHelper = new SuppliedConnectionHelper( connection );
+//
+//		this.sqlStatementLogger = new SqlStatementLogger( false, true );
+//		this.formatter = FormatStyle.DDL.getFormatter();
+//		this.sqlExceptionHelper = new SqlExceptionHelper();
+//
+//		this.classLoaderService = new ClassLoaderServiceImpl();
+//
+//		this.importFiles = ConfigurationHelper.getString(
+//				AvailableSettings.HBM2DDL_IMPORT_FILES,
+//				configuration.getProperties(),
+//				DEFAULT_IMPORT_FILE
+//		);
+//
+//		final Dialect dialect = Dialect.getDialect( configuration.getProperties() );
+//		this.dropSQL = configuration.generateDropSchemaScript( dialect );
+//		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+//	}
 
 	public SchemaExport(
 			ConnectionHelper connectionHelper,
@@ -581,9 +583,13 @@ public class SchemaExport {
 
 	public static void main(String[] args) {
 		try {
-			final Configuration cfg = new Configuration();
-			final StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
-			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+			final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+			final ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
+
+			final MetadataSources metadataSources = new MetadataSources( bsr );
+			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+
+			NamingStrategy namingStrategy = null;
 
 			boolean script = true;
 			boolean drop = false;
@@ -592,7 +598,6 @@ public class SchemaExport {
 			boolean export = true;
 			String outFile = null;
 			String importFile = DEFAULT_IMPORT_FILE;
-			String propFile = null;
 			boolean format = false;
 			String delim = null;
 
@@ -620,7 +625,7 @@ public class SchemaExport {
 						importFile = args[i].substring( 9 );
 					}
 					else if ( args[i].startsWith( "--properties=" ) ) {
-						propFile = args[i].substring( 13 );
+						ssrBuilder.loadProperties( new File( args[i].substring( 13 ) ) );
 					}
 					else if ( args[i].equals( "--format" ) ) {
 						format = true;
@@ -629,51 +634,48 @@ public class SchemaExport {
 						delim = args[i].substring( 12 );
 					}
 					else if ( args[i].startsWith( "--config=" ) ) {
-						cfg.configure( args[i].substring( 9 ) );
+						ssrBuilder.configure( args[i].substring( 9 ) );
 					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
-						cfg.setNamingStrategy(
-								( NamingStrategy ) classLoaderService.classForName( args[i].substring( 9 ) )
-										.newInstance()
-						);
+						namingStrategy = (NamingStrategy) classLoaderService.classForName( args[i].substring( 9 ) ).newInstance();
 					}
 				}
 				else {
 					String filename = args[i];
 					if ( filename.endsWith( ".jar" ) ) {
-						cfg.addJar( new File( filename ) );
+						metadataSources.addJar( new File( filename ) );
 					}
 					else {
-						cfg.addFile( filename );
+						metadataSources.addFile( filename );
 					}
 				}
-
-			}
-
-			if ( propFile != null ) {
-				Properties props = new Properties();
-				props.putAll( cfg.getProperties() );
-				props.load( new FileInputStream( propFile ) );
-				cfg.setProperties( props );
 			}
 
 			if ( importFile != null ) {
-				cfg.setProperty( AvailableSettings.HBM2DDL_IMPORT_FILES, importFile );
+				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_IMPORT_FILES, importFile );
 			}
 
+			final StandardServiceRegistryImpl ssr = (StandardServiceRegistryImpl) ssrBuilder.build();
+			final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
+			if ( namingStrategy != null ) {
+				metadataBuilder.with( namingStrategy );
+			}
+
+			final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+
 			try {
-				SchemaExport se = new SchemaExport( serviceRegistry, cfg )
+				SchemaExport se = new SchemaExport( metadata )
 						.setHaltOnError( halt )
 						.setOutputFile( outFile )
 						.setDelimiter( delim )
-						.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
+						.setImportSqlCommandExtractor( ssr.getService( ImportSqlCommandExtractor.class ) );
 				if ( format ) {
 					se.setFormat( true );
 				}
 				se.execute( script, export, drop, create );
 			}
 			finally {
-				serviceRegistry.destroy();
+				ssr.destroy();
 			}
 		}
 		catch ( Exception e ) {
@@ -689,14 +691,6 @@ public class SchemaExport {
 	 */
 	public List getExceptions() {
 		return exceptions;
-	}
-	
-	public String[] getCreateSqlScripts() {
-		return createSQL;
-	}
-	
-	public String[] getDropSqlScripts() {
-		return dropSQL;
 	}
 
 }

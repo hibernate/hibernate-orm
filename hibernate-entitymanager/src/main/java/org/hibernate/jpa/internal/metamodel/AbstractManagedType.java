@@ -58,16 +58,16 @@ public abstract class AbstractManagedType<X>
 	private final Map<String, PluralAttribute<X, ?, ?>> declaredPluralAttributes
 			= new HashMap<String, PluralAttribute<X,?,?>>();
 
-	protected AbstractManagedType(Class<X> javaType, String typeName, AbstractManagedType<? super X> superType) {
-		super( javaType, typeName );
+	protected AbstractManagedType(Class<X> javaType, AbstractManagedType<? super X> superType) {
+		super( javaType );
 		this.superType = superType;
 	}
 
-	protected AbstractManagedType<? super X> getSupertype() {
+	public AbstractManagedType<? super X> getSupertype() {
 		return superType;
 	}
 
-	private boolean locked;
+	private boolean locked = false;
 
 	public Builder<X> getBuilder() {
 		if ( locked ) {
@@ -75,7 +75,6 @@ public abstract class AbstractManagedType<X>
 		}
 		return new Builder<X>() {
 			@Override
-			@SuppressWarnings("unchecked")
 			public void addAttribute(Attribute<X,?> attribute) {
 				declaredAttributes.put( attribute.getName(), attribute );
 				final Bindable.BindableType bindableType = ( ( Bindable ) attribute ).getBindableType();
@@ -127,28 +126,19 @@ public abstract class AbstractManagedType<X>
 		if ( attribute == null && getSupertype() != null ) {
 			attribute = getSupertype().getAttribute( name );
 		}
-		checkNotNull( "Attribute ", attribute, name );
 		return attribute;
 	}
 
 	@Override
 	public Attribute<X, ?> getDeclaredAttribute(String name) {
-		Attribute<X, ?> attr = declaredAttributes.get( name );
+		final Attribute<X, ?> attr = declaredSingularAttributes.get( name );
 		checkNotNull( "Attribute ", attr, name );
 		return attr;
 	}
 
 	private void checkNotNull(String attributeType, Attribute<?,?> attribute, String name) {
-
 		if ( attribute == null ) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Unable to locate %s with the the given name [%s] on this ManagedType [%s]",
-							attributeType,
-							name,
-							getTypeName()
-					)
-			);
+			throw new IllegalArgumentException( attributeType + " named " + name + " is not present" );
 		}
 	}
 
@@ -174,7 +164,6 @@ public abstract class AbstractManagedType<X>
 		if ( attribute == null && getSupertype() != null ) {
 			attribute = getSupertype().getSingularAttribute( name );
 		}
-		checkNotNull( "SingularAttribute ", attribute, name );
 		return attribute;
 	}
 
@@ -215,8 +204,8 @@ public abstract class AbstractManagedType<X>
 			}
 			throw new IllegalArgumentException(
 					attributeType + " named " + name
-					+ ( javaType != null ? " and of type " + javaType.getName() : "" )
-					+ " is not present"
+							+ ( javaType != null ? " and of type " + javaType.getName() : "" )
+							+ " is not present"
 			);
 		}
 	}
@@ -343,7 +332,6 @@ public abstract class AbstractManagedType<X>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public ListAttribute<X, ?> getDeclaredList(String name) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		basicListCheck( attribute, name );
@@ -369,7 +357,6 @@ public abstract class AbstractManagedType<X>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public MapAttribute<X, ?, ?> getDeclaredMap(String name) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		basicMapCheck( attribute, name );
@@ -388,7 +375,6 @@ public abstract class AbstractManagedType<X>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> CollectionAttribute<X, E> getDeclaredCollection(String name, Class<E> elementType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkCollectionElementType( attribute, name, elementType );
@@ -410,8 +396,8 @@ public abstract class AbstractManagedType<X>
 				|| attribute.getCollectionType() != collectionType ) {
 			throw new IllegalArgumentException(
 					attributeType + " named " + name
-					+ ( elementType != null ? " and of element type " + elementType : "" )
-					+ " is not present"
+							+ ( elementType != null ? " and of element type " + elementType : "" )
+							+ " is not present"
 			);
 		}
 	}
@@ -432,7 +418,6 @@ public abstract class AbstractManagedType<X>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> SetAttribute<X, E> getDeclaredSet(String name, Class<E> elementType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkSetElementType( attribute, name, elementType );
@@ -455,7 +440,6 @@ public abstract class AbstractManagedType<X>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> ListAttribute<X, E> getDeclaredList(String name, Class<E> elementType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkListElementType( attribute, name, elementType );
@@ -486,7 +470,6 @@ public abstract class AbstractManagedType<X>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <K, V> MapAttribute<X, K, V> getDeclaredMap(String name, Class<K> keyType, Class<V> valueType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkMapValueType( attribute, name, valueType );

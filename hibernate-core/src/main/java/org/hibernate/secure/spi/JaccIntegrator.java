@@ -78,7 +78,7 @@ public class JaccIntegrator implements ServiceContributingIntegrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		doIntegration( configuration.getProperties(), configuration.getJaccPermissionDeclarations(), serviceRegistry );
+		doIntegration( configuration.getProperties(), null, serviceRegistry );
 	}
 
 	private void doIntegration(
@@ -121,6 +121,7 @@ public class JaccIntegrator implements ServiceContributingIntegrator {
 			MetadataImplementor metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
+		// todo : need to stash the JACC permissions somewhere accessible from here...
 		doIntegration( sessionFactory.getProperties(), null, serviceRegistry );
 	}
 

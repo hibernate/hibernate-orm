@@ -44,37 +44,37 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
 @TestForIssue(jiraKey = "HHH-7306")
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenancyTest {
-
-	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
-
-
-	@Override
-	protected Configuration buildConfiguration() {
-		Configuration cfg = super.buildConfiguration();
-		cfg.setCurrentTenantIdentifierResolver( currentTenantResolver );
-		return cfg;
-	}
-
-	@Override
-	protected Session getNewSession(String tenant) {
-		currentTenantResolver.currentTenantIdentifier = tenant;
-		Session session = sessionFactory.openSession();
-		Assert.assertEquals( tenant, session.getTenantIdentifier() );
-		return session;
-	}
-
-
-	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
-		private String currentTenantIdentifier;
-
-		@Override
-		public boolean validateExistingCurrentSessions() {
-			return false;
-		}
-
-		@Override
-		public String resolveCurrentTenantIdentifier() {
-			return currentTenantIdentifier;
-		}
-	}
+//
+//	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
+//
+//
+//	@Override
+//	protected Configuration buildConfiguration() {
+//		Configuration cfg = super.buildConfiguration();
+//		cfg.setCurrentTenantIdentifierResolver( currentTenantResolver );
+//		return cfg;
+//	}
+//
+//	@Override
+//	protected Session getNewSession(String tenant) {
+//		currentTenantResolver.currentTenantIdentifier = tenant;
+//		Session session = sessionFactory.openSession();
+//		Assert.assertEquals( tenant, session.getTenantIdentifier() );
+//		return session;
+//	}
+//
+//
+//	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
+//		private String currentTenantIdentifier;
+//
+//		@Override
+//		public boolean validateExistingCurrentSessions() {
+//			return false;
+//		}
+//
+//		@Override
+//		public String resolveCurrentTenantIdentifier() {
+//			return currentTenantIdentifier;
+//		}
+//	}
 }

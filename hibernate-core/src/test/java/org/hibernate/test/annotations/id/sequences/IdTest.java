@@ -23,12 +23,13 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Column;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity1;
 import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity2;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
@@ -49,10 +50,8 @@ import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -316,20 +315,12 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		if ( isMetadataUsed() ) {
-			org.hibernate.metamodel.spi.relational.Column idCol = SchemaUtil.getPrimaryKey(
-					Ball.class,
-					metadata()
-			)
-					.getColumns().get( 0 );
-			Assert.assertEquals( "ball_id", idCol.getColumnName().getText() );
-
-		}
-		else {
-			Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
-					.getIdentifierProperty().getValue().getColumnIterator().next();
-			assertEquals( "ball_id", idCol.getName() );
-		}
+		org.hibernate.metamodel.spi.relational.Column idCol = SchemaUtil.getPrimaryKey(
+				Ball.class,
+				metadata()
+		)
+				.getColumns().get( 0 );
+		Assert.assertEquals( "ball_id", idCol.getColumnName().getText() );
 	}
 
 	@Test

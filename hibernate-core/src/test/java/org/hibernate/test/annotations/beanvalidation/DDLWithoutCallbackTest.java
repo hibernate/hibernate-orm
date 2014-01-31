@@ -26,18 +26,20 @@ package org.hibernate.test.annotations.beanvalidation;
 import java.math.BigDecimal;
 import javax.validation.ConstraintViolationException;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
@@ -50,6 +52,8 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testListeners() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
 		assertDatabaseConstraintViolationThrown( ch );
@@ -58,6 +62,8 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testMinAndMaxChecksGetApplied() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		MinMax minMax = new MinMax( 1 );
 		assertDatabaseConstraintViolationThrown( minMax );
 
@@ -76,6 +82,8 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testRangeChecksGetApplied() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Range range = new Range( 1 );
 		assertDatabaseConstraintViolationThrown( range );
 
@@ -93,9 +101,14 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDDLEnabled() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
-		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
-		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
+		EntityBinding eb = metadata().getEntityBinding( Address.class.getName() );
+		SingularAttributeBinding ab = (SingularAttributeBinding) eb.locateAttributeBinding( "country" );
+		assertEquals( 1, ab.getRelationalValueBindings().size() );
+		RelationalValueBinding columnBind = ab.getRelationalValueBindings().get( 0 );
+		org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) columnBind.getValue();
+		assertFalse( "DDL constraints are not applied", column.isNullable() );
 	}
 
 	@Override

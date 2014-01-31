@@ -26,8 +26,6 @@ package org.hibernate.jpa.internal.metamodel;
 import java.io.Serializable;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.mapping.PersistentClass;
-
 /**
  * Defines the Hibernate implementation of the JPA {@link EntityType} contract.
  *
@@ -35,24 +33,21 @@ import org.hibernate.mapping.PersistentClass;
  * @author Emmanuel Bernard
  */
 public class EntityTypeImpl<X> extends AbstractIdentifiableType<X> implements EntityType<X>, Serializable {
-	private final String jpaEntityName;
+	private final String entityName;
 
-	@SuppressWarnings("unchecked")
-	public EntityTypeImpl(Class javaType, AbstractIdentifiableType<? super X> superType, PersistentClass persistentClass) {
-		super(
-				javaType,
-				persistentClass.getEntityName(),
-				superType,
-				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
-				persistentClass.hasIdentifierProperty(),
-				persistentClass.isVersioned()
-		);
-		this.jpaEntityName = persistentClass.getJpaEntityName();
+	public EntityTypeImpl(
+			Class<X> javaType,
+			AbstractIdentifiableType<? super X> superType,
+			String entityName,
+			boolean hasIdentifierProperty,
+			boolean isVersioned) {
+		super( javaType, superType, hasIdentifierProperty, isVersioned );
+		this.entityName = entityName;
 	}
 
 	@Override
 	public String getName() {
-		return jpaEntityName;
+		return entityName;
 	}
 
 	@Override
@@ -68,5 +63,10 @@ public class EntityTypeImpl<X> extends AbstractIdentifiableType<X> implements En
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	protected boolean requiresSupertypeForNonDeclaredIdentifier() {
+		return true;
 	}
 }

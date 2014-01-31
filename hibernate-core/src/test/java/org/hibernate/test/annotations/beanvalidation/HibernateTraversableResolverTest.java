@@ -46,6 +46,8 @@ import static org.junit.Assert.fail;
 public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonLazyAssocFieldWithConstraintsFailureExpected() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -66,6 +68,8 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testEmbedded() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -95,6 +99,8 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testToOneAssocNotValidated() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -120,6 +126,8 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testCollectionAssocNotValidated() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -150,6 +158,8 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testEmbeddedCollection() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -178,6 +188,8 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testAssocInEmbeddedNotValidated() {
+		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 

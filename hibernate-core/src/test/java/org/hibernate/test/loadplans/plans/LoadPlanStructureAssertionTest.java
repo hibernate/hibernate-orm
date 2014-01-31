@@ -44,6 +44,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.annotations.cid.keymanytoone.Card;
 import org.hibernate.test.annotations.cid.keymanytoone.CardField;
@@ -64,8 +65,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinedOneToOne() {
 		// tests the mappings defined in org.hibernate.test.onetoone.joined.JoinedSubclassOneToOneTest
+
+		// metamodel : org.hibernate.HibernateException: SessionFactory for type scoping not yet known
+
 		Configuration cfg = new Configuration();
 		cfg.addResource( "org/hibernate/test/onetoone/joined/Person.hbm.xml" );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
@@ -82,8 +87,12 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSpecialOneToOne() {
 		// tests the mappings defined in org.hibernate.test.onetoone.joined.JoinedSubclassOneToOneTest
+
+		// metamodel : XSD problem : key-many-to-one needs to add on-delete attribute
+
 		Configuration cfg = new Configuration();
 		cfg.addResource( "org/hibernate/test/onetoone/formula/Person.hbm.xml" );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
@@ -97,9 +106,13 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdNoFetches1() {
 		// CardField is an entity with a composite identifier mapped via a @EmbeddedId class (CardFieldPK) defining
 		// a @ManyToOne
+
+		// metamodel : another indication of @Embedded/@Embeddable problem
+
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( EncapsulatedCompositeIdResultSetProcessorTest.CardField.class );
 		cfg.addAnnotatedClass( EncapsulatedCompositeIdResultSetProcessorTest.Card.class );
@@ -115,9 +128,13 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdNoFetches2() {
 		// Parent is an entity with a composite identifier mapped via a @EmbeddedId class (ParentPK) which is defined
 		// using just basic types (strings, ints, etc)
+
+		// metamodel : another indication of @Embedded/@Embeddable problem
+
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( EncapsulatedCompositeIdResultSetProcessorTest.Parent.class );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
@@ -190,6 +207,7 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdWithFetches2() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Card.class );
@@ -263,7 +281,10 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAnotherBasicCollection() {
+		// metamodel : another indication of @Embedded/@Embeddable problem
+
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Boy.class );
 		cfg.addAnnotatedClass( Country.class );

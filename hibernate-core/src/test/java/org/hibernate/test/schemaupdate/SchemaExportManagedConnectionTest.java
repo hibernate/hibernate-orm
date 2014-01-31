@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
@@ -31,7 +31,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  */
 public class SchemaExportManagedConnectionTest extends SchemaExportTest {
 	@Override
-	protected SchemaExport createSchemaExport(Configuration cfg) {
-		return new SchemaExport( cfg );
+	protected SchemaExport createSchemaExport(MetadataImplementor metadata) {
+		return new SchemaExport( metadata );
 	}
 }

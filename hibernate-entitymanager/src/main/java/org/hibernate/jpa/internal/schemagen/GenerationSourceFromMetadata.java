@@ -23,10 +23,16 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.spi.SchemaCreator;
+import org.hibernate.tool.schema.spi.SchemaDropper;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.Target;
 
 /**
  * Handle schema generation source from (annotation/xml) metadata.
@@ -34,21 +40,60 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class GenerationSourceFromMetadata implements GenerationSource {
-	private final Configuration hibernateConfiguration;
-	private final Dialect dialect;
+	private final MetadataImplementor metadata;
+	private final ServiceRegistry serviceRegistry;
+	private final Map options;
 	private final boolean creation;
 
-	public GenerationSourceFromMetadata(Configuration hibernateConfiguration, Dialect dialect, boolean creation) {
-		this.hibernateConfiguration = hibernateConfiguration;
-		this.dialect = dialect;
+	public GenerationSourceFromMetadata(
+			MetadataImplementor metadata,
+			ServiceRegistry serviceRegistry,
+			Map options,
+			boolean creation) {
+		this.metadata = metadata;
+		this.serviceRegistry = serviceRegistry;
+		this.options = options;
 		this.creation = creation;
 	}
 
 	@Override
 	public Iterable<String> getCommands() {
-		return creation
-				? Arrays.asList( hibernateConfiguration.generateSchemaCreationScript( dialect ) )
-				: Arrays.asList( hibernateConfiguration.generateDropSchemaScript( dialect ) );
+		final List<String> commands = new ArrayList<String>();
+		final Target collector = new Target() {
+			@Override
+			public boolean acceptsImportScriptActions() {
+				// JpaSchemaGenerator handles import scripts
+				return false;
+			}
+
+			@Override
+			public void prepare() {
+			}
+
+			@Override
+			public void accept(String action) {
+				commands.add( action );
+			}
+
+			@Override
+			public void release() {
+			}
+		};
+
+		if ( creation ) {
+			final SchemaCreator schemaCreator = serviceRegistry.getService( SchemaManagementTool.class )
+					.getSchemaCreator( options );
+			// NOTE : false here is for `createSchemas` since JpaSchemaGenerator itself handles that
+			schemaCreator.doCreation( metadata.getDatabase(), false, collector );
+		}
+		else {
+			final SchemaDropper schemaDropper = serviceRegistry.getService( SchemaManagementTool.class )
+					.getSchemaDropper( options );
+			// NOTE : false here is for `dropSchemas` since JpaSchemaGenerator itself handles that
+			schemaDropper.doDrop( metadata.getDatabase(), false, collector );
+		}
+
+		return commands;
 	}
 
 	@Override

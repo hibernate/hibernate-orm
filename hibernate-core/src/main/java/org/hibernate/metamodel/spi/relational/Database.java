@@ -39,6 +39,12 @@ import org.hibernate.metamodel.Metadata;
  * @author Gail Badner
  */
 public class Database {
+	public static interface Defaults {
+		String getDefaultSchemaName();
+		String getDefaultCatalogName();
+		boolean isGloballyQuotedIdentifiers();
+	}
+
 	private final Schema.Name implicitSchemaName;
 	private final JdbcEnvironment jdbcEnvironment;
 
@@ -46,7 +52,7 @@ public class Database {
 	private final List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
 	private final List<InitCommand> initCommands = new ArrayList<InitCommand>();
 
-	public Database(Metadata.Options options, JdbcEnvironment jdbcEnvironment) {
+	public Database(Defaults options, JdbcEnvironment jdbcEnvironment) {
 		String schemaName = options.getDefaultSchemaName();
 		String catalogName = options.getDefaultCatalogName();
 		if ( options.isGloballyQuotedIdentifiers() ) {

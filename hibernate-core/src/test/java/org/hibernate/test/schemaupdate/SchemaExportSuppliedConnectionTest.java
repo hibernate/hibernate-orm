@@ -23,13 +23,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import org.junit.After;
-import org.junit.Before;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
@@ -38,7 +32,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 public class SchemaExportSuppliedConnectionTest extends SchemaExportTest {
 
 	@Override
-	protected SchemaExport createSchemaExport(Configuration cfg) {
-		return new SchemaExport( serviceRegistry, cfg );
+	protected SchemaExport createSchemaExport(MetadataImplementor metadata) {
+		return new SchemaExport( metadata );
 	}
 }

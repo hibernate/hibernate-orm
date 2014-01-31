@@ -356,7 +356,6 @@ public class SaveOrUpdateTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSaveOrUpdateGotWithMutableProp() {
 		clearCounts();
 

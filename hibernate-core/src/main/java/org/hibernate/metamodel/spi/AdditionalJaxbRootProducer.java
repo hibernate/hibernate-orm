@@ -27,10 +27,10 @@ import java.util.List;
 
 import org.jboss.jandex.IndexView;
 
-import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.xml.spi.BindResult;
 
 /**
- * Contract for integrations that wish to provide additional mappings (in the form of {@link JaxbRoot}.  This hook
+ * Contract for integrations that wish to provide additional mappings (in the form of {@link org.hibernate.xml.spi.BindResult}.  This hook
  * is performed after all other mappings, annotations, etc have completed processing.
  *
  * @author Steve Ebersole
@@ -44,5 +44,5 @@ public interface AdditionalJaxbRootProducer {
 	 *
 	 * @return List of additional mappings
 	 */
-	public List<JaxbRoot> produceRoots(MetadataImplementor metadata, IndexView jandexIndex);
+	public List<BindResult> produceRoots(MetadataImplementor metadata, IndexView jandexIndex);
 }

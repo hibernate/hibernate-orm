@@ -24,6 +24,7 @@
 package org.hibernate.cfg.beanvalidation;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,15 +80,14 @@ public class BeanValidationEventListener
 	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
 	 * @param properties Configued properties
 	 */
-	public BeanValidationEventListener(ValidatorFactory factory, Properties properties) {
+	public BeanValidationEventListener(ValidatorFactory factory, Map properties) {
 		init( factory, properties );
 	}
 
-	public void initialize(Configuration cfg) {
+	public void initialize(Map settings) {
 		if ( !initialized ) {
 			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-			Properties props = cfg.getProperties();
-			init( factory, props );
+			init( factory, settings );
 		}
 	}
 
@@ -115,7 +115,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
-	private void init(ValidatorFactory factory, Properties properties) {
+	private void init(ValidatorFactory factory, Map properties) {
 		this.factory = factory;
 		groupsPerOperation = new GroupsPerOperation( properties );
 		initialized = true;

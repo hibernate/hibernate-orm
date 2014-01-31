@@ -28,8 +28,8 @@ import java.util.List;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.JaxbRoot;
-import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.xml.spi.BindResult;
+import org.hibernate.xml.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFetchProfileElement;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
@@ -47,25 +47,25 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class MappingDocument {
-	private final JaxbRoot<JaxbHibernateMapping> hbmJaxbRoot;
+	private final BindResult<JaxbHibernateMapping> hbmBindResult;
 	private final LocalBindingContextImpl mappingLocalBindingContext;
 
-	public MappingDocument(JaxbRoot<JaxbHibernateMapping> hbmJaxbRoot, MetadataImplementor metadata) {
-		this.hbmJaxbRoot = hbmJaxbRoot;
+	public MappingDocument(BindResult<JaxbHibernateMapping> hbmBindResult, MetadataImplementor metadata) {
+		this.hbmBindResult = hbmBindResult;
 		this.mappingLocalBindingContext = new LocalBindingContextImpl( metadata );
 
 	}
 
 	public JaxbHibernateMapping getMappingRoot() {
-		return hbmJaxbRoot.getRoot();
+		return hbmBindResult.getRoot();
 	}
 
 	public Origin getOrigin() {
-		return hbmJaxbRoot.getOrigin();
+		return hbmBindResult.getOrigin();
 	}
 
-	public JaxbRoot<JaxbHibernateMapping> getJaxbRoot() {
-		return hbmJaxbRoot;
+	public BindResult<JaxbHibernateMapping> getJaxbRoot() {
+		return hbmBindResult;
 	}
 
 	public HbmBindingContext getMappingLocalBindingContext() {
@@ -81,22 +81,22 @@ public class MappingDocument {
 			this.metadata = metadata;
 			this.localMappingDefaults = new OverriddenMappingDefaults(
 					metadata.getMappingDefaults(),
-					hbmJaxbRoot.getRoot().getPackage(),
-					hbmJaxbRoot.getRoot().getSchema(),
-					hbmJaxbRoot.getRoot().getCatalog(),
+					hbmBindResult.getRoot().getPackage(),
+					hbmBindResult.getRoot().getSchema(),
+					hbmBindResult.getRoot().getCatalog(),
 					null,
 					null,
 					null,
-					hbmJaxbRoot.getRoot().getDefaultCascade(),
-					hbmJaxbRoot.getRoot().getDefaultAccess(),
-					hbmJaxbRoot.getRoot().isDefaultLazy()
+					hbmBindResult.getRoot().getDefaultCascade(),
+					hbmBindResult.getRoot().getDefaultAccess(),
+					hbmBindResult.getRoot().isDefaultLazy()
 			);
-			if ( CollectionHelper.isEmpty( hbmJaxbRoot.getRoot().getMeta() ) ) {
+			if ( CollectionHelper.isEmpty( hbmBindResult.getRoot().getMeta() ) ) {
 				this.metaAttributeContext = new MetaAttributeContext( metadata.getGlobalMetaAttributeContext() );
 			}
 			else {
 				this.metaAttributeContext = Helper.extractMetaAttributeContext(
-						hbmJaxbRoot.getRoot().getMeta(),
+						hbmBindResult.getRoot().getMeta(),
 						true,
 						metadata.getGlobalMetaAttributeContext()
 				);
@@ -140,7 +140,7 @@ public class MappingDocument {
 
 		@Override
 		public boolean isAutoImport() {
-			return hbmJaxbRoot.getRoot().isAutoImport();
+			return hbmBindResult.getRoot().isAutoImport();
 		}
 
 		@Override
@@ -150,7 +150,7 @@ public class MappingDocument {
 
 		@Override
 		public Origin getOrigin() {
-			return hbmJaxbRoot.getOrigin();
+			return hbmBindResult.getOrigin();
 		}
 
 		@Override

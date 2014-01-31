@@ -1,4 +1,3 @@
-//$Id$
 package org.hibernate.test.annotations.onetoone;
 
 import org.junit.Assert;
@@ -11,11 +10,12 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class OneToOneErrorTest {
+public class OneToOneErrorTest extends BaseUnitTestCase {
     @Test
 	@FailureExpectedWithNewMetamodel
 	public void testWrongOneToOne() throws Exception {

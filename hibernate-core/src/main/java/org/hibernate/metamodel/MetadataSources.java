@@ -40,18 +40,21 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+import javax.persistence.AttributeConverter;
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.jaxb.internal.JaxbMappingProcessor;
-import org.hibernate.jaxb.spi.JaxbRoot;
-import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
+import org.hibernate.xml.spi.BindResult;
+import org.hibernate.xml.spi.Origin;
+import org.hibernate.xml.spi.SourceType;
 import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -89,14 +92,17 @@ public class MetadataSources {
 	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
 
 	private final ServiceRegistry serviceRegistry;
-	private final JaxbMappingProcessor jaxbProcessor;
-	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
-	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
+	private final MappingXmlBinder jaxbProcessor;
+	private List<BindResult> bindResultList = new ArrayList<BindResult>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private boolean hasOrmXmlJaxbRoots;
+
+	public MetadataSources() {
+		this( new BootstrapServiceRegistryBuilder().build() );
+	}
 
 	/**
 	 * Create a metadata sources using the specified service registry.
@@ -113,7 +119,7 @@ public class MetadataSources {
 			);
 		}
 		this.serviceRegistry = serviceRegistry;
-		this.jaxbProcessor = new JaxbMappingProcessor( serviceRegistry );
+		this.jaxbProcessor = new MappingXmlBinder( serviceRegistry );
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
@@ -121,8 +127,8 @@ public class MetadataSources {
 				|| StandardServiceRegistry.class.isInstance( serviceRegistry );
 	}
 
-	public List<JaxbRoot> getJaxbRootList() {
-		return jaxbRootList;
+	public List<BindResult> getBindResultList() {
+		return bindResultList;
 	}
 
 	public Iterable<String> getAnnotatedPackages() {
@@ -135,10 +141,6 @@ public class MetadataSources {
 
 	public Iterable<String> getAnnotatedClassNames() {
 		return annotatedClassNames;
-	}
-
-	public List<CacheRegionDefinition> getExternalCacheRegionDefinitions() {
-		return externalCacheRegionDefinitions;
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -248,11 +250,11 @@ public class MetadataSources {
 		return serviceRegistry.getService( ClassLoaderService.class );
 	}
 
-	private JaxbRoot add(InputStream inputStream, Origin origin, boolean close) {
+	private BindResult add(InputStream inputStream, Origin origin, boolean close) {
 		try {
-			JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( inputStream, origin );
-			addJaxbRoot( jaxbRoot );
-			return jaxbRoot;
+			BindResult bindResult = jaxbProcessor.bind( inputStream, origin );
+			addJaxbRoot( bindResult );
+			return bindResult;
 		}
 		catch ( Exception e ) {
 			throw new InvalidMappingException( origin, e );
@@ -369,7 +371,7 @@ public class MetadataSources {
 		}
 
 		LOG.readingMappingsFromFile( file.getPath() );
-		JaxbRoot metadataXml = add( inputStream, origin, true );
+		BindResult metadataXml = add( inputStream, origin, true );
 
 		try {
 			LOG.debugf( "Writing cache file for: %s to: %s", file, cachedFile );
@@ -388,7 +390,7 @@ public class MetadataSources {
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
 	 * the cache version cannot be found or used for whatever reason
 	 *
-	 * @param xmlFile The xml file, not the bin!
+	 * @param file The xml file, not the bin!
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
@@ -407,7 +409,7 @@ public class MetadataSources {
 		}
 
 		LOG.readingCachedMappings( cachedFile );
-		addJaxbRoot( ( JaxbRoot ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) ) );
+		addJaxbRoot( (BindResult) SerializationHelper.deserialize( new FileInputStream( cachedFile ) ) );
 		return this;
 	}
 
@@ -457,14 +459,14 @@ public class MetadataSources {
 	 */
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, UNKNOWN_FILE_PATH );
-		JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( document, origin );
-		addJaxbRoot( jaxbRoot );
+		BindResult bindResult = jaxbProcessor.unmarshal( document, origin );
+		addJaxbRoot( bindResult );
 		return this;
 	}
 
-	private void addJaxbRoot(JaxbRoot jaxbRoot) {
-		hasOrmXmlJaxbRoots = hasOrmXmlJaxbRoots || JaxbEntityMappings.class.isInstance( jaxbRoot.getRoot() );
-		jaxbRootList.add( jaxbRoot );
+	private void addJaxbRoot(BindResult bindResult) {
+		hasOrmXmlJaxbRoots = hasOrmXmlJaxbRoots || JaxbEntityMappings.class.isInstance( bindResult.getRoot() );
+		bindResultList.add( bindResult );
 	}
 
 	/**
@@ -537,11 +539,6 @@ public class MetadataSources {
 		return this;
 	}
 
-	public MetadataSources addCacheRegionDefinitions(List<CacheRegionDefinition> cacheRegionDefinitions) {
-		externalCacheRegionDefinitions.addAll( cacheRegionDefinitions );
-		return this;
-	}
-
 	@SuppressWarnings("unchecked")
 	public IndexView wrapJandexView(IndexView jandexView) {
 		if ( ! hasOrmXmlJaxbRoots ) {
@@ -550,9 +547,9 @@ public class MetadataSources {
 		}
 
 		final List<JaxbEntityMappings> collectedOrmXmlMappings = new ArrayList<JaxbEntityMappings>();
-		for ( JaxbRoot jaxbRoot : getJaxbRootList() ) {
-			if ( JaxbEntityMappings.class.isInstance( jaxbRoot.getRoot() ) ) {
-				collectedOrmXmlMappings.add( ( (JaxbRoot<JaxbEntityMappings>) jaxbRoot ).getRoot() );
+		for ( BindResult bindResult : getBindResultList() ) {
+			if ( JaxbEntityMappings.class.isInstance( bindResult.getRoot() ) ) {
+				collectedOrmXmlMappings.add( ( (BindResult<JaxbEntityMappings>) bindResult ).getRoot() );
 			}
 		}
 
@@ -657,5 +654,13 @@ public class MetadataSources {
 		}
 		
 		return null;
+	}
+
+	public void addAttributeConverter(Class<? extends AttributeConverter> cls) {
+
+	}
+
+	public void addAttributeConverter(Class<? extends AttributeConverter> theClass, boolean autoApply) {
+
 	}
 }

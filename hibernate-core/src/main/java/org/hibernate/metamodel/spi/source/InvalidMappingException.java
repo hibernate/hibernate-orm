@@ -24,9 +24,7 @@
 
 package org.hibernate.metamodel.spi.source;
 
-import javassist.runtime.Desc;
-
-import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.xml.spi.Origin;
 
 /**
  * @author Brett Meyer

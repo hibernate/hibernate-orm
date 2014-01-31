@@ -10,6 +10,7 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -25,6 +26,7 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@Priority(10)
+	@FailureExpectedWithNewMetamodel
 	public void initData() {
 		// Revision 1
 		getSession().getTransaction().begin();
@@ -37,6 +39,7 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-4760")
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings("unchecked")
 	public void testQueryingWithProxyObject() {
 		StrTestEntity originalSte = new StrTestEntity( "data", id );

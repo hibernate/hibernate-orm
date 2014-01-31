@@ -46,6 +46,8 @@ import javax.persistence.Transient;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -55,8 +57,10 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  * This plugin will enhance Entity objects.
  * 
  * @author Jeremy Whiting
+ * @phase "compile"
  */
-@Mojo(name = "enhance")
+@Mojo ( name="enhance", defaultPhase = LifecyclePhase.COMPILE )
+@Execute ( goal ="enhance" , phase = LifecyclePhase.COMPILE )
 public class MavenEnhancePlugin extends AbstractMojo implements EnhancementContext {
 
 	/**
@@ -142,6 +146,7 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 
     private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
         try {
+            getLog().info( String.format("Processing Entity class file [%1$s].", ctClass.getName()) );
             byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
             if(result != null)
                 writeEnhancedClass(javaClassFile, result);
@@ -154,6 +159,7 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 
     private void processCompositeClassFile(File javaClassFile, CtClass ctClass) {
         try {
+            getLog().info( String.format("Processing Composite class file [%1$s].", ctClass.getName()) );
             byte[] result = enhancer.enhanceComposite(ctClass.getName(), ctClass.toBytecode());
             if(result != null)
                 writeEnhancedClass(javaClassFile, result);

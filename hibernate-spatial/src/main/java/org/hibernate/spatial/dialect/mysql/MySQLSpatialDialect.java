@@ -20,16 +20,20 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.*;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.spatial.GeometryType;
+import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.SpatialRelation;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Extends the MySQLDialect by also including information on spatial operators,
@@ -91,12 +95,6 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 				StandardBasicTypes.STRING));
 		functionsToRegister.put("asbinary", new StandardSQLFunction("asbinary",
 				StandardBasicTypes.BINARY));
-		functionsToRegister.put("isempty", new StandardSQLFunction("isempty",
-				StandardBasicTypes.BOOLEAN));
-		functionsToRegister.put("issimple", new StandardSQLFunction("issimple",
-				StandardBasicTypes.BOOLEAN));
-		functionsToRegister.put("boundary", new StandardSQLFunction("boundary",
-				GeometryType.INSTANCE));
 
 		// Register functions for spatial relation constructs
 		functionsToRegister.put("overlaps", new StandardSQLFunction("overlaps",
@@ -115,24 +113,7 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 				StandardBasicTypes.BOOLEAN));
 		functionsToRegister.put("within", new StandardSQLFunction("within",
 				StandardBasicTypes.BOOLEAN));
-		functionsToRegister.put("relate", new StandardSQLFunction("relate",
-				StandardBasicTypes.BOOLEAN));
 
-		// register the spatial analysis functions
-		functionsToRegister.put("distance", new StandardSQLFunction("distance",
-				StandardBasicTypes.DOUBLE));
-		functionsToRegister.put("buffer", new StandardSQLFunction("buffer",
-				GeometryType.INSTANCE));
-		functionsToRegister.put("convexhull", new StandardSQLFunction("convexhull",
-				GeometryType.INSTANCE));
-		functionsToRegister.put("difference", new StandardSQLFunction("difference",
-				GeometryType.INSTANCE));
-		functionsToRegister.put("intersection", new StandardSQLFunction(
-				"intersection", GeometryType.INSTANCE));
-		functionsToRegister.put("symdifference", new StandardSQLFunction(
-				"symdifference", GeometryType.INSTANCE));
-		functionsToRegister.put("geomunion", new StandardSQLFunction("union",
-				GeometryType.INSTANCE));
 		return functionsToRegister;
 	}
 
@@ -214,21 +195,7 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 	}
 
 	public boolean supports(SpatialFunction function) {
-		switch (function) {
-			case boundary:
-			case relate:
-			case distance:
-			case buffer:
-			case convexhull:
-			case difference:
-			case symdifference:
-			case intersection:
-			case geomunion:
-			case dwithin:
-			case transform:
-				return false;
-		}
-		return true;
+		return (getFunctions().get(function.toString()) != null);
 	}
 
 }

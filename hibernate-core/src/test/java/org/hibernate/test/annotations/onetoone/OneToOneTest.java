@@ -28,6 +28,7 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -424,15 +425,21 @@ class JoinCounter extends EmptyInterceptor {
 	private static final long serialVersionUID = -3689681272273261051L;
 	
 	private int expectedNumberOfJoins = 0;
+	private String nextValString;
 			
 	public JoinCounter(int val) {
 		super();
 		this.expectedNumberOfJoins = val;
+		try {
+		    nextValString = Dialect.getDialect().getSequenceNextValString("");
+		} catch (MappingException ex) {
+		    nextValString = "nextval";
+		}
 	}
 
 	public String onPrepareStatement(String sql) {
 		int numberOfJoins = 0;
-		if (sql.startsWith("select") & !sql.contains(Dialect.getDialect().getSequenceNextValString(""))) {
+		if (sql.startsWith("select") & !sql.contains(nextValString)) {
 			 numberOfJoins = count(sql, "join");
 			 assertEquals( sql,  expectedNumberOfJoins, numberOfJoins );
 		}

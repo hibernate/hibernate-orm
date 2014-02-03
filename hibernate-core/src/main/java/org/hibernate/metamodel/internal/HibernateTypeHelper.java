@@ -215,13 +215,26 @@ class HibernateTypeHelper {
 					defaultJavaTypeName
 			);
 			//2. resolve hibernate type
-			type = heuristicType( hibernateTypeDescriptor );
+			type = getHeuristicType(
+					determineTypeName( hibernateTypeDescriptor ),
+					getTypeParameters( hibernateTypeDescriptor )
+			);
 		}
 		if ( type == null ) {
 			//todo how to deal with this?
 		}
+
 		//3. now set hibernateTypeDescripter's ResolvedTypeMapping and defaultJavaType (if not yet)
 		hibernateTypeDescriptor.setResolvedTypeMapping( type );
+
+		if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
+			if ( defaultJavaTypeName != null ) {
+				hibernateTypeDescriptor.setJavaTypeName( defaultJavaTypeName );
+			}
+			else if ( type != null ) {
+				hibernateTypeDescriptor.setJavaTypeName( type.getReturnedClass().getName() );
+			}
+		}
 	}
 
 	void bindHibernateTypeDescriptor(
@@ -527,18 +540,6 @@ class HibernateTypeHelper {
 	 * <p/>
 	 * return <code>null</code> if can't resolve.
 	 */
-	private Type heuristicType(
-			final HibernateTypeDescriptor hibernateTypeDescriptor) {
-		if ( hibernateTypeDescriptor.getResolvedTypeMapping() != null ) {
-			return hibernateTypeDescriptor.getResolvedTypeMapping();
-		}
-		String typeName = determineTypeName( hibernateTypeDescriptor );
-		Properties typeParameters = getTypeParameters( hibernateTypeDescriptor );
-		Type type = getHeuristicType( typeName, typeParameters );
-		hibernateTypeDescriptor.setResolvedTypeMapping( type );
-		return type;
-	}
-
 	private Type getHeuristicType(
 			final String typeName,
 			final Properties typeParameters) {
@@ -571,7 +572,11 @@ class HibernateTypeHelper {
 			// we can determine the Hibernate Type if either:
 			// 		1) the user explicitly named a Type in a HibernateTypeDescriptor
 			// 		2) we know the java type of the attribute
-			resolvedType = heuristicType( attributeBinding.getHibernateTypeDescriptor() );
+			final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+			resolvedType = getHeuristicType(
+					determineTypeName( hibernateTypeDescriptor ),
+					getTypeParameters( hibernateTypeDescriptor )
+			);
 			if ( resolvedType == null ) {
 				resolvedType = determineHibernateTypeFromAttributeJavaType( attributeBinding.getAttribute() );
 			}
@@ -637,6 +642,18 @@ class HibernateTypeHelper {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() == null ) {
 			hibernateTypeDescriptor.setResolvedTypeMapping( resolvedHibernateType );
+		}
+		if ( hibernateTypeDescriptor.getJavaTypeName() == null ) {
+			// try to get Java type name from attribute because it may not be available from
+			// resolvedHibernateType until after persisters are available.
+			if ( attributeBinding.getAttribute().isTypeResolved() ) {
+				hibernateTypeDescriptor.setJavaTypeName(
+						attributeBinding.getAttribute().getSingularAttributeType().getClassName()
+				);
+			}
+			else {
+				hibernateTypeDescriptor.setJavaTypeName( resolvedHibernateType.getReturnedClass().getName() );
+			}
 		}
 
 		// sql type information ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -32,7 +32,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.EntityStatistics;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +41,6 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class DiscrimSubclassOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

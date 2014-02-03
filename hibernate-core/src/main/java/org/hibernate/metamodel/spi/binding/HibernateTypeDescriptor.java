@@ -59,11 +59,7 @@ public class HibernateTypeDescriptor {
 	}
 
 	public boolean isToOne() {
-		return isToOne;
-	}
-
-	public void setToOne(boolean toOne) {
-		this.isToOne = toOne;
+		return resolvedTypeMapping.isEntityType();
 	}
 
 	public Map<String, String> getTypeParameters() {
@@ -76,16 +72,11 @@ public class HibernateTypeDescriptor {
 
 	public void setResolvedTypeMapping(Type resolvedTypeMapping) {
 		this.resolvedTypeMapping = resolvedTypeMapping;
-		if ( getJavaTypeName() == null && resolvedTypeMapping!=null ) {
-			setJavaTypeName( resolvedTypeMapping.getReturnedClass().getName() );
-			setToOne( resolvedTypeMapping.isEntityType()  );
-		}
 	}
 
 	public void copyFrom(HibernateTypeDescriptor hibernateTypeDescriptor) {
 		setJavaTypeName( hibernateTypeDescriptor.getJavaTypeName() );
 		setExplicitTypeName( hibernateTypeDescriptor.getExplicitTypeName() );
-		setToOne( hibernateTypeDescriptor.isToOne() );
 		getTypeParameters().putAll( hibernateTypeDescriptor.getTypeParameters() );
 		setResolvedTypeMapping( hibernateTypeDescriptor.getResolvedTypeMapping() );
 	}

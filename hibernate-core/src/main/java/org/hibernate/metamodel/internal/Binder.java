@@ -2405,11 +2405,18 @@ public class Binder implements HelperContext {
 				false
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
+		final String elementJavaTypeName;
+		if ( defaultElementJavaTypeName != null ) {
+			elementJavaTypeName = defaultElementJavaTypeName;
+		}
+		else {
+			elementJavaTypeName = referencedEntityBinding.getClassReference().getName();
+		}
 		typeHelper.bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				referencedEntityBinding.getEntity().getName(),
 				null,
-				defaultElementJavaTypeName,
+				elementJavaTypeName,
 				resolvedElementType
 		);
 		// no need to bind JDBC data types because element is referenced EntityBinding's ID

@@ -24,24 +24,21 @@
 package org.hibernate.serialization;
 
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-
-import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.SerializationException;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -50,11 +47,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	public static final String NAME = "mySF";
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNamedSessionFactorySerialization() throws Exception {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented for new metamodel." );
-		}
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
@@ -80,12 +73,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUnNamedSessionFactorySerialization() throws Exception {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented for new metamodel." );
-		}
-
 		// IMPL NOTE : this test is a control to testNamedSessionFactorySerialization
 		// 		here, the test should fail based just on attempted uuid resolution
 		Configuration cfg = new Configuration()

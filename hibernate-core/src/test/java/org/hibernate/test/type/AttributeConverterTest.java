@@ -25,6 +25,7 @@ package org.hibernate.test.type;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
@@ -32,7 +33,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.cfg.NotYetImplementedException;
-
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -47,9 +47,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testBasicOperation() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		SimpleValue simpleValue = new SimpleValue( cfg.createMappings() );
 //		simpleValue.setJpaAttributeConverterDefinition(
@@ -70,9 +68,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testNonAutoApplyHandling() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		cfg.addAttributeConverter( NotAutoAppliedConverter.class, false );
 //		cfg.addAnnotatedClass( Tester.class );
@@ -91,9 +87,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testBasicConverterApplication() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		cfg.addAttributeConverter( StringClobConverter.class, true );
 //		cfg.addAnnotatedClass( Tester.class );
@@ -119,9 +113,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@TestForIssue(jiraKey = "HHH-8462")
 	@FailureExpectedWithNewMetamodel
 	public void testBasicOrmXmlConverterApplication() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		cfg.addAnnotatedClass( Tester.class );
 //		cfg.addURL( ConfigHelper.findAsResource( "org/hibernate/test/type/orm.xml") );
@@ -145,9 +137,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testBasicConverterDisableApplication() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		cfg.addAttributeConverter( StringClobConverter.class, true );
 //		cfg.addAnnotatedClass( Tester2.class );
@@ -171,9 +161,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testBasicUsage() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		cfg.addAttributeConverter( IntegerToVarcharConverter.class, false );
 //		cfg.addAnnotatedClass( Tester4.class );
@@ -220,9 +208,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testBasicTimestampUsage() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
+		throw new NotYetImplementedException( "Not implemented using new metamodel." );
 //		Configuration cfg = new Configuration();
 //		cfg.addAttributeConverter( InstantConverter.class, false );
 //		cfg.addAnnotatedClass( IrrelevantInstantEntity.class );

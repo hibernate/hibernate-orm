@@ -26,16 +26,14 @@ package org.hibernate.testing.junit4;
 import javax.transaction.SystemException;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-
-import org.jboss.logging.Logger;
 
 /**
  * The base unit test adapter.
@@ -51,10 +49,6 @@ public abstract class BaseUnitTestCase {
 					MetadataSources.USE_NEW_METADATA_MAPPINGS, "true"
 			)
 	);
-
-	public boolean isDefaultUseNewMetamodel() {
-		return DEFAULT_USE_NEW_METAMODEL;
-	}
 
 	@Rule
 	public TestRule globalTimeout= new Timeout(30 * 60 * 1000); // no test should run longer than 30 minutes

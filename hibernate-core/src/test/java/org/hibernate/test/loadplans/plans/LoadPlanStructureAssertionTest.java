@@ -23,40 +23,36 @@
  */
 package org.hibernate.test.loadplans.plans;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import org.hibernate.loader.plan.spi.BidirectionalEntityReference;
-import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
-import org.hibernate.test.annotations.Country;
-import org.hibernate.test.annotations.collectionelement.Boy;
-import org.hibernate.test.annotations.collectionelement.Matrix;
-import org.hibernate.test.annotations.collectionelement.TestCourse;
-import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProcessorTest;
-
-//import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
-import org.hibernate.loader.plan.build.internal.returns.CollectionFetchableElementEntityGraph;
-import org.hibernate.loader.plan.spi.EntityFetch;
-import org.hibernate.loader.plan.spi.EntityReturn;
-import org.hibernate.loader.plan.spi.FetchSource;
-import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.OuterJoinLoadable;
-
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.annotations.cid.keymanytoone.Card;
-import org.hibernate.test.annotations.cid.keymanytoone.CardField;
-import org.hibernate.test.annotations.cid.keymanytoone.Key;
-import org.hibernate.test.annotations.cid.keymanytoone.PrimaryKey;
-
 import static junit.framework.Assert.assertNotNull;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+//import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan.build.internal.returns.CollectionFetchableElementEntityGraph;
+import org.hibernate.loader.plan.spi.BidirectionalEntityReference;
+import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
+import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.FetchSource;
+import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.test.annotations.Country;
+import org.hibernate.test.annotations.cid.keymanytoone.Card;
+import org.hibernate.test.annotations.cid.keymanytoone.CardField;
+import org.hibernate.test.annotations.cid.keymanytoone.Key;
+import org.hibernate.test.annotations.cid.keymanytoone.PrimaryKey;
+import org.hibernate.test.annotations.collectionelement.Boy;
+import org.hibernate.test.annotations.collectionelement.Matrix;
+import org.hibernate.test.annotations.collectionelement.TestCourse;
+import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProcessorTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 /**
  * Used to assert that "fetch graphs" between JoinWalker and LoadPlan are same.
@@ -65,21 +61,18 @@ import static org.junit.Assert.assertTrue;
  */
 public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testJoinedOneToOne() {
 		// tests the mappings defined in org.hibernate.test.onetoone.joined.JoinedSubclassOneToOneTest
-
-		// metamodel : org.hibernate.HibernateException: SessionFactory for type scoping not yet known
 
 		Configuration cfg = new Configuration();
 		cfg.addResource( "org/hibernate/test/onetoone/joined/Person.hbm.xml" );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
 
 		try {
-//			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Person.class ) );
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Person.class ) );
 			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Entity.class ) );
 
-//			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Address.class ) );
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Address.class ) );
 		}
 		finally {
 			sf.close();

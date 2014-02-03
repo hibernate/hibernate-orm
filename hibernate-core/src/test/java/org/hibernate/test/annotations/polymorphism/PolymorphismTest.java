@@ -37,10 +37,10 @@ import static org.junit.Assert.assertEquals;
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class PolymorphismTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testPolymorphism() throws Exception {
 		Car car = new Car();
 		car.setModel( "SUV" );

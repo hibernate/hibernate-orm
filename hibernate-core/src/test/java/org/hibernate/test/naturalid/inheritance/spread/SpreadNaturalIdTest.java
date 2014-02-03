@@ -23,16 +23,14 @@
  */
 package org.hibernate.test.naturalid.inheritance.spread;
 
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -42,9 +40,6 @@ import static org.junit.Assert.fail;
 public class SpreadNaturalIdTest extends BaseUnitTestCase {
 	@Test
 	public void testSpreadNaturalIdDeclarationGivesMappingException() {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
 		Configuration cfg = new Configuration()
 				.addAnnotatedClass( Principal.class )
 				.addAnnotatedClass( User.class );

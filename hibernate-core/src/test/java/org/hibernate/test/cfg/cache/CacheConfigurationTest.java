@@ -24,8 +24,6 @@
 package org.hibernate.test.cfg.cache;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -34,16 +32,11 @@ import org.junit.Test;
  * 
  * @author Tair Sabirgaliev
  */
-@FailureExpectedWithNewMetamodel
 public class CacheConfigurationTest extends BaseUnitTestCase {
 	public static final String CFG_XML = "org/hibernate/test/cfg/cache/hibernate.cfg.xml";
 
 	@Test
 	public void testCacheConfiguration() throws Exception {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
-
 		// we only care if the SF builds successfully.
 		Configuration cfg = new Configuration().configure(CFG_XML);
 		cfg.buildSessionFactory().close();

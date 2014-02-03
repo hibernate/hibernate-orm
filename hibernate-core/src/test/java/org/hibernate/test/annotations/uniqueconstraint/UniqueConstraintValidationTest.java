@@ -10,7 +10,6 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
@@ -21,11 +20,11 @@ import org.junit.Test;
  * @author Nikolay Shestakov
  *
  */
-@FailureExpectedWithNewMetamodel
 public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 
 	@Test(expected = AnnotationException.class)
 	@TestForIssue(jiraKey = "HHH-4084")
+	@FailureExpectedWithNewMetamodel
 	public void testUniqueConstraintWithEmptyColumnName() {
 		buildSessionFactory(EmptyColumnNameEntity.class);
 	}
@@ -36,15 +35,12 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 	}
 
 	@Test(expected = AnnotationException.class)
+	@FailureExpectedWithNewMetamodel
 	public void testUniqueConstraintWithNotExistsColumnName() {
 		buildSessionFactory(NotExistsColumnEntity.class);
 	}
 
 	private void buildSessionFactory(Class<?> entity) {
-		if ( isDefaultUseNewMetamodel() ) {
-			throw new NotYetImplementedException( "Not implemented using new metamodel." );
-		}
-
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass(entity);
 		cfg.buildMappings();

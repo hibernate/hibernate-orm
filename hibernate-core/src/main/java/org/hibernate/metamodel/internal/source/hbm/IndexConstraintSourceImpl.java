@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import java.util.List;
-
 import org.hibernate.metamodel.spi.source.IndexConstraintSource;
 
 /**
@@ -46,6 +44,12 @@ class IndexConstraintSourceImpl extends AbstractConstraintSource implements Inde
 		sb.append( ", orderings=" ).append( orderings );
 		sb.append( '}' );
 		return sb.toString();
+	}
+	
+	@Override
+	public boolean isUnique() {
+		// TODO: Is it possible to have a unique index in HBM?
+		return false;
 	}
 }
 

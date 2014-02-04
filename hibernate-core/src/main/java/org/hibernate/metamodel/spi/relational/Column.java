@@ -35,6 +35,10 @@ import org.hibernate.sql.Template;
  * @author Steve Ebersole
  */
 public class Column extends AbstractValue {
+	public static final int DEFAULT_LENGTH = 255;
+	public static final int DEFAULT_PRECISION = 19;
+	public static final int DEFAULT_SCALE = 2;
+	
 	private final Identifier columnName;
 	private boolean nullable = true; 
 

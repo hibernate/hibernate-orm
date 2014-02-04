@@ -45,7 +45,6 @@ import org.junit.Test;
 /**
  * @author Sharath Reddy
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneFromNonPk() throws Exception {

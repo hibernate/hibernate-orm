@@ -20,7 +20,10 @@
  */
 package org.hibernate.test.constraint;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -34,9 +37,10 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.cfg.NotYetImplementedException;
-
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -72,88 +76,34 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-7797" )
-	@FailureExpectedWithNewMetamodel
 	public void testUniqueConstraints() {
-		if ( isMetadataUsed() ) {
-			throw new NotYetImplementedException( "Test case does not work with new metamodel yet." );
-		}
-//		Column column = (Column) configuration().getClassMapping( DataPoint.class.getName() )
-//				.getProperty( "foo1" ).getColumnIterator().next();
-//		assertFalse( column.isNullable() );
-//		assertTrue( column.isUnique() );
-//
-//		column = (Column) configuration().getClassMapping( DataPoint.class.getName() )
-//				.getProperty( "foo2" ).getColumnIterator().next();
-//		assertTrue( column.isNullable() );
-//		assertTrue( column.isUnique() );
-//
-//		column = (Column) configuration().getClassMapping( DataPoint.class.getName() )
-//				.getProperty( "id" ).getColumnIterator().next();
-//		assertFalse( column.isNullable() );
-//		assertTrue( column.isUnique() );
+		TableSpecification table = SchemaUtil.getTable( DataPoint.class, metadata() );
+		assertTrue( SchemaUtil.hasUniqueKey( table, "foo" ) );
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-8862")
-	@FailureExpectedWithNewMetamodel
 	public void testConstraintNames() {
-		if ( isMetadataUsed() ) {
-			throw new NotYetImplementedException( "Test case does not work with new metamodel yet." );
+		TableSpecification table1 = SchemaUtil.getTable( DataPoint.class, metadata() );
+		assertTrue( SchemaUtil.hasUniqueKey( table1, EXPLICIT_UK_NAME, "explicit" ) );
+
+		TableSpecification table2 = SchemaUtil.getTable( DataPoint.class, metadata() );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_NATIVE, EXPLICIT_COLUMN_NAME_NATIVE ) );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_O2O, EXPLICIT_COLUMN_NAME_JPA_O2O ) );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_M2O, EXPLICIT_COLUMN_NAME_JPA_M2O ) );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_M2M, EXPLICIT_COLUMN_NAME_JPA_M2M ) );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_ELEMENT, EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) );
+		
+		testConstraintLength( table1 );
+		testConstraintLength( table2 );
+	}
+	
+	private void testConstraintLength(TableSpecification table) {
+		for (UniqueKey uk : table.getUniqueKeys()) {
+			assertTrue(uk.getName().length() <= MAX_NAME_LENGTH);
 		}
-//		Iterator<org.hibernate.mapping.Table> tableItr = configuration().getTableMappings();
-//		int foundCount = 0;
-//		while (tableItr.hasNext()) {
-//			org.hibernate.mapping.Table table = tableItr.next();
-//
-//			Iterator fkItr = table.getForeignKeyIterator();
-//			while (fkItr.hasNext()) {
-//				ForeignKey fk = (ForeignKey) fkItr.next();
-//				assertTrue( fk.getName().length() <= MAX_NAME_LENGTH );
-//
-//				// ensure the randomly generated constraint name doesn't
-//				// happen if explicitly given
-//				Iterator<Column> cItr = fk.columnIterator();
-//				while (cItr.hasNext()) {
-//					Column column = cItr.next();
-//					if ( column.getName().equals( EXPLICIT_COLUMN_NAME_NATIVE ) ) {
-//						foundCount++;
-//						assertEquals( fk.getName(), EXPLICIT_FK_NAME_NATIVE );
-//					}
-//					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_O2O ) ) {
-//						foundCount++;
-//						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_O2O );
-//					}
-//					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_M2O ) ) {
-//						foundCount++;
-//						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_M2O );
-//					}
-//					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_M2M ) ) {
-//						foundCount++;
-//						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_M2M );
-//					}
-//					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) ) {
-//						foundCount++;
-//						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_ELEMENT );
-//					}
-//				}
-//			}
-//
-//			Iterator ukItr = table.getUniqueKeyIterator();
-//			while (ukItr.hasNext()) {
-//				UniqueKey uk = (UniqueKey) ukItr.next();
-//				assertTrue( uk.getName().length() <= MAX_NAME_LENGTH );
-//
-//				// ensure the randomly generated constraint name doesn't
-//				// happen if explicitly given
-//				Column column = uk.getColumn( 0 );
-//				if ( column.getName().equals( "explicit" ) ) {
-//					foundCount++;
-//					assertEquals( uk.getName(), EXPLICIT_UK_NAME );
-//				}
-//			}
-//		}
-//
-//		assertEquals("Could not find the necessary columns.", 5, foundCount);
+		for (ForeignKey fk : table.getForeignKeys()) {
+			assertTrue(fk.getName().length() <= MAX_NAME_LENGTH);
+		}
 	}
 
 	@Entity
@@ -163,14 +113,10 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	public static class DataPoint {
 		@Id
 		@GeneratedValue
-		@javax.persistence.Column( nullable = false, unique = true)
 		public long id;
 
-		@javax.persistence.Column( nullable = false, unique = true)
-		public String foo1;
-
-		@javax.persistence.Column( nullable = true, unique = true)
-		public String foo2;
+		@javax.persistence.Column( unique = true)
+		public String foo;
 
 		public String explicit;
 	}

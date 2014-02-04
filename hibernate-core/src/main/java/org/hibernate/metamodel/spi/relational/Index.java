@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import org.hibernate.dialect.Dialect;
 
 /**
  * Models a SQL <tt>INDEX</tt>
@@ -33,31 +32,15 @@ import org.hibernate.dialect.Dialect;
  */
 public class Index extends AbstractConstraint {
 	
-	public Index() {
-		this( null, null );
+	private final boolean unique;
+	
+	public Index(boolean unique) {
+		this( null, null, unique );
 	}
 
-	protected Index(Table table, String name) {
+	protected Index(Table table, String name, boolean unique) {
 		super( table, name );
-	}
-	
-	@Override
-	public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		StringBuilder buf = new StringBuilder( " index (" );
-		boolean first = true;
-		for ( Column column : getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append( ", " );
-			}
-			buf.append( column.getColumnName().getText( dialect ) );
-			if ( hasOrdering( column ) ) {
-				buf.append( " " ).append( getOrdering( column ) );
-			}
-		}
-		return buf.append( ')' ).toString();
+		this.unique = unique;
 	}
 	
 	@Override
@@ -69,5 +52,9 @@ public class Index extends AbstractConstraint {
 			sb.append( '_' ).append( column.getColumnName().getText() );
 		}
 		return sb.toString();
+	}
+	
+	public boolean isUnique() {
+		return unique;
 	}
 }

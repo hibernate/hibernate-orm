@@ -23,32 +23,6 @@
  */
 package org.hibernate.test.annotations.index.jpa;
 
-import java.util.Iterator;
-
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Bag;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.List;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Set;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
-import org.hibernate.mapping.Value;
-import org.hibernate.test.annotations.embedded.Address;
-import org.hibernate.test.annotations.embedded.AddressType;
-import org.hibernate.test.annotations.embedded.Book;
-import org.hibernate.test.annotations.embedded.Person;
-import org.hibernate.test.annotations.embedded.Summary;
-import org.hibernate.test.annotations.embedded.WealthyPerson;
-import org.hibernate.test.event.collection.detached.*;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

@@ -29,4 +29,5 @@ package org.hibernate.metamodel.spi.source;
  * @author Brett Meyer
  */
 public interface IndexConstraintSource extends ConstraintSource {
+	public boolean isUnique();
 }

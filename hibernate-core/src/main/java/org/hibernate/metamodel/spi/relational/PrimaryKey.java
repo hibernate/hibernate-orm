@@ -40,25 +40,9 @@ public class PrimaryKey extends AbstractConstraint {
 		super( table, null );
 	}
 
+	// TODO: Can this be removed?
 	public String sqlConstraintStringInCreateTable(Dialect dialect) {
 		StringBuilder buf = new StringBuilder("primary key (");
-		boolean first = true;
-		for ( Column column : getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append(", ");
-			}
-			buf.append( column.getColumnName().getText( dialect ) );
-		}
-		return buf.append(')').toString();
-	}
-
-	public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		StringBuilder buf = new StringBuilder(
-			dialect.getAddPrimaryKeyConstraintString( getName() )
-		).append('(');
 		boolean first = true;
 		for ( Column column : getColumns() ) {
 			if ( first ) {

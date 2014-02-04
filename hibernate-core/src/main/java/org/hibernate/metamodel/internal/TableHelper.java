@@ -202,8 +202,9 @@ public class TableHelper {
 	public void createIndex(
 			final TableSpecification table,
 			final List<Column> columns,
-			final String name) {
-		final Index idx = new Index();
+			final String name,
+			final boolean isUnique) {
+		final Index idx = new Index(isUnique);
 		for ( final Column column : columns ) {
 			idx.addColumn( column );
 		}

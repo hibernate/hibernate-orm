@@ -33,12 +33,10 @@ import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Exportable;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
-import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.InitCommand;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.Target;
@@ -100,17 +98,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings( targets, dialect.getTableExporter().getSqlCreateStrings( table, jdbcEnvironment ) );
 
-				for ( Index index : table.getIndexes() ) {
-					checkExportIdentifier( index, exportIdentifiers );
-					applySqlStrings( targets, dialect.getIndexExporter().getSqlCreateStrings( index, jdbcEnvironment ) );
-				}
-
-				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-					checkExportIdentifier( uniqueKey, exportIdentifiers );
-					applySqlStrings( targets, dialect.getUniqueDelegate()
-							.getAlterTableToAddUniqueKeyCommand( uniqueKey ) );
-				}
-
 			}
 
 			for ( Table table : schema.getTables() ) {
@@ -130,6 +117,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					}
 				}
 			}
+			
+			applySqlStrings( targets, dialect.applyConstraints( schema.getTables(), jdbcEnvironment ) );
 		}
 
 		// next, create all "after table" auxiliary objects

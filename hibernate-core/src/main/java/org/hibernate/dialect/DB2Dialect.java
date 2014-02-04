@@ -476,6 +476,7 @@ public class DB2Dialect extends Dialect {
 	}
 	
 	@Override
+	@Deprecated
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}

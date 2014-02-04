@@ -23,61 +23,75 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.util.Iterator;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.Constraint;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
- * @author Steve Ebersole
+ * Unique constraint Exporter.  Note that it's parameterized for Constraint, rather than UniqueKey.  This is
+ * to allow Dialects to decide whether or not to create unique constraints for unique indexes.
+ * 
+ * @author Brett Meyer
  */
-public class StandardIndexExporter implements Exporter<Index> {
+public class StandardUniqueKeyExporter implements Exporter<Constraint> {
 	private final Dialect dialect;
 
-	public StandardIndexExporter(Dialect dialect) {
+	public StandardUniqueKeyExporter(Dialect dialect) {
 		this.dialect = dialect;
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Index index, JdbcEnvironment jdbcEnvironment) {
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameSupport().formatName(
-				( (Table) index.getTable() ).getTableName()
-		);
-		StringBuilder buf = new StringBuilder()
-				.append( "create index " )
-				.append( dialect.qualifyIndexName() ? index.getName() : StringHelper.unqualify( index.getName() ) )
-				.append( " on " )
-				.append( tableName )
-				.append( " (" );
-
-		boolean first = true;
-		for ( Column column : index.getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append( ", " );
-			}
-			buf.append( ( column.getColumnName().getText( dialect ) ) );
+	public String[] getSqlCreateStrings(Constraint constraint, JdbcEnvironment jdbcEnvironment) {
+		if ( ! dialect.hasAlterTable() ) {
+			return NO_COMMANDS;
 		}
-		buf.append( ")" );
-		return new String[] { buf.toString() };
+		
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameSupport().formatName(
+				( (Table) constraint.getTable() ).getTableName()
+		);
+		StringBuilder sb = new StringBuilder()
+				.append( "alter table " )
+				.append( tableName )
+				.append( " add constraint " )
+				.append( constraint.getName() )
+				.append( " unique ( " );
+
+		final Iterator columnIterator = constraint.getColumns().iterator();
+		while ( columnIterator.hasNext() ) {
+			Column column = (Column) columnIterator.next();
+			sb.append( column.getColumnName().getText( dialect ) );
+			if ( columnIterator.hasNext() ) {
+				sb.append( ", " );
+			}
+		}
+		sb.append( ")" );
+		return new String[] { sb.toString() };
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Index index, JdbcEnvironment jdbcEnvironment) {
+	public String[] getSqlDropStrings(Constraint constraint, JdbcEnvironment jdbcEnvironment) {
 		if ( ! dialect.dropConstraints() ) {
 			return NO_COMMANDS;
 		}
 
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameSupport().formatName(
-				( (Table) index.getTable() ).getTableName()
+				( (Table) constraint.getTable() ).getTableName()
 		);
-		return new String[] {
-				"drop index " + StringHelper.qualify( tableName, index.getName() )
-		};
+		final StringBuilder sb = new StringBuilder( "alter table " );
+		sb.append( tableName );
+		sb.append(" drop constraint " );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			sb.append( "if exists " );
+		}
+		sb.append( dialect.quote( constraint.getName() ) );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			sb.append( " if exists" );
+		}
+		return new String[] { sb.toString() };
 	}
 }

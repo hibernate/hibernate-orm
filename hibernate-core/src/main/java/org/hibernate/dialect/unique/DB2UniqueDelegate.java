@@ -33,6 +33,7 @@ import org.hibernate.metamodel.spi.relational.UniqueKey;
  * 
  * @author Brett Meyer
  */
+@Deprecated
 public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	/**
 	 * Constructs a DB2UniqueDelegate

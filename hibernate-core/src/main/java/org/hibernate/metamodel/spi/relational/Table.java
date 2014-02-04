@@ -264,11 +264,6 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			String nullablePostfix = column.isNullable() ? dialect.getNullColumnString() : " not null";
 			alter.append( nullablePostfix );
 
-			if ( hasUniqueKey(column) ) {
-				alter.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment(
-						column ) );
-			}
-
 			final String checkCondition = column.getCheckCondition();
 			if ( checkCondition != null && dialect.supportsColumnCheck() ) {
 				alter.append( " check(" )

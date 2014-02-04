@@ -32,6 +32,8 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -64,6 +66,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -78,13 +81,15 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
-import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Constraint;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -99,12 +104,12 @@ import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.internal.TemporaryTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -1980,6 +1985,7 @@ public abstract class Dialect implements ConversionContext {
 	private StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
 	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
 	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
+	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 	private TemporaryTableExporter temporaryTableExporter = new TemporaryTableExporter( this );
 
@@ -2001,6 +2007,10 @@ public abstract class Dialect implements ConversionContext {
 
 	public Exporter<ForeignKey> getForeignKeyExporter() {
 		return foreignKeyExporter;
+	}
+
+	public Exporter<Constraint> getUniqueKeyExporter() {
+		return uniqueKeyExporter;
 	}
 
 	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
@@ -2684,58 +2694,85 @@ public abstract class Dialect implements ConversionContext {
 	 * Get the UniqueDelegate supported by this dialect
 	 *
 	 * @return The UniqueDelegate
+	 * 
+	 * @deprecated
 	 */
+	@Deprecated
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
+	
+	public String[] applyConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {
+		final List<String> sqlStrings = new ArrayList<String>();
+		final List<String> uniqueExportIdentifiers = new ArrayList<String>();
+		
+		for ( Table table : tables ) {
+			if( !table.isPhysicalTable() ){
+				continue;
+			}
+			
+			// TODO: Some Dialects will need to create both the index and unique constraints.  Audit them.
+			
+			for ( Index index : table.getIndexes() ) {
+				if (index.isUnique()) {
+					sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlCreateStrings(
+							index, jdbcEnvironment ) ) );
+					uniqueExportIdentifiers.add( index.getColumnExportIdentifier() );
+				}
+				else {
+					sqlStrings.addAll(Arrays.asList( getIndexExporter().getSqlCreateStrings(
+							index, jdbcEnvironment ) ) );
+				}
+			}
 
-	/**
-	 * Does this dialect support the <tt>UNIQUE</tt> column syntax?
-	 *
-	 * @return boolean
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsUnique() {
-		return true;
+			for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
+				// A unique Index may have already exported the constraint.
+				if (! uniqueExportIdentifiers.contains( uniqueKey.getExportIdentifier() )) {
+					sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlCreateStrings(
+							uniqueKey, jdbcEnvironment ) ) );
+				}
+				uniqueExportIdentifiers.add( uniqueKey.getColumnExportIdentifier() );
+			}
+
+		}
+		
+		return sqlStrings.toArray( new String[sqlStrings.size()] );
 	}
-
-	/**
-	 * Does this dialect support adding Unique constraints via create and alter table ?
-	 *
-	 * @return boolean
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
-		return true;
-	}
-
-	/**
-	 * The syntax used to add a unique constraint to a table.
-	 *
-	 * @param constraintName The name of the unique constraint.
-	 * @return The "add unique" fragment
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public String getAddUniqueConstraintString(String constraintName) {
-		return " add constraint " + constraintName + " unique ";
-	}
-
-	/**
-	 * Is the combination of not-null and unique supported?
-	 *
-	 * @return deprecated
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsNotNullUnique() {
-		return true;
+	
+	public String[] dropConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {
+		final List<String> sqlStrings = new ArrayList<String>();
+		final List<String> uniqueExportIdentifiers = new ArrayList<String>();
+		
+		for ( Table table : tables ) {
+			if( !table.isPhysicalTable() ){
+				continue;
+			}
+			
+			if ( dropConstraints() ) {
+				for ( Index index : table.getIndexes() ) {
+					if (index.isUnique()) {
+						sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlDropStrings(
+								index, jdbcEnvironment ) ) );
+						uniqueExportIdentifiers.add( index.getColumnExportIdentifier() );
+					}
+					else {
+						sqlStrings.addAll(Arrays.asList( getIndexExporter().getSqlDropStrings(
+								index, jdbcEnvironment ) ) );
+					}
+				}
+	
+				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
+					// A unique Index may have already exported the constraint.
+					if (! uniqueExportIdentifiers.contains( uniqueKey.getExportIdentifier() )) {
+						sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlDropStrings(
+								uniqueKey, jdbcEnvironment ) ) );
+					}
+					uniqueExportIdentifiers.add( uniqueKey.getColumnExportIdentifier() );
+				}
+			}
+		}
+		
+		return sqlStrings.toArray( new String[sqlStrings.size()] );
 	}
 	
 	/**

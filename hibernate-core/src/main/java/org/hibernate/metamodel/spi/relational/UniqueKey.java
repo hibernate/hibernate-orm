@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import org.hibernate.dialect.Dialect;
 
 /**
  * Models a SQL <tt>INDEX</tt> defined as UNIQUE
@@ -42,22 +41,6 @@ public class UniqueKey extends AbstractConstraint {
 		super( table, name );
 	}
 
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) {
-		return new String[] { dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand( this ) };
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) {
-		return new String[] { dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand( this ) };
-	}
-
-	@Override
-    public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		// not used
-		return "";
-	}
-	
 	@Override
 	public String getExportIdentifier() {
 		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );

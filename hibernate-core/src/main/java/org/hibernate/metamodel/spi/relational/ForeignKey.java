@@ -25,13 +25,9 @@ package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -85,6 +81,19 @@ public class ForeignKey extends AbstractConstraint {
 		return targetColumns == null
 				? getTargetTable().getPrimaryKey().getColumns()
 				: Collections.unmodifiableList( targetColumns );
+	}
+	
+	public boolean hasTargetColumn(String name) {
+		for (Column column : targetColumns) {
+			if (column.getColumnName().getText().equals( name )) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public int getTargetColumnSpan() {
+		return targetColumns.size();
 	}
 
 	protected int generateConstraintColumnListId() {
@@ -150,61 +159,6 @@ public class ForeignKey extends AbstractConstraint {
 
 	public void setUpdateRule(ReferentialAction updateRule) {
 		this.updateRule = updateRule;
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) {
-		final StringBuilder buf = new StringBuilder( "alter table " );
-		buf.append( getTable().getQualifiedName( dialect ) );
-		buf.append( dialect.getDropForeignKeyString() );
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( getName() );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
-		}
-		return new String[] { buf.toString() };
-	}
-
-	public String sqlConstraintStringInAlterTable(Dialect dialect) {
-		String[] columnNames = new String[ getColumnSpan() ];
-		String[] targetColumnNames = new String[ getColumnSpan() ];
-		int i=0;
-		Iterator<Column> itTargetColumn = getTargetColumns().iterator();
-		for ( Column column : getColumns() ) {
-			if ( ! itTargetColumn.hasNext() ) {
-				throw new MappingException( "More constraint columns that foreign key target columns." );
-			}
-			columnNames[i] = column.getColumnName().getText( dialect );
-			targetColumnNames[i] = ( itTargetColumn.next() ).getColumnName().getText( dialect );
-			i++;
-		}
-		if ( itTargetColumn.hasNext() ) {
-			throw new MappingException( "More foreign key target columns than constraint columns." );
-		}
-		StringBuilder sb =
-				new StringBuilder(
-						dialect.getAddForeignKeyConstraintString(
-								getName(),
-								columnNames,
-								targetTable.getQualifiedName( dialect ),
-								targetColumnNames,
-								this.targetColumns == null ||
-										this.targetColumns.equals( targetTable.getPrimaryKey().getColumns() )
-						)
-				);
-		// TODO: If a dialect does not support cascade-delete, can it support other actions? (HHH-6428)
-		// For now, assume not.
-		if ( dialect.supportsCascadeDelete() ) {
-			if ( deleteRule != ReferentialAction.NO_ACTION ) {
-				sb.append( ON_DELETE ).append( deleteRule.getActionString() );
-			}
-			if ( updateRule != ReferentialAction.NO_ACTION ) {
-				sb.append( ON_UPDATE ).append( updateRule.getActionString() );
-			}
-		}
-		return sb.toString();
 	}
 
 	public static enum ReferentialAction {

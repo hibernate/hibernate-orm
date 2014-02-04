@@ -28,6 +28,7 @@ import org.hibernate.metamodel.spi.relational.UniqueKey;
  * 
  * @author Brett Meyer
  */
+@Deprecated
 public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 	
 	public InformixUniqueDelegate( Dialect dialect ) {

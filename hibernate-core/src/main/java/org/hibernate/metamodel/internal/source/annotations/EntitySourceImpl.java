@@ -532,12 +532,8 @@ public class EntitySourceImpl implements EntitySource {
 				}
 			}
 			
-			ConstraintSource constraintSource = null;
-			if ( isUnique ) {
-				constraintSource = new UniqueConstraintSourceImpl( name, tableName, columnNames, orderings );
-			} else {
-				constraintSource = new IndexConstraintSourceImpl( name, tableName, columnNames, orderings );
-			}
+			ConstraintSource constraintSource = new IndexConstraintSourceImpl(
+					name, tableName, columnNames, orderings, isUnique );
 			constraintSources.add( constraintSource );
 		}
 	}

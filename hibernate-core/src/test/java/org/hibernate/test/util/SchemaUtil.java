@@ -109,6 +109,13 @@ public class SchemaUtil {
 		return collection.getPluralAttributeKeyBinding().getCollectionTable();
 	}
 
+	/**
+	 * Do all of the given columns have associated UKs?
+	 * 
+	 * @param table
+	 * @param columnNames
+	 * @return
+	 */
 	public static boolean hasUniqueKeys(TableSpecification table, String... columnNames) {
 		for ( String columnName : columnNames ) {
 			if ( !table.hasUniqueKey( table.locateColumn( columnName ) ) ) {
@@ -127,13 +134,40 @@ public class SchemaUtil {
 		return false;
 	}
 
-	public static boolean hasForeignKey(TableSpecification table, String keyName) {
-		for ( ForeignKey fk : table.getForeignKeys() ) {
-			if ( fk.getName().equals( keyName ) ) {
-				return true;
+	/**
+	 * Does a unique key exist with the given keyName containing the given columnNames *exclusively*?
+	 * 
+	 * @param table
+	 * @param keyName
+	 * @param columnNames
+	 * @return
+	 */
+	public static boolean hasUniqueKey(TableSpecification table, String keyName, String... columnNames) {
+		for ( UniqueKey uk : table.getUniqueKeys() ) {
+			if ( uk.getName().equals( keyName ) ) {
+				for (String columnName : columnNames) {
+					if (!uk.hasColumn( columnName )) {
+						return false;
+					}
+					return columnNames.length == uk.getColumnSpan();
+				}
 			}
 		}
 		return false;
+	}
+
+	public static boolean hasForeignKey(TableSpecification table, String keyName) {
+		return table.locateForeignKey( keyName ) != null;
+	}
+
+	public static boolean hasForeignKey(TableSpecification table, String keyName, String... targetColumnNames) {
+		ForeignKey fk = table.locateForeignKey( keyName );
+		for (String targetColumnName : targetColumnNames) {
+			if (!fk.hasTargetColumn( targetColumnName )) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static boolean hasIndex(TableSpecification table, String indexName) {

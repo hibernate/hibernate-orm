@@ -33,6 +33,7 @@ import org.hibernate.metamodel.spi.relational.UniqueKey;
  * 
  * @author Brett Meyer
  */
+@Deprecated
 public class DefaultUniqueDelegate implements UniqueDelegate {
 	protected final Dialect dialect;
 

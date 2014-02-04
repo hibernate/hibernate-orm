@@ -294,6 +294,7 @@ public class InformixDialect extends Dialect {
 	}
 	
 	@Override
+	@Deprecated
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}

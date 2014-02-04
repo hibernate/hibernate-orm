@@ -46,6 +46,7 @@ import org.hibernate.metamodel.spi.relational.UniqueKey;
  * 
  * @author Brett Meyer
  */
+@Deprecated
 public interface UniqueDelegate {
 	/**
 	 * Get the fragment that can be used to make a column unique as part of its column definition.

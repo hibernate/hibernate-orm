@@ -31,9 +31,13 @@ import org.hibernate.metamodel.spi.source.IndexConstraintSource;
  * @author Brett Meyer
  */
 class IndexConstraintSourceImpl extends AbstractConstraintSource implements IndexConstraintSource {
+	
+	private final boolean unique;
 
-	public IndexConstraintSourceImpl(String name, String tableName, List<String> columnNames, List<String> orderings) {
+	public IndexConstraintSourceImpl(String name, String tableName, List<String> columnNames, List<String> orderings,
+			boolean unique) {
 		super( name, tableName, columnNames, orderings );
+		this.unique = unique;
 	}
 
 	@Override
@@ -46,6 +50,11 @@ class IndexConstraintSourceImpl extends AbstractConstraintSource implements Inde
 		sb.append( ", orderings=" ).append( orderings );
 		sb.append( '}' );
 		return sb.toString();
+	}
+	
+	@Override
+	public boolean isUnique() {
+		return unique;
 	}
 }
 

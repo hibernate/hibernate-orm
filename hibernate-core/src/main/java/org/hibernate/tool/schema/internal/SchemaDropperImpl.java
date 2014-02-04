@@ -33,11 +33,9 @@ import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Exportable;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
-import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.Target;
@@ -79,10 +77,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		for ( Schema schema : database.getSchemas() ) {
+			// we need to drop constraints prior to dropping table
+			applySqlStrings( targets, dialect.dropConstraints( schema.getTables(), jdbcEnvironment ) );
+			
 			for ( Table table : schema.getTables() ) {
 				if( !table.isPhysicalTable() ){
 					continue;
 				}
+				
 				if ( dialect.dropConstraints() ) {
 					// we need to drop constraints prior to dropping table
 
@@ -103,17 +105,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 								);
 							}
 						}
-					}
-
-					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						checkExportIdentifier( uniqueKey, exportIdentifiers );
-						applySqlStrings( targets, dialect.getUniqueDelegate()
-								.getAlterTableToDropUniqueKeyCommand( uniqueKey ) );
-					}
-
-					for ( Index index : table.getIndexes() ) {
-						checkExportIdentifier( index, exportIdentifiers );
-						applySqlStrings( targets, dialect.getIndexExporter().getSqlDropStrings( index, jdbcEnvironment ) );
 					}
 				}
 

@@ -24,13 +24,13 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -45,6 +45,7 @@ import org.hibernate.internal.util.StringHelper;
 public abstract class AbstractConstraint implements Constraint {
 	private TableSpecification table;
 	private String name;
+	// For #getExportIdentifier, alphabetical ordering is important.
 	private final Map<Identifier, Column> columnMap = new LinkedHashMap<Identifier, Column>();
 	private final Map<Column, String> columnOrderMap = new HashMap<Column, String>();
 
@@ -122,6 +123,18 @@ public abstract class AbstractConstraint implements Constraint {
 	protected Map<Identifier, Column> internalColumnAccess() {
 		return columnMap;
 	}
+	
+	public String getColumnExportIdentifier() {
+		List<Identifier> columnNames = new ArrayList<Identifier>();
+		columnNames.addAll( columnMap.keySet() );
+		Collections.sort( columnNames );
+		
+		StringBuilder sb = new StringBuilder();
+		for ( Identifier columnName : columnNames ) {
+			sb.append( '_' ).append( columnName.getText() );
+		}
+		return sb.toString();
+	}
 
 	public void addColumn(Column column) {
 		internalAddColumn( column );
@@ -153,41 +166,5 @@ public abstract class AbstractConstraint implements Constraint {
 	
 	public String getOrdering(Column column) {
 		return columnOrderMap.get( column );
-	}
-
-	protected boolean isCreationVetoed(Dialect dialect) {
-		return false;
-	}
-
-	protected abstract String sqlConstraintStringInAlterTable(Dialect dialect);
-
-	public String[] sqlDropStrings(Dialect dialect) {
-		if ( isCreationVetoed( dialect ) ) {
-			return null;
-		}
-		else {
-			return new String[] {
-					new StringBuilder()
-						.append( "alter table " )
-						.append( getTable().getQualifiedName( dialect ) )
-						.append( " drop constraint " )
-						.append( dialect.quote( name ) )
-						.toString()
-			};
-		}
-	}
-
-	public String[] sqlCreateStrings(Dialect dialect) {
-		if ( isCreationVetoed( dialect ) ) {
-			return null;
-		}
-		else {
-			return new String[] {
-					new StringBuilder( "alter table " )
-							.append( getTable().getQualifiedName( dialect ) )
-							.append( sqlConstraintStringInAlterTable( dialect ) )
-							.toString()
-			};
-		}
 	}
 }

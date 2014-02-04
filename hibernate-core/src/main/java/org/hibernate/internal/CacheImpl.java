@@ -260,6 +260,8 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictQueryRegions() {
+		evictDefaultQueryRegion();
+		
 		if ( CollectionHelper.isEmpty( queryCaches ) ) {
 			return;
 		}
@@ -268,7 +270,6 @@ public class CacheImpl implements CacheImplementor {
         }
 		for ( QueryCache queryCache : queryCaches.values() ) {
 			queryCache.clear();
-			// TODO : cleanup entries in queryCaches + allCacheRegions ?
 		}
 	}
 

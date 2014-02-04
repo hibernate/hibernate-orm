@@ -33,10 +33,6 @@ dependencies {
     runtime 'org.codehaus.plexus:plexus-utils:3.0.1'
 }
 
-// avoiding test dependencies in generated pom
-configurations.remove(configurations.getByName('testCompile'))
-configurations.remove(configurations.getByName('testRuntime'))
-
 // Inject dependencies into plugin.xml
 // Note: injecting the full dependency, rather than just the version,
 // removing the need to maintain artifact names that might change with upgrades (JPA/JTA API version, etc.)
@@ -73,6 +69,12 @@ def generateMavenDependency(String gradleDependency) {
 
 task writeNewPom(type:Task, description: 'Writes pom.xml using merged Gradle dependency and MavenPom configuration.') {  
     ext.pomDefinition = pom {
+	configurations {
+		// avoiding test dependencies in generated pom
+		compile
+		runtime
+	}
+
        project {
          groupId  project.group
          packaging 'maven-plugin'

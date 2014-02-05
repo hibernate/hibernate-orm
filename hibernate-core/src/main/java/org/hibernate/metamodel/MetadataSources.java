@@ -643,9 +643,11 @@ public class MetadataSources {
 				}
 			}
 
-			Index jandexIndex = indexer.complete();
-			jandexIndex.printSubclasses();
-			jandexIndex.printAnnotations();
+			final Index jandexIndex = indexer.complete();
+			if ( log.isTraceEnabled() ) {
+				jandexIndex.printSubclasses();
+				jandexIndex.printAnnotations();
+			}
 			return jandexIndex;
 		}
 

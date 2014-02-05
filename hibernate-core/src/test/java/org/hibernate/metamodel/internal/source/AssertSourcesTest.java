@@ -71,6 +71,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 		MetadataSources ann = new MetadataSources( serviceRegistry );
 		ann.addAnnotatedClass( User.class );
+		ann.addAnnotatedClass( User.Name.class );
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
 				buildMetadata( ann ),
 				ann.buildJandexView()

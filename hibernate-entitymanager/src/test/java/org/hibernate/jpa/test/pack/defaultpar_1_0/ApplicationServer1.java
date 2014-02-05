@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.jpa.test.pack.defaultpar_1_0;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -31,6 +32,7 @@ public class ApplicationServer1 {
 		this.name = name;
 	}
 
+	@Embedded
 	public Version1 getVersion() {
 		return version;
 	}

@@ -626,12 +626,9 @@ public class MetadataSources {
 				indexResource( packageName.replace( '.', '/' ) + "/package-info.class" );
 			}
 
-			// the classes referenced in any xml bindings
+			// the classes referenced in any orm.xml bindings (unless it is "metadata complete")
 			for ( BindResult bindResult : sources.bindResultList ) {
-				if ( JaxbHibernateMapping.class.isInstance( bindResult.getRoot() ) ) {
-					indexHbmReferences( (JaxbHibernateMapping) bindResult.getRoot() );
-				}
-				else {
+				if ( JaxbEntityMappings.class.isInstance( bindResult.getRoot() ) ) {
 					final JaxbEntityMappings ormXmlRoot = (JaxbEntityMappings) bindResult.getRoot();
 					if ( !isMappingMetadataComplete( ormXmlRoot ) ) {
 						indexOrmXmlReferences( ormXmlRoot );

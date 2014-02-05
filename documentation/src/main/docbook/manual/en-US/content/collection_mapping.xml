@@ -643,14 +643,14 @@ public class Order {
         <title>Maps</title>
 
         <para>The question with <classname>Map</classname>s is where the key
-        value is stored. There are everal options. Maps can borrow their keys
+        value is stored. There are several options. Maps can borrow their keys
         from one of the associated entity properties or have dedicated columns
         to store an explicit key.</para>
 
         <para>To use one of the target entity property as a key of the map,
         use <literal>@MapKey(name="myProperty")</literal>, where
         <literal>myProperty</literal> is a property name in the target entity.
-        When using <literal>@MapKey</literal> without the name attribuate, the
+        When using <literal>@MapKey</literal> without the name attribute, the
         target entity primary key is used. The map key uses the same column as
         the property pointed out. There is no additional column defined to
         hold the map key, because the map key represent a target property. Be

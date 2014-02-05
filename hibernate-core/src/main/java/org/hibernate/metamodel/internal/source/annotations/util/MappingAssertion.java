@@ -69,18 +69,14 @@ public class MappingAssertion {
 
 
 	/**
-	 * Check if the sub-entity has {@link javax.persistence.Embeddable @Embeddable} or {@link javax.persistence.MappedSuperclass @MappedSuperclass}.
-	 *
-	 * From the JPA Spec, a sub entity class can not has such annotation.
+	 * Check if the sub-entity has {@link javax.persistence.Embeddable @Embeddable}.  From the JPA Spec,
+	 * a sub entity class can not has such annotation.
 	 *
 	 * @param subClassInfo The sub entity {@link ClassInfo class}.
 	 */
-	static void assertSubEntityIsNotEmbeddableNorMappedSuperclass(ClassInfo subClassInfo) {
+	static void assertSubEntityIsNotEmbeddable(ClassInfo subClassInfo) {
 		if ( JandexHelper.containsSingleAnnotation( subClassInfo, JPADotNames.EMBEDDABLE ) ) {
 			throw new AnnotationException( "An embeddable cannot extend an entity: " + subClassInfo );
-		}
-		if ( JandexHelper.containsSingleAnnotation( subClassInfo, JPADotNames.MAPPED_SUPERCLASS ) ) {
-			throw new AnnotationException( "A mapped superclass cannot extend an entity: " + subClassInfo );
 		}
 	}
 }

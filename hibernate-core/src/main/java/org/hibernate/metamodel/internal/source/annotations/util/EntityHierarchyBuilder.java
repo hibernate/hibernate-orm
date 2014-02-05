@@ -267,7 +267,7 @@ public class EntityHierarchyBuilder {
 
 		for ( ClassInfo subClassInfo : subClasses ) {
 			if ( !isEntityClass( subClassInfo ) ) {
-				MappingAssertion.assertSubEntityIsNotEmbeddableNorMappedSuperclass( subClassInfo );
+				MappingAssertion.assertSubEntityIsNotEmbeddable( subClassInfo );
 				continue;
 			}
 			addSubClassToSubclassMap( classInfo.name(), subClassInfo, classToDirectSubclassMap );

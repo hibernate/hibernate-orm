@@ -32,6 +32,7 @@ import org.dom4j.Document;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface XmlDocument extends Serializable {
 	/**
 	 * Retrieve the parsed DOM tree.

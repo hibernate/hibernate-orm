@@ -37,6 +37,7 @@ import org.xml.sax.ErrorHandler;
 /**
  * Small helper class that lazy loads DOM and SAX reader and keep them for fast use afterwards.
  */
+@Deprecated
 public final class XMLHelper {
 
 	public static final EntityResolver DEFAULT_DTD_RESOLVER = new DTDEntityResolver();

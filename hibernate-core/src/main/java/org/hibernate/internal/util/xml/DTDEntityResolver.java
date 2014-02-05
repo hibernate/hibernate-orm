@@ -55,6 +55,7 @@ import org.xml.sax.InputSource;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
+@Deprecated
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DTDEntityResolver.class.getName() );

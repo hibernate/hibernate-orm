@@ -26,11 +26,11 @@ package org.hibernate.xml.internal.stax;
 import java.net.URL;
 import javax.xml.validation.Schema;
 
-import org.hibernate.internal.util.xml.Origin;
+import org.hibernate.xml.spi.Origin;
 
 /**
-* @author Steve Ebersole
-*/
+ * @author Steve Ebersole
+ */
 public enum SupportedOrmXsdVersion {
 	ORM_1_0( "org/hibernate/jpa/orm_1_0.xsd" ),
 	ORM_2_0( "org/hibernate/jpa/orm_2_0.xsd" ),

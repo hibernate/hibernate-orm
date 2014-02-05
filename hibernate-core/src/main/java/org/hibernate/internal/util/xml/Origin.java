@@ -30,9 +30,10 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface Origin extends Serializable {
 	/**
-	 * Retrieve the type of origin.  This is not a discrete set, but might be somethign like
+	 * Retrieve the type of origin.  This is not a discrete set, but might be something like
 	 * {@code file} for file protocol URLs, or {@code resource} for classpath resource lookups.
 	 *
 	 * @return The origin type.

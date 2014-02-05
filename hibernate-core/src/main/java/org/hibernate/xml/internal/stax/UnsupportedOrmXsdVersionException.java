@@ -24,7 +24,7 @@
 package org.hibernate.xml.internal.stax;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.xml.Origin;
+import org.hibernate.xml.spi.Origin;
 
 /**
  * @author Steve Ebersole

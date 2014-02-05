@@ -381,6 +381,7 @@ public class Configuration {
 	@Deprecated
 	public void add(XmlDocument metadataXml) {
 	}
+
 	/**
 	 * Add a cached mapping file.  A cached file is a serialized representation
 	 * of the DOM structure of a particular mapping.  It is saved from a previous

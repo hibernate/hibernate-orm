@@ -38,7 +38,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
-import org.hibernate.internal.util.xml.OriginImpl;
 import org.hibernate.xml.internal.stax.SupportedOrmXsdVersion;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
@@ -64,6 +63,12 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 	public MappingXmlBinder(ServiceRegistry serviceRegistry, boolean validateXml) {
 		super(serviceRegistry, validateXml);
 	}
+
+	// todo : DO THIS!
+	// the goal here ultimately is to:
+	// 		1) use one "combined" XSD for both orm.xml and hbm.xml features (HHH-8893)
+	//		2) always always always validate against the latest version of that XSD (HHH-8894)
+	//		3) profit!
 
 	@Override
 	protected JAXBContext getJaxbContext(XMLEvent event) throws JAXBException {
@@ -157,7 +162,6 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 	}
 
 	private Schema resolveSupportedOrmXsd(String explicitVersion, Origin origin) {
-
 		if ( StringHelper.isEmpty( explicitVersion ) ) {
 			return SupportedOrmXsdVersion.ORM_2_1.getSchema();
 		}
@@ -171,13 +175,8 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 		//
 		// However, still check for the validity of the version by calling #parse.  If someone explicitly uses a value
 		// that doesn't exist, we still need to throw the exception.
-		@SuppressWarnings("unused")
-		SupportedOrmXsdVersion version =
-				SupportedOrmXsdVersion.parse(
-						explicitVersion,
-						new OriginImpl( origin.getType().name(), origin.getName() )
-				);
-		// return version.getSchema();
+		SupportedOrmXsdVersion.parse( explicitVersion, origin );
+
 		return SupportedOrmXsdVersion.ORM_2_1.getSchema();
 		
 	}

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,39 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.util.xml;
+package org.hibernate.xml.internal.jaxb;
 
-import java.io.Serializable;
-
-import org.dom4j.Document;
+import javax.xml.bind.ValidationEvent;
+import javax.xml.bind.ValidationEventHandler;
+import javax.xml.bind.ValidationEventLocator;
 
 /**
- * Basic implementation of {@link XmlDocument}
+ * ValidationEventHandler implementation providing easier access to where (line/column) an error occurred.
  *
  * @author Steve Ebersole
  */
-@Deprecated
-public class XmlDocumentImpl implements XmlDocument, Serializable {
-	private final Document documentTree;
-	private final Origin origin;
-
-	public XmlDocumentImpl(Document documentTree, String originType, String originName) {
-		this( documentTree, new OriginImpl( originType, originName ) );
-	}
-
-
-	public XmlDocumentImpl(Document documentTree, Origin origin) {
-		this.documentTree = documentTree;
-		this.origin = origin;
-	}
+class ContextProvidingValidationEventHandler implements ValidationEventHandler {
+	private int lineNumber;
+	private int columnNumber;
+	private String message;
 
 	@Override
-	public Document getDocumentTree() {
-		return documentTree;
+	public boolean handleEvent(ValidationEvent validationEvent) {
+		ValidationEventLocator locator = validationEvent.getLocator();
+		lineNumber = locator.getLineNumber();
+		columnNumber = locator.getColumnNumber();
+		message = validationEvent.getMessage();
+		return false;
 	}
 
-	@Override
-	public Origin getOrigin() {
-		return origin;
+	public int getLineNumber() {
+		return lineNumber;
+	}
+
+	public int getColumnNumber() {
+		return columnNumber;
+	}
+
+	public String getMessage() {
+		return message;
 	}
 }

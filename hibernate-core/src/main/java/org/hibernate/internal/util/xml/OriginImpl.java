@@ -30,6 +30,7 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public class OriginImpl implements Origin, Serializable {
 	private final String type;
 	private final String name;

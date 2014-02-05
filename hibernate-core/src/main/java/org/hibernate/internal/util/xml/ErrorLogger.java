@@ -41,6 +41,7 @@ import org.xml.sax.SAXParseException;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
+@Deprecated
 public class ErrorLogger implements ErrorHandler, Serializable {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(

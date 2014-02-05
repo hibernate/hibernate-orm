@@ -27,9 +27,6 @@ import java.io.InputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -48,6 +45,15 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.spi.XmlBinder;
 
 /**
+ * Base implementation (template) of the XmlBinder contract.
+ * <p/>
+ * Generally implementors should just have to implement:<ol>
+ *     <li>{@link #getJaxbContext}</li>
+ *     <li>{@link #getSchema}</li>
+ *     <li>(optionally) {@link #wrapReader}</li>
+ * </ol>
+ *
+ * @author Steve Ebersole
  * @author Strong Liu <stliu@hibernate.org>
  */
 abstract class AbstractXmlBinder implements XmlBinder {
@@ -123,12 +129,14 @@ abstract class AbstractXmlBinder implements XmlBinder {
 
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
-			Schema schema = getSchema(event, origin);
+			final Schema schema = getSchema( event, origin );
 			staxEventReader = wrapReader( staxEventReader, event );
-			JAXBContext jaxbContext =getJaxbContext(event);
-			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+
+			final JAXBContext jaxbContext = getJaxbContext( event );
+			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( schema );
 			unmarshaller.setEventHandler( handler );
+
 			final Object target = unmarshaller.unmarshal( staxEventReader );
 			return new BindResult( target, origin );
 		}
@@ -136,44 +144,50 @@ abstract class AbstractXmlBinder implements XmlBinder {
 			throw new MappingException(
 					"Unable to perform unmarshalling at line number " + handler.getLineNumber()
 							+ " and column " + handler.getColumnNumber()
-							+ ". Message: " + handler.getMessage(), e, origin
+							+ ". Message: " + handler.getMessage(),
+					e,
+					origin
 			);
 		}
 	}
-	protected abstract JAXBContext getJaxbContext(XMLEvent event) throws JAXBException;
-	protected abstract Schema getSchema(XMLEvent event, Origin origin) throws JAXBException;
-	protected XMLEventReader wrapReader(XMLEventReader xmlEventReader, XMLEvent event){
+
+	/**
+	 * Identify the Schema to use to validate the document being processed.
+	 *
+	 * @param rootElementStartEvent The peeked event that represents the start of the root element of the document
+	 * @param origin
+	 *
+	 * @return
+	 *
+	 * @throws JAXBException
+	 */
+	protected abstract Schema getSchema(XMLEvent rootElementStartEvent, Origin origin) throws JAXBException;
+
+	/**
+	 * Wrap the given StAX event reader in another if needed.
+	 *
+	 * @param xmlEventReader The "real" reader.
+	 * @param rootElementStartEvent The peeked event that represents the start of the root element of the document
+	 *
+	 * @return The wrapped reader.  Simply return the given reader if no wrapping is needed.
+	 */
+	protected XMLEventReader wrapReader(XMLEventReader xmlEventReader, XMLEvent rootElementStartEvent) {
 		return xmlEventReader;
 	}
+
+	/**
+	 * Get the JAXB context representing the Java model to bind to.
+	 *
+	 * @param event
+	 *
+	 * @return
+	 *
+	 * @throws JAXBException
+	 */
+	protected abstract JAXBContext getJaxbContext(XMLEvent event) throws JAXBException;
+
 	protected static boolean isNamespaced(StartElement startElement) {
 		return ! "".equals( startElement.getName().getNamespaceURI() );
 	}
 
-
-	static class ContextProvidingValidationEventHandler implements ValidationEventHandler {
-		private int lineNumber;
-		private int columnNumber;
-		private String message;
-
-		@Override
-		public boolean handleEvent(ValidationEvent validationEvent) {
-			ValidationEventLocator locator = validationEvent.getLocator();
-			lineNumber = locator.getLineNumber();
-			columnNumber = locator.getColumnNumber();
-			message = validationEvent.getMessage();
-			return false;
-		}
-
-		public int getLineNumber() {
-			return lineNumber;
-		}
-
-		public int getColumnNumber() {
-			return columnNumber;
-		}
-
-		public String getMessage() {
-			return message;
-		}
-	}
 }

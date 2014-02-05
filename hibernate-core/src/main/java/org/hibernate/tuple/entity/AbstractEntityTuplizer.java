@@ -594,7 +594,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	protected boolean shouldGetAllProperties(Object entity) {
-		return !hasUninitializedLazyProperties( entity );
+		return !entityMetamodel.hasLazyProperties();
 	}
 
 	@Override

@@ -623,7 +623,14 @@ public class MetadataSources {
 
 			// add package-info from the configured packages
 			for ( String packageName : sources.getAnnotatedPackages() ) {
-				indexResource( packageName.replace( '.', '/' ) + "/package-info.class" );
+				// older code seemed to simply ignore packages that did not have package-info,
+				// so do same
+				try {
+					indexResource( packageName.replace( '.', '/' ) + "/package-info.class" );
+				}
+				catch (Exception e) {
+					log.debugf( "Skipping package [%s] which caused error indexing : %s", packageName, e.getMessage() );
+				}
 			}
 
 			// the classes referenced in any orm.xml bindings (unless it is "metadata complete")

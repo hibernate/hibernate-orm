@@ -22,10 +22,10 @@ public class ExchangeRateKey
     }
 
     @Column(nullable = false)
-    protected long date;
+    public long date;
     
     @javax.persistence.ManyToOne(fetch = FetchType.LAZY )
-    protected Currency currency1;
+    public Currency currency1;
     
     @javax.persistence.ManyToOne(fetch = FetchType.LAZY )
     protected Currency currency2;

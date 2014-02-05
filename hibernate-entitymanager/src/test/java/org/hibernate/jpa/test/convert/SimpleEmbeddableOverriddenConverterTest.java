@@ -46,6 +46,7 @@ import org.hibernate.type.Type;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -60,6 +61,7 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseUnitTestCase {
 	 * Test outcome of annotations exclusively.
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testSimpleConvertOverrides() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

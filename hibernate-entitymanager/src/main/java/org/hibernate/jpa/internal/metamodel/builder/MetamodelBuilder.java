@@ -106,7 +106,6 @@ public class MetamodelBuilder {
 	public MetamodelBuilder(SessionFactoryImplementor sessionFactory, JpaMetaModelPopulationSetting populationSetting) {
 		this.sessionFactory = sessionFactory;
 		this.populationSetting = populationSetting;
-		final AttributeBuilderContext attributeBuilderContext = new AttributeBuilderContext();
 		this.attributeBuilder = new AttributeBuilder( new AttributeBuilderContext() );
 	}
 
@@ -134,6 +133,9 @@ public class MetamodelBuilder {
 				javaType,
 				superType,
 				entityBinding.getEntityName(),
+				entityBinding.getJpaEntityName(),
+				entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite()
+						&& entityBinding.getHierarchyDetails().getEntityIdentifier().getIdClassClass() != null,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
 				entityBinding.isVersioned()
 		);
@@ -200,6 +202,8 @@ public class MetamodelBuilder {
 		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
 				javaType,
 				superSuperType,
+				entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite()
+						&& entityBinding.getHierarchyDetails().getEntityIdentifier().getIdClassClass() != null,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
 				entityBinding.isVersioned()
 		);
@@ -221,7 +225,6 @@ public class MetamodelBuilder {
 		for ( EmbeddableTypeImpl embeddable : embeddableTypeMap.values() ) {
 			populateStaticMetamodel( embeddable );
 		}
-
 
 		return new MetamodelImpl(
 				entityTypeMap,

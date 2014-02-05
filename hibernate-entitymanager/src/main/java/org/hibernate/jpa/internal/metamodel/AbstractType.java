@@ -39,15 +39,6 @@ public abstract class AbstractType<X> implements Type<X>, Serializable {
 	/**
 	 * Instantiates the type based on the given Java type.
 	 *
-	 * @param javaType The Java type of the JPA model type.
-	 */
-    protected AbstractType(Class<X> javaType) {
-		this( javaType, javaType != null ? javaType.getName() : null );
-    }
-
-	/**
-	 * Instantiates the type based on the given Java type.
-	 *
 	 * @param javaType
 	 * @param typeName
 	 */

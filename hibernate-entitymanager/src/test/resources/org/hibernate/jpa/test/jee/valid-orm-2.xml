@@ -54,4 +54,6 @@
             </entity-listener>
         </entity-listeners>
     </entity>
+    <embeddable class="Version">
+    </embeddable>
 </entity-mappings>

@@ -23,25 +23,20 @@
  */
 package org.hibernate.jpa.boot.internal;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.AttributeConverter;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
@@ -76,7 +71,6 @@ import org.hibernate.jpa.boot.scan.spi.ScanResult;
 import org.hibernate.jpa.boot.scan.spi.Scanner;
 import org.hibernate.jpa.boot.spi.ClassDescriptor;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.jpa.boot.spi.InputStreamAccess;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
 import org.hibernate.jpa.boot.spi.PackageDescriptor;
@@ -90,31 +84,38 @@ import org.hibernate.jpa.internal.schemagen.JpaSchemaGenerator;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
-import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.TypeContributor;
-import org.hibernate.metamodel.spi.source.InvalidMappingException;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.MappingNotFoundException;
-import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.spi.GrantedPermission;
+import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.secure.spi.JaccService;
 import org.hibernate.service.ConfigLoader;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
+import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSecurity.JaxbGrant;
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache;
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbCollectionCache;
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
+import static org.hibernate.jpa.AvailableSettings.CFG_FILE;
+import static org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX;
+import static org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX;
+import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
+import static org.hibernate.jpa.AvailableSettings.PERSISTENCE_UNIT_NAME;
+import static org.hibernate.jpa.AvailableSettings.SHARED_CACHE_MODE;
+import static org.hibernate.jpa.AvailableSettings.VALIDATION_MODE;
 
 /**
  * @author Steve Ebersole
@@ -124,8 +125,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			EntityManagerMessageLogger.class,
 			EntityManagerFactoryBuilderImpl.class.getName()
 	);
-
-	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -156,30 +155,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	// Explicit "injectables"
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private Object validatorFactory;
+	private Object cdiBeanManager;
 	private DataSource dataSource;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final PersistenceUnitDescriptor persistenceUnit;
-	private final SettingsImpl settings = new SettingsImpl();
-	private final StandardServiceRegistryBuilder serviceRegistryBuilder;
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// things built in first phase, needed for second phase..
 	private final Map configurationValues;
+	private final StandardServiceRegistry standardServiceRegistry;
+	private final MetadataImplementor metadata;
+	private final SettingsImpl settings;
 
-	private final List<GrantedPermission> grantedJaccPermissions = new ArrayList<GrantedPermission>();
-	private final List<CacheRegionDefinition> localCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
-	// todo : would much prefer this as a local variable...
-	private final List<JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping> cfgXmlNamedMappings = new ArrayList<JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping>();
-
-	private IndexView jandexIndex;
-
-	private LocalMetadataSources localMetadataSources;
-
-	private static EntityNotFoundDelegate jpaEntityNotFoundDelegate = new JpaEntityNotFoundDelegate();
-	
-	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
-		public void handleEntityNotFound(String entityName, Serializable id) {
-			throw new EntityNotFoundException( "Unable to find " + entityName  + " with id " + id );
-		}
-	}
 
 	public EntityManagerFactoryBuilderImpl(PersistenceUnitDescriptor persistenceUnit, Map integrationSettings) {
 		this( persistenceUnit, integrationSettings, null );
@@ -193,41 +181,160 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.persistenceUnit = persistenceUnit;
 
 		if ( integrationSettings == null ) {
-			integrationSettings = Collections.emptyMap();
+			integrationSettings = new HashMap();
 		}
 
-		// Build the boot-strap service registry, which mainly handles class loader interactions
-		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader );
+		try {
+			// Build the boot-strap service registry, which mainly handles class loader interactions
+			final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader );
 
-		// Create the builder for the "standard" service registry (so we can start adding configuration values, etc)
-		this.serviceRegistryBuilder = new StandardServiceRegistryBuilder( bsr );
+			// merge configuration sources
+			final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, bsr );
+			this.configurationValues = mergedSettings.getConfigurationValues();
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Next we build a merged map of all the configuration values
-		this.configurationValues = mergePropertySources( persistenceUnit, integrationSettings, bsr );
-		// add all merged configuration values into the service registry builder
-		this.serviceRegistryBuilder.applySettings( configurationValues );
+			// Build the "standard" service registry
+			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+			ssrBuilder.applySettings( configurationValues );
+			this.settings = configure( ssrBuilder );
+			this.standardServiceRegistry = ssrBuilder.build();
+			configure( standardServiceRegistry, mergedSettings );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Next we do a preliminary pass at metadata processing, which involves:
-		//		1) scanning
-		final ScanResult scanResult = scan( bsr );
-		final DeploymentResources deploymentResources = buildDeploymentResources( scanResult, bsr );
-		//		2) building a Jandex index
-		jandexIndex = locateOrBuildJandexIndex( deploymentResources );
-		//		3) building "metadata sources" to keep for later to use in building the SessionFactory
-		localMetadataSources = prepareMetadataSources( jandexIndex, deploymentResources, bsr );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		withValidatorFactory( configurationValues.get( AvailableSettings.VALIDATION_FACTORY ) );
+			// Perform deployment scanning
+			final ScanResult scanResult = scanDeployment( bsr );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// push back class transformation to the environment; for the time being this only has any effect in EE
-		// container situations, calling back into PersistenceUnitInfo#addClassTransformer
-		final boolean useClassTransformer = "true".equals( configurationValues.remove( AvailableSettings.USE_CLASS_ENHANCER ) );
-		if ( useClassTransformer ) {
-			persistenceUnit.pushClassTransformer( localMetadataSources.collectMappingClassNames() );
+			// Build the Metadata object
+			final MetadataSources metadataSources = new MetadataSources( bsr );
+			populate( metadataSources, scanResult, mergedSettings, standardServiceRegistry );
+			final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( standardServiceRegistry );
+			populate( metamodelBuilder, mergedSettings, standardServiceRegistry );
+			this.metadata = (MetadataImplementor) metamodelBuilder.build();
+
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// push back class transformation to the environment; for the time being this only has any effect in EE
+			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
+			final boolean useClassTransformer = "true".equals( configurationValues.remove( AvailableSettings.USE_CLASS_ENHANCER ) );
+			if ( useClassTransformer ) {
+				persistenceUnit.pushClassTransformer( collectNamesOfClassesToEnhance( metadata ) );
+			}
 		}
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (Exception e) {
+			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+		}
+	}
+
+	private SettingsImpl configure(StandardServiceRegistryBuilder ssrBuilder) {
+		final SettingsImpl settings = new SettingsImpl();
+
+		applyJdbcConnectionProperties( ssrBuilder );
+		applyTransactionProperties( ssrBuilder, settings );
+
+		// flush before completion validation
+		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
+			ssrBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
+			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
+		}
+
+		final Object value = configurationValues.get( DISCARD_PC_ON_CLOSE );
+		if ( value != null ) {
+			settings.setReleaseResourcesOnCloseEnabled( "true".equals( value ) );
+		}
+
+		final StrategySelector strategySelector = ssrBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
+		final Object interceptorSetting = configurationValues.remove( AvailableSettings.SESSION_INTERCEPTOR );
+		if ( interceptorSetting != null ) {
+			settings.setSessionInterceptorClass(
+					loadSessionInterceptorClass( interceptorSetting, strategySelector )
+			);
+		}
+
+		return settings;
+	}
+
+	private void applyJdbcConnectionProperties(StandardServiceRegistryBuilder ssrBuilder) {
+		if ( dataSource != null ) {
+			ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, dataSource );
+		}
+		else if ( persistenceUnit.getJtaDataSource() != null ) {
+			if ( ! ssrBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
+				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getJtaDataSource() );
+				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
+				configurationValues.put( AvailableSettings.JTA_DATASOURCE, persistenceUnit.getJtaDataSource() );
+			}
+		}
+		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
+			if ( ! ssrBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
+				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
+				configurationValues.put( AvailableSettings.NON_JTA_DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+			}
+		}
+		else {
+			final String driver = (String) configurationValues.get( AvailableSettings.JDBC_DRIVER );
+			if ( StringHelper.isNotEmpty( driver ) ) {
+				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DRIVER, driver );
+			}
+			final String url = (String) configurationValues.get( AvailableSettings.JDBC_URL );
+			if ( StringHelper.isNotEmpty( url ) ) {
+				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.URL, url );
+			}
+			final String user = (String) configurationValues.get( AvailableSettings.JDBC_USER );
+			if ( StringHelper.isNotEmpty( user ) ) {
+				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.USER, user );
+			}
+			final String pass = (String) configurationValues.get( AvailableSettings.JDBC_PASSWORD );
+			if ( StringHelper.isNotEmpty( pass ) ) {
+				ssrBuilder.applySetting( org.hibernate.cfg.AvailableSettings.PASS, pass );
+			}
+		}
+	}
+
+	private void applyTransactionProperties(StandardServiceRegistryBuilder ssrBuilder, SettingsImpl settings) {
+		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
+				configurationValues.get( AvailableSettings.TRANSACTION_TYPE )
+		);
+		if ( txnType == null ) {
+			txnType = persistenceUnit.getTransactionType();
+		}
+		if ( txnType == null ) {
+			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
+			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		}
+		settings.setTransactionType( txnType );
+		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_STRATEGY );
+		if ( hasTxStrategy ) {
+			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_STRATEGY );
+		}
+		else {
+			if ( txnType == PersistenceUnitTransactionType.JTA ) {
+				ssrBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class );
+			}
+			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
+				ssrBuilder.applySetting( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class );
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private Class<? extends Interceptor> loadSessionInterceptorClass(Object value, StrategySelector strategySelector) {
+		if ( value == null ) {
+			return null;
+		}
+
+		return Class.class.isInstance( value )
+				? (Class<? extends Interceptor>) value
+				: strategySelector.selectStrategyImplementor( Interceptor.class, value.toString() );
+	}
+
+	private List<String> collectNamesOfClassesToEnhance(MetadataImplementor metadata) {
+		final List<String> entityClassNames = new ArrayList<String>();
+		for ( EntityBinding eb : metadata.getEntityBindings() ) {
+			entityClassNames.add( eb.getEntity().getClassName() );
+		}
+		return entityClassNames;
 	}
 
 	/**
@@ -301,337 +408,141 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return bsrBuilder.build();
 	}
 
-	private static interface DeploymentResources {
-		public Iterable<ClassDescriptor> getClassDescriptors();
-		public Iterable<PackageDescriptor> getPackageDescriptors();
-		public Iterable<MappingFileDescriptor> getMappingFileDescriptors();
-	}
-
-	private DeploymentResources buildDeploymentResources(
-			ScanResult scanResult,
-			BootstrapServiceRegistry bootstrapServiceRegistry) {
-
-		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		final ArrayList<MappingFileDescriptor> mappingFileDescriptors = new ArrayList<MappingFileDescriptor>();
-
-		final Set<String> nonLocatedMappingFileNames = new HashSet<String>();
-		final List<String> explicitMappingFileNames = persistenceUnit.getMappingFileNames();
-		if ( explicitMappingFileNames != null ) {
-			nonLocatedMappingFileNames.addAll( explicitMappingFileNames );
-		}
-
-		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-			mappingFileDescriptors.add( mappingFileDescriptor );
-			nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
-		}
-
-		for ( String name : nonLocatedMappingFileNames ) {
-			MappingFileDescriptor descriptor = buildMappingFileDescriptor( name, bootstrapServiceRegistry );
-			mappingFileDescriptors.add( descriptor );
-		}
-
-
-		// classes and packages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		final HashMap<String, ClassDescriptor> classDescriptorMap = new HashMap<String, ClassDescriptor>();
-		final HashMap<String, PackageDescriptor> packageDescriptorMap = new HashMap<String, PackageDescriptor>();
-
-		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
-			classDescriptorMap.put( classDescriptor.getName(), classDescriptor );
-		}
-
-		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
-			packageDescriptorMap.put( packageDescriptor.getName(), packageDescriptor );
-		}
-
-		final List<String> explicitClassNames = persistenceUnit.getManagedClassNames();
-		if ( explicitClassNames != null ) {
-			for ( String explicitClassName : explicitClassNames ) {
-				// IMPL NOTE : explicitClassNames can contain class or package names!!!
-				if ( classDescriptorMap.containsKey( explicitClassName ) ) {
-					continue;
-				}
-				if ( packageDescriptorMap.containsKey( explicitClassName ) ) {
-					continue;
-				}
-
-				// try it as a class name first...
-				final String classFileName = explicitClassName.replace( '.', '/' ) + ".class";
-				final URL classFileUrl = bootstrapServiceRegistry.getService( ClassLoaderService.class )
-						.locateResource( classFileName );
-				if ( classFileUrl != null ) {
-					classDescriptorMap.put(
-							explicitClassName,
-							new ClassDescriptorImpl( explicitClassName, new UrlInputStreamAccess( classFileUrl ) )
-					);
-					continue;
-				}
-
-				// otherwise, try it as a package name
-				final String packageInfoFileName = explicitClassName.replace( '.', '/' ) + "/package-info.class";
-				final URL packageInfoFileUrl = bootstrapServiceRegistry.getService( ClassLoaderService.class )
-						.locateResource( packageInfoFileName );
-				if ( packageInfoFileUrl != null ) {
-					packageDescriptorMap.put(
-							explicitClassName,
-							new PackageDescriptorImpl( explicitClassName, new UrlInputStreamAccess( packageInfoFileUrl ) )
-					);
-					continue;
-				}
-
-				LOG.debugf(
-						"Unable to resolve class [%s] named in persistence unit [%s]",
-						explicitClassName,
-						persistenceUnit.getName()
-				);
-			}
-		}
-
-		return new DeploymentResources() {
-			@Override
-			public Iterable<ClassDescriptor> getClassDescriptors() {
-				return classDescriptorMap.values();
-			}
-
-			@Override
-			public Iterable<PackageDescriptor> getPackageDescriptors() {
-				return packageDescriptorMap.values();
-			}
-
-			@Override
-			public Iterable<MappingFileDescriptor> getMappingFileDescriptors() {
-				return mappingFileDescriptors;
-			}
-		};
-	}
-
-	private MappingFileDescriptor buildMappingFileDescriptor(
-			String name,
-			BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final URL url = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResource( name );
-		if ( url == null ) {
-			throw persistenceException( "Unable to resolve named mapping-file [" + name + "]" );
-		}
-
-		return new MappingFileDescriptorImpl( name, new UrlInputStreamAccess( url ) );
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// temporary!
 	@SuppressWarnings("unchecked")
-	public Map getConfigurationValues() {
-		return Collections.unmodifiableMap( configurationValues );
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-	@SuppressWarnings("unchecked")
-	private LocalMetadataSources prepareMetadataSources(
-			IndexView jandexIndex,
-			DeploymentResources deploymentResources,
-			BootstrapServiceRegistry bsr) {
-		LocalMetadataSources localMetadataSources = new LocalMetadataSources();
-
-		for ( ClassDescriptor classDescriptor : deploymentResources.getClassDescriptors() ) {
-			final String className = classDescriptor.getName();
-			final ClassInfo classInfo = jandexIndex.getClassByName( DotName.createSimple( className ) );
-			if ( classInfo == null ) {
-				// Not really sure what this means.  Most likely it is explicitly listed in the persistence unit,
-				// but mapped via mapping file.  Anyway assume its a mapping class...
-				localMetadataSources.annotatedMappingClassNames.add( className );
-				continue;
-			}
-
-			// logic here assumes an entity is not also a converter...
-			AnnotationInstance converterAnnotation = JandexHelper.getSingleAnnotation(
-					classInfo.annotations(),
-					JPADotNames.CONVERTER
-			);
-			if ( converterAnnotation != null ) {
-				localMetadataSources.converterDescriptors.add(
-						new LocalMetadataSources.ConverterDescriptor(
-								className,
-								JandexHelper.getValue(
-										converterAnnotation, "autoApply", boolean.class,
-										bsr.getService( ClassLoaderService.class )
-								)
-						)
-				);
-			}
-			else {
-				localMetadataSources.annotatedMappingClassNames.add( className );
-			}
-		}
-
-		for ( PackageDescriptor packageDescriptor : deploymentResources.getPackageDescriptors() ) {
-			localMetadataSources.packageNames.add( packageDescriptor.getName() );
-		}
-
-		for ( MappingFileDescriptor mappingFileDescriptor : deploymentResources.getMappingFileDescriptors() ) {
-			localMetadataSources.inputStreamAccessList.add( mappingFileDescriptor.getStreamAccess() );
-		}
-
-		final String explicitHbmXmls = (String) configurationValues.remove( AvailableSettings.HBXML_FILES );
-		if ( explicitHbmXmls != null ) {
-			localMetadataSources.mappingFileResources.addAll( Arrays.asList( StringHelper.split( ", ", explicitHbmXmls ) ) );
-		}
-
-		final List<String> explicitOrmXml = (List<String>) configurationValues.remove( AvailableSettings.XML_FILE_NAMES );
-		if ( explicitOrmXml != null ) {
-			localMetadataSources.mappingFileResources.addAll( explicitOrmXml );
-		}
-
-		return localMetadataSources;
-	}
-
-	private IndexView locateOrBuildJandexIndex(DeploymentResources deploymentResources) {
-		// for now create a whole new Index to work with, eventually we need to:
-		//		1) accept an Index as an incoming config value
-		//		2) pass that Index along to the metamodel code...
-		IndexView jandexIndex = (IndexView) configurationValues.get( JANDEX_INDEX );
-		if ( jandexIndex == null ) {
-			jandexIndex = buildJandexIndex( deploymentResources );
-		}
-		return jandexIndex;
-	}
-
-	private IndexView buildJandexIndex(DeploymentResources deploymentResources) {
-		Indexer indexer = new Indexer();
-
-		boolean addedAny = false;
-
-		for ( ClassDescriptor classDescriptor : deploymentResources.getClassDescriptors() ) {
-			addedAny = true;
-			indexStream( indexer, classDescriptor.getStreamAccess() );
-		}
-
-		for ( PackageDescriptor packageDescriptor : deploymentResources.getPackageDescriptors() ) {
-			addedAny = true;
-			indexStream( indexer, packageDescriptor.getStreamAccess() );
-		}
-
-		// for now we just skip entities defined in (1) orm.xml files and (2) hbm.xml files.  this part really needs
-		// metamodel branch...
-
-		// for now, we also need to wrap this in a CompositeIndex until Jandex is updated to use a common interface
-		// between the 2...
-
-		return addedAny ? indexer.complete() : null;
-	}
-
-	private void indexStream(Indexer indexer, InputStreamAccess streamAccess) {
-		try {
-			InputStream stream = streamAccess.accessInputStream();
-			try {
-				indexer.index( stream );
-			}
-			finally {
-				try {
-					stream.close();
-				}
-				catch (Exception ignore) {
-				}
-			}
-		}
-		catch ( IOException e ) {
-			throw persistenceException( "Unable to index from stream " + streamAccess.getStreamName(), e );
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map mergePropertySources(
+	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
-			final BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final Map merged = new HashMap();
+			final BootstrapServiceRegistry bsr) {
+		final MergedSettings mergedSettings = new MergedSettings(
+				determineJaccContext( integrationSettings, persistenceUnit.getProperties() )
+		);
+
 		// first, apply persistence.xml-defined settings
 		if ( persistenceUnit.getProperties() != null ) {
-			merged.putAll( persistenceUnit.getProperties() );
+			mergedSettings.configurationValues.putAll( persistenceUnit.getProperties() );
 		}
 
-		merged.put( AvailableSettings.PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
+		mergedSettings.configurationValues.put( PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
 
-		// see if the persistence.xml settings named a Hibernate config file....
 		final ValueHolder<ConfigLoader> configLoaderHolder = new ValueHolder<ConfigLoader>(
 				new ValueHolder.DeferredInitializer<ConfigLoader>() {
 					@Override
 					public ConfigLoader initialize() {
-						return new ConfigLoader( bootstrapServiceRegistry );
+						return new ConfigLoader( bsr );
 					}
 				}
 		);
 
-		final String cfgXmlResourceName1 = (String) merged.remove( AvailableSettings.CFG_FILE );
+		// see if the persistence.xml settings named a Hibernate config file....
+		final String cfgXmlResourceName1 = (String) mergedSettings.configurationValues.remove( CFG_FILE );
 		if ( StringHelper.isNotEmpty( cfgXmlResourceName1 ) ) {
-			// it does, so load those properties
-			JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue()
-					.loadConfigXmlResource( cfgXmlResourceName1 );
-			processHibernateConfigurationElement( configurationElement, merged );
+			processConfigXml( configLoaderHolder.getValue(), cfgXmlResourceName1, mergedSettings );
 		}
 
 		// see if integration settings named a Hibernate config file....
-		final String cfgXmlResourceName2 = (String) integrationSettings.get( AvailableSettings.CFG_FILE );
+		final String cfgXmlResourceName2 = (String) integrationSettings.get( CFG_FILE );
 		if ( StringHelper.isNotEmpty( cfgXmlResourceName2 ) ) {
-			integrationSettings.remove( AvailableSettings.CFG_FILE );
-			// it does, so load those properties
-			JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue().loadConfigXmlResource(
-					cfgXmlResourceName2
-			);
-			processHibernateConfigurationElement( configurationElement, merged );
+			integrationSettings.remove( CFG_FILE );
+			processConfigXml( configLoaderHolder.getValue(), cfgXmlResourceName2, mergedSettings );
 		}
 
 		// finally, apply integration-supplied settings (per JPA spec, integration settings should override other sources)
-		merged.putAll( integrationSettings );
+		mergedSettings.configurationValues.putAll( integrationSettings );
 
-		if ( !merged.containsKey( AvailableSettings.VALIDATION_MODE ) ) {
+		if ( !mergedSettings.configurationValues.containsKey( VALIDATION_MODE ) ) {
 			if ( persistenceUnit.getValidationMode() != null ) {
-				merged.put( AvailableSettings.VALIDATION_MODE, persistenceUnit.getValidationMode() );
+				mergedSettings.configurationValues.put( VALIDATION_MODE, persistenceUnit.getValidationMode() );
 			}
 		}
 
-		if ( !merged.containsKey( AvailableSettings.SHARED_CACHE_MODE ) ) {
+		if ( !mergedSettings.configurationValues.containsKey( SHARED_CACHE_MODE ) ) {
 			if ( persistenceUnit.getSharedCacheMode() != null ) {
-				merged.put( AvailableSettings.SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
+				mergedSettings.configurationValues.put( SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 			}
 		}
 
-		// was getting NPE exceptions from the underlying map when just using #putAll, so going this safer route...
-		Iterator itr = merged.entrySet().iterator();
+		// here we are going to iterate the merged config settings looking for:
+		//		1) additional JACC permissions
+		//		2) additional cache region declarations
+		//
+		// we will also clean up an references with null entries
+		Iterator itr = mergedSettings.configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = (Map.Entry) itr.next();
 			if ( entry.getValue() == null ) {
+				// remove entries with null values
 				itr.remove();
+				break;
 			}
+
+			if ( String.class.isInstance( entry.getKey() ) && String.class.isInstance( entry.getValue() ) ) {
+				final String keyString = (String) entry.getKey();
+				final String valueString = (String) entry.getValue();
+
+				if ( keyString.startsWith( JACC_PREFIX ) ) {
+					mergedSettings.getJaccPermissions().addPermissionDeclaration(
+							parseJaccConfigEntry( keyString, valueString )
+					);
+				}
+				else if ( keyString.startsWith( CLASS_CACHE_PREFIX ) ) {
+					mergedSettings.add(
+							parseCacheRegionDefinitionEntry(
+									keyString.substring( CLASS_CACHE_PREFIX.length() + 1 ),
+									valueString,
+									CacheRegionDefinition.CacheRegionType.ENTITY
+							)
+					);
+				}
+				else if ( keyString.startsWith( COLLECTION_CACHE_PREFIX ) ) {
+					mergedSettings.add(
+							parseCacheRegionDefinitionEntry(
+									keyString.substring( COLLECTION_CACHE_PREFIX.length() + 1 ),
+									(String) entry.getValue(),
+									CacheRegionDefinition.CacheRegionType.COLLECTION
+							)
+					);
+				}
+			}
+
 		}
 
-		return merged;
+		return mergedSettings;
+	}
+
+	private JaccPermissionDeclarations determineJaccContext(Map integrationSettings, Properties properties) {
+		String jaccContextId = (String) integrationSettings.get( JACC_CONTEXT_ID );
+		if ( jaccContextId == null && properties != null ) {
+			jaccContextId = properties.getProperty( JACC_CONTEXT_ID );
+		}
+
+ 		return new JaccPermissionDeclarations( jaccContextId );
 	}
 
 	@SuppressWarnings("unchecked")
-	private void processHibernateConfigurationElement(
-			JaxbHibernateConfiguration configurationElement,
-			Map mergeMap) {
-		if ( ! mergeMap.containsKey( org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME ) ) {
-			String cfgName = configurationElement.getSessionFactory().getName();
-			if ( cfgName != null ) {
-				mergeMap.put( org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME, cfgName );
+	private void processConfigXml(ConfigLoader configLoader, String cfgXmlResourceName, MergedSettings mergedSettings) {
+		JaxbHibernateConfiguration configurationElement = configLoader.loadConfigXmlResource( cfgXmlResourceName );
+
+		if ( ! mergedSettings.configurationValues.containsKey( SESSION_FACTORY_NAME ) ) {
+			// there is not already a SF-name in the merged settings
+			final String sfName = configurationElement.getSessionFactory().getName();
+			if ( sfName != null ) {
+				// but the cfg.xml file we are processing named one..
+				mergedSettings.configurationValues.put( SESSION_FACTORY_NAME, sfName );
 			}
 		}
 
 		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty jaxbProperty : configurationElement.getSessionFactory().getProperty() ) {
-			mergeMap.put( jaxbProperty.getName(), jaxbProperty.getValue() );
+			mergedSettings.configurationValues.put( jaxbProperty.getName(), jaxbProperty.getValue() );
 		}
 
-		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping jaxbMapping : configurationElement.getSessionFactory().getMapping() ) {
-			cfgXmlNamedMappings.add( jaxbMapping );
+		for ( JaxbMapping jaxbMapping : configurationElement.getSessionFactory().getMapping() ) {
+			mergedSettings.add( jaxbMapping );
 		}
 
 		for ( Object cacheDeclaration : configurationElement.getSessionFactory().getClassCacheOrCollectionCache() ) {
-			if ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache.class.isInstance( cacheDeclaration ) ) {
-				final JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache jaxbClassCache
-						= (JaxbHibernateConfiguration.JaxbSessionFactory.JaxbClassCache) cacheDeclaration;
-				localCacheRegionDefinitions.add(
+			if ( JaxbClassCache.class.isInstance( cacheDeclaration ) ) {
+				final JaxbClassCache jaxbClassCache = (JaxbClassCache) cacheDeclaration;
+				mergedSettings.add(
 						new CacheRegionDefinition(
 								CacheRegionDefinition.CacheRegionType.ENTITY,
 								jaxbClassCache.getClazz(),
@@ -642,9 +553,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				);
 			}
 			else {
-				final JaxbHibernateConfiguration.JaxbSessionFactory.JaxbCollectionCache jaxbCollectionCache
-						= (JaxbHibernateConfiguration.JaxbSessionFactory.JaxbCollectionCache) cacheDeclaration;
-				localCacheRegionDefinitions.add(
+				final JaxbCollectionCache jaxbCollectionCache = (JaxbCollectionCache) cacheDeclaration;
+				mergedSettings.add(
 						new CacheRegionDefinition(
 								CacheRegionDefinition.CacheRegionType.COLLECTION,
 								jaxbCollectionCache.getCollection(),
@@ -657,8 +567,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( configurationElement.getSecurity() != null ) {
-			for ( JaxbHibernateConfiguration.JaxbSecurity.JaxbGrant grant : configurationElement.getSecurity().getGrant() ) {
-				grantedJaccPermissions.add(
+			for ( JaxbGrant grant : configurationElement.getSecurity().getGrant() ) {
+				mergedSettings.getJaccPermissions().addPermissionDeclaration(
 						new GrantedPermission(
 								grant.getRole(),
 								grant.getEntityName(),
@@ -669,45 +579,32 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private String jaccContextId;
-
-	private void addJaccDefinition(String key, Object value) {
-		if ( jaccContextId == null ) {
-			jaccContextId = (String) configurationValues.get( AvailableSettings.JACC_CONTEXT_ID );
-			if ( jaccContextId == null ) {
-				throw persistenceException(
-						"Entities have been configured for JACC, but "
-								+ AvailableSettings.JACC_CONTEXT_ID + " has not been set"
-				);
-			}
-		}
-
+	private GrantedPermission parseJaccConfigEntry(String keyString, String valueString) {
 		try {
-			final int roleStart = AvailableSettings.JACC_PREFIX.length() + 1;
-			final String role = key.substring( roleStart, key.indexOf( '.', roleStart ) );
+			final int roleStart = JACC_PREFIX.length() + 1;
+			final String role = keyString.substring( roleStart, keyString.indexOf( '.', roleStart ) );
 			final int classStart = roleStart + role.length() + 1;
-			final String clazz = key.substring( classStart, key.length() );
-
-			grantedJaccPermissions.add( new GrantedPermission( role, clazz, (String) value ) );
+			final String clazz = keyString.substring( classStart, keyString.length() );
+			return new GrantedPermission( role, clazz, valueString );
 		}
 		catch ( IndexOutOfBoundsException e ) {
-			throw persistenceException( "Illegal usage of " + AvailableSettings.JACC_PREFIX + ": " + key );
+			throw persistenceException( "Illegal usage of " + JACC_PREFIX + ": " + keyString );
 		}
 	}
 
-	private void addCacheRegionDefinition(String role, String value, CacheRegionDefinition.CacheRegionType cacheType) {
+	private CacheRegionDefinition parseCacheRegionDefinitionEntry(String role, String value, CacheRegionDefinition.CacheRegionType cacheType) {
 		final StringTokenizer params = new StringTokenizer( value, ";, " );
 		if ( !params.hasMoreTokens() ) {
 			StringBuilder error = new StringBuilder( "Illegal usage of " );
 			if ( cacheType == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-				error.append( AvailableSettings.CLASS_CACHE_PREFIX )
+				error.append( CLASS_CACHE_PREFIX )
 						.append( ": " )
-						.append( AvailableSettings.CLASS_CACHE_PREFIX );
+						.append( CLASS_CACHE_PREFIX );
 			}
 			else {
-				error.append( AvailableSettings.COLLECTION_CACHE_PREFIX )
+				error.append( COLLECTION_CACHE_PREFIX )
 						.append( ": " )
-						.append( AvailableSettings.COLLECTION_CACHE_PREFIX );
+						.append( COLLECTION_CACHE_PREFIX );
 			}
 			error.append( '.' )
 					.append( role )
@@ -732,23 +629,51 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			lazyProperty = false;
 		}
 
-		final CacheRegionDefinition def = new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
-		localCacheRegionDefinitions.add( def );
+		return new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
+	}
+
+	private void configure(StandardServiceRegistry ssr, MergedSettings mergedSettings) {
+		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
+
+		// apply any JACC permissions
+		final JaccService jaccService = ssr.getService( JaccService.class );
+		if ( jaccService == null ) {
+			// JACC not enabled
+			if ( !mergedSettings.getJaccPermissions().getPermissionDeclarations().isEmpty() ) {
+				LOG.debug( "JACC Service not enabled, but JACC permissions specified" );
+			}
+		}
+		else {
+			for ( GrantedPermission grantedPermission : mergedSettings.getJaccPermissions().getPermissionDeclarations() ) {
+				jaccService.addPermission( grantedPermission );
+			}
+		}
+
+
+		// apply id generators
+		final Object idGeneratorStrategyProviderSetting = configurationValues.remove( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
+		if ( idGeneratorStrategyProviderSetting != null ) {
+			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
+					strategySelector.resolveStrategy( IdentifierGeneratorStrategyProvider.class, idGeneratorStrategyProviderSetting );
+			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( MutableIdentifierGeneratorFactory.class );
+			if ( identifierGeneratorFactory == null ) {
+				throw persistenceException(
+						"Application requested custom identifier generator strategies, " +
+								"but the MutableIdentifierGeneratorFactory could not be found"
+				);
+			}
+			for ( Map.Entry<String,Class<?>> entry : idGeneratorStrategyProvider.getStrategies().entrySet() ) {
+				identifierGeneratorFactory.register( entry.getKey(), entry.getValue() );
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private ScanResult scan(BootstrapServiceRegistry bootstrapServiceRegistry) {
+	private ScanResult scanDeployment(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		final Scanner scanner = locateOrBuildScanner( bootstrapServiceRegistry );
 		final ScanOptions scanOptions = determineScanOptions();
 
 		return scanner.scan( persistenceUnit, scanOptions );
-	}
-
-	private ScanOptions determineScanOptions() {
-		return new StandardScanOptions(
-				(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
-				persistenceUnit.isExcludeUnlistedClasses()
-		);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -789,6 +714,173 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
+	private ScanOptions determineScanOptions() {
+		return new StandardScanOptions(
+				(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
+				persistenceUnit.isExcludeUnlistedClasses()
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void populate(
+			MetadataSources metadataSources,
+			ScanResult scanResult,
+			MergedSettings mergedSettings,
+			StandardServiceRegistry ssr) {
+		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
+
+		// todo : make MetadataSources/Metadata capable of handling duplicates
+
+		// explicit persistence unit mapping files listings
+		if ( persistenceUnit.getMappingFileNames() != null ) {
+			for ( String name : persistenceUnit.getMappingFileNames() ) {
+				metadataSources.addResource( name );
+			}
+		}
+
+		// explicit persistence unit managed class listings
+		//		IMPL NOTE : managed-classes can contain class or package names!!!
+		if ( persistenceUnit.getManagedClassNames() != null ) {
+			for ( String managedClassName : persistenceUnit.getManagedClassNames() ) {
+				// try it as a class name first...
+				final String classFileName = managedClassName.replace( '.', '/' ) + ".class";
+				final URL classFileUrl = classLoaderService.locateResource( classFileName );
+				if ( classFileUrl != null ) {
+					// it is a class
+					metadataSources.addAnnotatedClassName( managedClassName );
+					continue;
+				}
+
+				// otherwise, try it as a package name
+				final String packageInfoFileName = managedClassName.replace( '.', '/' ) + "/package-info.class";
+				final URL packageInfoFileUrl = classLoaderService.locateResource( packageInfoFileName );
+				if ( packageInfoFileUrl != null ) {
+					// it is a package
+					metadataSources.addPackage( managedClassName );
+					continue;
+				}
+
+				LOG.debugf(
+						"Unable to resolve class [%s] named in persistence unit [%s]",
+						managedClassName,
+						persistenceUnit.getName()
+				);
+			}
+		}
+
+		// add metadata sources explicitly listed in a cfg.xml file referenced by the application
+		if ( mergedSettings.cfgXmlNamedMappings != null ) {
+			for ( JaxbMapping jaxbMapping : mergedSettings.cfgXmlNamedMappings ) {
+				if ( jaxbMapping.getClazz() != null ) {
+					metadataSources.addAnnotatedClassName( jaxbMapping.getClazz() );
+				}
+				else if ( jaxbMapping.getResource() != null ) {
+					metadataSources.addResource( jaxbMapping.getResource() );
+				}
+				else if ( jaxbMapping.getJar() != null ) {
+					metadataSources.addJar( new File( jaxbMapping.getJar() ) );
+				}
+				else if ( jaxbMapping.getPackage() != null ) {
+					metadataSources.addPackage( jaxbMapping.getPackage() );
+				}
+			}
+		}
+
+		// add any explicit Class references passed in
+		final List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
+		if ( loadedAnnotatedClasses != null ) {
+			for ( Class cls : loadedAnnotatedClasses ) {
+				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
+					metadataSources.addAttributeConverter( (Class<? extends AttributeConverter>) cls );
+				}
+				else {
+					metadataSources.addAnnotatedClass( cls );
+				}
+			}
+		}
+
+		// add any explicit hbm.xml references passed in
+		final String explicitHbmXmls = (String) configurationValues.remove( AvailableSettings.HBXML_FILES );
+		if ( explicitHbmXmls != null ) {
+			for ( String hbmXml : StringHelper.split( ", ", explicitHbmXmls ) ) {
+				metadataSources.addResource( hbmXml );
+			}
+		}
+
+		// add any explicit orm.xml references passed in
+		final List<String> explicitOrmXmlList = (List<String>) configurationValues.remove( AvailableSettings.XML_FILE_NAMES );
+		if ( explicitOrmXmlList != null ) {
+			for ( String ormXml : explicitOrmXmlList ) {
+				metadataSources.addResource( ormXml );
+			}
+		}
+
+		// Add mapping files found as a result of scanning
+		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
+			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
+			try {
+				metadataSources.addInputStream( stream );
+			}
+			finally {
+				try {
+					stream.close();
+				}
+				catch ( IOException ignore ) {
+					LOG.trace( "Was unable to close input stream" );
+				}
+			}
+		}
+
+		// Add packages found as a result of scanning
+		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
+			metadataSources.addPackage( packageDescriptor.getName() );
+		}
+
+		// Add classes found as a result of scanning
+		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
+			metadataSources.addAnnotatedClassName( classDescriptor.getName() );
+		}
+	}
+
+	private void populate(MetadataBuilder metamodelBuilder, MergedSettings mergedSettings, StandardServiceRegistry ssr) {
+		if ( mergedSettings.cacheRegionDefinitions != null ) {
+			for ( CacheRegionDefinition localCacheRegionDefinition : mergedSettings.cacheRegionDefinitions ) {
+				metamodelBuilder.with( localCacheRegionDefinition );
+			}
+		}
+
+		final Object namingStrategySetting = configurationValues.remove( AvailableSettings.NAMING_STRATEGY );
+		if ( namingStrategySetting != null ) {
+			final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
+			metamodelBuilder.with( strategySelector.resolveStrategy( NamingStrategy.class, namingStrategySetting ) );
+		}
+
+		final TypeContributorList typeContributorList = (TypeContributorList) configurationValues.remove(
+				TYPE_CONTRIBUTORS
+		);
+		if ( typeContributorList != null ) {
+			for ( TypeContributor typeContributor : typeContributorList.getTypeContributors() ) {
+				metamodelBuilder.with( typeContributor );
+			}
+		}
+
+		IndexView jandexIndex = (IndexView) configurationValues.remove( JANDEX_INDEX );
+		if ( jandexIndex != null ) {
+			metamodelBuilder.with( jandexIndex );
+		}
+	}
+
+	/**
+	 * Completely and utterly not supported :)  Here for use by tests
+	 */
+	public Map getConfigurationValues() {
+		return configurationValues;
+	}
+
+
+
+	// Phase 2 concerns ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	@Override
 	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
 		this.validatorFactory = validatorFactory;
@@ -808,36 +900,27 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@Override
 	public void cancel() {
-		// todo : close the bootstrap registry (not critical, but nice to do)
+		if ( standardServiceRegistry != null ) {
+			StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+		}
 
 	}
 
 	@Override
 	public void generateSchema() {
-		processProperties();
-
-		final StandardServiceRegistry ssr = serviceRegistryBuilder.build();
-
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		populate( metadataSources, ssr );
-
-		final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( ssr );
-		populate( metamodelBuilder, ssr );
-
-		final MetadataImplementor metadata = (MetadataImplementor) metamodelBuilder.build();
-
 		// This seems overkill, but building the SF is necessary to get the Integrators to kick in.
 		// Metamodel will clean this up...
 		try {
 			SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
-			populate( sfBuilder, ssr );
+			populate( sfBuilder, standardServiceRegistry );
 			sfBuilder.build();
+
+			JpaSchemaGenerator.performGeneration( metadata, configurationValues, standardServiceRegistry );
 		}
-		catch (MappingException e) {
+		catch (Exception e) {
 			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
 		}
 
-		JpaSchemaGenerator.performGeneration( metadata, configurationValues, ssr );
 
 		// release this builder
 		cancel();
@@ -845,27 +928,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	public EntityManagerFactory build() {
-		processProperties();
-
-		final StandardServiceRegistry ssr = serviceRegistryBuilder.build();
-		configure( ssr );
-
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		populate( metadataSources, ssr );
-
-		final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( ssr );
-		populate( metamodelBuilder, ssr );
-
-		final Metadata metadata = metamodelBuilder.build();
-
 		SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
-		populate( sfBuilder, ssr );
+		populate( sfBuilder, standardServiceRegistry );
 
 		SessionFactoryImplementor sessionFactory;
 		try {
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) sfBuilder.build();
 		}
-		catch (MappingException e) {
+		catch (Exception e) {
 			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
 		}
 
@@ -876,177 +946,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				settings,
 				configurationValues
 		);
-	}
-
-	private void configure(StandardServiceRegistry ssr) {
-		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
-
-		// apply any JACC permissions
-		final JaccService jaccService = ssr.getService( JaccService.class );
-		if ( jaccService == null ) {
-			// JACC not enabled
-			if ( !grantedJaccPermissions.isEmpty() ) {
-				// todo : warn?
-				LOG.debugf( "JACC Service not enabled, but JACC permissions specified" );
-			}
-		}
-		else {
-			for ( GrantedPermission grantedPermission : grantedJaccPermissions ) {
-				jaccService.addPermission( grantedPermission );
-			}
-		}
-
-
-		// apply id generators
-		final Object idGeneratorStrategyProviderSetting = configurationValues.remove( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
-		if ( idGeneratorStrategyProviderSetting != null ) {
-			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
-					strategySelector.resolveStrategy( IdentifierGeneratorStrategyProvider.class, idGeneratorStrategyProviderSetting );
-			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( MutableIdentifierGeneratorFactory.class );
-			if ( identifierGeneratorFactory == null ) {
-				throw persistenceException(
-						"Application requested custom identifier generator strategies, " +
-								"but the MutableIdentifierGeneratorFactory could not be found"
-				);
-			}
-			for ( Map.Entry<String,Class<?>> entry : idGeneratorStrategyProvider.getStrategies().entrySet() ) {
-				identifierGeneratorFactory.register( entry.getKey(), entry.getValue() );
-			}
-		}
-	}
-
-	private void populate(MetadataSources metadataSources, StandardServiceRegistry ssr) {
-		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
-
-		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping jaxbMapping : cfgXmlNamedMappings ) {
-			if ( jaxbMapping.getClazz() != null ) {
-				metadataSources.addAnnotatedClassName( jaxbMapping.getClazz() );
-			}
-			else if ( jaxbMapping.getResource() != null ) {
-				metadataSources.addResource( jaxbMapping.getResource() );
-			}
-			else if ( jaxbMapping.getJar() != null ) {
-				metadataSources.addJar( new File( jaxbMapping.getJar() ) );
-			}
-			else if ( jaxbMapping.getPackage() != null ) {
-				metadataSources.addPackage( jaxbMapping.getPackage() );
-			}
-		}
-
-		List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
-		if ( loadedAnnotatedClasses != null ) {
-			for ( Class cls : loadedAnnotatedClasses ) {
-				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
-					metadataSources.addAttributeConverter( (Class<? extends AttributeConverter>) cls );
-				}
-				else {
-					metadataSources.addAnnotatedClass( cls );
-				}
-			}
-		}
-
-		for ( String className : localMetadataSources.getAnnotatedMappingClassNames() ) {
-			metadataSources.addAnnotatedClassName( className );
-		}
-
-		for ( LocalMetadataSources.ConverterDescriptor converterDescriptor : localMetadataSources.getConverterDescriptors() ) {
-			try {
-				Class theClass = classLoaderService.classForName( converterDescriptor.converterClassName );
-				metadataSources.addAttributeConverter(
-						(Class<? extends AttributeConverter>) theClass,
-						converterDescriptor.autoApply
-				);
-			}
-			catch (ClassCastException e) {
-				throw persistenceException(
-						String.format(
-								"AttributeConverter implementation [%s] does not implement AttributeConverter interface",
-								converterDescriptor.converterClassName
-						)
-				);
-			}
-		}
-
-		for ( String resourceName : localMetadataSources.mappingFileResources ) {
-			Boolean useMetaInf = null;
-			try {
-				if ( resourceName.endsWith( META_INF_ORM_XML ) ) {
-					useMetaInf = true;
-				}
-				metadataSources.addResource( resourceName );
-			}
-			catch( MappingNotFoundException e ) {
-				if ( ! resourceName.endsWith( META_INF_ORM_XML ) ) {
-					throw persistenceException( "Unable to find XML mapping file in classpath: " + resourceName );
-				}
-				else {
-					useMetaInf = false;
-					//swallow it, the META-INF/orm.xml is optional
-				}
-			}
-			catch( MappingException me ) {
-				throw persistenceException( "Error while reading JPA XML file: " + resourceName, me );
-			}
-
-			if ( Boolean.TRUE.equals( useMetaInf ) ) {
-				LOG.exceptionHeaderFound( getExceptionHeader(), META_INF_ORM_XML );
-			}
-			else if (Boolean.FALSE.equals(useMetaInf)) {
-				LOG.exceptionHeaderNotFound( getExceptionHeader(), META_INF_ORM_XML );
-			}
-		}
-
-		for ( InputStreamAccess inputStreamAccess : localMetadataSources.inputStreamAccessList ) {
-			try {
-				//addInputStream has the responsibility to close the stream
-				metadataSources.addInputStream( new BufferedInputStream( inputStreamAccess.accessInputStream() ) );
-			}
-			catch ( InvalidMappingException e ) {
-				throw persistenceException(
-						String.format(
-								"Error parsing mapping from stream : %s - %s ",
-								inputStreamAccess.getStreamName(),
-								e.getOrigin().getName()
-						)
-				);
-			}
-			catch (MappingException e) {
-				throw persistenceException(
-						String.format(
-								"Error parsing mapping from stream : %s - %s ",
-								inputStreamAccess.getStreamName(),
-								e.getOrigin().getName()
-						)
-				);
-			}
-		}
-
-		for ( String packageName : localMetadataSources.packageNames ) {
-			metadataSources.addPackage( packageName );
-		}
-	}
-
-	private void populate(MetadataBuilder metamodelBuilder, StandardServiceRegistry ssr) {
-		for ( CacheRegionDefinition localCacheRegionDefinition : localCacheRegionDefinitions ) {
-			metamodelBuilder.with( localCacheRegionDefinition );
-		}
-
-		final Object namingStrategySetting = configurationValues.remove( AvailableSettings.NAMING_STRATEGY );
-		if ( namingStrategySetting != null ) {
-			final StrategySelector strategySelector = serviceRegistryBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
-			metamodelBuilder.with( strategySelector.resolveStrategy( NamingStrategy.class, namingStrategySetting ) );
-		}
-
-		final TypeContributorList typeContributorList = (TypeContributorList) configurationValues.remove(
-				TYPE_CONTRIBUTORS
-		);
-		if ( typeContributorList != null ) {
-			for ( TypeContributor typeContributor : typeContributorList.getTypeContributors() ) {
-				metamodelBuilder.with( typeContributor );
-			}
-		}
-
-		metamodelBuilder.with( jandexIndex );
 	}
 
 	private void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
@@ -1070,144 +969,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		sfBuilder.add( new ServiceRegistryCloser() );
 
-		sfBuilder.with( jpaEntityNotFoundDelegate );
-	}
+		sfBuilder.with( JpaEntityNotFoundDelegate.INSTANCE );
 
-	private void processProperties() {
-		applyJdbcConnectionProperties();
-		applyTransactionProperties();
-
-		Object validationFactory = this.validatorFactory;
-		if ( validationFactory == null ) {
-			validationFactory = configurationValues.get( AvailableSettings.VALIDATION_FACTORY );
+		if ( this.validatorFactory != null ) {
+			sfBuilder.withValidatorFactory( validatorFactory );
 		}
-		if ( validationFactory != null ) {
-			BeanValidationIntegrator.validateFactory( validationFactory );
-			serviceRegistryBuilder.applySetting( AvailableSettings.VALIDATION_FACTORY, validationFactory );
-			configurationValues.put( AvailableSettings.VALIDATION_FACTORY, this.validatorFactory );
+		if ( this.cdiBeanManager != null ) {
+			sfBuilder.withBeanManager( cdiBeanManager );
 		}
-
-		// flush before completion validation
-		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
-			serviceRegistryBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
-		}
-
-		final StrategySelector strategySelector = serviceRegistryBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
-
-		for ( Object oEntry : configurationValues.entrySet() ) {
-			Map.Entry entry = (Map.Entry) oEntry;
-			if ( entry.getKey() instanceof String ) {
-				final String keyString = (String) entry.getKey();
-
-				if ( AvailableSettings.SESSION_INTERCEPTOR.equals( keyString ) ) {
-					settings.setSessionInterceptorClass(
-							loadSessionInterceptorClass( entry.getValue(), strategySelector )
-					);
-				}
-				else if ( AvailableSettings.DISCARD_PC_ON_CLOSE.equals( keyString ) ) {
-					settings.setReleaseResourcesOnCloseEnabled( "true".equals( entry.getValue() ) );
-				}
-				else if ( keyString.startsWith( AvailableSettings.CLASS_CACHE_PREFIX ) ) {
-					addCacheRegionDefinition(
-							keyString.substring( AvailableSettings.CLASS_CACHE_PREFIX.length() + 1 ),
-							(String) entry.getValue(),
-							CacheRegionDefinition.CacheRegionType.ENTITY
-					);
-				}
-				else if ( keyString.startsWith( AvailableSettings.COLLECTION_CACHE_PREFIX ) ) {
-					addCacheRegionDefinition(
-							keyString.substring( AvailableSettings.COLLECTION_CACHE_PREFIX.length() + 1 ),
-							(String) entry.getValue(),
-							CacheRegionDefinition.CacheRegionType.COLLECTION
-					);
-				}
-				else if ( keyString.startsWith( AvailableSettings.JACC_PREFIX )
-						&& ! ( keyString.equals( AvailableSettings.JACC_CONTEXT_ID )
-						|| keyString.equals( AvailableSettings.JACC_ENABLED ) ) ) {
-					addJaccDefinition( (String) entry.getKey(), entry.getValue() );
-				}
-			}
-		}
-	}
-
-	private void applyJdbcConnectionProperties() {
-		if ( dataSource != null ) {
-			serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, dataSource );
-		}
-		else if ( persistenceUnit.getJtaDataSource() != null ) {
-			if ( ! serviceRegistryBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getJtaDataSource() );
-				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
-				configurationValues.put( AvailableSettings.JTA_DATASOURCE, persistenceUnit.getJtaDataSource() );
-			}
-		}
-		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
-			if ( ! serviceRegistryBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
-				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
-				configurationValues.put( AvailableSettings.NON_JTA_DATASOURCE, persistenceUnit.getNonJtaDataSource() );
-			}
-		}
-		else {
-			final String driver = (String) configurationValues.get( AvailableSettings.JDBC_DRIVER );
-			if ( StringHelper.isNotEmpty( driver ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DRIVER, driver );
-			}
-			final String url = (String) configurationValues.get( AvailableSettings.JDBC_URL );
-			if ( StringHelper.isNotEmpty( url ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.URL, url );
-			}
-			final String user = (String) configurationValues.get( AvailableSettings.JDBC_USER );
-			if ( StringHelper.isNotEmpty( user ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.USER, user );
-			}
-			final String pass = (String) configurationValues.get( AvailableSettings.JDBC_PASSWORD );
-			if ( StringHelper.isNotEmpty( pass ) ) {
-				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.PASS, pass );
-			}
-		}
-	}
-
-	private void applyTransactionProperties() {
-		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
-				configurationValues.get( AvailableSettings.TRANSACTION_TYPE )
-		);
-		if ( txnType == null ) {
-			txnType = persistenceUnit.getTransactionType();
-		}
-		if ( txnType == null ) {
-			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
-		}
-		settings.setTransactionType( txnType );
-		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_STRATEGY );
-		if ( hasTxStrategy ) {
-			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_STRATEGY );
-		}
-		else {
-			if ( txnType == PersistenceUnitTransactionType.JTA ) {
-				serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class );
-			}
-			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class );
-			}
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Class<? extends Interceptor> loadSessionInterceptorClass(Object value, StrategySelector strategySelector) {
-		if ( value == null ) {
-			return null;
-		}
-
-		return Class.class.isInstance( value )
-				? (Class<? extends Interceptor>) value
-				: strategySelector.selectStrategyImplementor( Interceptor.class, value.toString() );
-	}
-
-	public ServiceRegistry buildServiceRegistry() {
-		return serviceRegistryBuilder.build();
 	}
 
 	private PersistenceException persistenceException(String message) {
@@ -1242,35 +1011,39 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	public static class LocalMetadataSources {
-		private final List<String> annotatedMappingClassNames = new ArrayList<String>();
-		private final List<ConverterDescriptor> converterDescriptors = new ArrayList<ConverterDescriptor>();
-		private final List<InputStreamAccess> inputStreamAccessList = new ArrayList<InputStreamAccess>();
-		private final List<String> mappingFileResources = new ArrayList<String>();
-		private final List<String> packageNames = new ArrayList<String>();
+	public static class MergedSettings {
+		private final JaccPermissionDeclarations jaccPermissions;
 
-		public List<String> getAnnotatedMappingClassNames() {
-			return annotatedMappingClassNames;
+		private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
+
+		private List<CacheRegionDefinition> cacheRegionDefinitions;
+		private List<JaxbMapping> cfgXmlNamedMappings;
+
+		public MergedSettings(JaccPermissionDeclarations jaccPermissions) {
+			this.jaccPermissions = jaccPermissions;
 		}
 
-		public List<ConverterDescriptor> getConverterDescriptors() {
-			return converterDescriptors;
+		public Map getConfigurationValues() {
+			return configurationValues;
 		}
 
-		public List<String> collectMappingClassNames() {
-			// todo : the complete answer to this involves looking through the mapping files as well.
-			// 		Really need the metamodel branch code to do that properly
-			return annotatedMappingClassNames;
+		public JaccPermissionDeclarations getJaccPermissions() {
+			return jaccPermissions;
 		}
 
-		public static class ConverterDescriptor {
-			private final String converterClassName;
-			private final boolean autoApply;
-
-			public ConverterDescriptor(String converterClassName, boolean autoApply) {
-				this.converterClassName = converterClassName;
-				this.autoApply = autoApply;
+		public void add(CacheRegionDefinition cacheRegionDefinition) {
+			if ( cacheRegionDefinitions == null ) {
+				cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 			}
+			cacheRegionDefinitions.add( cacheRegionDefinition );
+		}
+
+		public void add(JaxbMapping jaxbMapping) {
+			if ( cfgXmlNamedMappings == null ) {
+				cfgXmlNamedMappings =  new ArrayList<JaxbMapping>();
+			}
+			cfgXmlNamedMappings.add( jaxbMapping );
 		}
 	}
+
 }

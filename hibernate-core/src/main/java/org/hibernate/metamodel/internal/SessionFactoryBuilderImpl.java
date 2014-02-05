@@ -47,9 +47,11 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.StandardEntityNotFoundDelegate;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -102,8 +104,20 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	}
 
 	@Override
-	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass){
+	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
 		this.options.settings.getEntityTuplizerFactory().registerDefaultTuplizerClass( entityMode, tuplizerClass );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder withValidatorFactory(Object validatorFactory) {
+		this.options.validatorFactoryReference = validatorFactory;
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder withBeanManager(Object beanManager) {
+		this.options.beanManagerReference = beanManager;
 		return this;
 	}
 
@@ -122,6 +136,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		private List<EntityNameResolver> entityNameResolvers = new ArrayList<EntityNameResolver>();
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 		private Settings settings;
+		public Object beanManagerReference;
+		public Object validatorFactoryReference;
 
 		public SessionFactoryOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -136,12 +152,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 					EmptyInterceptor.INSTANCE
 			);
 
-			// TODO: should there be a DefaultEntityNotFoundDelegate.INSTANCE?
-			this.entityNotFoundDelegate = new EntityNotFoundDelegate() {
-				public void handleEntityNotFound(String entityName, Serializable id) {
-					throw new ObjectNotFoundException( id, entityName );
-				}
-			};
+			this.entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 
 			this.customEntityDirtinessStrategy = strategySelector.resolveDefaultableStrategy(
 					CustomEntityDirtinessStrategy.class,
@@ -153,6 +164,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 					CurrentTenantIdentifierResolver.class,
 					configurationSettings.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
+
+			this.beanManagerReference = configurationSettings.get( "javax.persistence.bean.manager" );
+			this.validatorFactoryReference = configurationSettings.get( "javax.persistence.validation.factory" );
+
 			Properties properties = new Properties();
 			properties.putAll( configurationSettings );
 			this.settings = new SettingsFactory().buildSettings( properties, serviceRegistry );
@@ -196,6 +211,16 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		@Override
 		public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 			return entityNotFoundDelegate;
+		}
+
+		@Override
+		public Object getBeanManagerReference() {
+			return beanManagerReference;
+		}
+
+		@Override
+		public Object getValidatorFactoryReference() {
+			return validatorFactoryReference;
 		}
 	}
 

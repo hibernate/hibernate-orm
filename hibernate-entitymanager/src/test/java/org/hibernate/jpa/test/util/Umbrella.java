@@ -1,6 +1,7 @@
 package org.hibernate.jpa.test.util;
 import java.io.Serializable;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
@@ -31,6 +32,7 @@ public class Umbrella {
 		this.size = size;
 	}
 
+	@Embeddable
 	public static class PK implements Serializable {
 		private String model;
 		private String brand;

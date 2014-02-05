@@ -45,7 +45,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import org.junit.Test;
 
@@ -57,7 +59,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-8842" )
-public class BasicJodaTimeConversionTest {
+public class BasicJodaTimeConversionTest extends BaseUnitTestCase {
 	static int callsToConverter = 0;
 
 	public static class JodaLocalDateConverter implements AttributeConverter<LocalDate, Date> {
@@ -89,6 +91,7 @@ public class BasicJodaTimeConversionTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testSimpleConvertUsage() throws MalformedURLException {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

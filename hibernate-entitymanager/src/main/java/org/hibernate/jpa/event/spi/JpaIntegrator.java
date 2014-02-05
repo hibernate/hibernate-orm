@@ -25,7 +25,6 @@ package org.hibernate.jpa.event.spi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -59,12 +58,10 @@ import org.hibernate.jpa.event.internal.jpa.CallbackProcessor;
 import org.hibernate.jpa.event.internal.jpa.CallbackProcessorImpl;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
-import org.hibernate.jpa.event.internal.jpa.LegacyCallbackProcessor;
 import org.hibernate.jpa.event.internal.jpa.StandardListenerFactory;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -242,7 +239,7 @@ public class JpaIntegrator implements Integrator {
 		// handle JPA "entity listener classes"...
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		final Object beanManagerRef = sessionFactory.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
+		final Object beanManagerRef = sessionFactory.getSessionFactoryOptions().getBeanManagerReference();
 		this.jpaListenerFactory = beanManagerRef == null
 				? new StandardListenerFactory()
 				: buildBeanManagerListenerFactory( beanManagerRef );

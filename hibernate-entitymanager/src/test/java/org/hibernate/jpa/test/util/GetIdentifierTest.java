@@ -118,6 +118,7 @@ public class GetIdentifierTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[] {
 				Book.class,
 				Umbrella.class,
+				Umbrella.PK.class,
 				Sickness.class,
 				Author.class,
 				Article.class

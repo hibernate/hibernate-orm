@@ -43,7 +43,7 @@ import org.hibernate.testing.TestForIssue;
 public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] { Client.class };
+		return new Class[] { Client.class, Name.class };
 	}
 
 	@Test

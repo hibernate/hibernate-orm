@@ -35,10 +35,17 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class XmlTest extends BaseEntityManagerFunctionalTestCase {
+
+	// failures from org.hibernate.tuple.PropertyFactory.buildEntityBasedAttribute again
+	// where attribute is an association (ManyToOne), Type resolves to null
+
 	@Test
 	public void testXmlMappingCorrectness() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

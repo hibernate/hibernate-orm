@@ -111,12 +111,12 @@ public class OrmVersionTest {
 			return mappingFileNames;
 		}
 
-		private final List<String> managedClassNames = new ArrayList<String>();
-
 		private PersistenceUnitInfoImpl addMappingFileName(String mappingFileName) {
 			mappingFileNames.add( mappingFileName );
 			return this;
 		}
+
+		private final List<String> managedClassNames = new ArrayList<String>();
 
 		public List<String> getManagedClassNames() {
 			return managedClassNames;

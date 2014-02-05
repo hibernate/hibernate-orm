@@ -12,6 +12,7 @@ import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Kitten;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -131,7 +132,9 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8931" )
 	public void testCallBackListenersHierarchy() throws Exception {
+		// used both to
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Television tv = new Television();

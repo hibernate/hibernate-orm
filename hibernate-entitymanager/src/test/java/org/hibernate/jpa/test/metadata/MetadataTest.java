@@ -46,6 +46,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -59,6 +60,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel( jiraKey="HHH-8935" )
 public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBaseOfService() throws Exception {

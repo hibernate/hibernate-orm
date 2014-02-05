@@ -53,7 +53,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -72,8 +71,6 @@ import org.jboss.logging.Logger;
 class TypeSafeActivator {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
-
-	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -95,7 +92,7 @@ class TypeSafeActivator {
 		final Map properties = activationContext.getSettings();
 		final ValidatorFactory factory;
 		try {
-			factory = getValidatorFactory( properties );
+			factory = getValidatorFactory( activationContext );
 		}
 		catch (IntegrationException e) {
 			if ( activationContext.getValidationModes().contains( ValidationMode.CALLBACK ) ) {
@@ -453,30 +450,26 @@ class TypeSafeActivator {
 		return false;
 	}
 
-	private static ValidatorFactory getValidatorFactory(Map properties) {
-		ValidatorFactory factory = null;
-		if ( properties != null ) {
-			Object unsafeProperty = properties.get( FACTORY_PROPERTY );
-			if ( unsafeProperty != null ) {
-				try {
-					factory = ValidatorFactory.class.cast( unsafeProperty );
-				}
-				catch ( ClassCastException e ) {
-					throw new IntegrationException(
-							"Property " + FACTORY_PROPERTY
-									+ " should contain an object of type " + ValidatorFactory.class.getName()
-					);
-				}
-			}
-		}
-		if ( factory == null ) {
+	private static ValidatorFactory getValidatorFactory(ActivationContext activationContext) {
+		// first look for an explicitly passed ValidatorFactory
+		final Object reference = activationContext.getSessionFactory().getSessionFactoryOptions().getValidatorFactoryReference();
+		if ( reference != null ) {
 			try {
-				factory = Validation.buildDefaultValidatorFactory();
+				return ValidatorFactory.class.cast( reference );
 			}
-			catch ( Exception e ) {
-				throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
+			catch ( ClassCastException e ) {
+				throw new IntegrationException(
+						"Passed ValidatorFactory was not of correct type; expected " + ValidatorFactory.class.getName() +
+								", but found " + reference.getClass().getName()
+				);
 			}
 		}
-		return factory;
+
+		try {
+			return Validation.buildDefaultValidatorFactory();
+		}
+		catch ( Exception e ) {
+			throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
+		}
 	}
 }

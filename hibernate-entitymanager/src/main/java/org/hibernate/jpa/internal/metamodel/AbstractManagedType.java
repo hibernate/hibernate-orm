@@ -58,8 +58,8 @@ public abstract class AbstractManagedType<X>
 	private final Map<String, PluralAttribute<X, ?, ?>> declaredPluralAttributes
 			= new HashMap<String, PluralAttribute<X,?,?>>();
 
-	protected AbstractManagedType(Class<X> javaType, AbstractManagedType<? super X> superType) {
-		super( javaType );
+	protected AbstractManagedType(Class<X> javaType, String typeName, AbstractManagedType<? super X> superType) {
+		super( javaType, typeName );
 		this.superType = superType;
 	}
 
@@ -131,7 +131,7 @@ public abstract class AbstractManagedType<X>
 
 	@Override
 	public Attribute<X, ?> getDeclaredAttribute(String name) {
-		final Attribute<X, ?> attr = declaredSingularAttributes.get( name );
+		final Attribute<X, ?> attr = declaredAttributes.get( name );
 		checkNotNull( "Attribute ", attr, name );
 		return attr;
 	}

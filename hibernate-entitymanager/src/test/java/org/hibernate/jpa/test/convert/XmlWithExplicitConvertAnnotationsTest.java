@@ -46,7 +46,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -59,7 +61,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-8812" )
-public class XmlWithExplicitConvertAnnotationsTest {
+public class XmlWithExplicitConvertAnnotationsTest extends BaseUnitTestCase {
 
 	// NOTE : essentially the same exact test as ExplicitDateConvertersTest, but here we will mix annotations and xml
 
@@ -106,6 +108,7 @@ public class XmlWithExplicitConvertAnnotationsTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testSimpleConvertUsage() throws MalformedURLException {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

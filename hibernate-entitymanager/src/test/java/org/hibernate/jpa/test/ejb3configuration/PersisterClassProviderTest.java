@@ -118,14 +118,13 @@ public class PersisterClassProviderTest {
 	}
 
 	public static class GoofyProvider implements EntityPersister {
-
-		@SuppressWarnings( {"UnusedParameters"})
+		@SuppressWarnings({"UnusedParameters", "UnusedDeclaration"})
 		public GoofyProvider(
-				org.hibernate.mapping.PersistentClass persistentClass,
-				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
-				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-				SessionFactoryImplementor sf,
-				Mapping mapping) {
+				org.hibernate.metamodel.spi.binding.EntityBinding entityBinding,
+				org.hibernate.cache.spi.access.EntityRegionAccessStrategy entityRegionAccessStrategy,
+				org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				org.hibernate.engine.spi.SessionFactoryImplementor sf,
+				org.hibernate.engine.spi.Mapping mapping) {
 			throw new GoofyException();
 		}
 

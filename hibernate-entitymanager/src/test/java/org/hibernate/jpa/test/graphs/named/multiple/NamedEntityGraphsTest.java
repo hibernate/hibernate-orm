@@ -33,6 +33,8 @@ import org.junit.Test;
 
 import java.util.List;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,6 +48,7 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8933" )
 	public void testIt() {
 		EntityGraph graph = getOrCreateEntityManager().getEntityGraph( "abc" );
 		assertNotNull( graph );
@@ -54,6 +57,7 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8933" )
 	public void testAttributeNodesAreAvailable() {
 		EntityManager em = getOrCreateEntityManager();
 			EntityGraph graph = em.getEntityGraph( "name_salary_graph" );

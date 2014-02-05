@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,37 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.secure.spi;
+package org.hibernate.jpa.boot.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.Serializable;
+import javax.persistence.EntityNotFoundException;
+
+import org.hibernate.proxy.EntityNotFoundDelegate;
 
 /**
+ * EntityNotFoundDelegate implementation complying with the JPA spec by throwing {@link EntityNotFoundException}.
+ *
  * @author Steve Ebersole
  */
-public class JaccPermissionDeclarations {
-	private final String contextId;
-	private List<GrantedPermission> permissionDeclarations;
+class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
+	/**
+	 * Singleton access
+	 */
+	public static final JpaEntityNotFoundDelegate INSTANCE = new JpaEntityNotFoundDelegate();
 
-	public JaccPermissionDeclarations(String contextId) {
-		this.contextId = contextId;
-	}
-
-	public String getContextId() {
-		return contextId;
-	}
-
-	public void addPermissionDeclaration(GrantedPermission permissionDeclaration) {
-		if ( permissionDeclarations == null ) {
-			permissionDeclarations = new ArrayList<GrantedPermission>();
-		}
-		permissionDeclarations.add( permissionDeclaration );
-	}
-
-	public List<GrantedPermission> getPermissionDeclarations() {
-		return permissionDeclarations == null
-				? Collections.<GrantedPermission>emptyList()
-				: permissionDeclarations;
+	public void handleEntityNotFound(String entityName, Serializable id) {
+		throw new EntityNotFoundException( "Unable to find " + entityName  + " with id " + id );
 	}
 }

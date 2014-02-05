@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,37 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.secure.spi;
+package org.hibernate.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.Serializable;
+
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.proxy.EntityNotFoundDelegate;
 
 /**
  * @author Steve Ebersole
  */
-public class JaccPermissionDeclarations {
-	private final String contextId;
-	private List<GrantedPermission> permissionDeclarations;
+public class StandardEntityNotFoundDelegate implements EntityNotFoundDelegate {
+	/**
+	 * Singleton access
+	 */
+	public static final StandardEntityNotFoundDelegate INSTANCE = new StandardEntityNotFoundDelegate();
 
-	public JaccPermissionDeclarations(String contextId) {
-		this.contextId = contextId;
-	}
-
-	public String getContextId() {
-		return contextId;
-	}
-
-	public void addPermissionDeclaration(GrantedPermission permissionDeclaration) {
-		if ( permissionDeclarations == null ) {
-			permissionDeclarations = new ArrayList<GrantedPermission>();
-		}
-		permissionDeclarations.add( permissionDeclaration );
-	}
-
-	public List<GrantedPermission> getPermissionDeclarations() {
-		return permissionDeclarations == null
-				? Collections.<GrantedPermission>emptyList()
-				: permissionDeclarations;
+	@Override
+	public void handleEntityNotFound(String entityName, Serializable id) {
+		throw new ObjectNotFoundException( id, entityName );
 	}
 }

@@ -33,17 +33,14 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 	public MappedSuperclassTypeImpl(
 			Class<X> javaType,
 			AbstractIdentifiableType<? super X> superType,
+			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned) {
-		super( javaType, superType, hasIdentifierProperty, versioned );
-	}
-
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.MAPPED_SUPERCLASS;
+		super( javaType, javaType.getName(), superType, hasIdClass, hasIdentifierProperty, versioned );
 	}
 
 	@Override
-	protected boolean requiresSupertypeForNonDeclaredIdentifier() {
-		return false;
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.MAPPED_SUPERCLASS;
 	}
 }

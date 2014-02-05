@@ -48,6 +48,7 @@ import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -59,6 +60,7 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue( jiraKey = "HHH-8529" )
 public class CollectionCompositeElementConversionTest extends BaseUnitTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testElementCollectionConversion() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

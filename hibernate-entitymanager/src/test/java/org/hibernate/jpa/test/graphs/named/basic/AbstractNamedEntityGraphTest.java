@@ -27,6 +27,7 @@ import javax.persistence.EntityGraph;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
@@ -36,6 +37,7 @@ import static junit.framework.Assert.assertNotNull;
  */
 public abstract class AbstractNamedEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8933" )
 	public void testIt() {
 		EntityGraph graph = getOrCreateEntityManager().getEntityGraph( "Person" );
 		assertNotNull( graph );

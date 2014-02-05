@@ -41,6 +41,7 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -56,6 +57,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 	 * A baseline test, with an explicit @Convert annotation that should be in effect
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void baseline() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

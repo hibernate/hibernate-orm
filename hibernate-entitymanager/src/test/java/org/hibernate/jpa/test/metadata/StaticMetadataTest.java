@@ -34,6 +34,8 @@ import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -42,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( jiraKey="HHH-8935" )
 public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testInjections() throws Exception {

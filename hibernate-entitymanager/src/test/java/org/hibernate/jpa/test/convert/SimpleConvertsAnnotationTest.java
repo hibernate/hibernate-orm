@@ -48,6 +48,7 @@ import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -61,6 +62,7 @@ public class SimpleConvertsAnnotationTest extends BaseUnitTestCase {
 	// test handling of an AttributeConverter explicitly named via a @Convert annotation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testSimpleConvertUsage() throws MalformedURLException {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

@@ -388,8 +388,10 @@ public class JandexHelper {
 	}
 
 	public static void throwNotIndexException(String className){
-		throw new MappingException( "Class " + className +" is not indexed, probably means this class should be explicitly added" +
-				"into MatadataSources" );
+		throw new MappingException(
+				"Class " + className +" is not indexed, probably means this class should be explicitly added " +
+				"into MatadataSources"
+		);
 
 	}
 

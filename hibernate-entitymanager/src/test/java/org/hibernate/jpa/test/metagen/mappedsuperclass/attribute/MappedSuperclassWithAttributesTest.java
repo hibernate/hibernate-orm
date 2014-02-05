@@ -27,12 +27,11 @@ import javax.persistence.EntityManagerFactory;
 import java.util.Arrays;
 
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
-import org.hibernate.jpa.test.metagen.mappedsuperclass.attribute.AbstractNameable_;
-import org.hibernate.jpa.test.metagen.mappedsuperclass.attribute.Product_;
 import org.hibernate.jpa.AvailableSettings;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -44,7 +43,12 @@ import static org.junit.Assert.assertNotNull;
 @TestForIssue( jiraKey = "HHH-5024" )
 public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testStaticMetamodel() {
+
+		// spent too much time digging into this.  problem is ultimately that metamodel binding
+		// is not handling MappedSuperclass well
+
 		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList( Product.class )

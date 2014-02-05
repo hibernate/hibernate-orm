@@ -34,6 +34,7 @@ import javax.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +51,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	public static final float SALARY = 267.89f;
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testJpqlLiteral() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -524,11 +524,10 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "EntityBinding" );
-		sb.append( "{entity=" ).append( entity != null ? entity.getName() : "not set" );
-		sb.append( '}' );
-		return sb.toString();
+		return String.format(
+				"EntityBinding(%s)",
+				entity != null ? StringHelper.collapse( entity.getName() ) : "<not set>"
+		);
 	}
 
 	public CompositeAttributeBinding makeVirtualCompositeAttributeBinding(

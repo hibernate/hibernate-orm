@@ -35,7 +35,7 @@ import javax.sql.DataSource;
  * The second phase is building the EntityManagerFactory instance via {@link #build}.
  *
  * If anything goes wrong during either phase and the bootstrap process needs to be aborted, {@link #cancel()} should
- * be called.
+ * be called to release resources held between the 2 phases.
  *
  * @author Steve Ebersole
  * @author Scott Marlow

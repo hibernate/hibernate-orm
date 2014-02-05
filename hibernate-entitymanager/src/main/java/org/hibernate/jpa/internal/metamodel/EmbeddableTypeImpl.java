@@ -37,7 +37,7 @@ public class EmbeddableTypeImpl<X>
 	private final ComponentType hibernateType;
 
 	public EmbeddableTypeImpl(Class<X> javaType, AbstractManagedType parent, ComponentType hibernateType) {
-		super( javaType, null );
+		super( javaType, null, null );
 		this.parent = parent;
 		this.hibernateType = hibernateType;
 	}

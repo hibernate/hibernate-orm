@@ -31,6 +31,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -115,6 +116,24 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass);
+
+	/**
+	 * Apply a BeanValidation ValidatorFactory to the SessionFactory being built
+	 *
+	 * @param validatorFactory The ValidatorFactory to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SessionFactoryBuilder withValidatorFactory(Object validatorFactory);
+
+	/**
+	 * Apply a CDI BeanManager to the SessionFactory being built
+	 *
+	 * @param beanManager The BeanManager to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SessionFactoryBuilder withBeanManager(Object beanManager);
 
 	/**
 	 * After all options have been set, build the SessionFactory.

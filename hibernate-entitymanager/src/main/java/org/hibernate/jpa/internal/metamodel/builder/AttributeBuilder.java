@@ -407,20 +407,17 @@ public class AttributeBuilder {
 		}
 	}
 
-	private EntityMetamodel getDeclarerEntityMetamodel(IdentifiableType<?> ownerType) {
+	private EntityMetamodel getDeclarerEntityMetamodel(AbstractIdentifiableType<?> ownerType) {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
+
 		if ( persistenceType == Type.PersistenceType.ENTITY) {
-			String entityName;
-			if ( ownerType instanceof EntityType<?> ) {
-				entityName = ( ( EntityType<?> ) ownerType ).getName();
-			} else {
-				entityName = ownerType.getJavaType().getName();
-			}
 			return context.getSessionFactory()
-					.getEntityPersister( entityName ).getEntityMetamodel();
+					.getEntityPersister( ownerType.getTypeName() )
+					.getEntityMetamodel();
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS) {
-			return context.getSubClassEntityPersister( (MappedSuperclassTypeImpl) ownerType ).getEntityMetamodel();
+			return context.getSubClassEntityPersister( (MappedSuperclassTypeImpl<?>) ownerType )
+					.getEntityMetamodel();
 		}
 		else {
 			throw new AssertionFailure( "Cannot get the metamodel for PersistenceType: " + persistenceType );
@@ -616,7 +613,7 @@ public class AttributeBuilder {
 	private final MemberResolver VIRTUAL_IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
 		@Override
 		public Member resolveMember(AbstractManagedType owner, AttributeBinding attributeBinding) {
-			final IdentifiableType identifiableType = (IdentifiableType) owner;
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) owner;
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			if ( ! entityMetamodel.getIdentifierProperty().isVirtual() ) {
 				throw new IllegalArgumentException( "expecting a virtual (non-aggregated composite) identifier mapping" );
@@ -653,7 +650,7 @@ public class AttributeBuilder {
 			}
 			else if ( Type.PersistenceType.ENTITY == persistenceType
 					|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
-				final IdentifiableType identifiableType = (IdentifiableType) owner;
+				final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) owner;
 				final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 				final String propertyName = attributeBinding.getAttribute().getName();
 				final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
@@ -676,7 +673,7 @@ public class AttributeBuilder {
 	private final MemberResolver IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
 		@Override
 		public Member resolveMember(AbstractManagedType owner, AttributeBinding attributeBinding) {
-			final IdentifiableType identifiableType = (IdentifiableType) owner;
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) owner;
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			final String attributeName = attributeBinding.getAttribute().getName();
 			if ( ! attributeName.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
@@ -690,7 +687,7 @@ public class AttributeBuilder {
 	private final MemberResolver VERSION_MEMBER_RESOLVER = new MemberResolver() {
 		@Override
 		public Member resolveMember(AbstractManagedType owner, AttributeBinding attributeBinding) {
-			final IdentifiableType identifiableType = (IdentifiableType) owner;
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) owner;
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			final String versionPropertyName = attributeBinding.getAttribute().getName();
 			if ( ! versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {

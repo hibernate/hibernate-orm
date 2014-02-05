@@ -85,6 +85,10 @@ public interface SessionFactory extends Referenceable, Serializable {
 		 * @return The specific EntityNotFoundDelegate to use,  May be {@code null}
 		 */
 		public EntityNotFoundDelegate getEntityNotFoundDelegate();
+
+		public Object getBeanManagerReference();
+
+		public Object getValidatorFactoryReference();
 	}
 
 	/**

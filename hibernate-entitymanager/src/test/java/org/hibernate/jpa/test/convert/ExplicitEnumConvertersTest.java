@@ -44,7 +44,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -54,7 +56,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-8809" )
-public class ExplicitEnumConvertersTest {
+public class ExplicitEnumConvertersTest extends BaseUnitTestCase {
 
 	// NOTE : initially unable to reproduce the reported problem
 
@@ -101,6 +103,7 @@ public class ExplicitEnumConvertersTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testSimpleConvertUsage() throws MalformedURLException {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

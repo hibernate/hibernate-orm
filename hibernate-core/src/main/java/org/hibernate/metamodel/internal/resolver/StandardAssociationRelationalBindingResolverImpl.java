@@ -133,7 +133,8 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 				sourceTable,
 				sourceColumns,
 				targetTable,
-				targetColumns
+				targetColumns,
+				attributeSource.isCascadeDeleteEnabled()
 		);
 	}
 
@@ -334,15 +335,13 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 						referencedEntityBinding,
 						keySource
 				);
-		ForeignKey foreignKey = locateOrCreateForeignKey(
+		return locateOrCreateForeignKey(
 				keySource,
 				referencedEntityBinding,
 				collectionTable,
 				sourceRelationalValueBindings,
 				targetColumns
 		);
-		foreignKey.setDeleteRule( keySource.getOnDeleteAction() );
-		return foreignKey;
 	}
 
 	@Override
@@ -392,7 +391,8 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 				sourceTable,
 				extractColumnsFromRelationalValueBindings( sourceRelationalValueBindings ),
 				targetTable,
-				targetColumns
+				targetColumns,
+				foreignKeyContributingSource.isCascadeDeleteEnabled()
 		);
 	}
 

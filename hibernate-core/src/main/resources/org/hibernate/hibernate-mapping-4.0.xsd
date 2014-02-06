@@ -1233,6 +1233,7 @@
         <xs:attribute name="foreign-key" type="xs:string"/>
         <xs:attribute name="lazy" type="lazy-attribute"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
+        <xs:attribute name="on-delete" default="noaction" type="on-delete-attribute"/>
     </xs:complexType>
 
     <xs:complexType name="key-property-element">

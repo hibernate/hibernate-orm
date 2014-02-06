@@ -58,7 +58,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {
@@ -1349,7 +1348,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-8476" )
-	@FailureExpectedWithNewMetamodel
 	public void testManyToManyBulkDelete() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1387,6 +1385,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-1917" )
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyBulkDeleteMultiTable() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

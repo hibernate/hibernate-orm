@@ -26,6 +26,11 @@ public class ManyToManyMappedByPluralAttributeElementSourceImpl
 		throw new UnsupportedOperationException( "Not supported for attributes with mappedBy specified." );	}
 
 	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return false;
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		throw new UnsupportedOperationException( "Not supported for attributes with mappedBy specified." );	}
 

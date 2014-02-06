@@ -103,7 +103,8 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 				sourceTable,
 				sourceColumns,
 				targetTable,
-				targetColumns
+				targetColumns,
+				attributeSource.isCascadeDeleteEnabled()
 		);
 	}
 
@@ -270,7 +271,9 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 					(ManyToManyPluralAttributeElementBinding) pluralOwnerAttributeBinding.getPluralAttributeElementBinding();
 			foreignKey = ownerElementBinding.getForeignKey();
 		}
-		foreignKey.setDeleteRule( attributeSource.getKeySource().getOnDeleteAction() );
+		if ( attributeSource.getKeySource().isCascadeDeleteEnabled() ) {
+			foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
+		}
 		return foreignKey;
 
 	}

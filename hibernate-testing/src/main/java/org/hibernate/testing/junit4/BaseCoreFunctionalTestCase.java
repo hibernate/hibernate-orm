@@ -174,11 +174,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void rebuildSessionFactory() {
-		if ( sessionFactory == null ) {
-			return;
-		}
 		try {
-			sessionFactory.close();
+			releaseSessionFactory();
 		}
 		catch (Exception ignore) {
 		}

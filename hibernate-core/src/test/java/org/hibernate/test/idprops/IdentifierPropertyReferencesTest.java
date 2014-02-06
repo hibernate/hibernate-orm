@@ -38,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class IdentifierPropertyReferencesTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

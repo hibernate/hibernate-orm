@@ -31,7 +31,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
@@ -43,16 +42,15 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  */
 public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 	private final PluralAssociationAttribute attribute;
-	private final ForeignKey.ReferentialAction deleteAction;
+	private final boolean isCascadeDeleteEnabled;
 
 	public PluralAttributeKeySourceImpl(PluralAssociationAttribute attribute) {
 		this.attribute = attribute;
-		this.deleteAction = attribute.getOnDeleteAction() == OnDeleteAction.CASCADE
-				? ForeignKey.ReferentialAction.CASCADE : ForeignKey.ReferentialAction.NO_ACTION;
+		this.isCascadeDeleteEnabled = attribute.getOnDeleteAction() == OnDeleteAction.CASCADE;
 	}
 	@Override
-	public ForeignKey.ReferentialAction getOnDeleteAction() {
-		return deleteAction;
+	public boolean isCascadeDeleteEnabled() {
+		return isCascadeDeleteEnabled;
 	}
 
 	@Override

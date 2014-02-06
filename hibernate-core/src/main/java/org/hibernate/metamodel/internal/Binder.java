@@ -838,11 +838,11 @@ public class Binder implements HelperContext {
 							table,
 							joinRelationalValueBindings,
 							foreignKeyHelper.determineForeignKeyTargetTable( superEntityBinding, subclassEntitySource ),
-							targetColumns
+							targetColumns,
+							subclassEntitySource.isCascadeDeleteEnabled()
 					);
 
 					if ( subclassEntitySource.isCascadeDeleteEnabled() ) {
-						foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
 						entityBinding.setCascadeDeleteEnabled( true );
 					}
 				}
@@ -1256,20 +1256,19 @@ public class Binder implements HelperContext {
 					table,
 					joinRelationalValueBindings,
 					foreignKeyHelper.determineForeignKeyTargetTable( entityBinding, secondaryTableSource ),
-					targetColumns
+					targetColumns,
+					secondaryTableSource.isCascadeDeleteEnabled()
 			);
 			SecondaryTable secondaryTable = new SecondaryTable( table, foreignKey );
-			if(secondaryTableSource.getFetchStyle()!=null)
-			secondaryTable.setFetchStyle( secondaryTableSource.getFetchStyle() );
+			if ( secondaryTableSource.getFetchStyle()!=null ) {
+				secondaryTable.setFetchStyle( secondaryTableSource.getFetchStyle() );
+			}
 			secondaryTable.setInverse( secondaryTableSource.isInverse() );
 			secondaryTable.setOptional( secondaryTableSource.isOptional() );
 			secondaryTable.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
 			secondaryTable.setCustomDelete( secondaryTableSource.getCustomSqlDelete() );
 			secondaryTable.setCustomInsert( secondaryTableSource.getCustomSqlInsert() );
 			secondaryTable.setCustomUpdate( secondaryTableSource.getCustomSqlUpdate() );
-			if ( secondaryTable.isCascadeDeleteEnabled() ) {
-				foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
-			}
 			entityBinding.addSecondaryTable( secondaryTable );
 			metadata.addSecondaryTable( secondaryTable );
 		}
@@ -1334,7 +1333,8 @@ public class Binder implements HelperContext {
 				ownerTable,
 				extractColumnsFromRelationalValueBindings( ownerAssociationAttributeBinding.getRelationalValueBindings() ),
 				entityBinding.getPrimaryTable(),
-				targetColumns
+				targetColumns,
+				attributeSource.isCascadeDeleteEnabled()
 		);
 		if ( foreignKey == null ) {
 			throw new AssertionFailure( "Foreign key not found; should have been defined by owner side of association." );
@@ -1348,9 +1348,6 @@ public class Binder implements HelperContext {
 		secondaryTable.setCustomDelete( ownerSecondaryTable.getCustomDelete() );
 		secondaryTable.setCustomInsert( ownerSecondaryTable.getCustomInsert() );
 		secondaryTable.setCustomUpdate( ownerSecondaryTable.getCustomUpdate() );
-		if ( secondaryTable.isCascadeDeleteEnabled() ) {
-			foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
-		}
 		entityBinding.addSecondaryTable( secondaryTable );
 		metadata.addSecondaryTable( secondaryTable );
 	}
@@ -1428,13 +1425,15 @@ public class Binder implements HelperContext {
 			final TableSpecification sourceTable,
 			final List<RelationalValueBinding> sourceRelationalValueBindings,
 			final TableSpecification targetTable,
-			final List<Column> targetColumns) {
+			final List<Column> targetColumns,
+			boolean isCascadeDeleteEnabled) {
 		return foreignKeyHelper.locateOrCreateForeignKey(
 				foreignKeyName,
 				sourceTable,
 				extractColumnsFromRelationalValueBindings( sourceRelationalValueBindings ),
 				targetTable,
-				targetColumns
+				targetColumns,
+				isCascadeDeleteEnabled
 		);
 	}
 

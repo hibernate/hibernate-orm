@@ -197,4 +197,9 @@ class KeyManyToOneSourceImpl
 	public String getExplicitForeignKeyName() {
 		return keyManyToOneElement.getForeignKey();
 	}
+
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return "cascade".equals( keyManyToOneElement.getOnDelete().value() );
+	}
 }

@@ -150,6 +150,11 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return false;
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return manyToManyElement.getPropertyRef() == null
 				? null

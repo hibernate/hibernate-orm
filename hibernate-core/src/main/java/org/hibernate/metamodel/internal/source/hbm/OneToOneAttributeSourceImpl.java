@@ -193,6 +193,11 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return false;
+	}
+
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return oneToOneElement.isConstrained()  ? ForeignKeyDirection.FROM_PARENT : ForeignKeyDirection.TO_PARENT;
 	}

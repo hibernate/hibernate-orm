@@ -36,6 +36,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.SerializationException;
 import org.junit.Test;
@@ -47,6 +48,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	public static final String NAME = "mySF";
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNamedSessionFactorySerialization() throws Exception {
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
@@ -73,6 +75,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUnNamedSessionFactorySerialization() throws Exception {
 		// IMPL NOTE : this test is a control to testNamedSessionFactorySerialization
 		// 		here, the test should fail based just on attempted uuid resolution

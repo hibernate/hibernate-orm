@@ -254,6 +254,11 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		return null;
 	}
 
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return false;
+	}
+
 	public class AnnotationJoinColumnResolutionDelegate
 			implements ForeignKeyContributingSource.JoinColumnResolutionDelegate {
 

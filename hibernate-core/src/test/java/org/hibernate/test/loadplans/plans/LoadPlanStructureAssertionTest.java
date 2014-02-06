@@ -80,11 +80,8 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSpecialOneToOne() {
 		// tests the mappings defined in org.hibernate.test.onetoone.joined.JoinedSubclassOneToOneTest
-
-		// metamodel : XSD problem : key-many-to-one needs to add on-delete attribute
 
 		Configuration cfg = new Configuration();
 		cfg.addResource( "org/hibernate/test/onetoone/formula/Person.hbm.xml" );

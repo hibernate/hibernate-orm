@@ -31,5 +31,5 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
  * @author Steve Ebersole
  */
 public interface PluralAttributeKeySource extends ForeignKeyContributingSource, RelationalValueSourceContainer {
-	public ForeignKey.ReferentialAction getOnDeleteAction();
+	public boolean isCascadeDeleteEnabled();
 }

@@ -39,7 +39,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -50,7 +49,6 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"unchecked"})
-@FailureExpectedWithNewMetamodel
 public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
     public String[] getMappings() {

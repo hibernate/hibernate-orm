@@ -43,6 +43,14 @@ public interface ForeignKeyContributingSource {
 	public String getExplicitForeignKeyName();
 
 	/**
+	 * Is "cascade delete" enabled for the foreign key? In other words, if a record in the parent (referenced)
+	 * table is deleted, should the corresponding records in the child table automatically be deleted?
+	 *
+	 * @return true, if the cascade delete is enabled; false, otherwise.
+	 */
+	public boolean isCascadeDeleteEnabled();
+
+	/**
 	 * Retrieve the delegate for resolving foreign key target columns.  This corresponds directly to
 	 * HBM {@code <property-ref/>} and JPA {@link javax.persistence.JoinColumn} mappings.
 	 * <p/>

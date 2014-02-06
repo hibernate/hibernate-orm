@@ -78,6 +78,11 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return false;
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		boolean hasReferencedColumn = false;
 		for ( Column joinColumn : pluralAssociationAttribute().getInverseJoinColumnValues() ) {

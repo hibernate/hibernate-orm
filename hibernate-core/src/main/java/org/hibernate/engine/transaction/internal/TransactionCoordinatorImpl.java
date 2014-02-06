@@ -62,6 +62,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  */
 public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TransactionCoordinatorImpl.class );
+	private static final boolean DEBUGGING = LOG.isDebugEnabled();
+	private static final boolean TRACING = LOG.isTraceEnabled();
 
 	private final transient TransactionContext transactionContext;
 	private final transient JdbcCoordinatorImpl jdbcCoordinator;
@@ -132,7 +134,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	public void afterTransaction(TransactionImplementor hibernateTransaction, int status) {
-		LOG.trace( "after transaction completion" );
+		if (TRACING) LOG.trace( "after transaction completion" );
 
 		final boolean success = JtaStatusHelper.isCommitted( status );
 
@@ -223,7 +225,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 				// we are supposed to not auto join transactions; if the transaction is not marked for join
 				// we cannot go any further in attempting to join (register sync).
 				if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
-					LOG.debug( "Skipping JTA sync registration due to auto join checking" );
+					if (DEBUGGING) LOG.debug( "Skipping JTA sync registration due to auto join checking" );
 					return;
 				}
 			}
@@ -242,20 +244,20 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		// Can we resister a synchronization
 		if ( !jtaPlatform.canRegisterSynchronization() ) {
-			LOG.trace( "registered JTA platform says we cannot currently resister synchronization; skipping" );
+			if (TRACING) LOG.trace( "registered JTA platform says we cannot currently resister synchronization; skipping" );
 			return;
 		}
 
 		// Should we resister a synchronization
 		if ( !transactionFactory().isJoinableJtaTransaction( this, currentHibernateTransaction ) ) {
-			LOG.trace( "TransactionFactory reported no JTA transaction to join; skipping Synchronization registration" );
+			if (TRACING) LOG.trace( "TransactionFactory reported no JTA transaction to join; skipping Synchronization registration" );
 			return;
 		}
 
 		jtaPlatform.registerSynchronization( new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
 		getSynchronizationCallbackCoordinator().synchronizationRegistered();
 		synchronizationRegistered = true;
-		LOG.debug( "successfully registered Synchronization" );
+		if (DEBUGGING) LOG.debug( "successfully registered Synchronization" );
 	}
 
 	@Override

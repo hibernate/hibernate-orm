@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.jpa.test.multimappingperclass">
+
+    <class entity-name="Entity1" name="Entity" table="ENTITY1">
+        <id name="id" column="id" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" type="string">
+            <column name="NAME" length="20" not-null="true"/>
+        </property>
+    </class>
+    <class entity-name="Entity2" name="Entity" table="ENTITY2">
+        <id name="id" column="id" type="long">
+            <generator class="native"/>
+        </id>
+        <property name="name" type="string">
+            <column name="NAME" length="20" not-null="true"/>
+        </property>
+    </class>
+
+</hibernate-mapping>
+

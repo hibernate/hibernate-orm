@@ -63,7 +63,7 @@ public abstract class AbstractServiceRegistryImpl
 	private final ServiceRegistryImplementor parent;
 	private final boolean allowCrawling;
 
-	private final ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap = CollectionHelper.concurrentMap( 20 );
+	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
 	private ConcurrentHashMap<Class,Class> roleXref;
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to

@@ -30,6 +30,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -58,7 +59,6 @@ import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 
 import org.jboss.logging.Logger;
-import org.jboss.logging.Logger.Level;
 
 /**
  * Standard Hibernate implementation of {@link JdbcCoordinator}
@@ -67,6 +67,7 @@ import org.jboss.logging.Logger.Level;
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Sanne Grinovero
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -80,6 +81,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private transient Batch currentBatch;
 
 	private transient long transactionTimeOutInstant = -1;
+
+	/**
+	 * This is a marker value to insert instead of null values for when a Statement gets registered in xref
+	 * but has no associations registered. This is useful to be able to efficiently check against duplicate
+	 * registraction but you'll have to check against instance equality rather than null before attempting
+	 * to add elements to this set.
+	 */
+	private static final Set<ResultSet> EMPTY_RESULTSET = Collections.emptySet();
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
@@ -360,10 +369,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void register(Statement statement) {
 		LOG.tracev( "Registering statement [{0}]", statement );
-		if ( xref.containsKey( statement ) ) {
+		final Set<ResultSet> previousValue = xref.put( statement, EMPTY_RESULTSET );
+		if ( previousValue != null ) {
+			//we could check as a pre-condition but this is a very hot spot in terms of computation,
+			//so we optimize for the common scenario. At this point however we need to put the previous
+			//value back to undo the put:
+			xref.put( statement, previousValue );
 			throw new HibernateException( "statement already registered with JDBCContainer" );
 		}
-		xref.put( statement, null );
 	}
 
 	@Override
@@ -411,7 +424,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void register(ResultSet resultSet, Statement statement) {
-		LOG.tracev( "Registering result set [{0}]", resultSet );
 		if ( statement == null ) {
 			try {
 				statement = resultSet.getStatement();
@@ -421,17 +433,19 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 		if ( statement != null ) {
-			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			if ( LOG.isEnabled( Level.DEBUG ) && !xref.containsKey( statement ) ) {
+			LOG.tracev( "Registering result set [{0}]", resultSet );
+			final Set<ResultSet> resultSets = xref.get( statement );
+			if ( resultSets == null ) {
+				// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
+				// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
 				LOG.unregisteredStatement();
 			}
-			Set<ResultSet> resultSets = xref.get( statement );
-			if ( resultSets == null ) {
-				resultSets = new HashSet<ResultSet>();
-				xref.put( statement, resultSets );
+			if ( resultSets == null || resultSets == EMPTY_RESULTSET ) {
+				xref.put( statement, new HashSet<ResultSet>() );
 			}
-			resultSets.add( resultSet );
+			else {
+				resultSets.add( resultSet );
+			}
 		}
 		else {
 			unassociatedResultSets.add( resultSet );
@@ -450,13 +464,13 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 		if ( statement != null ) {
-			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			if ( LOG.isEnabled( Level.DEBUG ) && !xref.containsKey( statement ) ) {
+			final Set<ResultSet> resultSets = xref.get( statement );
+			if ( resultSets == null ) {
+				// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
+				// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
 				LOG.unregisteredStatement();
 			}
-			final Set<ResultSet> resultSets = xref.get( statement );
-			if ( resultSets != null ) {
+			else {
 				resultSets.remove( resultSet );
 				if ( resultSets.isEmpty() ) {
 					xref.remove( statement );
@@ -495,9 +509,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	private void cleanup() {
 		for ( Map.Entry<Statement,Set<ResultSet>> entry : xref.entrySet() ) {
-			if ( entry.getValue() != null ) {
-				closeAll( entry.getValue() );
-			}
+			closeAll( entry.getValue() );
 			close( entry.getKey() );
 		}
 		xref.clear();

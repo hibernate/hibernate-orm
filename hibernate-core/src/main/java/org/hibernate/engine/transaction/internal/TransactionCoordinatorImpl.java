@@ -61,7 +61,7 @@ import org.hibernate.service.jta.platform.spi.JtaPlatform;
  *
  * @author Steve Ebersole
  */
-public class TransactionCoordinatorImpl implements TransactionCoordinator {
+public final class TransactionCoordinatorImpl implements TransactionCoordinator {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TransactionCoordinatorImpl.class.getName());
 	private static final boolean DEBUGGING = LOG.isDebugEnabled();
@@ -216,7 +216,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			return;
 		}
 
-		JtaPlatform jtaPlatform = getTransactionEnvironment().getJtaPlatform();
+		final JtaPlatform jtaPlatform = getTransactionEnvironment().getJtaPlatform();
 		if ( jtaPlatform == null ) {
 			// if no jta platform was registered we wont be able to register a jta synchronization
 			return;
@@ -235,13 +235,13 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 		}
 
 		// IMPL NOTE : At this point the local callback is the "maybe" one.  The only time that needs to change is if
-		// we are able to successfully register the transaction synchronization in which case the local callback would  become
+		// we are able to successfully register the transaction synchronization in which case the local callback would become
 		// non driving.  To that end, the following checks are simply opt outs where we are unable to register the
 		// synchronization
 
 		// Can we resister a synchronization
 		if ( !jtaPlatform.canRegisterSynchronization() ) {
-			if (TRACING) LOG.trace( "registered JTA platform says we cannot currently resister synchronization; skipping" );
+			if (TRACING) LOG.trace( "registered JTA platform says we cannot currently register synchronization; skipping" );
 			return;
 		}
 

@@ -214,6 +214,12 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			return;
 		}
 
+		JtaPlatform jtaPlatform = getTransactionEnvironment().getJtaPlatform();
+		if ( jtaPlatform == null ) {
+			// if no jta platform was registered we wont be able to register a jta synchronization
+			return;
+		}
+
 		// Has the local transaction (Hibernate facade) taken on the responsibility of driving the transaction inflow?
 		if ( currentHibernateTransaction.isInitiator() ) {
 			return;
@@ -235,12 +241,6 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 		// we are able to successfully register the transaction synchronization in which case the local callback would  become
 		// non driving.  To that end, the following checks are simply opt outs where we are unable to register the
 		// synchronization
-
-		JtaPlatform jtaPlatform = getTransactionEnvironment().getJtaPlatform();
-		if ( jtaPlatform == null ) {
-			// if no jta platform was registered we wont be able to register a jta synchronization
-			return;
-		}
 
 		// Can we resister a synchronization
 		if ( !jtaPlatform.canRegisterSynchronization() ) {

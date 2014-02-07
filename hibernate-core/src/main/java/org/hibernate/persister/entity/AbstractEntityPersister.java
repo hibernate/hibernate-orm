@@ -3540,7 +3540,9 @@ public abstract class AbstractEntityPersister
 
 	public Serializable insert(Object[] fields, Object object, SessionImplementor session)
 			throws HibernateException {
-
+		// apply any pre-insert in-memory value generation
+		preInsertInMemoryValueGeneration( fields, object, session );
+		
 		final int span = getTableSpan();
 		final Serializable id;
 		if ( entityMetamodel.isDynamicInsert() ) {
@@ -3563,15 +3565,7 @@ public abstract class AbstractEntityPersister
 
 	public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session) {
 		// apply any pre-insert in-memory value generation
-		if ( getEntityMetamodel().hasPreInsertGeneratedValues() ) {
-			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
-			for ( int i = 0; i < strategies.length; i++ ) {
-				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesInsert() ) {
-					fields[i] = strategies[i].getValueGenerator().generateValue( (Session) session, object );
-					setPropertyValue( object, i, fields[i] );
-				}
-			}
-		}
+		preInsertInMemoryValueGeneration( fields, object, session );
 
 		final int span = getTableSpan();
 		if ( entityMetamodel.isDynamicInsert() ) {
@@ -3585,6 +3579,18 @@ public abstract class AbstractEntityPersister
 			// For the case of dynamic-insert="false", use the static SQL
 			for ( int j = 0; j < span; j++ ) {
 				insert( id, fields, getPropertyInsertability(), j, getSQLInsertStrings()[j], object, session );
+			}
+		}
+	}
+	
+	private void preInsertInMemoryValueGeneration(Object[] fields, Object object, SessionImplementor session) {
+		if ( getEntityMetamodel().hasPreInsertGeneratedValues() ) {
+			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
+			for ( int i = 0; i < strategies.length; i++ ) {
+				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesInsert() ) {
+					fields[i] = strategies[i].getValueGenerator().generateValue( (Session) session, object );
+					setPropertyValue( object, i, fields[i] );
+				}
 			}
 		}
 	}

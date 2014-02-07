@@ -60,7 +60,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  *
  * @author Steve Ebersole
  */
-public class TransactionCoordinatorImpl implements TransactionCoordinator {
+public final class TransactionCoordinatorImpl implements TransactionCoordinator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TransactionCoordinatorImpl.class );
 	private static final boolean DEBUGGING = LOG.isDebugEnabled();
 	private static final boolean TRACING = LOG.isTraceEnabled();
@@ -225,12 +225,13 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			return;
 		}
 
-		if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.JOINED ) {
+		final JoinStatus joinStatus = currentHibernateTransaction.getJoinStatus();
+		if ( joinStatus != JoinStatus.JOINED ) {
 			// the transaction is not (yet) joined, see if we should join...
 			if ( !transactionContext.shouldAutoJoinTransaction() ) {
 				// we are supposed to not auto join transactions; if the transaction is not marked for join
 				// we cannot go any further in attempting to join (register sync).
-				if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
+				if ( joinStatus != JoinStatus.MARKED_FOR_JOINED ) {
 					if (DEBUGGING) LOG.debug( "Skipping JTA sync registration due to auto join checking" );
 					return;
 				}
@@ -238,13 +239,13 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 		}
 
 		// IMPL NOTE : At this point the local callback is the "maybe" one.  The only time that needs to change is if
-		// we are able to successfully register the transaction synchronization in which case the local callback would  become
+		// we are able to successfully register the transaction synchronization in which case the local callback would become
 		// non driving.  To that end, the following checks are simply opt outs where we are unable to register the
 		// synchronization
 
 		// Can we resister a synchronization
 		if ( !jtaPlatform.canRegisterSynchronization() ) {
-			if (TRACING) LOG.trace( "registered JTA platform says we cannot currently resister synchronization; skipping" );
+			if (TRACING) LOG.trace( "registered JTA platform says we cannot currently register synchronization; skipping" );
 			return;
 		}
 

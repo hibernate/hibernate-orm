@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.constraint.InformixUniqueKeyExporter;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -34,6 +35,8 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.spi.relational.Constraint;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -46,6 +49,8 @@ import org.hibernate.type.StandardBasicTypes;
 public class InformixDialect extends Dialect {
 	
 	private final UniqueDelegate uniqueDelegate;
+	
+	private final InformixUniqueKeyExporter uniqueKeyExporter = new InformixUniqueKeyExporter( this );
 
 	/**
 	 * Creates new <code>InformixDialect</code> instance. Sets up the JDBC /
@@ -297,5 +302,10 @@ public class InformixDialect extends Dialect {
 	@Deprecated
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+	
+	@Override
+	public Exporter<Constraint> getUniqueKeyExporter() {
+		return uniqueKeyExporter;
 	}
 }

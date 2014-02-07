@@ -30,6 +30,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.constraint.DB2UniqueKeyExporter;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -40,6 +41,8 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.metamodel.spi.relational.Constraint;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -50,7 +53,10 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
+	
 	private final UniqueDelegate uniqueDelegate;
+	
+	private final DB2UniqueKeyExporter uniqueKeyExporter = new DB2UniqueKeyExporter( this );
 
 	/**
 	 * Constructs a DB2Dialect
@@ -479,6 +485,11 @@ public class DB2Dialect extends Dialect {
 	@Deprecated
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+	
+	@Override
+	public Exporter<Constraint> getUniqueKeyExporter() {
+		return uniqueKeyExporter;
 	}
 	
 	@Override

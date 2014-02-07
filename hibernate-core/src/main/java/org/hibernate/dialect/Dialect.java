@@ -32,8 +32,6 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,6 +47,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.constraint.ConstraintDelegate;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -89,7 +88,6 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Sequence;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -1988,6 +1986,7 @@ public abstract class Dialect implements ConversionContext {
 	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 	private TemporaryTableExporter temporaryTableExporter = new TemporaryTableExporter( this );
+	private ConstraintDelegate constraintDelegate = new ConstraintDelegate( this );
 
 	public Exporter<Table> getTableExporter() {
 		return tableExporter;
@@ -2015,6 +2014,10 @@ public abstract class Dialect implements ConversionContext {
 
 	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
 		return auxiliaryObjectExporter;
+	}
+
+	protected ConstraintDelegate getConstraintDelegate() {
+		return constraintDelegate;
 	}
 
 	/**
@@ -2703,76 +2706,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 	
 	public String[] applyConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {
-		final List<String> sqlStrings = new ArrayList<String>();
-		final List<String> uniqueExportIdentifiers = new ArrayList<String>();
-		
-		for ( Table table : tables ) {
-			if( !table.isPhysicalTable() ){
-				continue;
-			}
-			
-			// TODO: Some Dialects will need to create both the index and unique constraints.  Audit them.
-			
-			for ( Index index : table.getIndexes() ) {
-				if (index.isUnique()) {
-					sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlCreateStrings(
-							index, jdbcEnvironment ) ) );
-					uniqueExportIdentifiers.add( index.getColumnExportIdentifier() );
-				}
-				else {
-					sqlStrings.addAll(Arrays.asList( getIndexExporter().getSqlCreateStrings(
-							index, jdbcEnvironment ) ) );
-				}
-			}
-
-			for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-				// A unique Index may have already exported the constraint.
-				if (! uniqueExportIdentifiers.contains( uniqueKey.getExportIdentifier() )) {
-					sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlCreateStrings(
-							uniqueKey, jdbcEnvironment ) ) );
-				}
-				uniqueExportIdentifiers.add( uniqueKey.getColumnExportIdentifier() );
-			}
-
-		}
-		
-		return sqlStrings.toArray( new String[sqlStrings.size()] );
+		return constraintDelegate.applyConstraints( tables, jdbcEnvironment );
 	}
 	
 	public String[] dropConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {
-		final List<String> sqlStrings = new ArrayList<String>();
-		final List<String> uniqueExportIdentifiers = new ArrayList<String>();
-		
-		for ( Table table : tables ) {
-			if( !table.isPhysicalTable() ){
-				continue;
-			}
-			
-			if ( dropConstraints() ) {
-				for ( Index index : table.getIndexes() ) {
-					if (index.isUnique()) {
-						sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlDropStrings(
-								index, jdbcEnvironment ) ) );
-						uniqueExportIdentifiers.add( index.getColumnExportIdentifier() );
-					}
-					else {
-						sqlStrings.addAll(Arrays.asList( getIndexExporter().getSqlDropStrings(
-								index, jdbcEnvironment ) ) );
-					}
-				}
-	
-				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-					// A unique Index may have already exported the constraint.
-					if (! uniqueExportIdentifiers.contains( uniqueKey.getExportIdentifier() )) {
-						sqlStrings.addAll(Arrays.asList( getUniqueKeyExporter().getSqlDropStrings(
-								uniqueKey, jdbcEnvironment ) ) );
-					}
-					uniqueExportIdentifiers.add( uniqueKey.getColumnExportIdentifier() );
-				}
-			}
-		}
-		
-		return sqlStrings.toArray( new String[sqlStrings.size()] );
+		return constraintDelegate.dropConstraints( tables, jdbcEnvironment );
 	}
 	
 	/**

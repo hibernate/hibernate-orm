@@ -112,15 +112,17 @@ task jaxb {
         cfgXsd = file( 'src/main/resources/org/hibernate/hibernate-configuration-4.0.xsd')
         hbmXsd = file( 'src/main/resources/org/hibernate/hibernate-mapping-4.0.xsd' )
         ormXsd = file( 'src/main/resources/org/hibernate/jpa/orm_2_1.xsd' )
+        unifiedOrmXsd = file( 'src/main/resources/org/hibernate/xsd/mapping/orm-2.1.0.xsd' )
 
         // input bindings
         cfgXjb = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
         hbmXjb = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
         ormXjb = file( 'src/main/xjb/orm-bindings.xjb' )
+		unifiedOrmXjb = file( 'src/main/xjb/mapping-bindings.xjb' )
     }
 
     // configure Gradle up-to-date checking
-    inputs.files( [cfgXsd, hbmXsd, ormXsd, cfgXjb, hbmXjb, ormXjb] )
+    inputs.files( [cfgXsd, hbmXsd, ormXsd, unifiedOrmXsd, cfgXjb, hbmXjb, ormXjb, unifiedOrmXjb] )
     outputs.dir( jaxbTargetDir )
 
     // perform actions
@@ -159,6 +161,17 @@ task jaxb {
         ) {
             arg line:     '-Xinheritance'
         }
+
+		// unified mapping xsd
+		ant.xjc(
+				destdir: '${jaxbTargetDir}',
+//				package: 'org.hibernate.metamodel.spi.source.jaxb',
+				binding: 'src/main/xjb/mapping-bindings.xjb',
+				schema: unifiedOrmXsd.path,
+				extension: 'true'
+		) {
+			arg line:     '-Xinheritance'
+		}
 
     }
 

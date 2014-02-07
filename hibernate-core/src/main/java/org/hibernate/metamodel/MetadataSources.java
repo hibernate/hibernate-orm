@@ -479,7 +479,7 @@ public class MetadataSources {
 	 */
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, UNKNOWN_FILE_PATH );
-		BindResult bindResult = jaxbProcessor.unmarshal( document, origin );
+		BindResult bindResult = jaxbProcessor.bind( document, origin );
 		addJaxbRoot( bindResult );
 		return this;
 	}

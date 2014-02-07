@@ -128,7 +128,7 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 
 
 	@SuppressWarnings( { "unchecked" })
-	public BindResult unmarshal(Document document, Origin origin) {
+	public BindResult bind(Document document, Origin origin) {
 		Element rootElement = document.getDocumentElement();
 		if ( rootElement == null ) {
 			throw new MappingException( "No root element found", origin );

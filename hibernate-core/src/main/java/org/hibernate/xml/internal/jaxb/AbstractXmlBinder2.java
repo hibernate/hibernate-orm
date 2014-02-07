@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -34,57 +34,53 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.validation.Schema;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.xml.internal.stax.BufferedXMLEventReader;
 import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.spi.XmlBinder;
 
 /**
- * Base implementation (template) of the XmlBinder contract.
- * <p/>
- * Generally implementors should just have to implement:<ol>
- *     <li>{@link #getJaxbContext}</li>
- *     <li>{@link #getSchema}</li>
- *     <li>(optionally) {@link #wrapReader}</li>
- * </ol>
- *
  * @author Steve Ebersole
- * @author Strong Liu <stliu@hibernate.org>
  */
-abstract class AbstractXmlBinder implements XmlBinder {
-	protected static final Logger log = Logger.getLogger( AbstractXmlBinder.class );
+public abstract class AbstractXmlBinder2 implements XmlBinder {
+	private final boolean validateXml;
 
-	protected final ServiceRegistry serviceRegistry;
-	protected final boolean validateXml;
-
-	public AbstractXmlBinder(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, true );
+	protected AbstractXmlBinder2() {
+		this( true );
 	}
 
-	public AbstractXmlBinder(ServiceRegistry serviceRegistry, boolean validateXml) {
-		this.serviceRegistry = serviceRegistry;
+	protected AbstractXmlBinder2(boolean validateXml) {
 		this.validateXml = validateXml;
+	}
+
+	public boolean isValidationEnabled() {
+		return validateXml;
 	}
 
 	@Override
 	public BindResult bind(InputStream stream, Origin origin) {
+		final XMLEventReader eventReader = createReader( stream, origin );
 		try {
-			BufferedXMLEventReader staxReader = new BufferedXMLEventReader(staxFactory().createXMLEventReader( stream ), 100);
+			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
+			return doBind( eventReader, rootElementStartEvent, origin );
+		}
+		finally {
 			try {
-				return unmarshal( staxReader, origin );
+				eventReader.close();
 			}
-			finally {
-				try {
-					staxReader.close();
-				}
-				catch ( Exception ignore ) {
-				}
+			catch ( Exception ignore ) {
 			}
+		}
+	}
+
+	protected XMLEventReader createReader(InputStream stream, Origin origin) {
+		try {
+			// create a standard StAX reader
+			final XMLEventReader staxReader = staxFactory().createXMLEventReader( stream );
+			// and wrap it in a buffered reader (keeping 100 element sized buffer)
+			return new BufferedXMLEventReader( staxReader, 100 );
 		}
 		catch ( XMLStreamException e ) {
 			throw new MappingException( "Unable to create stax reader", e, origin );
@@ -107,8 +103,7 @@ abstract class AbstractXmlBinder implements XmlBinder {
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "unchecked" })
-	private BindResult unmarshal(XMLEventReader staxEventReader, final Origin origin) {
+	protected StartElement seekRootElementStartEvent(XMLEventReader staxEventReader, Origin origin) {
 		XMLEvent rootElementStartEvent;
 		try {
 			rootElementStartEvent = staxEventReader.peek();
@@ -125,19 +120,31 @@ abstract class AbstractXmlBinder implements XmlBinder {
 			throw new MappingException( "Could not locate root element", origin );
 		}
 
+		return rootElementStartEvent.asStartElement();
+	}
 
+	protected abstract BindResult doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
+
+	protected static boolean hasNamespace(StartElement startElement) {
+		return ! "".equals( startElement.getName().getNamespaceURI() );
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <T> T jaxb(XMLEventReader reader, Schema xsd, Class<T> modelClass, Origin origin) {
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
-		try {
-			final Schema schema = getSchema( rootElementStartEvent, origin );
-			staxEventReader = wrapReader( staxEventReader, rootElementStartEvent );
 
-			final JAXBContext jaxbContext = getJaxbContext( rootElementStartEvent );
+		try {
+			final JAXBContext jaxbContext = JAXBContext.newInstance( modelClass );
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			unmarshaller.setSchema( schema );
+			if ( isValidationEnabled() ) {
+				unmarshaller.setSchema( xsd );
+			}
+			else {
+				unmarshaller.setSchema( null );
+			}
 			unmarshaller.setEventHandler( handler );
 
-			final Object target = unmarshaller.unmarshal( staxEventReader );
-			return new BindResult( target, origin );
+			return (T) unmarshaller.unmarshal( reader );
 		}
 		catch ( JAXBException e ) {
 			throw new MappingException(
@@ -149,44 +156,4 @@ abstract class AbstractXmlBinder implements XmlBinder {
 			);
 		}
 	}
-
-	/**
-	 * Identify the Schema to use to validate the document being processed.
-	 *
-	 * @param rootElementStartEvent The peeked event that represents the start of the root element of the document
-	 * @param origin
-	 *
-	 * @return
-	 *
-	 * @throws JAXBException
-	 */
-	protected abstract Schema getSchema(XMLEvent rootElementStartEvent, Origin origin) throws JAXBException;
-
-	/**
-	 * Wrap the given StAX event reader in another if needed.
-	 *
-	 * @param xmlEventReader The "real" reader.
-	 * @param rootElementStartEvent The peeked event that represents the start of the root element of the document
-	 *
-	 * @return The wrapped reader.  Simply return the given reader if no wrapping is needed.
-	 */
-	protected XMLEventReader wrapReader(XMLEventReader xmlEventReader, XMLEvent rootElementStartEvent) {
-		return xmlEventReader;
-	}
-
-	/**
-	 * Get the JAXB context representing the Java model to bind to.
-	 *
-	 * @param event
-	 *
-	 * @return
-	 *
-	 * @throws JAXBException
-	 */
-	protected abstract JAXBContext getJaxbContext(XMLEvent event) throws JAXBException;
-
-	protected static boolean isNamespaced(StartElement startElement) {
-		return ! "".equals( startElement.getName().getNamespaceURI() );
-	}
-
 }

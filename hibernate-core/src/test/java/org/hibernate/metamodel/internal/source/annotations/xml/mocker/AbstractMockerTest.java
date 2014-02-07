@@ -70,17 +70,15 @@ public abstract class AbstractMockerTest {
 	}
 
 	protected EntityMappingsMocker getEntityMappingsMocker(String... mappingFiles) {
+		MappingXmlBinder processor = new MappingXmlBinder( getServiceRegistry() );
 		ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 		List<JaxbEntityMappings> xmlEntityMappingsList = new ArrayList<JaxbEntityMappings>();
 		for ( String fileName : mappingFiles ) {
-			MappingXmlBinder processor = new MappingXmlBinder( getServiceRegistry() );
 			BindResult bindResult = processor.bind(
 					classLoaderService.locateResourceStream( packagePrefix + fileName ),
 					new Origin( SourceType.FILE, packagePrefix + fileName )
 			);
 			JaxbEntityMappings entityMappings = (JaxbEntityMappings) bindResult.getRoot();
-
-
 			xmlEntityMappingsList.add( entityMappings );
 		}
 		return new EntityMappingsMocker( xmlEntityMappingsList, getIndex(), getServiceRegistry() );

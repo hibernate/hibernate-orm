@@ -27,7 +27,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -46,8 +46,8 @@ import org.osgi.framework.Bundle;
 public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	// Leave these as Sets -- addClassLoader or addBundle may be called more
 	// than once if a SF or EMF is closed and re-created.
-	private Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
-	private Set<Bundle> bundles = new HashSet<Bundle>();
+	private Set<ClassLoader> classLoaders = new LinkedHashSet<ClassLoader>();
+	private Set<Bundle> bundles = new LinkedHashSet<Bundle>();
 
 	private Map<String, Class<?>> classCache = new HashMap<String, Class<?>>();
 	private Map<String, URL> resourceCache = new HashMap<String, URL>();

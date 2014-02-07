@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ClassLoaderHelper;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -182,7 +180,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		@Override
 		public Enumeration<URL> getResources(String name) throws IOException {
-			final HashSet<URL> resourceUrls = new HashSet<URL>();
+			final LinkedHashSet<URL> resourceUrls = new LinkedHashSet<URL>();
 
 			for ( ClassLoader classLoader : individualClassLoaders ) {
 				final Enumeration<URL> urls = classLoader.getResources( name );

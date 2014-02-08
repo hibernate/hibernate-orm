@@ -110,9 +110,9 @@ task jaxb {
 	ext {
         // input schemas
         cfgXsd = file( 'src/main/resources/org/hibernate/hibernate-configuration-4.0.xsd')
-        hbmXsd = file( 'src/main/resources/org/hibernate/hibernate-mapping-4.0.xsd' )
+        hbmXsd = file( 'src/main/resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd' )
         ormXsd = file( 'src/main/resources/org/hibernate/jpa/orm_2_1.xsd' )
-        unifiedOrmXsd = file( 'src/main/resources/org/hibernate/xsd/mapping/orm-2.1.0.xsd' )
+        unifiedOrmXsd = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-2.1.0.xsd' )
 
         // input bindings
         cfgXjb = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
@@ -143,8 +143,7 @@ task jaxb {
         // hibernate-mapping
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
-                package: 'org.hibernate.jaxb.spi.hbm',
-                binding: hbmXjb.path,
+                binding: 'src/main/xjb/hbm-mapping-bindings.xjb',
                 schema: hbmXsd.path,
                 extension: 'true'
         ) {

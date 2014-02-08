@@ -35,8 +35,8 @@ public enum SupportedOrmXsdVersion {
 	ORM_1_0( "org/hibernate/jpa/orm_1_0.xsd" ),
 	ORM_2_0( "org/hibernate/jpa/orm_2_0.xsd" ),
 	ORM_2_1( "org/hibernate/jpa/orm_2_1.xsd" ),
-	ORM_2_1_0( "org/hibernate/xsd/mapping/orm-2.1.0.xsd" ),
-	HBM_4_0( "org/hibernate/hibernate-mapping-4.0.xsd" );
+	ORM_2_1_0( "org/hibernate/xsd/mapping/mapping-2.1.0.xsd" ),
+	HBM_4_0( "org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd" );
 
 	private final String schemaResourceName;
 

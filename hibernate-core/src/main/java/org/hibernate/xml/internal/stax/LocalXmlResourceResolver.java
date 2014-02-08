@@ -34,7 +34,11 @@ import org.hibernate.internal.util.ConfigHelper;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated No longer used.  "resolvers" to stop remote lookups are no longer needed given the
+ * way we now process the XML.
  */
+@Deprecated
 public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( LocalXmlResourceResolver.class );
 

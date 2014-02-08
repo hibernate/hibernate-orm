@@ -2,13 +2,15 @@
 
 <jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema"
                xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
                jaxb:extensionBindingPrefixes="inheritance"
                version="2.1">
 
-    <jaxb:bindings schemaLocation="../resources/org/hibernate/hibernate-mapping-4.0.xsd" node="/xsd:schema">
+    <jaxb:bindings schemaLocation="../resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd" node="/xsd:schema">
 
         <jaxb:schemaBindings>
+			<jaxb:package name="org.hibernate.jaxb.spi.hbm" />
             <jaxb:nameXmlTransform>
                 <jaxb:typeName prefix="Jaxb"/>
                 <jaxb:elementName prefix="Jaxb"/>

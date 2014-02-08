@@ -32,26 +32,26 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.xml.internal.stax.BufferedXMLEventReader;
 import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
-import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
-import org.hibernate.xml.spi.XmlBinder;
+import org.hibernate.xml.spi.UnifiedBinder;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractXmlBinder2 implements XmlBinder {
+public abstract class AbstractUnifiedBinder<T> implements UnifiedBinder<T> {
 	private final boolean validateXml;
 
-	protected AbstractXmlBinder2() {
+	protected AbstractUnifiedBinder() {
 		this( true );
 	}
 
-	protected AbstractXmlBinder2(boolean validateXml) {
+	protected AbstractUnifiedBinder(boolean validateXml) {
 		this.validateXml = validateXml;
 	}
 
@@ -60,19 +60,9 @@ public abstract class AbstractXmlBinder2 implements XmlBinder {
 	}
 
 	@Override
-	public BindResult bind(InputStream stream, Origin origin) {
+	public T bind(InputStream stream, Origin origin) {
 		final XMLEventReader eventReader = createReader( stream, origin );
-		try {
-			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
-			return doBind( eventReader, rootElementStartEvent, origin );
-		}
-		finally {
-			try {
-				eventReader.close();
-			}
-			catch ( Exception ignore ) {
-			}
-		}
+		return doBind( eventReader, origin );
 	}
 
 	protected XMLEventReader createReader(InputStream stream, Origin origin) {
@@ -84,6 +74,38 @@ public abstract class AbstractXmlBinder2 implements XmlBinder {
 		}
 		catch ( XMLStreamException e ) {
 			throw new MappingException( "Unable to create stax reader", e, origin );
+		}
+	}
+
+	@Override
+	public T bind(Source source, Origin origin) {
+		final XMLEventReader eventReader = createReader( source, origin );
+		return doBind( eventReader, origin );
+	}
+
+	protected XMLEventReader createReader(Source source, Origin origin) {
+		try {
+			// create a standard StAX reader
+			final XMLEventReader staxReader = staxFactory().createXMLEventReader( source );
+			// and wrap it in a buffered reader (keeping 100 element sized buffer)
+			return new BufferedXMLEventReader( staxReader, 100 );
+		}
+		catch ( XMLStreamException e ) {
+			throw new MappingException( "Unable to create stax reader", e, origin );
+		}
+	}
+
+	private T doBind(XMLEventReader eventReader, Origin origin) {
+		try {
+			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
+			return doBind( eventReader, rootElementStartEvent, origin );
+		}
+		finally {
+			try {
+				eventReader.close();
+			}
+			catch ( Exception ignore ) {
+			}
 		}
 	}
 
@@ -123,7 +145,7 @@ public abstract class AbstractXmlBinder2 implements XmlBinder {
 		return rootElementStartEvent.asStartElement();
 	}
 
-	protected abstract BindResult doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
+	protected abstract T doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
 
 	protected static boolean hasNamespace(StartElement startElement) {
 		return ! "".equals( startElement.getName().getNamespaceURI() );

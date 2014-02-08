@@ -290,7 +290,10 @@ public class MetadataSources {
 	 * @param entityClass The mapped class. Cannot be {@code null} null.
 	 *
 	 * @return this (for method chaining purposes)
+	 *
+	 * @deprecated hbm.xml is a legacy mapping format now considered deprecated.
 	 */
+	@Deprecated
 	public MetadataSources addClass(Class entityClass) {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );

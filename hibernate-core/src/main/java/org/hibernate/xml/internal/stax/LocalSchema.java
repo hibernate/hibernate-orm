@@ -34,33 +34,60 @@ import javax.xml.validation.SchemaFactory;
 import org.jboss.logging.Logger;
 
 /**
- * Helper for resolving XML Schema references locally.
- * <p/>
- * Note that *by design* we always use our ClassLoader to perform the lookups here.
- *
  * @author Steve Ebersole
- *
- * @deprecated No longer used.  Because of the move to "unified" XML processing, references on {@link LocalSchema}
- * are all that are needed
  */
-@Deprecated
-public class LocalSchemaLocator {
-	private static final Logger log = Logger.getLogger( LocalSchemaLocator.class );
+public enum LocalSchema {
+	MAPPING(
+			"http://www.hibernate.org/xsd/orm/mapping",
+			"org/hibernate/xsd/mapping/mapping-2.1.0.xsd",
+			"2.1.0"
+	),
+	LEGACY_HBM(
+			"http://www.hibernate.org/xsd/orm/hbm",
+			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd",
+			"4.0"
+	)
+//	, CONFIGURATION( )
+//	, LEGACY_CONFIGURATON( )
+	;
 
-	/**
-	 * Disallow direct instantiation
-	 */
-	private LocalSchemaLocator() {
+	private static final Logger log = Logger.getLogger( LocalSchema.class );
+
+	private final String namespaceUri;
+	private final String localResourceName;
+	private final String currentVersion;
+	private final Schema schema;
+
+	LocalSchema(String namespaceUri, String localResourceName, String currentVersion) {
+		this.namespaceUri = namespaceUri;
+		this.localResourceName = localResourceName;
+		this.currentVersion = currentVersion;
+		this.schema = resolveLocalSchema( localResourceName );
 	}
 
-	/**
-	 * Given the resource name of a schema, locate its URL reference via ClassLoader lookup.
-	 *
-	 * @param schemaName
-	 *
-	 * @return
-	 */
-	public static URL resolveLocalSchemaUrl(String schemaName) {
+	public String getNamespaceUri() {
+		return namespaceUri;
+	}
+
+	public String getCurrentVersion() {
+		return currentVersion;
+	}
+
+	public Schema getSchema() {
+		return schema;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo : centralize this...
+	// 		this is all a general case of wanting to resolve resources strictly
+	// 		using the ClassLoader
+
+	private static javax.xml.validation.Schema resolveLocalSchema(String schemaName) {
+		return resolveLocalSchema( resolveLocalSchemaUrl( schemaName ) );
+	}
+
+	private static URL resolveLocalSchemaUrl(String schemaName) {
 		URL url = LocalSchemaLocator.class.getClassLoader().getResource( schemaName );
 		if ( url == null ) {
 			throw new XmlInfrastructureException( "Unable to locate schema [" + schemaName + "] via classpath" );
@@ -68,31 +95,27 @@ public class LocalSchemaLocator {
 		return url;
 	}
 
-	public static Schema resolveLocalSchema(String schemaName){
-		return resolveLocalSchema( resolveLocalSchemaUrl( schemaName ) );
-	}
-
-	public static Schema resolveLocalSchema(URL schemaUrl) {
+	private static javax.xml.validation.Schema resolveLocalSchema(URL schemaUrl) {
 		try {
 			InputStream schemaStream = schemaUrl.openStream();
 			try {
-				StreamSource source = new StreamSource(schemaUrl.openStream());
+				StreamSource source = new StreamSource( schemaUrl.openStream() );
 				SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-				return schemaFactory.newSchema(source);
+				return schemaFactory.newSchema( source );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );
 			}
 			finally {
 				try {
 					schemaStream.close();
 				}
-				catch ( IOException e ) {
+				catch (IOException e) {
 					log.debugf( "Problem closing schema stream - %s", e.toString() );
 				}
 			}
 		}
-		catch ( IOException e ) {
+		catch (IOException e) {
 			throw new XmlInfrastructureException( "Stream error handling schema url [" + schemaUrl.toExternalForm() + "]" );
 		}
 	}

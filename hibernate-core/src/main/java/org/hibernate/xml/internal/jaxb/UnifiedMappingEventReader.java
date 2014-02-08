@@ -37,6 +37,8 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
+import org.hibernate.xml.internal.stax.LocalSchema;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -44,9 +46,6 @@ import org.jboss.logging.Logger;
  */
 public class UnifiedMappingEventReader extends EventReaderDelegate {
 	private static final Logger log = Logger.getLogger( UnifiedMappingEventReader.class );
-
-	public static final String NAMESPACE = "http://www.hibernate.org/xsd/orm";
-	public static final String VERSION = "2.1.0";
 
 	private static final List<String> JPA_NAMESPACE_URIS = Arrays.asList(
 			// JPA 1.0 and 2.0 namespace uri
@@ -103,20 +102,19 @@ public class UnifiedMappingEventReader extends EventReaderDelegate {
 					targetAttributeList.add( attribute );
 				}
 			}
-			targetAttributeList.add( xmlEventFactory.createAttribute( "version", VERSION ) );
+			targetAttributeList.add( xmlEventFactory.createAttribute( "version", LocalSchema.MAPPING.getCurrentVersion() ) );
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			// namespaces are a little more complicated.  First we add our
-			// unified schema namespace as the default (no-prefix) namespace.
-			// Then we will check each of the original namespaces and if they
-			// have a uri matching any of the JPA mapping schema namespaces
-			// we will swap our uri; if the uri does not match, we will copy
-			// it as-is
+			// namespaces are a little more complicated.  We copy over all namespaces,
+			// but if any uris match known JPA namespaces which point that given
+			// prefix to our namespace instead.
 			final Iterator<Namespace> originalNamespaces = startElement.getNamespaces();
 			while ( originalNamespaces.hasNext() ) {
 				Namespace namespace = originalNamespaces.next();
 				if ( JPA_NAMESPACE_URIS.contains( namespace.getNamespaceURI() ) ) {
-					namespace = xmlEventFactory.createNamespace( namespace.getPrefix(), NAMESPACE );
+					// this namespace was recognized as a "JPA namespace" by uri,
+					// so map our unified namespace uri to that prefix
+					namespace = xmlEventFactory.createNamespace( namespace.getPrefix(), LocalSchema.MAPPING.getNamespaceUri() );
 				}
 				targetNamespaces.add( namespace );
 			}
@@ -130,12 +128,12 @@ public class UnifiedMappingEventReader extends EventReaderDelegate {
 		}
 
 		final StartElement adjusted = xmlEventFactory.createStartElement(
-				new QName( NAMESPACE, startElement.getName().getLocalPart() ),
+				new QName( LocalSchema.MAPPING.getNamespaceUri(), startElement.getName().getLocalPart() ),
 				attributesItr,
 				namespacesItr
 		);
 		if ( log.isDebugEnabled() ) {
-			log.debugf( "Created new StartElement with adjusted namespacing : %s ", adjusted );
+			log.debugf( "Created new StartElement with adjusted namespace : %s ", adjusted );
 		}
 		return adjusted;
 	}

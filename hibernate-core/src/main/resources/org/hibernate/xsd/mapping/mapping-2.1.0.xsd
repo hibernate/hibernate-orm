@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-           xmlns="http://www.hibernate.org/xsd/orm"
-           xmlns:orm="http://www.hibernate.org/xsd/orm"
-           targetNamespace="http://www.hibernate.org/xsd/orm"
+           xmlns="http://www.hibernate.org/xsd/orm/mapping"
+           xmlns:orm="http://www.hibernate.org/xsd/orm/mapping"
+           targetNamespace="http://www.hibernate.org/xsd/orm/mapping"
            elementFormDefault="qualified"
            version="2.1.0">
 
@@ -89,8 +89,9 @@
                 <xsd:element name="default-cascade" type="xsd:string" minOccurs="0" />
                 <xsd:element name="default-lazy" type="xsd:boolean" minOccurs="0" />
 
-                <xsd:element name="type-def" type="orm:hbm-type-def" minOccurs="0" maxOccurs="unbounded"/>
-                <xsd:element name="filter-def" type="orm:hbm-filter-def" minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element name="type-def" type="orm:hbm-type-def" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="filter-def" type="orm:hbm-filter-def" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="fetch-profile" type="orm:hbm-fetch-profile" minOccurs="0" maxOccurs="unbounded" />
 
                 <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0" maxOccurs="unbounded"/>
@@ -308,25 +309,8 @@
             <xsd:choice>
                 <xsd:element name="id" type="orm:id" minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="embedded-id" type="orm:embedded-id" minOccurs="0"/>
-                <xsd:element name="natural-id" minOccurs="0">
-                    <xsd:complexType>
-                        <xsd:annotation>
-                            <xsd:documentation>
-                                A natural-id element allows declaration of the unique business key
-                            </xsd:documentation>
-                        </xsd:annotation>
-                        <xsd:sequence>
-                            <xsd:choice maxOccurs="unbounded">
-                                <xsd:element name="basic" type="orm:basic" />
-                                <xsd:element name="many-to-one" type="orm:many-to-one"/>
-                                <xsd:element name="embedded" type="orm:embedded"/>
-                                <xsd:element name="any" type="orm:any"/>
-                            </xsd:choice>
-                        </xsd:sequence>
-                        <xsd:attribute name="mutable" default="false" type="xsd:boolean"/>
-                    </xsd:complexType>
-                </xsd:element>
             </xsd:choice>
+            <xsd:element name="natural-id" type="orm:natural-id" minOccurs="0" maxOccurs="1" />
             <xsd:element name="basic" type="orm:basic" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="version" type="orm:version" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="many-to-one" type="orm:many-to-one" minOccurs="0" maxOccurs="unbounded"/>
@@ -390,18 +374,18 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="tooling-hint" type="orm:hbm-tooling-hint" minOccurs="0" maxOccurs="unbounded" />
-            <xsd:choice>
-                <xsd:element name="column" type="orm:column" minOccurs="0"/>
-                <xsd:element name="formula" type="xsd:string" minOccurs="0"/>
+            <xsd:choice minOccurs="0">
+                <xsd:element name="column" type="orm:column" />
+                <xsd:element name="formula" type="xsd:string" />
             </xsd:choice>
-            <xsd:choice>
+            <xsd:choice minOccurs="0">
                 <xsd:element name="lob" type="orm:lob" minOccurs="0"/>
                 <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
                 <xsd:element name="enumerated" type="orm:enumerated" minOccurs="0"/>
                 <xsd:element name="convert" type="orm:convert" minOccurs="0"/>
                 <xsd:element name="type" type="orm:hbm-type" minOccurs="0"/>
             </xsd:choice>
-            <xsd:element name="generated" default="never">
+            <xsd:element name="generated" minOccurs="0">
                 <!-- todo : account for new generation strategies -->
                 <xsd:simpleType>
                     <xsd:restriction base="xsd:token">
@@ -920,7 +904,12 @@
             <xsd:element name="attributes" type="orm:attributes" minOccurs="0" maxOccurs="1" />
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string"/>
-        <xsd:attribute name="class" type="xsd:string" use="required"/>
+        <!--
+            Note : strictly speaking JPA says the class attribute is required, but Hibernate
+            dynamic models (map mode) need it as non-required.  But in that case, 'name' does
+            become required.
+        -->
+        <xsd:attribute name="class" type="xsd:string" />
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="custom-access" type="xsd:string" />
         <xsd:attribute name="cacheable" type="xsd:boolean"/>
@@ -1095,17 +1084,17 @@
         <xsd:sequence>
             <xsd:element name="tooling-hint" type="orm:hbm-tooling-hint" minOccurs="0" maxOccurs="unbounded" />
             <xsd:element name="column" type="orm:column" minOccurs="0"/>
-            <xsd:choice>
-                <xsd:element name="generated-value" type="orm:generated-value" minOccurs="0" />
-                <xsd:element name="generator" type="orm:hbm-id-generator" minOccurs="0" />
+            <xsd:choice minOccurs="0">
+                <xsd:element name="generated-value" type="orm:generated-value" />
+                <xsd:element name="generator" type="orm:hbm-id-generator" />
             </xsd:choice>
             <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
             <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0"/>
             <xsd:element name="sequence-generator" type="orm:sequence-generator" minOccurs="0"/>
-            <xsd:element name="type" minOccurs="0" type="orm:hbm-type" />
+            <xsd:element name="type" type="orm:hbm-type" minOccurs="0" />
             <!-- todo : consider dropping the ability to specify arbitrary values here and make this an enumeration -->
             <!-- heck, consider collapsing this up to the entity level -->
-            <xsd:element name="unsaved-value" type="xsd:string"/>
+            <xsd:element name="unsaved-value" type="xsd:string" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
@@ -1558,12 +1547,12 @@
 
         <xsd:sequence>
             <xsd:element name="comment" type="xsd:string" minOccurs="0" />
-            <xsd:element name="timeout" type="xsd:string" minOccurs="0" />
+            <xsd:element name="timeout" type="xsd:int" minOccurs="0" />
             <xsd:element name="flush-mode" type="orm:flush-mode-type" minOccurs="0" />
             <xsd:element name="cacheable" type="xsd:boolean" minOccurs="0" />
             <xsd:element name="cache-mode" type="orm:cache-mode-type" minOccurs="0" />
             <xsd:element name="cache-region" type="xsd:string" minOccurs="0" />
-            <xsd:element name="fetch-size" type="xsd:string" minOccurs="0" />
+            <xsd:element name="fetch-size" type="xsd:int" minOccurs="0" />
             <xsd:element name="read-only" type="xsd:boolean" minOccurs="0" />
 
             <xsd:sequence minOccurs="0" maxOccurs="unbounded">
@@ -1575,8 +1564,7 @@
     <xsd:complexType name="named-native-query">
         <xsd:annotation>
             <xsd:documentation>
-                Mix of javax.persistence.NamedNativeQuery and  org.hibernate.annotations.NamedNativeQuery
-                annotations.
+                Mix of @javax.persistence.NamedNativeQuery and @org.hibernate.annotations.NamedNativeQuery
             </xsd:documentation>
         </xsd:annotation>
 
@@ -1598,8 +1586,7 @@
     <xsd:complexType name="named-query">
         <xsd:annotation>
             <xsd:documentation>
-                Mix of javax.persistence.NamedQuery and  org.hibernate.annotations.NamedQuery
-                annotations.
+                Mix of @javax.persistence.NamedQuery and @org.hibernate.annotations.NamedQuery
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -2220,8 +2207,6 @@
     </xsd:complexType>
 
 
-
-
     <!-- **************************************************** -->
 
     <xsd:complexType name="hbm-fetch-profile">
@@ -2458,5 +2443,21 @@
         <xsd:attribute name="name" use="required" type="xsd:string"/>
     </xsd:complexType>
 
+
+    <xsd:complexType name="natural-id">
+        <xsd:annotation>
+            <xsd:documentation>
+                A natural-id element allows declaration of unique business key
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="basic" type="orm:basic" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="many-to-one" type="orm:many-to-one" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="embedded" type="orm:embedded" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="any" type="orm:any" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+        <xsd:attribute name="mutable" default="false" type="xsd:boolean"/>
+        <xsd:attribute name="cache-region" type="xsd:string"/>
+    </xsd:complexType>
 
 </xsd:schema>

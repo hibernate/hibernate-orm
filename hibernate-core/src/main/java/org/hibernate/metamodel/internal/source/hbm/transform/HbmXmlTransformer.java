@@ -25,22 +25,41 @@ package org.hibernate.metamodel.internal.source.hbm.transform;
 
 import java.util.Date;
 
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jaxb.spi.hbm.JaxbCacheModeAttribute;
+import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFetchProfileElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterDefElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterParamElement;
+import org.hibernate.jaxb.spi.hbm.JaxbFlushModeAttribute;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.jaxb.spi.hbm.JaxbIdentifierGeneratorElement;
 import org.hibernate.jaxb.spi.hbm.JaxbImportElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMetaContainerElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMetaElement;
 import org.hibernate.jaxb.spi.hbm.JaxbParamElement;
+import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
+import org.hibernate.jaxb.spi.hbm.JaxbQueryParamElement;
+import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
+import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTypedefElement;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbCacheModeType;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbEntity;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbFlushModeType;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmFetchProfile;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmFilterDef;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmIdGeneratorDef;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmParam;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmToolingHint;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmTypeDef;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbMappedSuperclass;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbNamedNativeQuery;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbNamedQuery;
 import org.hibernate.metamodel.spi.source.jaxb.JaxbPersistenceUnitMetadata;
+import org.hibernate.metamodel.spi.source.jaxb.JaxbQueryParamType;
+
+import org.jboss.logging.Logger;
 
 /**
  * Transforms a JAXB binding of a hbm.xml file into a unified orm.xml representation
@@ -48,6 +67,8 @@ import org.hibernate.metamodel.spi.source.jaxb.JaxbPersistenceUnitMetadata;
  * @author Steve Ebersole
  */
 public class HbmXmlTransformer {
+	private static final Logger log = Logger.getLogger( HbmXmlTransformer.class );
+
 	/**
 	 * Singleton access
 	 */
@@ -78,20 +99,18 @@ public class HbmXmlTransformer {
 		ormRoot.setDefaultLazy( hbmXmlMapping.isDefaultLazy() );
 
 		transferTypeDefs( hbmXmlMapping, ormRoot );
-		transferFilterDefs( hbmXmlMapping, ormRoot );
 		transferIdentifierGenerators( hbmXmlMapping, ormRoot );
+		transferFilterDefs( hbmXmlMapping, ormRoot );
+		transferFetchProfiles( hbmXmlMapping, ormRoot );
 		transferImports( hbmXmlMapping, ormRoot );
 
+		transferResultSetMappings( hbmXmlMapping, ormRoot );
+		transferNamedQuery( hbmXmlMapping, ormRoot );
+		transferNamedSqlQuery( hbmXmlMapping, ormRoot );
 
-//		<xs:element name="resultset" type="resultset-element"/>
-//		<xs:group ref="query-or-sql-query"/>
-//		<xs:element name="fetch-profile" type="fetch-profile-element"/>
-//		<xs:element name="database-object" type="database-object-element"/>
+		transferDatabaseObjects( hbmXmlMapping, ormRoot );
 
-//		<xs:element name="class" type="class-element"/>
-//		<xs:element name="subclass" type="subclass-element"/>
-//		<xs:element name="joined-subclass" type="joined-subclass-element"/>
-//		<xs:element name="union-subclass" type="union-subclass-element"/>
+		transferEntities( hbmXmlMapping, ormRoot );
 
 		return ormRoot;
 	}
@@ -187,6 +206,168 @@ public class HbmXmlTransformer {
 			ormImport.setClazz( hbmImport.getClazz() );
 			ormImport.setRename( hbmImport.getRename() );
 		}
+	}
+
+	private void transferResultSetMappings(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+		if ( hbmXmlMapping.getResultset().isEmpty() ) {
+			return;
+		}
+
+		// todo : implement this; or decide to not support it in transformation
+		log.debugf( "skipping hbm.xml <resultset/> definitions" );
+	}
+
+	private void transferFetchProfiles(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+		if ( hbmXmlMapping.getFetchProfile().isEmpty() ) {
+			return;
+		}
+
+		for ( JaxbFetchProfileElement hbmFetchProfile : hbmXmlMapping.getFetchProfile() ) {
+			final JaxbHbmFetchProfile fetchProfile = new JaxbHbmFetchProfile();
+			ormRoot.getFetchProfile().add( fetchProfile );
+			fetchProfile.setName( hbmFetchProfile.getName() );
+
+			if ( hbmFetchProfile.getFetch().isEmpty() ) {
+				// really this should be an error, right?
+				continue;
+			}
+			for ( JaxbFetchProfileElement.JaxbFetch hbmFetch : hbmFetchProfile.getFetch() ) {
+				final JaxbHbmFetchProfile.JaxbFetch fetch = new JaxbHbmFetchProfile.JaxbFetch();
+				fetchProfile.getFetch().add( fetch );
+				fetch.setEntity( hbmFetch.getEntity() );
+				fetch.setAssociation( hbmFetch.getAssociation() );
+				fetch.setStyle( hbmFetch.getStyle().value() );
+			}
+		}
+	}
+
+	private void transferNamedQuery(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+		if ( hbmXmlMapping.getQuery().isEmpty() ) {
+			return;
+		}
+
+		for ( JaxbQueryElement hbmQuery : hbmXmlMapping.getQuery() ) {
+			final JaxbNamedQuery query = new JaxbNamedQuery();
+			ormRoot.getNamedQuery().add( query );
+			query.setName( hbmQuery.getName() );
+			query.setCacheable( hbmQuery.isCacheable() );
+			query.setCacheMode( convert( hbmQuery.getCacheMode() ) );
+			query.setCacheRegion( hbmQuery.getCacheRegion() );
+			query.setComment( hbmQuery.getComment() );
+			query.setFetchSize( hbmQuery.getFetchSize() );
+			query.setFlushMode( convert( hbmQuery.getFlushMode() ) );
+			query.setFetchSize( hbmQuery.getFetchSize() );
+			query.setReadOnly( hbmQuery.isReadOnly() );
+			query.setTimeout( hbmQuery.getTimeout() );
+
+			// JaxbQueryElement#content elements can be either the query or parameters
+			for ( Object content : hbmQuery.getContent() ) {
+				if ( String.class.isInstance( content ) ) {
+					query.setQuery( (String) content );
+				}
+				else {
+					final JaxbQueryParamElement hbmQueryParam = (JaxbQueryParamElement) content;
+					final JaxbQueryParamType queryParam = new JaxbQueryParamType();
+					query.getQueryParam().add( queryParam );
+					queryParam.setName( hbmQueryParam.getName() );
+					queryParam.setType( hbmQueryParam.getType() );
+				}
+			}
+		}
+	}
+
+	private JaxbCacheModeType convert(JaxbCacheModeAttribute cacheMode) {
+		final String value = cacheMode == null ? null : cacheMode.value();
+		if ( StringHelper.isEmpty( value ) ) {
+			return JaxbCacheModeType.NORMAL;
+		}
+
+		return JaxbCacheModeType.fromValue( value );
+	}
+
+	private JaxbFlushModeType convert(JaxbFlushModeAttribute flushMode) {
+		final String value = flushMode == null ? null : flushMode.value();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+
+		return JaxbFlushModeType.fromValue( value );
+	}
+
+	private void transferNamedSqlQuery(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+		if ( hbmXmlMapping.getSqlQuery().isEmpty() ) {
+			return;
+		}
+
+		for ( JaxbSqlQueryElement hbmQuery : hbmXmlMapping.getSqlQuery() ) {
+			final JaxbNamedNativeQuery query = new JaxbNamedNativeQuery();
+			ormRoot.getNamedNativeQuery().add( query );
+			query.setName( hbmQuery.getName() );
+			query.setCacheable( hbmQuery.isCacheable() );
+			query.setCacheMode( convert( hbmQuery.getCacheMode() ) );
+			query.setCacheRegion( hbmQuery.getCacheRegion() );
+			query.setComment( hbmQuery.getComment() );
+			query.setFetchSize( hbmQuery.getFetchSize() );
+			query.setFlushMode( convert( hbmQuery.getFlushMode() ) );
+			query.setFetchSize( hbmQuery.getFetchSize() );
+			query.setReadOnly( hbmQuery.isReadOnly() );
+			query.setTimeout( hbmQuery.getTimeout() );
+
+			// JaxbQueryElement#content elements can be either the query or parameters
+			for ( Object content : hbmQuery.getContent() ) {
+				if ( String.class.isInstance( content ) ) {
+					query.setQuery( (String) content );
+				}
+				else {
+					final JaxbQueryParamElement hbmQueryParam = (JaxbQueryParamElement) content;
+					final JaxbQueryParamType queryParam = new JaxbQueryParamType();
+					query.getQueryParam().add( queryParam );
+					queryParam.setName( hbmQueryParam.getName() );
+					queryParam.setType( hbmQueryParam.getType() );
+				}
+			}
+		}
+	}
+
+	private void transferDatabaseObjects(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+		// todo : implement
+	}
+
+	private void transferEntities(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+		// todo : make MappedSuperclass for abstract hbm class mappings?
+
+		// thoughts...
+		//		1) We only need to transfer the "extends" attribute if the model is dynamic (map mode)
+		//
+		if ( !hbmXmlMapping.getClazz().isEmpty() ) {
+			for ( JaxbClassElement hbmClass : hbmXmlMapping.getClazz() ) {
+				final JaxbEntity entity = new JaxbEntity();
+				ormRoot.getEntity().add( entity );
+				transferEntity( hbmClass, entity );
+			}
+		}
+
+		if ( !hbmXmlMapping.getSubclass().isEmpty() ) {
+			for ( JaxbSubclassElement hbmSubclass : hbmXmlMapping.getSubclass() ) {
+				final JaxbEntity entity = new JaxbEntity();
+				ormRoot.getEntity().add( entity );
+
+				transferDiscriminatorSubclass( hbmSubclass, entity );
+			}
+		}
+//		<xs:element name="class" type="class-element"/>
+//		<xs:element name="subclass" type="subclass-element"/>
+//		<xs:element name="joined-subclass" type="joined-subclass-element"/>
+//		<xs:element name="union-subclass" type="union-subclass-element"/>
+
+	}
+
+	private void transferEntity(JaxbClassElement hbmClass, JaxbEntity entity) {
+		// todo : implement
+	}
+
+	private void transferDiscriminatorSubclass(JaxbSubclassElement hbmSubclass, JaxbEntity entity) {
+		// todo : implement
 	}
 
 }

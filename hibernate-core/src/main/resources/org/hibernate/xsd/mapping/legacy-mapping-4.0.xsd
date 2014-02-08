@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+           xmlns="http://www.hibernate.org/xsd/orm/hbm"
            xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
            xmlns:simplify="http://jaxb2-commons.dev.java.net/basic/simplify"
-           targetNamespace="http://www.hibernate.org/xsd/hibernate-mapping"
+           targetNamespace="http://www.hibernate.org/xsd/orm/hbm"
            elementFormDefault="qualified"
            jaxb:extensionBindingPrefixes="simplify"
            version="4.0">
@@ -314,7 +314,9 @@
                         <xs:group ref="query-or-sql-query"/>
                     </xs:choice>
                 </xs:sequence>
-                <xs:attribute name="discriminator-value" type="xs:string"/>
+                <xs:attribute name="discriminator-value" type="xs:string" />
+                <xs:attribute name="name" type="xs:string" />
+                <xs:attribute name="entity-name" type="xs:string" />
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

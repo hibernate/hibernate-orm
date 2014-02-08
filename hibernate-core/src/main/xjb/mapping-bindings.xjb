@@ -6,7 +6,7 @@
         extensionBindingPrefixes="inheritance"
         version="2.1">
 
-    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/orm-2.1.0.xsd" node="/xsd:schema">
+    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-2.1.0.xsd" node="/xsd:schema">
         <schemaBindings>
             <package name="org.hibernate.metamodel.spi.source.jaxb" />
             <nameXmlTransform>

@@ -26,7 +26,6 @@ package org.hibernate.service.internal;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.cfg.Environment;
@@ -64,7 +63,7 @@ public abstract class AbstractServiceRegistryImpl
 	private final boolean allowCrawling;
 
 	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
-	private ConcurrentHashMap<Class,Class> roleXref;
+	private ConcurrentServiceBinding<Class,Class> roleXref;
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
@@ -134,8 +133,9 @@ public abstract class AbstractServiceRegistryImpl
 
 		// look for a previously resolved alternate registration
 		if ( roleXref != null ) {
-			if ( roleXref.containsKey( serviceRole ) ) {
-				return serviceBindingMap.get( roleXref.get( serviceRole ) );
+			final Class alternative = roleXref.get( serviceRole );
+			if ( alternative != null ) {
+				return serviceBindingMap.get( alternative );
 			}
 		}
 
@@ -161,7 +161,7 @@ public abstract class AbstractServiceRegistryImpl
 
 	private void registerAlternate(Class alternate, Class target) {
 		if ( roleXref == null ) {
-			roleXref = CollectionHelper.concurrentMap( 20 );
+			roleXref = new ConcurrentServiceBinding<Class,Class>();
 		}
 		roleXref.put( alternate, target );
 	}

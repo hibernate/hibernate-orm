@@ -62,9 +62,12 @@ public abstract class AbstractStandardBasicType<T>
 	// by DynamicParameterizedTypes.
 	private SqlTypeDescriptor sqlTypeDescriptor;
 	private JavaTypeDescriptor<T> javaTypeDescriptor;
+	// sqlTypes need always to be in sync with sqlTypeDescriptor
+	private int[] sqlTypes;
 
 	public AbstractStandardBasicType(SqlTypeDescriptor sqlTypeDescriptor, JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
+		this.sqlTypes = new int[] { sqlTypeDescriptor.getSqlType() };
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
@@ -139,9 +142,10 @@ public abstract class AbstractStandardBasicType<T>
 	public final SqlTypeDescriptor getSqlTypeDescriptor() {
 		return sqlTypeDescriptor;
 	}
-	
+
 	public final void setSqlTypeDescriptor( SqlTypeDescriptor sqlTypeDescriptor ) {
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
+		this.sqlTypes = new int[] { sqlTypeDescriptor.getSqlType() };
 	}
 
 	public final Class getReturnedClass() {
@@ -153,7 +157,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public final int[] sqlTypes(Mapping mapping) throws MappingException {
-		return new int[] { sqlTypeDescriptor.getSqlType() };
+		return sqlTypes;
 	}
 
 	@Override

@@ -968,13 +968,6 @@ public final class SessionFactoryImpl
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
-		SessionFactoryRegistry.INSTANCE.addSessionFactory(
-				uuid, 
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				this,
-				serviceRegistry.getService( JndiService.class )
-		);
 
 		if ( debugEnabled ) {
 			LOG.debug("Instantiated session factory");
@@ -1058,6 +1051,14 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				uuid,
+				name,
+				settings.isSessionFactoryNameAlsoJndiName(),
+				this,
+				serviceRegistry.getService( JndiService.class )
+		);
 	}
 
 	@SuppressWarnings( {"unchecked"} )

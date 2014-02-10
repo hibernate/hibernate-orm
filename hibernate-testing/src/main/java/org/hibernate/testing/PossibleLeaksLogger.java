@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,37 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.internal.SessionFactoryRegistry;
-
-import org.hibernate.testing.PossibleLeaksLogger;
-import org.junit.runners.model.Statement;
+package org.hibernate.testing;
 
 import org.jboss.logging.Logger;
 
 /**
+ * Centralized logger (easier config) for logging possible test leaks
+ *
  * @author Steve Ebersole
  */
-public class AfterClassCallbackHandler extends Statement {
-	private final CustomRunner runner;
-	private final Statement wrappedStatement;
+public class PossibleLeaksLogger {
+	private static final Logger log = Logger.getLogger( PossibleLeaksLogger.class );
 
-	public AfterClassCallbackHandler(CustomRunner runner, Statement wrappedStatement) {
-		this.runner = runner;
-		this.wrappedStatement = wrappedStatement;
-	}
-
-	@Override
-	public void evaluate() throws Throwable {
-		wrappedStatement.evaluate();
-		runner.getTestClassMetadata().performAfterClassCallbacks( runner.getTestInstance() );
-		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
-			PossibleLeaksLogger.logPossibleLeak(
-					"Possible SessionFactory leak",
-					runner.getTestClassMetadata().getTestClass().getName()
-			);
-			SessionFactoryRegistry.INSTANCE.clearRegistrations();
-		}
+	public static void logPossibleLeak(String message, String test) {
+		log.warn( "POSSIBLE LEAK [" + test + "] : " + message );
 	}
 }

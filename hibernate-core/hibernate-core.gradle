@@ -165,4 +165,3 @@ task jaxb {
 
 runSourceGenerators.dependsOn jaxb
 runSourceGenerators.dependsOn generateGrammarSource
-

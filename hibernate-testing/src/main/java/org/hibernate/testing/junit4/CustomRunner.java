@@ -233,25 +233,6 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		return result;
 	}
 
-	@SuppressWarnings( {"ClassExplicitlyAnnotation"})
-	public static class IgnoreImpl implements Ignore {
-		private final String value;
-
-		public IgnoreImpl(String value) {
-			this.value = value;
-		}
-
-		@Override
-		public String value() {
-			return value;
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Ignore.class;
-		}
-	}
-
 	private static Dialect dialect = determineDialect();
 
 	private static Dialect determineDialect() {
@@ -374,6 +355,25 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	private static class MatcherInstantiationException extends RuntimeException {
 		private MatcherInstantiationException(Class<? extends Skip.Matcher> matcherClass, Throwable cause) {
 			super( "Unable to instantiate specified Matcher [" + matcherClass.getName(), cause );
+		}
+	}
+
+	@SuppressWarnings( {"ClassExplicitlyAnnotation"})
+	public static class IgnoreImpl implements Ignore {
+		private final String value;
+
+		public IgnoreImpl(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public String value() {
+			return value;
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Ignore.class;
 		}
 	}
 

@@ -26,8 +26,8 @@ package org.hibernate.xml.internal.jaxb;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
 
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
-import org.hibernate.metamodel.internal.source.hbm.transform.HbmXmlTransformer;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.HbmXmlTransformer;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.xml.internal.stax.LocalSchema;
 import org.hibernate.xml.spi.Origin;

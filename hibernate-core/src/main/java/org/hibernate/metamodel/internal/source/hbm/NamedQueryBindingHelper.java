@@ -21,23 +21,18 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbLoadCollectionElement;
-import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
-import org.hibernate.jaxb.spi.hbm.JaxbReturnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbReturnPropertyElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbLoadCollectionElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbQueryElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnPropertyElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSqlQueryElement;
 import org.hibernate.metamodel.internal.source.hbm.parser.BasicQueryElementContentParser;
 import org.hibernate.metamodel.internal.source.hbm.parser.SQLQueryElementContentParser;
 import org.hibernate.metamodel.spi.MetadataImplementor;

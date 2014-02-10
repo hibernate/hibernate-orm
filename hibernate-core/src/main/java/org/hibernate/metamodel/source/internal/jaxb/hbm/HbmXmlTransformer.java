@@ -21,29 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.internal.source.hbm.transform;
+package org.hibernate.metamodel.source.internal.jaxb.hbm;
 
 import java.util.Date;
 
 import org.hibernate.FlushMode;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbCacheModeAttribute;
-import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFetchProfileElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFilterDefElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFilterParamElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFlushModeAttribute;
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
-import org.hibernate.jaxb.spi.hbm.JaxbIdentifierGeneratorElement;
-import org.hibernate.jaxb.spi.hbm.JaxbImportElement;
-import org.hibernate.jaxb.spi.hbm.JaxbMetaContainerElement;
-import org.hibernate.jaxb.spi.hbm.JaxbMetaElement;
-import org.hibernate.jaxb.spi.hbm.JaxbParamElement;
-import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
-import org.hibernate.jaxb.spi.hbm.JaxbQueryParamElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
-import org.hibernate.jaxb.spi.hbm.JaxbTypedefElement;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheModeType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;

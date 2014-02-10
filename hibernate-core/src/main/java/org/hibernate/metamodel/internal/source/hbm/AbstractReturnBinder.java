@@ -27,8 +27,8 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbReturnPropertyElement;
-import org.hibernate.jaxb.spi.hbm.ReturnElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnPropertyElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.ReturnElement;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 

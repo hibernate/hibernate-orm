@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.spi.source.MappingException;
 
 /**

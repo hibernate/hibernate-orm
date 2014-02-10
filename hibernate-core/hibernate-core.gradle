@@ -152,7 +152,6 @@ task jaxb {
 		// unified mapping xsd
 		ant.xjc(
 				destdir: '${jaxbTargetDir}',
-//				package: 'org.hibernate.metamodel.spi.source.jaxb',
 				binding: 'src/main/xjb/mapping-bindings.xjb',
 				schema: unifiedOrmXsd.path,
 				extension: 'true'

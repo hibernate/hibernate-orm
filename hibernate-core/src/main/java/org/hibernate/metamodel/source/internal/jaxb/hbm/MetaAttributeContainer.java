@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jaxb.spi.hbm;
+package org.hibernate.metamodel.source.internal.jaxb.hbm;
+
+import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
-public interface ComponentSourceElement extends MetaAttributeContainer {
-	public String getAccess();
-	public String getClazz();
-	public String getName();
+public interface MetaAttributeContainer {
+	public List<JaxbMetaElement> getMeta();
 }

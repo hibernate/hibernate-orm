@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**

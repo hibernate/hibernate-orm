@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbOneToManyElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbOneToManyElement;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 

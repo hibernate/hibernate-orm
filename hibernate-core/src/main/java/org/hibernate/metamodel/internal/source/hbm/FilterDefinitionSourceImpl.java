@@ -28,8 +28,8 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbFilterDefElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFilterParamElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFilterDefElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFilterParamElement;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
 

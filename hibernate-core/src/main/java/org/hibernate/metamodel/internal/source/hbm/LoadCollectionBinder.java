@@ -26,7 +26,7 @@ import java.util.Map;
 import org.hibernate.cfg.HbmBinder;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.jaxb.spi.hbm.JaxbLoadCollectionElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbLoadCollectionElement;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 

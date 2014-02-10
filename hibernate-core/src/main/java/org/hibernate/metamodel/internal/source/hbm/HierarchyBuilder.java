@@ -31,18 +31,17 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.EntityElement;
-import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
-import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
-import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
-import org.hibernate.jaxb.spi.hbm.JaxbUnionSubclassElement;
-import org.hibernate.jaxb.spi.hbm.SubEntityElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbClassElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbQueryElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSqlQueryElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSubclassElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbUnionSubclassElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.SubEntityElement;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntityContainer;

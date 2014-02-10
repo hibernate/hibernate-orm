@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFetchStyleAttribute;
-import org.hibernate.jaxb.spi.hbm.JaxbJoinElement;
-import org.hibernate.jaxb.spi.hbm.JaxbOnDeleteAttribute;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFetchStyleAttribute;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbJoinElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbOnDeleteAttribute;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;

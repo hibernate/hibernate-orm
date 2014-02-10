@@ -23,9 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.jaxb.spi.hbm.EntityElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
-import org.hibernate.jaxb.spi.hbm.TableInformationSource;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSubclassElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.TableInformationSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;

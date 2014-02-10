@@ -25,7 +25,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.Map;
 
-import org.hibernate.jaxb.spi.hbm.JaxbTypedefElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbTypedefElement;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**

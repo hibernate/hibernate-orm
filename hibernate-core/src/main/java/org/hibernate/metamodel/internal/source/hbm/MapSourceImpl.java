@@ -25,7 +25,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.jaxb.spi.hbm.JaxbMapElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbMapElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;

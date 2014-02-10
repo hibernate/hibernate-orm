@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.jaxb.spi.hbm.JaxbCompositeIndexElement;
-import org.hibernate.jaxb.spi.hbm.JaxbCompositeMapKeyElement;
-import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
-import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeIndexElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeMapKeyElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyManyToOneElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;

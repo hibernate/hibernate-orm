@@ -25,8 +25,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
 
-import org.hibernate.jaxb.spi.hbm.EntityElement;
-import org.hibernate.jaxb.spi.hbm.JaxbFetchProfileElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFetchProfileElement;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 

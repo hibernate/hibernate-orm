@@ -29,9 +29,8 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;

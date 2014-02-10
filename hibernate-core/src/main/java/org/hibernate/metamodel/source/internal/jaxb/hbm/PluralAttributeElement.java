@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jaxb.spi.hbm;
+package org.hibernate.metamodel.source.internal.jaxb.hbm;
 
 import java.util.List;
 

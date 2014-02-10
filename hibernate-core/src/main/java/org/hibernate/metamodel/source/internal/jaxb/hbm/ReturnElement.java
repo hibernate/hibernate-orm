@@ -21,25 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jaxb.spi.hbm;
+package org.hibernate.metamodel.source.internal.jaxb.hbm;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
- * TODO javadoc
- *
  * @author Strong Liu <stliu@hibernate.org>
  */
-public interface QuerySourceElement {
-	List<Serializable> getContent();
-	JaxbCacheModeAttribute getCacheMode();
-	String getCacheRegion();
-	boolean isCacheable();
-	String getComment();
-	Integer getFetchSize();
-	JaxbFlushModeAttribute getFlushMode();
-	String getName();
-	boolean isReadOnly();
-	Integer getTimeout();
+public interface ReturnElement {
+	public String getAlias();
+	public JaxbLockModeAttribute getLockMode();
+	public List<JaxbReturnPropertyElement> getReturnProperty();
 }

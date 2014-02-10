@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.jaxb.spi.hbm.JaxbTimestampElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbTimestampElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;

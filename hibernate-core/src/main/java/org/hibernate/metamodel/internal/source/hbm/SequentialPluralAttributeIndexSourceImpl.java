@@ -29,9 +29,9 @@ import java.util.Map;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
-import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIndexElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;

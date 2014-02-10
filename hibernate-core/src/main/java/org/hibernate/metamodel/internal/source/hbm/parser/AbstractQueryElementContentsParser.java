@@ -30,12 +30,12 @@ import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.hbm.JaxbCacheModeAttribute;
-import org.hibernate.jaxb.spi.hbm.JaxbFlushModeAttribute;
-import org.hibernate.jaxb.spi.hbm.JaxbQueryElement;
-import org.hibernate.jaxb.spi.hbm.JaxbQueryParamElement;
-import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
-import org.hibernate.jaxb.spi.hbm.QuerySourceElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCacheModeAttribute;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFlushModeAttribute;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbQueryElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbQueryParamElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSqlQueryElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.QuerySourceElement;
 
 /**
  * @author Brett Meyer

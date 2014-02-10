@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.jaxb.spi.hbm.JaxbReturnJoinElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnJoinElement;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 

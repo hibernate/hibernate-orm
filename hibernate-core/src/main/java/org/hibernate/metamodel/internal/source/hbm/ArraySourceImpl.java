@@ -24,8 +24,8 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
-import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbArrayElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;

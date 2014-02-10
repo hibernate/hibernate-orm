@@ -31,7 +31,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.xml.spi.BindResult;
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;

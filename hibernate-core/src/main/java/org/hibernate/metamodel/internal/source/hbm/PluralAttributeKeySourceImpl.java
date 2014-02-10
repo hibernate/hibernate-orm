@@ -25,9 +25,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
 
-import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
-import org.hibernate.jaxb.spi.hbm.JaxbKeyElement;
-import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyElement;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;

@@ -2550,11 +2550,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			try {
 				fireLoad( event, LoadEventListener.GET );
 				success = true;
-				return event.getResult();
+			}
+			catch (ObjectNotFoundException e) {
+				// if session cache contains proxy for non-existing object
 			}
 			finally {
 				afterOperation( success );
 			}
+			return event.getResult();
 		}
 	}
 

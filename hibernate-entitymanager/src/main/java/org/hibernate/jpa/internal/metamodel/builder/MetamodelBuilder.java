@@ -134,8 +134,7 @@ public class MetamodelBuilder {
 				superType,
 				entityBinding.getEntityName(),
 				entityBinding.getJpaEntityName(),
-				entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite()
-						&& entityBinding.getHierarchyDetails().getEntityIdentifier().getIdClassClass() != null,
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass(),
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
 				entityBinding.isVersioned()
 		);

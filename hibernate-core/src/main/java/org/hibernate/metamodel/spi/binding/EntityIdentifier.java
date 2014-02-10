@@ -62,6 +62,8 @@ public class EntityIdentifier {
 	private EntityIdentifierBinding entityIdentifierBinding;
 	private IdentifierGenerator identifierGenerator;
 
+	private LookupClassBinding lookupClassBinding;
+
 	/**
 	 * Create an identifier
 	 *
@@ -78,36 +80,56 @@ public class EntityIdentifier {
 	public void prepareAsSimpleIdentifier(
 			SingularNonAssociationAttributeBinding attributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
-			String unsavedValue) {
+			String unsavedValue,
+			Class lookupIdClass,
+			String lookupIdClassAccessType) {
 		ensureNotBound();
-		this.entityIdentifierBinding =
-				new SimpleAttributeIdentifierBindingImpl( attributeBinding, identifierGeneratorDefinition, unsavedValue );
+		this.entityIdentifierBinding = new SimpleAttributeIdentifierBindingImpl(
+				attributeBinding,
+				identifierGeneratorDefinition,
+				unsavedValue
+		);
+		this.lookupClassBinding = new LookupClassBindingImpl( lookupIdClass, lookupIdClassAccessType );
 	}
 
 	public void prepareAsAggregatedCompositeIdentifier(
 			CompositeAttributeBinding attributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
-			String unsavedValue) {
+			String unsavedValue,
+			Class lookupIdClass,
+			String lookupIdClassAccessType) {
 		ensureNotBound();
-		this.entityIdentifierBinding =
-				new AggregatedComponentIdentifierBindingImpl( attributeBinding,
-						identifierGeneratorDefinition, unsavedValue );
+		this.entityIdentifierBinding = new AggregatedComponentIdentifierBindingImpl(
+				attributeBinding,
+				identifierGeneratorDefinition,
+				unsavedValue
+		);
+		this.lookupClassBinding = new LookupClassBindingImpl( lookupIdClass, lookupIdClassAccessType );
 	}
 
 	public void prepareAsNonAggregatedCompositeIdentifier(
 			CompositeAttributeBinding compositeAttributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue,
-			Class<?> externalAggregatingClass,
-			String externalAggregatingPropertyAccessorName) {
+			Class lookupIdClass,
+			String lookupIdClassAccessType) {
 		ensureNotBound();
 		this.entityIdentifierBinding = new NonAggregatedCompositeIdentifierBindingImpl(
 				compositeAttributeBinding,
 				identifierGeneratorDefinition,
 				unsavedValue,
-				externalAggregatingClass,
-				externalAggregatingPropertyAccessorName
+				lookupIdClass,
+				lookupIdClassAccessType
 		);
+		this.lookupClassBinding = new LookupClassBindingImpl( lookupIdClass, lookupIdClassAccessType );
+	}
+
+	public EntityIdentifierBinding getEntityIdentifierBinding() {
+		return entityIdentifierBinding;
+	}
+
+	public LookupClassBinding getLookupClassBinding() {
+		return lookupClassBinding;
 	}
 
 	public EntityIdentifierNature getNature() {
@@ -143,34 +165,33 @@ public class EntityIdentifier {
 		return getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 	}
 
-
+	/**
+	 * Get the Class of the {@link javax.persistence.IdClass} associated with the entity, if one.
+	 *
+	 * @deprecated Use {@link #getLookupClassBinding()} instead
+	 */
+	@Deprecated
 	public Class getIdClassClass() {
 		ensureBound();
-		ensureNonAggregatedComposite();
-		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassClass();
+		return getLookupClassBinding().getIdClassType();
 	}
 
+	/**
+	 * @deprecated Use {@link #getLookupClassBinding()} instead
+	 */
+	@Deprecated
 	public String getIdClassPropertyAccessorName() {
 		ensureBound();
-		ensureNonAggregatedComposite();
-		return ( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassPropertyAccessorName();
+		return getLookupClassBinding().getAccessStrategy();
 	}
 
-	private void ensureNonAggregatedComposite() {
-		if ( ! isNonAggregatedComposite() ) {
-			throw new UnsupportedOperationException(
-					String.format(
-							"Entity identifiers of nature %s does not support idClasses.",
-							entityIdentifierBinding.getNature()
-					)
-			);
-		}
-	}
-
+	/**
+	 * @deprecated Use {@link #getLookupClassBinding()} instead
+	 */
+	@Deprecated
 	public boolean isIdentifierMapper() {
 		ensureBound();
-		return isNonAggregatedComposite() &&
-				( (NonAggregatedCompositeIdentifierBindingImpl) entityIdentifierBinding ).getIdClassClass() != null;
+		return isNonAggregatedComposite() && getLookupClassBinding().getIdClassType() != null;
 	}
 
 	// todo do we really need this createIdentifierGenerator and how do we make sure the getter is not called too early
@@ -209,13 +230,47 @@ public class EntityIdentifier {
 		return entityIdentifierBinding.getColumnCount();
 	}
 
+	/**
+	 * For now simply models {@link javax.persistence.IdClass} information.  Ultimately should
+	 * handle {@link javax.persistence.MapsId} information as well.
+	 */
+	public static interface LookupClassBinding {
+		public boolean definedIdClass();
+		public Class getIdClassType();
+		public String getAccessStrategy();
+	}
+
+	private static class LookupClassBindingImpl implements LookupClassBinding {
+		private final Class idClassType;
+		private final String accessStrategy;
+
+		private LookupClassBindingImpl(Class idClassType, String accessStrategy) {
+			this.idClassType = idClassType;
+			this.accessStrategy = idClassType == null ? null : accessStrategy;
+		}
+
+		@Override
+		public boolean definedIdClass() {
+			return getIdClassType() != null;
+		}
+
+		@Override
+		public Class getIdClassType() {
+			return idClassType;
+		}
+
+		@Override
+		public String getAccessStrategy() {
+			return accessStrategy;
+		}
+	}
+
 	private abstract class EntityIdentifierBinding {
 		private final EntityIdentifierNature nature;
 		private final SingularNonAssociationAttributeBinding identifierAttributeBinding;
 		private final IdentifierGeneratorDefinition identifierGeneratorDefinition;
 		private final String unsavedValue;
 		private final int columnCount;
-
 
 		protected EntityIdentifierBinding(
 				EntityIdentifierNature nature,
@@ -441,14 +496,14 @@ public class EntityIdentifier {
 	}
 
 	private class NonAggregatedCompositeIdentifierBindingImpl extends EntityIdentifierBinding {
-		private final Class<?> externalAggregatingClass;
+		private final Class externalAggregatingClass;
 		private final String externalAggregatingPropertyAccessorName;
 
 		NonAggregatedCompositeIdentifierBindingImpl(
 				CompositeAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue,
-				Class<?> externalAggregatingClass,
+				Class externalAggregatingClass,
 				String externalAggregatingPropertyAccessorName) {
 			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
 			if ( identifierAttributeBinding.isAggregated() ) {

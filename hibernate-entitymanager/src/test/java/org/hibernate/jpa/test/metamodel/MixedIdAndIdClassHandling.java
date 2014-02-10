@@ -51,7 +51,7 @@ public class MixedIdAndIdClassHandling extends BaseEntityManagerFunctionalTestCa
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { FullTimeEmployee.class };
+		return new Class[] { FullTimeEmployee.class, Employee.class, EmployeeId.class };
 	}
 
 	@Test
@@ -65,6 +65,7 @@ public class MixedIdAndIdClassHandling extends BaseEntityManagerFunctionalTestCa
 		catch (IllegalArgumentException expected) {
 		}
 
+		assertNotNull( entityType.getSupertype() );
 		assertNotNull( entityType.getSupertype().getIdClassAttributes() );
 		assertEquals( 1, entityType.getSupertype().getIdClassAttributes().size() );
 
@@ -76,8 +77,7 @@ public class MixedIdAndIdClassHandling extends BaseEntityManagerFunctionalTestCa
 	@MappedSuperclass
 	@IdClass( EmployeeId.class )
 	public static abstract class Employee {
-		@Id
-		private String id;
+		@Id private String id;
 		private String name;
 	}
 

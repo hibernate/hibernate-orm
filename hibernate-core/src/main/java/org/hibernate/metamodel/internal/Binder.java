@@ -107,6 +107,7 @@ import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBindin
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.IndexedPluralAttribute;
+import org.hibernate.metamodel.spi.domain.JavaType;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -482,7 +483,7 @@ public class Binder implements HelperContext {
 				final EntityBinding rootEntityBinding = bindingContextContext.getEntityBinding();
 				bindPrimaryTable( rootEntityBinding, rootEntitySource );
 				// Create/Bind root-specific information
-				bindIdentifier( rootEntityBinding, rootEntitySource.getIdentifierSource() );
+				bindIdentifier( rootEntityBinding, rootEntitySource );
 				bindSecondaryTables( rootEntityBinding, rootEntitySource );
 				bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
 				bindDiscriminator( rootEntityBinding, rootEntitySource );
@@ -519,9 +520,12 @@ public class Binder implements HelperContext {
 				rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsSimpleIdentifier(
 						idAttributeBinding,
 						generator,
-						unsavedValue
+						unsavedValue,
+						identifierSource.getLookupIdClass(),
+						propertyAccessorName( identifierSource.getIdClassPropertyAccessorName() )
 				);
 			}
+
 			private  String interpretIdentifierUnsavedValue(
 					final IdentifierSource identifierSource,
 					final IdentifierGeneratorDefinition generator) {
@@ -598,7 +602,11 @@ public class Binder implements HelperContext {
 				final String unsavedValue = interpretIdentifierUnsavedValue( identifierSource, generator );
 
 				rootEntityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsAggregatedCompositeIdentifier(
-						idAttributeBinding, generator, unsavedValue
+						idAttributeBinding,
+						generator,
+						unsavedValue,
+						identifierSource.getLookupIdClass(),
+						propertyAccessorName( identifierSource.getIdClassPropertyAccessorName() )
 				);
 			}
 
@@ -614,11 +622,10 @@ public class Binder implements HelperContext {
 					idAttributeBindings.add( singularAttributeBinding );
 				}
 
-				final Class<?> idClassClass = identifierSource.getLookupIdClass();
-				final String idClassPropertyAccessorName =
-						idClassClass == null ?
-								null :
-								propertyAccessorName( identifierSource.getIdClassPropertyAccessorName() );
+				final Class idClassType = identifierSource.getLookupIdClass();
+				final String idClassPropertyAccessorName = idClassType == null
+						? null
+						: propertyAccessorName( identifierSource.getIdClassPropertyAccessorName() );
 
 				// Configure ID generator
 				IdentifierGeneratorDefinition generator = identifierSource.getIdentifierGeneratorDescriptor();
@@ -628,11 +635,10 @@ public class Binder implements HelperContext {
 					generator = new IdentifierGeneratorDefinition( "default_assign_identity_generator", "assigned", params );
 				}
 				// Create the synthetic attribute
-				final SingularAttribute syntheticAttribute =
-						rootEntityBinding.getEntity().createSyntheticCompositeAttribute(
-								SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME,
-								rootEntityBinding.getEntity()
-						);
+				final SingularAttribute syntheticAttribute = rootEntityBinding.getEntity().createSyntheticCompositeAttribute(
+						SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME,
+						rootEntityBinding.getEntity()
+				);
 
 				final CompositeAttributeBinding syntheticAttributeBinding =
 						rootEntityBinding.makeVirtualCompositeAttributeBinding(
@@ -645,7 +651,7 @@ public class Binder implements HelperContext {
 						syntheticAttributeBinding,
 						generator,
 						interpretIdentifierUnsavedValue( identifierSource, generator ),
-						idClassClass,
+						idClassType,
 						idClassPropertyAccessorName
 				);
 
@@ -654,11 +660,15 @@ public class Binder implements HelperContext {
 
 			private void bindIdentifier(
 					final EntityBinding rootEntityBinding,
-					final IdentifierSource identifierSource) {
+					final RootEntitySource rootEntitySource) {
+				final IdentifierSource identifierSource = rootEntitySource.getIdentifierSource();
 				final EntityIdentifierNature nature = identifierSource.getNature();
 				switch ( nature ) {
 					case SIMPLE: {
-						bindSimpleIdentifier( rootEntityBinding, (SimpleIdentifierSource) identifierSource );
+						bindSimpleIdentifier(
+								rootEntityBinding,
+								(SimpleIdentifierSource) identifierSource
+						);
 						break;
 					}
 					case AGGREGATED_COMPOSITE: {

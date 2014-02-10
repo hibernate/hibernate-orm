@@ -338,13 +338,33 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		};
 	}
 
+
+	private Class determineJpaIdClass() {
+		// this would be a <composite-id/> defined with mapped="false"
+		final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
+		if ( compositeId == null ) {
+			return null;
+		}
+
+		if ( !"".equals( compositeId.getName() ) ) {
+			return null;
+		}
+
+		if ( compositeId.isMapped() ) {
+			return null;
+		}
+
+		if ( compositeId.getClazz() == null ) {
+			return null;
+		}
+
+		return bindingContext().locateClassByName( bindingContext().qualifyClassName( compositeId.getClazz() ) );
+	}
+
 	private class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 		@Override
 		public SingularAttributeSource getIdentifierAttributeSource() {
-			return new SingularIdentifierAttributeSourceImpl(
-					sourceMappingDocument(),
-					entityElement().getId()
-			);
+			return new SingularIdentifierAttributeSourceImpl( sourceMappingDocument(), entityElement().getId() );
 		}
 
 		@Override
@@ -379,6 +399,16 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		@Override
 		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
 			return entityElement().getId().getMeta();
+		}
+
+		@Override
+		public Class getLookupIdClass() {
+			return determineJpaIdClass();
+		}
+
+		@Override
+		public String getIdClassPropertyAccessorName() {
+			return null;
 		}
 	}
 
@@ -424,6 +454,16 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		@Override
 		public String getUnsavedValue() {
 			return entityElement().getCompositeId().getUnsavedValue().value();
+		}
+
+		@Override
+		public Class getLookupIdClass() {
+			return determineJpaIdClass();
+		}
+
+		@Override
+		public String getIdClassPropertyAccessorName() {
+			return null;
 		}
 
 		@Override
@@ -518,11 +558,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	private class NonAggregatedCompositeIdentifierSourceImpl implements NonAggregatedCompositeIdentifierSource {
 		@Override
 		public Class getLookupIdClass() {
-			return StringHelper.isEmpty( entityElement().getCompositeId().getClazz() ) ?
-					null :
-					bindingContext().locateClassByName(
-							bindingContext().qualifyClassName( entityElement().getCompositeId().getClazz() )
-			);
+			return determineJpaIdClass();
 		}
 
 		@Override

@@ -25,13 +25,14 @@ package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+import org.hibernate.metamodel.spi.domain.JavaType;
 
 /**
  * Contract describing source of identifier information for the entity.
  *
  * @author Steve Ebersole
  */
-public interface IdentifierSource extends MetaSource{
+public interface IdentifierSource extends MetaSource {
     /**
      * Obtain the identifier generator source.
 	 *
@@ -59,5 +60,19 @@ public interface IdentifierSource extends MetaSource{
 	 *  @return the "unsaved" entity identifier value
 	 */
 	public String getUnsavedValue();
+
+	/**
+	 * Retrieve the class specified as the {@link javax.persistence.IdClass}, if one.
+	 *
+	 * @return The class specified as the {@link javax.persistence.IdClass}, or {@code null} if none.
+	 */
+	public Class getLookupIdClass();
+
+	/**
+	 * Obtain the property accessor name for the {@link javax.persistence.IdClass}, if one.
+	 *
+	 * @return The property accessor name for the {@link javax.persistence.IdClass}, or {@code null} if none.
+	 **/
+	public String getIdClassPropertyAccessorName();
 
 }

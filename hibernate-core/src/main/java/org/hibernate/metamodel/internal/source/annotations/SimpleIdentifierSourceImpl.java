@@ -39,9 +39,9 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
  */
 public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	private final BasicAttribute attribute;
-	private final RootEntityClass rootEntityClass;
+	private final RootEntitySourceImpl rootEntitySource;
 	private final SingularAttributeSourceImpl source ;
-	public SimpleIdentifierSourceImpl(RootEntityClass rootEntityClass, BasicAttribute attribute) {
+	public SimpleIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource, BasicAttribute attribute) {
 		if ( !attribute.isId() ) {
 			throw new AssertionFailure(
 					String.format(
@@ -50,10 +50,11 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 					)
 			);
 		}
-		this.rootEntityClass = rootEntityClass;
+		this.rootEntitySource = rootEntitySource;
 		this.attribute = attribute;
 		this.source= new SingularAttributeSourceImpl( attribute );
-		source.applyAttributeOverride( rootEntityClass.getAttributeOverrideMap() );
+
+		source.applyAttributeOverride( rootEntitySource.getEntityClass().getAttributeOverrideMap() );
 	}
 
 	@Override
@@ -75,6 +76,16 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	@Override
 	public String getUnsavedValue() {
 		return null;
+	}
+
+	@Override
+	public Class getLookupIdClass() {
+		return rootEntitySource.locateIdClassType();
+	}
+
+	@Override
+	public String getIdClassPropertyAccessorName() {
+		return rootEntitySource.determineIdClassAccessStrategy();
 	}
 
 	@Override

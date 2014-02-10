@@ -50,7 +50,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.xml.mocker.MockHelper;
+import org.hibernate.metamodel.source.internal.jandex.MockHelper;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;

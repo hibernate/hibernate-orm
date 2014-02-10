@@ -31,7 +31,6 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
@@ -88,21 +87,7 @@ public class UnifiedMappingEventReader extends EventReaderDelegate {
 		Iterator<?> namespacesItr;
 
 		if ( "entity-mappings".equals( startElement.getName().getLocalPart() ) ) {
-			final List<Attribute> targetAttributeList = new ArrayList<Attribute>();
 			final List<Namespace> targetNamespaces = new ArrayList<Namespace>();
-
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			// attributes are pretty straight-forward; copy over any attributes
-			// *except* the version attribute and then add our specific unified
-			// schema version explicitly
-			final Iterator<Attribute> originalAttributes = startElement.getAttributes();
-			while ( originalAttributes.hasNext() ) {
-				final Attribute attribute = originalAttributes.next();
-				if ( !"version".equals( attribute.getName().getLocalPart() ) ) {
-					targetAttributeList.add( attribute );
-				}
-			}
-			targetAttributeList.add( xmlEventFactory.createAttribute( "version", LocalSchema.MAPPING.getCurrentVersion() ) );
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// namespaces are a little more complicated.  We copy over all namespaces,
@@ -119,7 +104,7 @@ public class UnifiedMappingEventReader extends EventReaderDelegate {
 				targetNamespaces.add( namespace );
 			}
 
-			attributesItr = targetAttributeList.iterator();
+			attributesItr = startElement.getAttributes();
 			namespacesItr = targetNamespaces.iterator();
 		}
 		else {

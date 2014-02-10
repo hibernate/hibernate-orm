@@ -29,7 +29,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
-import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
+import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
 
 import static org.junit.Assert.assertEquals;
 

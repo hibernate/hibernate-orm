@@ -26,36 +26,34 @@ package org.hibernate.xml.internal.jaxb;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.validation.Schema;
 
-import org.jboss.logging.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
+import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.xml.internal.stax.LocalSchema;
 import org.hibernate.xml.internal.stax.SupportedOrmXsdVersion;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
-import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
-import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.service.ServiceRegistry;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Loads {@code hbm.xml} and {@code orm.xml} files and processes them using StAX and JAXB.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ *
+ * @deprecated see {@link org.hibernate.xml.internal.jaxb.UnifiedMappingBinder}
  */
+@Deprecated
 public class MappingXmlBinder extends AbstractXmlBinder {
-	private static final Logger log = Logger.getLogger( MappingXmlBinder.class );
-	public static final String HIBERNATE_MAPPING_URI = "http://www.hibernate.org/xsd/hibernate-mapping";
-
 	public MappingXmlBinder(ServiceRegistry serviceRegistry) {
 		this( serviceRegistry, true );
 	}
@@ -63,12 +61,6 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 	public MappingXmlBinder(ServiceRegistry serviceRegistry, boolean validateXml) {
 		super(serviceRegistry, validateXml);
 	}
-
-	// todo : DO THIS!
-	// the goal here ultimately is to:
-	// 		1) use one "combined" XSD for both orm.xml and hbm.xml features (HHH-8893)
-	//		2) always always always validate against the latest version of that XSD (HHH-8894)
-	//		3) profit!
 
 	@Override
 	protected JAXBContext getJaxbContext(XMLEvent event) throws JAXBException {
@@ -88,9 +80,7 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 		final String elementName = event.asStartElement().getName().getLocalPart();
 		final Schema validationSchema;
 		if ( "entity-mappings".equals( elementName ) ) {
-			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
-			final String explicitVersion = attribute == null ? null : attribute.getValue();
-			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
+			return LocalSchema.MAPPING.getSchema();
 		}
 		else {
 			validationSchema = validateXml ? SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
@@ -102,29 +92,12 @@ public class MappingXmlBinder extends AbstractXmlBinder {
 	protected XMLEventReader wrapReader(XMLEventReader staxEventReader, XMLEvent event) {
 		final String elementName = event.asStartElement().getName().getLocalPart();
 		if ( "entity-mappings".equals( elementName ) ) {
-			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
-			final String explicitVersion = attribute == null ? null : attribute.getValue();
-			if ( !"2.1".equals( explicitVersion ) ) {
-				return new LegacyJPAEventReader(
-						staxEventReader,
-						LocalXmlResourceResolver.SECOND_JPA_ORM_NS
-				);
-			}
+			return new UnifiedMappingEventReader( staxEventReader );
 		}
 		else {
-			if ( !isNamespaced( event.asStartElement() ) ) {
-				// if the elements are not namespaced, wrap the reader in a reader which will namespace them as pulled.
-				log.debug( "HBM mapping document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
-				return  new NamespaceAddingEventReader( staxEventReader, HIBERNATE_MAPPING_URI );
-			}
+			return new HbmEventReader( staxEventReader );
 		}
-		return super.wrapReader( staxEventReader, event );
 	}
-
-	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "version" );
-
-
-
 
 
 	@SuppressWarnings( { "unchecked" })

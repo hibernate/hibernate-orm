@@ -30,7 +30,9 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
+import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
 import org.hibernate.xml.spi.BindResult;

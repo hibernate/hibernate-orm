@@ -298,7 +298,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		catch ( Exception e ) {
 
 		}
-		return BaseCoreFunctionalTestCase.DEFAULT_USE_NEW_METAMODEL;
+		return true;
 	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {

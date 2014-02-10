@@ -24,6 +24,7 @@
 package org.hibernate.xml.spi;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 /**
  * Describes the origin of an xml document
@@ -31,6 +32,8 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public class Origin implements Serializable {
+	public static final String UNKNOWN_FILE_PATH = "<unknown>";
+
 	private final SourceType type;
 	private final String name;
 
@@ -88,9 +91,6 @@ public class Origin implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Origin{" +
-				"name='" + name + '\'' +
-				", type=" + type +
-				'}';
+		return String.format( Locale.ENGLISH, "Origin(name=%s,type=%s)", name, type );
 	}
 }

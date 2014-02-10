@@ -118,7 +118,7 @@
                 </xsd:element>
 
             </xsd:sequence>
-            <xsd:attribute name="version" type="orm:supportedVersionsType" default="2.1.0" use="optional"/>
+            <xsd:attribute name="version" type="orm:supportedVersionsType" use="required" />
         </xsd:complexType>
     </xsd:element>
 
@@ -132,7 +132,10 @@
 
     <xsd:simpleType name="supportedVersionsType">
         <xsd:restriction base="orm:versionType">
-            <xsd:enumeration value="2.1.0"/>
+            <xsd:enumeration value="2.1.0" />
+            <xsd:enumeration value="1.0" />
+            <xsd:enumeration value="2.0" />
+            <xsd:enumeration value="2.1" />
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -222,9 +225,7 @@
     <xsd:simpleType name="access-type">
         <xsd:annotation>
             <xsd:documentation>
-                The JPA "attribute access" enumeration, declaring the discrete set of values
-                describing how the persistence provider accesses the state of an entity or
-                embedded object.
+                javax.persistence.AccessType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -443,7 +444,7 @@
     <xsd:simpleType name="cache-mode-type">
         <xsd:annotation>
             <xsd:documentation>
-                Enumeration values for Hibernate's CacheMode
+                org.hibernate.CacheMode enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -462,7 +463,7 @@
         <!-- todo : account for Hibernate cascade types -->
         <xsd:annotation>
             <xsd:documentation>
-                public enum CascadeType { ALL, PERSIST, MERGE, REMOVE, REFRESH, DETACH};
+                javax.persistence.CascadeType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -584,9 +585,7 @@
     <xsd:simpleType name="discriminator-type">
         <xsd:annotation>
             <xsd:documentation>
-
-                public enum DiscriminatorType { STRING, CHAR, INTEGER };
-
+                javax.persistence.DiscriminatorType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -961,7 +960,7 @@
     <xsd:simpleType name="enum-type">
         <xsd:annotation>
             <xsd:documentation>
-                Enumerated values specified by javax.persistence.EnumType
+                javax.persistence.EnumType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -988,7 +987,7 @@
     <xsd:simpleType name="fetch-type">
         <xsd:annotation>
             <xsd:documentation>
-                Enumerated values specified by javax.persistence.FetchType
+                javax.persistence.FetchType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -1003,7 +1002,7 @@
     <xsd:simpleType name="flush-mode-type">
         <xsd:annotation>
             <xsd:documentation>
-                Enumeration values for Hibernate's FlushMode
+                org.hibernate.FlushMode enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -1047,7 +1046,9 @@
     <xsd:simpleType name="generation-type">
         <xsd:annotation>
             <xsd:documentation>
-                Enumerated values specified by javax.persistence.GenerationType
+                javax.persistence.GenerationType rnum values
+
+                todo : add custom ones like INCREMENT, UUID, etc
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -1151,6 +1152,8 @@
         <xsd:annotation>
             <xsd:documentation>
                 Corresponds to the JPA InheritanceType enumeration values + Hibernate's UNION_SUBCLASS
+
+                todo : make a singular enum to cover these
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -1226,7 +1229,7 @@
     <xsd:simpleType name="lock-mode-type">
         <xsd:annotation>
             <xsd:documentation>
-                Enumerated values specified by javax.persistence.LockModeType
+                javax.persistence.LockModeType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -1641,7 +1644,7 @@
     <xsd:simpleType name="parameter-mode">
         <xsd:annotation>
             <xsd:documentation>
-                Corresponds to enumerated values defined by javax.persistence.ParameterMode
+                javax.persistence.ParameterMode enum values
             </xsd:documentation>
         </xsd:annotation>
 
@@ -2146,7 +2149,7 @@
     <xsd:simpleType name="temporal-type">
         <xsd:annotation>
             <xsd:documentation>
-                javax.persistence.TemporalType enum
+                javax.persistence.TemporalType enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">

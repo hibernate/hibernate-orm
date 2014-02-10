@@ -37,7 +37,7 @@ import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor
 import org.hibernate.metamodel.internal.source.annotations.util.EntityHierarchyBuilder;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
+import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;

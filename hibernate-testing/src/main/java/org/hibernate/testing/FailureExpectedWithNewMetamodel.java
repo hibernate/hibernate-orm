@@ -30,8 +30,7 @@ import java.lang.annotation.Target;
 
 /**
  * Used to mark test classes or methods as expecting to fail when using the new metamodel introduced in 5.0.  This annotation is
- * only honored when the system property
- * {@value org.hibernate.metamodel.MetadataSources#USE_NEW_METADATA_MAPPINGS} is set to <code>true</code>.
+ * only honored when the system property 'hibernate.test.new_metadata_mappings' is set to <code>true</code>.
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( { ElementType.METHOD, ElementType.TYPE } )

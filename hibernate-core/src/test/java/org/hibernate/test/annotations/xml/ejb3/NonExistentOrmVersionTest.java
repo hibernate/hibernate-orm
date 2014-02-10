@@ -23,16 +23,13 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
-import java.io.InputStream;
-
-import org.hibernate.InvalidMappingException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.xml.internal.stax.UnsupportedOrmXsdVersionException;
-
-import org.junit.Test;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.source.InvalidMappingException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -41,16 +38,11 @@ public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {
 		try {
-			Configuration config = buildConfiguration();
-			String xmlFileName = "org/hibernate/test/annotations/xml/ejb3/orm5.xml";
-			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFileName );
-			config.addInputStream( is );
-			config.buildMappings();
+			MetadataSources sources = new MetadataSources( new BootstrapServiceRegistryBuilder().build() );
+			sources.addResource( "org/hibernate/test/annotations/xml/ejb3/orm5.xml" );
 			fail( "Expecting failure due to unsupported xsd version" );
 		}
-		catch ( InvalidMappingException expected ) {
-		}
-		catch ( UnsupportedOrmXsdVersionException expected ) {
+		catch (InvalidMappingException expected) {
 		}
 	}
 }

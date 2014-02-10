@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.hbm.transform;
 
 import java.util.Date;
 
+import org.hibernate.FlushMode;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbCacheModeAttribute;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
@@ -43,21 +44,19 @@ import org.hibernate.jaxb.spi.hbm.JaxbQueryParamElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSqlQueryElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbTypedefElement;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbCacheModeType;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbEntity;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbEntityMappings;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbFlushModeType;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmFetchProfile;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmFilterDef;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmIdGeneratorDef;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmParam;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmToolingHint;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbHbmTypeDef;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbMappedSuperclass;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbNamedNativeQuery;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbNamedQuery;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbPersistenceUnitMetadata;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbQueryParamType;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheModeType;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFetchProfile;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmIdGeneratorDef;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmParam;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmToolingHint;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmTypeDef;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedNativeQuery;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedQuery;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbQueryParamType;
 
 import org.jboss.logging.Logger;
 
@@ -255,7 +254,7 @@ public class HbmXmlTransformer {
 			query.setCacheRegion( hbmQuery.getCacheRegion() );
 			query.setComment( hbmQuery.getComment() );
 			query.setFetchSize( hbmQuery.getFetchSize() );
-			query.setFlushMode( convert( hbmQuery.getFlushMode() ) );
+			query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
 			query.setFetchSize( hbmQuery.getFetchSize() );
 			query.setReadOnly( hbmQuery.isReadOnly() );
 			query.setTimeout( hbmQuery.getTimeout() );
@@ -285,13 +284,13 @@ public class HbmXmlTransformer {
 		return JaxbCacheModeType.fromValue( value );
 	}
 
-	private JaxbFlushModeType convert(JaxbFlushModeAttribute flushMode) {
+	private FlushMode interpret(JaxbFlushModeAttribute flushMode) {
 		final String value = flushMode == null ? null : flushMode.value();
 		if ( StringHelper.isEmpty( value ) ) {
 			return null;
 		}
 
-		return JaxbFlushModeType.fromValue( value );
+		return FlushMode.valueOf( value );
 	}
 
 	private void transferNamedSqlQuery(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
@@ -308,7 +307,7 @@ public class HbmXmlTransformer {
 			query.setCacheRegion( hbmQuery.getCacheRegion() );
 			query.setComment( hbmQuery.getComment() );
 			query.setFetchSize( hbmQuery.getFetchSize() );
-			query.setFlushMode( convert( hbmQuery.getFlushMode() ) );
+			query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
 			query.setFetchSize( hbmQuery.getFetchSize() );
 			query.setReadOnly( hbmQuery.isReadOnly() );
 			query.setTimeout( hbmQuery.getTimeout() );
@@ -334,11 +333,11 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferEntities(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		// todo : make MappedSuperclass for abstract hbm class mappings?
-
 		// thoughts...
-		//		1) We only need to transfer the "extends" attribute if the model is dynamic (map mode)
-		//
+		//		1) We only need to transfer the "extends" attribute if the model is dynamic (map mode),
+		//			otherwise it will be discovered via jandex
+		//		2) ?? Have abstract hbm class mappings become MappedSuperclass mappings ??
+
 		if ( !hbmXmlMapping.getClazz().isEmpty() ) {
 			for ( JaxbClassElement hbmClass : hbmXmlMapping.getClazz() ) {
 				final JaxbEntity entity = new JaxbEntity();

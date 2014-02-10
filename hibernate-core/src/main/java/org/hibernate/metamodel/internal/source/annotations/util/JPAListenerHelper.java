@@ -51,7 +51,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClas
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.MappedSuperclass;
-import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
+import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 
 /**

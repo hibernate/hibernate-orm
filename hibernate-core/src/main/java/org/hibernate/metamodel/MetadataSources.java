@@ -32,7 +32,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -47,6 +46,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.SerializationHelper;
@@ -56,16 +56,16 @@ import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSubclassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbUnionSubclassElement;
-import org.hibernate.jaxb.spi.orm.JaxbConverter;
-import org.hibernate.jaxb.spi.orm.JaxbEmbeddable;
-import org.hibernate.jaxb.spi.orm.JaxbEntity;
-import org.hibernate.jaxb.spi.orm.JaxbEntityMappings;
-import org.hibernate.jaxb.spi.orm.JaxbMappedSuperclass;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbConverter;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddable;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbMappedSuperclass;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
 import org.hibernate.metamodel.spi.source.InvalidMappingException;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
@@ -78,7 +78,6 @@ import org.hibernate.xml.spi.SourceType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.CompositeIndex;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
@@ -96,15 +95,7 @@ import org.w3c.dom.Document;
  * @author Brett Meyer
  */
 public class MetadataSources {
-	public static final String UNKNOWN_FILE_PATH = "<unknown>";
-	
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, MetadataSources.class.getName());
-	
-	/**
-	 * temporary option
-	 */
-	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
 	private final MappingXmlBinder jaxbProcessor;
@@ -448,7 +439,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
-		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, UNKNOWN_FILE_PATH ), false );
+		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, Origin.UNKNOWN_FILE_PATH ), false );
 		return this;
 	}
 
@@ -481,7 +472,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addDocument(Document document) {
-		final Origin origin = new Origin( SourceType.DOM, UNKNOWN_FILE_PATH );
+		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
 		BindResult bindResult = jaxbProcessor.bind( document, origin );
 		addJaxbRoot( bindResult );
 		return this;
@@ -562,31 +553,20 @@ public class MetadataSources {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	public IndexView wrapJandexView(IndexView jandexView) {
-		if ( ! hasOrmXmlJaxbRoots ) {
-			// no need to wrap
-			return jandexView;
-		}
-
-		final List<JaxbEntityMappings> collectedOrmXmlMappings = new ArrayList<JaxbEntityMappings>();
-		for ( BindResult bindResult : getBindResultList() ) {
-			if ( JaxbEntityMappings.class.isInstance( bindResult.getRoot() ) ) {
-				collectedOrmXmlMappings.add( ( (BindResult<JaxbEntityMappings>) bindResult ).getRoot() );
-			}
-		}
-
-		if ( collectedOrmXmlMappings.isEmpty() ) {
-			// log a warning or something
-		}
-
-		return new EntityMappingsMocker( collectedOrmXmlMappings, jandexView, serviceRegistry ).mockNewIndex();
-	}
-
 	public IndexView buildJandexView() {
 		return buildJandexView( false );
 	}
 
+	/**
+	 * Create a Jandex IndexView from scratch given the sources information contained here.
+	 *
+	 * @param autoIndexMemberTypes Should the types of class members automatically be added to the built index?
+	 *
+	 * @return
+	 */
+	public IndexView buildJandexView(boolean autoIndexMemberTypes) {
+		return JandexIndexBuilder.process( autoIndexMemberTypes, this );
+	}
 
 	public static class JandexIndexBuilder {
 		private static final Logger log = Logger.getLogger( JandexIndexBuilder.class );
@@ -863,16 +843,5 @@ public class MetadataSources {
 				indexClassName( toDotName( jaxbEntity.getClazz(), packageName ) );
 			}
 		}
-	}
-
-	/**
-	 * Create a Jandex IndexView from scratch given the sources information contained here.
-	 *
-	 * @param autoIndexMemberTypes Should the types of class members automatically be added to the built index?
-	 *
-	 * @return
-	 */
-	public IndexView buildJandexView(boolean autoIndexMemberTypes) {
-		return wrapJandexView( JandexIndexBuilder.process( autoIndexMemberTypes, this ) );
 	}
 }

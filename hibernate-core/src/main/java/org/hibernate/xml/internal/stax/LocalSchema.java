@@ -42,13 +42,13 @@ public enum LocalSchema {
 			"org/hibernate/xsd/mapping/mapping-2.1.0.xsd",
 			"2.1.0"
 	),
-	LEGACY_HBM(
+	HBM(
 			"http://www.hibernate.org/xsd/orm/hbm",
 			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd",
 			"4.0"
 	)
 //	, CONFIGURATION( )
-//	, LEGACY_CONFIGURATON( )
+//	, CFG( )
 	;
 
 	private static final Logger log = Logger.getLogger( LocalSchema.class );

@@ -55,7 +55,10 @@ import org.hibernate.xml.spi.XmlBinder;
  *
  * @author Steve Ebersole
  * @author Strong Liu <stliu@hibernate.org>
+ *
+ * @deprecated See {@link AbstractUnifiedBinder}
  */
+@Deprecated
 abstract class AbstractXmlBinder implements XmlBinder {
 	protected static final Logger log = Logger.getLogger( AbstractXmlBinder.class );
 

@@ -49,11 +49,6 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( MetadataSources.USE_NEW_METADATA_MAPPINGS, "true");
-	}
-
 	@Override
 	public String[] getMappings() {
 		return new String[] { "discriminator/SimpleInheritance.hbm.xml" };

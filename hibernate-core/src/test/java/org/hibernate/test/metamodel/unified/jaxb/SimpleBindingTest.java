@@ -25,11 +25,10 @@ package org.hibernate.test.metamodel.unified.jaxb;
 
 import java.io.InputStream;
 
-import org.hibernate.metamodel.spi.source.jaxb.JaxbAttributes;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbBasic;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbEntity;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbEntityMappings;
-import org.hibernate.metamodel.spi.source.jaxb.JaxbId;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbBasic;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.xml.internal.jaxb.UnifiedMappingBinder;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;

@@ -44,12 +44,6 @@ import org.junit.runner.RunWith;
 public abstract class BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
 
-	public static final boolean DEFAULT_USE_NEW_METAMODEL = Boolean.valueOf(
-			System.getProperty(
-					MetadataSources.USE_NEW_METADATA_MAPPINGS, "true"
-			)
-	);
-
 	@Rule
 	public TestRule globalTimeout= new Timeout(30 * 60 * 1000); // no test should run longer than 30 minutes
 	@After

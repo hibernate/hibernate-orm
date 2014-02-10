@@ -110,16 +110,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		final ConfigurationService dummyConfigurationService = new ConfigurationServiceImpl(
 				dummyConfiguration.getProperties()
 		);
-		isMetadataUsed = dummyConfigurationService.getSetting(
-				MetadataSources.USE_NEW_METADATA_MAPPINGS,
-				new ConfigurationService.Converter<Boolean>() {
-					@Override
-					public Boolean convert(Object value) {
-						return Boolean.parseBoolean( ( String ) value );
-					}
-				},
-				DEFAULT_USE_NEW_METAMODEL
-		);
+		isMetadataUsed = true;
 	}
 
 	protected Configuration configuration() {

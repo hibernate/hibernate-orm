@@ -25,15 +25,10 @@ package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
@@ -62,13 +57,13 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.xml.spi.BindResult;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.internal.jandex.Unifier;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
 import org.hibernate.metamodel.spi.MetadataContributor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -110,6 +105,10 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.hibernate.xml.spi.BindResult;
+
+import org.jboss.jandex.IndexView;
+import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -177,13 +176,31 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			}
 		};
 
-		// todo : cache the built index if no inputs have changed (look at gradle-style hashing for up-to-date checking)
-		boolean autoIndexMemberTypes = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES, StandardConverters.BOOLEAN, false );
-		final IndexView jandexView = options.getJandexView() != null
-				? metadataSources.wrapJandexView( options.getJandexView() )
-				: metadataSources.buildJandexView( autoIndexMemberTypes );
-		Collection<AnnotationInstance> tables = jandexView.getAnnotations( JPADotNames.TABLE );
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+
+		final IndexView baseJandexIndex;
+		if ( options.getJandexView() != null ) {
+			baseJandexIndex = options.getJandexView();
+		}
+		else {
+			final boolean autoIndexMemberTypes = configurationService.getSetting(
+					AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES,
+					StandardConverters.BOOLEAN,
+					false
+			);
+			baseJandexIndex = metadataSources.buildJandexView( autoIndexMemberTypes );
+		}
+
+		final List<BindResult<JaxbEntityMappings>> jpaXmlBindings = new ArrayList<BindResult<JaxbEntityMappings>>();
+		for ( BindResult bindResult : metadataSources.getBindResultList() ) {
+			if ( JaxbEntityMappings.class.isInstance( bindResult.getRoot() ) ) {
+				// todo : this will be checked after hbm transformation is in place.
+				//noinspection unchecked
+				jpaXmlBindings.add( bindResult );
+			}
+		}
+		final IndexView jandexView = Unifier.unify( baseJandexIndex, jpaXmlBindings, serviceRegistry );
+
 		final MetadataSourceProcessor[] metadataSourceProcessors;
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {

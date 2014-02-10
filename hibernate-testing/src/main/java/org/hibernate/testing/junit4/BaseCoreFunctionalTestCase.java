@@ -379,7 +379,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		sessionFactory.close();
 		sessionFactory = null;
-		configuration = null;
         if(serviceRegistry == null){
             return;
         }
@@ -392,20 +391,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public void onFailure() {
 		if ( rebuildSessionFactoryOnError() ) {
+			releaseSessionFactory();
 			rebuildSessionFactory();
 		}
 	}
 
 	protected void rebuildSessionFactory() {
-		if ( sessionFactory == null ) {
-			return;
-		}
-		sessionFactory.close();
-		sessionFactory = null;
-		configuration = null;
-		serviceRegistry.destroy();
-		serviceRegistry = null;
-
 		serviceRegistry = buildServiceRegistry( configuration );
 		if ( isMetadataUsed ) {
 			// need to rebuild metadata because serviceRegistry was recreated

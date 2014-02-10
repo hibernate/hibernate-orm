@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -76,8 +77,6 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
@@ -143,7 +142,6 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-
 import org.jboss.logging.Logger;
 
 
@@ -1763,7 +1761,8 @@ public final class SessionFactoryImpl
 
 		@Override
 		public StatelessSession openStatelessSession() {
-			return new StatelessSessionImpl( connection, tenantIdentifier, sessionFactory, sessionFactory.settings.getRegionFactory().nextTimestamp() );
+			return new StatelessSessionImpl( connection, tenantIdentifier, sessionFactory,
+					sessionFactory.settings.getRegionFactory().nextTimestamp() );
 		}
 
 		@Override

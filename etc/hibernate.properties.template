@@ -424,7 +424,7 @@ hibernate.jdbc.use_streams_for_binary true
 ### Second-level Cache ###
 ##########################
 
-## optimize chache for minimal "puts" instead of minimal "gets" (good for clustered cache)
+## optimize cache for minimal "puts" instead of minimal "gets" (good for clustered cache)
 
 #hibernate.cache.use_minimal_puts true
 

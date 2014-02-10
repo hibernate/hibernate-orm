@@ -46,6 +46,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -113,7 +114,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		Session parallelSession = openSession();
+		Session parallelSession = openSecondarySession();
 		Transaction parallelTx = parallelSession.beginTransaction();
 		s = openSession();
 		tx = s.beginTransaction();
@@ -131,7 +132,13 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			fail( "All optimistic locking should have make it fail" );
 		}
 		catch (HibernateException e) {
-			if ( parallelTx != null ) parallelTx.rollback();
+			if ( parallelTx != null ) {
+				try {
+					parallelTx.rollback();
+				}
+				catch (Exception ignore) {
+				}
+			}
 		}
 		finally {
 			parallelSession.close();
@@ -532,7 +539,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	@FailureExpectedWithNewMetamodel
 	public void testSerialized() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Shire" );

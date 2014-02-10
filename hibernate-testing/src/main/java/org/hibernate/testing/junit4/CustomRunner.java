@@ -133,17 +133,12 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.junit.runners.ParentRunner#classBlock(org.junit.runner.notification.RunNotifier)
-	 */
 	@Override
 	protected Statement classBlock( RunNotifier notifier ) {
 		log.info( BeforeClass.class.getSimpleName() + ": " + getName() );
 
 		if ( getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) != null
-				|| ( useNewMetamodel() && getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) ) {
+				|| getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) {
 			log.info( FailureExpected.class.getSimpleName() );
 		}
 
@@ -155,7 +150,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		log.info( Test.class.getSimpleName() + ": " + method.getName() );
 
 		if ( method.getAnnotation( FailureExpected.class ) != null
-				|| ( useNewMetamodel() && method.getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) ) {
+				|| method.getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) {
 			log.info( FailureExpected.class.getSimpleName() );
 		}
 
@@ -214,33 +209,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		Ignore virtualIgnore;
 
 		for ( FrameworkMethod frameworkMethod : methods ) {
-			// Convert @FailureExpectedWithNewMetamodel annotations to @FailureExpected annotations
-			FailureExpected failureExpected = null;
-			if ( useNewMetamodel() ) {
-				final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel =
-						Helper.locateAnnotation( FailureExpectedWithNewMetamodel.class, frameworkMethod, getTestClass() );
-				if ( failureExpectedWithNewMetamodel != null ) {
-					failureExpected = new FailureExpected() {
-
-						@Override
-						public Class< ? extends Annotation > annotationType() {
-							return FailureExpected.class;
-						}
-
-						@Override
-						public String message() {
-							return failureExpectedWithNewMetamodel.message();
-						}
-
-						@Override
-						public String jiraKey() {
-							return failureExpectedWithNewMetamodel.jiraKey();
-						}
-					};
-				}
-			}
+			FailureExpected failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
 			if ( failureExpected == null ) {
-				failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
+				// see if there is a FailureExpectedWithNewMetamodel, and if so treat it like FailureExpected
+				final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel
+						= Helper.locateAnnotation( FailureExpectedWithNewMetamodel.class, frameworkMethod, getTestClass() );
+				if ( failureExpectedWithNewMetamodel != null ) {
+					failureExpected = new FailureExpectedWithNewMetamodelAdapter( failureExpectedWithNewMetamodel );
+				}
 			}
 			// potentially ignore based on expected failure
 			if ( failureExpected != null && !doValidation ) {
@@ -286,19 +262,6 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			return new Dialect() {
 			};
 		}
-	}
-
-	boolean useNewMetamodel() {
-		try {
-			Object object = getTestInstance();
-			if ( object != null && object instanceof BaseCoreFunctionalTestCase ) {
-				return ( (BaseCoreFunctionalTestCase) object ).isMetadataUsed();
-			}
-		}
-		catch ( Exception e ) {
-
-		}
-		return true;
 	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {
@@ -414,4 +377,26 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 	}
 
+	@SuppressWarnings("ClassExplicitlyAnnotation")
+	private class FailureExpectedWithNewMetamodelAdapter implements FailureExpected {
+		private final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel;
+
+		public FailureExpectedWithNewMetamodelAdapter(FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel) {
+			this.failureExpectedWithNewMetamodel = failureExpectedWithNewMetamodel;
+		}
+		@Override
+		public Class< ? extends Annotation > annotationType() {
+			return FailureExpected.class;
+		}
+
+		@Override
+		public String message() {
+			return failureExpectedWithNewMetamodel.message();
+		}
+
+		@Override
+		public String jiraKey() {
+			return failureExpectedWithNewMetamodel.jiraKey();
+		}
+	}
 }

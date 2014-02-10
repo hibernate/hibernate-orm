@@ -42,12 +42,15 @@ import org.hibernate.testing.OnFailure;
 public class TestClassMetadata {
 	private static final Object[] NO_ARGS = new Object[0];
 
+	private Class testClass;
+
 	private LinkedHashSet<Method> beforeClassOnceMethods;
 	private LinkedHashSet<Method> afterClassOnceMethods;
 	private LinkedHashSet<Method> onFailureCallbacks;
 	private LinkedHashSet<Method> onExpectedFailureCallbacks;
 
 	public TestClassMetadata(Class testClass) {
+		this.testClass = testClass;
 		processClassHierarchy( testClass );
 	}
 
@@ -72,6 +75,10 @@ public class TestClassMetadata {
 		if ( superClass != null ) {
 			processClassHierarchy( superClass );
 		}
+	}
+
+	public Class getTestClass() {
+		return testClass;
 	}
 
 	private void addBeforeClassOnceCallback(Method method) {

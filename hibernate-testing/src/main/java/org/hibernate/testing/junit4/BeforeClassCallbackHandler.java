@@ -45,11 +45,11 @@ public class BeforeClassCallbackHandler extends Statement {
 		try {
 			runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
 			wrappedStatement.evaluate();
-		} catch ( Throwable error ) {
+		}
+		catch ( Throwable error ) {
 			runner.setBeforeClassMethodFailed();
-			if ( runner.getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) == null &&
-					( !runner.useNewMetamodel() ||
-							runner.getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) == null ) ) {
+			if ( runner.getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) == null
+					&& runner.getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) == null ) {
 				throw error;
 			}
 		}

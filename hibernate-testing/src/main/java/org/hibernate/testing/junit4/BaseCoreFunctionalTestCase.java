@@ -29,6 +29,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -94,6 +95,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	private final boolean isMetadataUsed;
 
 	protected Session session;
+	private List<Session> secondarySessions;
 
 	protected static Dialect getDialect() {
 		return DIALECT;
@@ -130,13 +132,40 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected Session openSession() throws HibernateException {
+		registerPreviousSessionIfNeeded( session );
 		session = sessionFactory().openSession();
 		return session;
 	}
 
+	private void registerPreviousSessionIfNeeded(Session session) {
+		if ( session == null ) {
+			return;
+		}
+
+		if ( !session.isOpen() ) {
+			return;
+		}
+
+		registerSecondarySession( session );
+	}
+
 	protected Session openSession(Interceptor interceptor) throws HibernateException {
+		registerPreviousSessionIfNeeded( session );
 		session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
 		return session;
+	}
+
+	protected Session openSecondarySession() throws HibernateException {
+		Session session = sessionFactory().openSession();
+		registerSecondarySession( session );
+		return session;
+	}
+
+	protected void registerSecondarySession(Session session) {
+		if ( secondarySessions == null ) {
+			secondarySessions = new LinkedList<Session>();
+		}
+		secondarySessions.add( session );
 	}
 
 
@@ -455,7 +484,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		cleanupTest();
 
-		cleanupSession();
+		cleanupSession( session );
+		if ( secondarySessions != null ) {
+			for ( Session session: secondarySessions ) {
+				cleanupSession( session );
+			}
+		}
 
 		assertAllDataRemoved();
 
@@ -470,22 +504,33 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected boolean isCleanupTestDataRequired() { return false; }
 	
 	protected void cleanupTestData() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete from java.lang.Object" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		Session s = sessionFactory.openSession();
+		try {
+			s.beginTransaction();
+			try {
+				s.createQuery( "delete from java.lang.Object" ).executeUpdate();
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				try {
+					s.doWork( new RollbackWork() );
+				}
+				catch (Exception ignore) {
+				}
+			}
+		}
+		finally {
+			s.close();
+		}
 	}
 
-
-	private void cleanupSession() {
+	private void cleanupSession(Session session) {
 		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {
 			if ( session.isConnected() ) {
 				session.doWork( new RollbackWork() );
 			}
 			session.close();
 		}
-		session = null;
 	}
 
 	public class RollbackWork implements Work {

@@ -710,5 +710,15 @@ public interface AvailableSettings {
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
+	
+	/**
+	 * A {@link org.hibernate.engine.internal.StatefulPersistenceContext} maintains multiple Maps for a Session.  For
+	 * performance reasons, it can be desirable to initialize the Maps with a non-default capacity, minimizing the
+	 * occurrences of #resize calls. The capacity generally correlates with the quantity of entities expected to be
+	 * managed by an average Session.
+	 * 
+	 * Default: 8
+	 */
+	String SESSION_INITIAL_CAPACITY = "hibernate.session.initial_capacity";
 
 }

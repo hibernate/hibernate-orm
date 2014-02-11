@@ -23,75 +23,86 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.PrimaryKey;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.util.SchemaUtil;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test verifying that DDL constraints get applied when Bean Validation / Hibernate Validator are enabled.
+ * Test verifying that DDL constraints get applied when Bean Validation / Hibernate Validator is enabled.
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 public class DDLTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testBasicDDL() {
-		org.hibernate.metamodel.spi.relational.Column stateColumn = SchemaUtil.getColumn( Address.class, "state", metadata() );
-		assertEquals( stateColumn.getSize().getLength(), 3 );
-		org.hibernate.metamodel.spi.relational.Column zipColumn = SchemaUtil.getColumn( Address.class, "zip", metadata() );
-		assertEquals( zipColumn.getSize().getLength(), 5 );
+		Column stateColumn = SchemaUtil.getColumn(
+				Address.class,
+				"state",
+				metadata()
+		);
+		assertEquals( 3, stateColumn.getSize().getLength() );
+		Column zipColumn = SchemaUtil.getColumn(
+				Address.class,
+				"zip",
+				metadata()
+		);
+		assertEquals( 5, zipColumn.getSize().getLength() );
 		assertFalse( zipColumn.isNullable() );
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testApplyOnIdColumn() throws Exception {
 		PrimaryKey id = SchemaUtil.getPrimaryKey( Tv.class, metadata() );
 		assertEquals( "Validator annotation not applied on ids", 2, id.getColumns().get( 0 ).getSize().getLength() );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5281" )
-	@FailureExpectedWithNewMetamodel
+	@TestForIssue(jiraKey = "HHH-5281")
 	public void testLengthConstraint() throws Exception {
-		org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( Tv.class, "model", metadata() );
-		assertEquals( column.getSize().getLength(), 5 );
+		Column column = SchemaUtil.getColumn( Tv.class, "model", metadata() );
+		assertEquals( 5, column.getSize().getLength() );
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testApplyOnManyToOne() throws Exception {
-		org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( TvOwner.class, "tv_serial", metadata() );
-		assertEquals( "Validator annotations not applied on associations", false, column.isNullable() );
+		org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn(
+				TvOwner.class,
+				"tv_serial",
+				metadata()
+		);
+		assertFalse( "@NotNull on @ManyToOne should be applied", column.isNullable() );
 	}
 
 	@Test
 	public void testSingleTableAvoidNotNull() throws Exception {
-		org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( Rock.class, "bit", metadata() );
+		Column column = SchemaUtil.getColumn( Rock.class, "bit", metadata() );
 		assertTrue( "Notnull should not be applied on single tables", column.isNullable() );
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() throws Exception {
-		org.hibernate.metamodel.spi.relational.Column column = SchemaUtil.getColumn( Tv.class, "frequency", metadata() );
-		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", false, column.isNullable()
+		Column column = SchemaUtil.getColumn(
+				Tv.class,
+				"frequency",
+				metadata()
+		);
+		assertFalse(
+				"Validator annotations are applied on tuner as it is @NotNull", column.isNullable()
 		);
 
 		column = SchemaUtil.getColumn( Tv.class, "`time`", metadata() );
-		assertEquals(
-				"Validator annotations were not applied on recorder", true, column.isNullable()
+		assertTrue(
+				"Validator annotations were not applied on recorder", column.isNullable()
 		);
 	}
 

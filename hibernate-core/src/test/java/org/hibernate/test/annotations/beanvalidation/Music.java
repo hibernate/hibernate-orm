@@ -23,13 +23,17 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public class Music {
 	@Id
 	public String name;

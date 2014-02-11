@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collections;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -44,6 +46,8 @@ public class UserTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+      	@TestForIssue(jiraKey = "HHH-8957")
+	@FailureExpected(jiraKey = "HHH-8957")
 	public void testWithNullField() {
 		final PersonInfo info1 = new PersonInfo( 160, null ); // null field
 		final PersonInfo info2 = new PersonInfo( 170, "black" );

@@ -25,6 +25,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -35,6 +36,25 @@ import org.hibernate.LockOptions;
  */
 public class LoadEvent extends AbstractEvent {
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
+	//Performance hotspot: avoid allocating unneeded LockOptions
+	public static final LockOptions DEFAULT_LOCK_OPTIONS = new LockOptions() {
+		@Override
+		public LockOptions setLockMode(LockMode lockMode) {
+			throw new AssertionFailure( "Should not be invoked: DEFAULT_LOCK_OPTIONS needs to be treated as immutable." );
+		}
+		@Override
+		public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
+			throw new AssertionFailure( "Should not be invoked: DEFAULT_LOCK_OPTIONS needs to be treated as immutable." );
+		}
+		@Override
+		public LockOptions setTimeOut(int timeout) {
+			throw new AssertionFailure( "Should not be invoked: DEFAULT_LOCK_OPTIONS needs to be treated as immutable." );
+		}
+		@Override
+		public LockOptions setScope(boolean scope) {
+			throw new AssertionFailure( "Should not be invoked: DEFAULT_LOCK_OPTIONS needs to be treated as immutable." );
+		}
+	};
 
 	private Serializable entityId;
 	private String entityClassName;
@@ -44,7 +64,7 @@ public class LoadEvent extends AbstractEvent {
 	private Object result;
 
 	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
-		this(entityId, null, instanceToLoad, new LockOptions(), false, source);
+		this(entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source);
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source) {
@@ -56,7 +76,7 @@ public class LoadEvent extends AbstractEvent {
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
-		this(entityId, entityClassName, null, new LockOptions(), isAssociationFetch, source);
+		this(entityId, entityClassName, null, DEFAULT_LOCK_OPTIONS, isAssociationFetch, source);
 	}
 	
 	public boolean isAssociationFetch() {
@@ -70,7 +90,9 @@ public class LoadEvent extends AbstractEvent {
 			LockMode lockMode,
 			boolean isAssociationFetch,
 			EventSource source) {
-		this(entityId, entityClassName, instanceToLoad, new LockOptions().setLockMode(lockMode), isAssociationFetch, source );
+		this(entityId, entityClassName, instanceToLoad,
+				lockMode == DEFAULT_LOCK_MODE ? DEFAULT_LOCK_OPTIONS : new LockOptions().setLockMode(lockMode),
+				isAssociationFetch, source );
 	}
 
 	private LoadEvent(
@@ -134,11 +156,23 @@ public class LoadEvent extends AbstractEvent {
 	}
 
 	public void setLockMode(LockMode lockMode) {
-		this.lockOptions.setLockMode(lockMode);
+		if ( lockMode != lockOptions.getLockMode() ) {
+			writingOnLockOptions();
+			this.lockOptions.setLockMode(lockMode);
+		}
+	}
+
+	private void writingOnLockOptions() {
+		if ( lockOptions == DEFAULT_LOCK_OPTIONS ) {
+			this.lockOptions = new LockOptions();
+		}
 	}
 
 	public void setLockTimeout(int timeout) {
-		this.lockOptions.setTimeOut(timeout);
+		if ( timeout != lockOptions.getTimeOut() ) {
+			writingOnLockOptions();
+			this.lockOptions.setTimeOut(timeout);
+		}
 	}
 
 	public int getLockTimeout() {
@@ -146,7 +180,10 @@ public class LoadEvent extends AbstractEvent {
 	}
 
 	public void setLockScope(boolean cascade) {
-		this.lockOptions.setScope(cascade);
+		if ( lockOptions.getScope() != cascade ) {
+			writingOnLockOptions();
+			this.lockOptions.setScope(cascade);
+		}
 	}
 
 	public boolean getLockScope() {

@@ -26,9 +26,6 @@ package org.hibernate.service.internal;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -46,6 +43,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -60,7 +58,7 @@ public abstract class AbstractServiceRegistryImpl
 
 	private final ServiceRegistryImplementor parent;
 
-	private final ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap = CollectionHelper.concurrentMap( 20 );
+	private final ConcurrentServiceBinding<Class,ServiceBinding> serviceBindingMap = new ConcurrentServiceBinding<Class,ServiceBinding>();
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator

@@ -84,8 +84,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	/**
 	 * This is a marker value to insert instead of null values for when a Statement gets registered in xref
-	 * but has no associations registered. This is useful to be able to efficiently check against duplicate
-	 * registraction but you'll have to check against instance equality rather than null before attempting
+	 * but has no associated ResultSets registered. This is useful to efficiently check against duplicate
+	 * registration but you'll have to check against instance equality rather than null before attempting
 	 * to add elements to this set.
 	 */
 	private static final Set<ResultSet> EMPTY_RESULTSET = Collections.emptySet();
@@ -369,11 +369,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void register(Statement statement) {
 		LOG.tracev( "Registering statement [{0}]", statement );
+		// Benchmarking has shown this to be a big hotspot.  Originally, most usages would call both
+		// #containsKey and #put.  Instead, we optimize for the most common path (no previous Statement was
+		// registered) by calling #put only once, but still handling the unlikely conflict and resulting exception.
 		final Set<ResultSet> previousValue = xref.put( statement, EMPTY_RESULTSET );
 		if ( previousValue != null ) {
-			//we could check as a pre-condition but this is a very hot spot in terms of computation,
-			//so we optimize for the common scenario. At this point however we need to put the previous
-			//value back to undo the put:
+			// Put the previous value back to undo the put
 			xref.put( statement, previousValue );
 			throw new HibernateException( "statement already registered with JDBCContainer" );
 		}
@@ -434,18 +435,15 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		if ( statement != null ) {
 			LOG.tracev( "Registering result set [{0}]", resultSet );
-			final Set<ResultSet> resultSets = xref.get( statement );
+			Set<ResultSet> resultSets = xref.get( statement );
 			if ( resultSets == null ) {
-				// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-				// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
 				LOG.unregisteredStatement();
 			}
 			if ( resultSets == null || resultSets == EMPTY_RESULTSET ) {
-				xref.put( statement, new HashSet<ResultSet>() );
+				resultSets = new HashSet<ResultSet>();
+				xref.put( statement, resultSets );
 			}
-			else {
-				resultSets.add( resultSet );
-			}
+			resultSets.add( resultSet );
 		}
 		else {
 			unassociatedResultSets.add( resultSet );
@@ -466,8 +464,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( statement != null ) {
 			final Set<ResultSet> resultSets = xref.get( statement );
 			if ( resultSets == null ) {
-				// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-				// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
 				LOG.unregisteredStatement();
 			}
 			else {

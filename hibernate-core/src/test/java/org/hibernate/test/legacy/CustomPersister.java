@@ -136,6 +136,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public String getRole() {
+		return getEntityName();
+	}
+
+	@Override
 	public boolean implementsLifecycle() {
 		return false;
 	}

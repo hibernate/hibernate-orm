@@ -161,7 +161,7 @@ public class CollectionCacheInvalidator implements Integrator, PostInsertEventLi
 
 	private void evict(Serializable id, CollectionPersister collectionPersister, EventSource session) {
 		LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
-		CacheKey key = session.generateCacheKey( id, collectionPersister.getKeyType(), collectionPersister.getRole() );
+		CacheKey key = session.generateCacheKey( id, collectionPersister );
 		collectionPersister.getCacheAccessStrategy().evict( key );
 	}
 }

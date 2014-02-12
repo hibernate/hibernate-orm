@@ -95,8 +95,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		if ( persister.hasCache() ) {
 			final CacheKey ck = session.generateCacheKey(
 					key,
-					persister.getKeyType(),
-					persister.getRole()
+					persister
 			);
 			final SoftLock lock = persister.getCacheAccessStrategy().lockItem( ck, null );
 			// the old behavior used key as opposed to getKey()
@@ -146,8 +145,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		if ( persister.hasCache() ) {
 			final CacheKey ck = session.generateCacheKey(
 					key, 
-					persister.getKeyType(), 
-					persister.getRole()
+					persister
 			);
 			persister.getCacheAccessStrategy().remove( ck );
 		}
@@ -188,8 +186,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 			final CacheKey ck = session.generateCacheKey(
 					key,
-					persister.getKeyType(),
-					persister.getRole()
+					persister
 			);
 			persister.getCacheAccessStrategy().unlockItem( ck, lock );
 		}

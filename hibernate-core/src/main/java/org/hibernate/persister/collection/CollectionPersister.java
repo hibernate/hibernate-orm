@@ -37,6 +37,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.persister.Persister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.type.CollectionType;
@@ -61,7 +62,7 @@ import org.hibernate.type.Type;
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
-public interface CollectionPersister extends CollectionDefinition {
+public interface CollectionPersister extends CollectionDefinition, Persister {
 	/**
 	 * Initialize the given collection with the given key
 	 */
@@ -85,7 +86,9 @@ public interface CollectionPersister extends CollectionDefinition {
 	public CollectionType getCollectionType();
 	/**
 	 * Get the "key" type (the type of the foreign key)
+	 * Use getIdentifierType()
 	 */
+	@Deprecated
 	public Type getKeyType();
 	/**
 	 * Get the "index" type for a list or map (optional operation)
@@ -209,11 +212,6 @@ public interface CollectionPersister extends CollectionDefinition {
 			SessionImplementor session)
 			throws HibernateException;
 	
-	/**
-	 * Get the name of this collection role (the fully qualified class name,
-	 * extended by a "property path")
-	 */
-	public String getRole();
 	/**
 	 * Get the persister of the entity that "owns" this collection
 	 */

@@ -1597,8 +1597,7 @@ public abstract class Loader {
 					session,
 					session.generateCacheKey(
 							key.getIdentifier(),
-							persister.getEntityMetamodel().getEntityType(),
-							key.getEntityName()
+							persister
 					),
 					persister.getCacheAccessStrategy()
 			);

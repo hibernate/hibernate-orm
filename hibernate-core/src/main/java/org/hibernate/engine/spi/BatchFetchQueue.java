@@ -221,8 +221,7 @@ public class BatchFetchQueue {
 		if ( persister.hasCache() ) {
 			final CacheKey key = context.getSession().generateCacheKey(
 					entityKey.getIdentifier(),
-					persister.getIdentifierType(),
-					entityKey.getEntityName()
+					persister
 			);
 			return CacheHelper.fromSharedCache( context.getSession(), key, persister.getCacheAccessStrategy() ) != null;
 		}
@@ -334,8 +333,7 @@ public class BatchFetchQueue {
 		if ( persister.hasCache() ) {
 			CacheKey cacheKey = context.getSession().generateCacheKey(
 					collectionKey,
-					persister.getKeyType(),
-					persister.getRole()
+					persister
 			);
 			return CacheHelper.fromSharedCache( context.getSession(), cacheKey, persister.getCacheAccessStrategy() ) != null;
 		}

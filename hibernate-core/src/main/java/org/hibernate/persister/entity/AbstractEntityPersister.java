@@ -112,6 +112,7 @@ import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Value;
+import org.hibernate.persister.Persister;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -151,7 +152,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
+		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable, Persister {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractEntityPersister.class.getName() );
 
@@ -1235,7 +1236,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( hasCache() ) {
-			final CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
+			final CacheKey cacheKey = session.generateCacheKey( id, this );
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, getCacheAccessStrategy() );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);
@@ -4348,6 +4349,11 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getName();
 	}
 
+	@Override
+	public final String getRole() {
+		return getEntityName();
+	}
+
 	public EntityType getEntityType() {
 		return entityMetamodel.getEntityType();
 	}
@@ -4494,7 +4500,7 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( hasCache() ) {
-			final CacheKey ck = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
+			final CacheKey ck = session.generateCacheKey( id, this );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
 			if ( ce != null ) {
 				return Boolean.FALSE;

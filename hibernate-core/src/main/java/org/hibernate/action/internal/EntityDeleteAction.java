@@ -102,7 +102,7 @@ public class EntityDeleteAction extends EntityAction {
 
 		final CacheKey ck;
 		if ( persister.hasCache() ) {
-			ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
+			ck = session.generateCacheKey( id, persister );
 			lock = persister.getCacheAccessStrategy().lockItem( ck, version );
 		}
 		else {
@@ -192,8 +192,7 @@ public class EntityDeleteAction extends EntityAction {
 		if ( getPersister().hasCache() ) {
 			final CacheKey ck = getSession().generateCacheKey(
 					getId(),
-					getPersister().getIdentifierType(),
-					getPersister().getRootEntityName()
+					getPersister()
 			);
 			getPersister().getCacheAccessStrategy().unlockItem( ck, lock );
 		}

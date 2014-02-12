@@ -119,11 +119,10 @@ public class CacheImpl implements CacheImplementor {
 	}
 
 	private CacheKey buildCacheKey(Serializable identifier, EntityPersister p) {
+		// have to assume non tenancy
 		return new CacheKey(
 				identifier,
-				p.getIdentifierType(),
-				p.getRootEntityName(),
-				null,                         // have to assume non tenancy
+				p,
 				sessionFactory
 		);
 	}
@@ -197,11 +196,10 @@ public class CacheImpl implements CacheImplementor {
 	}
 
 	private CacheKey buildCacheKey(Serializable ownerIdentifier, CollectionPersister p) {
+		// have to assume non tenancy
 		return new CacheKey(
 				ownerIdentifier,
-				p.getKeyType(),
-				p.getRole(),
-				null,                        // have to assume non tenancy
+				p,
 				sessionFactory
 		);
 	}

@@ -61,6 +61,7 @@ import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.persister.Persister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.stat.SessionStatistics;
@@ -114,9 +115,14 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 		return sessionImplementor.generateEntityKey( id, persister );
 	}
 
-	@Override
+	@Override @Deprecated
 	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
 		return sessionImplementor.generateCacheKey( id, type, entityOrRoleName );
+	}
+
+	@Override
+	public CacheKey generateCacheKey(Serializable id, Persister persister) {
+		return sessionImplementor.generateCacheKey( id, persister );
 	}
 
 	@Override

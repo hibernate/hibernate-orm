@@ -377,8 +377,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		if ( persister.hasCache() ) {
 			ck = source.generateCacheKey(
 					event.getEntityId(),
-					persister.getIdentifierType(),
-					persister.getRootEntityName()
+					persister
 			);
 			lock = persister.getCacheAccessStrategy().lockItem( ck, null );
 		}
@@ -590,8 +589,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final SessionFactoryImplementor factory = source.getFactory();
 		final CacheKey ck = source.generateCacheKey(
 				event.getEntityId(),
-				persister.getIdentifierType(),
-				persister.getRootEntityName()
+				persister
 		);
 
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );

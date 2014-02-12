@@ -118,8 +118,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "No cache for collection", persister.hasCache() );
 		CacheKey cacheKey = ( (SessionImplementor) session ).generateCacheKey(
 				testData.steveId,
-				persister.getKeyType(),
-				persister.getRole()
+				persister
 		);
 		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( cacheKey, ts );
 		assertNotNull( "collection was not in cache", cachedData );
@@ -136,8 +135,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 
 		CacheKey cacheKey2 = ( (SessionImplementor) session ).generateCacheKey(
 				testData.steveId,
-				persister.getKeyType(),
-				persister.getRole()
+				persister
 		);
 		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( cacheKey2, ts );
 		assertNotNull( "collection no longer in cache!", cachedData2 );

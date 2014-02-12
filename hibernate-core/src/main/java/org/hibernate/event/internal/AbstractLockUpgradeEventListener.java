@@ -82,7 +82,7 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 			final SoftLock lock;
 			final CacheKey ck;
 			if ( persister.hasCache() ) {
-				ck = source.generateCacheKey( entry.getId(), persister.getIdentifierType(), persister.getRootEntityName() );
+				ck = source.generateCacheKey( entry.getId(), persister );
 				lock = persister.getCacheAccessStrategy().lockItem( ck, entry.getVersion() );
 			}
 			else {

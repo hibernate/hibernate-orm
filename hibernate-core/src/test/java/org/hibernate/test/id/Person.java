@@ -3,16 +3,16 @@ package org.hibernate.test.id;
 
 public class Person {
 
-    private Long id;
+    private long id;
 
     public Person() {
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(final Long id) {
+    public void setId(final long id) {
         this.id = id;
     }
 

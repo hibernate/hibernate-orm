@@ -25,7 +25,6 @@ package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.domain.JavaType;
 
 /**
  * Contract describing source of identifier information for the entity.

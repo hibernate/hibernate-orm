@@ -65,7 +65,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 		if ( entityBinding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ) {
 			return;
 		}
-		final Class entityClass = entityBinding.getEntity().getClassReference();
+		final Class entityClass = entityBinding.getEntity().getClassReference().getResolvedClass();
 		for ( final Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
 			callbackRegistry.addEntityCallbacks(
 					entityClass,

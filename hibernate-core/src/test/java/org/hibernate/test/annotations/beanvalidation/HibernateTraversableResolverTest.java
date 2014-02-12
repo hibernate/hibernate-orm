@@ -31,9 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,12 +40,9 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonLazyAssocFieldWithConstraintsFailureExpected() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -68,8 +63,6 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testEmbedded() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -99,8 +92,6 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testToOneAssocNotValidated() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -126,8 +117,6 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testCollectionAssocNotValidated() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -158,8 +147,6 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testEmbeddedCollection() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -188,8 +175,6 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	public void testAssocInEmbeddedNotValidated() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 

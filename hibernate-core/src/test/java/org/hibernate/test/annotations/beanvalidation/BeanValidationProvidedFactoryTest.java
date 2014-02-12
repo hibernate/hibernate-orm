@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,12 +43,9 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testListeners() {
-		fail( "HARDY : needs the changes in BeanValidationIntegrator" );
-
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
 		Session s = openSession();
@@ -89,8 +85,9 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 		};
 		final javax.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
 		configuration.messageInterpolator( messageInterpolator );
-		ValidatorFactory vf = configuration.buildValidatorFactory();
-		cfg.getProperties().put( "javax.persistence.validation.factory", vf );
+		ValidatorFactory validatorFactory = configuration.buildValidatorFactory();
+		cfg.getProperties().put( "javax.persistence.validation.factory", validatorFactory );
+
 		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
 	}
 }

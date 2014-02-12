@@ -20,7 +20,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
@@ -36,6 +34,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssoc
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.binding.CascadeType;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -129,13 +128,8 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 
 	@Override
-	public String getClassName() {
-		return associationAttribute.getReferencedEntityType();
-	}
-
-	@Override
-	public ValueHolder<Class<?>> getClassReference() {
-		return getLocalBindingContext().makeClassReference( getClassName() );
+	public JavaClassReference getClassReference() {
+		return getLocalBindingContext().makeJavaClassReference( associationAttribute.getReferencedEntityType() );
 	}
 
 	@Override

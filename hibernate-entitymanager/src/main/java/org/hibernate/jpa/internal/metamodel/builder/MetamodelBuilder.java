@@ -126,7 +126,7 @@ public class MetamodelBuilder {
 
 	@SuppressWarnings("unchecked")
 	private EntityTypeImpl buildEntityType(EntityBinding entityBinding) {
-		final Class javaType = entityBinding.getClassReference();
+		final Class javaType = entityBinding.getClassReference().getResolvedClass();
 		final AbstractIdentifiableType superType = locateOrBuildSuperType( entityBinding.getEntity().getSuperType(), entityBinding );
 
 		EntityTypeImpl entityType = new EntityTypeImpl(
@@ -180,13 +180,13 @@ public class MetamodelBuilder {
 		else {
 			throw new IllegalStateException(
 					"Unexpected type for entity super descriptor; expecting Entity or Superclass, found ["
-							+ superDescriptor.getClassName() + "]"
+							+ superDescriptor.getClassReference().getName() + "]"
 			);
 		}
 	}
 
 	private MappedSuperclassTypeImpl locateOrBuildMappedSuperclassType(Superclass superDescriptor, EntityBinding entityBinding) {
-		MappedSuperclassTypeImpl mappedSuperclassType = mappedSuperclassTypeMap.get( superDescriptor.getClassReference() );
+		MappedSuperclassTypeImpl mappedSuperclassType = mappedSuperclassTypeMap.get( superDescriptor.getClassReference().getResolvedClass() );
 		if ( mappedSuperclassType == null ) {
 			mappedSuperclassType = buildMappedSuperclassType( superDescriptor, entityBinding );
 		}
@@ -195,7 +195,7 @@ public class MetamodelBuilder {
 
 	@SuppressWarnings("unchecked")
 	private MappedSuperclassTypeImpl buildMappedSuperclassType(Superclass superDescriptor, EntityBinding entityBinding) {
-		final Class javaType = superDescriptor.getClassReference();
+		final Class javaType = superDescriptor.getClassReference().getResolvedClass();
 		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType( superDescriptor, entityBinding );
 
 		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(

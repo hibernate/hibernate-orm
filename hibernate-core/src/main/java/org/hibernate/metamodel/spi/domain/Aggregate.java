@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
-import org.hibernate.internal.util.ValueHolder;
-
 /**
  * Models the notion of an aggregated composite (what JPA calls an Embeddable).
  * <p/>
@@ -33,8 +31,11 @@ import org.hibernate.internal.util.ValueHolder;
  * @author Steve Ebersole
  */
 public class Aggregate extends AbstractAttributeContainer {
-	public Aggregate(String name, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
-		super( name, className, classReference, superType );
+	final String roleBaseName;
+
+	public Aggregate(String roleBaseName, String name, JavaClassReference javaClassReference, Hierarchical superType) {
+		super( name, javaClassReference, superType );
+		this.roleBaseName = roleBaseName;
 	}
 
 	@Override
@@ -49,8 +50,6 @@ public class Aggregate extends AbstractAttributeContainer {
 
 	@Override
 	public String getRoleBaseName() {
-		// todo : this is not really completely accurate atm
-		//		the role base here should really be the role of the aggregated composite attribute.
-		return getClassName();
+		return roleBaseName;
 	}
 }

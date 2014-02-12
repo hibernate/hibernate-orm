@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
-import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Basic information about a Java type, in regards to its role in particular set of mappings.
@@ -39,13 +38,6 @@ public interface Type {
 	public String getName();
 
 	/**
-	 * Obtain the java class name for this type.
-	 *
-	 * @return The class name
-	 */
-	public String getClassName();
-
-	/**
 	 * Obtain the java {@link Class} reference for this type
 	 *
 	 * @return The {@link Class} reference
@@ -54,9 +46,7 @@ public interface Type {
 	 * could not be determined.  Generally this is the case in reverse-engineering scenarios where the specified
 	 * domain model classes do not yet exist.
 	 */
-	public Class<?> getClassReference();
-
-	public ValueHolder<Class<?>> getClassReferenceUnresolved();
+	public JavaClassReference getClassReference();
 
 	public boolean isAssociation();
 

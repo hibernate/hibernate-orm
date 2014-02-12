@@ -51,7 +51,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Aggregate;
@@ -796,8 +795,10 @@ public class EntityMetamodel implements Serializable {
 		Class<?> proxyInterfaceClass = null;
 		Class<?> mappedClass = null;
 		if ( isPOJO ) {
-			mappedClass = entityBinding.getEntity().getClassReference();
-			proxyInterfaceClass = entityBinding.getProxyInterfaceType() == null ? null : entityBinding.getProxyInterfaceType().getValue();
+			mappedClass = entityBinding.getEntity().getClassReference().getResolvedClass();
+			proxyInterfaceClass = entityBinding.getProxyInterfaceType() == null ?
+					null :
+					entityBinding.getProxyInterfaceType().getResolvedClass();
 			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 		}
 		else {
@@ -993,7 +994,7 @@ public class EntityMetamodel implements Serializable {
 			subclassEntityNames.add( subEntityBinding.getEntity().getName() );
 			if ( isPOJO ) {
 				entityNameByInheritenceClassMap.put(
-						subEntityBinding.getEntity().getClassReference(),
+						subEntityBinding.getEntity().getClassReference().getResolvedClass(),
 						subEntityBinding.getEntity().getName() );
 			}
 		}

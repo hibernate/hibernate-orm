@@ -29,7 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 
 /**
  * Convenient base class for {@link AttributeContainer}.  Because in our model all
@@ -40,17 +39,15 @@ import org.hibernate.internal.util.ValueHolder;
  */
 public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
 	private final String name;
-	private final String className;
-	private final ValueHolder<Class<?>> classReference;
+	private final JavaClassReference javaClassReference;
 	private final Hierarchical superType;
 
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
 	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
-	public AbstractAttributeContainer(String name, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
+	public AbstractAttributeContainer(String name, JavaClassReference javaClassReference, Hierarchical superType) {
 		this.name = name;
-		this.className = className;
-		this.classReference = classReference;
+		this.javaClassReference = javaClassReference;
 		this.superType = superType;
 	}
 
@@ -60,18 +57,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public String getClassName() {
-		return className;
-	}
-
-	@Override
-	public Class<?> getClassReference() {
-		return classReference.getValue();
-	}
-
-	@Override
-	public ValueHolder<Class<?>> getClassReferenceUnresolved() {
-		return classReference;
+	public JavaClassReference getClassReference() {
+		return javaClassReference;
 	}
 
 	@Override
@@ -82,11 +69,6 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	@Override
 	public Set<Attribute> attributes() {
 		return Collections.unmodifiableSet( attributeSet );
-	}
-
-	@Override
-	public String getRoleBaseName() {
-		return getClassName();
 	}
 
 	@Override

@@ -107,7 +107,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		this.componentClass =
 				isIdentifierMapper ?
 						entityIdentifier.getIdClassClass() :
-						component.getClassReference();
+						component.getClassReference().getResolvedClass();
 
 		String[] getterNames = new String[propertySpan];
 		String[] setterNames = new String[propertySpan];
@@ -213,7 +213,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
 			boolean isIdentifierMapper) {
 		if ( !compositeAttributeBindingContainer.isAggregated() &&
-				ReflectHelper.isAbstractClass( compositeAttributeBindingContainer.getClassReference() ) ) {
+				ReflectHelper.isAbstractClass( compositeAttributeBindingContainer.getClassReference().getResolvedClass() ) ) {
 			return new ProxiedInstantiator( compositeAttributeBindingContainer );
 		}
 		if ( optimizer == null ) {
@@ -245,7 +245,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		else {
 			return getGetter(
-					compositeAttributeBindingContainer.getClassReference(),
+					compositeAttributeBindingContainer.getClassReference().getResolvedClass(),
 					attributeBinding.getAttribute().getName(),
 					PropertyAccessorFactory.getPropertyAccessor( attributeBinding, EntityMode.POJO )
 			);
@@ -271,7 +271,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		else {
 			return getSetter(
-					compositeAttributeBindingContainer.getClassReference(),
+					compositeAttributeBindingContainer.getClassReference().getResolvedClass(),
 					attributeBinding.getAttribute().getName(),
 					PropertyAccessorFactory.getPropertyAccessor( attributeBinding, EntityMode.POJO )
 			);
@@ -295,7 +295,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 
 		public ProxiedInstantiator(CompositeAttributeBindingContainer compositeAttributeBindingContainer) {
-			this( compositeAttributeBindingContainer.getClassReference() );
+			this( compositeAttributeBindingContainer.getClassReference().getResolvedClass() );
 		}
 
 		private ProxiedInstantiator(Class<?> proxiedClass) {

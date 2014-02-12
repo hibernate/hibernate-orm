@@ -627,7 +627,7 @@ public final class PropertyFactory {
 		}
 
 		try {
-			return ReflectHelper.getDefaultConstructor( entityBinding.getEntity().getClassReference() );
+			return ReflectHelper.getDefaultConstructor( entityBinding.getEntity().getClassReference().getResolvedClass() );
 		}
 		catch( Throwable t ) {
 			return null;
@@ -644,13 +644,15 @@ public final class PropertyFactory {
 	}
 
 	private static Getter getGetter(AttributeBinding mappingProperty) {
-		if ( mappingProperty == null || mappingProperty.getContainer().getClassReference() == null ) {
+		final EntityMode entityMode =
+				mappingProperty.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode();
+		if ( mappingProperty == null || entityMode != EntityMode.POJO ) {
 			return null;
 		}
 
 		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
 		return pa.getGetter(
-				mappingProperty.getContainer().getClassReference(),
+				mappingProperty.getContainer().getClassReference().getResolvedClass(),
 				mappingProperty.getAttribute().getName()
 		);
 	}

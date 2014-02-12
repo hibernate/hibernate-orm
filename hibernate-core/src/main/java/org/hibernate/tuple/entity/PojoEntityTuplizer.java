@@ -118,8 +118,11 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super( entityMetamodel, mappedEntity );
-		this.mappedClass = mappedEntity.getEntity().getClassReference();
-		this.proxyInterface = mappedEntity.getProxyInterfaceType() == null ? null : mappedEntity.getProxyInterfaceType().getValue();		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
+		this.mappedClass = mappedEntity.getEntity().getClassReference().getResolvedClass();
+		this.proxyInterface = mappedEntity.getProxyInterfaceType() == null ?
+				null :
+				mappedEntity.getProxyInterfaceType().getResolvedClass();
+		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
 		this.isInstrumented = entityMetamodel.isInstrumented();
 
 		for ( AttributeBinding property : mappedEntity.getAttributeBindingClosure() ) {
@@ -263,8 +266,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		// determine all interfaces needed by the resulting proxy
 		Set<Class> proxyInterfaces = new java.util.LinkedHashSet<Class>();
 
-		Class mappedClass = entityBinding.getClassReference();
-		Class proxyInterface = entityBinding.getProxyInterfaceType().getValue();
+		Class mappedClass = entityBinding.getClassReference().getResolvedClass();
+		Class proxyInterface = entityBinding.getProxyInterfaceType().getResolvedClass();
 
 		if ( proxyInterface!=null && !mappedClass.equals( proxyInterface ) ) {
 			if ( ! proxyInterface.isInterface() ) {
@@ -280,8 +283,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 
 		for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
-			final Class subclassProxy = subEntityBinding.getProxyInterfaceType().getValue();
-			final Class subclassClass = subEntityBinding.getClassReference();
+			final Class subclassProxy = subEntityBinding.getProxyInterfaceType().getResolvedClass();
+			final Class subclassClass = subEntityBinding.getClassReference().getResolvedClass();
 			if ( subclassProxy!=null && !subclassClass.equals( subclassProxy ) ) {
 				if ( ! subclassProxy.isInterface() ) {
 					throw new MappingException(
@@ -431,14 +434,14 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	private Getter getGetter(AttributeBinding mappedProperty)  throws PropertyNotFoundException, MappingException {
 		return getPropertyAccessor( mappedProperty ).getGetter(
-				mappedProperty.getContainer().getClassReference(),
+				mappedProperty.getContainer().getClassReference().getResolvedClass(),
 				mappedProperty.getAttribute().getName()
 		);
 	}
 
 	private Setter getSetter(AttributeBinding mappedProperty) throws PropertyNotFoundException, MappingException {
 		return getPropertyAccessor( mappedProperty ).getSetter(
-				mappedProperty.getContainer().getClassReference(),
+				mappedProperty.getContainer().getClassReference().getResolvedClass(),
 				mappedProperty.getAttribute().getName()
 		);
 	}
@@ -460,7 +463,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			}
 		}
 		return PropertyAccessorFactory.getPropertyAccessor(
-				mappedProperty.getContainer().getClassReference(),
+				mappedProperty.getContainer().getClassReference().getResolvedClass(),
 				mappedProperty.getPropertyAccessorName()
 		);
 	}

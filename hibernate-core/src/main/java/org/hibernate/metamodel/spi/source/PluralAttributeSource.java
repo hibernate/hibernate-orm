@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 
 /**
  * @author Steve Ebersole
@@ -45,7 +45,7 @@ public interface PluralAttributeSource
 
 	public FilterSource[] getFilterSources();
 
-	public ValueHolder<Class<?>> getElementClassReference();
+	public JavaClassReference getElementJavaClassReference();
 
 	public TableSpecificationSource getCollectionTableSpecificationSource();
 

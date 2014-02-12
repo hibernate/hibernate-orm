@@ -31,11 +31,11 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFilterElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
@@ -63,7 +63,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 	private final PluralAttributeElementSource elementSource;
 	private final Caching caching;
 	private final FilterSource[] filterSources;
-	private ValueHolder<Class<?>> elementClassReference;
+	private JavaClassReference elementJavaClassReference;
 
 	protected AbstractPluralAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -130,8 +130,10 @@ public abstract class AbstractPluralAttributeSourceImpl
 			);
 		}
 		else if ( pluralAttributeElement.getCompositeElement() != null ) {
-			elementClassReference = makeClassReference(pluralAttributeElement
-					.getCompositeElement().getClazz());
+			elementJavaClassReference = makeJavaClassReference(
+					pluralAttributeElement
+							.getCompositeElement().getClazz()
+			);
 			return new CompositePluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
 					pluralAttributeElement.getCompositeElement(),
@@ -139,8 +141,10 @@ public abstract class AbstractPluralAttributeSourceImpl
 			);
 		}
 		else if ( pluralAttributeElement.getOneToMany() != null ) {
-			elementClassReference = makeClassReference(pluralAttributeElement
-					.getOneToMany().getClazz());
+			elementJavaClassReference = makeJavaClassReference(
+					pluralAttributeElement
+							.getOneToMany().getClazz()
+			);
 			return new OneToManyPluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
 					this,
@@ -149,8 +153,10 @@ public abstract class AbstractPluralAttributeSourceImpl
 			);
 		}
 		else if ( pluralAttributeElement.getManyToMany() != null ) {
-			elementClassReference = makeClassReference(pluralAttributeElement
-					.getManyToMany().getClazz());
+			elementJavaClassReference = makeJavaClassReference(
+					pluralAttributeElement
+							.getManyToMany().getClazz()
+			);
 			return new ManyToManyPluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
 					this,
@@ -223,8 +229,8 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public ValueHolder<Class<?>> getElementClassReference() {
-		return elementClassReference;
+	public JavaClassReference getElementJavaClassReference() {
+		return elementJavaClassReference;
 	}
 
 	@Override

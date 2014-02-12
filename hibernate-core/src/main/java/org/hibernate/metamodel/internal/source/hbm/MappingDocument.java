@@ -26,8 +26,8 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
@@ -129,13 +129,25 @@ public class MappingDocument {
 		}
 
 		@Override
-		public Type makeJavaType(String className) {
-			return metadata.makeJavaType( className );
+		public Type makeDomainType(String className) {
+			return metadata.makeDomainType( className );
 		}
 
 		@Override
-		public ValueHolder<Class<?>> makeClassReference(String className) {
-			return metadata.makeClassReference( className );
+		public JavaClassReference makeJavaClassReference(String className) {
+			return metadata.makeJavaClassReference( className );
+		}
+
+		@Override
+		public JavaClassReference makeJavaClassReference(Class<?> clazz) {
+			return metadata.makeJavaClassReference( clazz );
+		}
+
+		@Override
+		public JavaClassReference makeJavaPropertyClassReference(
+				JavaClassReference propertyContainerClassReference,
+				String propertyName) {
+			return metadata.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
 		}
 
 		@Override

@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
@@ -59,8 +59,10 @@ public abstract class AbstractHbmSourceNode {
 		return sourceMappingDocument().getJaxbRoot();
 	}
 
-	protected ValueHolder<Class<?>> makeClassReference(String className) {
-		return bindingContext().makeClassReference( bindingContext().qualifyClassName( className ) );
+	protected JavaClassReference makeJavaClassReference(String className) {
+		return className == null ?
+				null :
+				bindingContext().makeJavaClassReference( bindingContext().qualifyClassName( className ) );
 	}
 
 	protected MappingException makeMappingException(String message) {

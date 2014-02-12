@@ -28,9 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
-import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;

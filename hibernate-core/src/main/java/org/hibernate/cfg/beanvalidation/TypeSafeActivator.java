@@ -162,7 +162,7 @@ class TypeSafeActivator {
 		// Hardy : I started working on this as part of a big metamodel clean up I am doing, but this got to be too
 		// 	much of a rabbit hole.  - Steve
 		for ( EntityBinding entityBinding : activationContext.getMetadata().getEntityBindings() ) {
-			final String className = entityBinding.getEntity().getClassName();
+			final String className = entityBinding.getEntity().getClassReference().getName();
 
 			if ( className == null || className.length() == 0 ) {
 				continue;
@@ -217,7 +217,8 @@ class TypeSafeActivator {
 					if ( attribute.isSingular() ) {
 						final SingularAttribute singularAttribute = (SingularAttribute) attribute;
 						if ( singularAttribute.getSingularAttributeType().isAggregate() ) {
-							final Class componentClass = singularAttribute.getSingularAttributeType().getClassReference();
+							final Class componentClass =
+									singularAttribute.getSingularAttributeType().getClassReference().getResolvedClass();
 							final boolean canSetNotNullOnColumns = activateNotNull && hasNotNull;
 							applyDDL(
 									prefix + propertyDesc.getPropertyName() + ".",

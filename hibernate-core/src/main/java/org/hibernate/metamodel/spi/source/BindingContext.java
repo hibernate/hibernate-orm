@@ -24,8 +24,8 @@
 package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
@@ -43,11 +43,18 @@ public interface BindingContext {
 
 	public <T> Class<T> locateClassByName(String name);
 
-	public Type makeJavaType(String className);
+	public Type makeDomainType(String className);
 
 	public boolean isGloballyQuotedIdentifiers();
 
-	public ValueHolder<Class<?>> makeClassReference(String className);
+	public JavaClassReference makeJavaClassReference(String className);
+
+	public JavaClassReference makeJavaClassReference(Class<?> clazz);
+
+	public JavaClassReference makeJavaPropertyClassReference(
+			JavaClassReference propertyContainerClassReference,
+			String propertyName
+	);
 
 	public String qualifyClassName(String name);
 }

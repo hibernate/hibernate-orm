@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
@@ -96,8 +96,8 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	}
 
 	@Override
-	public Type makeJavaType(String className) {
-		return contextDelegate.makeJavaType( className );
+	public Type makeDomainType(String className) {
+		return contextDelegate.makeDomainType( className );
 	}
 
 	@Override
@@ -106,8 +106,20 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	}
 
 	@Override
-	public ValueHolder<Class<?>> makeClassReference(String className) {
-		return contextDelegate.makeClassReference( className );
+	public JavaClassReference makeJavaClassReference(String className) {
+		return contextDelegate.makeJavaClassReference( className );
+	}
+
+	@Override
+	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
+		return contextDelegate.makeJavaClassReference( clazz );
+	}
+
+	@Override
+	public JavaClassReference makeJavaPropertyClassReference(
+			JavaClassReference propertyContainerClassReference,
+			String propertyName) {
+		return contextDelegate.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
 	}
 
 	@Override

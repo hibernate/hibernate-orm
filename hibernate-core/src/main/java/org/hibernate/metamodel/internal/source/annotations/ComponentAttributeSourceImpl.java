@@ -29,12 +29,12 @@ import java.util.Map;
 import javax.persistence.AccessType;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
@@ -51,7 +51,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource, AnnotationAttributeSource {
 	private final EmbeddableClass embeddableClass;
-	private final ValueHolder<Class<?>> classReference;
+	private final JavaClassReference javaClassReference;
 	private final String path;
 	private final AccessType classAccessType;
 	private Map<String, AttributeOverride> attributeOverrideMap;
@@ -61,7 +61,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource, A
 			final String parentPath,
 			final AccessType classAccessType) {
 		this.embeddableClass = embeddableClass;
-		this.classReference = new ValueHolder<Class<?>>( embeddableClass.getConfiguredClass() );
+		this.javaClassReference = getLocalBindingContext().makeJavaClassReference( embeddableClass.getConfiguredClass() );
 		this.path = StringHelper.isEmpty( parentPath ) ? embeddableClass.getEmbeddedAttributeName() : parentPath + "." + embeddableClass.getEmbeddedAttributeName();
 		this.classAccessType = classAccessType;
 	}
@@ -92,13 +92,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource, A
 	}
 
 	@Override
-	public String getClassName() {
-		return embeddableClass.getConfiguredClass().getName();
-	}
-
-	@Override
-	public ValueHolder<Class<?>> getClassReference() {
-		return classReference;
+	public JavaClassReference getClassReference() {
+		return javaClassReference;
 	}
 
 	@Override

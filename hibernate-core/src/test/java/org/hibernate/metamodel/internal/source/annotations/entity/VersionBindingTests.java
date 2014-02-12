@@ -97,7 +97,8 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 				.getVersioningAttributeBinding()
 				.getHibernateTypeDescriptor();
 //		assertEquals( "Long", descriptor.getExplicitTypeName() );
-		assertEquals( Long.class.getName(), descriptor.getJavaTypeName() );
+		assertEquals( Long.class.getName(), descriptor.getClassReference().getName() );
+		assertEquals( Long.class, descriptor.getClassReference().getResolvedClass() );
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertEquals( LongType.class, descriptor.getResolvedTypeMapping().getClass() );
 		assertNotNull( descriptor.getTypeParameters() );
@@ -131,7 +132,8 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 				.getVersioningAttributeBinding()
 				.getHibernateTypeDescriptor();
 		assertEquals( "dbtimestamp", descriptor.getExplicitTypeName() );
-		assertEquals( Date.class.getName(), descriptor.getJavaTypeName() );
+		assertEquals( Date.class.getName(), descriptor.getClassReference().getName() );
+		assertEquals( Date.class, descriptor.getClassReference().getResolvedClass() );
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertEquals( DbTimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
 		assertNotNull( descriptor.getTypeParameters() );

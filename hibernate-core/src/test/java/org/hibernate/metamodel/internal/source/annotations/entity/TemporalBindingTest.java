@@ -63,7 +63,8 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );
         HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
         assertEquals( "timestamp", descriptor.getExplicitTypeName() );
-        assertEquals( Date.class.getName(), descriptor.getJavaTypeName() );
+        assertEquals( Date.class.getName(), descriptor.getClassReference().getName() );
+		assertEquals( Date.class, descriptor.getClassReference().getResolvedClass() );
         assertNotNull( descriptor.getResolvedTypeMapping() );
         assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
         assertNotNull( descriptor.getTypeParameters() );
@@ -84,7 +85,8 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );
         HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
         assertEquals( "timestamp", descriptor.getExplicitTypeName() );
-        assertEquals( Date.class.getName(), descriptor.getJavaTypeName() );
+        assertEquals( Date.class.getName(), descriptor.getClassReference().getName() );
+		assertEquals( Date.class, descriptor.getClassReference().getResolvedClass() );
         assertNotNull( descriptor.getResolvedTypeMapping() );
         assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
         assertNotNull( descriptor.getTypeParameters() );

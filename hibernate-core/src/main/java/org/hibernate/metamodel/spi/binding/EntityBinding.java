@@ -35,10 +35,10 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -46,7 +46,6 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -70,7 +69,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private String primaryTableName;
 	private Map<Identifier, SecondaryTable> secondaryTables = new LinkedHashMap<Identifier, SecondaryTable>();
 
-	private ValueHolder<Class<?>> proxyInterfaceType;
+	private JavaClassReference proxyInterfaceType;
 
 	private String entityName;
 	private String jpaEntityName;
@@ -358,11 +357,11 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		this.lazy = lazy;
 	}
 
-	public ValueHolder<Class<?>> getProxyInterfaceType() {
+	public JavaClassReference getProxyInterfaceType() {
 		return proxyInterfaceType;
 	}
 
-	public void setProxyInterfaceType(ValueHolder<Class<?>> proxyInterfaceType) {
+	public void setProxyInterfaceType(JavaClassReference proxyInterfaceType) {
 		this.proxyInterfaceType = proxyInterfaceType;
 	}
 

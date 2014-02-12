@@ -23,14 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.service.ServiceRegistry;
@@ -117,21 +114,26 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 		return classLoaderService.classForName( name );
 	}
 
-	private Map<String, Type> nameToJavaTypeMap = new HashMap<String, Type>();
-
 	@Override
-	public Type makeJavaType(String className) {
-		Type javaType = nameToJavaTypeMap.get( className );
-		if ( javaType == null ) {
-			javaType = metadata.makeJavaType( className );
-			nameToJavaTypeMap.put( className, javaType );
-		}
-		return javaType;
+	public Type makeDomainType(String className) {
+		return  metadata.makeDomainType( className );
 	}
 
 	@Override
-	public ValueHolder<Class<?>> makeClassReference(String className) {
-		return new ValueHolder<Class<?>>( locateClassByName( className ) );
+	public JavaClassReference makeJavaClassReference(String className) {
+		return metadata.makeJavaClassReference( className );
+	}
+
+	@Override
+	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
+		return metadata.makeJavaClassReference( clazz );
+	}
+
+	@Override
+	public JavaClassReference makeJavaPropertyClassReference(
+			JavaClassReference propertyContainerClassReference,
+			String propertyName) {
+		return metadata.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
 	}
 
 	@Override

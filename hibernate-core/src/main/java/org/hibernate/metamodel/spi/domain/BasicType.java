@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
-import org.hibernate.internal.util.ValueHolder;
-
 /**
  * Models a basic type.
  *
@@ -32,11 +30,15 @@ import org.hibernate.internal.util.ValueHolder;
  */
 public class BasicType implements Type {
 	private final String name;
-	private final ValueHolder<Class<?>> classReference;
+	private final JavaClassReference javaClassReference;
 
-	public BasicType(String name, ValueHolder<Class<?>> classReference) {
+	public BasicType(String name, JavaClassReference javaClassReference) {
 		this.name = name;
-		this.classReference = classReference;
+		this.javaClassReference = javaClassReference;
+	}
+
+	public BasicType(JavaClassReference javaClassReference) {
+		this( javaClassReference.getName(), javaClassReference );
 	}
 
 	@Override
@@ -45,18 +47,8 @@ public class BasicType implements Type {
 	}
 
 	@Override
-	public String getClassName() {
-		return name;
-	}
-
-	@Override
-	public Class<?> getClassReference() {
-		return classReference.getValue();
-	}
-
-	@Override
-	public ValueHolder<Class<?>> getClassReferenceUnresolved() {
-		return classReference;
+	public JavaClassReference getClassReference() {
+		return javaClassReference;
 	}
 
 	@Override

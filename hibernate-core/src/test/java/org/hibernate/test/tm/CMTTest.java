@@ -55,7 +55,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class CMTTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -81,6 +80,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testConcurrent() throws Exception {
 		sessionFactory().getStatistics().clear();
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );

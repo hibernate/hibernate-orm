@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class DynamicMapOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

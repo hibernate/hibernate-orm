@@ -395,7 +395,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong resolved type",
 				"int",
-				attribute.getAttribute().getSingularAttributeType().getClassName()
+				attribute.getAttribute().getSingularAttributeType().getClassReference().getName()
 		);
 	}
 }

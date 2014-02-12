@@ -48,7 +48,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 	public void testProxyNoAttributes() {
 		EntityBinding binding = getEntityBinding( ProxiedEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", ProxiedEntity.class, binding.getProxyInterfaceType().getValue() );
+		assertEquals( "Wrong proxy interface", ProxiedEntity.class, binding.getProxyInterfaceType().getResolvedClass() );
 	}
 
 	@Test
@@ -56,7 +56,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 	public void testNoProxy() {
 		EntityBinding binding = getEntityBinding( NoProxyEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", NoProxyEntity.class, binding.getProxyInterfaceType().getValue() );
+		assertEquals( "Wrong proxy interface", NoProxyEntity.class, binding.getProxyInterfaceType().getResolvedClass() );
 	}
 
 	@Test
@@ -75,7 +75,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong proxy interface",
 				ProxyBindingTest.ProxyInterfaceEntity.class.getName(),
-				binding.getProxyInterfaceType().getValue().getName()
+				binding.getProxyInterfaceType().getResolvedClass().getName()
 		);
 	}
 

@@ -55,8 +55,10 @@ import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.xml.spi.BindResult;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
@@ -105,7 +107,6 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.hibernate.xml.spi.BindResult;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -707,39 +708,62 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Type makeJavaType(String className) {
+	public Type makeDomainType(String className) {
 		// todo : have this perform some analysis of the incoming type name to determine appropriate return
-		return new BasicType( className, makeClassReference( className ) );
+		return new BasicType( className, makeJavaClassReference( className ) );
 	}
 
-	// TODO: ClassLoaderService.classForName( className ) does not work for primitives, so add mapping
-	//       from primitive class names -> class.
-	private static final Map<String,Class<?>> primitiveClassesByName = new HashMap<String,Class<?>>();
-	static {
-		primitiveClassesByName.put("int", Integer.TYPE );
-		primitiveClassesByName.put( "long", Long.TYPE );
-		primitiveClassesByName.put( "double", Double.TYPE );
-		primitiveClassesByName.put( "float", Float.TYPE );
-		primitiveClassesByName.put( "bool", Boolean.TYPE );
-		primitiveClassesByName.put( "char", Character.TYPE );
-		primitiveClassesByName.put( "byte", Byte.TYPE );
-		primitiveClassesByName.put( "void", Void.TYPE );
-		primitiveClassesByName.put( "short", Short.TYPE );
+	private Map<String, JavaClassReference> nameToJavaTypeMap = new HashMap<String, JavaClassReference>();
+
+	@Override
+	public JavaClassReference makeJavaClassReference(final String className) {
+		if ( className == null ) {
+			throw new IllegalArgumentException( "className must be non-null." );
+		}
+		JavaClassReference javaClassReference = nameToJavaTypeMap.get( className );
+		if ( javaClassReference == null ) {
+			javaClassReference = new JavaClassReference( className, classLoaderService );
+			nameToJavaTypeMap.put( className, javaClassReference );
+		}
+		return javaClassReference;
 	}
 
 	@Override
-	public ValueHolder<Class<?>> makeClassReference(final String className) {
-		return new ValueHolder<Class<?>>(
-				new ValueHolder.DeferredInitializer<Class<?>>() {
-					@Override
-					public Class<?> initialize() {
-						Class<?> primitiveClass = primitiveClassesByName.get( className );
-						return primitiveClass == null ?
-								classLoaderService.classForName( className ) :
-								primitiveClass;
-					}
-				}
-		);
+	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
+		if ( clazz == null ) {
+			throw new IllegalArgumentException( "clazz must be non-null." );
+		}
+		JavaClassReference javaClassReference = nameToJavaTypeMap.get( clazz.getName() );
+		if ( javaClassReference == null ) {
+			javaClassReference = new JavaClassReference( clazz );
+			nameToJavaTypeMap.put( clazz.getName(), javaClassReference );
+		}
+		return javaClassReference;
+	}
+
+	@Override
+	public JavaClassReference makeJavaPropertyClassReference(
+			JavaClassReference propertyContainerClassReference,
+			String propertyName) {
+		if ( propertyContainerClassReference == null || propertyName == null ) {
+			throw new IllegalArgumentException( "propertyContainerClassReference and propertyName must be non-null." );
+		}
+		try {
+			return makeJavaClassReference(
+					ReflectHelper.reflectedPropertyClass(
+							propertyContainerClassReference.getResolvedClass(),
+							propertyName
+					)
+			);
+		}
+		catch ( Exception ignore ) {
+			LOG.debugf(
+					"Unable to locate attribute [%s] on class [%s]",
+					propertyName,
+					propertyContainerClassReference.getName()
+			);
+		}
+		return null;
 	}
 
 	@Override
@@ -784,7 +808,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		entityBindingMap.put( entityName, entityBinding );
 		final boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
-		final String className = isPOJO ? entityBinding.getEntity().getClassName() : null;
+		final String className = isPOJO ? entityBinding.getEntity().getClassReference().getName() : null;
 		if ( isPOJO && StringHelper.isEmpty( className ) ) {
 			throw new MappingException( "Entity[" + entityName + "] is mapped as pojo but don't have a class name" );
 		}

@@ -90,7 +90,6 @@ import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.secure.spi.JaccService;
@@ -332,7 +331,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private List<String> collectNamesOfClassesToEnhance(MetadataImplementor metadata) {
 		final List<String> entityClassNames = new ArrayList<String>();
 		for ( EntityBinding eb : metadata.getEntityBindings() ) {
-			entityClassNames.add( eb.getEntity().getClassName() );
+			entityClassNames.add( eb.getEntity().getClassReference().getName() );
 		}
 		return entityClassNames;
 	}

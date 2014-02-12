@@ -31,10 +31,11 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.EntityMode;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
@@ -55,6 +56,8 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 	public static final JdbcDataType BIGINT = new JdbcDataType( Types.BIGINT, "BIGINT", Long.class );
 	public static final JdbcDataType VARCHAR = new JdbcDataType( Types.VARCHAR, "VARCHAR", String.class );
 
+	private static final ClassLoaderService classLoaderService = new ClassLoaderServiceImpl();
+
 
 	@Test
 	public void testBasicMiddleOutBuilding() {
@@ -66,7 +69,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		table.getPrimaryKey().addColumn( idColumn );
 		table.getPrimaryKey().setName( "my_table_pk" );
 
-		Entity entity = new Entity( "TheEntity", "NoSuchClass", makeJavaType( "NoSuchClass" ), null );
+		Entity entity = new Entity( "TheEntity", makeJavaType( "NoSuchClass" ), null );
 		EntityBinding entityBinding = new EntityBinding( InheritanceType.NO_INHERITANCE, EntityMode.POJO );
 		entityBinding.setEntity( entity );
 		entityBinding.setPrimaryTable( table );
@@ -103,19 +106,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		);
 	}
 
-	ValueHolder<Class<?>> makeJavaType(final String name) {
-		return new ValueHolder<Class<?>>(
-				new ValueHolder.DeferredInitializer<Class<?>>() {
-					@Override
-					public Class<?> initialize() {
-						try {
-							return Class.forName( name );
-						}
-						catch ( Exception e ) {
-							throw new ClassLoadingException( "Could not load class : " + name, e );
-						}
-					}
-				}
-		);
+	JavaClassReference makeJavaType(final String name) {
+		return new JavaClassReference( name, classLoaderService );
 	}
 }

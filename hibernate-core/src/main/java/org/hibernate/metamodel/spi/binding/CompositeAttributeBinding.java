@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -357,7 +358,7 @@ public class CompositeAttributeBinding
 	}
 
 	@Override
-	public Class<?> getClassReference() {
+	public JavaClassReference getClassReference() {
 		return compositeAttributeBindingContainer.getClassReference();
 	}
 

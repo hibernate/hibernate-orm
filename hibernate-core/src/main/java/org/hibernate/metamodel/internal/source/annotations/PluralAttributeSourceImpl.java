@@ -32,7 +32,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
@@ -41,6 +40,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AssociationSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
@@ -174,11 +174,11 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 	}
 
 	@Override
-	public ValueHolder<Class<?>> getElementClassReference() {
+	public JavaClassReference getElementJavaClassReference() {
 		// needed for arrays
 		Class<?> attributeType = associationAttribute.getAttributeType();
 		if ( attributeType.isArray() ) {
-			return new ValueHolder<Class<?>>( attributeType.getComponentType() );
+			return entityClass.getLocalBindingContext().makeJavaClassReference( attributeType.getComponentType() );
 		}
 		else {
 			return null;

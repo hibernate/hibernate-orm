@@ -449,8 +449,6 @@ public class EntityIdentifier {
 						factory, properties
 				);
 			}
-			final Class entityClass = entityBinding.getEntity().getClassReference();
-			final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
 			// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 			//		various scenarios for which we need to account here
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
@@ -564,9 +562,6 @@ public class EntityIdentifier {
 			if ( entityBinding.getSuperEntityBinding() != null ) {
 				throw new AssertionError( "Creating an identifier generator for a component on a subclass." );
 			}
-			final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
-			final Class entityClass = entityBinding.getEntity().getClassReference();
-			final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
 			// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 			//		various scenarios for which we need to account here
 			//if ( idClassClass != null ) {

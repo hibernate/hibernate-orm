@@ -193,7 +193,8 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		final HibernateTypeDescriptor collectionHibernateTypeDescriptor = collectionBinding.getHibernateTypeDescriptor();
 		assertNull( collectionHibernateTypeDescriptor.getExplicitTypeName() );
-		assertEquals( expectedCollectionJavaType.getName(), collectionHibernateTypeDescriptor.getJavaTypeName() );
+		assertEquals( expectedCollectionJavaType.getName(), collectionHibernateTypeDescriptor.getClassReference().getName() );
+		assertEquals( expectedCollectionJavaType, collectionHibernateTypeDescriptor.getClassReference().getResolvedClass() );
 		assertTrue( collectionHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( expectedCollectionTypeClass.isInstance( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ) );
 		assertFalse( collectionHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
@@ -238,13 +239,13 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		assertEquals(
 				expectedElementEntityBinding.getEntity().getName(),
-				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeName()
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getClassReference().getName()
 		);
 	}
 
 	private void checkEquals(HibernateTypeDescriptor expected, HibernateTypeDescriptor actual) {
 		assertEquals( expected.getExplicitTypeName(), actual.getExplicitTypeName() );
-		assertEquals( expected.getJavaTypeName(), actual.getJavaTypeName() );
+		assertEquals( expected.getClassReference(), actual.getClassReference() );
 		assertEquals( expected.getTypeParameters(), actual.getTypeParameters() );
 		assertEquals( expected.getResolvedTypeMapping(), actual.getResolvedTypeMapping() );
 		assertEquals( expected.isToOne(), actual.isToOne() );

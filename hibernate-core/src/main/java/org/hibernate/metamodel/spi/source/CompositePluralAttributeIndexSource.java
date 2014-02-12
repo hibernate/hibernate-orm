@@ -23,14 +23,13 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 
 /**
  * @author Gail Badner
  */
 public interface CompositePluralAttributeIndexSource
 		extends PluralAttributeIndexSource, AttributeSourceContainer {
-	public String getClassName();
 
-	public ValueHolder<Class<?>> getClassReference();
+	public JavaClassReference getClassReference();
 }

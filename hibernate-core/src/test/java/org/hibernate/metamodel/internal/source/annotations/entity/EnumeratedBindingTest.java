@@ -78,7 +78,8 @@ public class EnumeratedBindingTest extends BaseAnnotationBindingTestCase {
 		AttributeBinding attributeBinding = binding.locateAttributeBinding( "customerType" );
 		HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
 		assertEquals( org.hibernate.type.EnumType.class.getName(), descriptor.getExplicitTypeName() );
-		assertEquals( CustomerType.class.getName(), descriptor.getJavaTypeName() );
+		assertEquals( CustomerType.class.getName(), descriptor.getClassReference().getName() );
+		assertEquals( CustomerType.class, descriptor.getClassReference().getResolvedClass() );
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertFalse( descriptor.getTypeParameters().isEmpty() );
 		assertEquals(
@@ -94,7 +95,8 @@ public class EnumeratedBindingTest extends BaseAnnotationBindingTestCase {
 		attributeBinding = binding.locateAttributeBinding( "orderType" );
 		descriptor = attributeBinding.getHibernateTypeDescriptor();
 		assertEquals( org.hibernate.type.EnumType.class.getName(), descriptor.getExplicitTypeName() );
-		assertEquals( OrderType.class.getName(), descriptor.getJavaTypeName() );
+		assertEquals( OrderType.class.getName(), descriptor.getClassReference().getName() );
+		assertEquals( OrderType.class, descriptor.getClassReference().getResolvedClass() );
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertFalse( descriptor.getTypeParameters().isEmpty() );
 		assertEquals(

@@ -25,9 +25,6 @@ package org.hibernate.test.util;
 import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -99,9 +96,8 @@ public class SchemaUtil {
 		Iterator<PluralAttributeBinding> collectionBindings = metadata.getCollectionBindings().iterator();
 		while ( collectionBindings.hasNext() ) {
 			PluralAttributeBinding collectionBinding = collectionBindings.next();
-			if ( collectionBinding.getAttribute().getName().equals( fieldName )
-					&& collectionBinding.getAttribute().getAttributeContainer().getClassReference()
-					.equals( entityClass ) ) {
+			if ( collectionBinding.getAttribute().getName().equals( fieldName ) && entityClass.equals(
+					collectionBinding.getAttribute().getAttributeContainer().getClassReference().getResolvedClass() ) ) {
 				return collectionBinding;
 			}
 		}

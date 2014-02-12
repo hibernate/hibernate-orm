@@ -31,7 +31,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbAnyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeElementElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbManyToOneElement;
@@ -39,6 +38,7 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbNestedCompositeEleme
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbPropertyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbTuplizerElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -73,13 +73,9 @@ public class CompositePluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public String getClassName() {
-		return bindingContext().qualifyClassName( compositeElement.getClazz() );
-	}
-
-	@Override
-	public ValueHolder<Class<?>> getClassReference() {
-		return bindingContext().makeClassReference( getClassName() );
+	public JavaClassReference getClassReference() {
+		final String className = bindingContext().qualifyClassName( compositeElement.getClazz() );
+		return bindingContext().makeJavaClassReference( className );
 	}
 
 	@Override

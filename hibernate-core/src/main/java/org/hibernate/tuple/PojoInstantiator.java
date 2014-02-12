@@ -83,7 +83,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			this.mappedClass = entityIdentifier.getIdClassClass();
 		}
 		else {
-			this.mappedClass = compositeAttributeBindingContainer.getClassReference();
+			this.mappedClass = compositeAttributeBindingContainer.getClassReference().getResolvedClass();
 		}
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.optimizer = optimizer;
@@ -117,9 +117,11 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	}
 
 	public PojoInstantiator(EntityBinding entityBinding, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = entityBinding.getEntity().getClassReference();
+		this.mappedClass = entityBinding.getEntity().getClassReference().getResolvedClass();
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
-		this.proxyInterface = entityBinding.getProxyInterfaceType() == null ? null : entityBinding.getProxyInterfaceType().getValue();
+		this.proxyInterface = entityBinding.getProxyInterfaceType() == null ?
+				null :
+				entityBinding.getProxyInterfaceType().getResolvedClass();
 		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite();
 		this.optimizer = optimizer;
 

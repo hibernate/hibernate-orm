@@ -46,7 +46,6 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
@@ -71,14 +70,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.List;
-import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
@@ -568,7 +559,7 @@ public abstract class AbstractCollectionPersister
 
 		isInverse = keyBinding.isInverse();
 		if ( isArray ) {
-			elementClass = collection.getAttribute().getElementType().getClassReference();
+			elementClass = collection.getAttribute().getElementType().getClassReference().getResolvedClass();
 		}
 		else {
 			// for non-arrays, we don't need to know the element class

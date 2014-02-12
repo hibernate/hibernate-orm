@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
-import org.hibernate.internal.util.ValueHolder;
-
 /**
  * Models the concept of a (intermediate) superclass
  *
@@ -35,12 +33,11 @@ public class Superclass extends AbstractAttributeContainer {
 	 * Constructor for the entity
 	 *
 	 * @param entityName The name of the entity
-	 * @param className The name of this entity's java class
-	 * @param classReference The reference to this entity's {@link Class}
+	 * @param javaClassReference The reference to this entity's {@link Class}
 	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public Superclass(String entityName, String className, ValueHolder<Class<?>> classReference, Hierarchical superType) {
-		super( entityName, className, classReference, superType );
+	public Superclass(String entityName, JavaClassReference javaClassReference, Hierarchical superType) {
+		super( entityName, javaClassReference, superType );
 	}
 
 	@Override
@@ -51,5 +48,10 @@ public class Superclass extends AbstractAttributeContainer {
 	@Override
 	public boolean isAggregate() {
 		return false;
+	}
+
+	@Override
+	public String getRoleBaseName() {
+		return getName();
 	}
 }

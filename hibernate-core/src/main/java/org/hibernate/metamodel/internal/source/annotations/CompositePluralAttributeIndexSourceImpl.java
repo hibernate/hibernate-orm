@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -87,13 +87,8 @@ public class CompositePluralAttributeIndexSourceImpl extends AbstractPluralAttri
 		return false;
 	}
 
-	@Override
-	public String getClassName() {
-		return pluralAssociationAttribute().getIndexType().getName();
-	}
-
-	public ValueHolder<Class<?>> getClassReference() {
-		return getLocalBindingContext().makeClassReference( getClassName() );
+	public JavaClassReference getClassReference() {
+		return getLocalBindingContext().makeJavaClassReference( pluralAssociationAttribute().getIndexType().getName() );
 	}
 
 	@Override

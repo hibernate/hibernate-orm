@@ -39,7 +39,6 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertTrue;
 
-@FailureExpectedWithNewMetamodel
 public class MapTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -53,6 +52,7 @@ public class MapTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMap() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -120,6 +120,7 @@ public class MapTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapOneToOne() throws Exception {
 		Map child = new HashMap();
 		Map parent = new HashMap();

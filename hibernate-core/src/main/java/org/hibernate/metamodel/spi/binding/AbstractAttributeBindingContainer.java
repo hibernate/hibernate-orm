@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -77,7 +78,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	}
 
 	@Override
-	public Class<?> getClassReference() {
+	public JavaClassReference getClassReference() {
 		return getAttributeContainer().getClassReference();
 	}
 

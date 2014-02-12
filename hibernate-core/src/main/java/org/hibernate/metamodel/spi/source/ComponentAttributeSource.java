@@ -23,15 +23,14 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
 
 /**
  * @author Steve Ebersole
  */
 public interface ComponentAttributeSource extends SingularAttributeSource, AttributeSourceContainer {
-	public String getClassName();
 
-	public ValueHolder<Class<?>> getClassReference();
+	public JavaClassReference getClassReference();
 
 	public String getParentReferenceAttributeName();
 

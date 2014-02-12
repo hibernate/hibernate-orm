@@ -338,7 +338,7 @@ public class BasicAttribute extends MappedAttribute {
 					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 					genType,
-					getContext().getMetadataImplementor().getOptions().useNewIdentifierGenerators()
+					getContext().getBuildingOptions().isUseNewIdentifierGenerators()
 			);
 			generator = new IdentifierGeneratorDefinition( null, strategy, null );
 		}

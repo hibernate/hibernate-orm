@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
@@ -38,6 +39,8 @@ public interface BindingContext {
 	public NamingStrategy getNamingStrategy();
 
 	public MappingDefaults getMappingDefaults();
+
+	public MetadataBuildingOptions getBuildingOptions();
 
 	public MetadataImplementor getMetadataImplementor();
 

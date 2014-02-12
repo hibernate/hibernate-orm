@@ -726,7 +726,7 @@ public class Binder implements HelperContext {
 				// if (1) the strategy is discriminator based and (2) the entity is not shared, we need to either (a) extract
 				// the user supplied tenant discriminator value mapping or (b) generate an implicit one
 				final boolean needsTenantIdentifierValueMapping =
-						MultiTenancyStrategy.DISCRIMINATOR == metadata.getOptions().getMultiTenancyStrategy()
+						MultiTenancyStrategy.DISCRIMINATOR == bindingContext().getBuildingOptions().getMultiTenancyStrategy()
 								&& !multiTenancySource.isShared();
 
 				if ( needsTenantIdentifierValueMapping ) {

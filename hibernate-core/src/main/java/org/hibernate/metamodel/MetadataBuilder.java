@@ -165,7 +165,22 @@ public interface MetadataBuilder {
 	 *
 	 * @param cacheRegionDefinition The cache region definition to apply
 	 */
-	public void with(CacheRegionDefinition cacheRegionDefinition);
+	public MetadataBuilder with(CacheRegionDefinition cacheRegionDefinition);
+
+	/**
+	 * Apply a ClassLoader for use while building the Metadata.
+	 * <p/>
+	 * Ideally we should avoid accessing ClassLoaders when perform 1st phase of bootstrap.  This
+	 * is a ClassLoader that can be used in cases when we have to.  IN EE managed environments, this
+	 * is the ClassLoader mandated by
+	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}.  This ClassLoader
+	 * is thrown away by the container afterwards.  The idea being that the Class can still be enhanced
+	 * in the application ClassLoader.  In other environments, pass a ClassLoader that performs the
+	 * same function if desired.
+	 *
+	 * @param tempClassLoader ClassLoader for use during building the Metadata
+	 */
+	public MetadataBuilder with(ClassLoader tempClassLoader);
 
 	/**
 	 * Actually build the metamodel

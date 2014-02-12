@@ -497,7 +497,7 @@ public class EntityClass extends ConfiguredClass {
 		);
 
 		final boolean doCaching;
-		switch ( getLocalBindingContext().getMetadataImplementor().getOptions().getSharedCacheMode() ) {
+		switch ( getLocalBindingContext().getBuildingOptions().getSharedCacheMode() ) {
 			case ALL: {
 				doCaching = true;
 				break;

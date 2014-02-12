@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
@@ -83,6 +84,11 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	@Override
 	public MappingDefaults getMappingDefaults() {
 		return contextDelegate.getMappingDefaults();
+	}
+
+	@Override
+	public MetadataBuildingOptions getBuildingOptions() {
+		return contextDelegate.getBuildingOptions();
 	}
 
 	@Override

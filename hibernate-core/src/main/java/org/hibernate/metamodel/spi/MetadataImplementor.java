@@ -79,6 +79,7 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 
+	@Deprecated
 	void setGloballyQuotedIdentifiers(boolean b);
 
 	MetaAttributeContext getGlobalMetaAttributeContext();

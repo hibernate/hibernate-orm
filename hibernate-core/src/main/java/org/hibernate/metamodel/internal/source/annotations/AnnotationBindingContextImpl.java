@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
@@ -107,6 +108,11 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	@Override
 	public MetadataImplementor getMetadataImplementor() {
 		return metadata;
+	}
+
+	@Override
+	public MetadataBuildingOptions getBuildingOptions() {
+		return metadata.getBuildingOptions();
 	}
 
 	@Override

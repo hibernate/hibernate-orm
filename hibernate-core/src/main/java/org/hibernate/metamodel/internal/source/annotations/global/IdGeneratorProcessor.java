@@ -151,7 +151,7 @@ public class IdGeneratorProcessor {
 		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final String name = JandexHelper.getValue( generator, "name", String.class, classLoaderService );
 
-		final boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
+		final boolean useNewIdentifierGenerators = bindingContext.getBuildingOptions().isUseNewIdentifierGenerators();
 		final String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 				GenerationType.SEQUENCE,
 				useNewIdentifierGenerators
@@ -196,7 +196,7 @@ public class IdGeneratorProcessor {
 		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final String name = JandexHelper.getValue( generator, "name", String.class, classLoaderService );
 
-		final boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
+		final boolean useNewIdentifierGenerators = bindingContext.getBuildingOptions().isUseNewIdentifierGenerators();
 		final String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 				GenerationType.TABLE,
 				useNewIdentifierGenerators

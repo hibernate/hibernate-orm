@@ -52,6 +52,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeCustomType;
@@ -68,7 +69,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	private static final Logger log = Logger.getLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
-	private final OptionsImpl options;
+	private final Options options;
 
 	public MetadataBuilderImpl(MetadataSources sources) {
 		this(
@@ -110,7 +111,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 						.loadJavaServices( MetadataSourcesContributor.class ) ) {
 			contributor.contribute( sources, null );
 		}
-		this.options = new OptionsImpl( serviceRegistry );
+		this.options = new Options( serviceRegistry );
 	}
 
 	@Override
@@ -195,41 +196,93 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
-	public void with(CacheRegionDefinition cacheRegionDefinition) {
+	public MetadataBuilder with(CacheRegionDefinition cacheRegionDefinition) {
 		if ( options.cacheRegionDefinitions == null ) {
 			options.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 		}
 		options.cacheRegionDefinitions.add( cacheRegionDefinition );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(ClassLoader tempClassLoader) {
+		options.tempClassLoader = tempClassLoader;
+		return this;
 	}
 
 	@Override
 	public Metadata build() {
-		return new MetadataImpl( sources, options );
+		return MetadataImpl.build( sources, options );
 	}
 
-	public static class OptionsImpl implements Metadata.Options {
-		private final StandardServiceRegistry serviceRegistry;
-
-		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
-		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
-		// todo : entity-resolver maybe needed for ServiceRegistry building also
-		// 		maybe move there and default to looking up that value somehow?
-		private EntityResolver entityResolver = EJB3DTDEntityResolver.INSTANCE;
-		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
-		private AccessType defaultCacheAccessType;
-        private boolean useNewIdentifierGenerators;
-        private boolean globallyQuotedIdentifiers;
+	/**
+	 * Implementation of the Database.Defaults contract
+	 */
+	public static class DatabaseDefaults implements Database.Defaults {
+		private boolean globallyQuotedIdentifiers;
 		private String defaultSchemaName;
 		private String defaultCatalogName;
-		private MultiTenancyStrategy multiTenancyStrategy;
-		private IndexView jandexView;
+
+		public DatabaseDefaults(ConfigurationService configurationService) {
+			defaultSchemaName = configurationService.getSetting(
+					AvailableSettings.DEFAULT_SCHEMA,
+					StandardConverters.STRING,
+					null
+			);
+
+			defaultCatalogName = configurationService.getSetting(
+					AvailableSettings.DEFAULT_CATALOG,
+					StandardConverters.STRING,
+					null
+			);
+
+			globallyQuotedIdentifiers = configurationService.getSetting(
+					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
+					StandardConverters.BOOLEAN,
+					false
+			);
+		}
+
+		@Override
+		public String getDefaultSchemaName() {
+			return defaultSchemaName;
+		}
+
+		@Override
+		public String getDefaultCatalogName() {
+			return defaultCatalogName;
+		}
+
+		@Override
+		public boolean isGloballyQuotedIdentifiers() {
+			return globallyQuotedIdentifiers;
+		}
+	}
+
+	public static class Options implements org.hibernate.metamodel.spi.MetadataBuildingOptions {
+		private final StandardServiceRegistry serviceRegistry;
+		private final DatabaseDefaults databaseDefaults;
+
 		private List<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
+
+		private IndexView jandexView;
+		private ClassLoader tempClassLoader;
+		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
+		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
+		private AccessType defaultCacheAccessType;
+		private boolean useNewIdentifierGenerators;
+		private MultiTenancyStrategy multiTenancyStrategy;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
-		public OptionsImpl(StandardServiceRegistry serviceRegistry) {
+		// todo : go away
+		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
+		private EntityResolver entityResolver = EJB3DTDEntityResolver.INSTANCE;
+
+		public Options(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 
-			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			this.databaseDefaults = new DatabaseDefaults( configService );
 
 			// cache access type
 			defaultCacheAccessType = configService.getSetting(
@@ -248,24 +301,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 					false
 			);
 
-			defaultSchemaName = configService.getSetting(
-					AvailableSettings.DEFAULT_SCHEMA,
-					StandardConverters.STRING,
-					null
-			);
-
-			defaultCatalogName = configService.getSetting(
-					AvailableSettings.DEFAULT_CATALOG,
-					StandardConverters.STRING,
-					null
-			);
-
-            globallyQuotedIdentifiers = configService.getSetting(
-                    AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
-					StandardConverters.BOOLEAN,
-                    false
-            );
-
 			multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
 		}
 
@@ -275,58 +310,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		@Override
-		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder() {
-			return metadataSourceProcessingOrder;
-		}
-
-		@Override
-		public NamingStrategy getNamingStrategy() {
-			return namingStrategy;
-		}
-
-		@Override
-		public EntityResolver getEntityResolver() {
-			return entityResolver;
-		}
-
-		@Override
-		public AccessType getDefaultAccessType() {
-			return defaultCacheAccessType;
-		}
-
-		@Override
-		public SharedCacheMode getSharedCacheMode() {
-			return sharedCacheMode;
-		}
-
-		@Override
-        public boolean useNewIdentifierGenerators() {
-            return useNewIdentifierGenerators;
-        }
-
-        @Override
-        public boolean isGloballyQuotedIdentifiers() {
-            return globallyQuotedIdentifiers;
-        }
-
-        @Override
-		public String getDefaultSchemaName() {
-			return defaultSchemaName;
-		}
-
-		@Override
-		public String getDefaultCatalogName() {
-			return defaultCatalogName;
-		}
-
-		@Override
-		public MultiTenancyStrategy getMultiTenancyStrategy() {
-			return multiTenancyStrategy;
-		}
-
-		@Override
-		public IndexView getJandexView() {
-			return jandexView;
+		public DatabaseDefaults getDatabaseDefaults() {
+			return databaseDefaults;
 		}
 
 		@Override
@@ -335,8 +320,54 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		@Override
+		public IndexView getJandexView() {
+			return jandexView;
+		}
+
+		@Override
+		public ClassLoader getTempClassLoader() {
+			return tempClassLoader;
+		}
+
+		@Override
+		public NamingStrategy getNamingStrategy() {
+			return namingStrategy;
+		}
+
+		@Override
+		public SharedCacheMode getSharedCacheMode() {
+			return sharedCacheMode;
+		}
+
+		@Override
+		public AccessType getDefaultCacheAccessType() {
+			return defaultCacheAccessType;
+		}
+
+		@Override
+		public boolean isUseNewIdentifierGenerators() {
+			return useNewIdentifierGenerators;
+		}
+
+		@Override
+		public MultiTenancyStrategy getMultiTenancyStrategy() {
+			return multiTenancyStrategy;
+		}
+
+		@Override
 		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
 			return cacheRegionDefinitions;
 		}
+
+		@Override
+		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder() {
+			return metadataSourceProcessingOrder;
+		}
+
+		@Override
+		public EntityResolver getEntityResolver() {
+			return entityResolver;
+		}
 	}
+
 }

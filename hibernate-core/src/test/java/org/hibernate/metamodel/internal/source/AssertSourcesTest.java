@@ -80,7 +80,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 	}
 
 	private MetadataImpl buildMetadata(MetadataSources sources) {
-		return new MetadataImpl( sources, new MetadataBuilderImpl.OptionsImpl( serviceRegistry ) );
+		return new MetadataImpl( sources, new MetadataBuilderImpl.Options( serviceRegistry ) );
 	}
 
 	private void testUserEntitySources(MetadataSourceProcessor processor) {

@@ -23,19 +23,9 @@
  */
 package org.hibernate.metamodel;
 
-import java.util.List;
 import java.util.Map;
-import javax.persistence.SharedCacheMode;
 
-import org.jboss.jandex.IndexView;
-import org.xml.sax.EntityResolver;
-
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.spi.CacheRegionDefinition;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -47,39 +37,12 @@ import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
-import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public interface Metadata {
-	/**
-	 * Exposes the options used to produce a {@link Metadata} instance.
-	 */
-	public static interface Options extends Database.Defaults {
-		StandardServiceRegistry getServiceRegistry();
-
-		MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
-		NamingStrategy getNamingStrategy();
-		EntityResolver getEntityResolver();
-		SharedCacheMode getSharedCacheMode();
-		AccessType getDefaultAccessType();
-		boolean useNewIdentifierGenerators();
-		MultiTenancyStrategy getMultiTenancyStrategy();
-		IndexView getJandexView();
-		List<BasicType> getBasicTypeRegistrations();
-		List<CacheRegionDefinition> getCacheRegionDefinitions();
-	}
-
-	/**
-	 * Retrieve the options used to build this {@link Metadata} instance.
-	 *
-	 * @return The options.
-	 */
-	Options getOptions();
-
 	/**
 	 * Get the builder for {@link SessionFactory} instances based on this metamodel,
 	 *

@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
@@ -116,6 +117,11 @@ public class MappingDocument {
 		@Override
 		public MappingDefaults getMappingDefaults() {
 			return localMappingDefaults;
+		}
+
+		@Override
+		public MetadataBuildingOptions getBuildingOptions() {
+			return metadata.getBuildingOptions();
 		}
 
 		@Override

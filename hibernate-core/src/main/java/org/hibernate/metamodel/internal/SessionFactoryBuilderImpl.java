@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +34,6 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -51,7 +49,6 @@ import org.hibernate.internal.StandardEntityNotFoundDelegate;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -62,9 +59,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsImpl options;
 
-	SessionFactoryBuilderImpl(MetadataImplementor metadata) {
+	SessionFactoryBuilderImpl(MetadataImplementor metadata, StandardServiceRegistry serviceRegistry) {
 		this.metadata = metadata;
-		options = new SessionFactoryOptionsImpl( metadata.getOptions().getServiceRegistry() );
+		options = new SessionFactoryOptionsImpl( serviceRegistry );
 	}
 
 	@Override

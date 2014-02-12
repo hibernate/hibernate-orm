@@ -67,6 +67,7 @@ import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImp
 import org.hibernate.metamodel.source.internal.jandex.Unifier;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
+import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.MetadataContributor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
@@ -126,7 +127,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	);
 
 	private final ServiceRegistry serviceRegistry;
-	private final Options options;
+	private final MetadataBuildingOptions options;
 
 	private final ClassLoaderService classLoaderService;
 //	private final transient ValueHolder<PersisterClassResolver> persisterClassResolverService;
@@ -156,12 +157,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
     private boolean globallyQuotedIdentifiers = false;
 
-	public MetadataImpl(MetadataSources metadataSources, Options options) {
+	public MetadataImpl(MetadataSources metadataSources, MetadataBuildingOptions options) {
 		this.serviceRegistry =  options.getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.options = options;
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
-		this.database = new Database( options, serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment() );
+		this.database = new Database(
+				options.getDatabaseDefaults(),
+				serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment()
+		);
 
 		this.mappingDefaults = new MappingDefaultsImpl();
 		this.nameNormalizer = new ObjectNameNormalizer() {
@@ -692,11 +696,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 //	}
 
 	@Override
-	public Options getOptions() {
-		return options;
-	}
-
-	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
@@ -881,7 +880,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		return new SessionFactoryBuilderImpl( this );
+		return new SessionFactoryBuilderImpl( this, options.getServiceRegistry() );
 	}
 
 	@Override
@@ -896,7 +895,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
     @Override
     public boolean isGloballyQuotedIdentifiers() {
-        return globallyQuotedIdentifiers || getOptions().isGloballyQuotedIdentifiers();
+        return globallyQuotedIdentifiers || options.getDatabaseDefaults().isGloballyQuotedIdentifiers();
     }
 
     public void setGloballyQuotedIdentifiers(boolean globallyQuotedIdentifiers){
@@ -906,6 +905,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
     @Override
 	public MappingDefaults getMappingDefaults() {
 		return mappingDefaults;
+	}
+
+	@Override
+	public MetadataBuildingOptions getBuildingOptions() {
+		return options;
 	}
 
 	private final MetaAttributeContext globalMetaAttributeContext = new MetaAttributeContext();
@@ -965,6 +969,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 	}
 
+	public static MetadataImpl build(MetadataSources sources, MetadataBuildingOptions options) {
+		return new MetadataImpl( sources, options );
+	}
+
 	private class MappingDefaultsImpl implements MappingDefaults {
 
 		@Override
@@ -974,12 +982,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		@Override
 		public String getSchemaName() {
-			return options.getDefaultSchemaName();
+			return options.getDatabaseDefaults().getDefaultSchemaName();
 		}
 
 		@Override
 		public String getCatalogName() {
-			return options.getDefaultCatalogName();
+			return options.getDatabaseDefaults().getDefaultCatalogName();
 		}
 
 		@Override
@@ -1014,7 +1022,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		@Override
 		public AccessType getCacheAccessType() {
-			return options.getDefaultAccessType();
+			return options.getDefaultCacheAccessType();
 		}
 	}
 }

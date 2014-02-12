@@ -1,9 +1,9 @@
-//$Id: CustomerId.java 7239 2005-06-20 09:44:54Z oneovthafew $
 package org.hibernate.test.idclass;
+
 import java.io.Serializable;
 
 public class CustomerId implements Serializable {
-	
+
 	private String orgName;
 	private String customerName;
 
@@ -31,5 +31,4 @@ public class CustomerId implements Serializable {
 	public void setOrgName(String orgName) {
 		this.orgName = orgName;
 	}
-
 }

@@ -69,7 +69,7 @@ public class ClassFileArchiveEntryHandler extends AbstractJavaArtifactArchiveEnt
 			return;
 		}
 
-		// we are only interested in classes with certain annotations, so see if the ClassDescriptor
+		// we are only interested in classes with certain annotations, so see if the TypeDescriptor
 		// represents a class which contains any of those annotations
 		if ( ! containsClassAnnotationsOfInterest( classFile ) ) {
 			return;

@@ -26,7 +26,6 @@ package org.hibernate.cfg;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,6 +126,7 @@ public class Configuration {
 	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private Properties properties;
 
 	public Configuration() {
 		this( new BootstrapServiceRegistryBuilder().build() );
@@ -174,6 +174,8 @@ public class Configuration {
 		entityTuplizerFactory = new EntityTuplizerFactory();
 		//componentTuplizerFactory = new ComponentTuplizerFactory();
 		interceptor = EmptyInterceptor.INSTANCE;
+		properties = new Properties(  );
+		properties.putAll( standardServiceRegistryBuilder.getSettings());
 	}
 
 
@@ -185,8 +187,6 @@ public class Configuration {
 	 * @return all properties
 	 */
 	public Properties getProperties() {
-		Properties properties = new Properties();
-		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 		return properties;
 	}
 
@@ -198,8 +198,7 @@ public class Configuration {
 	 * @return this for method chaining
 	 */
 	public Configuration setProperties(Properties properties) {
-		standardServiceRegistryBuilder.getSettings().clear();
-		standardServiceRegistryBuilder.applySettings( properties );
+		this.properties = properties;
 		return this;
 	}
 
@@ -211,7 +210,7 @@ public class Configuration {
 	 * @return The value currently associated with that property name; may be null.
 	 */
 	public String getProperty(String propertyName) {
-		Object o = standardServiceRegistryBuilder.getSettings().get( propertyName );
+		Object o = properties.get( propertyName );
 		return o instanceof String ? (String) o : null;
 	}
 
@@ -224,7 +223,7 @@ public class Configuration {
 	 * @return this for method chaining
 	 */
 	public Configuration setProperty(String propertyName, String value) {
-		standardServiceRegistryBuilder.applySetting( propertyName, value );
+		properties.setProperty( propertyName, value );
 		return this;
 	}
 
@@ -236,7 +235,7 @@ public class Configuration {
 	 * @return this for method chaining
 	 */
 	public Configuration addProperties(Properties properties) {
-		standardServiceRegistryBuilder.applySettings( properties );
+		this.properties.putAll( properties );
 		return this;
 	}
 
@@ -695,6 +694,7 @@ public class Configuration {
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		log.debug( "Building session factory using internal StandardServiceRegistryBuilder" );
+		standardServiceRegistryBuilder.applySettings( properties );
 		return buildSessionFactory( standardServiceRegistryBuilder.build() );
 	}
 

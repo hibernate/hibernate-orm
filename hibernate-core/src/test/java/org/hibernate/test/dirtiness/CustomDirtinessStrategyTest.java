@@ -57,7 +57,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOnlyCustomStrategy() {
 		// todo : not sure why this only fails with metamodel
 
@@ -91,7 +90,6 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOnlyCustomStrategyConsultedOnNonDirty() throws Exception {
 		// todo : not sure why this only fails with metamodel
 

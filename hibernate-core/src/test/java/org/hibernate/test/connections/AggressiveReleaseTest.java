@@ -218,7 +218,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testConnectionMaintanenceDuringFlush() throws Throwable {
 		// todo : no idea why this fails with metamodel
 

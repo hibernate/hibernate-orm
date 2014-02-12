@@ -80,7 +80,6 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testConcurrent() throws Exception {
 		sessionFactory().getStatistics().clear();
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );

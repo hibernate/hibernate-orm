@@ -1,9 +1,12 @@
 package org.hibernate.test.id;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -14,27 +17,21 @@ public class SequenceGeneratorTest extends BaseCoreFunctionalTestCase {
         return new String[] { "id/Person.hbm.xml" };
     }
 
+    /**
+     * This seems a little trivial, but we need to guarantee that all Dialects start their sequences on a non-0 value.
+     */
     @Test
-    public void testDistinctId() throws Exception {
+    @TestForIssue(jiraKey = "HHH-8814")
+    @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+    public void testStartOfSequence() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();
-        final int testLength = 8;
-        final Person[] persons = new Person[testLength];
-        for (int i = 0; i < testLength; i++) {
-            persons[i] = new Person();
-            s.persist(persons[i]);
-        }
+        final Person person = new Person();
+        s.persist(person);
         tx.commit();
         s.close();
-        for (int i = 0; i < testLength; i++) {
-            assertEquals(i + 1, persons[i].getId().intValue());
-        }
-
-        s = openSession();
-        tx = s.beginTransaction();
-        s.createQuery("delete from Person").executeUpdate();
-        tx.commit();
-        s.close();
+        
+        assertTrue(person.getId() > 0);
     }
 
 }

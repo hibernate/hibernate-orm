@@ -151,7 +151,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public final int getColumnSpan(Mapping mapping) throws MappingException {
-		return sqlTypes( mapping ).length;
+		return 1;
 	}
 
 	public final int[] sqlTypes(Mapping mapping) throws MappingException {

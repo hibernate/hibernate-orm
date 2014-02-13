@@ -69,14 +69,21 @@ public class RepositoryImpl implements Repository {
 		if ( type.isArray() ) {
 			return new ArrayTypeDescriptorImpl(
 					buildName( "[" + type.getName() ),
+					type.getModifiers(),
 					arrayOfType( type.getComponentType() )
 			);
 		}
 
-		return new ArrayTypeDescriptorImpl(
-				buildName( "[" + type.getName() ),
-				getType( buildName( type.getName() ) )
-		);
+		if ( type.isPrimitive() ) {
+			return Primitives.primitiveArrayDescriptor( type );
+		}
+		else {
+			return new ArrayTypeDescriptorImpl(
+					buildName( "[" + type.getName() ),
+					type.getModifiers(),
+					getType( buildName( type.getName() ) )
+			);
+		}
 	}
 
 	@Override
@@ -151,7 +158,7 @@ public class RepositoryImpl implements Repository {
 
 	private TypeDescriptor makeTypeDescriptor(Name typeName, Class clazz) {
 		if ( clazz.isInterface() ) {
-			final InterfaceDescriptorImpl typeDescriptor = new InterfaceDescriptorImpl( typeName );
+			final InterfaceDescriptorImpl typeDescriptor = new InterfaceDescriptorImpl( typeName, clazz.getModifiers() );
 			typeDescriptorMap.put( typeName, typeDescriptor );
 
 			typeDescriptor.setExtendedInterfaceTypes( fromInterfaces( clazz ) );
@@ -161,7 +168,11 @@ public class RepositoryImpl implements Repository {
 			return typeDescriptor;
 		}
 		else {
-			final ClassDescriptorImpl typeDescriptor = new ClassDescriptorImpl( typeName, hasDefaultCtor( clazz ) );
+			final ClassDescriptorImpl typeDescriptor = new ClassDescriptorImpl(
+					typeName,
+					clazz.getModifiers(),
+					hasDefaultCtor( clazz )
+			);
 			typeDescriptorMap.put( typeName, typeDescriptor );
 
 			typeDescriptor.setSuperType( fromSuper( clazz ) );
@@ -211,6 +222,7 @@ public class RepositoryImpl implements Repository {
 			fieldDescriptors[i] = new FieldDescriptorImpl(
 					fields[i].getName(),
 					toTypeDescriptor( fieldType ),
+					fields[i].getModifiers(),
 					declaringType
 			);
 		}
@@ -252,6 +264,7 @@ public class RepositoryImpl implements Repository {
 			methodDescriptors[i] = new MethodDescriptorImpl(
 					methods[i].getName(),
 					declaringType,
+					methods[i].getModifiers(),
 					toTypeDescriptor( methods[i].getReturnType() ),
 					argumentTypes
 			);
@@ -291,6 +304,11 @@ public class RepositoryImpl implements Repository {
 		@Override
 		public Name getName() {
 			return name;
+		}
+
+		@Override
+		public int getModifiers() {
+			return Void.class.getModifiers();
 		}
 
 		@Override

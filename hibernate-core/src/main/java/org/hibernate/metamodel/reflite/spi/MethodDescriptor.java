@@ -31,6 +31,9 @@ package org.hibernate.metamodel.reflite.spi;
 public interface MethodDescriptor {
 	public String getName();
 	public TypeDescriptor getDeclaringType();
+
+	public int getModifiers();
+
 	public TypeDescriptor getReturnType();
 	public TypeDescriptor[] getParameterTypes();
 }

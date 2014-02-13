@@ -31,6 +31,8 @@ package org.hibernate.metamodel.reflite.spi;
 public interface TypeDescriptor {
 	public Name getName();
 
+	public int getModifiers();
+
 	/**
 	 * Is this type an interface (as opposed to a class)?
 	 *

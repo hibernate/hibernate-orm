@@ -43,6 +43,8 @@ public interface FieldDescriptor {
 	 */
 	public TypeDescriptor getType();
 
+	public int getModifiers();
+
 	/**
 	 * The declaring type
 	 *

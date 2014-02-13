@@ -32,16 +32,23 @@ import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
  */
 public class ArrayTypeDescriptorImpl implements ArrayTypeDescriptor {
 	private final Name name;
+	private final int modifiers;
 	private TypeDescriptor componentType;
 
-	public ArrayTypeDescriptorImpl(Name name, TypeDescriptor componentType) {
+	public ArrayTypeDescriptorImpl(Name name, int modifiers, TypeDescriptor componentType) {
 		this.name = name;
+		this.modifiers = modifiers;
 		this.componentType = componentType;
 	}
 
 	@Override
 	public Name getName() {
 		return name;
+	}
+
+	@Override
+	public int getModifiers() {
+		return modifiers;
 	}
 
 	@Override

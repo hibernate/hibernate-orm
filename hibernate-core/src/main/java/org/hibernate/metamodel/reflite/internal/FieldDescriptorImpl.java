@@ -33,11 +33,14 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	private final String name;
 	private final TypeDescriptor fieldType;
 
+	private final int modifiers;
+
 	private final TypeDescriptor declaringType;
 
-	public FieldDescriptorImpl(String name, TypeDescriptor fieldType, TypeDescriptor declaringType) {
+	public FieldDescriptorImpl(String name, TypeDescriptor fieldType, int modifiers, TypeDescriptor declaringType) {
 		this.name = name;
 		this.fieldType = fieldType;
+		this.modifiers = modifiers;
 		this.declaringType = declaringType;
 	}
 
@@ -52,7 +55,17 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	}
 
 	@Override
+	public int getModifiers() {
+		return modifiers;
+	}
+
+	@Override
 	public TypeDescriptor getDeclaringType() {
 		return declaringType;
+	}
+
+	@Override
+	public String toString() {
+		return "FieldDescriptorImpl{" + declaringType.getName().toString() + '#' + name + '}';
 	}
 }

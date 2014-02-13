@@ -40,19 +40,26 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 	private TypeDescriptor superType;
 	private TypeDescriptor[] interfaces;
 
+	private final int modifiers;
 	private final boolean hasDefaultConstructor;
 
 	private FieldDescriptor[] fieldDescriptors;
 	private MethodDescriptor[] methodDescriptors;
 
-	public ClassDescriptorImpl(Name name, boolean hasDefaultConstructor) {
+	public ClassDescriptorImpl(Name name, int modifiers, boolean hasDefaultConstructor) {
 		this.name = name;
+		this.modifiers = modifiers;
 		this.hasDefaultConstructor = hasDefaultConstructor;
 	}
 
 	@Override
 	public Name getName() {
 		return name;
+	}
+
+	@Override
+	public int getModifiers() {
+		return modifiers;
 	}
 
 	@Override
@@ -114,5 +121,10 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 
 	void setMethods(MethodDescriptor[] methodDescriptors) {
 		this.methodDescriptors = methodDescriptors;
+	}
+
+	@Override
+	public String toString() {
+		return "ClassDescriptorImpl{" + name.toString() + '}';
 	}
 }

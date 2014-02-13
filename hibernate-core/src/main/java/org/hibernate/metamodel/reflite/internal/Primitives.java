@@ -38,44 +38,31 @@ public class Primitives {
 		private final PrimitiveWrapperTypeDescriptor primitiveWrapperType;
 
 		private final ArrayTypeDescriptor primitiveArrayType;
-		private final ArrayTypeDescriptor primitiveWrapperArrayType;
 
-		public PrimitiveGroup(Class primitiveClass, Class wrapperClass) {
+		public PrimitiveGroup(Class primitiveClass, Class primitiveArrayClass, Class wrapperClass) {
 			assert primitiveClass.isPrimitive();
+			assert primitiveArrayClass.isArray();
 			assert !wrapperClass.isPrimitive();
 
-			this.primitiveType = new PrimitiveDescriptorImpl( primitiveClass.getName(), this );
-			this.primitiveWrapperType = new WrapperDescriptorImpl( wrapperClass.getName(), this );
+			this.primitiveType = new PrimitiveDescriptorImpl( primitiveClass, this );
+			this.primitiveWrapperType = new WrapperDescriptorImpl( wrapperClass, this );
 
-			this.primitiveArrayType = new ArrayTypeDescriptorImpl( null, this.primitiveType );
-			this.primitiveWrapperArrayType = new ArrayTypeDescriptorImpl( null, this.primitiveWrapperType );
-		}
-
-		public PrimitiveTypeDescriptor getPrimitiveType() {
-			return primitiveType;
-		}
-
-		public PrimitiveWrapperTypeDescriptor getPrimitiveWrapperType() {
-			return primitiveWrapperType;
-		}
-
-		public ArrayTypeDescriptor getPrimitiveArrayType() {
-			return primitiveArrayType;
-		}
-
-		public ArrayTypeDescriptor getPrimitiveWrapperArrayType() {
-			return primitiveWrapperArrayType;
+			this.primitiveArrayType = new ArrayTypeDescriptorImpl(
+					new DotNameAdapter( primitiveArrayClass.getName() ),
+					primitiveArrayClass.getModifiers(),
+					this.primitiveType
+			);
 		}
 	}
 
-	public static final PrimitiveGroup CHAR = new PrimitiveGroup( char.class, Character.class );
-	public static final PrimitiveGroup BOOLEAN = new PrimitiveGroup( boolean.class, Boolean.class );
-	public static final PrimitiveGroup BYTE = new PrimitiveGroup( byte.class, Byte.class );
-	public static final PrimitiveGroup SHORT = new PrimitiveGroup( short.class, Short.class );
-	public static final PrimitiveGroup INTEGER = new PrimitiveGroup( int.class, Integer.class );
-	public static final PrimitiveGroup LONG = new PrimitiveGroup( long.class, Long.class );
-	public static final PrimitiveGroup FLOAT = new PrimitiveGroup( float.class, Float.class );
-	public static final PrimitiveGroup DOUBLE = new PrimitiveGroup( double.class, Double.class );
+	public static final PrimitiveGroup CHAR = new PrimitiveGroup( char.class, char[].class, Character.class );
+	public static final PrimitiveGroup BOOLEAN = new PrimitiveGroup( boolean.class, boolean[].class,  Boolean.class );
+	public static final PrimitiveGroup BYTE = new PrimitiveGroup( byte.class, byte[].class, Byte.class );
+	public static final PrimitiveGroup SHORT = new PrimitiveGroup( short.class, short[].class, Short.class );
+	public static final PrimitiveGroup INTEGER = new PrimitiveGroup( int.class, int[].class, Integer.class );
+	public static final PrimitiveGroup LONG = new PrimitiveGroup( long.class, long[].class, Long.class );
+	public static final PrimitiveGroup FLOAT = new PrimitiveGroup( float.class, float[].class, Float.class );
+	public static final PrimitiveGroup DOUBLE = new PrimitiveGroup( double.class, double[].class, Double.class );
 
 	public static TypeDescriptor resolveByName(Name name) {
 		assert name != null;
@@ -85,7 +72,7 @@ public class Primitives {
 		if ( char.class.getName().equals( typeNameString ) ) {
 			return CHAR.primitiveType;
 		}
-		else if ( Character.class.getName().equals( name ) ) {
+		else if ( Character.class.getName().equals( typeNameString ) ) {
 			return CHAR.primitiveWrapperType;
 		}
 		else if ( boolean.class.getName().equals( typeNameString ) ) {
@@ -134,18 +121,63 @@ public class Primitives {
 		return null;
 	}
 
+	public static TypeDescriptor primitiveArrayDescriptor(Class type) {
+		assert type != null;
+		assert type.isPrimitive();
+
+		final String typeNameString = type.getName();
+
+		if ( char.class.getName().equals( typeNameString ) ) {
+			return CHAR.primitiveType;
+		}
+		else if ( boolean.class.getName().equals( typeNameString ) ) {
+			return BOOLEAN.primitiveType;
+		}
+		else if ( byte.class.getName().equals( typeNameString ) ) {
+			return BYTE.primitiveType;
+		}
+		else if ( short.class.getName().equals( typeNameString ) ) {
+			return SHORT.primitiveType;
+		}
+		else if ( int.class.getName().equals( typeNameString ) ) {
+			return INTEGER.primitiveType;
+		}
+		else if ( long.class.getName().equals( typeNameString ) ) {
+			return LONG.primitiveType;
+		}
+		else if ( float.class.getName().equals( typeNameString ) ) {
+			return FLOAT.primitiveType;
+		}
+		else if ( double.class.getName().equals( typeNameString ) ) {
+			return DOUBLE.primitiveType;
+		}
+		else if ( double.class.getName().equals( typeNameString ) ) {
+			return DOUBLE.primitiveWrapperType;
+		}
+
+		return null;
+	}
+
+
 	private static class PrimitiveDescriptorImpl implements PrimitiveTypeDescriptor {
 		private final Name name;
+		private final int modifiers;
 		private final PrimitiveGroup group;
 
-		protected PrimitiveDescriptorImpl(String simpleName, PrimitiveGroup group) {
-			this.name = new DotNameAdapter( simpleName );
+		protected PrimitiveDescriptorImpl(Class clazz, PrimitiveGroup group) {
+			this.name = new DotNameAdapter( clazz.getName() );
+			this.modifiers = clazz.getModifiers();
 			this.group = group;
 		}
 
 		@Override
 		public Name getName() {
 			return name;
+		}
+
+		@Override
+		public int getModifiers() {
+			return modifiers;
 		}
 
 		@Override
@@ -176,16 +208,23 @@ public class Primitives {
 
 	private static class WrapperDescriptorImpl implements PrimitiveWrapperTypeDescriptor {
 		private final Name name;
+		private final int modifiers;
 		private final PrimitiveGroup group;
 
-		private WrapperDescriptorImpl(String simpleName, PrimitiveGroup group) {
-			this.name = new DotNameAdapter( simpleName );
+		private WrapperDescriptorImpl(Class clazz, PrimitiveGroup group) {
+			this.name = new DotNameAdapter( clazz.getName() );
+			this.modifiers = clazz.getModifiers();
 			this.group = group;
 		}
 
 		@Override
 		public Name getName() {
 			return name;
+		}
+
+		@Override
+		public int getModifiers() {
+			return modifiers;
 		}
 
 		@Override

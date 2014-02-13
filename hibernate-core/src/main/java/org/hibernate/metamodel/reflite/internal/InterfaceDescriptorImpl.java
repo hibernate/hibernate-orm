@@ -34,18 +34,25 @@ import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
  */
 public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 	private final Name name;
+	private final int modifiers;
 
 	private TypeDescriptor[] extendedInterfaceTypes;
 	private FieldDescriptor[] declaredFields;
 	private MethodDescriptor[] declaredMethods;
 
-	public InterfaceDescriptorImpl(Name name) {
+	public InterfaceDescriptorImpl(Name name, int modifiers) {
 		this.name = name;
+		this.modifiers = modifiers;
 	}
 
 	@Override
 	public Name getName() {
 		return name;
+	}
+
+	@Override
+	public int getModifiers() {
+		return modifiers;
 	}
 
 	@Override
@@ -93,5 +100,10 @@ public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 
 	void setDeclaredMethods(MethodDescriptor[] declaredMethods) {
 		this.declaredMethods = declaredMethods;
+	}
+
+	@Override
+	public String toString() {
+		return "InterfaceDescriptorImpl{" + name.toString() + '}';
 	}
 }

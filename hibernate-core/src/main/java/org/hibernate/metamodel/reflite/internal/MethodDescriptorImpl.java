@@ -32,16 +32,19 @@ import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 public class MethodDescriptorImpl implements MethodDescriptor {
 	private final String name;
 	private final TypeDescriptor declaringType;
+	private final int modifiers;
 	private final TypeDescriptor returnType;
 	private final TypeDescriptor[] parameterTypes;
 
 	public MethodDescriptorImpl(
 			String name,
 			TypeDescriptor declaringType,
+			int modifiers,
 			TypeDescriptor returnType,
 			TypeDescriptor[] parameterTypes) {
 		this.name = name;
 		this.declaringType = declaringType;
+		this.modifiers = modifiers;
 		this.returnType = returnType;
 		this.parameterTypes = parameterTypes;
 	}
@@ -57,6 +60,11 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	}
 
 	@Override
+	public int getModifiers() {
+		return modifiers;
+	}
+
+	@Override
 	public TypeDescriptor getReturnType() {
 		return returnType;
 	}
@@ -64,5 +72,10 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	@Override
 	public TypeDescriptor[] getParameterTypes() {
 		return parameterTypes;
+	}
+
+	@Override
+	public String toString() {
+		return "MethodDescriptorImpl{" + declaringType.getName().toString() + '#' + name + '}';
 	}
 }

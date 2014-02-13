@@ -24,31 +24,41 @@
 package org.hibernate.metamodel.reflite.spi;
 
 /**
- * Describes information about a class.
- *
  * @author Steve Ebersole
  */
-public interface TypeDescriptor {
-	public Name getName();
+public interface ClassDescriptor extends TypeDescriptor {
+	/**
+	 * Did the class define a default (no-arg) constructor?
+	 *
+	 * @return {@code true} indicates the class did have a default (no arg) constructor.
+	 */
+	public boolean hasDefaultConstructor();
 
 	/**
-	 * Is this type an interface (as opposed to a class)?
+	 * The super type for this type (if it is a class)
 	 *
-	 * @return {@code true} indicates it is a interface; {@code false} indicates it is a class.
+	 * @return The super type
 	 */
-	public boolean isInterface();
-
-	public boolean isVoid();
+	public TypeDescriptor getSuperType();
 
 	/**
+	 * Get the interfaces implemented by this type
 	 *
-	 * @return
+	 * @return The implemented interfaces
 	 */
-	public boolean isArray();
+	public TypeDescriptor[] getInterfaceTypes();
 
 	/**
+	 * Get all the fields declared by this type.
 	 *
-	 * @return
+	 * @return All fields declared by this type
 	 */
-	public boolean isPrimitive();
+	public FieldDescriptor[] getDeclaredFields();
+
+	/**
+	 * Get all the methods declared by this type.
+	 *
+	 * @return All fields declared by this type
+	 */
+	public MethodDescriptor[] getDeclaredMethods();
 }

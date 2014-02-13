@@ -21,34 +21,51 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.reflite.spi;
+package org.hibernate.metamodel.reflite.internal;
+
+import org.hibernate.metamodel.reflite.spi.ArrayTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.Name;
+import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
- * Describes information about a class.
- *
  * @author Steve Ebersole
  */
-public interface TypeDescriptor {
-	public Name getName();
+public class ArrayTypeDescriptorImpl implements ArrayTypeDescriptor {
+	private final Name name;
+	private TypeDescriptor componentType;
 
-	/**
-	 * Is this type an interface (as opposed to a class)?
-	 *
-	 * @return {@code true} indicates it is a interface; {@code false} indicates it is a class.
-	 */
-	public boolean isInterface();
+	public ArrayTypeDescriptorImpl(Name name, TypeDescriptor componentType) {
+		this.name = name;
+		this.componentType = componentType;
+	}
 
-	public boolean isVoid();
+	@Override
+	public Name getName() {
+		return name;
+	}
 
-	/**
-	 *
-	 * @return
-	 */
-	public boolean isArray();
+	@Override
+	public TypeDescriptor getComponentTypeDescriptor() {
+		return componentType;
+	}
 
-	/**
-	 *
-	 * @return
-	 */
-	public boolean isPrimitive();
+	@Override
+	public boolean isInterface() {
+		return false;
+	}
+
+	@Override
+	public boolean isVoid() {
+		return false;
+	}
+
+	@Override
+	public boolean isArray() {
+		return true;
+	}
+
+	@Override
+	public boolean isPrimitive() {
+		return false;
+	}
 }

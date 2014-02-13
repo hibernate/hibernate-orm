@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
@@ -64,12 +65,41 @@ public class RepositoryImpl implements Repository {
 		return new DotNameAdapter( name );
 	}
 
-	@Override
-	public TypeDescriptor getType(Name className) {
-		TypeDescriptor descriptor = typeDescriptorMap.get( className );
-		if ( descriptor == null ) {
-			descriptor = makeTypeDescriptor( className );
+	private TypeDescriptor arrayOfType(Class type) {
+		if ( type.isArray() ) {
+			return new ArrayTypeDescriptorImpl(
+					buildName( "[" + type.getName() ),
+					arrayOfType( type.getComponentType() )
+			);
 		}
+
+		return new ArrayTypeDescriptorImpl(
+				buildName( "[" + type.getName() ),
+				getType( buildName( type.getName() ) )
+		);
+	}
+
+	@Override
+	public TypeDescriptor getType(Name typeName) {
+		if ( typeName == null ) {
+			return null;
+		}
+
+		final String typeNameString = typeName.toString();
+		if ( "void".equals( typeNameString ) ) {
+			return VoidTypeDescriptor.INSTANCE;
+		}
+
+		TypeDescriptor descriptor = typeDescriptorMap.get( typeName );
+		if ( descriptor == null ) {
+			descriptor = Primitives.resolveByName( typeName );
+		}
+
+		if ( descriptor == null ) {
+			descriptor = makeTypeDescriptor( typeName );
+			typeDescriptorMap.put( typeName, descriptor );
+		}
+
 		return descriptor;
 	}
 
@@ -117,90 +147,116 @@ public class RepositoryImpl implements Repository {
 
 	}
 
-	private static TypeDescriptor[] NO_TYPES = new TypeDescriptor[0];
-	private static FieldDescriptor[] NO_FIELDS = new FieldDescriptor[0];
-	private static MethodDescriptor[] NO_METHODS = new MethodDescriptor[0];
 
-
-	// todo : this is not circular reference safe in terms of fields/methods referring back to this type
 
 	private TypeDescriptor makeTypeDescriptor(Name typeName, Class clazz) {
-		// we build and register it now to protect against circular references
-		final TypeDescriptorImpl typeDescriptor = new TypeDescriptorImpl(
-				typeName,
-				clazz.isInterface(),
-				hasDefaultCtor( clazz )
-		);
-		typeDescriptorMap.put( typeName, typeDescriptor );
+		if ( clazz.isInterface() ) {
+			final InterfaceDescriptorImpl typeDescriptor = new InterfaceDescriptorImpl( typeName );
+			typeDescriptorMap.put( typeName, typeDescriptor );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// super type
-		TypeDescriptor superType = null;
-		if ( !clazz.isInterface() ) {
-			final Class superclass = clazz.getSuperclass();
-			if ( superclass != null ) {
-				superType = getType( buildName( superclass.getName() ) );
-			}
+			typeDescriptor.setExtendedInterfaceTypes( fromInterfaces( clazz ) );
+			typeDescriptor.setDeclaredFields( fromFields( clazz, typeDescriptor ) );
+			typeDescriptor.setDeclaredMethods( fromMethods( clazz, typeDescriptor ) );
+
+			return typeDescriptor;
 		}
-		typeDescriptor.setSuperType( superType );
+		else {
+			final ClassDescriptorImpl typeDescriptor = new ClassDescriptorImpl( typeName, hasDefaultCtor( clazz ) );
+			typeDescriptorMap.put( typeName, typeDescriptor );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// interfaces
-		TypeDescriptor[] interfaceTypes = null;
+			typeDescriptor.setSuperType( fromSuper( clazz ) );
+			typeDescriptor.setInterfaces( fromInterfaces( clazz ) );
+			typeDescriptor.setFields( fromFields( clazz, typeDescriptor ) );
+			typeDescriptor.setMethods( fromMethods( clazz, typeDescriptor ) );
+
+			return typeDescriptor;
+		}
+	}
+
+	private TypeDescriptor fromSuper(Class clazz) {
+		final Class superclass = clazz.getSuperclass();
+		if ( superclass == null ) {
+			return null;
+		}
+
+		return getType( buildName( superclass.getName() ) );
+	}
+
+	private static TypeDescriptor[] NO_TYPES = new TypeDescriptor[0];
+
+	private TypeDescriptor[] fromInterfaces(Class clazz) {
 		final Class[] interfaces = clazz.getInterfaces();
-		if ( interfaces != null && interfaces.length > 0 ) {
-			interfaceTypes = new TypeDescriptor[ interfaces.length ];
-			for ( int i = 0; i < interfaces.length; i++ ) {
-				interfaceTypes[i] = getType( buildName( interfaces[i].getName() ) );
-			}
+		if ( interfaces == null || interfaces.length <= 0 ) {
+			return NO_TYPES;
 		}
-		typeDescriptor.setInterfaces( interfaceTypes == null ? NO_TYPES : interfaceTypes );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// fields
-		FieldDescriptor[] fieldDescriptors = null;
+		final TypeDescriptor[] interfaceTypes = new TypeDescriptor[ interfaces.length ];
+		for ( int i = 0; i < interfaces.length; i++ ) {
+			interfaceTypes[i] = getType( buildName( interfaces[i].getName() ) );
+		}
+		return interfaceTypes;
+	}
+
+	private static FieldDescriptor[] NO_FIELDS = new FieldDescriptor[0];
+
+	private FieldDescriptor[] fromFields(Class clazz, TypeDescriptor declaringType) {
 		final Field[] fields = clazz.getDeclaredFields();
-		if ( fields != null && fields.length > 0 ) {
-			fieldDescriptors = new FieldDescriptor[ fields.length ];
-			for ( int i = 0; i < fields.length; i++ ) {
-				fieldDescriptors[i] = new FieldDescriptorImpl(
-						fields[i].getName(),
-						getType( buildName( fields[i].getType().getName() ) ),
-						typeDescriptor
-				);
-			}
+		if ( fields == null || fields.length <= 0 ) {
+			return NO_FIELDS;
 		}
-		typeDescriptor.setFields( fieldDescriptors == null ? NO_FIELDS : fieldDescriptors );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// methods
-		MethodDescriptor[] methodDescriptors = null;
+		FieldDescriptor[] fieldDescriptors = new FieldDescriptor[ fields.length ];
+		for ( int i = 0; i < fields.length; i++ ) {
+			final Class fieldType =  fields[i].getType();
+			fieldDescriptors[i] = new FieldDescriptorImpl(
+					fields[i].getName(),
+					toTypeDescriptor( fieldType ),
+					declaringType
+			);
+		}
+		return fieldDescriptors;
+	}
+
+	private TypeDescriptor toTypeDescriptor(Class clazz) {
+		final TypeDescriptor fieldTypeDescriptor;
+		if ( clazz.isArray() ) {
+			fieldTypeDescriptor = arrayOfType( clazz.getComponentType() );
+		}
+		else {
+			fieldTypeDescriptor = getType( buildName( clazz.getName() ) );
+		}
+		return fieldTypeDescriptor;
+	}
+
+	private static MethodDescriptor[] NO_METHODS = new MethodDescriptor[0];
+
+	private MethodDescriptor[] fromMethods(Class clazz, TypeDescriptor declaringType) {
 		final Method[] methods = clazz.getDeclaredMethods();
-		if ( methods != null && methods.length > 0 ) {
-			methodDescriptors = new MethodDescriptor[ methods.length ];
-			for ( int i = 0; i < methods.length; i++ ) {
-				final Class[] parameterTypes = methods[i].getParameterTypes();
-				final TypeDescriptor[] argumentTypes;
-				if ( parameterTypes.length == 0 ) {
-					argumentTypes = NO_TYPES;
-				}
-				else {
-					argumentTypes = new TypeDescriptor[ parameterTypes.length ];
-					for ( int x = 0; x < parameterTypes.length; x++ ) {
-						argumentTypes[x] = getType( buildName( parameterTypes[x].getName() ) );
-					}
-				}
-				methodDescriptors[i] = new MethodDescriptorImpl(
-						methods[i].getName(),
-						typeDescriptor,
-						getType( buildName( methods[i].getReturnType().getName() ) ),
-						argumentTypes
-				);
-			}
+		if ( methods == null || methods.length <= 0 ) {
+			return NO_METHODS;
 		}
-		typeDescriptor.setMethods( methodDescriptors == null ? NO_METHODS : methodDescriptors );
 
-		return typeDescriptor;
+		MethodDescriptor[] methodDescriptors = new MethodDescriptor[ methods.length ];
+		for ( int i = 0; i < methods.length; i++ ) {
+			final Class[] parameterTypes = methods[i].getParameterTypes();
+			final TypeDescriptor[] argumentTypes;
+			if ( parameterTypes.length == 0 ) {
+				argumentTypes = NO_TYPES;
+			}
+			else {
+				argumentTypes = new TypeDescriptor[ parameterTypes.length ];
+				for ( int x = 0; x < parameterTypes.length; x++ ) {
+					argumentTypes[x] = toTypeDescriptor( parameterTypes[x] );
+				}
+			}
+			methodDescriptors[i] = new MethodDescriptorImpl(
+					methods[i].getName(),
+					declaringType,
+					toTypeDescriptor( methods[i].getReturnType() ),
+					argumentTypes
+			);
+		}
+		return methodDescriptors;
 	}
 
 
@@ -210,6 +266,50 @@ public class RepositoryImpl implements Repository {
 			return !clazz.isInterface() && clazz.getConstructor() != null;
 		}
 		catch (NoSuchMethodException ignore) {
+			return false;
+		}
+	}
+
+	public static void main(String... args) {
+		RepositoryImpl repo = new RepositoryImpl(
+				RepositoryImpl.class.getClassLoader(),
+				new BootstrapServiceRegistryBuilder().build()
+		);
+
+		TypeDescriptor td = repo.getType( repo.buildName( RepositoryImpl.class.getName() ) );
+		assert !td.isInterface();
+	}
+
+	private static class VoidTypeDescriptor implements TypeDescriptor {
+		/**
+		 * Singleton access
+		 */
+		public static final VoidTypeDescriptor INSTANCE = new VoidTypeDescriptor();
+
+		private final Name name = new DotNameAdapter( "void" );
+
+		@Override
+		public Name getName() {
+			return name;
+		}
+
+		@Override
+		public boolean isInterface() {
+			return false;
+		}
+
+		@Override
+		public boolean isVoid() {
+			return true;
+		}
+
+		@Override
+		public boolean isArray() {
+			return false;
+		}
+
+		@Override
+		public boolean isPrimitive() {
 			return false;
 		}
 	}

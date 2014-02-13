@@ -24,31 +24,27 @@
 package org.hibernate.metamodel.reflite.spi;
 
 /**
- * Describes information about a class.
- *
  * @author Steve Ebersole
  */
-public interface TypeDescriptor {
-	public Name getName();
+public interface InterfaceDescriptor extends TypeDescriptor {
+	/**
+	 * Get the interfaces extended by this interface
+	 *
+	 * @return The implemented interfaces
+	 */
+	public TypeDescriptor[] getExtendedInterfaceTypes();
 
 	/**
-	 * Is this type an interface (as opposed to a class)?
+	 * Get all the fields declared by this type.
 	 *
-	 * @return {@code true} indicates it is a interface; {@code false} indicates it is a class.
+	 * @return All fields declared by this type
 	 */
-	public boolean isInterface();
-
-	public boolean isVoid();
+	public FieldDescriptor[] getDeclaredFields();
 
 	/**
+	 * Get all the methods declared by this type.
 	 *
-	 * @return
+	 * @return All fields declared by this type
 	 */
-	public boolean isArray();
-
-	/**
-	 *
-	 * @return
-	 */
-	public boolean isPrimitive();
+	public MethodDescriptor[] getDeclaredMethods();
 }

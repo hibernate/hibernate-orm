@@ -32,10 +32,10 @@ import org.jboss.jandex.DotName;
  *
  * @author Steve Ebersole
  */
-public class DotNameAdapter implements Name {
+class DotNameAdapter implements Name {
 	private final DotName dotName;
 
-	public DotNameAdapter(String name) {
+	DotNameAdapter(String name) {
 		final int loc = name.lastIndexOf( '.' );
 		if ( loc < 0 ) {
 			this.dotName = DotName.createSimple( name );

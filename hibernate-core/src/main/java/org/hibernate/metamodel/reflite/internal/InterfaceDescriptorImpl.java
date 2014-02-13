@@ -24,31 +24,23 @@
 package org.hibernate.metamodel.reflite.internal;
 
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
+import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
- * Implementation of a type descriptor
- *
  * @author Steve Ebersole
  */
-public class TypeDescriptorImpl implements TypeDescriptor {
+public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 	private final Name name;
 
-	private final boolean isInterface;
-	private final boolean hasDefaultConstructor;
+	private TypeDescriptor[] extendedInterfaceTypes;
+	private FieldDescriptor[] declaredFields;
+	private MethodDescriptor[] declaredMethods;
 
-	private TypeDescriptor superType;
-	private TypeDescriptor[] interfaces;
-
-	private FieldDescriptor[] fieldDescriptors;
-	private MethodDescriptor[] methodDescriptors;
-
-	public TypeDescriptorImpl(Name name, boolean isInterface, boolean hasDefaultConstructor) {
+	public InterfaceDescriptorImpl(Name name) {
 		this.name = name;
-		this.isInterface = isInterface;
-		this.hasDefaultConstructor = hasDefaultConstructor;
 	}
 
 	@Override
@@ -58,47 +50,48 @@ public class TypeDescriptorImpl implements TypeDescriptor {
 
 	@Override
 	public boolean isInterface() {
-		return isInterface;
+		return true;
 	}
 
 	@Override
-	public boolean hasDefaultConstructor() {
-		return hasDefaultConstructor;
+	public boolean isVoid() {
+		return false;
 	}
 
 	@Override
-	public TypeDescriptor getSuperType() {
-		return superType;
+	public boolean isArray() {
+		return false;
 	}
 
 	@Override
-	public TypeDescriptor[] getInterfaceTypes() {
-		return interfaces;
+	public boolean isPrimitive() {
+		return false;
+	}
+
+	@Override
+	public TypeDescriptor[] getExtendedInterfaceTypes() {
+		return extendedInterfaceTypes;
 	}
 
 	@Override
 	public FieldDescriptor[] getDeclaredFields() {
-		return fieldDescriptors;
+		return declaredFields;
 	}
 
 	@Override
 	public MethodDescriptor[] getDeclaredMethods() {
-		return methodDescriptors;
+		return declaredMethods;
 	}
 
-	void setSuperType(TypeDescriptor superType) {
-		this.superType = superType;
+	void setExtendedInterfaceTypes(TypeDescriptor[] extendedInterfaceTypes) {
+		this.extendedInterfaceTypes = extendedInterfaceTypes;
 	}
 
-	void setInterfaces(TypeDescriptor[] interfaces) {
-		this.interfaces = interfaces;
+	void setDeclaredFields(FieldDescriptor[] declaredFields) {
+		this.declaredFields = declaredFields;
 	}
 
-	void setFields(FieldDescriptor[] fieldDescriptors) {
-		this.fieldDescriptors = fieldDescriptors;
-	}
-
-	void setMethods(MethodDescriptor[] methodDescriptors) {
-		this.methodDescriptors = methodDescriptors;
+	void setDeclaredMethods(MethodDescriptor[] declaredMethods) {
+		this.declaredMethods = declaredMethods;
 	}
 }

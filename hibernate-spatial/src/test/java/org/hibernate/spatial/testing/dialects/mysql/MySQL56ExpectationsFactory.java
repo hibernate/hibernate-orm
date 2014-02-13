@@ -72,4 +72,18 @@ public class MySQL56ExpectationsFactory extends MySQLExpectationsFactory {
 				geom.toText());
 	}
 
+	@Override
+	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
+		return createNativeSQLStatement(
+				"select t.id, ST_Buffer(t.geom,?) from GEOMTEST t where srid(t.geom) = 4326",
+				new Object[] { distance }
+		);
+	}
+
+	@Override
+	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
+		return createNativeSQLStatementAllWKTParams(
+						"select t.id, st_distance(t.geom, GeomFromText(?, 4326)) from GEOMTEST t where srid(t.geom) = 4326",
+						geom.toText());
+	}
 }

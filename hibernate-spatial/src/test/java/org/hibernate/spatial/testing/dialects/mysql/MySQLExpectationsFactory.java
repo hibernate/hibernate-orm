@@ -84,9 +84,7 @@ public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
-		return createNativeSQLStatementAllWKTParams(
-				"select t.id, distance(t.geom, GeomFromText(?, 4326)) from GEOMTEST t where srid(t.geom) = 4326",
-				geom.toText());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -96,7 +94,7 @@ public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
-		return createNativeSQLStatement("select t.id, buffer(t.geom,?) from GEOMTEST t where srid(t.geom) = 4326", new Object[]{distance});
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

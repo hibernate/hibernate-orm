@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.spatial.GeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
@@ -63,6 +64,8 @@ public class MySQLSpatial56Dialect extends MySQL5Dialect implements SpatialDiale
 		mysqlFunctions.put("overlaps" , new StandardSQLFunction("ST_Overlaps",StandardBasicTypes.BOOLEAN));
 		mysqlFunctions.put("touches" , new StandardSQLFunction("ST_Touches",StandardBasicTypes.BOOLEAN));
 		mysqlFunctions.put("within" , new StandardSQLFunction("ST_Within",StandardBasicTypes.BOOLEAN));
+		mysqlFunctions.put( "distance", new StandardSQLFunction( "ST_Distance", StandardBasicTypes.DOUBLE ) );
+		mysqlFunctions.put( "buffer", new StandardSQLFunction( "ST_Buffer", GeometryType.INSTANCE ) );
 		return mysqlFunctions;
 	}
 
@@ -130,7 +133,7 @@ public class MySQLSpatial56Dialect extends MySQL5Dialect implements SpatialDiale
 	}
 
 	public boolean supports(SpatialFunction function) {
-		return dialectDelegate.supports(function);
+		return (getFunctions().get(function.toString()) != null);
 	}
 
 }

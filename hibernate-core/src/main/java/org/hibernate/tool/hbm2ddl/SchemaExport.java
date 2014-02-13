@@ -64,7 +64,6 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -691,6 +690,14 @@ public class SchemaExport {
 	 */
 	public List getExceptions() {
 		return exceptions;
+	}
+	
+	public String[] getCreateSQL() {
+		return createSQL;
+	}
+	
+	public String[] getDropSQL() {
+		return dropSQL;
 	}
 
 }

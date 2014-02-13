@@ -32,12 +32,14 @@ import java.util.Set;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -58,6 +60,8 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 	private final List<RelationalValueSource> relationalValueSources;
 	private final String containingTableName;
 	private final EntityBindingContext bindingContext;
+	private final String explicitForeignKeyName;
+	private final ClassLoaderService cls;
 
 	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute, String relativePath,
 			EntityBindingContext bindingContext) {
@@ -66,11 +70,13 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 			throw new IllegalArgumentException( "associationAttribute.getMappedBy() must be null" );
 		}
 		this.bindingContext = bindingContext;
+		this.cls = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		// Need to initialize relationalValueSources before determining logicalJoinTableName.
 		this.relationalValueSources = resolveRelationalValueSources( associationAttribute );
 		// Need to initialize logicalJoinTableName before determining nature.
 		this.containingTableName = resolveContainingTableName( associationAttribute, relationalValueSources );
 		setNature( determineNatureIfPossible( associationAttribute ) );
+		this.explicitForeignKeyName = resolveForeignKeyName( associationAttribute );
 	}
 
 	private Nature determineNatureIfPossible(
@@ -102,6 +108,30 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 					associationAttribute.getNature(), associationAttribute.getRole() ));
 		}
 	}
+	
+	private String resolveForeignKeyName(SingularAssociationAttribute associationAttribute) {
+		String fkName = null;
+		
+		final AnnotationInstance fkAnnotation = JandexHelper.getSingleAnnotation( associationAttribute().annotations(),
+				HibernateDotNames.FOREIGN_KEY );
+		fkName = fkAnnotation != null ? JandexHelper.getValue( fkAnnotation, "name", String.class, cls ) : null;
+		
+		if (StringHelper.isEmpty( fkName) ) {
+			final AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
+					associationAttribute().annotations(), JPADotNames.JOIN_COLUMN );
+			if (joinColumnAnnotation != null) {
+				final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
+						joinColumnAnnotation, "foreignKey", AnnotationInstance.class, cls );
+				fkName = jpaFkAnnotation != null ? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls )
+						: null;
+			}
+		}
+		
+		// TODO: join tables?
+		
+		return fkName;
+	}
+	
 	@Override
 	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
 		if ( getNature() != null ) {
@@ -208,8 +238,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		if ( associationAttribute.getJoinTableAnnotation() == null ) {
 			return null;
 		}
-		return JandexHelper.getValue( associationAttribute.getJoinTableAnnotation(), "name", String.class,
-				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ));
+		return JandexHelper.getValue( associationAttribute.getJoinTableAnnotation(), "name", String.class, cls);
 	}
 
 
@@ -251,7 +280,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return null;
+		return explicitForeignKeyName;
 	}
 
 	@Override

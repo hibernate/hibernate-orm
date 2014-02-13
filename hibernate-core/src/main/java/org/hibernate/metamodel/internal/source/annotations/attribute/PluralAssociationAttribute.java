@@ -83,8 +83,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final OnDeleteAction onDeleteAction;
 	private final boolean isSequentiallyIndexed;
 	// Used for the non-owning side of a ManyToMany relationship
-	private final String inverseForeignKeyName;
-	private final String explicitForeignKeyName;
+	private String inverseForeignKeyName;
+	private String explicitForeignKeyName;
 
 	private final PluralAttributeSource.Nature pluralAttributeNature;
 
@@ -212,21 +212,29 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		this.indexType = indexType;
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
+		
+		final ClassLoaderService cls = context.getServiceRegistry().getService( ClassLoaderService.class );
 
 		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
-				annotations(),
-				HibernateDotNames.FOREIGN_KEY
-		);
-		if ( foreignKey != null ) {
-			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class,
-					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
-			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class,
-					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
+				annotations(), HibernateDotNames.FOREIGN_KEY );
+		AnnotationInstance joinTable = JandexHelper.getSingleAnnotation(
+				annotations(), JPADotNames.JOIN_TABLE );
+		if (foreignKey != null) {
+			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class, cls );
+			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class, cls );
 			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
 		}
-		else {
-			explicitForeignKeyName = null;
-			inverseForeignKeyName = null;
+		if (joinTable != null && StringHelper.isEmpty( explicitForeignKeyName )) {
+			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
+					joinTable, "foreignKey", AnnotationInstance.class, cls );
+			explicitForeignKeyName = jpaFkAnnotation != null
+					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
+		}
+		if (joinTable != null && StringHelper.isEmpty( inverseForeignKeyName )) {
+			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
+					joinTable, "inverseForeignKey", AnnotationInstance.class, cls );
+			inverseForeignKeyName = jpaFkAnnotation != null
+					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
 		}
 
 		this.mutable = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.IMMUTABLE ) == null;
@@ -262,8 +270,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		else if ( sortComparatorAnnotation != null ) {
 			this.sorted = true;
-			this.comparatorName = JandexHelper.getValue( sortComparatorAnnotation, "value", String.class,
-					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
+			this.comparatorName = JandexHelper.getValue( sortComparatorAnnotation, "value", String.class, cls );
 		}
 		else if ( sortAnnotation != null ) {
 			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class,

@@ -209,7 +209,7 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 		return primaryKey;
 	}
 	@Override
-	public int generateColumnListId(Iterable<Column> columns) {
+	public int columnListId(Iterable<Column> columns) {
 		int result = getLogicalName().hashCode();
 		for ( Column column : columns ) {
 			sameTableCheck( column );

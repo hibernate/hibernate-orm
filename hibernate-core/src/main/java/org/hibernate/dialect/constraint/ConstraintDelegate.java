@@ -38,7 +38,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * Databases differ in the ways they handle indexes and unique constraints.  For example, some automatically create
- * indexs for all unique constraints.  Others do not, so it may be desirable to have Hibernate automatically create both.
+ * indexes for all unique constraints.  Others do not, so it may be desirable to have Hibernate automatically create both.
  * 
  * Due to the somewhat complex rulesets, the constraints export is tied to the Dialect through this delegate.  Through
  * the list of {@link Table}s, we're able to handle permutations of:
@@ -46,10 +46,18 @@ import org.hibernate.tool.schema.spi.Exporter;
  * <li>unique columns (ex: {@link Column#unique()})</li>
  * <li>{@link UniqueConstraint}</li>
  * <li>{@link javax.persistence.Index} (including {@link javax.persistence.Index#unique()}</li>
+ * <li>whether or not Hibernate should automatically create an index for a unique constraint (can potentially create
+ *     duplicates if {@link javax.persistence.Index} is also used)</li>
  * </ul>
  * 
  * Each Dialect then determines the correct set of constraints to export based on the entire bucket of index and
- * uniqueness concepts.
+ * uniqueness concepts.  This implementation attempts to cover *most* cases.  However, if you require something specific, it can be easily
+ * extended and provided through a custom {@link Dialect}.
+ * 
+ * Note that we introduce another layer of duplicate prevention (indexColumnListIds & uniqueColumnListIds).
+ * Some duplication is already prevented further up (ex: through {@link Index#getExportIdentifier()}), but that primarily
+ * prevents duplication caused by explicit mappings.  We also need to prevent, for ex, duplicate indexes in the case
+ * where a Dialect needs to automatically create an index for a unique constraint.
  * 
  * @author Brett Meyer
  */
@@ -73,7 +81,10 @@ public class ConstraintDelegate {
 	 */
 	public String[] applyConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {
 		final List<String> sqlStrings = new ArrayList<String>();
-		final List<String> uniqueExportIdentifiers = new ArrayList<String>();
+		// List of "columnListIds" (hashes of column names), FIFO, used to prevent duplicate index creation.
+		final List<Integer> indexColumnListIds = new ArrayList<Integer>();
+		// List of "columnListIds" (hashes of column names), alphabetical, used to prevent duplicate unique constraint creation.
+		final List<Integer> uniqueColumnListIds = new ArrayList<Integer>();
 		
 		for ( Table table : tables ) {
 			if( !table.isPhysicalTable() ){
@@ -81,14 +92,13 @@ public class ConstraintDelegate {
 			}
 			
 			// TODO: Some Dialects will need to create both the index and unique constraints.  Audit them.
-			// TODO: Should we also be checking for duplicate indexes?
 			
 			for ( Index index : table.getIndexes() ) {
-				createIndex( index, sqlStrings, uniqueExportIdentifiers, jdbcEnvironment );
+				createIndex( index, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 			}
 
 			for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-				createUnique( uniqueKey, sqlStrings, uniqueExportIdentifiers, jdbcEnvironment );
+				createUnique( uniqueKey, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 			}
 		}
 		
@@ -99,49 +109,45 @@ public class ConstraintDelegate {
 	 * Create the SQL string for the given {@link Index}.  By default, this creates a unique constraint if
 	 * {@link Index#isUnique()} returns true.  Otherwise, create the index.
 	 * 
-	 * Unique constraints are added to uniqueExportIdentifiers (using
-	 * {@link AbstractConstraint#getColumnExportIdentifier()}.  This list should be checked to prevent the creation
-	 * of duplicate unique constraints.
-	 * 
 	 * Note that an index for (col1, col2) is not the same as (col2, col1), so both should be created.  However,
 	 * only one single unique constraint should be created for (col1, col2) if {@link Index#isUnique()} returns true.
 	 * 
 	 * @param index
 	 * @param sqlStrings
-	 * @param uniqueExportIdentifiers
+	 * @param indexColumnListIds
+	 * @param uniqueColumnListIds
 	 * @param jdbcEnvironment
 	 */
-	protected void createIndex(Index index, List<String> sqlStrings, List<String> uniqueExportIdentifiers,
-			JdbcEnvironment jdbcEnvironment) {
+	protected void createIndex(Index index, List<String> sqlStrings, List<Integer> indexColumnListIds,
+			List<Integer> uniqueColumnListIds, JdbcEnvironment jdbcEnvironment) {
 		if (index.isUnique()) {
-			createUnique( index, sqlStrings, uniqueExportIdentifiers, jdbcEnvironment );
+			createUnique( index, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 		}
 		else {
-			sqlStrings.addAll(Arrays.asList( indexExporter.getSqlCreateStrings(
-					index, jdbcEnvironment ) ) );
+			if (! indexColumnListIds.contains( index.columnListId() )) {
+				sqlStrings.addAll(Arrays.asList( indexExporter.getSqlCreateStrings( index, jdbcEnvironment ) ) );
+			}
+			indexColumnListIds.add( index.columnListId() );
 		}
 	}
 	
 	/**
 	 * Create the unique constraint SQL string for the given {@link UniqueKey} or unique {@link Index}.
 	 * 
-	 * Unique constraints are added to uniqueExportIdentifiers (using
-	 * {@link AbstractConstraint#getColumnExportIdentifier()}.  This list should be checked to prevent the creation
-	 * of duplicate unique constraints.
-	 * 
 	 * @param constraint
 	 * @param sqlStrings
-	 * @param uniqueExportIdentifiers
+	 * @param indexColumnListIds
+	 * @param uniqueColumnListIds
 	 * @param jdbcEnvironment
 	 */
 	protected void createUnique(AbstractConstraint constraint, List<String> sqlStrings,
-			List<String> uniqueExportIdentifiers, JdbcEnvironment jdbcEnvironment) {
+			List<Integer> indexColumnListIds, List<Integer> uniqueColumnListIds, JdbcEnvironment jdbcEnvironment) {
 		// A unique Index may have already exported the constraint.
-		if (! uniqueExportIdentifiers.contains( constraint.getExportIdentifier() )) {
+		if (! uniqueColumnListIds.contains( constraint.columnListAlphabeticalId() )) {
 			sqlStrings.addAll(Arrays.asList( uniqueExporter.getSqlCreateStrings(
 					constraint, jdbcEnvironment ) ) );
 		}
-		uniqueExportIdentifiers.add( constraint.getColumnExportIdentifier() );
+		uniqueColumnListIds.add( constraint.columnListAlphabeticalId() );
 	}
 	
 	/**
@@ -154,7 +160,10 @@ public class ConstraintDelegate {
 	 */
 	public String[] dropConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {
 		final List<String> sqlStrings = new ArrayList<String>();
-		final List<String> uniqueExportIdentifiers = new ArrayList<String>();
+		// List of "columnListIds" (hashes of column names), FIFO, used to prevent duplicate index creation.
+		final List<Integer> indexColumnListIds = new ArrayList<Integer>();
+		// List of "columnListIds" (hashes of column names), alphabetical, used to prevent duplicate unique constraint creation.
+		final List<Integer> uniqueColumnListIds = new ArrayList<Integer>();
 		
 		if (dialect.dropConstraints()) {
 			for ( Table table : tables ) {
@@ -163,11 +172,11 @@ public class ConstraintDelegate {
 				}
 				
 				for ( Index index : table.getIndexes() ) {
-					dropIndex( index, sqlStrings, uniqueExportIdentifiers, jdbcEnvironment );
+					dropIndex( index, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 				}
 	
 				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-					dropUnique( uniqueKey, sqlStrings, uniqueExportIdentifiers, jdbcEnvironment );
+					dropUnique( uniqueKey, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 				}
 			}
 		}
@@ -181,17 +190,20 @@ public class ConstraintDelegate {
 	 * 
 	 * @param index
 	 * @param sqlStrings
-	 * @param uniqueExportIdentifiers
+	 * @param indexColumnListIds
+	 * @param uniqueColumnListIds
 	 * @param jdbcEnvironment
 	 */
-	protected void dropIndex(Index index, List<String> sqlStrings, List<String> uniqueExportIdentifiers,
-			JdbcEnvironment jdbcEnvironment) {
+	protected void dropIndex(Index index, List<String> sqlStrings, List<Integer> indexColumnListIds,
+			List<Integer> uniqueColumnListIds, JdbcEnvironment jdbcEnvironment) {
 		if (index.isUnique()) {
-			dropUnique( index, sqlStrings, uniqueExportIdentifiers, jdbcEnvironment );
+			dropUnique( index, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 		}
 		else {
-			sqlStrings.addAll(Arrays.asList( indexExporter.getSqlDropStrings(
-					index, jdbcEnvironment ) ) );
+			if (! indexColumnListIds.contains( index.columnListId() )) {
+				sqlStrings.addAll(Arrays.asList( indexExporter.getSqlDropStrings( index, jdbcEnvironment ) ) );
+			}
+			indexColumnListIds.add( index.columnListId() );
 		}
 	}
 	
@@ -201,16 +213,17 @@ public class ConstraintDelegate {
 	 * 
 	 * @param constraint
 	 * @param sqlStrings
-	 * @param uniqueExportIdentifiers
+	 * @param indexColumnListIds
+	 * @param uniqueColumnListIds
 	 * @param jdbcEnvironment
 	 */
-	protected void dropUnique(AbstractConstraint constraint, List<String> sqlStrings,
-			List<String> uniqueExportIdentifiers, JdbcEnvironment jdbcEnvironment) {
+	protected void dropUnique(AbstractConstraint constraint, List<String> sqlStrings, List<Integer> indexColumnListIds,
+			List<Integer> uniqueColumnListIds, JdbcEnvironment jdbcEnvironment) {
 		// A unique Index may have already exported the constraint.
-		if (! uniqueExportIdentifiers.contains( constraint.getExportIdentifier() )) {
+		if (! uniqueColumnListIds.contains( constraint.columnListAlphabeticalId() )) {
 			sqlStrings.addAll(Arrays.asList( uniqueExporter.getSqlDropStrings(
 					constraint, jdbcEnvironment ) ) );
 		}
-		uniqueExportIdentifiers.add( constraint.getColumnExportIdentifier() );
+		uniqueColumnListIds.add( constraint.columnListAlphabeticalId() );
 	}
 }

@@ -1,13 +1,18 @@
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
+
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-
-import org.junit.Test;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
@@ -15,16 +20,10 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -91,8 +90,9 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 
 //		assertFalse( "natural id column should not be nullable", column.isNullable() );
 		// -----------------------------------------------------------------------------------------------------
-		
-		assertTrue( SchemaUtil.hasUniqueKeys( entityBinding.getPrimaryTable(), "age", "name" ) );
+
+		assertTrue( SchemaUtil.columnHasUniqueKey( entityBinding.getPrimaryTable(), "age" ) );
+		assertTrue( SchemaUtil.columnHasUniqueKey( entityBinding.getPrimaryTable(), "name" ) );
 	}
 
 	@Entity
@@ -135,7 +135,8 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 //			assertFalse( "natural id column should not be nullable", column.isNullable() );
 		}
 		
-		assertTrue( SchemaUtil.hasUniqueKeys( entityBinding.getPrimaryTable(), "age", "name" ) );
+		assertTrue( SchemaUtil.columnHasUniqueKey( entityBinding.getPrimaryTable(), "age" ) );
+		assertTrue( SchemaUtil.columnHasUniqueKey( entityBinding.getPrimaryTable(), "name" ) );
 	}
 
 	@Entity
@@ -186,7 +187,8 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 //		assertFalse( "natural id column should not be nullable", column.isNullable() );
 		// -----------------------------------------------------------------------------------------------------
 		
-		assertTrue( SchemaUtil.hasUniqueKeys( entityBinding.getPrimaryTable(), "name", "simpleEntity_id" ) );
+		assertTrue( SchemaUtil.columnHasUniqueKey( entityBinding.getPrimaryTable(), "name" ) );
+		assertTrue( SchemaUtil.columnHasUniqueKey( entityBinding.getPrimaryTable(), "simpleEntity_id" ) );
 
 	}
 }

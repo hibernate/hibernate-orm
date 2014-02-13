@@ -116,13 +116,8 @@ public class SchemaUtil {
 	 * @param columnNames
 	 * @return
 	 */
-	public static boolean hasUniqueKeys(TableSpecification table, String... columnNames) {
-		for ( String columnName : columnNames ) {
-			if ( !table.hasUniqueKey( table.locateColumn( columnName ) ) ) {
-				return false;
-			}
-		}
-		return true;
+	public static boolean columnHasUniqueKey(TableSpecification table, String columnName) {
+		return table.hasUniqueKey( table.locateColumn( columnName ) );
 	}
 
 	public static boolean hasUniqueKey(TableSpecification table, String keyName) {
@@ -160,10 +155,13 @@ public class SchemaUtil {
 		return table.locateForeignKey( keyName ) != null;
 	}
 
-	public static boolean hasForeignKey(TableSpecification table, String keyName, String... targetColumnNames) {
+	public static boolean hasForeignKey(TableSpecification table, String keyName, String... columnNames) {
 		ForeignKey fk = table.locateForeignKey( keyName );
-		for (String targetColumnName : targetColumnNames) {
-			if (!fk.hasTargetColumn( targetColumnName )) {
+		if (fk == null) {
+			return false;
+		}
+		for (String columnName : columnNames) {
+			if (!fk.hasColumn( columnName )) {
 				return false;
 			}
 		}
@@ -173,6 +171,33 @@ public class SchemaUtil {
 	public static boolean hasIndex(TableSpecification table, String indexName) {
 		for ( Index index : table.getIndexes() ) {
 			if ( index.getName().equals( indexName ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Does an exist with the given name containing the given columnNames *exclusively* & in order?
+	 * 
+	 * @param table
+	 * @param name
+	 * @param columnNames
+	 * @return
+	 */
+	public static boolean hasIndex(TableSpecification table, String name, String... columnNames) {
+		for ( Index index : table.getIndexes() ) {
+			if ( index.getName().equals( name ) ) {
+				if (columnNames.length != index.getColumnSpan()) {
+					return false;
+				}
+				
+				for (int i = 0; i < index.getColumnSpan(); i++) {
+					if (! index.getColumns().get( i ).getColumnName().getText().equals( columnNames[i] ) ) {
+						return false;
+					}
+				}
+				
 				return true;
 			}
 		}

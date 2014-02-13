@@ -20,6 +20,7 @@
  */
 package org.hibernate.test.constraint;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -29,6 +30,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -42,8 +44,8 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.junit.Test;
 
 /**
@@ -62,10 +64,17 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	private static final String EXPLICIT_FK_NAME_JPA_O2O = "EXPLICIT_FK_NAME_JPA_O2O";
 	private static final String EXPLICIT_COLUMN_NAME_JPA_M2O = "EXPLICIT_COLUMN_NAME_JPA_M2O";
 	private static final String EXPLICIT_FK_NAME_JPA_M2O = "EXPLICIT_FK_NAME_JPA_M2O";
+	private static final String EXPLICIT_JOINTABLE_NAME_JPA_M2M = "EXPLICIT_JOINTABLE_NAME_JPA_M2M";
 	private static final String EXPLICIT_COLUMN_NAME_JPA_M2M = "EXPLICIT_COLUMN_NAME_JPA_M2M";
 	private static final String EXPLICIT_FK_NAME_JPA_M2M = "EXPLICIT_FK_NAME_JPA_M2M";
 	private static final String EXPLICIT_COLUMN_NAME_JPA_ELEMENT = "EXPLICIT_COLUMN_NAME_JPA_ELEMENT";
 	private static final String EXPLICIT_FK_NAME_JPA_ELEMENT = "EXPLICIT_FK_NAME_JPA_ELEMENT";
+	private static final String INDEX_1 = "INDEX_1";
+	private static final String INDEX_2 = "INDEX_2";
+	private static final String INDEX_3 = "INDEX_3";
+	private static final String INDEX_4 = "INDEX_4";
+	private static final String INDEX_5 = "INDEX_5";
+	private static final String INDEX_6 = "INDEX_6";
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -75,10 +84,38 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7797" )
-	public void testUniqueConstraints() {
-		TableSpecification table = SchemaUtil.getTable( DataPoint.class, metadata() );
-		assertTrue( SchemaUtil.hasUniqueKey( table, "foo" ) );
+	public void testConstraints() {
+		String[] sqlActions = new SchemaExport( metadata() ).getCreateSQL();
+		// TODO: This should cover most dialects, but may need better tied to them otherwise.
+		
+		assertEquals( 1, findActions( ".*constraint.*" + INDEX_1 + ".*unique.*foo2.*", sqlActions ) );
+		
+		int count = 0;
+		// Yep, this is stupid.  But, need to ensure that the UC is created only once.  A 1 shot regex would be hell.
+		count += findActions( ".*constraint.*" + INDEX_2 + ".*unique.*foo3.*foo4.*", sqlActions );
+		count += findActions( ".*constraint.*" + INDEX_2 + ".*unique.*foo4.*foo3.*", sqlActions );
+		count += findActions( ".*constraint.*" + INDEX_3 + ".*unique.*foo3.*foo4.*", sqlActions );
+		count += findActions( ".*constraint.*" + INDEX_3 + ".*unique.*foo4.*foo3.*", sqlActions );
+		assertEquals( 1, count );
+		
+		// Ensure no UCs were created for these.
+		assertEquals( 0, findActions( ".*constraint.*unique.*foo5.*", sqlActions ) );
+		assertEquals( 0, findActions( ".*constraint.*unique.*foo6.*", sqlActions ) );
+		
+		// Check indexes
+		assertEquals( 1, findActions( ".*index.*" + INDEX_4 + ".*foo5.*foo6.*", sqlActions ) );
+		assertEquals( 1, findActions( ".*index.*" + INDEX_5 + ".*foo6.*foo5.*", sqlActions ) );
+		assertEquals( 1, findActions( ".*index.*" + INDEX_6 + ".*foo5.*", sqlActions ) );
+		
+		// TODO: For Dialects that do not automatically create indexes for UKs, ensure index creation
+	}
+	
+	private int findActions(String regex, String[] sqlActions) {
+		int count = 0;
+		for (String sqlAction : sqlActions) {
+			count += sqlAction.matches( regex ) ? 1 : 0;
+		}
+		return count;
 	}
 
 	@Test
@@ -86,11 +123,12 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		TableSpecification table1 = SchemaUtil.getTable( DataPoint.class, metadata() );
 		assertTrue( SchemaUtil.hasUniqueKey( table1, EXPLICIT_UK_NAME, "explicit" ) );
 
-		TableSpecification table2 = SchemaUtil.getTable( DataPoint.class, metadata() );
+		TableSpecification table2 = SchemaUtil.getTable( DataPoint2.class, metadata() );
+		TableSpecification joinTable = SchemaUtil.getTable( EXPLICIT_JOINTABLE_NAME_JPA_M2M, metadata() );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_NATIVE, EXPLICIT_COLUMN_NAME_NATIVE ) );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_O2O, EXPLICIT_COLUMN_NAME_JPA_O2O ) );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_M2O, EXPLICIT_COLUMN_NAME_JPA_M2O ) );
-		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_M2M, EXPLICIT_COLUMN_NAME_JPA_M2M ) );
+		assertTrue( SchemaUtil.hasForeignKey( joinTable, EXPLICIT_FK_NAME_JPA_M2M, EXPLICIT_COLUMN_NAME_JPA_M2M ) );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_ELEMENT, EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) );
 		
 		testConstraintLength( table1 );
@@ -107,18 +145,34 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "DataPoint", uniqueConstraints = {
-			@UniqueConstraint( name = EXPLICIT_UK_NAME, columnNames = { "explicit" } )
-	} )
+	@Table( name = "DataPoint",
+			uniqueConstraints = { @UniqueConstraint( name = EXPLICIT_UK_NAME, columnNames = { "explicit" } ) },
+			indexes = {
+					@Index(columnList = "foo2", unique = true, name = INDEX_1),
+					@Index(columnList = "foo3,foo4", unique = true, name = INDEX_2),
+					@Index(columnList = "foo4,foo3", unique = true, name = INDEX_3),
+					@Index(columnList = "foo5,foo6", name = INDEX_4),
+					@Index(columnList = "foo6,foo5", name = INDEX_5),
+					@Index(columnList = "foo5", name = INDEX_6) } )
 	public static class DataPoint {
 		@Id
 		@GeneratedValue
 		public long id;
 
-		@javax.persistence.Column( unique = true)
-		public String foo;
-
 		public String explicit;
+
+		@javax.persistence.Column(unique = true)
+		public String foo1;
+		
+		public String foo2;
+		
+		public String foo3;
+		
+		public String foo4;
+		
+		public String foo5;
+		
+		public String foo6;
 	}
 
 	@Entity
@@ -147,7 +201,8 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		private DataPoint explicit_jpa_m2o;
 
 		@ManyToMany
-		@JoinTable(joinColumns = @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2M),
+		@JoinTable(name = EXPLICIT_JOINTABLE_NAME_JPA_M2M,
+				joinColumns = @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2M),
 				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2M))
 		private Set<DataPoint> explicit_jpa_m2m;
 

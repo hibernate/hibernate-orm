@@ -96,7 +96,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 * @param columns - the columns used to generate the ID
 	 * @return the ID unique to the specified columns in this table.
 	 */
-	public int generateColumnListId(Iterable<Column> columns);
+	public int columnListId(Iterable<Column> columns);
 
 	/**
 	 * Retrieve a read-only version of foreign keys currently defined for this table.

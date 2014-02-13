@@ -96,8 +96,8 @@ public class ForeignKey extends AbstractConstraint {
 		return targetColumns.size();
 	}
 
-	protected int generateConstraintColumnListId() {
-		return 31 * super.generateConstraintColumnListId() + targetTable.generateColumnListId( getTargetColumns() );
+	public int columnListId() {
+		return 31 * super.columnListId() + targetTable.columnListId( getTargetColumns() );
 	}
 
 	@Override

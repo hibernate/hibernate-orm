@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,7 +45,6 @@ import org.hibernate.internal.util.StringHelper;
 public abstract class AbstractConstraint implements Constraint {
 	private TableSpecification table;
 	private String name;
-	// For #getExportIdentifier, alphabetical ordering is important.
 	private final Map<Identifier, Column> columnMap = new LinkedHashMap<Identifier, Column>();
 	private final Map<Column, String> columnOrderMap = new HashMap<Column, String>();
 
@@ -96,8 +96,14 @@ public abstract class AbstractConstraint implements Constraint {
 		this.name = name;
 	}
 
-	protected int generateConstraintColumnListId() {
-		return table.generateColumnListId( getColumns() );
+	public int columnListId() {
+		return table.columnListId( getColumns() );
+	}
+
+	public int columnListAlphabeticalId() {
+		List<Column> alphabeticalColumns = new ArrayList<Column>( columnMap.values() );
+		Collections.sort( alphabeticalColumns, alphabeticalColumnComparator );
+		return table.columnListId( Collections.unmodifiableList( alphabeticalColumns ) );
 	}
 
 	public List<Column> getColumns() {
@@ -121,18 +127,6 @@ public abstract class AbstractConstraint implements Constraint {
 
 	protected Map<Identifier, Column> internalColumnAccess() {
 		return columnMap;
-	}
-	
-	public String getColumnExportIdentifier() {
-		List<Identifier> columnNames = new ArrayList<Identifier>();
-		columnNames.addAll( columnMap.keySet() );
-		Collections.sort( columnNames );
-		
-		StringBuilder sb = new StringBuilder();
-		for ( Identifier columnName : columnNames ) {
-			sb.append( '_' ).append( columnName.getText() );
-		}
-		return sb.toString();
 	}
 
 	public void addColumn(Column column) {
@@ -165,5 +159,13 @@ public abstract class AbstractConstraint implements Constraint {
 	
 	public String getOrdering(Column column) {
 		return columnOrderMap.get( column );
+	}
+	
+	private final static AlphabeticalColumnComparator alphabeticalColumnComparator = new AlphabeticalColumnComparator();
+	private static class AlphabeticalColumnComparator implements Comparator<Column> {
+		@Override
+		public int compare(Column c1, Column c2) {
+			return c1.getColumnName().compareTo( c2.getColumnName() );
+		}
 	}
 }

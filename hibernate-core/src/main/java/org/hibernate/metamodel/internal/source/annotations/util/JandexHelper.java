@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -515,11 +516,17 @@ public class JandexHelper {
 			return val;
 		}
 		try {
+			Class<?> returnType = classLoaderService.classForName( name ).getMethod( element ).getReturnType();
 			val = classLoaderService.classForName( name ).getMethod( element ).getDefaultValue();
 			if ( val != null ) {
-				// Annotation parameters of type Class are handled using Strings
 				if ( val instanceof Class ) {
+					// Annotation parameters of type Class are handled using Strings
 					val = ( ( Class ) val ).getName();
+				}
+				if ( Proxy.isProxyClass( val.getClass() ) ) {
+					// val is a Proxy if the annotation field was itself an annotation.  In those cases, we generally
+					// do not care about the value -- we'd ignore it anyway.  Simply return null.
+					return null;
 				}
 			}
 			DEFAULT_VALUES_BY_ELEMENT.put( fqElement, val );
@@ -537,6 +544,10 @@ public class JandexHelper {
 	}
 
 	private static <T> T defaultAnnotationParameter(Object defaultValue, Class<T> type) {
+		if (defaultValue == null) {
+			return null;
+		}
+		
 		Object returnValue = defaultValue;
 
 		// resolve some mismatches between what's stored in jandex and what the defaults are for annotations

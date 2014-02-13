@@ -175,7 +175,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		  * @see org.hibernatespatial.SpatialDialect#getSpatialFilterExpression(java.lang.String)
 		  */
 	public String getSpatialFilterExpression(String columnName) {
-		return "(" + columnName + " && ? ) ";
+		return " ST_BBOX(" + columnName + ", ? ) ";
 	}
 
 	/* (non-Javadoc)
@@ -223,7 +223,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 	}
 
 	public boolean supportsFiltering() {
-		return false;
+		return true;
 	}
 
 	public boolean supports(SpatialFunction function) {

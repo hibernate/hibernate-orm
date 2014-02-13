@@ -237,8 +237,10 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
-		throw new UnsupportedOperationException(
-				"Filter is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, ST_BBOX(t.geom , ST_GeomFromText(?, 4326)) from GeomTest t where st_bbox(t.geom, ST_GeomFromText(?, 4326)) = 'true' and ST_SRID(t.geom) = 4326",
+				geom.toText()
+		);
 	}
 
 	/*

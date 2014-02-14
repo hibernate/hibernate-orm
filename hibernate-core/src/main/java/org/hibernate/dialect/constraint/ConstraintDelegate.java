@@ -27,27 +27,26 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.relational.AbstractConstraint;
 import org.hibernate.metamodel.spi.relational.Constraint;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.jboss.logging.Logger;
 
 /**
- * Databases differ in the ways they handle indexes and unique constraints.  For example, some automatically create
- * indexes for all unique constraints.  Others do not, so it may be desirable to have Hibernate automatically create both.
- * 
- * Due to the somewhat complex rulesets, the constraints export is tied to the Dialect through this delegate.  Through
- * the list of {@link Table}s, we're able to handle permutations of:
+ * Databases differ in the ways they handle indexes and unique constraints.  Due to the somewhat complex rulesets,
+ * the constraints export is tied to the Dialect through this delegate.  Through the list of {@link Table}s,
+ * we're able to handle permutations of:
  * <ul>
  * <li>unique columns (ex: {@link Column#unique()})</li>
  * <li>{@link UniqueConstraint}</li>
  * <li>{@link javax.persistence.Index} (including {@link javax.persistence.Index#unique()}</li>
- * <li>whether or not Hibernate should automatically create an index for a unique constraint (can potentially create
- *     duplicates if {@link javax.persistence.Index} is also used)</li>
  * </ul>
  * 
  * Each Dialect then determines the correct set of constraints to export based on the entire bucket of index and
@@ -56,12 +55,14 @@ import org.hibernate.tool.schema.spi.Exporter;
  * 
  * Note that we introduce another layer of duplicate prevention (indexColumnListIds & uniqueColumnListIds).
  * Some duplication is already prevented further up (ex: through {@link Index#getExportIdentifier()}), but that primarily
- * prevents duplication caused by explicit mappings.  We also need to prevent, for ex, duplicate indexes in the case
- * where a Dialect needs to automatically create an index for a unique constraint.
+ * prevents duplication caused by explicit mappings.
  * 
  * @author Brett Meyer
  */
 public class ConstraintDelegate {
+
+	private static final Logger LOG = Logger.getLogger( ConstraintDelegate.class );
+	
 	final protected Dialect dialect;
 	final protected Exporter<Index> indexExporter;
 	final protected Exporter<Constraint> uniqueExporter;
@@ -90,8 +91,6 @@ public class ConstraintDelegate {
 			if( !table.isPhysicalTable() ){
 				continue;
 			}
-			
-			// TODO: Some Dialects will need to create both the index and unique constraints.  Audit them.
 			
 			for ( Index index : table.getIndexes() ) {
 				createIndex( index, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
@@ -124,7 +123,11 @@ public class ConstraintDelegate {
 			createUnique( index, sqlStrings, indexColumnListIds, uniqueColumnListIds, jdbcEnvironment );
 		}
 		else {
-			if (! indexColumnListIds.contains( index.columnListId() )) {
+			if (indexColumnListIds.contains( index.columnListId() )) {
+				LOG.warnf( "The mapping would have resulted in the creation of duplicate indexes for the following"
+						+ " sequence of columns: %s", index.getColumnNames());
+			}
+			else {
 				sqlStrings.addAll(Arrays.asList( indexExporter.getSqlCreateStrings( index, jdbcEnvironment ) ) );
 			}
 			indexColumnListIds.add( index.columnListId() );
@@ -142,8 +145,13 @@ public class ConstraintDelegate {
 	 */
 	protected void createUnique(AbstractConstraint constraint, List<String> sqlStrings,
 			List<Integer> indexColumnListIds, List<Integer> uniqueColumnListIds, JdbcEnvironment jdbcEnvironment) {
-		// A unique Index may have already exported the constraint.
-		if (! uniqueColumnListIds.contains( constraint.columnListAlphabeticalId() )) {
+		// A unique Index may have already exported the unique constraint.
+		if (uniqueColumnListIds.contains( constraint.columnListAlphabeticalId() )) {
+			LOG.warnf( "The mapping would have resulted in the creation of duplicate unique constraints for the"
+					+ " following sequence of columns.  Note that Hibernate automatically creates a unique constraint"
+					+ " for a unique index.  %s", constraint.getColumnNames());
+		}
+		else {
 			sqlStrings.addAll(Arrays.asList( uniqueExporter.getSqlCreateStrings(
 					constraint, jdbcEnvironment ) ) );
 		}

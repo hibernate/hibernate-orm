@@ -109,6 +109,17 @@ public abstract class AbstractConstraint implements Constraint {
 	public List<Column> getColumns() {
 		return Collections.unmodifiableList( new ArrayList<Column>( columnMap.values() ) );
 	}
+	
+	public String getColumnNames() {
+		StringBuilder sb = new StringBuilder();
+		String sep = "";
+		for (Column column : columnMap.values()) {
+			sb.append( column.getColumnName().getText() );
+			sb.append( sep );
+			sep = ", ";
+		}
+		return sb.toString();
+	}
 
 	public int getColumnSpan() {
 		return columnMap.size();

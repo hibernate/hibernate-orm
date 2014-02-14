@@ -106,8 +106,6 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, findActions( ".*index.*" + INDEX_4 + ".*foo5.*foo6.*", sqlActions ) );
 		assertEquals( 1, findActions( ".*index.*" + INDEX_5 + ".*foo6.*foo5.*", sqlActions ) );
 		assertEquals( 1, findActions( ".*index.*" + INDEX_6 + ".*foo5.*", sqlActions ) );
-		
-		// TODO: For Dialects that do not automatically create indexes for UKs, ensure index creation
 	}
 	
 	private int findActions(String regex, String[] sqlActions) {

@@ -2,13 +2,13 @@
 package org.hibernate.test.annotations.access;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * @author Emmanuel Bernard
  */
 @MappedSuperclass
-@AccessType("property")
+@AttributeAccessor("property")
 public class Woody extends Thingy {
 	private String color;
 	private String name;

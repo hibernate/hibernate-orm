@@ -27,17 +27,16 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.ForeignKey;
 
 @Entity
 @Table(name = "CODED_PAIR_SET_HOLDER")
@@ -54,8 +53,8 @@ class CodedPairSetHolder implements Serializable {
 	private String code;
 
 	@ElementCollection
-	@CollectionTable(name = "CODED_PAIR_HOLDER_PAIR_SET", joinColumns = @JoinColumn(name = "CODED_PAIR_HOLDER_ID"))
-	@ForeignKey(name = "FK_PAIR_SET")
+	@CollectionTable(name = "CODED_PAIR_HOLDER_PAIR_SET", joinColumns = @JoinColumn(name = "CODED_PAIR_HOLDER_ID"),
+			foreignKey = @ForeignKey(name = "FK_PAIR_SET"))
 	private final Set<PersonPair> pairs = new HashSet<PersonPair>(0);
 
 	CodedPairSetHolder() {

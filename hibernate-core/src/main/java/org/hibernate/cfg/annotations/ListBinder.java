@@ -28,7 +28,6 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
-import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.CollectionSecondPass;
@@ -46,7 +45,6 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -72,12 +70,6 @@ public class ListBinder extends CollectionBinder {
 	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null )
 			LOG.orderByAnnotationIndexedCollection();
-	}
-
-	@Override
-	public void setSort(Sort sortAnn) {
-		if ( sortAnn != null )
-			LOG.sortAnnotationIndexedCollection();
 	}
 
 	@Override

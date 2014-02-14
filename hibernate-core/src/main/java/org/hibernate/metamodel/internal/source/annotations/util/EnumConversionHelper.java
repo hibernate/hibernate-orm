@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations.util;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.GenerationType;
 
@@ -126,9 +127,6 @@ public class EnumConversionHelper {
 			}
 			case LOCK: {
 				return CascadeStyles.LOCK;
-			}
-			case DELETE_ORPHAN: {
-				return CascadeStyles.DELETE_ORPHAN;
 			}
 			default: {
 				throw new AssertionFailure( "Unknown cascade type: " + cascadeType );

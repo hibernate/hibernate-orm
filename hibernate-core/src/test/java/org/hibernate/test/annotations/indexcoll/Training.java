@@ -2,14 +2,14 @@
 package org.hibernate.test.annotations.indexcoll;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 
-import org.hibernate.annotations.Sort;
-import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Emmanuel Bernard
@@ -17,7 +17,7 @@ import org.hibernate.annotations.SortType;
 @Entity
 public class Training {
 	@Id @GeneratedValue private Long id;
-	@Sort(type= SortType.NATURAL)
+	@SortNatural
 	@MapKey(name="name") @ManyToMany SortedMap<String, Trainee> trainees = new TreeMap<String, Trainee>();
 
 	public Long getId() {

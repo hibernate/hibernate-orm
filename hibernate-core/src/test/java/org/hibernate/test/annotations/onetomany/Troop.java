@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.onetomany;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -24,9 +25,8 @@ public class Troop {
 	private String name;
 	private Set<Soldier> soldiers;
 
-	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, orphanRemoval = true)
 	@OrderBy(clause = "name desc")
-	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<Soldier> getSoldiers() {
 		return soldiers;

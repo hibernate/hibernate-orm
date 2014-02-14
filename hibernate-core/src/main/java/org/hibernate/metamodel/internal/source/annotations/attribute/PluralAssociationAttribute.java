@@ -37,7 +37,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.SortType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
@@ -216,33 +215,24 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		final ClassLoaderService cls = context.getServiceRegistry().getService( ClassLoaderService.class );
 
 		// TODO: This is UGLY -- pull into a util and find a better pattern?
-		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
-				annotations(), HibernateDotNames.FOREIGN_KEY );
 		AnnotationInstance joinTable = JandexHelper.getSingleAnnotation(
 				annotations(), JPADotNames.JOIN_TABLE );
 		AnnotationInstance collectionTable = JandexHelper.getSingleAnnotation(
 				annotations(), JPADotNames.COLLECTION_TABLE );
-		if (foreignKey != null) {
-			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class, cls );
-			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class, cls );
-			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
-		}
-		if (joinTable != null && StringHelper.isEmpty( explicitForeignKeyName )) {
-			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
+		if (joinTable != null) {
+			AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
 					joinTable, "foreignKey", AnnotationInstance.class, cls );
 			explicitForeignKeyName = jpaFkAnnotation != null
 					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
+			jpaFkAnnotation = JandexHelper.getValue(
+					joinTable, "inverseForeignKey", AnnotationInstance.class, cls );
+			inverseForeignKeyName = jpaFkAnnotation != null
+					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
 		}
-		if (collectionTable != null && StringHelper.isEmpty( explicitForeignKeyName )) {
+		if (collectionTable != null) {
 			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
 					collectionTable, "foreignKey", AnnotationInstance.class, cls );
 			explicitForeignKeyName = jpaFkAnnotation != null
-					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
-		}
-		if (joinTable != null && StringHelper.isEmpty( inverseForeignKeyName )) {
-			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
-					joinTable, "inverseForeignKey", AnnotationInstance.class, cls );
-			inverseForeignKeyName = jpaFkAnnotation != null
 					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
 		}
 
@@ -269,7 +259,6 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				annotations,
 				HibernateDotNames.COLLECTION_ID
 		) != null;
-		final AnnotationInstance sortAnnotation =  JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT );
 		final AnnotationInstance sortNaturalAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT_NATURAL );
 		final AnnotationInstance sortComparatorAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT_COMPARATOR );
 
@@ -281,33 +270,6 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			this.sorted = true;
 			this.comparatorName = JandexHelper.getValue( sortComparatorAnnotation, "value", String.class, cls );
 		}
-		else if ( sortAnnotation != null ) {
-			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class,
-					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
-			switch ( sortType ){
-
-				case NATURAL:
-					this.sorted = true;
-					this.comparatorName = "natural";
-					break;
-				case COMPARATOR:
-					String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class,
-							getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
-					if ( StringHelper.isEmpty( comparatorName ) ) {
-						throw new MappingException(
-								"Comparator class must be provided when using SortType.COMPARATOR on property: " + getRole(),
-								getContext().getOrigin()
-						);
-					}
-					this.sorted = true;
-					this.comparatorName = comparatorName;
-					break;
-				default:
-					this.sorted = false;
-					this.comparatorName = null;
-					break;
-			}
-		}
 		else {
 			this.sorted = false;
 			this.comparatorName = null;
@@ -315,14 +277,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 
 		AnnotationInstance orderColumnAnnotation =  JandexHelper.getSingleAnnotation( annotations, JPADotNames.ORDER_COLUMN );
-		AnnotationInstance indexColumnAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.INDEX_COLUMN );
-		if ( orderColumnAnnotation != null && indexColumnAnnotation != null ) {
-			throw new MappingException(
-					"@OrderColumn and @IndexColumn can't be used together on property: " + getRole(),
-					getContext().getOrigin()
-			);
-		}
-		this.isSequentiallyIndexed = orderColumnAnnotation != null || indexColumnAnnotation != null;
+		this.isSequentiallyIndexed = orderColumnAnnotation != null;
 		this.pluralAttributeNature = resolvePluralAttributeNature();
 
 		AnnotationInstance batchAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.BATCH_SIZE );
@@ -357,7 +312,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 					|| SortedSet.class.isAssignableFrom( getAttributeType() ) ) {
 				if ( !isSorted() ) {
 					throw new MappingException(
-							"A sorted collection has to define @Sort: " + getRole(),
+							"A sorted collection has to define @SortNatural or @SortComparator: " + getRole(),
 							getContext().getOrigin()
 					);
 				}

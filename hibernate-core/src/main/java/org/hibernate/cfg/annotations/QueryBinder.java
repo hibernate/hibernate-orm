@@ -24,6 +24,7 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.HashMap;
+
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -50,7 +51,6 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -278,9 +278,6 @@ public abstract class QueryBinder {
 				break;
 			case COMMIT:
 				flushMode = FlushMode.COMMIT;
-				break;
-			case NEVER:
-				flushMode = FlushMode.MANUAL;
 				break;
 			case MANUAL:
 				flushMode = FlushMode.MANUAL;

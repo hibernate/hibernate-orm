@@ -1,17 +1,18 @@
 //$Id$
 package org.hibernate.test.annotations.join;
 import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.Table;
 import org.hibernate.annotations.Tables;
@@ -25,11 +26,12 @@ import org.hibernate.annotations.Tables;
 @SecondaryTable(name = "Cat2", uniqueConstraints = {@UniqueConstraint(columnNames = {"storyPart2"})})
 		})
 @Tables( {
-	@Table(appliesTo = "Cat", indexes = @Index(name = "secondname",
-			columnNames = "secondName"), comment = "My cat table" ),
+	@Table(comment = "My cat table", appliesTo = "Cat", indexes = {
+			@Index(name = "secondname", columnList = "secondName"),
+			@Index(name = "nameindex", columnList = "name"),
+			@Index(name = "story1index", columnList = "`Cat nbr1`")}),
 	@Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
-			sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
-			} )
+			sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)"))})
 public class Cat implements Serializable {
 
 	private Integer id;
@@ -44,7 +46,6 @@ public class Cat implements Serializable {
 		return id;
 	}
 
-	@Index(name = "nameindex")
 	public String getName() {
 		return name;
 	}
@@ -77,7 +78,6 @@ public class Cat implements Serializable {
 //	}
 
 	@Column(table = "`Cat nbr1`")
-	@Index(name = "story1index")
 	public String getStoryPart1() {
 		return storyPart1;
 	}

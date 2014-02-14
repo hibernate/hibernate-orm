@@ -60,23 +60,9 @@ public enum CascadeType {
 	 */
 	REPLICATE,
 	/**
-	 * Hibernate originally handled orphan removal as a specialized cascade.
-	 *
-	 * @deprecated use @OneToOne(orphanRemoval=true) or @OneToMany(orphanRemoval=true)
-	 */
-	@Deprecated
-	DELETE_ORPHAN,
-	/**
 	 * Corresponds to the Hibernate native LOCK action.
 	 */
 	LOCK,
-	/**
-	 * JPA originally planned on calling DETACH EVICT.
-	 *
-	 * @deprecated use javax.persistence.CascadeType.DETACH
-	 */
-	@Deprecated
-	EVICT,
 	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#REFRESH}.
 	 */

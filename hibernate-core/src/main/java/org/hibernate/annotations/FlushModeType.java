@@ -42,13 +42,6 @@ public enum FlushModeType {
 	 */
 	COMMIT,
 	/**
-	 * Corresponds to  {@link org.hibernate.FlushMode#NEVER}.
-	 *
-	 * @deprecated use MANUAL, will be removed in a subsequent release
-	 */
-	@Deprecated
-	NEVER,
-	/**
 	 * Corresponds to  {@link org.hibernate.FlushMode#MANUAL}.
 	 */
 	MANUAL,

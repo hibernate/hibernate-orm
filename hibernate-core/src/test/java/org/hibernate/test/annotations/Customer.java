@@ -1,8 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations;
+import static org.hibernate.annotations.CascadeType.ALL;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.SortedSet;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -13,10 +16,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Sort;
-import org.hibernate.annotations.SortType;
-
-import static org.hibernate.annotations.CascadeType.ALL;
+import org.hibernate.annotations.SortComparator;
 
 
 /**
@@ -55,7 +55,7 @@ public class Customer implements Serializable {
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name = "CUST_ID")
-	@Sort(type = SortType.COMPARATOR, comparator = TicketComparator.class)
+	@SortComparator(TicketComparator.class)
 	public SortedSet<Ticket> getTickets() {
 		return tickets;
 	}

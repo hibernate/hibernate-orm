@@ -3,13 +3,10 @@ package org.hibernate.test.annotations.inheritance.joined;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
-import org.hibernate.annotations.ForeignKey;
-
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@ForeignKey(name = "FK_DOCU_FILE")
 public class Document extends File {
 	@Column(nullable = false, name="xsize")
 	private int size;

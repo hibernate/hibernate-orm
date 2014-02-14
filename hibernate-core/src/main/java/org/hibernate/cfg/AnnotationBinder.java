@@ -87,7 +87,6 @@ import javax.persistence.Version;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
@@ -107,11 +106,9 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ListIndexBase;
@@ -128,7 +125,6 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Proxy;
-import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
@@ -607,11 +603,8 @@ public final class AnnotationBinder {
 
 		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
 		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );
-		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
-				org.hibernate.annotations.Entity.class
-		);
 		EntityBinder entityBinder = new EntityBinder(
-				entityAnn, hibEntityAnn, clazzToProcess, persistentClass, mappings
+				entityAnn, clazzToProcess, persistentClass, mappings
 		);
 		entityBinder.setInheritanceState( inheritanceState );
 
@@ -713,10 +706,6 @@ public final class AnnotationBinder {
 				final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
 				SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
 				jsc.setKey( key );
-				ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
-				if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
-					key.setForeignKeyName( fk.name() );
-				}
 				if ( onDeleteAnn != null ) {
 					key.setCascadeDeleteEnabled( OnDeleteAction.CASCADE.equals( onDeleteAnn.action() ) );
 				}
@@ -1359,10 +1348,6 @@ public final class AnnotationBinder {
 				|| AnnotatedClassType.NONE.equals( classType ) //to be ignored
 				|| AnnotatedClassType.EMBEDDABLE.equals( classType ) //allow embeddable element declaration
 				) {
-			if ( AnnotatedClassType.NONE.equals( classType )
-					&& clazzToProcess.isAnnotationPresent( org.hibernate.annotations.Entity.class ) ) {
-				LOG.missingEntityAnnotation( clazzToProcess.getName() );
-			}
 			return false;
 		}
 
@@ -1892,29 +1877,15 @@ public final class AnnotationBinder {
 				ManyToMany manyToManyAnn = property.getAnnotation( ManyToMany.class );
 				ElementCollection elementCollectionAnn = property.getAnnotation( ElementCollection.class );
 
-				final IndexColumn indexColumn;
-
-				if ( property.isAnnotationPresent( OrderColumn.class ) ) {
-					indexColumn = IndexColumn.buildColumnFromAnnotation(
-							property.getAnnotation( OrderColumn.class ),
-							propertyHolder,
-							inferredData,
-							entityBinder.getSecondaryTables(),
-							mappings
-					);
-					if ( property.isAnnotationPresent( ListIndexBase.class ) ) {
-						indexColumn.setBase( ( property.getAnnotation( ListIndexBase.class ) ).value() );
-					}
-				}
-				else {
-					//if @IndexColumn is not there, the generated IndexColumn is an implicit column and not used.
-					//so we can leave the legacy processing as the default
-					indexColumn = IndexColumn.buildColumnFromAnnotation(
-							property.getAnnotation( org.hibernate.annotations.IndexColumn.class ),
-							propertyHolder,
-							inferredData,
-							mappings
-					);
+				final IndexColumn indexColumn = IndexColumn.buildColumnFromAnnotation(
+						property.getAnnotation( OrderColumn.class ),
+						propertyHolder,
+						inferredData,
+						entityBinder.getSecondaryTables(),
+						mappings
+				);
+				if ( property.isAnnotationPresent( ListIndexBase.class ) ) {
+					indexColumn.setBase( ( property.getAnnotation( ListIndexBase.class ) ).value() );
 				}
 				CollectionBinder collectionBinder = CollectionBinder.getCollectionBinder(
 						propertyHolder.getEntityName(),
@@ -1932,7 +1903,6 @@ public final class AnnotationBinder {
 				collectionBinder.setJpaOrderBy( property.getAnnotation( javax.persistence.OrderBy.class ) );
 				collectionBinder.setSqlOrderBy( property.getAnnotation( OrderBy.class ) );
 
-				collectionBinder.setSort( property.getAnnotation( Sort.class ) );
 				collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
 				collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
 
@@ -2270,24 +2240,6 @@ public final class AnnotationBinder {
 								isIdentifierMapper,
 								mappings
 						);
-					}
-				}
-			}
-		}
-		//init index
-		//process indexes after everything: in second pass, many to one has to be done before indexes
-		Index index = property.getAnnotation( Index.class );
-		if ( index != null ) {
-			if ( joinColumns != null ) {
-
-				for ( Ejb3Column column : joinColumns ) {
-					column.addIndex( index, inSecondPass );
-				}
-			}
-			else {
-				if ( columns != null ) {
-					for ( Ejb3Column column : columns ) {
-						column.addIndex( index, inSecondPass );
 					}
 				}
 			}
@@ -2795,16 +2747,12 @@ public final class AnnotationBinder {
 		}
 		if ( property.isAnnotationPresent( Tuplizers.class ) ) {
 			for ( Tuplizer tuplizer : property.getAnnotation( Tuplizers.class ).value() ) {
-				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-				//todo tuplizer.entityModeType
-				component.addTuplizer( mode, tuplizer.impl().getName() );
+				component.addTuplizer( tuplizer.entityModeType(), tuplizer.impl().getName() );
 			}
 		}
 		if ( property.isAnnotationPresent( Tuplizer.class ) ) {
 			Tuplizer tuplizer = property.getAnnotation( Tuplizer.class );
-			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-			//todo tuplizer.entityModeType
-			component.addTuplizer( mode, tuplizer.impl().getName() );
+			component.addTuplizer( tuplizer.entityModeType(), tuplizer.impl().getName() );
 		}
 	}
 
@@ -2880,10 +2828,6 @@ public final class AnnotationBinder {
 		String fkName = null;
 		if ( joinColumn != null && joinColumn.foreignKey() != null ) {
 			fkName = joinColumn.foreignKey().name();
-		}
-		if ( StringHelper.isEmpty( fkName ) ) {
-			ForeignKey fk = property.getAnnotation( ForeignKey.class );
-			fkName = fk != null ? fk.name() : "";
 		}
 		if ( !StringHelper.isEmpty( fkName ) ) {
 			value.setForeignKeyName( fkName );
@@ -3164,7 +3108,6 @@ public final class AnnotationBinder {
 		}
 
 		if ( orphanRemoval ) {
-			hibernateCascadeSet.add( CascadeType.DELETE_ORPHAN );
 			hibernateCascadeSet.add( CascadeType.REMOVE );
 		}
 		if ( forcePersist ) {
@@ -3195,15 +3138,11 @@ public final class AnnotationBinder {
 				case REPLICATE:
 					cascade.append( "," ).append( "replicate" );
 					break;
-				case EVICT:
 				case DETACH:
 					cascade.append( "," ).append( "evict" );
 					break;
 				case DELETE:
 					cascade.append( "," ).append( "delete" );
-					break;
-				case DELETE_ORPHAN:
-					cascade.append( "," ).append( "delete-orphan" );
 					break;
 				case REMOVE:
 					cascade.append( "," ).append( "delete" );

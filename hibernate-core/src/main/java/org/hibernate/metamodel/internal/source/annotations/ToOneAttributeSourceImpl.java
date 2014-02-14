@@ -32,14 +32,12 @@ import java.util.Set;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -112,22 +110,14 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 	private String resolveForeignKeyName(SingularAssociationAttribute associationAttribute) {
 		String fkName = null;
 		
-		final AnnotationInstance fkAnnotation = JandexHelper.getSingleAnnotation( associationAttribute().annotations(),
-				HibernateDotNames.FOREIGN_KEY );
-		fkName = fkAnnotation != null ? JandexHelper.getValue( fkAnnotation, "name", String.class, cls ) : null;
-		
-		if (StringHelper.isEmpty( fkName) ) {
-			final AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
-					associationAttribute().annotations(), JPADotNames.JOIN_COLUMN );
-			if (joinColumnAnnotation != null) {
-				final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
-						joinColumnAnnotation, "foreignKey", AnnotationInstance.class, cls );
-				fkName = jpaFkAnnotation != null ? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls )
-						: null;
-			}
+		final AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
+				associationAttribute().annotations(), JPADotNames.JOIN_COLUMN );
+		if (joinColumnAnnotation != null) {
+			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
+					joinColumnAnnotation, "foreignKey", AnnotationInstance.class, cls );
+			fkName = jpaFkAnnotation != null ? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls )
+					: null;
 		}
-		
-		// TODO: join tables?
 		
 		return fkName;
 	}

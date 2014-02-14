@@ -24,7 +24,7 @@
 package org.hibernate.test.annotations.embedded.one2many;
 import javax.persistence.Embeddable;
 
-import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * TODO : javadoc
@@ -32,7 +32,7 @@ import org.hibernate.annotations.AccessType;
  * @author Steve Ebersole
  */
 @Embeddable
-@AccessType("property")
+@AttributeAccessor("property")
 public class Name {
 	private String first;
 	private String last;

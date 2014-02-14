@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 import javax.persistence.Access;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -39,7 +40,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.Type;
@@ -47,7 +47,6 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -207,35 +206,13 @@ class PropertyContainer {
 	}
 
 	private AccessType determineClassDefinedAccessStrategy() {
-		AccessType classDefinedAccessType;
-
-		AccessType hibernateDefinedAccessType = AccessType.DEFAULT;
-		AccessType jpaDefinedAccessType = AccessType.DEFAULT;
-
-		org.hibernate.annotations.AccessType accessType = xClass.getAnnotation( org.hibernate.annotations.AccessType.class );
-		if ( accessType != null ) {
-			hibernateDefinedAccessType = AccessType.getAccessStrategy( accessType.value() );
-		}
+		AccessType classDefinedAccessType = null;
 
 		Access access = xClass.getAnnotation( Access.class );
 		if ( access != null ) {
-			jpaDefinedAccessType = AccessType.getAccessStrategy( access.value() );
+			classDefinedAccessType = AccessType.getAccessStrategy( access.value() );
 		}
-
-		if ( hibernateDefinedAccessType != AccessType.DEFAULT
-				&& jpaDefinedAccessType != AccessType.DEFAULT
-				&& hibernateDefinedAccessType != jpaDefinedAccessType ) {
-			throw new MappingException(
-					"@AccessType and @Access specified with contradicting values. Use of @Access only is recommended. "
-			);
-		}
-
-		if ( hibernateDefinedAccessType != AccessType.DEFAULT ) {
-			classDefinedAccessType = hibernateDefinedAccessType;
-		}
-		else {
-			classDefinedAccessType = jpaDefinedAccessType;
-		}
+		
 		return classDefinedAccessType;
 	}
 

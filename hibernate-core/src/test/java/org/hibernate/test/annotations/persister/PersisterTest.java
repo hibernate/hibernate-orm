@@ -23,14 +23,13 @@
  */
 package org.hibernate.test.annotations.persister;
 
-import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Shawn Clowater
@@ -46,7 +45,6 @@ public class PersisterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEntityEntityPersisterSpecified() throws Exception {
 		//tests the persister specified with an @Entity.persister()		
 		Class<? extends  org.hibernate.persister.entity.EntityPersister> clazz =

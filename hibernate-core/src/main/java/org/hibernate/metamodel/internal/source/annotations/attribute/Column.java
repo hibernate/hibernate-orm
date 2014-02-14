@@ -23,13 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
  * Container for the properties defined by {@link javax.persistence.Column} or {@link javax.persistence.JoinColumn}.
@@ -64,7 +62,6 @@ public class Column {
 			if ( !( JPADotNames.COLUMN.equals( name )
 					|| JPADotNames.JOIN_COLUMN.equals( name )
 					|| JPADotNames.ORDER_COLUMN.equals( name )
-					|| HibernateDotNames.INDEX_COLUMN.equals( name )
 					|| JPADotNames.PRIMARY_KEY_JOIN_COLUMN.equals( name )
 					|| JPADotNames.MAP_KEY_COLUMN.equals( name )
 			) ) {

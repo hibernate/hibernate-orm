@@ -24,13 +24,13 @@
 package org.hibernate.test.annotations.cascade;
 
 import java.io.Serializable;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-
-import org.hibernate.annotations.ForeignKey;
 
 @Embeddable
 class PersonPair implements Serializable {
@@ -38,13 +38,13 @@ class PersonPair implements Serializable {
 	private static final long serialVersionUID = 4543565503074112720L;
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
-	@JoinColumn(name = "LEFT_PERSON_ID", nullable = false, updatable = false)
-	@ForeignKey(name = "FK_LEFT_PERSON")
+	@JoinColumn(name = "LEFT_PERSON_ID", nullable = false, updatable = false,
+			foreignKey = @ForeignKey(name = "FK_LEFT_PERSON"))
 	private Person left;
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
-	@JoinColumn(name = "RIGHT_PERSON_ID", nullable = false, updatable = false)
-	@ForeignKey(name = "FK_RIGHT_PERSON")
+	@JoinColumn(name = "RIGHT_PERSON_ID", nullable = false, updatable = false,
+			foreignKey = @ForeignKey(name = "FK_RIGHT_PERSON"))
 	private Person right;
 
 	PersonPair() {

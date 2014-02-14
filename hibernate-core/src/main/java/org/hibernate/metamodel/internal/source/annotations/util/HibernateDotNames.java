@@ -23,9 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
-import org.jboss.jandex.DotName;
-
-import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.AnyMetaDefs;
@@ -50,14 +47,11 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
@@ -90,7 +84,6 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
@@ -108,6 +101,7 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
+import org.jboss.jandex.DotName;
 
 /**
  * Defines the dot names for the Hibernate specific mapping annotations.
@@ -115,7 +109,6 @@ import org.hibernate.annotations.WhereJoinTable;
  * @author Hardy Ferentschik
  */
 public interface HibernateDotNames {
-	DotName ACCESS_TYPE = DotName.createSimple( AccessType.class.getName() );
 	DotName ANY = DotName.createSimple( Any.class.getName() );
 	DotName ANY_META_DEF = DotName.createSimple( AnyMetaDef.class.getName() );
 	DotName ANY_META_DEFS = DotName.createSimple( AnyMetaDefs.class.getName() );
@@ -141,14 +134,11 @@ public interface HibernateDotNames {
 	DotName FILTER_DEFS = DotName.createSimple( FilterDefs.class.getName() );
 	DotName FILTER_JOIN_TABLE = DotName.createSimple( FilterJoinTable.class.getName() );
 	DotName FILTER_JOIN_TABLES = DotName.createSimple( FilterJoinTables.class.getName() );
-	DotName FOREIGN_KEY = DotName.createSimple( ForeignKey.class.getName() );
 	DotName FORMULA = DotName.createSimple( Formula.class.getName() );
 	DotName GENERATED = DotName.createSimple( Generated.class.getName() );
 	DotName GENERIC_GENERATOR = DotName.createSimple( GenericGenerator.class.getName() );
 	DotName GENERIC_GENERATORS = DotName.createSimple( GenericGenerators.class.getName() );
 	DotName IMMUTABLE = DotName.createSimple( Immutable.class.getName() );
-	DotName INDEX = DotName.createSimple( Index.class.getName() );
-	DotName INDEX_COLUMN = DotName.createSimple( IndexColumn.class.getName() );
 	DotName JOIN_COLUMN_OR_FORMULA = DotName.createSimple( JoinColumnOrFormula.class.getName() );
 	DotName JOIN_COLUMNS_OR_FORMULAS = DotName.createSimple( JoinColumnsOrFormulas.class.getName() );
 	DotName JOIN_FORMULA = DotName.createSimple( JoinFormula.class.getName() );
@@ -177,7 +167,6 @@ public interface HibernateDotNames {
 	DotName PROXY = DotName.createSimple( Proxy.class.getName() );
 	DotName ROW_ID = DotName.createSimple( RowId.class.getName() );
 	DotName SELECT_BEFORE_UPDATE = DotName.createSimple( SelectBeforeUpdate.class.getName() );
-	DotName SORT = DotName.createSimple( Sort.class.getName() );
 	DotName SORT_COMPARATOR = DotName.createSimple( SortComparator.class.getName());
 	DotName SORT_NATURAL = DotName.createSimple( SortNatural.class.getName() );
 	DotName SOURCE = DotName.createSimple( Source.class.getName() );

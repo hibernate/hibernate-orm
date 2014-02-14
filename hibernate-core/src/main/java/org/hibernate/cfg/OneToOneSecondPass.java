@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.internal.util.StringHelper;
@@ -255,9 +254,6 @@ public class OneToOneSecondPass implements SecondPass {
 				);
 			}
 		}
-		ForeignKey fk = inferredData.getProperty().getAnnotation( ForeignKey.class );
-		String fkName = fk != null ? fk.name() : "";
-		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) value.setForeignKeyName( fkName );
 	}
 
 	/**

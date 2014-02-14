@@ -1,10 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
 import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
-import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * Non realistic embedded dependent object
@@ -12,7 +13,7 @@ import org.hibernate.annotations.AccessType;
  * @author Emmanuel Bernard
  */
 @Embeddable
-@AccessType("property")
+@AttributeAccessor("property")
 public class Country implements Serializable {
 	private String iso2;
 	private String name;

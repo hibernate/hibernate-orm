@@ -2,15 +2,15 @@
 package org.hibernate.test.annotations.onetomany;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Immutable;
 
 /**
@@ -52,8 +52,7 @@ class City {
 	}
 
 	@OneToMany
-	@JoinColumn(name = "mainstreetcity_id")
-	@ForeignKey(name = "CITYSTR_FK")
+	@JoinColumn(name = "mainstreetcity_id", foreignKey = @ForeignKey(name = "CITYSTR_FK"))
 	@OrderBy
 	@Immutable
 	public List<Street> getMainStreets() {

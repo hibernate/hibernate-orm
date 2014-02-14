@@ -7,13 +7,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 /**
@@ -70,7 +71,7 @@ public class EntityWithUnidirectionalOneToMany {
 
 	@OneToMany(fetch = FetchType.EAGER)
 	@JoinColumn(name = "theListOwner", nullable = false)
-	@IndexColumn( name = "list_index")
+	@OrderColumn( name = "list_index")
 	public List<ReferencedEntity> getTheList() {
 		return theList;
 	}

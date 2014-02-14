@@ -23,10 +23,14 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -39,22 +43,17 @@ import javax.persistence.SecondaryTables;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.Persister;
-import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.RowId;
@@ -62,7 +61,6 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
@@ -86,7 +84,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
@@ -96,11 +93,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
-
 import org.jboss.logging.Logger;
-
-import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
-import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 
 
 /**
@@ -154,7 +147,6 @@ public class EntityBinder {
 
 	public EntityBinder(
 			Entity ejb3Ann,
-			org.hibernate.annotations.Entity hibAnn,
 			XClass annotatedClass,
 			PersistentClass persistentClass,
 			Mappings mappings) {
@@ -162,52 +154,6 @@ public class EntityBinder {
 		this.persistentClass = persistentClass;
 		this.annotatedClass = annotatedClass;
 		bindEjb3Annotation( ejb3Ann );
-		bindHibernateAnnotation( hibAnn );
-	}
-
-
-	@SuppressWarnings("SimplifiableConditionalExpression")
-	private void bindHibernateAnnotation(org.hibernate.annotations.Entity hibAnn) {
-		{
-			final DynamicInsert dynamicInsertAnn = annotatedClass.getAnnotation( DynamicInsert.class );
-			this.dynamicInsert = dynamicInsertAnn == null
-					? ( hibAnn == null ? false : hibAnn.dynamicInsert() )
-					: dynamicInsertAnn.value();
-		}
-
-		{
-			final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotation( DynamicUpdate.class );
-			this.dynamicUpdate = dynamicUpdateAnn == null
-					? ( hibAnn == null ? false : hibAnn.dynamicUpdate() )
-					: dynamicUpdateAnn.value();
-		}
-
-		{
-			final SelectBeforeUpdate selectBeforeUpdateAnn = annotatedClass.getAnnotation( SelectBeforeUpdate.class );
-			this.selectBeforeUpdate = selectBeforeUpdateAnn == null
-					? ( hibAnn == null ? false : hibAnn.selectBeforeUpdate() )
-					: selectBeforeUpdateAnn.value();
-		}
-
-		{
-			final OptimisticLocking optimisticLockingAnn = annotatedClass.getAnnotation( OptimisticLocking.class );
-			this.optimisticLockType = optimisticLockingAnn == null
-					? ( hibAnn == null ? OptimisticLockType.VERSION : hibAnn.optimisticLock() )
-					: optimisticLockingAnn.type();
-		}
-
-		{
-			final Polymorphism polymorphismAnn = annotatedClass.getAnnotation( Polymorphism.class );
-			this.polymorphismType = polymorphismAnn == null
-					? ( hibAnn == null ? PolymorphismType.IMPLICIT : hibAnn.polymorphism() )
-					: polymorphismAnn.type();
-		}
-
-		if ( hibAnn != null ) {
-			// used later in bind for logging
-			explicitHibernateEntityAnnotation = true;
-			//persister handled in bind
-		}
 	}
 
 	private void bindEjb3Annotation(Entity ejb3Ann) {
@@ -260,13 +206,6 @@ public class EntityBinder {
 			if ( annotatedClass.isAnnotationPresent( Immutable.class ) ) {
 				mutable = false;
 			}
-			else {
-				org.hibernate.annotations.Entity entityAnn =
-						annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-				if ( entityAnn != null ) {
-					mutable = entityAnn.mutable();
-				}
-			}
 			rootClass.setMutable( mutable );
 			rootClass.setExplicitPolymorphism( isExplicitPolymorphism( polymorphismType ) );
 			if ( StringHelper.isNotEmpty( where ) ) rootClass.setWhere( where );
@@ -300,17 +239,6 @@ public class EntityBinder {
 		Class persister = null;
 		if ( persisterAnn != null ) {
 			persister = persisterAnn.impl();
-		}
-		else {
-			org.hibernate.annotations.Entity entityAnn = annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-			if ( entityAnn != null && !BinderHelper.isEmptyAnnotationValue( entityAnn.persister() ) ) {
-				try {
-					persister = ReflectHelper.classForName( entityAnn.persister() );
-				}
-				catch (ClassNotFoundException cnfe) {
-					throw new AnnotationException( "Could not find persister class: " + persister );
-				}
-			}
 		}
 		if ( persister != null ) {
 			persistentClass.setEntityPersisterClass( persister );
@@ -367,16 +295,12 @@ public class EntityBinder {
 		//tuplizers
 		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
 			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
-				EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-				//todo tuplizer.entityModeType
-				persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+				persistentClass.addTuplizer( tuplizer.entityModeType(), tuplizer.impl().getName() );
 			}
 		}
 		if ( annotatedClass.isAnnotationPresent( Tuplizer.class ) ) {
 			Tuplizer tuplizer = annotatedClass.getAnnotation( Tuplizer.class );
-			EntityMode mode = EntityMode.parse( tuplizer.entityMode() );
-			//todo tuplizer.entityModeType
-			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
+			persistentClass.addTuplizer( tuplizer.entityModeType(), tuplizer.impl().getName() );
 		}
 
 		for ( Filter filter : filters ) {
@@ -998,30 +922,9 @@ public class EntityBinder {
 	public AccessType getExplicitAccessType(XAnnotatedElement element) {
 		AccessType accessType = null;
 
-		AccessType hibernateAccessType = null;
-		AccessType jpaAccessType = null;
-
-		org.hibernate.annotations.AccessType accessTypeAnnotation = element.getAnnotation( org.hibernate.annotations.AccessType.class );
-		if ( accessTypeAnnotation != null ) {
-			hibernateAccessType = AccessType.getAccessStrategy( accessTypeAnnotation.value() );
-		}
-
 		Access access = element.getAnnotation( Access.class );
 		if ( access != null ) {
-			jpaAccessType = AccessType.getAccessStrategy( access.value() );
-		}
-
-		if ( hibernateAccessType != null && jpaAccessType != null && hibernateAccessType != jpaAccessType ) {
-			throw new MappingException(
-					"Found @Access and @AccessType with conflicting values on a property in class " + annotatedClass.toString()
-			);
-		}
-
-		if ( hibernateAccessType != null ) {
-			accessType = hibernateAccessType;
-		}
-		else if ( jpaAccessType != null ) {
-			accessType = jpaAccessType;
+			accessType = AccessType.getAccessStrategy( access.value() );
 		}
 
 		return accessType;

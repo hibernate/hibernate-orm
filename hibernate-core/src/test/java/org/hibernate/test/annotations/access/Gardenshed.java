@@ -5,7 +5,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * This is the opposite of the Furniture test, as this tries to override the class AccessType("property") with
@@ -15,7 +15,7 @@ import org.hibernate.annotations.AccessType;
  * @since 2007-05-31
  */
 @Entity
-@AccessType( "property" )
+@AttributeAccessor( "property" )
 public class Gardenshed
 		extends
 		Woody {
@@ -43,7 +43,7 @@ public class Gardenshed
 	}
 
 	// These 2 functions should not return in Hibernate, but the value should come from the field "floors"
-	@AccessType( "field" )
+	@AttributeAccessor( "field" )
 	public long getFloors() {
 		return this.floors + 2;
 	}

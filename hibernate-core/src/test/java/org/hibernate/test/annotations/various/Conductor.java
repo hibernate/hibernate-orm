@@ -4,22 +4,23 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import javax.persistence.Version;
 
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.OptimisticLock;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@Table(indexes = @Index(name = "cond_name", columnList = "cond_name"))
 public class Conductor {
 	@Id
 	@GeneratedValue
 	private Integer id;
 
 	@Column(name = "cond_name")
-	@Index(name = "cond_name")
 	@OptimisticLock(excluded = true)
 	private String name;
 

@@ -56,18 +56,16 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 
 	private static final String EXPLICIT_UK_NAME = "EXPLICIT_UK_NAME";
 
-	private static final String EXPLICIT_COLUMN_NAME_NATIVE = "EXPLICIT_COLUMN_NAME_NATIVE";
-	private static final String EXPLICIT_FK_NAME_NATIVE = "EXPLICIT_FK_NAME_NATIVE";
-	private static final String EXPLICIT_COLUMN_NAME_JPA_O2O = "EXPLICIT_COLUMN_NAME_JPA_O2O";
-	private static final String EXPLICIT_FK_NAME_JPA_O2O = "EXPLICIT_FK_NAME_JPA_O2O";
-	private static final String EXPLICIT_COLUMN_NAME_JPA_M2O = "EXPLICIT_COLUMN_NAME_JPA_M2O";
-	private static final String EXPLICIT_FK_NAME_JPA_M2O = "EXPLICIT_FK_NAME_JPA_M2O";
-	private static final String EXPLICIT_JOINTABLE_NAME_JPA_M2M = "EXPLICIT_JOINTABLE_NAME_JPA_M2M";
-	private static final String EXPLICIT_COLUMN_NAME_JPA_M2M = "EXPLICIT_COLUMN_NAME_JPA_M2M";
-	private static final String EXPLICIT_FK_NAME_JPA_M2M = "EXPLICIT_FK_NAME_JPA_M2M";
-	private static final String EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT = "EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT";
-	private static final String EXPLICIT_COLUMN_NAME_JPA_ELEMENT = "EXPLICIT_COLUMN_NAME_JPA_ELEMENT";
-	private static final String EXPLICIT_FK_NAME_JPA_ELEMENT = "EXPLICIT_FK_NAME_JPA_ELEMENT";
+	private static final String EXPLICIT_COLUMN_NAME_O2O = "EXPLICIT_COLUMN_NAME_O2O";
+	private static final String EXPLICIT_FK_NAME_O2O = "EXPLICIT_FK_NAME_O2O";
+	private static final String EXPLICIT_COLUMN_NAME_M2O = "EXPLICIT_COLUMN_NAME_M2O";
+	private static final String EXPLICIT_FK_NAME_M2O = "EXPLICIT_FK_NAME_M2O";
+	private static final String EXPLICIT_JOINTABLE_NAME_M2M = "EXPLICIT_JOINTABLE_NAME_M2M";
+	private static final String EXPLICIT_COLUMN_NAME_M2M = "EXPLICIT_COLUMN_NAME_M2M";
+	private static final String EXPLICIT_FK_NAME_M2M = "EXPLICIT_FK_NAME_M2M";
+	private static final String EXPLICIT_COLLECTIONTABLE_NAME_ELEMENT = "EXPLICIT_COLLECTIONTABLE_NAME_ELEMENT";
+	private static final String EXPLICIT_COLUMN_NAME_ELEMENT = "EXPLICIT_COLUMN_NAME_ELEMENT";
+	private static final String EXPLICIT_FK_NAME_ELEMENT = "EXPLICIT_FK_NAME_ELEMENT";
 	private static final String INDEX_1 = "INDEX_1";
 	private static final String INDEX_2 = "INDEX_2";
 	private static final String INDEX_3 = "INDEX_3";
@@ -121,13 +119,12 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		assertTrue( SchemaUtil.hasUniqueKey( table1, EXPLICIT_UK_NAME, "explicit" ) );
 
 		TableSpecification table2 = SchemaUtil.getTable( DataPoint2.class, metadata() );
-		TableSpecification joinTable = SchemaUtil.getTable( EXPLICIT_JOINTABLE_NAME_JPA_M2M, metadata() );
-		TableSpecification collectionTable = SchemaUtil.getTable( EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT, metadata() );
-		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_NATIVE, EXPLICIT_COLUMN_NAME_NATIVE ) );
-		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_O2O, EXPLICIT_COLUMN_NAME_JPA_O2O ) );
-		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_M2O, EXPLICIT_COLUMN_NAME_JPA_M2O ) );
-		assertTrue( SchemaUtil.hasForeignKey( joinTable, EXPLICIT_FK_NAME_JPA_M2M, EXPLICIT_COLUMN_NAME_JPA_M2M ) );
-		assertTrue( SchemaUtil.hasForeignKey( collectionTable, EXPLICIT_FK_NAME_JPA_ELEMENT, EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) );
+		TableSpecification joinTable = SchemaUtil.getTable( EXPLICIT_JOINTABLE_NAME_M2M, metadata() );
+		TableSpecification collectionTable = SchemaUtil.getTable( EXPLICIT_COLLECTIONTABLE_NAME_ELEMENT, metadata() );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_O2O, EXPLICIT_COLUMN_NAME_O2O ) );
+		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_M2O, EXPLICIT_COLUMN_NAME_M2O ) );
+		assertTrue( SchemaUtil.hasForeignKey( joinTable, EXPLICIT_FK_NAME_M2M, EXPLICIT_COLUMN_NAME_M2M ) );
+		assertTrue( SchemaUtil.hasForeignKey( collectionTable, EXPLICIT_FK_NAME_ELEMENT, EXPLICIT_COLUMN_NAME_ELEMENT ) );
 		
 		testConstraintLength( table1 );
 		testConstraintLength( table2 );
@@ -184,31 +181,26 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		public DataPoint dp;
 
 		@OneToOne
-		@org.hibernate.annotations.ForeignKey(name = EXPLICIT_FK_NAME_NATIVE)
-		@JoinColumn(name = EXPLICIT_COLUMN_NAME_NATIVE)
-		public DataPoint explicit_native;
-
-		@OneToOne
-		@JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_O2O,
-				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_O2O))
-		public DataPoint explicit_jpa_o2o;
+		@JoinColumn(name = EXPLICIT_COLUMN_NAME_O2O,
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_O2O))
+		public DataPoint explicit_o2o;
 
 		@ManyToOne
-		@JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2O,
-				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2O))
-		public DataPoint explicit_jpa_m2o;
+		@JoinColumn(name = EXPLICIT_COLUMN_NAME_M2O,
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_M2O))
+		public DataPoint explicit_m2o;
 
 		@ManyToMany
-		@JoinTable(name = EXPLICIT_JOINTABLE_NAME_JPA_M2M,
-				joinColumns = @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2M),
-				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2M))
-		public Set<DataPoint> explicit_jpa_m2m;
+		@JoinTable(name = EXPLICIT_JOINTABLE_NAME_M2M,
+				joinColumns = @JoinColumn(name = EXPLICIT_COLUMN_NAME_M2M),
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_M2M))
+		public Set<DataPoint> explicit_m2m;
 
 		@ElementCollection
-		@CollectionTable(name = EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT,
-				joinColumns =  @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_ELEMENT),
-				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_ELEMENT))
-		public Set<String> explicit_jpa_element;
+		@CollectionTable(name = EXPLICIT_COLLECTIONTABLE_NAME_ELEMENT,
+				joinColumns =  @JoinColumn(name = EXPLICIT_COLUMN_NAME_ELEMENT),
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_ELEMENT))
+		public Set<String> explicit_element;
 	}
 
 	public static enum SimpleEnum {

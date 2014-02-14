@@ -322,11 +322,6 @@ public class ConfiguredClass {
 		if ( accessAnnotation != null ) {
 			accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class,
 					localBindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
-		} else {
-			accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, HibernateDotNames.ACCESS_TYPE, ClassInfo.class );
-			if ( accessAnnotation != null ) {
-				accessType = AccessType.valueOf( accessAnnotation.value().asString().toUpperCase() );
-			}
 		}
 
 		return accessType;
@@ -380,14 +375,8 @@ public class ConfiguredClass {
 		Set<String> explicitAccessPropertyNames = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
-		List<AnnotationInstance> hibernateAccessAnnotations = classInfo.annotations().get( HibernateDotNames.ACCESS_TYPE );
 		if ( accessAnnotations == null ) {
-			accessAnnotations = hibernateAccessAnnotations;
-			if ( accessAnnotations == null ) {
-				return explicitAccessPropertyNames;
-			}
-		} else if ( hibernateAccessAnnotations != null ) {
-			accessAnnotations.addAll( hibernateAccessAnnotations );
+			return explicitAccessPropertyNames;
 		}
 
 		// iterate over all @Access annotations defined on the current class

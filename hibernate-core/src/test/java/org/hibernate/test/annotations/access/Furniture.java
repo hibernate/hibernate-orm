@@ -5,13 +5,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@AccessType("field")
+@AttributeAccessor("field")
 public class Furniture extends Woody {
 	@Id
 	@GeneratedValue
@@ -36,7 +36,7 @@ public class Furniture extends Woody {
 		this.id = id;
 	}
 
-	@AccessType("property")
+	@AttributeAccessor("property")
 	public long weight;
 
 	public long getWeight() {

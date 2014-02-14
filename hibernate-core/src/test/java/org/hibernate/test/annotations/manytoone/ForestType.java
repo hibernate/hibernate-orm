@@ -1,15 +1,15 @@
 //$Id$
 package org.hibernate.test.annotations.manytoone;
 import java.util.Set;
+
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * @author Emmanuel Bernard
@@ -24,10 +24,9 @@ public class ForestType {
 	@OneToOne
 	@JoinTable(name="BiggestRepPerForestType",
 		joinColumns = @JoinColumn(name="forest_type"),
-		inverseJoinColumns = @JoinColumn(name="forest")
-	)
-	@ForeignKey(name="A_TYP_FK",
-			inverseName = "A_FOR_FK" //inverse fail cause it involves a Join
+		inverseJoinColumns = @JoinColumn(name="forest"),
+		foreignKey = @ForeignKey(name="A_TYP_FK"),
+		inverseForeignKey = @ForeignKey(name="A_FOR_FK") //inverse fail cause it involves a Join
 	)
 	public BiggestForest getBiggestRepresentative() {
 		return biggestRepresentative;

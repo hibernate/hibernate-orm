@@ -2,11 +2,11 @@
 package org.hibernate.test.annotations.manytoone;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Many to one sample using default mapping values
@@ -30,7 +30,7 @@ public class Car {
 	}
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@ForeignKey(name="BODY_COLOR_FK")
+	@JoinColumn(foreignKey = @ForeignKey(name="BODY_COLOR_FK"))
 	public Color getBodyColor() {
 		return bodyColor;
 	}

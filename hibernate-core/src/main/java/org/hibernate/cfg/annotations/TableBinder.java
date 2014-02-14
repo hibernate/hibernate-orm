@@ -26,14 +26,14 @@ package org.hibernate.cfg.annotations;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.persistence.Index;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.Index;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NamingStrategy;
@@ -53,7 +53,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -107,7 +106,7 @@ public class TableBinder {
 		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
 	}
 
-	public void setJpaIndex(javax.persistence.Index[] jpaIndex){
+	public void setJpaIndex(Index[] jpaIndex){
 		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
 	}
 
@@ -536,21 +535,12 @@ public class TableBinder {
 	}
 
 	public static void addIndexes(Table hibTable, Index[] indexes, Mappings mappings) {
-		for (Index index : indexes) {
-			//no need to handle inSecondPass here since it is only called from EntityBinder
-			mappings.addSecondPass(
-					new IndexOrUniqueKeySecondPass( hibTable, index.name(), index.columnNames(), mappings )
-			);
-		}
-	}
-
-	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, Mappings mappings) {
 		mappings.addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
 	}
 
-	public static List<JPAIndexHolder> buildJpaIndexHolder(javax.persistence.Index[] indexes){
+	public static List<JPAIndexHolder> buildJpaIndexHolder(Index[] indexes){
 		List<JPAIndexHolder> holders = new ArrayList<JPAIndexHolder>( indexes.length );
-		for(javax.persistence.Index index : indexes){
+		for(Index index : indexes){
 			holders.add( new JPAIndexHolder( index ) );
 		}
 		return holders;

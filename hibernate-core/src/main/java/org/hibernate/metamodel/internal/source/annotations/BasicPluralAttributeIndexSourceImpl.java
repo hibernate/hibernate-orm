@@ -26,17 +26,15 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -66,14 +64,8 @@ public class BasicPluralAttributeIndexSourceImpl extends AbstractPluralAttribute
 	private static List<RelationalValueSource> createRelationalValueSources(PluralAssociationAttribute attribute) {
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				attribute.annotations(),
-				HibernateDotNames.INDEX_COLUMN
+				JPADotNames.ORDER_COLUMN
 		);
-		if ( columnAnnotation == null ) {
-			columnAnnotation = JandexHelper.getSingleAnnotation(
-					attribute.annotations(),
-					JPADotNames.ORDER_COLUMN
-			);
-		}
 		if ( columnAnnotation == null ) {
 			columnAnnotation = JandexHelper.getSingleAnnotation(
 					attribute.annotations(),

@@ -144,24 +144,10 @@ public class EntityClass extends ConfiguredClass {
 		processProxyGeneration();
 		processDiscriminatorValue();
 
-		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
-				classInfo,
-				HibernateDotNames.FOREIGN_KEY,
-				ClassInfo.class
-		);
 		this.joinedSubclassPrimaryKeyJoinColumnSources = determinePrimaryKeyJoinColumns();
-		if ( foreignKey != null ) {
-			ensureJoinedSubEntity();
-			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
-			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
-			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
-		}
-		else {
-			explicitForeignKeyName = null;
-			inverseForeignKeyName = null;
-		}
+		// TODO: bind JPA @ForeignKey?
+		explicitForeignKeyName = null;
+		inverseForeignKeyName = null;
 		this.onDeleteAction = determineOnDeleteAction();
 
 	}

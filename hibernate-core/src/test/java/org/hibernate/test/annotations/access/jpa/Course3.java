@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 import java.util.List;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
@@ -31,6 +32,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+
+import org.hibernate.annotations.AttributeAccessor;
 
 
 /**
@@ -48,7 +51,7 @@ public class Course3 {
 
 	@Id
 	@GeneratedValue
-	@org.hibernate.annotations.AccessType("field")
+	@AttributeAccessor("field")
 	public long getId() {
 		return id;
 	}

@@ -30,7 +30,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.internal.CoreMessageLogger;
@@ -40,7 +39,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -645,12 +643,6 @@ public class Ejb3Column {
 			}
 		}
 
-	}
-
-	public void addIndex(Index index, boolean inSecondPass) {
-		if ( index == null ) return;
-		String indexName = index.name();
-		addIndex( indexName, inSecondPass );
 	}
 
 	void addIndex(String indexName, boolean inSecondPass) {

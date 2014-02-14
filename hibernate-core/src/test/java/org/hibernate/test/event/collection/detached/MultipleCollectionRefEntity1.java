@@ -25,6 +25,7 @@ package org.hibernate.test.event.collection.detached;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -43,8 +44,8 @@ public class MultipleCollectionRefEntity1 implements org.hibernate.test.event.co
 	private String text;
 
 	@ManyToOne
-	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false)
-	@org.hibernate.annotations.ForeignKey(name = "FK_RE1_MCE")
+	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false,
+			foreignKey = @ForeignKey(name = "FK_RE1_MCE"))
 	private MultipleCollectionEntity multipleCollectionEntity;
 
 	@Column(name = "MCE_ID", insertable = false, updatable = false)

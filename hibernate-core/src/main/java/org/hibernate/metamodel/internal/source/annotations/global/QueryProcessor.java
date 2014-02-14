@@ -171,9 +171,6 @@ public class QueryProcessor {
 			case COMMIT:
 				flushMode = FlushMode.COMMIT;
 				break;
-			case NEVER:
-				flushMode = FlushMode.MANUAL;
-				break;
 			case MANUAL:
 				flushMode = FlushMode.MANUAL;
 				break;

@@ -17,10 +17,10 @@
 */
 package org.hibernate.test.annotations.access.xml;
 import java.util.Set;
+
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import org.hibernate.annotations.Entity;
 
 /**
  * @author Hardy Ferentschik

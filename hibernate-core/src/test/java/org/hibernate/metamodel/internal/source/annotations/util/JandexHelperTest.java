@@ -23,9 +23,15 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -33,27 +39,19 @@ import javax.persistence.Entity;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexView;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests for the helper class {@link JandexHelper}.
@@ -177,23 +175,6 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class,
 				classLoaderService );
 		assertEquals( "Wrong lock mode", LockModeType.OPTIMISTIC, lockMode );
-	}
-
-	@Test
-	public void testRetrieveStringArray() {
-		class Foo {
-			@org.hibernate.annotations.Index(name = "index", columnNames = { "a", "b", "c" })
-			private String foo;
-		}
-
-		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.INDEX );
-		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
-
-		String[] columnNames = JandexHelper.getValue( annotationInstance, "columnNames", String[].class,
-				classLoaderService );
-		Assert.assertTrue( columnNames.length == 3 );
 	}
 
 	@Test(expected = AssertionFailure.class)

@@ -3,16 +3,17 @@ package org.hibernate.test.annotations.tableperclass;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-
-import org.hibernate.annotations.Index;
+import javax.persistence.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity(name = "xpmComponent")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Table(indexes = @Index(name = "manufacturerPartNumber", columnList = "manufacturerPartNumber"))
 public abstract class Component {
 	private String manufacturerPartNumber;
 	private Long manufacturerId;
@@ -31,7 +32,6 @@ public abstract class Component {
 	}
 
 	@Column(nullable = false)
-	@Index(name = "manufacturerPartNumber")
 	public String getManufacturerPartNumber() {
 		return manufacturerPartNumber;
 	}

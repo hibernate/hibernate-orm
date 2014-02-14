@@ -4,25 +4,26 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
+import org.hibernate.annotations.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@org.hibernate.annotations.Table(appliesTo = "Vehicule",
-		indexes = {
-		@Index(name = "improbableindex", columnNames = {"registration", "Conductor_fk"}),
-		@Index(name = "secondone", columnNames = {"Conductor_fk"})
-				}
-)
+@Table(appliesTo = "Vehicule", indexes = {
+		@Index(name = "improbableindex", columnList = "registration, Conductor_fk"),
+		@Index(name = "secondone", columnList = "Conductor_fk"),
+		@Index(name = "thirdone", columnList = "Conductor_fk"),
+		@Index(name = "year_idx", columnList = "year"),
+		@Index(name = "forthone", columnList = "previousConductor")})
 public class Vehicule {
 	@Id
 	@GeneratedValue(generator = "gen")
@@ -32,12 +33,9 @@ public class Vehicule {
 	private String registrationNumber;
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "Conductor_fk")
-	@Index(name = "thirdone")
 	private Conductor currentConductor;
-	@Index(name = "year_idx")
 	private Integer year;
 	@ManyToOne(optional = true)
-	@Index(name = "forthone")
 	private Conductor previousConductor;
 
 	public String getId() {

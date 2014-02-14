@@ -1,22 +1,28 @@
 //$Id$
 package org.hibernate.test.annotations.entity;
 import java.util.Set;
+
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Lob;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
+import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
 
@@ -27,11 +33,11 @@ import org.hibernate.annotations.Where;
  */
 @Entity
 @BatchSize(size = 5)
-@org.hibernate.annotations.Entity(
-		selectBeforeUpdate = true,
-		dynamicInsert = true, dynamicUpdate = true,
-		optimisticLock = OptimisticLockType.ALL,
-		polymorphism = PolymorphismType.EXPLICIT)
+@SelectBeforeUpdate
+@DynamicInsert
+@DynamicUpdate
+@OptimisticLocking(type = OptimisticLockType.ALL)
+@Polymorphism(type = PolymorphismType.EXPLICIT)
 @Where(clause = "1=1")
 @FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = "integer")})
 @Filters({
@@ -39,7 +45,7 @@ import org.hibernate.annotations.Where;
 @Filter(name = "minLength", condition = ":minLength <= length")
 		})
 @org.hibernate.annotations.Table(appliesTo = "Forest",
-		indexes = {@Index(name = "idx", columnNames = {"name", "length"})})
+		indexes = {@Index(name = "idx", columnList = "name, length")})
 public class Forest {
 	private Integer id;
 	private String name;

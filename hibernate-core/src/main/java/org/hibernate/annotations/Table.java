@@ -23,11 +23,14 @@
  */
 package org.hibernate.annotations;
 
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.persistence.ForeignKey;
+import javax.persistence.Index;
 
 /**
  * Complementary information to a table either primary or secondary.

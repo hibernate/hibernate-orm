@@ -25,7 +25,7 @@ package org.hibernate.test.annotations.embedded.many2one;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.annotations.AccessType;
+import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * TODO : javadoc
@@ -33,7 +33,7 @@ import org.hibernate.annotations.AccessType;
  * @author Steve Ebersole
  */
 @Embeddable
-@AccessType("property")
+@AttributeAccessor("property")
 public class Address {
 	private String line1;
 	private String line2;

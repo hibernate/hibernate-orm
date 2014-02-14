@@ -33,7 +33,6 @@ import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -73,10 +72,9 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		}
 		
 		if ( attribute.getPluralAttributeNature() == PluralAttributeSource.Nature.ARRAY
-				&& !attribute.annotations().containsKey( JPADotNames.ORDER_COLUMN ) 
-				&& !attribute.annotations().containsKey( HibernateDotNames.INDEX_COLUMN ) ) {
+				&& !attribute.annotations().containsKey( JPADotNames.ORDER_COLUMN ) ) {
 			throw new AnnotationException( "The array attribute '" + attribute.getRole()
-					+ "' must be annotated with @OrderColumn or @IndexColumn!" );
+					+ "' must be annotated with @OrderColumn!" );
 		}
 		
 		if ( attribute.isSequentiallyIndexed() ) {

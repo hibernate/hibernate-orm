@@ -2,14 +2,14 @@
 package org.hibernate.test.annotations.manytomany;
 import java.io.Serializable;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * Woman knowing several mens
@@ -33,19 +33,16 @@ public class Woman implements Serializable {
 	}
 
 	@ManyToMany(cascade = {CascadeType.ALL})
-	@JoinTable(
-			name = "Man_Woman",
+	@JoinTable(name = "Man_Woman",
 			joinColumns = {
-			@JoinColumn(name = "womanLastName", referencedColumnName = "lastName"),
-			@JoinColumn(name = "womanFirstName", referencedColumnName = "firstName")
-					},
+					@JoinColumn(name = "womanLastName", referencedColumnName = "lastName"),
+					@JoinColumn(name = "womanFirstName", referencedColumnName = "firstName") },
 			inverseJoinColumns = {
-			@JoinColumn(name = "manIsElder", referencedColumnName = "elder"),
-			@JoinColumn(name = "manLastName", referencedColumnName = "lastName"),
-			@JoinColumn(name = "manFirstName", referencedColumnName = "firstName")
-					}
-	)
-	@ForeignKey(name = "WM_W_FK", inverseName = "WM_M_FK")
+					@JoinColumn(name = "manIsElder", referencedColumnName = "elder"),
+					@JoinColumn(name = "manLastName", referencedColumnName = "lastName"),
+					@JoinColumn(name = "manFirstName", referencedColumnName = "firstName") },
+			foreignKey = @ForeignKey(name = "WM_W_FK"),
+			inverseForeignKey = @ForeignKey(name = "WM_M_FK"))
 	public Set<Man> getMens() {
 		return mens;
 	}

@@ -440,7 +440,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 				Order.class,
 				OrderLine.class,
 				Frame.class,
-				Lens.class,	
+				Lens.class	
 		};
 	}
 

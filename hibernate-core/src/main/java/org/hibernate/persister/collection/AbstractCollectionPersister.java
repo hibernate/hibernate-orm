@@ -156,7 +156,6 @@ public abstract class AbstractCollectionPersister
 	private String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
-
 	protected final boolean elementIsPureFormula;
 
 	// types
@@ -244,8 +243,8 @@ public abstract class AbstractCollectionPersister
 	private final Serializable[] spaces;
 
 	private Map collectionPropertyColumnAliases = new HashMap();
-//	private Map collectionPropertyColumnNames = new HashMap(); never used actually
-	private String mapKey;
+	private Map collectionPropertyColumnNames = new HashMap(); // futile?
+	private String mapKeyName; // filled when collection is a map with a composite key (= embeddable class)
 
 	public AbstractCollectionPersister(
 			final Collection collection,
@@ -1869,7 +1868,7 @@ public abstract class AbstractCollectionPersister
 		if ( hasIndex ) {
 			if (indexContainsFormula && collection instanceof org.hibernate.mapping.Map) {
 				
-				initCollectionPropertyMap( ((org.hibernate.mapping.Map)collection).getMapProperty().getName(), indexType, indexColumnAliases, indexColumnNames );
+				initCollectionPropertyMap( ((org.hibernate.mapping.Map)collection).getMapKeyName(), indexType, indexColumnAliases, indexColumnNames );
 			}
 			else {
 				initCollectionPropertyMap( "index", indexType, indexColumnAliases, indexColumnNames );
@@ -1887,16 +1886,16 @@ public abstract class AbstractCollectionPersister
 	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases, String[] columnNames) {
 
 		collectionPropertyColumnAliases.put( aliasName, columnAliases );
-//		collectionPropertyColumnNames.put( aliasName, columnNames );
+		collectionPropertyColumnNames.put( aliasName, columnNames );
 
 		if ( type.isComponentType() ) {
-			mapKey = aliasName;
+			mapKeyName = aliasName;
 			CompositeType ct = (CompositeType) type;
 			String[] propertyNames = ct.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {
 				String name = propertyNames[i];
 				collectionPropertyColumnAliases.put( aliasName + "." + name, columnAliases[i] );
-//				collectionPropertyColumnNames.put( aliasName + "." + name, columnNames[i] );
+				collectionPropertyColumnNames.put( aliasName + "." + name, columnNames[i] );
 			}
 		}
 
@@ -2220,7 +2219,12 @@ public abstract class AbstractCollectionPersister
 		};
 	}
 
-	public String getMapKey() {
-		return mapKey;
+	
+	/**
+	 * 
+	 * @return the @MapKey(name="...")
+	 */
+	public String getMapKeyName() {
+		return mapKeyName;
 	}
 }

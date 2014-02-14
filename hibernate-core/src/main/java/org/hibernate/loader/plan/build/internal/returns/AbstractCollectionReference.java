@@ -93,7 +93,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 			else if ( type.isComponentType() ) {
 				String parentPropertyName = "";
 				if (persister.getCollectionType() instanceof org.hibernate.type.MapType) {
-					parentPropertyName = ((AbstractCollectionPersister) persister).getMapKey();
+					parentPropertyName = ((AbstractCollectionPersister) persister).getMapKeyName();
 				}
 				final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
 						collectionQuerySpace,

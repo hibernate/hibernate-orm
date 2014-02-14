@@ -32,7 +32,7 @@ import org.hibernate.type.CollectionType;
  */
 public class Map extends IndexedCollection {
 	
-	private Property mapProperty;
+	private String mapKeyName;
 
 
 	public Map(Mappings mappings, PersistentClass owner) {
@@ -43,12 +43,12 @@ public class Map extends IndexedCollection {
 		return true;
 	}
 	
-	public Property getMapProperty() {
-		return mapProperty;
+	public String getMapKeyName() {
+		return mapKeyName;
 	}
 
-	public void setMapProperty(Property mapProperty) {
-		this.mapProperty = mapProperty;
+	public void setMapKeyName(String mapKeyName) {
+		this.mapKeyName = mapKeyName;
 	}
 
 	public CollectionType getDefaultCollectionType() {

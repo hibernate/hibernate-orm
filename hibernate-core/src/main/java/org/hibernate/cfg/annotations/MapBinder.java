@@ -142,7 +142,7 @@ public class MapBinder extends CollectionBinder {
 					mapProperty.getValue(), map, targetPropertyName, associatedClass, mappings
 			);
 			map.setIndex( indexValue );
-			map.setMapProperty(mapProperty);
+			map.setMapKeyName(mapProperty.getName());
 		}
 		else {
 			//this is a true Map mapping

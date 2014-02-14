@@ -215,10 +215,13 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		
 		final ClassLoaderService cls = context.getServiceRegistry().getService( ClassLoaderService.class );
 
+		// TODO: This is UGLY -- pull into a util and find a better pattern?
 		AnnotationInstance foreignKey = JandexHelper.getSingleAnnotation(
 				annotations(), HibernateDotNames.FOREIGN_KEY );
 		AnnotationInstance joinTable = JandexHelper.getSingleAnnotation(
 				annotations(), JPADotNames.JOIN_TABLE );
+		AnnotationInstance collectionTable = JandexHelper.getSingleAnnotation(
+				annotations(), JPADotNames.COLLECTION_TABLE );
 		if (foreignKey != null) {
 			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class, cls );
 			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class, cls );
@@ -227,6 +230,12 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		if (joinTable != null && StringHelper.isEmpty( explicitForeignKeyName )) {
 			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
 					joinTable, "foreignKey", AnnotationInstance.class, cls );
+			explicitForeignKeyName = jpaFkAnnotation != null
+					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
+		}
+		if (collectionTable != null && StringHelper.isEmpty( explicitForeignKeyName )) {
+			final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
+					collectionTable, "foreignKey", AnnotationInstance.class, cls );
 			explicitForeignKeyName = jpaFkAnnotation != null
 					? JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls ) : null;
 		}

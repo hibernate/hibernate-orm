@@ -43,7 +43,6 @@ import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.junit.Test;
@@ -51,7 +50,6 @@ import org.junit.Test;
 /**
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
 public class ConstraintTest extends BaseCoreFunctionalTestCase {
 
 	private static final int MAX_NAME_LENGTH = 30;
@@ -67,6 +65,7 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	private static final String EXPLICIT_JOINTABLE_NAME_JPA_M2M = "EXPLICIT_JOINTABLE_NAME_JPA_M2M";
 	private static final String EXPLICIT_COLUMN_NAME_JPA_M2M = "EXPLICIT_COLUMN_NAME_JPA_M2M";
 	private static final String EXPLICIT_FK_NAME_JPA_M2M = "EXPLICIT_FK_NAME_JPA_M2M";
+	private static final String EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT = "EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT";
 	private static final String EXPLICIT_COLUMN_NAME_JPA_ELEMENT = "EXPLICIT_COLUMN_NAME_JPA_ELEMENT";
 	private static final String EXPLICIT_FK_NAME_JPA_ELEMENT = "EXPLICIT_FK_NAME_JPA_ELEMENT";
 	private static final String INDEX_1 = "INDEX_1";
@@ -123,11 +122,12 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 
 		TableSpecification table2 = SchemaUtil.getTable( DataPoint2.class, metadata() );
 		TableSpecification joinTable = SchemaUtil.getTable( EXPLICIT_JOINTABLE_NAME_JPA_M2M, metadata() );
+		TableSpecification collectionTable = SchemaUtil.getTable( EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT, metadata() );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_NATIVE, EXPLICIT_COLUMN_NAME_NATIVE ) );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_O2O, EXPLICIT_COLUMN_NAME_JPA_O2O ) );
 		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_M2O, EXPLICIT_COLUMN_NAME_JPA_M2O ) );
 		assertTrue( SchemaUtil.hasForeignKey( joinTable, EXPLICIT_FK_NAME_JPA_M2M, EXPLICIT_COLUMN_NAME_JPA_M2M ) );
-		assertTrue( SchemaUtil.hasForeignKey( table2, EXPLICIT_FK_NAME_JPA_ELEMENT, EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) );
+		assertTrue( SchemaUtil.hasForeignKey( collectionTable, EXPLICIT_FK_NAME_JPA_ELEMENT, EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) );
 		
 		testConstraintLength( table1 );
 		testConstraintLength( table2 );
@@ -152,7 +152,7 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 					@Index(columnList = "foo5,foo6", name = INDEX_4),
 					@Index(columnList = "foo6,foo5", name = INDEX_5),
 					@Index(columnList = "foo5", name = INDEX_6) } )
-	public static class DataPoint {
+	private static class DataPoint {
 		@Id
 		@GeneratedValue
 		public long id;
@@ -175,7 +175,7 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@Table( name = "DataPoint2" )
-	public static class DataPoint2 {
+	private static class DataPoint2 {
 		@Id
 		@GeneratedValue
 		public long id;
@@ -196,18 +196,19 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		@ManyToOne
 		@JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2O,
 				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2O))
-		private DataPoint explicit_jpa_m2o;
+		public DataPoint explicit_jpa_m2o;
 
 		@ManyToMany
 		@JoinTable(name = EXPLICIT_JOINTABLE_NAME_JPA_M2M,
 				joinColumns = @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2M),
 				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2M))
-		private Set<DataPoint> explicit_jpa_m2m;
+		public Set<DataPoint> explicit_jpa_m2m;
 
 		@ElementCollection
-		@CollectionTable(joinColumns =  @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_ELEMENT),
+		@CollectionTable(name = EXPLICIT_COLLECTIONTABLE_NAME_JPA_ELEMENT,
+				joinColumns =  @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_ELEMENT),
 				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_ELEMENT))
-		private Set<String> explicit_jpa_element;
+		public Set<String> explicit_jpa_element;
 	}
 
 	public static enum SimpleEnum {

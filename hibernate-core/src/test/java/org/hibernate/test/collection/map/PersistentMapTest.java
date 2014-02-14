@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.collection.map;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -45,7 +46,6 @@ import javax.persistence.OneToMany;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentMap;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -56,7 +56,6 @@ import org.junit.Test;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
 public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

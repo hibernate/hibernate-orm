@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
 import java.util.List;
@@ -71,7 +72,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -858,8 +858,9 @@ class HibernateTypeHelper {
 			java.lang.reflect.Type collectionAttributeType = null;
 			if ( beanInfo.getPropertyDescriptors() == null || beanInfo.getPropertyDescriptors().length == 0 ) {
 				// we need to look for the field and look at it...
-				//TODO this only works when the field is public accessable or NoSuchElementException will be thrown
-				collectionAttributeType = ownerClass.getField( attributeName ).getGenericType();
+				Field field = ownerClass.getDeclaredField( attributeName );
+				field.setAccessible( true );
+				collectionAttributeType = field.getGenericType();
 			}
 			else {
 				for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {

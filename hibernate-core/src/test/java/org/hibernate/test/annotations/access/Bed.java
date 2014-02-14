@@ -1,15 +1,15 @@
 //$Id$
 package org.hibernate.test.annotations.access;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
-
-import org.hibernate.annotations.AttributeAccessor;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@AttributeAccessor("property")
+@Access(AccessType.PROPERTY)
 public class Bed extends Furniture {
 	String quality;
 

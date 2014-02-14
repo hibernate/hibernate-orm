@@ -4,6 +4,7 @@ package org.hibernate.jpa.test.cascade;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -22,9 +23,8 @@ public class Troop implements Serializable {
 	private String name;
 	private Set<Soldier> soldiers;
 
-	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, orphanRemoval = true)
 	@OrderBy(clause = "name desc")
-	@org.hibernate.annotations.Cascade({org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	public Set<Soldier> getSoldiers() {
 		return soldiers;
 	}

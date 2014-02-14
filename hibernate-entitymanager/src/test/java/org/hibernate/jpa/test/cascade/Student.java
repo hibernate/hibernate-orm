@@ -1,5 +1,7 @@
 package org.hibernate.jpa.test.cascade;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -7,10 +9,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
-import org.hibernate.annotations.AccessType;
-
 @Entity
-@AccessType("field")
+@Access(AccessType.FIELD)
 public class Student {
 
 	@Id @GeneratedValue

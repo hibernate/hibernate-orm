@@ -24,9 +24,9 @@
 package org.hibernate.test.annotations.access;
 
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +39,7 @@ import static org.junit.Assert.assertNull;
  */
 public class AccessTest extends BaseCoreFunctionalTestCase {
 	@Test
+    @FailureExpectedWithNewMetamodel
 	public void testSuperclassOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setColor( "Black" );
@@ -125,6 +126,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
     @Test
+    @FailureExpectedWithNewMetamodel
 	public void testFieldsOverriding() throws Exception {
 		Gardenshed gs = new Gardenshed();
 		gs.floors = 4;

@@ -159,6 +159,7 @@ public class AccessMappingTest extends BaseUnitTestCase {
     }
 
     @Test
+	@FailureExpectedWithNewMetamodel
     public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         Class<?> classUnderTest = Course3.class;

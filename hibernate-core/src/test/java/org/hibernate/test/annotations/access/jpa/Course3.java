@@ -33,8 +33,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.annotations.AttributeAccessor;
-
 
 /**
  * @author Hardy Ferentschik
@@ -51,7 +49,7 @@ public class Course3 {
 
 	@Id
 	@GeneratedValue
-	@AttributeAccessor("field")
+	@Access(AccessType.FIELD)
 	public long getId() {
 		return id;
 	}

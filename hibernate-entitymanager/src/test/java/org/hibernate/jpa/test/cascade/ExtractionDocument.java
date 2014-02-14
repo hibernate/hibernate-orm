@@ -2,6 +2,7 @@
 package org.hibernate.jpa.test.cascade;
 
 import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,6 +11,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Proxy;
 
 /**
@@ -18,7 +21,8 @@ import org.hibernate.annotations.Proxy;
 @Entity
 @Table(name = "portal_pk_docs_extraction")
 //@Cache(usage = READ_WRITE)
-@org.hibernate.annotations.Entity(dynamicInsert = true, dynamicUpdate = true)
+@DynamicInsert
+@DynamicUpdate
 @Proxy
 public class ExtractionDocument implements Serializable {
 	private Long id;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,13 +18,17 @@ import javax.persistence.PreRemove;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
 /**
  * @author Emmanuel Bernard
  */
 @Entity
 @Table(name = "portal_pk_docs_extraction_info")
 //@Cache(usage = READ_WRITE)
-@org.hibernate.annotations.Entity(dynamicInsert = true, dynamicUpdate = true)
+@DynamicInsert
+@DynamicUpdate
 public class ExtractionDocumentInfo implements Serializable {
 	private Long id;
 	private Date lastModified;

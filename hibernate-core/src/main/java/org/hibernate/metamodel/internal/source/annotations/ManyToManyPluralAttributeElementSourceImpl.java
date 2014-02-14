@@ -154,7 +154,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 
 			if ( joinTableAnnotation != null ) {
 				return JandexHelper.getValue( joinTableAnnotation, "name", String.class,
-						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+						bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 			}
 
 			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...

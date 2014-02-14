@@ -25,13 +25,14 @@ package org.hibernate.metamodel.spi;
 
 import java.util.List;
 
-import org.jboss.jandex.IndexView;
-
 import org.hibernate.xml.spi.BindResult;
 
+import org.jboss.jandex.IndexView;
+
 /**
- * Contract for integrations that wish to provide additional mappings (in the form of {@link org.hibernate.xml.spi.BindResult}.  This hook
- * is performed after all other mappings, annotations, etc have completed processing.
+ * Contract for integrations that wish to provide additional mappings (in the form of
+ * {@link org.hibernate.xml.spi.BindResult}.  This hook is performed after all other
+ * mappings, annotations, etc have completed processing.
  *
  * @author Steve Ebersole
  */
@@ -39,10 +40,10 @@ public interface AdditionalJaxbRootProducer {
 	/**
 	 * Produce and return the list of additional mappings to be processed.
 	 *
-	 * @param metadata The metadata (for access to binding information).
+	 * @param metadataCollector The metadata (for access to binding information).
 	 * @param jandexIndex The Jandex annotation index
 	 *
 	 * @return List of additional mappings
 	 */
-	public List<BindResult> produceRoots(MetadataImplementor metadata, IndexView jandexIndex);
+	public List<BindResult> produceRoots(InFlightMetadataCollector metadataCollector, IndexView jandexIndex);
 }

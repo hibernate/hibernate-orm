@@ -42,7 +42,10 @@ public class MutliTenancySourceImpl implements MultiTenancySource  {
 	private final boolean bindAsParameter;
 
 	public MutliTenancySourceImpl(EntityClass entityClass) {
-		final ClassLoaderService classLoaderService = entityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = entityClass.getLocalBindingContext()
+				.getBuildingOptions()
+				.getServiceRegistry()
+				.getService( ClassLoaderService.class );
 		
 		final AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(),

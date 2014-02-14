@@ -163,7 +163,7 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		final AnnotationInstance mapKeyAnnotation =
 				JandexHelper.getSingleAnnotation( pluralAssociationAttribute().annotations(), JPADotNames.MAP_KEY );
 		final String attributeName = JandexHelper.getValue( mapKeyAnnotation, "name", String.class,
-				entityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
+				entityClass.getLocalBindingContext().getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 		final PluralAttributeIndexSource innerIndexSource;
 		if ( attributeName == null ) {
 			IdentifierSource identifierSource = attributeSourceResolutionContext.resolveIdentifierSource(

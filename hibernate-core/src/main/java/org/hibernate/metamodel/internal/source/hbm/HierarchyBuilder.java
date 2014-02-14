@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
@@ -42,6 +43,7 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSqlQueryElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSubclassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbUnionSubclassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.SubEntityElement;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntityContainer;
@@ -51,9 +53,9 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
  * @author Steve Ebersole
  */
 public class HierarchyBuilder {
-	private static final CoreMessageLogger LOG = Logger
-			.getMessageLogger( CoreMessageLogger.class, HierarchyBuilder.class.getName() );
-	private final MetadataImplementor metadata;
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HierarchyBuilder.class );
+
+	private final BindingContext bindingContext;
 	
 	private final List<EntityHierarchyImpl> entityHierarchies = new ArrayList<EntityHierarchyImpl>();
 
@@ -64,8 +66,8 @@ public class HierarchyBuilder {
 	// mapping file specific state
 	private MappingDocument currentMappingDocument;
 	
-	public HierarchyBuilder( MetadataImplementor metadata ) {
-		this.metadata = metadata;
+	public HierarchyBuilder(BindingContext bindingContext) {
+		this.bindingContext = bindingContext;
 	}
 
 	public void processMappingDocument(MappingDocument mappingDocument) {
@@ -203,14 +205,14 @@ public class HierarchyBuilder {
 		queryNamePrefix = StringHelper.isNotEmpty( queryNamePrefix ) ? queryNamePrefix : currentMappingDocument.getMappingLocalBindingContext().qualifyClassName( entityElement.getName() );
 		for ( final JaxbQueryElement element : entityElement.getQuery() ) {
 			element.setName( queryNamePrefix + "." + element.getName() );
-			NamedQueryBindingHelper.bindNamedQuery( element, metadata );
+			NamedQueryBindingHelper.bindNamedQuery( element, bindingContext.getMetadataCollector() );
 		}
 		for ( final JaxbSqlQueryElement element : entityElement.getSqlQuery() ) {
 			element.setName( queryNamePrefix + "." + element.getName() );
 			NamedQueryBindingHelper.bindNamedSQLQuery(
 					element,
 					currentMappingDocument.getMappingLocalBindingContext(),
-					metadata
+					bindingContext.getMetadataCollector()
 			);
 		}
 	}

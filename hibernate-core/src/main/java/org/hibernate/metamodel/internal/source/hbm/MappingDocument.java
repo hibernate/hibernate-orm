@@ -25,22 +25,18 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
 
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.spi.MetadataBuildingOptions;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
-import org.hibernate.xml.spi.BindResult;
-import org.hibernate.xml.spi.Origin;
+import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFetchProfileElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
-import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.xml.spi.BindResult;
+import org.hibernate.xml.spi.Origin;
 
 /**
  * Aggregates together information about a mapping document.
@@ -51,9 +47,9 @@ public class MappingDocument {
 	private final BindResult<JaxbHibernateMapping> hbmBindResult;
 	private final LocalBindingContextImpl mappingLocalBindingContext;
 
-	public MappingDocument(BindResult<JaxbHibernateMapping> hbmBindResult, MetadataImplementor metadata) {
+	public MappingDocument(BindResult<JaxbHibernateMapping> hbmBindResult, BindingContext bindingContext) {
 		this.hbmBindResult = hbmBindResult;
-		this.mappingLocalBindingContext = new LocalBindingContextImpl( metadata );
+		this.mappingLocalBindingContext = new LocalBindingContextImpl( bindingContext );
 
 	}
 
@@ -73,15 +69,14 @@ public class MappingDocument {
 		return mappingLocalBindingContext;
 	}
 
-	private class LocalBindingContextImpl implements HbmBindingContext {
-		private final MetadataImplementor metadata;
+	private class LocalBindingContextImpl extends BaseDelegatingBindingContext implements HbmBindingContext {
 		private final MappingDefaults localMappingDefaults;
 		private final MetaAttributeContext metaAttributeContext;
 
-		private LocalBindingContextImpl(MetadataImplementor metadata) {
-			this.metadata = metadata;
+		private LocalBindingContextImpl(BindingContext rootBindingContext) {
+			super( rootBindingContext );
 			this.localMappingDefaults = new OverriddenMappingDefaults(
-					metadata.getMappingDefaults(),
+					rootBindingContext.getMappingDefaults(),
 					hbmBindResult.getRoot().getPackage(),
 					hbmBindResult.getRoot().getSchema(),
 					hbmBindResult.getRoot().getCatalog(),
@@ -92,26 +87,24 @@ public class MappingDocument {
 					hbmBindResult.getRoot().getDefaultAccess(),
 					hbmBindResult.getRoot().isDefaultLazy()
 			);
+
 			if ( CollectionHelper.isEmpty( hbmBindResult.getRoot().getMeta() ) ) {
-				this.metaAttributeContext = new MetaAttributeContext( metadata.getGlobalMetaAttributeContext() );
+				this.metaAttributeContext = new MetaAttributeContext(
+						rootBindingContext.getGlobalMetaAttributeContext()
+				);
 			}
 			else {
 				this.metaAttributeContext = Helper.extractMetaAttributeContext(
 						hbmBindResult.getRoot().getMeta(),
 						true,
-						metadata.getGlobalMetaAttributeContext()
+						rootBindingContext.getGlobalMetaAttributeContext()
 				);
 			}
 		}
 
 		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return metadata.getServiceRegistry();
-		}
-
-		@Override
-		public NamingStrategy getNamingStrategy() {
-			return metadata.getNamingStrategy();
+		public String qualifyClassName(String unqualifiedName) {
+			return Helper.qualifyIfNeeded( unqualifiedName, getMappingDefaults().getPackageName() );
 		}
 
 		@Override
@@ -120,40 +113,18 @@ public class MappingDocument {
 		}
 
 		@Override
-		public MetadataBuildingOptions getBuildingOptions() {
-			return metadata.getBuildingOptions();
+		public Origin getOrigin() {
+			return hbmBindResult.getOrigin();
 		}
 
 		@Override
-		public MetadataImplementor getMetadataImplementor() {
-			return metadata;
+		public MappingException makeMappingException(String message) {
+			return new MappingException( message, getOrigin() );
 		}
 
 		@Override
-		public <T> Class<T> locateClassByName(String name) {
-			return metadata.locateClassByName( name );
-		}
-
-		@Override
-		public Type makeDomainType(String className) {
-			return metadata.makeDomainType( className );
-		}
-
-		@Override
-		public JavaClassReference makeJavaClassReference(String className) {
-			return metadata.makeJavaClassReference( className );
-		}
-
-		@Override
-		public JavaClassReference makeJavaClassReference(Class<?> clazz) {
-			return metadata.makeJavaClassReference( clazz );
-		}
-
-		@Override
-		public JavaClassReference makeJavaPropertyClassReference(
-				JavaClassReference propertyContainerClassReference,
-				String propertyName) {
-			return metadata.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
+		public MappingException makeMappingException(String message, Exception cause) {
+			return new MappingException( message, cause, getOrigin() );
 		}
 
 		@Override
@@ -167,38 +138,13 @@ public class MappingDocument {
 		}
 
 		@Override
-		public Origin getOrigin() {
-			return hbmBindResult.getOrigin();
-		}
-
-		@Override
-		public String qualifyClassName(String unqualifiedName) {
-			return Helper.qualifyIfNeeded( unqualifiedName, getMappingDefaults().getPackageName() );
-		}
-
-		@Override
 		public String determineEntityName(EntityElement entityElement) {
 			return Helper.determineEntityName( entityElement, getMappingDefaults().getPackageName() );
 		}
 
 		@Override
-		public boolean isGloballyQuotedIdentifiers() {
-			return metadata.isGloballyQuotedIdentifiers();
-		}
-
-		@Override
 		public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName) {
 			// todo : this really needs to not be part of the context
-		}
-
-		@Override
-		public MappingException makeMappingException(String message) {
-			return new MappingException( message, getOrigin() );
-		}
-
-		@Override
-		public MappingException makeMappingException(String message, Exception cause) {
-			return new MappingException( message, cause, getOrigin() );
 		}
 	}
 }

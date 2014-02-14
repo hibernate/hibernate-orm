@@ -23,19 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.spi.MetadataBuildingOptions;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.service.ServiceRegistry;
+
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.IndexView;
 
@@ -47,11 +42,14 @@ import com.fasterxml.classmate.TypeResolver;
  * 
  * @author Steve Ebersole
  */
-public class EntityBindingContext implements LocalBindingContext, AnnotationBindingContext {
+public class EntityBindingContext
+		extends BaseDelegatingBindingContext
+		implements LocalBindingContext, AnnotationBindingContext {
 	private final AnnotationBindingContext contextDelegate;
 	private final Origin origin;
 
 	public EntityBindingContext(AnnotationBindingContext contextDelegate, ConfiguredClass source) {
+		super( contextDelegate );
 		this.contextDelegate = contextDelegate;
 		this.origin = new Origin( SourceType.ANNOTATION, source.getName() );
 	}
@@ -69,68 +67,6 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	@Override
 	public MappingException makeMappingException(String message, Exception cause) {
 		return new MappingException( message, cause, getOrigin() );
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return contextDelegate.getServiceRegistry();
-	}
-
-	@Override
-	public NamingStrategy getNamingStrategy() {
-		return contextDelegate.getNamingStrategy();
-	}
-
-	@Override
-	public MappingDefaults getMappingDefaults() {
-		return contextDelegate.getMappingDefaults();
-	}
-
-	@Override
-	public MetadataBuildingOptions getBuildingOptions() {
-		return contextDelegate.getBuildingOptions();
-	}
-
-	@Override
-	public MetadataImplementor getMetadataImplementor() {
-		return contextDelegate.getMetadataImplementor();
-	}
-
-	@Override
-	public <T> Class<T> locateClassByName(String name) {
-		return contextDelegate.locateClassByName( name );
-	}
-
-	@Override
-	public Type makeDomainType(String className) {
-		return contextDelegate.makeDomainType( className );
-	}
-
-	@Override
-	public boolean isGloballyQuotedIdentifiers() {
-		return contextDelegate.isGloballyQuotedIdentifiers();
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(String className) {
-		return contextDelegate.makeJavaClassReference( className );
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
-		return contextDelegate.makeJavaClassReference( clazz );
-	}
-
-	@Override
-	public JavaClassReference makeJavaPropertyClassReference(
-			JavaClassReference propertyContainerClassReference,
-			String propertyName) {
-		return contextDelegate.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
-	}
-
-	@Override
-	public String qualifyClassName(String name) {
-		return contextDelegate.qualifyClassName( name );
 	}
 
 	@Override

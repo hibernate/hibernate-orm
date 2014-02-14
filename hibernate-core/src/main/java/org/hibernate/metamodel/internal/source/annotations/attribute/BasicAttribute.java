@@ -330,7 +330,10 @@ public class BasicAttribute extends MappedAttribute {
 		if ( StringHelper.isNotEmpty( name ) ) {
 			generator = getContext().findIdGenerator( name );
 			if ( generator == null ) {
-				throw new MappingException( String.format( "Unable to find named generator %s", getRole() ), getContext().getOrigin() );
+				throw new MappingException(
+						String.format( "Unable to find named generator [%s] for %s", name, getRole() ),
+						getContext().getOrigin()
+				);
 			}
 		}
 		else {

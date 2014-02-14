@@ -21,8 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.spi.source;
+package org.hibernate.metamodel.spi;
 
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.xml.spi.Origin;
 
 /**

@@ -35,7 +35,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.xml.spi.Origin;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
@@ -45,18 +44,20 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.hibernate.xml.spi.Origin;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -86,7 +87,7 @@ public class EntitySourceImpl implements EntitySource {
 		}
 		
 		this.bindingContext = entityClass.getLocalBindingContext();
-		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
 		addImports();
 		this.filterSources = buildFilterSources();
@@ -464,8 +465,8 @@ public class EntitySourceImpl implements EntitySource {
 
 	private void addImports() {
 		try {
-			final MetadataImplementor metadataImplementor = entityClass.getLocalBindingContext()
-					.getMetadataImplementor();
+			final InFlightMetadataCollector metadataImplementor = entityClass.getLocalBindingContext()
+					.getMetadataCollector();
 			metadataImplementor.addImport( getJpaEntityName(), getEntityName() );
 			if ( !getEntityName().equals( getJpaEntityName() ) ) {
 				metadataImplementor.addImport( getEntityName(), getEntityName() );

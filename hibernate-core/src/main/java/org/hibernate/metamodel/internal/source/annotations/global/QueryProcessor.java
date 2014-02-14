@@ -84,7 +84,7 @@ public class QueryProcessor {
 	 * @param bindingContext the context for annotation binding
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
 				bindingContext.getIndex(),
 				JPADotNames.NAMED_QUERY,
@@ -128,12 +128,9 @@ public class QueryProcessor {
 
 	/**
 	 * Binds {@link javax.persistence.NamedQuery} as well as {@link org.hibernate.annotations.NamedQuery}.
-	 *
-	 * @param metadata the current metadata
-	 * @param annotation the named query annotation
 	 */
 	private static void bindNamedQuery(AnnotationBindingContext bindingContext, AnnotationInstance annotation) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		final String name = JandexHelper.getValue( annotation, "name", String.class, classLoaderService );
 		if ( StringHelper.isEmpty( name ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
@@ -158,7 +155,7 @@ public class QueryProcessor {
 		}
 
 
-		bindingContext.getMetadataImplementor().addNamedQuery(builder.createNamedQueryDefinition());
+		bindingContext.getMetadataCollector().addNamedQuery(builder.createNamedQueryDefinition());
 		LOG.debugf( "Binding named query: %s => %s", name, query );
 	}
 
@@ -212,7 +209,7 @@ public class QueryProcessor {
 			String name,
 			String query,
 			AnnotationBindingContext bindingContext){
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		AnnotationInstance[] hints = JandexHelper.getValue( annotation, "hints", AnnotationInstance[].class,
 				classLoaderService );
 
@@ -253,7 +250,7 @@ public class QueryProcessor {
 	}
 
 	private static void bindNamedNativeQuery(AnnotationInstance annotation, AnnotationBindingContext bindingContext) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		String name = JandexHelper.getValue( annotation, "name", String.class, classLoaderService );
 		if ( StringHelper.isEmpty( name ) ) {
 			throw new AnnotationException( "A named native query must have a name when used in class or package level" );
@@ -294,7 +291,7 @@ public class QueryProcessor {
 		boolean callable = getBoolean( hints, QueryHints.CALLABLE, name, bindingContext );
 		NamedSQLQueryDefinition def;
 		if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
-			boolean resultSetMappingExists = bindingContext.getMetadataImplementor().getResultSetMappingDefinitions().containsKey( resultSetMapping );
+			boolean resultSetMappingExists = bindingContext.getMetadataCollector().getResultSetMappingDefinitions().containsKey( resultSetMapping );
 			if ( !resultSetMappingExists ) {
 				throw new MappingException(
 						String.format(
@@ -355,7 +352,7 @@ public class QueryProcessor {
 					.setCallable( callable )
 					.createNamedQueryDefinition();
 		}
-		bindingContext.getMetadataImplementor().addNamedNativeQuery( def );
+		bindingContext.getMetadataCollector().addNamedNativeQuery( def );
 		LOG.debugf( "Binding named native query: %s => %s", name, query );
 	}
 
@@ -410,7 +407,7 @@ public class QueryProcessor {
 	}
 
 	private static String getString(AnnotationInstance[] hints, String element, AnnotationBindingContext bindingContext) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		for ( AnnotationInstance hint : hints ) {
 			if ( element.equals( JandexHelper.getValue( hint, "name", String.class, classLoaderService ) ) ) {
 				return JandexHelper.getValue( hint, "value", String.class, classLoaderService );

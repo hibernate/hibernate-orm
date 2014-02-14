@@ -93,7 +93,7 @@ public abstract class AbstractAttributeTypeResolver implements AttributeTypeReso
 	}
 	
 	final protected boolean hasTypeDef() {
-		return context.getMetadataImplementor().hasTypeDefinition(
+		return context.getMetadataCollector().hasTypeDefinition(
 				javaClass().getName()
 		);
 	}

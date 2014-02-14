@@ -87,7 +87,7 @@ public class SqlResultSetProcessor {
 					sqlResultSetMappingsAnnotationInstance,
 					"value",
 					AnnotationInstance[].class,
-					bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
+					bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
 			) ) {
 				bindSqlResultSetMapping( bindingContext, annotationInstance );
 			}
@@ -97,7 +97,7 @@ public class SqlResultSetProcessor {
 	private static int entityAliasIndex = 0;
 
 	private static void bindSqlResultSetMapping(final AnnotationBindingContext bindingContext, final AnnotationInstance annotation) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		entityAliasIndex = 0;
 		final String name = JandexHelper.getValue( annotation, "name", String.class, classLoaderService );
 		LOG.debugf( "Binding @SqlResultSetMapping(name=%s)", name );
@@ -119,15 +119,15 @@ public class SqlResultSetProcessor {
 			bindColumnResult( bindingContext, columnResult, definition );
 		}
 
-		bindingContext.getMetadataImplementor().addResultSetMapping( definition );
+		bindingContext.getMetadataCollector().addResultSetMapping( definition );
 	}
 
 	private static void bindEntityResult(final AnnotationBindingContext bindingContext,
 										 final AnnotationInstance entityResult,
 										 final ResultSetMappingDefinition definition) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		final String className = JandexHelper.getValue( entityResult, "entityClass", String.class, classLoaderService );
-		final EntityBinding targetEntityBinding = bindingContext.getMetadataImplementor().getEntityBinding( className );
+		final EntityBinding targetEntityBinding = bindingContext.getMetadataCollector().getEntityBinding( className );
 		if ( targetEntityBinding == null ) {
 			throw new MappingException(
 					String.format(
@@ -145,11 +145,9 @@ public class SqlResultSetProcessor {
 
 
 		if ( StringHelper.isNotEmpty( discriminatorColumn ) ) {
-			final String quotingNormalizedName = bindingContext.getMetadataImplementor()
+			final String quotingNormalizedName = bindingContext.getMetadataCollector()
 					.getObjectNameNormalizer()
-					.normalizeIdentifierQuoting(
-							discriminatorColumn
-					);
+					.normalizeIdentifierQuoting( discriminatorColumn );
 			propertyResults.put( "class", new String[] { quotingNormalizedName } );
 		}
 		List<FieldResult> fieldResultList = reorderFieldResult(
@@ -177,7 +175,7 @@ public class SqlResultSetProcessor {
 														AnnotationInstance entityResult,
 														EntityBinding entityBinding,
 														String resultSetMappingDefinitionName) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		final AnnotationInstance[] fieldResultAnnotationInstances = JandexHelper.getValue(
 				entityResult,
 				"fields",
@@ -330,14 +328,14 @@ public class SqlResultSetProcessor {
 										 final AnnotationInstance columnResult,
 										 final ResultSetMappingDefinition definition) {
 		final String name = JandexHelper.getValue( columnResult, "name", String.class,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 		final String normalizedName = normalize( bindingContext, name );
 		//todo TYPE
 		definition.addQueryReturn( new NativeSQLQueryScalarReturn( normalizedName, null ) );
 	}
 
 	private static String normalize(final AnnotationBindingContext bindingContext, String name) {
-		return bindingContext.getMetadataImplementor()
+		return bindingContext.getMetadataCollector()
 				.getObjectNameNormalizer()
 				.normalizeIdentifierQuoting( name );
 	}

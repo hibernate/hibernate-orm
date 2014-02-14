@@ -29,19 +29,19 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.hbm.parser.BasicQueryElementContentParser;
+import org.hibernate.metamodel.internal.source.hbm.parser.SQLQueryElementContentParser;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbLoadCollectionElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbQueryElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnPropertyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSqlQueryElement;
-import org.hibernate.metamodel.internal.source.hbm.parser.BasicQueryElementContentParser;
-import org.hibernate.metamodel.internal.source.hbm.parser.SQLQueryElementContentParser;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 
 /**
  * Helper class used to bind named query elements.
@@ -55,21 +55,21 @@ public class NamedQueryBindingHelper {
 	 * Helper method used to bind {@code <query/>} element.
 	 *
 	 * @param queryElement The {@code <query/>} element.
-	 * @param metadata  The {@link org.hibernate.metamodel.Metadata} which this named query will be added to.
+	 * @param metadataCollector  The {@link org.hibernate.metamodel.Metadata} which this named query will be added to.
 	 */
 	public static void bindNamedQuery(
 			final JaxbQueryElement queryElement,
-			final MetadataImplementor metadata) {
+			final InFlightMetadataCollector metadataCollector) {
 		final NamedQueryDefinitionBuilder builder = new NamedQueryDefinitionBuilder();
 		final BasicQueryElementContentParser parser = new BasicQueryElementContentParser();
 		parser.parse( builder, queryElement );
-		metadata.addNamedQuery( builder.createNamedQueryDefinition() );
+		metadataCollector.addNamedQuery( builder.createNamedQueryDefinition() );
 	}
 
 	public static void bindNamedSQLQuery(
 			final JaxbSqlQueryElement queryElement,
 			final LocalBindingContext bindingContext,
-			final MetadataImplementor metadata) {
+			final InFlightMetadataCollector metadataCollector) {
 		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder();
 		final SQLQueryElementContentParser parser = new SQLQueryElementContentParser();
 
@@ -86,9 +86,9 @@ public class NamedQueryBindingHelper {
 			namedQuery = builder.createNamedQueryDefinition();
 		}
 		else {
-			namedQuery = parser.buildQueryReturns( queryElement.getName(),builder, bindingContext, metadata );
+			namedQuery = parser.buildQueryReturns( queryElement.getName(),builder, bindingContext, metadataCollector );
 		}
-		metadata.addNamedNativeQuery( namedQuery );
+		metadataCollector.addNamedNativeQuery( namedQuery );
 	}
 
 

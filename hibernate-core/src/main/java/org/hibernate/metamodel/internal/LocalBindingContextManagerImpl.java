@@ -26,12 +26,12 @@ package org.hibernate.metamodel.internal;
 import java.util.LinkedList;
 
 import org.hibernate.EntityMode;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 
 /**
@@ -85,7 +85,7 @@ public class LocalBindingContextManagerImpl implements EntityHierarchyHelper.Loc
 
 	@Override
 	public EntityBinding getEntityBinding() {
-		return getMetadataImplementor().getEntityBinding( getEntitySource().getEntityName() );
+		return getMetadataCollector().getEntityBinding( getEntitySource().getEntityName() );
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class LocalBindingContextManagerImpl implements EntityHierarchyHelper.Loc
 		final EntitySource superEntitySource = getSuperEntitySource();
 		return superEntitySource == null ?
 				null :
-				getMetadataImplementor().getEntityBinding( superEntitySource.getEntityName() );
+				getMetadataCollector().getEntityBinding( superEntitySource.getEntityName() );
 	}
 
 	@Override
@@ -101,8 +101,8 @@ public class LocalBindingContextManagerImpl implements EntityHierarchyHelper.Loc
 		return getEntitySource().getLocalBindingContext();
 	}
 
-	private MetadataImplementor getMetadataImplementor() {
-		return localBindingContext().getMetadataImplementor();
+	private InFlightMetadataCollector getMetadataCollector() {
+		return localBindingContext().getMetadataCollector();
 	}
 
 	private EntitySource getSuperEntitySource() {

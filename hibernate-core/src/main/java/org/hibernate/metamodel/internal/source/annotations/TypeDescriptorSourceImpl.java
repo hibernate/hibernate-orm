@@ -47,12 +47,12 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 	public TypeDescriptorSourceImpl(AnnotationInstance typeDefAnnotation, AnnotationBindingContext bindingContext) {
 		this.bindingContext = bindingContext;
 		this.name = JandexHelper.getValue( typeDefAnnotation, "name", String.class,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 		this.implementationClassName = JandexHelper.getValue( typeDefAnnotation, "typeClass", String.class,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 
 		String defaultForType = JandexHelper.getValue( typeDefAnnotation, "defaultForType", String.class,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 		if ( defaultForType != null ) {
 			if ( void.class.getName().equals( defaultForType ) ) {
 				defaultForType = null;
@@ -79,14 +79,14 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 				typeDefAnnotation,
 				"parameters",
 				AnnotationInstance[].class,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance parameterAnnotation : parameterAnnotations ) {
 			parameterMaps.put(
 					JandexHelper.getValue( parameterAnnotation, "name", String.class,
-							bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) ),
+							bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) ),
 					JandexHelper.getValue( parameterAnnotation, "value", String.class,
-							bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) )
+							bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 		}
 		return parameterMaps;

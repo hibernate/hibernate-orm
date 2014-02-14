@@ -28,7 +28,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 

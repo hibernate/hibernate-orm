@@ -24,93 +24,32 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.DuplicateMappingException;
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.common.util.StringHelper;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.CacheRegionDefinition;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
-import org.hibernate.xml.spi.BindResult;
-import org.hibernate.metamodel.MetadataSourceProcessingOrder;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.source.internal.jandex.Unifier;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
-import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
-import org.hibernate.metamodel.spi.MetadataBuildingOptions;
-import org.hibernate.metamodel.spi.MetadataContributor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.MetadataSourceProcessor;
-import org.hibernate.metamodel.spi.TypeContributions;
-import org.hibernate.metamodel.spi.TypeContributor;
-import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
-import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
-import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
-import org.hibernate.metamodel.spi.domain.BasicType;
-import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
-import org.hibernate.metamodel.spi.source.FilterParameterSource;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
-
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -120,30 +59,14 @@ import org.jboss.logging.Logger;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			MetadataImpl.class.getName()
-	);
-
-	private final ServiceRegistry serviceRegistry;
-	private final MetadataBuildingOptions options;
-
-	private final ClassLoaderService classLoaderService;
-//	private final transient ValueHolder<PersisterClassResolver> persisterClassResolverService;
-
-	private final TypeResolver typeResolver;
-
-	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
+	private final StandardServiceRegistry serviceRegistry;
 
 	private final Database database;
-
-	private final MappingDefaults mappingDefaults;
-	private final ObjectNameNormalizer nameNormalizer;
+	private final TypeResolver typeResolver;
+	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
-
 	private final Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private final Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private final Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
@@ -155,243 +78,79 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>(  );
 	private final Map<Identifier, SecondaryTable> secondaryTableMap = new HashMap<Identifier, SecondaryTable>(  );
 
-    private boolean globallyQuotedIdentifiers = false;
+	MetadataImpl(
+			StandardServiceRegistry serviceRegistry,
+			Database database,
+			TypeResolver typeResolver,
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Map<String, TypeDefinition> typeDefinitionMap,
+			Map<String, FilterDefinition> filterDefinitionMap,
+			Map<String, EntityBinding> entityBindingMap,
+			Map<String, PluralAttributeBinding> collectionBindingMap,
+			Map<String, FetchProfile> fetchProfiles,
+			Map<String, String> imports,
+			Map<String, IdentifierGeneratorDefinition> idGenerators,
+			Map<String, NamedQueryDefinition> namedQueryDefs,
+			Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs,
+			Map<String, ResultSetMappingDefinition> resultSetMappings,
+			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
+			Map<Identifier, SecondaryTable> secondaryTableMap) {
+		this.serviceRegistry = serviceRegistry;
+		this.database = database;
+		this.typeResolver = typeResolver;
+		this.identifierGeneratorFactory = identifierGeneratorFactory;
 
-	public MetadataImpl(MetadataSources metadataSources, MetadataBuildingOptions options) {
-		this.serviceRegistry =  options.getServiceRegistry();
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.options = options;
-		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
-		this.database = new Database(
-				options.getDatabaseDefaults(),
-				serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment()
-		);
-
-		this.mappingDefaults = new MappingDefaultsImpl();
-		this.nameNormalizer = new ObjectNameNormalizer() {
-
-			@Override
-			protected NamingStrategy getNamingStrategy() {
-				return MetadataImpl.this.getNamingStrategy();
-			}
-
-			@Override
-			protected boolean isUseQuotedIdentifiersGlobally() {
-				return MetadataImpl.this.isGloballyQuotedIdentifiers();
-			}
-		};
-
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-
-		final IndexView baseJandexIndex;
-		if ( options.getJandexView() != null ) {
-			baseJandexIndex = options.getJandexView();
+		if ( typeDefinitionMap != null ) {
+			this.typeDefinitionMap.putAll( typeDefinitionMap );
 		}
-		else {
-			final boolean autoIndexMemberTypes = configurationService.getSetting(
-					AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES,
-					StandardConverters.BOOLEAN,
-					false
-			);
-			baseJandexIndex = metadataSources.buildJandexView( autoIndexMemberTypes );
+		if ( filterDefinitionMap != null ) {
+			this.filterDefinitionMap.putAll( filterDefinitionMap );
 		}
-
-		final List<BindResult<JaxbEntityMappings>> jpaXmlBindings = new ArrayList<BindResult<JaxbEntityMappings>>();
-		for ( BindResult bindResult : metadataSources.getBindResultList() ) {
-			if ( JaxbEntityMappings.class.isInstance( bindResult.getRoot() ) ) {
-				// todo : this will be checked after hbm transformation is in place.
-				//noinspection unchecked
-				jpaXmlBindings.add( bindResult );
-			}
+		if ( entityBindingMap != null ) {
+			this.entityBindingMap.putAll( entityBindingMap );
 		}
-		final IndexView jandexView = Unifier.unify( baseJandexIndex, jpaXmlBindings, serviceRegistry );
-
-		final MetadataSourceProcessor[] metadataSourceProcessors;
-		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
-			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new HbmMetadataSourceProcessorImpl( this, metadataSources ),
-					new AnnotationMetadataSourceProcessorImpl( this, jandexView )
-			};
+		if ( collectionBindingMap != null ) {
+			this.collectionBindingMap.putAll( collectionBindingMap );
 		}
-		else {
-			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new AnnotationMetadataSourceProcessorImpl( this, jandexView ),
-					new HbmMetadataSourceProcessorImpl( this, metadataSources )
-			};
+		if ( fetchProfiles != null ) {
+			this.fetchProfiles.putAll( fetchProfiles );
 		}
-
-//		this.persisterClassResolverService = new ValueHolder<PersisterClassResolver>(
-//				new ValueHolder.DeferredInitializer<PersisterClassResolver>() {
-//					@Override
-//					public PersisterClassResolver initialize() {
-//						return serviceRegistry.getService( PersisterClassResolver.class );
-//					}
-//				}
-//		);
-
-		processTypeDefinitions( metadataSourceProcessors );
-
-
-		// build BasicTypeRegistry and TypeResolver ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// 		ultimately this needs to change a little bit to account for HHH-7792
-		final BasicTypeRegistry basicTypeRegistry = new BasicTypeRegistry();
-
-		{
-			final TypeContributions typeContributions = new TypeContributions() {
-				@Override
-				public void contributeType(org.hibernate.type.BasicType type) {
-					basicTypeRegistry.register( type );
-				}
-
-				@Override
-				public void contributeType(UserType type, String[] keys) {
-					basicTypeRegistry.register( type, keys );
-				}
-
-				@Override
-				public void contributeType(CompositeUserType type, String[] keys) {
-					basicTypeRegistry.register( type, keys );
-				}
-			};
-
-			// add Dialect contributed types
-			final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
-			dialect.contributeTypes( typeContributions, serviceRegistry );
-
-			// add TypeContributor contributed types.
-			for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
-				contributor.contribute( typeContributions, serviceRegistry );
-			}
+		if ( imports != null ) {
+			this.imports.putAll( imports );
 		}
-
-		// add explicit application registered types
-		for ( org.hibernate.type.BasicType basicType : options.getBasicTypeRegistrations() ) {
-			basicTypeRegistry.register( basicType );
+		if ( idGenerators != null ) {
+			this.idGenerators.putAll( idGenerators );
 		}
-
-		typeResolver = new TypeResolver( basicTypeRegistry, new TypeFactory() );
-
-		processFilterDefinitions( metadataSourceProcessors );
-		processIdentifierGenerators( metadataSourceProcessors );
-		processMappings( metadataSourceProcessors );
-		bindMappingDependentMetadata( metadataSourceProcessors );
-
-		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
-			contributor.contribute( this, jandexView );
+		if ( namedQueryDefs != null ) {
+			this.namedQueryDefs.putAll( namedQueryDefs );
 		}
-
-		final List<BindResult> bindResults = new ArrayList<BindResult>();
-		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
-			bindResults.addAll( producer.produceRoots( this, jandexView ) );
+		if ( namedNativeQueryDefs != null ) {
+			this.namedNativeQueryDefs.putAll( namedNativeQueryDefs );
 		}
-		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( this, bindResults );
-		final Binder binder = new Binder( this, identifierGeneratorFactory );
-		binder.addEntityHierarchies( processor.extractEntityHierarchies() );
-		binder.bindEntityHierarchies();
-
-		secondPass(metadataSources);
-	}
-
-
-
-	// type definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private void processTypeDefinitions(MetadataSourceProcessor[] metadataSourceProcessors) {
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDefinitionSources() ) {
-				addTypeDefinition(
-						new TypeDefinition(
-								typeDescriptorSource.getName(),
-								classLoaderService.classForName( typeDescriptorSource.getTypeImplementationClassName() ),
-								typeDescriptorSource.getRegistrationKeys(),
-								typeDescriptorSource.getParameters()
-						)
-				);
-			}
+		if ( resultSetMappings != null ) {
+			this.resultSetMappings.putAll( resultSetMappings );
 		}
-	}
-	
-	private void secondPass(MetadataSources metadataSources) {
-		// This must be done outside of Table, rather than statically, to ensure
-		// deterministic alias names.  See HHH-2448.
-		int uniqueInteger = 0;
-		for ( Schema schema : database.getSchemas() ) {
-			for ( Table table : schema.getTables() ) {
-				table.setTableNumber( uniqueInteger++ );
-			}
+		if ( namedEntityGraphMap != null ) {
+			this.namedEntityGraphMap.putAll( namedEntityGraphMap );
 		}
-
-		if ( options.getCacheRegionDefinitions() == null || options.getCacheRegionDefinitions().isEmpty() ) {
-			return;
+		if ( secondaryTableMap != null ) {
+			this.secondaryTableMap.putAll( secondaryTableMap );
 		}
-
-		for ( CacheRegionDefinition cacheRegionDefinition : options.getCacheRegionDefinitions() ) {
-			final String role = cacheRegionDefinition.getRole();
-			if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-				EntityBinding entityBinding = entityBindingMap.get( role );
-				if ( entityBinding != null ) {
-					entityBinding.getHierarchyDetails()
-							.setCaching(
-									new Caching(
-											cacheRegionDefinition.getRegion(),
-											AccessType.fromExternalName( cacheRegionDefinition.getUsage() ),
-											cacheRegionDefinition.isCacheLazy()
-									)
-							);
-				}
-				else{
-					//logging?
-					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
-				}
-
-			}
-			else if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
-				PluralAttributeBinding pluralAttributeBinding = collectionBindingMap.get( role );
-				if(pluralAttributeBinding!=null){
-					AbstractPluralAttributeBinding.class.cast( pluralAttributeBinding ).setCaching( new Caching(
-							cacheRegionDefinition.getRegion(),
-							AccessType.fromExternalName( cacheRegionDefinition.getUsage() ),
-							cacheRegionDefinition.isCacheLazy()
-					) );
-				}  else {
-					//logging?
-					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
-				}
-			}
-		}
-
 	}
 
 	@Override
-	public ObjectNameNormalizer getObjectNameNormalizer() {
-		return nameNormalizer;
+	public Database getDatabase() {
+		return database;
 	}
 
 	@Override
-	public void addTypeDefinition( TypeDefinition typeDefinition ) {
-		if ( typeDefinition == null ) {
-			throw new IllegalArgumentException( "Type definition is null" );
-		}
-		
-		// Need to register both by name and registration keys.
-		if ( !StringHelper.isEmpty( typeDefinition.getName() ) ) {
-			addTypeDefinition( typeDefinition.getName(), typeDefinition );
-		}
-		
-		for ( String registrationKey : typeDefinition.getRegistrationKeys() ) {
-			addTypeDefinition( registrationKey, typeDefinition );
-		}
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
-	
-	private void addTypeDefinition( String registrationKey,
-			TypeDefinition typeDefinition ) {
-		final TypeDefinition previous = typeDefinitionMap.put( 
-				registrationKey, typeDefinition );
-		if ( previous != null ) {
-			LOG.debugf( "Duplicate typedef name [%s] now -> %s", 
-					registrationKey,
-					typeDefinition.getTypeImplementorClass().getName() );
-		}
+
+	@Override
+	public TypeResolver getTypeResolver() {
+		return typeResolver;
 	}
 
 	@Override
@@ -410,84 +169,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void addNamedEntityGraph(NamedEntityGraphDefinition definition) {
-		final String name = definition.getRegisteredName();
-		final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
-		if ( previous != null ) {
-			throw new DuplicateMappingException( "NamedEntityGraph", name );
-		}
-	}
-
-	@Override
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap;
 	}
 
-	// filter definitions  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private void processFilterDefinitions(MetadataSourceProcessor[] metadataSourceProcessors) {
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( FilterDefinitionSource filterDefinitionSource : processor.extractFilterDefinitionSources() ) {
-				addFilterDefinition(
-						new FilterDefinition(
-								filterDefinitionSource.getName(),
-								filterDefinitionSource.getCondition(),
-								resolveFilterDefinitionParamType(filterDefinitionSource.getParameterSources())
-						)
-				);
-			}
-		}
-	}
-
-	private Map<String, org.hibernate.type.Type> resolveFilterDefinitionParamType(Iterable<FilterParameterSource> filterParameterSources){
-		if( CollectionHelper.isEmpty( filterParameterSources )){
-			return Collections.EMPTY_MAP;
-		}
-		Map<String, org.hibernate.type.Type> params = new HashMap<String, org.hibernate.type.Type>(  );
-		for(final FilterParameterSource parameterSource : filterParameterSources){
-			final String name = parameterSource.getParameterName();
-			final String typeName = parameterSource.getParameterValueTypeName();
-			final org.hibernate.type.Type type = getTypeResolver().heuristicType( typeName );
-			params.put( name, type );
-		}
-		return params;
-	}
-
-	@Override
-	public void addFilterDefinition(FilterDefinition filterDefinition) {
-		if ( filterDefinition == null || filterDefinition.getFilterName() == null ) {
-			throw new IllegalArgumentException( "Filter definition object or name is null: "  + filterDefinition );
-		}
-		filterDefinitionMap.put( filterDefinition.getFilterName(), filterDefinition );
-	}
 	@Override
 	public Map<String, FilterDefinition> getFilterDefinitions() {
 		return filterDefinitionMap;
-	}
-
-
-	// identifier generators ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private void processIdentifierGenerators(MetadataSourceProcessor[] metadataSourceProcessors) {
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( IdentifierGeneratorSource identifierGeneratorSource : processor.extractGlobalIdentifierGeneratorSources() ) {
-				addIdGenerator(
-						new IdentifierGeneratorDefinition(
-								identifierGeneratorSource.getGeneratorName(),
-								identifierGeneratorSource.getGeneratorImplementationName(),
-								identifierGeneratorSource.getParameters()
-						)
-				);
-			}
-		}
-	}
-
-	@Override
-	public void addIdGenerator(IdentifierGeneratorDefinition generator) {
-		if ( generator == null || generator.getName() == null ) {
-			throw new IllegalArgumentException( "ID generator object or name is null." );
-		}
-		idGenerators.put( generator.getName(), generator );
 	}
 
 	@Override
@@ -499,171 +187,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void registerIdentifierGenerator(String name, String generatorClassName) {
-		identifierGeneratorFactory.register( name, classLoaderService.classForName( generatorClassName ) );
-	}
-
-	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
-		final Binder binder = new Binder( this, identifierGeneratorFactory );
-		// Add all hierarchies first, before binding.
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			binder.addEntityHierarchies( processor.extractEntityHierarchies() );
-		}
-		binder.bindEntityHierarchies();
-	}
-
-	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors) {
-		// Create required back references, which are required for one-to-many associations with key bindings that are non-inverse,
-		// non-nullable, and unidirectional
-		for ( PluralAttributeBinding pluralAttributeBinding : collectionBindingMap.values() ) {
-			// Find one-to-many associations with key bindings that are non-inverse and non-nullable
-			PluralAttributeKeyBinding keyBinding = pluralAttributeBinding.getPluralAttributeKeyBinding();
-			if ( keyBinding.isInverse() || keyBinding.isNullable() ||
-					pluralAttributeBinding.getPluralAttributeElementBinding().getNature() !=
-							PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
-				continue;
-			}
-			// Ensure this isn't a bidirectional association by ensuring FK columns don't match relational columns of any
-			// many-to-one on opposite side
-			EntityBinding referencedEntityBinding =
-					entityBindingMap.get(
-							pluralAttributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().
-									getResolvedTypeMapping().getName() );
-			List<RelationalValueBinding> keyValueBindings = keyBinding.getRelationalValueBindings();
-			boolean bidirectional = false;
-			for ( AttributeBinding attributeBinding : referencedEntityBinding.attributeBindings() ) {
-				if ( !(attributeBinding instanceof ManyToOneAttributeBinding) ) {
-					continue;
-				}
-				// Check if the opposite many-to-one attribute binding references the one-to-many attribute binding being processed
-				ManyToOneAttributeBinding manyToOneAttributeBinding = ( ManyToOneAttributeBinding ) attributeBinding;
-				if ( !manyToOneAttributeBinding.getReferencedEntityBinding().equals(
-						pluralAttributeBinding.getContainer().seekEntityBinding() ) ) {
-					continue;
-				}
-				// Check if the many-to-one attribute binding's columns match the one-to-many attribute binding's FK columns
-				// (meaning this is a bidirectional association, and no back reference should be created)
-				List<RelationalValueBinding> valueBindings = manyToOneAttributeBinding.getRelationalValueBindings();
-				if ( keyValueBindings.size() != valueBindings.size() ) {
-					continue;
-				}
-				bidirectional = true;
-				for ( int ndx = valueBindings.size(); --ndx >= 0; ) {
-					if ( keyValueBindings.get(ndx) != valueBindings.get( ndx ) ) {
-						bidirectional = false;
-						break;
-					}
-				}
-				if ( bidirectional ) {
-					break;
-				}
-			}
-			if ( bidirectional ) continue;
-
-			// Create the synthetic back reference attribute
-			SingularAttribute syntheticAttribute =
-					referencedEntityBinding.getEntity().createSyntheticSingularAttribute(
-							SyntheticAttributeHelper.createBackRefAttributeName( pluralAttributeBinding.getAttribute().getRole() ) );
-			// Create the back reference attribute binding.
-			BackRefAttributeBinding backRefAttributeBinding = referencedEntityBinding.makeBackRefAttributeBinding(
-					syntheticAttribute, pluralAttributeBinding, false
-			);
-			backRefAttributeBinding.getHibernateTypeDescriptor().copyFrom( keyBinding.getHibernateTypeDescriptor() );
-			backRefAttributeBinding.getAttribute().resolveType(
-					keyBinding.getReferencedAttributeBinding().getAttribute().getSingularAttributeType() );
-			if ( pluralAttributeBinding.hasIndex() ) {
-				SingularAttribute syntheticIndexAttribute =
-						referencedEntityBinding.getEntity().createSyntheticSingularAttribute(
-								SyntheticAttributeHelper.createIndexBackRefAttributeName( pluralAttributeBinding.getAttribute().getRole() ) );
-				BackRefAttributeBinding indexBackRefAttributeBinding = referencedEntityBinding.makeBackRefAttributeBinding(
-						syntheticIndexAttribute, pluralAttributeBinding, true
-				);
-				final PluralAttributeIndexBinding indexBinding =
-						( (IndexedPluralAttributeBinding) pluralAttributeBinding ).getPluralAttributeIndexBinding();
-				indexBackRefAttributeBinding.getHibernateTypeDescriptor().copyFrom(
-						indexBinding.getHibernateTypeDescriptor()
-				);
-				indexBackRefAttributeBinding.getAttribute().resolveType(
-						indexBinding.getPluralAttributeIndexType()
-				);
-			}
-		}
-
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processMappingDependentMetadata();
-		}
-	}
-
-	@Override
-	public void addFetchProfile(FetchProfile profile) {
-		if ( profile == null || profile.getName() == null ) {
-			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
-		}
-		FetchProfile old = fetchProfiles.put( profile.getName(), profile );
-		if ( old != null ) {
-			LOG.warn( "Duplicated fetch profile with same name [" + profile.getName() + "] found." );
-		}
-	}
-
-	@Override
-	public void addNamedNativeQuery(NamedSQLQueryDefinition def) {
-		if ( def == null ) {
-			throw new IllegalArgumentException( "Named native query definition object is null" );
-		}
-		if ( def.getName() == null ) {
-			throw new IllegalArgumentException( "Named native query definition name is null: " + def.getQueryString() );
-		}
-		NamedSQLQueryDefinition old = namedNativeQueryDefs.put( def.getName(), def );
-		if ( old != null ) {
-			LOG.warn( "Duplicated named query with same name["+ old.getName() +"] found" );
-			//todo mapping exception??
-			// in the old metamodel, the NamedQueryDefinition.name actually not exactly is the one defined in the hbm
-			// there are two cases:
-			// if this <query> or <sql-query> is a sub-element of <hibernate-mapping> then, then name is as it is
-			// but if these two are defined in a <class> ( or sub class ), then the name actually is
-			// entityName.query_name, and the referenced sql resultset mapping's name should also in this form.
-			// same as result mapping definition
-		}
-	}
-
-	public NamedSQLQueryDefinition getNamedNativeQuery(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "null is not a valid native query name" );
-		}
-		return namedNativeQueryDefs.get( name );
-	}
-
-	@Override
 	public Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
 		return namedNativeQueryDefs.values();
-	}
-
-	@Override
-	public void addNamedQuery(NamedQueryDefinition def) {
-		if ( def == null ) {
-			throw new IllegalArgumentException( "Named query definition is null" );
-		}
-		else if ( def.getName() == null ) {
-			throw new IllegalArgumentException( "Named query definition name is null: " + def.getQueryString() );
-		}
-		NamedQueryDefinition old = namedQueryDefs.put( def.getName(), def );
-		if ( old != null ) {
-			LOG.warn( "Duplicated named query with same name["+ old.getName() +"] found" );
-			//todo mapping exception??
-			// in the old metamodel, the NamedQueryDefinition.name actually not exactly is the one defined in the hbm
-			// there are two cases:
-			// if this <query> or <sql-query> is a sub-element of <hibernate-mapping> then, then name is as it is
-			// but if these two are defined in a <class> ( or sub class ), then the name actually is
-			// entityName.query_name, and the referenced sql resultset mapping's name should also in this form.
-			// same as result mapping definition
-		}
-	}
-
-	public NamedQueryDefinition getNamedQuery(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "null is not a valid query name" );
-		}
-		return namedQueryDefs.get( name );
 	}
 
 	@Override
@@ -672,18 +197,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
-		if ( resultSetMappingDefinition == null || resultSetMappingDefinition.getName() == null ) {
-			throw new IllegalArgumentException( "Result-set mapping object or name is null: " + resultSetMappingDefinition );
-		}
-		ResultSetMappingDefinition old = resultSetMappings.put(
-				resultSetMappingDefinition.getName(),
-				resultSetMappingDefinition
-		);
-		if ( old != null ) {
-			LOG.warn( "Duplicated sql result set mapping with same name["+ resultSetMappingDefinition.getName() +"] found" );
-			//todo mapping exception??
-		}
+	public NamedSQLQueryDefinition getNamedNativeQuery(String name) {
+		return namedNativeQueryDefs.get( name );
 	}
 
 	@Override
@@ -691,90 +206,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return resultSetMappings;
 	}
 
-//	private PersisterClassResolver persisterClassResolverService() {
-//		return persisterClassResolverService.getValue();
-//	}
-
 	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
-	}
-
-	@Override
-	@SuppressWarnings( {"unchecked"})
-	public <T> Class<T> locateClassByName(String name) {
-		return classLoaderService.classForName( name );
-	}
-
-	@Override
-	public Type makeDomainType(String className) {
-		// todo : have this perform some analysis of the incoming type name to determine appropriate return
-		return new BasicType( className, makeJavaClassReference( className ) );
-	}
-
-	private Map<String, JavaClassReference> nameToJavaTypeMap = new HashMap<String, JavaClassReference>();
-
-	@Override
-	public JavaClassReference makeJavaClassReference(final String className) {
-		if ( className == null ) {
-			throw new IllegalArgumentException( "className must be non-null." );
-		}
-		JavaClassReference javaClassReference = nameToJavaTypeMap.get( className );
-		if ( javaClassReference == null ) {
-			javaClassReference = new JavaClassReference( className, classLoaderService );
-			nameToJavaTypeMap.put( className, javaClassReference );
-		}
-		return javaClassReference;
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
-		if ( clazz == null ) {
-			throw new IllegalArgumentException( "clazz must be non-null." );
-		}
-		JavaClassReference javaClassReference = nameToJavaTypeMap.get( clazz.getName() );
-		if ( javaClassReference == null ) {
-			javaClassReference = new JavaClassReference( clazz );
-			nameToJavaTypeMap.put( clazz.getName(), javaClassReference );
-		}
-		return javaClassReference;
-	}
-
-	@Override
-	public JavaClassReference makeJavaPropertyClassReference(
-			JavaClassReference propertyContainerClassReference,
-			String propertyName) {
-		if ( propertyContainerClassReference == null || propertyName == null ) {
-			throw new IllegalArgumentException( "propertyContainerClassReference and propertyName must be non-null." );
-		}
-		try {
-			return makeJavaClassReference(
-					ReflectHelper.reflectedPropertyClass(
-							propertyContainerClassReference.getResolvedClass(),
-							propertyName
-					)
-			);
-		}
-		catch ( Exception ignore ) {
-			LOG.debugf(
-					"Unable to locate attribute [%s] on class [%s]",
-					propertyName,
-					propertyContainerClassReference.getName()
-			);
-		}
-		return null;
-	}
-
-	@Override
-	public String qualifyClassName(String name) {
-		return name;
-	}
-
-	@Override
-	public Database getDatabase() {
-		return database;
-	}
-
 	public EntityBinding getEntityBinding(String entityName) {
 		return entityBindingMap.get( entityName );
 	}
@@ -795,30 +227,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		throw new AssertionFailure( "Entity binding has no root: " + entityName );
 	}
+
 	@Override
 	public Iterable<EntityBinding> getEntityBindings() {
 		return entityBindingMap.values();
-	}
-	@Override
-	public void addEntity(EntityBinding entityBinding) {
-		final String entityName = entityBinding.getEntity().getName();
-		if ( entityBindingMap.containsKey( entityName ) ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
-		}
-		entityBindingMap.put( entityName, entityBinding );
-		final boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
-		final String className = isPOJO ? entityBinding.getEntity().getClassReference().getName() : null;
-		if ( isPOJO && StringHelper.isEmpty( className ) ) {
-			throw new MappingException( "Entity[" + entityName + "] is mapped as pojo but don't have a class name" );
-		}
-		if ( StringHelper.isNotEmpty( className ) && !entityBindingMap.containsKey( className ) ) {
-			entityBindingMap.put( className, entityBinding );
-		}
-	}
-
-	@Override
-	public void addSecondaryTable(SecondaryTable secondaryTable) {
-		secondaryTableMap.put( secondaryTable.getSecondaryTableReference().getLogicalName(), secondaryTable );
 	}
 
 	@Override
@@ -826,42 +238,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return secondaryTableMap;
 	}
 
-	public PluralAttributeBinding getCollection(String collectionRole) {
-		return collectionBindingMap.get( collectionRole );
-	}
-
 	@Override
 	public Iterable<PluralAttributeBinding> getCollectionBindings() {
 		return collectionBindingMap.values();
 	}
 
-	@Override
-	public void addCollection(PluralAttributeBinding pluralAttributeBinding) {
-		final String owningEntityName = pluralAttributeBinding.getContainer().seekEntityBinding().getEntityName();
-		final String containerPathBase = pluralAttributeBinding.getContainer().getPathBase();
-		final String attributeName = pluralAttributeBinding.getAttribute().getName();
-		final String collectionRole;
-		if ( StringHelper.isEmpty( containerPathBase ) ) {
-			collectionRole = owningEntityName + '.' + attributeName;
-		}
-		else {
-			collectionRole = owningEntityName + '.' + containerPathBase + '.' + attributeName;
-		}
-		if ( collectionBindingMap.containsKey( collectionRole ) ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, collectionRole );
-		}
-		collectionBindingMap.put( collectionRole, pluralAttributeBinding );
-	}
-	@Override
-	public void addImport(String importName, String entityName) {
-		if ( importName == null || entityName == null ) {
-			throw new IllegalArgumentException( "Import name or entity name is null" );
-		}
-		LOG.tracev( "Import: {0} -> {1}", importName, entityName );
-		String old = imports.put( importName, entityName );
-		if ( old != null ) {
-			LOG.debug( "import name [" + importName + "] overrode previous [{" + old + "}]" );
-		}
+	public PluralAttributeBinding getCollection(String role) {
+		return collectionBindingMap.get( role );
 	}
 
 	@Override
@@ -874,61 +257,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return fetchProfiles.values();
 	}
 
-	public TypeResolver getTypeResolver() {
-		return typeResolver;
-	}
-
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		return new SessionFactoryBuilderImpl( this, options.getServiceRegistry() );
+		return new SessionFactoryBuilderImpl( this, serviceRegistry );
 	}
 
 	@Override
 	public SessionFactory buildSessionFactory() {
 		return getSessionFactoryBuilder().build();
 	}
-
-	@Override
-	public NamingStrategy getNamingStrategy() {
-		return options.getNamingStrategy();
-	}
-
-    @Override
-    public boolean isGloballyQuotedIdentifiers() {
-        return globallyQuotedIdentifiers || options.getDatabaseDefaults().isGloballyQuotedIdentifiers();
-    }
-
-    public void setGloballyQuotedIdentifiers(boolean globallyQuotedIdentifiers){
-       this.globallyQuotedIdentifiers = globallyQuotedIdentifiers;
-    }
-
-    @Override
-	public MappingDefaults getMappingDefaults() {
-		return mappingDefaults;
-	}
-
-	@Override
-	public MetadataBuildingOptions getBuildingOptions() {
-		return options;
-	}
-
-	private final MetaAttributeContext globalMetaAttributeContext = new MetaAttributeContext();
-
-	@Override
-	public MetaAttributeContext getGlobalMetaAttributeContext() {
-		return globalMetaAttributeContext;
-	}
-
-	@Override
-	public MetadataImplementor getMetadataImplementor() {
-		return this;
-	}
-
-	private static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
-	private static final String DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME = "tenant_id";
-	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
-	private static final String DEFAULT_CASCADE = "none";
-	private static final String DEFAULT_PROPERTY_ACCESS = "property";
 
 	@Override
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
@@ -967,62 +304,5 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			throw new MappingException( "unknown property: " + entityName + '.' + propertyName );
 		}
 		return attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-	}
-
-	public static MetadataImpl build(MetadataSources sources, MetadataBuildingOptions options) {
-		return new MetadataImpl( sources, options );
-	}
-
-	private class MappingDefaultsImpl implements MappingDefaults {
-
-		@Override
-		public String getPackageName() {
-			return null;
-		}
-
-		@Override
-		public String getSchemaName() {
-			return options.getDatabaseDefaults().getDefaultSchemaName();
-		}
-
-		@Override
-		public String getCatalogName() {
-			return options.getDatabaseDefaults().getDefaultCatalogName();
-		}
-
-		@Override
-		public String getIdColumnName() {
-			return DEFAULT_IDENTIFIER_COLUMN_NAME;
-		}
-
-		@Override
-		public String getTenantIdColumnName() {
-			return DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME;
-		}
-
-		@Override
-		public String getDiscriminatorColumnName() {
-			return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
-		}
-
-		@Override
-		public String getCascadeStyle() {
-			return DEFAULT_CASCADE;
-		}
-
-		@Override
-		public String getPropertyAccessorName() {
-			return DEFAULT_PROPERTY_ACCESS;
-		}
-
-		@Override
-		public boolean areAssociationsLazy() {
-			return true;
-		}
-
-		@Override
-		public AccessType getCacheAccessType() {
-			return options.getDefaultCacheAccessType();
-		}
 	}
 }

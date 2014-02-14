@@ -62,7 +62,7 @@ import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;

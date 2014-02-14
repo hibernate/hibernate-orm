@@ -42,7 +42,7 @@ public class FetchProfileSourceImpl implements FetchProfileSource {
 	private final ClassLoaderService classLoaderService;
 
 	public FetchProfileSourceImpl(AnnotationInstance fetchProfileAnnotation, AnnotationBindingContext bindingContext) {
-		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		this.name = JandexHelper.getValue( fetchProfileAnnotation, "name", String.class, classLoaderService );
 		this.associationOverrideSources = buildAssociationOverrideSources( fetchProfileAnnotation );
 	}

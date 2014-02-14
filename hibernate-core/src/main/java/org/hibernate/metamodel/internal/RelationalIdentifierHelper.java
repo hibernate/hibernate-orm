@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 
 /**
  * @author Gail Badner
@@ -60,6 +59,6 @@ public class RelationalIdentifierHelper {
 	}
 
 	private ObjectNameNormalizer getObjectNameNormalizer() {
-		return helperContext.bindingContext().getMetadataImplementor().getObjectNameNormalizer();
+		return helperContext.bindingContext().getMetadataCollector().getObjectNameNormalizer();
 	}
 }

@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.source.BindingContext;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.IndexView;
 

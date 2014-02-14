@@ -36,8 +36,9 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnJoinElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnScalarElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSynchronizeElement;
 import org.hibernate.metamodel.internal.source.hbm.ResultSetMappingBinder;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 
 /**
  * @author Brett Meyer
@@ -81,9 +82,9 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 			final String queryName,
 			final NamedSQLQueryDefinitionBuilder builder,
 			final LocalBindingContext bindingContext,
-			final MetadataImplementor metadata ) {
+			final InFlightMetadataCollector metadataCollector) {
 
-		final JaxbResultsetElement mockedResultSet = new JaxbResultsetElement(){
+		final JaxbResultsetElement mockedResultSet = new JaxbResultsetElement() {
 			@Override
 			public String getName() {
 				return queryName;
@@ -109,8 +110,8 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 			}
 		};
 
+		final ResultSetMappingDefinition definition = ResultSetMappingBinder.buildResultSetMappingDefinitions( mockedResultSet,bindingContext, metadataCollector );
 
-		final ResultSetMappingDefinition definition = ResultSetMappingBinder.buildResultSetMappingDefinitions( mockedResultSet,bindingContext,metadata );
 		return builder.setQueryReturns( definition.getQueryReturns() )
 				.setQuerySpaces( synchronizedTables )
 				.createNamedQueryDefinition();

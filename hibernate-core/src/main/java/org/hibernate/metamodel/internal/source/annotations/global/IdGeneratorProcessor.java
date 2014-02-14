@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
 
@@ -49,8 +48,8 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.logging.Logger;
 
@@ -81,12 +80,12 @@ public class IdGeneratorProcessor {
 		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
 				.getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
-			bindSequenceGenerator( bindingContext.getMetadataImplementor(), generator, identifierGeneratorSources, bindingContext );
+			bindSequenceGenerator( generator, identifierGeneratorSources, bindingContext );
 		}
 
 		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
-			bindTableGenerator( bindingContext.getMetadataImplementor(), generator, identifierGeneratorSources, bindingContext );
+			bindTableGenerator( generator, identifierGeneratorSources, bindingContext );
 		}
 
 		annotations = JandexHelper.getAnnotations(
@@ -144,7 +143,6 @@ public class IdGeneratorProcessor {
 	}
 
 	private static void bindSequenceGenerator(
-			final MetadataImplementor metadata,
 			final AnnotationInstance generator,
 			final List<IdentifierGeneratorSource> identifierGeneratorSources,
 			final AnnotationBindingContext bindingContext) {
@@ -189,7 +187,6 @@ public class IdGeneratorProcessor {
 	}
 
 	private static void bindTableGenerator(
-			final MetadataImplementor metadata,
 			final AnnotationInstance generator,
 			final List<IdentifierGeneratorSource> identifierGeneratorSources,
 			final AnnotationBindingContext bindingContext) {

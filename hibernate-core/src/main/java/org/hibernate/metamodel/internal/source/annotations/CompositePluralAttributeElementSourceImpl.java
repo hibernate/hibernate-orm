@@ -37,7 +37,7 @@ import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 

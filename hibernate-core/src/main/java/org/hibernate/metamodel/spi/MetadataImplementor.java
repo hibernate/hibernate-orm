@@ -23,64 +23,19 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.FetchProfile;
-import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.SecondaryTable;
-import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.relational.Database;
-import org.hibernate.metamodel.spi.source.BindingContext;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.TypeResolver;
 
 /**
  * @author Steve Ebersole
  */
-public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
-
+public interface MetadataImplementor extends Metadata, Mapping {
 	Database getDatabase();
 
+	ServiceRegistry getServiceRegistry();
+
 	TypeResolver getTypeResolver();
-
-	ObjectNameNormalizer getObjectNameNormalizer();
-
-	void addImport(String entityName, String entityName1);
-
-	void addEntity(EntityBinding entityBinding);
-
-	void addSecondaryTable(SecondaryTable secondaryTable);
-
-	void addCollection(PluralAttributeBinding collectionBinding);
-
-	void addFetchProfile(FetchProfile profile);
-
-	void addTypeDefinition(TypeDefinition typeDefinition);
-
-	void addFilterDefinition(FilterDefinition filterDefinition);
-
-	void addIdGenerator(IdentifierGeneratorDefinition generator);
-
-	void registerIdentifierGenerator(String name, String clazz);
-
-	void addNamedNativeQuery(NamedSQLQueryDefinition def);
-
-	void addNamedEntityGraph(NamedEntityGraphDefinition def);
-
-	void addNamedQuery(NamedQueryDefinition def);
-
-	void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
-
-	@Deprecated
-	void setGloballyQuotedIdentifiers(boolean b);
-
-	MetaAttributeContext getGlobalMetaAttributeContext();
 }

@@ -44,7 +44,7 @@ public abstract class IdentifierGeneratorSourceContainerImpl implements Identifi
 	private final ClassLoaderService classLoaderService;
 	
 	public IdentifierGeneratorSourceContainerImpl(AnnotationBindingContext bindingContext) {
-		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 	}
 	
 	private Collection<AnnotationInstance> resolveOrEmpty(DotName name) {

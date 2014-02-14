@@ -83,4 +83,6 @@ public interface Metadata {
 	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
 	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
 	Map<String,String> getImports();
+
+	NamedSQLQueryDefinition getNamedNativeQuery(String name);
 }

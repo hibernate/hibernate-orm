@@ -26,7 +26,6 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.FetchMode;
-import org.hibernate.metamodel.spi.relational.Column;
 
 /**
  * Basic contract describing the commonality between the various types of collection element mappings.

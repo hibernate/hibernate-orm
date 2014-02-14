@@ -29,8 +29,9 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.xml.spi.Origin;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.xml.spi.Origin;
 
 /**
  * Contract describing source of an entity

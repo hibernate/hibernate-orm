@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.ValueHolder;
 
 /**

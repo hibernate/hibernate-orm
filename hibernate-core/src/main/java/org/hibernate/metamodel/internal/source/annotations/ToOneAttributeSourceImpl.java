@@ -209,7 +209,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 			return null;
 		}
 		return JandexHelper.getValue( associationAttribute.getJoinTableAnnotation(), "name", String.class,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ));
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ));
 	}
 
 
@@ -307,7 +307,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 
 			if ( joinTableAnnotation != null ) {
 				return JandexHelper.getValue( joinTableAnnotation, "name", String.class,
-						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+						bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 			}
 
 			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...

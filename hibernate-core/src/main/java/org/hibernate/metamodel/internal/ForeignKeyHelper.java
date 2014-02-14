@@ -41,7 +41,7 @@ import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.jboss.logging.Logger;
 
 /**
@@ -259,7 +259,7 @@ public class ForeignKeyHelper {
 				String logicalTableName,
 				String logicalSchemaName,
 				String logicalCatalogName) {
-			if ( bindingContext().isGloballyQuotedIdentifiers() && !org.hibernate
+			if ( bindingContext().quoteIdentifiersInContext() && !org.hibernate
 					.internal
 					.util
 					.StringHelper
@@ -285,7 +285,7 @@ public class ForeignKeyHelper {
 			Identifier schemaName = org.hibernate.internal.util.StringHelper.isNotEmpty( logicalCatalogName ) ?
 					Identifier.toIdentifier( logicalSchemaName )
 					: referencedEntityBinding.getPrimaryTable().getSchema().getName().getSchema();
-			Schema schema = bindingContext().getMetadataImplementor().getDatabase().getSchema( catalogName, schemaName );
+			Schema schema = bindingContext().getMetadataCollector().getDatabase().getSchema( catalogName, schemaName );
 			return schema.locateTable( tableIdentifier );
 		}
 

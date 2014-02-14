@@ -58,7 +58,7 @@ import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -287,11 +287,11 @@ public class Helper {
 				resolveIdentifier(
 						explicitCatalogName,
 						bindingContext.getMappingDefaults().getCatalogName(),
-						bindingContext.isGloballyQuotedIdentifiers()
+						bindingContext.quoteIdentifiersInContext()
 				), resolveIdentifier(
 						explicitSchemaName,
 						bindingContext.getMappingDefaults().getSchemaName(),
-						bindingContext.isGloballyQuotedIdentifiers()
+						bindingContext.quoteIdentifiersInContext()
 				)
 		);
 	}

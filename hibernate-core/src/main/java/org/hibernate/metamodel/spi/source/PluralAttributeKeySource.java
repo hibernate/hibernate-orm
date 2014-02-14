@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.metamodel.spi.relational.ForeignKey;
-
 /**
  * Describes the source mapping of plural-attribute (collection) foreign-key information.
  *

@@ -31,6 +31,7 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+
 import org.jboss.logging.Logger;
 
 /**

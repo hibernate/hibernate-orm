@@ -24,9 +24,9 @@
 package org.hibernate.metamodel.spi;
 
 
-import org.jboss.jandex.IndexView;
-
 import org.hibernate.metamodel.MetadataSources;
+
+import org.jboss.jandex.IndexView;
 
 /**
  * Contract for contributing sources to MetadataSources.

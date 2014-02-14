@@ -26,11 +26,11 @@ package org.hibernate.metamodel.spi.relational;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.compare.EqualsHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Represents a named schema/catalog pair and manages objects defined within.

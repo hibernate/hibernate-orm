@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 
 /**
  * @author Gail Badner

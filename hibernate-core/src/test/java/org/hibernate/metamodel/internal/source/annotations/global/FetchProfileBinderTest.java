@@ -25,24 +25,19 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 
 import java.util.Iterator;
 
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexView;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.MetadataImpl;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
@@ -52,16 +47,11 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 public class FetchProfileBinderTest extends BaseUnitTestCase {
-
 	private StandardServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
-	private MetadataImpl meta;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().build();
-		service = serviceRegistry.getService( ClassLoaderService.class );
-		meta = (MetadataImpl) new MetadataSources( serviceRegistry ).buildMetadata();
 	}
 
 	@After
@@ -76,9 +66,8 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		})
 		class Foo {
 		}
-		IndexView index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
+		Metadata meta = new MetadataSources( serviceRegistry ).addAnnotatedClass( Foo.class ).buildMetadata();
 
 		Iterator<org.hibernate.metamodel.spi.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -91,8 +80,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testFetchProfiles() {
-		IndexView index = JandexHelper.indexForClass( service, FooBar.class );
-		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
+		Metadata meta = new MetadataSources( serviceRegistry ).addAnnotatedClass( FooBar.class ).buildMetadata();
 
 		Iterator<org.hibernate.metamodel.spi.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -127,9 +115,8 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		})
 		class Foo {
 		}
-		IndexView index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
+		new MetadataSources( serviceRegistry ).addAnnotatedClass( Foo.class ).buildMetadata();
 	}
 
 	@FetchProfiles( {

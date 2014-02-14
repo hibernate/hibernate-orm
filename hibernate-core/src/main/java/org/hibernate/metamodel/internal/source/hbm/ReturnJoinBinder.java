@@ -26,17 +26,19 @@ import java.util.Map;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnJoinElement;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 class ReturnJoinBinder extends AbstractReturnBinder<JaxbReturnJoinElement> {
 	ReturnJoinBinder(
-			final JaxbReturnJoinElement element, final int elementIndex, final LocalBindingContext context,
-			final MetadataImplementor metadata) {
-		super( element, elementIndex, context, metadata );
+			final JaxbReturnJoinElement element,
+			final int elementIndex,
+			final LocalBindingContext context,
+			final InFlightMetadataCollector metadataCollector) {
+		super( element, elementIndex, context, metadataCollector );
 	}
 
 	@Override

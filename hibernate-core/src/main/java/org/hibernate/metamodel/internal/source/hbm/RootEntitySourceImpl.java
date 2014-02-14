@@ -372,7 +372,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			if ( entityElement().getId().getGenerator() != null ) {
 				final String generatorName = entityElement().getId().getGenerator().getClazz();
 				IdentifierGeneratorDefinition identifierGeneratorDefinition = sourceMappingDocument().getMappingLocalBindingContext()
-						.getMetadataImplementor()
+						.getMetadataCollector()
 						.getIdGenerator( generatorName );
 				if ( identifierGeneratorDefinition == null ) {
 					identifierGeneratorDefinition = new IdentifierGeneratorDefinition(
@@ -432,7 +432,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			if ( entityElement().getCompositeId().getGenerator() != null ) {
 				final String generatorName = entityElement().getCompositeId().getGenerator().getClazz();
 				IdentifierGeneratorDefinition identifierGeneratorDefinition = sourceMappingDocument().getMappingLocalBindingContext()
-						.getMetadataImplementor()
+						.getMetadataCollector()
 						.getIdGenerator( generatorName );
 				if ( identifierGeneratorDefinition == null ) {
 					identifierGeneratorDefinition = new IdentifierGeneratorDefinition(
@@ -596,7 +596,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			if ( entityElement().getCompositeId().getGenerator() != null ) {
 				final String generatorName = entityElement().getCompositeId().getGenerator().getClazz();
 				IdentifierGeneratorDefinition identifierGeneratorDefinition = sourceMappingDocument().getMappingLocalBindingContext()
-						.getMetadataImplementor()
+						.getMetadataCollector()
 						.getIdGenerator( generatorName );
 				if ( identifierGeneratorDefinition == null ) {
 					identifierGeneratorDefinition = new IdentifierGeneratorDefinition(

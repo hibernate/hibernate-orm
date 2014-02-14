@@ -110,7 +110,7 @@ public class AssociationAttribute extends MappedAttribute {
 				( attributeNature == Nature.ELEMENT_COLLECTION_BASIC || attributeNature == Nature.ELEMENT_COLLECTION_EMBEDDABLE ) ) {
 
 			AnnotationTarget target = MockHelper.getTarget(
-					context.getServiceRegistry(),
+					context.getBuildingOptions().getServiceRegistry(),
 					classInfo,
 					name,
 					MockHelper.TargetType.valueOf( accessType.toUpperCase() )
@@ -428,7 +428,7 @@ public class AssociationAttribute extends MappedAttribute {
 					fetchAnnotation,
 					"value",
 					org.hibernate.annotations.FetchMode.class,
-					getContext().getServiceRegistry().getService( ClassLoaderService.class )
+					getContext().getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
 			);
 			return EnumConversionHelper.annotationFetchModeToFetchStyle( annotationFetchMode );
 		}

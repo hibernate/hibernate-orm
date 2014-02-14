@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -56,8 +54,6 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.EntityHierarchyHelper.LocalBindingContextExecutionContext;
@@ -66,7 +62,8 @@ import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJ
 import org.hibernate.metamodel.internal.resolver.AssociationRelationalBindingResolver;
 import org.hibernate.metamodel.internal.resolver.MappedByAssociationRelationalBindingResolverImpl;
 import org.hibernate.metamodel.internal.resolver.StandardAssociationRelationalBindingResolverImpl;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.BindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
@@ -136,7 +133,6 @@ import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.IndexConstraintSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
@@ -166,12 +162,11 @@ import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
- * <p/>
- * The API consists of {@link #Binder(org.hibernate.metamodel.spi.MetadataImplementor, IdentifierGeneratorFactory)} and {@link #bindEntityHierarchies}
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -180,13 +175,6 @@ import org.jboss.logging.Logger;
  * @author Strong Liu
  */
 public class Binder implements HelperContext {
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			Binder.class.getName()
-	);
-
-	private final IdentifierGeneratorFactory identifierGeneratorFactory;
-
 	// Entity hierarchies and source index need be available throughout the binding process
 	private final Map<String, EntityHierarchy> entityHierarchiesByRootEntityName =
 			new LinkedHashMap<String, EntityHierarchy>();
@@ -194,7 +182,7 @@ public class Binder implements HelperContext {
 
 	// todo : apply org.hibernate.metamodel.MetadataSources.getExternalCacheRegionDefinitions()
 
-	private final MetadataImplementor metadata;
+	private final BindingContext rootBindingContext;
 
 	private final EntityHierarchyHelper.LocalBindingContextManager localBindingContextManager;
 
@@ -209,10 +197,8 @@ public class Binder implements HelperContext {
 	private final StandardAssociationRelationalBindingResolverImpl standardAssociationRelationalBindingResolver;
 	private final MappedByAssociationRelationalBindingResolverImpl mappedByAssociationRelationalBindingResolver;
 
-	public Binder(final MetadataImplementor metadata,
-				  final IdentifierGeneratorFactory identifierGeneratorFactory) {
-		this.metadata = metadata;
-		this.identifierGeneratorFactory = identifierGeneratorFactory;
+	public Binder(BindingContext rootBindingContext) {
+		this.rootBindingContext = rootBindingContext;
 		this.localBindingContextManager = new LocalBindingContextManagerImpl();
 		this.entityHierarchyHelper = new EntityHierarchyHelper( localBindingContextManager );
 		this.typeHelper = new HibernateTypeHelper( this );
@@ -339,7 +325,7 @@ public class Binder implements HelperContext {
 						createMetaAttributeContext(
 								entitySource.getMetaAttributeSources(),
 								true,
-								metadata.getGlobalMetaAttributeContext()
+								bindingContext.getGlobalMetaAttributeContext()
 						)
 				);
 
@@ -353,7 +339,7 @@ public class Binder implements HelperContext {
 					}
 				}
 				// Register binding with metadata
-				metadata.addEntity( entityBinding );
+				bindingContext.getMetadataCollector().addEntity( entityBinding );
 				return entityBinding;
 			}
 		};
@@ -736,7 +722,7 @@ public class Binder implements HelperContext {
 					if ( valueSource == null ) {
 						// user supplied no explicit information, so use implicit mapping with default name
 						tenantDiscriminatorValue = rootEntityBinding.getPrimaryTable().locateOrCreateColumn(
-								metadata.getMappingDefaults().getTenantIdColumnName()
+								bindingContext().getMappingDefaults().getTenantIdColumnName()
 						);
 					}
 					else {
@@ -1183,7 +1169,7 @@ public class Binder implements HelperContext {
 
 	private EntityBinding locateEntityBinding(final String entityName) {
 		// Check if binding has already been created
-		EntityBinding entityBinding = metadata.getEntityBinding( entityName );
+		EntityBinding entityBinding = rootBindingContext.getMetadataCollector().getEntityBinding( entityName );
 		if ( entityBinding == null ) {
 			 throw bindingContext().makeMappingException(
 					 String.format( "No entity binding with name: %s", entityName )
@@ -1197,7 +1183,7 @@ public class Binder implements HelperContext {
 	private FilterConfiguration createFilterConfiguration(FilterSource filterSource, EntityBinding entityBinding){
 		String condition = filterSource.getCondition();
 		if(StringHelper.isEmpty( condition )){
-			FilterDefinition filterDefinition = metadata.getFilterDefinitions().get( filterSource.getName() );
+			FilterDefinition filterDefinition = rootBindingContext.getMetadataCollector().getFilterDefinitions().get( filterSource.getName() );
 			if(filterDefinition == null){
 				throw bindingContext().makeMappingException( String.format( "Filter[%s] doesn't have a condition", filterSource.getName() ) );
 			}
@@ -1286,7 +1272,7 @@ public class Binder implements HelperContext {
 			secondaryTable.setCustomInsert( secondaryTableSource.getCustomSqlInsert() );
 			secondaryTable.setCustomUpdate( secondaryTableSource.getCustomSqlUpdate() );
 			entityBinding.addSecondaryTable( secondaryTable );
-			metadata.addSecondaryTable( secondaryTable );
+			rootBindingContext.getMetadataCollector().addSecondaryTable( secondaryTable );
 		}
 	}
 
@@ -1365,7 +1351,7 @@ public class Binder implements HelperContext {
 		secondaryTable.setCustomInsert( ownerSecondaryTable.getCustomInsert() );
 		secondaryTable.setCustomUpdate( ownerSecondaryTable.getCustomUpdate() );
 		entityBinding.addSecondaryTable( secondaryTable );
-		metadata.addSecondaryTable( secondaryTable );
+		rootBindingContext.getMetadataCollector().addSecondaryTable( secondaryTable );
 	}
 
 
@@ -1382,7 +1368,7 @@ public class Binder implements HelperContext {
 			joinRelationalValueBindings = new ArrayList<RelationalValueBinding>( primaryKeyColumns.size() );
 			for ( Column joinedColumn : primaryKeyColumns ) {
 				Column joinColumn = table.locateOrCreateColumn(
-						bindingContext().getNamingStrategy().joinKeyColumnName(
+						bindingContext().getBuildingOptions().getNamingStrategy().joinKeyColumnName(
 								joinedColumn.getColumnName().getText(),
 								entityBinding.getPrimaryTable().getLogicalName().getText()
 						)
@@ -1476,18 +1462,26 @@ public class Binder implements HelperContext {
 
 	private void bindIdentifierGenerator(final EntityBinding rootEntityBinding) {
 		final Properties properties = new Properties();
-		properties.putAll( metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings() );
+		properties.putAll(
+				rootBindingContext.getBuildingOptions()
+						.getServiceRegistry()
+						.getService( ConfigurationService.class )
+						.getSettings()
+		);
 		if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
 			properties.put( AvailableSettings.PREFER_POOLED_VALUES_LO, "false" );
 		}
 		if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) ) {
 			properties.put(
 					PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-					metadata.getObjectNameNormalizer()
+					rootBindingContext.getMetadataCollector().getObjectNameNormalizer()
 			);
 		}
 		final EntityIdentifier entityIdentifier = rootEntityBinding.getHierarchyDetails().getEntityIdentifier();
-		entityIdentifier.createIdentifierGenerator( identifierGeneratorFactory, properties );
+		entityIdentifier.createIdentifierGenerator(
+				rootBindingContext.getMetadataCollector().getIdentifierGeneratorFactory(),
+				properties
+		);
 		if ( IdentityGenerator.class.isInstance( entityIdentifier.getIdentifierGenerator() ) ) {
 			if ( rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumnSpan() != 1 ) {
 				throw bindingContext().makeMappingException(
@@ -1501,7 +1495,9 @@ public class Binder implements HelperContext {
 			rootEntityBinding.getPrimaryTable().getPrimaryKey().getColumns().get( 0 ).setIdentity( true );
 		}
 		if ( PersistentIdentifierGenerator.class.isInstance( entityIdentifier.getIdentifierGenerator() ) ) {
-			( (PersistentIdentifierGenerator) entityIdentifier.getIdentifierGenerator() ).registerExportables( metadata.getDatabase() );
+			( (PersistentIdentifierGenerator) entityIdentifier.getIdentifierGenerator() ).registerExportables(
+					rootBindingContext.getMetadataCollector().getDatabase()
+			);
 		}
 	}
 
@@ -1696,7 +1692,7 @@ public class Binder implements HelperContext {
 						createMetaAttributeContext( attributeBindingContainer, attributeSource )
 				);
 		if ( attributeSource.getExplicitTuplizerClassName() != null ) {
-			Class<? extends ComponentTuplizer> tuplizerClass = bindingContext().getServiceRegistry()
+			Class<? extends ComponentTuplizer> tuplizerClass = bindingContext().getBuildingOptions().getServiceRegistry()
 					.getService( ClassLoaderService.class )
 					.classForName( attributeSource.getExplicitTuplizerClassName() );
 			attributeBinding.setCustomComponentTuplizerClass( tuplizerClass );
@@ -1794,7 +1790,7 @@ public class Binder implements HelperContext {
 				null :
 				getRelativePathFromEntityName( referencedAttributeBinding );
 
-		final Type resolvedType = metadata.getTypeResolver().getTypeFactory().manyToOne(
+		final Type resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
 				uniqueKeyAttributeName == null,
 				uniqueKeyAttributeName,
@@ -1898,7 +1894,7 @@ public class Binder implements HelperContext {
 		}
 		final Type resolvedType;
 		if ( attributeSource.isMappedBy() || attributeSource.relationalValueSources().isEmpty() )  {
-			resolvedType = metadata.getTypeResolver().getTypeFactory().oneToOne(
+			resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().oneToOne(
 					referencedEntityBinding.getEntity().getName(),
 					attributeSource.getForeignKeyDirection(),
 					uniqueKeyAttributeName == null,
@@ -1910,7 +1906,7 @@ public class Binder implements HelperContext {
 			);
 		}
 		else {
-			resolvedType = metadata.getTypeResolver().getTypeFactory().specialOneToOne(
+			resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().specialOneToOne(
 					referencedEntityBinding.getEntity().getName(),
 					attributeSource.getForeignKeyDirection(),
 					uniqueKeyAttributeName == null,
@@ -2075,7 +2071,7 @@ public class Binder implements HelperContext {
 			);
 		}
 		bindCollectionTablePrimaryKey( attributeBinding, attributeSource );
-		metadata.addCollection( attributeBinding );
+		rootBindingContext.getMetadataCollector().addCollection( attributeBinding );
 		return attributeBinding;
 	}
 
@@ -2265,7 +2261,7 @@ public class Binder implements HelperContext {
 
 		bindAttributes( compositeAttributeBindingContainer, elementSource );
 		pluralAttributeBinding.getAttribute().setElementType( aggregate );
-		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
+		Type resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().component(
 				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
 		);
 		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
@@ -2388,7 +2384,7 @@ public class Binder implements HelperContext {
 
 		bindAttributes( compositeAttributeBindingContainer, indexSource );
 
-		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
+		Type resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().component(
 				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
 		);
 		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
@@ -2414,7 +2410,7 @@ public class Binder implements HelperContext {
 				referencedEntityBinding.getKeyRelationalValueBindings()
 		);
 
-		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
+		Type resolvedElementType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
 				true,
 				null,

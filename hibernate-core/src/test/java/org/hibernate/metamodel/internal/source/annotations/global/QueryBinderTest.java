@@ -23,41 +23,34 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
-
 import javax.persistence.NamedNativeQuery;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.MetadataImpl;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.jboss.jandex.IndexView;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
  */
 public class QueryBinderTest extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
-	private MetadataImpl meta;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().build();
-		service = serviceRegistry.getService( ClassLoaderService.class );
-		meta = (MetadataImpl) new MetadataSources( serviceRegistry ).buildMetadata();
 	}
 
 	@After
@@ -70,8 +63,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		@NamedNativeQuery(name = "fubar", query = "SELECT * FROM FOO")
 		class Foo {
 		}
-		IndexView index = JandexHelper.indexForClass( service, Foo.class );
-		QueryProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
+		new MetadataSources( serviceRegistry ).addAnnotatedClass( Foo.class ).buildMetadata();
 	}
 
 	@Test
@@ -79,9 +71,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		@NamedNativeQuery(name = "fubar", query = "SELECT * FROM FOO", resultClass = Foo.class)
 		class Foo {
 		}
-		IndexView index = JandexHelper.indexForClass( service, Foo.class );
-		QueryProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
-
+		Metadata meta = new MetadataSources( serviceRegistry ).addAnnotatedClass( Foo.class ).buildMetadata();
 		NamedSQLQueryDefinition namedQuery = meta.getNamedNativeQuery( "fubar" );
 		assertNotNull( namedQuery );
 		NativeSQLQueryReturn queryReturns[] = namedQuery.getQueryReturns();

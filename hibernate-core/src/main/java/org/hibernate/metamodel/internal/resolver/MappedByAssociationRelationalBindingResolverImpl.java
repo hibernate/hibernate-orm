@@ -45,7 +45,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.AssociationSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
@@ -319,7 +319,7 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 	}
 
 	private AttributeBinding getOwnerAttributeBinding(MappedByAssociationSource associationSource) {
-		final EntityBinding referencedEntityBinding =   bindingContext().getMetadataImplementor().getEntityBinding(
+		final EntityBinding referencedEntityBinding =   bindingContext().getMetadataCollector().getEntityBinding(
 				associationSource.getReferencedEntityName()
 		);
 		final AttributeBinding ownerAttributeBinding = referencedEntityBinding.locateAttributeBindingByPath(

@@ -69,7 +69,7 @@ public class InLineViewSourceImpl implements InLineViewSource {
 
 		return new InlineViewInfo(
 				JandexHelper.getValue( subselectAnnotation, "value", String.class,
-						entityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) ),
+						entityClass.getLocalBindingContext().getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) ),
 				entityClass.getEntityName()
 		);
 	}

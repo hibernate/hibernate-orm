@@ -25,8 +25,6 @@ package org.hibernate.metamodel.internal.source;
 
 import java.util.Iterator;
 
-import org.junit.Test;
-
 import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -35,20 +33,23 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.MetadataBuilderImpl;
-import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -64,26 +65,37 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 
 	@Test
 	public void testUserEntitySources() {
+		BindingContext rootContext = RootBindingContextBuilder.buildBindingContext( serviceRegistry );
+
 		MetadataSources hbm = new MetadataSources( serviceRegistry );
 		hbm.addResource( getClass().getPackage().getName().replace( '.', '/' ) + "/User.hbm.xml" );
-		MetadataSourceProcessor hbmProcessor = new HbmMetadataSourceProcessorImpl( buildMetadata( hbm ), hbm );
-		testUserEntitySources( hbmProcessor );
+		MetadataSourceProcessor hbmProcessor = new HbmMetadataSourceProcessorImpl(
+				rootContext,
+				hbm
+		);
+		testUserEntitySources( hbmProcessor, rootContext );
 
 		MetadataSources ann = new MetadataSources( serviceRegistry );
 		ann.addAnnotatedClass( User.class );
 		ann.addAnnotatedClass( User.Name.class );
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
-				buildMetadata( ann ),
+				rootContext,
 				ann.buildJandexView()
 		);
-		testUserEntitySources( annProcessor );
+		testUserEntitySources( annProcessor, rootContext );
 	}
 
-	private MetadataImpl buildMetadata(MetadataSources sources) {
-		return new MetadataImpl( sources, new MetadataBuilderImpl.Options( serviceRegistry ) );
-	}
+	private void testUserEntitySources(MetadataSourceProcessor processor, BindingContext rootContext) {
+		for ( IdentifierGeneratorSource identifierGeneratorSource : processor.extractGlobalIdentifierGeneratorSources() ) {
+			rootContext.getMetadataCollector().addIdGenerator(
+					new IdentifierGeneratorDefinition(
+							identifierGeneratorSource.getGeneratorName(),
+							identifierGeneratorSource.getGeneratorImplementationName(),
+							identifierGeneratorSource.getParameters()
+					)
+			);
+		}
 
-	private void testUserEntitySources(MetadataSourceProcessor processor) {
 		Iterator<EntityHierarchy> hierarchies = processor.extractEntityHierarchies().iterator();
 		assertTrue( hierarchies.hasNext() );
 		EntityHierarchy hierarchy = hierarchies.next();
@@ -177,7 +189,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.OrderPk.class );
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
-				buildMetadata( ann ),
+				RootBindingContextBuilder.buildBindingContext( serviceRegistry ),
 				ann.buildJandexView()
 		);
 		testOrderEntitySources( annProcessor );
@@ -205,7 +217,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.OrderPk.class );
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
-				buildMetadata( ann ),
+				RootBindingContextBuilder.buildBindingContext( serviceRegistry ),
 				ann.buildJandexView()
 		);
 		testOrderNonAggregatedEntitySources( annProcessor );

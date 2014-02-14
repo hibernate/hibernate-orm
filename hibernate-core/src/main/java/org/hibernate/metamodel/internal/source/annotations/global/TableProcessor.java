@@ -28,20 +28,19 @@ import java.util.Collection;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
+
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -49,11 +48,6 @@ import org.jboss.logging.Logger;
  * @author Hardy Ferentschik
  */
 public class TableProcessor {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			TableProcessor.class.getName()
-	);
 
 	private TableProcessor() {
 	}
@@ -80,14 +74,14 @@ public class TableProcessor {
 	}
 
 	private static void bind(AnnotationBindingContext bindingContext, AnnotationInstance tableAnnotation) {
-		MetadataImplementor metadata = bindingContext.getMetadataImplementor();
+		InFlightMetadataCollector metadataCollector = bindingContext.getMetadataCollector();
 		String tableName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class,
 				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 		ObjectName objectName = ObjectName.parse( tableName );
-		Schema schema = metadata.getDatabase().getSchema( objectName.getCatalog(), objectName.getSchema() );
+		Schema schema = metadataCollector.getDatabase().getSchema( objectName.getCatalog(), objectName.getSchema() );
 		Table table = schema.locateTable( objectName.getName() );
 		if ( table != null ) {
-			boolean isSecondaryTable = metadata.getSecondaryTables().containsKey( table.getLogicalName() );
+			boolean isSecondaryTable = metadataCollector.getSecondaryTables().containsKey( table.getLogicalName() );
 			bindHibernateTableAnnotation( table, tableAnnotation,isSecondaryTable, bindingContext );
 		}
 		else {
@@ -109,7 +103,7 @@ public class TableProcessor {
 		if ( !isSecondaryTable ) {
 			return;
 		}
-		SecondaryTable secondaryTable = bindingContext.getMetadataImplementor().getSecondaryTables().get( table.getLogicalName() );
+		SecondaryTable secondaryTable = bindingContext.getMetadataCollector().getSecondaryTables().get( table.getLogicalName() );
 		if ( tableAnnotation.value( "fetch" ) != null ) {
 			FetchMode fetchMode = JandexHelper.getEnumValue( tableAnnotation, "fetch", FetchMode.class,
 					classLoaderService );

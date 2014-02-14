@@ -153,7 +153,9 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 						idClassAnnotation,
 						"value",
 						String.class,
-						rootEntityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+						rootEntityClass.getLocalBindingContext().getBuildingOptions()
+								.getServiceRegistry()
+								.getService( ClassLoaderService.class )
 				)
 		);
 	}

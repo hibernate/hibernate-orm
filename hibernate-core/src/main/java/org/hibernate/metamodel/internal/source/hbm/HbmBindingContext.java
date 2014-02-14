@@ -27,11 +27,11 @@ import java.util.List;
 
 import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFetchProfileElement;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * Defines features specific to the {@code hbm.xml} variety of a {@link org.hibernate.metamodel.spi.source.BindingContext}
+ * Defines features specific to the {@code hbm.xml} variety of a {@link org.hibernate.metamodel.spi.BindingContext}
  * 
  * @author Steve Ebersole
  */

@@ -47,7 +47,7 @@ import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 

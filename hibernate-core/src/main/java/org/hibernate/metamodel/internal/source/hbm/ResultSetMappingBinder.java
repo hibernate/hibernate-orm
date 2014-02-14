@@ -28,31 +28,32 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbResultsetElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnJoinElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnScalarElement;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.type.Type;
 
 public class ResultSetMappingBinder {
 	public static ResultSetMappingDefinition buildResultSetMappingDefinitions(
-			final JaxbResultsetElement element, final LocalBindingContext bindingContext,
-			final MetadataImplementor metadata) {
+			final JaxbResultsetElement element,
+			final LocalBindingContext bindingContext,
+			final InFlightMetadataCollector metadataCollector) {
 		final ResultSetMappingDefinition definition = new ResultSetMappingDefinition( element.getName() );
 		int cnt = 0;
 		for ( final JaxbReturnScalarElement r : element.getReturnScalar() ) {
 			String column = r.getColumn();
 			String typeFromXML = r.getType();
-			Type type = StringHelper.isNotEmpty( typeFromXML ) ? metadata.getTypeResolver()
+			Type type = StringHelper.isNotEmpty( typeFromXML ) ? metadataCollector.getTypeResolver()
 					.heuristicType( typeFromXML ) : null;
 			definition.addQueryReturn( new NativeSQLQueryScalarReturn( column, type ) );
 		}
 		for ( final JaxbReturnElement r : element.getReturn() ) {
-			definition.addQueryReturn( new ReturnBinder( r, cnt++, bindingContext, metadata ).process() );
+			definition.addQueryReturn( new ReturnBinder( r, cnt++, bindingContext, metadataCollector ).process() );
 		}
 		for ( final JaxbReturnJoinElement r : element.getReturnJoin() ) {
-			definition.addQueryReturn( new ReturnJoinBinder( r, cnt++, bindingContext, metadata ).process() );
+			definition.addQueryReturn( new ReturnJoinBinder( r, cnt++, bindingContext, metadataCollector ).process() );
 		}
 		for ( final JaxbLoadCollectionElement r : element.getLoadCollection() ) {
-			definition.addQueryReturn( new LoadCollectionBinder( r, cnt++, bindingContext, metadata ).process() );
+			definition.addQueryReturn( new LoadCollectionBinder( r, cnt++, bindingContext, metadataCollector ).process() );
 		}
 
 		return definition;

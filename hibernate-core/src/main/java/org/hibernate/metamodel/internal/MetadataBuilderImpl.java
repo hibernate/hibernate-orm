@@ -27,10 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.SharedCacheMode;
 
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -45,7 +41,6 @@ import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
@@ -59,6 +54,11 @@ import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
+import org.jboss.jandex.IndexView;
+import org.jboss.logging.Logger;
+
+import org.xml.sax.EntityResolver;
 
 /**
  * The implementation of the {@link MetadataBuilder} contract.
@@ -211,8 +211,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
-	public Metadata build() {
-		return MetadataImpl.build( sources, options );
+	public MetadataImpl build() {
+		return MetadataBuildingProcess.build( sources, options );
 	}
 
 	/**

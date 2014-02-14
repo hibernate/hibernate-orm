@@ -24,14 +24,10 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.spi.MetadataBuildingOptions;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
-import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.service.ServiceRegistry;
+
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
@@ -45,22 +41,19 @@ import com.fasterxml.classmate.TypeResolver;
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class AnnotationBindingContextImpl implements AnnotationBindingContext {
-	private static final TypeResolver TYPE_RESOLVER = new TypeResolver();
-	private static final MemberResolver MEMBER_RESOLVER = new MemberResolver( TYPE_RESOLVER );
-	private final MetadataImplementor metadata;
-	private final ClassLoaderService classLoaderService;
-	private final IndexView index;
+public class AnnotationBindingContextImpl
+		extends BaseDelegatingBindingContext
+		implements AnnotationBindingContext {
 
-	/**
-	 * Constructor
-	 *
-	 * @param metadata {@code Metadata} instance
-	 * @param index the Jandex index view
-	 */
-	public AnnotationBindingContextImpl(MetadataImplementor metadata, IndexView index) {
-		this.metadata = metadata;
-		this.classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
+	private final TypeResolver classmateTypeResolver = new TypeResolver();
+	private final MemberResolver classmateMemberResolver = new MemberResolver( classmateTypeResolver );
+
+	private final IndexView index;
+	private final ClassLoaderService classLoaderService;
+
+	public AnnotationBindingContextImpl(BindingContext rootBindingContext, IndexView index) {
+		super( rootBindingContext );
+		this.classLoaderService = rootBindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		this.index = index;
 	}
 
@@ -77,79 +70,21 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 
 	@Override
 	public MemberResolver getMemberResolver() {
-		return MEMBER_RESOLVER;
+		return classmateMemberResolver;
 	}
 
 	@Override
 	public TypeResolver getTypeResolver() {
-		return TYPE_RESOLVER;
+		return classmateTypeResolver;
 	}
 
 	@Override
 	public IdentifierGeneratorDefinition findIdGenerator(String name) {
-		return getMetadataImplementor().getIdGenerator( name );
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return getMetadataImplementor().getServiceRegistry();
-	}
-
-	@Override
-	public NamingStrategy getNamingStrategy() {
-		return metadata.getNamingStrategy();
-	}
-
-	@Override
-	public MappingDefaults getMappingDefaults() {
-		return metadata.getMappingDefaults();
-	}
-
-	@Override
-	public MetadataImplementor getMetadataImplementor() {
-		return metadata;
-	}
-
-	@Override
-	public MetadataBuildingOptions getBuildingOptions() {
-		return metadata.getBuildingOptions();
+		return getMetadataCollector().getIdGenerator( name );
 	}
 
 	@Override
 	public <T> Class<T> locateClassByName(String name) {
 		return classLoaderService.classForName( name );
 	}
-
-	@Override
-	public Type makeDomainType(String className) {
-		return  metadata.makeDomainType( className );
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(String className) {
-		return metadata.makeJavaClassReference( className );
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
-		return metadata.makeJavaClassReference( clazz );
-	}
-
-	@Override
-	public JavaClassReference makeJavaPropertyClassReference(
-			JavaClassReference propertyContainerClassReference,
-			String propertyName) {
-		return metadata.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
-	}
-
-	@Override
-	public String qualifyClassName(String name) {
-		return name;
-	}
-
-	@Override
-	public boolean isGloballyQuotedIdentifiers() {
-		return metadata.isGloballyQuotedIdentifiers();
-	}
-
 }

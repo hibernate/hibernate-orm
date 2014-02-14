@@ -54,7 +54,7 @@ public abstract class AbstractOverrideDefinition {
 		this.attributePath = createAttributePath(
 				prefix,
 				JandexHelper.getValue( attributeOverrideAnnotation, "name", String.class,
-						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ))
+						bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ))
 		);
 		this.bindingContext = bindingContext;
 	}

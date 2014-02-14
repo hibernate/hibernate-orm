@@ -26,19 +26,16 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.xml.spi.BindResult;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
+import org.hibernate.xml.spi.BindResult;
 
 import static java.util.Collections.emptyList;
 
@@ -48,25 +45,24 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final CoreMessageLogger LOG = Logger
-			.getMessageLogger( CoreMessageLogger.class, HbmMetadataSourceProcessorImpl.class.getName() );
 	private final List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
 	private final List<EntityHierarchyImpl> entityHierarchies;
 
-	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, MetadataSources metadataSources) {
-		this( metadata, metadataSources.getBindResultList() );
+	public HbmMetadataSourceProcessorImpl(BindingContext bindingContext, MetadataSources metadataSources) {
+		this( bindingContext, metadataSources.getBindResultList() );
 	}
 
-	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata, List<BindResult> bindResults) {
-		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder( metadata );
+	@SuppressWarnings("unchecked")
+	public HbmMetadataSourceProcessorImpl(BindingContext bindingContext, List<BindResult> bindResults) {
+		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder( bindingContext );
 
 		for ( BindResult bindResult : bindResults ) {
 			if ( ! JaxbHibernateMapping.class.isInstance( bindResult.getRoot() ) ) {
 				continue;
 			}
 
-			final MappingDocument mappingDocument = new MappingDocument( bindResult, metadata );
-			processors.add( new HibernateMappingProcessor( metadata, mappingDocument ) );
+			final MappingDocument mappingDocument = new MappingDocument( bindResult, bindingContext );
+			processors.add( new HibernateMappingProcessor( mappingDocument ) );
 
 			hierarchyBuilder.processMappingDocument( mappingDocument );
 		}

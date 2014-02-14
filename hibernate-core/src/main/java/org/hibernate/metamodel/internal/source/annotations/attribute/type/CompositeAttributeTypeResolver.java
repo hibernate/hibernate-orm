@@ -63,10 +63,7 @@ public class CompositeAttributeTypeResolver implements AttributeTypeResolver {
 		if ( StringHelper.isNotEmpty( type ) ) {
 			return type;
 		}
-		else if ( mappedAttribute.getContext()
-				.getMetadataImplementor().hasTypeDefinition(
-						mappedAttribute.getAttributeType().getName()
-				) ) {
+		else if ( mappedAttribute.getContext().getMetadataCollector().hasTypeDefinition( mappedAttribute.getAttributeType().getName() ) ) {
 			return mappedAttribute.getAttributeType().getName();
 		}
 		else {

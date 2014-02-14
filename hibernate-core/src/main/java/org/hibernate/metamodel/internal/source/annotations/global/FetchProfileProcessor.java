@@ -95,6 +95,6 @@ public class FetchProfileProcessor {
 			final String associationName = JandexHelper.getValue( override, "association", String.class, classLoaderService );
 			fetches.add( new Fetch( entityName, associationName, fetchMode.toString().toLowerCase() ) );
 		}
-		bindingContext.getMetadataImplementor().addFetchProfile( new FetchProfile( name, fetches ) );
+		bindingContext.getMetadataCollector().addFetchProfile( new FetchProfile( name, fetches ) );
 	}
 }

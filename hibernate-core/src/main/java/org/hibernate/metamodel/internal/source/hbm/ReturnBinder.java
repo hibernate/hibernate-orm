@@ -30,18 +30,20 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbReturnPropertyElement;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 class ReturnBinder extends AbstractReturnBinder<JaxbReturnElement> {
 	ReturnBinder(
-			final JaxbReturnElement element, final int elementIndex, final LocalBindingContext context,
-			final MetadataImplementor metadata) {
-		super( element, elementIndex, context, metadata );
+			final JaxbReturnElement element,
+			final int elementIndex,
+			final LocalBindingContext context,
+			final InFlightMetadataCollector metadataCollector) {
+		super( element, elementIndex, context, metadataCollector );
 	}
 
 	@Override
@@ -54,7 +56,7 @@ class ReturnBinder extends AbstractReturnBinder<JaxbReturnElement> {
 			);
 		}
 		entityName = StringHelper.isNotEmpty( entityName ) ? entityName : context.qualifyClassName( clazz );
-		final EntityBinding entityBinding = metadata.getEntityBinding( entityName );
+		final EntityBinding entityBinding = metadataCollector.getEntityBinding( entityName );
 		// TODO throw exception here??
 		//		if ( entityBinding == null ) {
 		//			throw bindingContext.makeMappingException( "Can't locate entitybinding" );
@@ -119,14 +121,14 @@ class ReturnBinder extends AbstractReturnBinder<JaxbReturnElement> {
 				final JaxbReturnPropertyElement propertyresult, final LocalBindingContext context) {
 			List<String> allResultColumns = new ArrayList<String>();
 			if ( propertyresult.getColumn() != null ) {
-				String column = context.getMetadataImplementor()
+				String column = context.getMetadataCollector()
 						.getObjectNameNormalizer()
 						.normalizeIdentifierQuoting( propertyresult.getColumn() );
 				allResultColumns.add( column );
 			}
 			for ( JaxbReturnPropertyElement.JaxbReturnColumn returnColumn : propertyresult.getReturnColumn() ) {
 				if ( returnColumn.getName() != null ) {
-					String column = context.getMetadataImplementor()
+					String column = context.getMetadataCollector()
 							.getObjectNameNormalizer()
 							.normalizeIdentifierQuoting( returnColumn.getName() );
 

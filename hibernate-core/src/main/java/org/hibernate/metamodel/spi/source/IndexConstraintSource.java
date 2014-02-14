@@ -23,9 +23,6 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import java.util.List;
-
-
 /**
  * Defining a index constraint source
  *

@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.IdGeneratorProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
@@ -38,11 +37,13 @@ import org.hibernate.metamodel.internal.source.annotations.util.EntityHierarchyB
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.IndexView;
 
@@ -55,20 +56,17 @@ import org.jboss.jandex.IndexView;
  * @author Steve Ebersole
  */
 public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-
 	private final AnnotationBindingContext bindingContext;
 
-	public AnnotationMetadataSourceProcessorImpl(
-			MetadataImpl metadata,
-			IndexView jandexView) {
+	public AnnotationMetadataSourceProcessorImpl(BindingContext bindingContext, IndexView jandexView) {
 
 		if ( !jandexView.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ).isEmpty() ) {
 			// todo : this needs to move to AnnotationBindingContext
 			// what happens right now is that specifying this in an orm.xml causes it to effect all orm.xmls
-			metadata.setGloballyQuotedIdentifiers( true );
+			bindingContext.getMetadataCollector().setGloballyQuotedIdentifiers( true );
 		}
 
-		this.bindingContext = new AnnotationBindingContextImpl( metadata, jandexView );
+		this.bindingContext = new AnnotationBindingContextImpl( bindingContext, jandexView );
 	}
 
 	@Override
@@ -78,7 +76,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				bindingContext.getIndex(),
 				HibernateDotNames.TYPE_DEF,
 				HibernateDotNames.TYPE_DEFS,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance typeDef : annotations ) {
 			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef, bindingContext ) );
@@ -93,7 +91,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				bindingContext.getIndex(),
 				HibernateDotNames.FILTER_DEF,
 				HibernateDotNames.FILTER_DEFS,
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
+				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance filterDef : annotations ) {
 			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef, bindingContext ) );

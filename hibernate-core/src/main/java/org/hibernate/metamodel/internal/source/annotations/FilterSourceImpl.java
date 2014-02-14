@@ -43,7 +43,7 @@ public class FilterSourceImpl implements FilterSource {
 	private final Map<String, String> aliasEntityMap = new HashMap<String, String>();
 
 	public FilterSourceImpl(AnnotationInstance filterAnnotation, AnnotationBindingContext bindingContext) {
-		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		
 		this.name = JandexHelper.getValue( filterAnnotation, "name", String.class, classLoaderService );
 		this.condition = JandexHelper.getValue( filterAnnotation, "condition", String.class, classLoaderService );

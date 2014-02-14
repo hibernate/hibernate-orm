@@ -31,13 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
@@ -64,7 +63,6 @@ import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -73,6 +71,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
+
+import org.jboss.logging.Logger;
 
 /**
  * Delegate for handling:<ol>
@@ -308,12 +308,12 @@ class HibernateTypeHelper {
 		if ( value != null && value.getJdbcDataType() == null && resolvedHibernateType != null  ) {
 			final Type resolvedRelationalType =
 					resolvedHibernateType.isEntityType()
-							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
+							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadataCollector() )
 							: resolvedHibernateType;
 			if ( AbstractValue.class.isInstance( value ) ) {
 				( (AbstractValue) value ).setJdbcDataType(
 						new JdbcDataType(
-								resolvedRelationalType.sqlTypes( metadata() )[0],
+								resolvedRelationalType.sqlTypes( metadataCollector() )[0],
 								resolvedRelationalType.getName(),
 								resolvedRelationalType.getReturnedClass()
 						)
@@ -337,7 +337,7 @@ class HibernateTypeHelper {
 		else {
 			final Type resolvedRelationalType =
 					resolvedHibernateType.isEntityType()
-							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
+							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadataCollector() )
 							: resolvedHibernateType;
 			if ( !CompositeType.class.isInstance( resolvedRelationalType ) ) {
 				throw bindingContext()
@@ -530,7 +530,7 @@ class HibernateTypeHelper {
 	}
 
 	private TypeFactory typeFactory(){
-		return metadata().getTypeResolver().getTypeFactory();
+		return metadataCollector().getTypeResolver().getTypeFactory();
 	}
 
 	private Type determineHibernateTypeFromAttributeJavaType(
@@ -564,7 +564,7 @@ class HibernateTypeHelper {
 			final Properties typeParameters) {
 		if ( typeName != null ) {
 			try {
-				return metadata().getTypeResolver().heuristicType( typeName, typeParameters );
+				return metadataCollector().getTypeResolver().heuristicType( typeName, typeParameters );
 			}
 			catch ( Exception ignore ) {
 			}
@@ -629,7 +629,7 @@ class HibernateTypeHelper {
 		}
 		else {
 			// Check if user-specified name is of a User-Defined Type (UDT)
-			final TypeDefinition typeDef = metadata().getTypeDefinition( explicitTypeName );
+			final TypeDefinition typeDef = metadataCollector().getTypeDefinition( explicitTypeName );
 			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
 				throw bindingContext().makeMappingException(
 						String.format(
@@ -745,8 +745,8 @@ class HibernateTypeHelper {
 		return helperContext.bindingContext();
 	}
 
-	private MetadataImplementor metadata() {
-		return bindingContext().getMetadataImplementor();
+	private InFlightMetadataCollector metadataCollector() {
+		return bindingContext().getMetadataCollector();
 	}
 
 	private org.hibernate.metamodel.spi.domain.Type makeDomainType(String name) {

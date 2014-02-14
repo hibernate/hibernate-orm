@@ -29,7 +29,6 @@ import java.util.List;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.ConstraintNamingStrategyHelper.IndexNamingStrategyHelper;
 import org.hibernate.metamodel.internal.ConstraintNamingStrategyHelper.UniqueKeyNamingStrategyHelper;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -41,7 +40,7 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
@@ -86,7 +85,7 @@ public class TableHelper {
 			String explicitName = isTableSourceNull ? null : TableSource.class.cast( tableSpecSource ).getExplicitTableName();
 			String tableName = normalizeDatabaseIdentifier( explicitName, namingStrategyHelper );
 			String logicTableName = TableNamingStrategyHelper.class.cast( namingStrategyHelper ).getLogicalName(
-					bindingContext().getNamingStrategy()
+					bindingContext().getBuildingOptions().getNamingStrategy()
 			);
 			tableSpec = createTableSpecification( schema, tableName, logicTableName, includedTable );
 		}
@@ -110,7 +109,7 @@ public class TableHelper {
 						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
 						createIdentifier( explicitSchemaName, mappingDefaults.getSchemaName() )
 				);
-		return bindingContext().getMetadataImplementor().getDatabase().locateSchema( schemaName );
+		return bindingContext().getMetadataCollector().getDatabase().locateSchema( schemaName );
 	}
 
 	public TableSpecification createTableSpecification(

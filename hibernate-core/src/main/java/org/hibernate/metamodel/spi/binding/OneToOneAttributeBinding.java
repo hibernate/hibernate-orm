@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.List;
-
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 

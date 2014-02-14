@@ -42,7 +42,7 @@ public class FilterDefinitionSourceImpl implements FilterDefinitionSource {
 	private List<FilterParameterSource> parameterSources;
 
 	public FilterDefinitionSourceImpl(AnnotationInstance filterDefAnnotation, AnnotationBindingContext bindingContext) {
-		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		this.name = JandexHelper.getValue( filterDefAnnotation, "name", String.class, classLoaderService );
 		this.condition = JandexHelper.getValue( filterDefAnnotation, "defaultCondition", String.class, classLoaderService );
 		this.parameterSources = buildParameterSources( filterDefAnnotation );

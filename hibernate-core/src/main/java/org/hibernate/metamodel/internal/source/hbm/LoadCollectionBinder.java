@@ -27,17 +27,19 @@ import org.hibernate.cfg.HbmBinder;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbLoadCollectionElement;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
+import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 class LoadCollectionBinder extends AbstractReturnBinder<JaxbLoadCollectionElement> {
 	LoadCollectionBinder(
-			final JaxbLoadCollectionElement element, final int elementIndex, final LocalBindingContext context,
-			final MetadataImplementor metadata) {
-		super( element, elementIndex, context, metadata );
+			final JaxbLoadCollectionElement element,
+			final int elementIndex,
+			final LocalBindingContext context,
+			final InFlightMetadataCollector metadataCollector) {
+		super( element, elementIndex, context, metadataCollector );
 	}
 
 	@Override

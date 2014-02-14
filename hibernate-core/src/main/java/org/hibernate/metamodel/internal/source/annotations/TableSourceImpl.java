@@ -96,7 +96,7 @@ class TableSourceImpl implements TableSource {
 		final String explicitTableName = tableAnnotation == null
 				? null
 				: JandexHelper.getValue( tableAnnotation, "name", String.class,
-						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+						bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 
 		return new TableInfo( schemaName, catalogName, explicitTableName );
 	}
@@ -105,14 +105,14 @@ class TableSourceImpl implements TableSource {
 		return tableAnnotation == null
 				? null
 				: JandexHelper.getValue( tableAnnotation, "schema", String.class,
-						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+						bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 	}
 
 	private String determineCatalogName(AnnotationInstance tableAnnotation) {
 		return tableAnnotation == null
 				? null
 				: JandexHelper.getValue( tableAnnotation, "catalog", String.class,
-						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+						bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 	}
 
 	private static class TableInfo {

@@ -1,0 +1,129 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.metamodel.spi;
+
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.reflite.spi.Repository;
+import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.source.MappingDefaults;
+import org.hibernate.metamodel.spi.source.MetaAttributeContext;
+import org.hibernate.service.ServiceRegistry;
+
+/**
+ * Describes the context in which binding (the process of build Metadata out of
+ * MetadataSources) occurs.
+ * <p/>
+ * BindingContext are generally hierarchical getting more specific as we "go
+ * down".  E.g.  global -> PU -> document -> mapping
+ *
+ * @author Steve Ebersole
+ */
+public interface BindingContext {
+	/**
+	 * Access to the options specified by the {@link org.hibernate.metamodel.MetadataBuilder}
+	 *
+	 * @return The options
+	 */
+	public MetadataBuildingOptions getBuildingOptions();
+
+	/**
+	 * Access to the "reflite" type repository
+	 *
+	 * @return The reflite type repo
+	 */
+	public Repository getRefliteRepository();
+
+	/**
+	 * Access to mapping defaults in effect for this context
+	 *
+	 * @return The mapping defaults.
+	 */
+	public MappingDefaults getMappingDefaults();
+
+	/**
+	 * Access to the collector of metadata as we build it.
+	 *
+	 * @return The metadata collector.
+	 */
+	public InFlightMetadataCollector getMetadataCollector();
+
+	/**
+	 * Shortcut for {@link #getBuildingOptions()} -> {@link org.hibernate.metamodel.spi.MetadataBuildingOptions#getServiceRegistry()}
+	 *
+	 * @return The ServiceRegistry
+	 */
+	public ServiceRegistry getServiceRegistry();
+
+	public MetaAttributeContext getGlobalMetaAttributeContext();
+
+	/**
+	 * Qualify a class name per the rules for this context
+	 *
+	 * @param name The class name
+	 *
+	 * @return The qualified name
+	 */
+	public String qualifyClassName(String name);
+
+	public boolean quoteIdentifiersInContext();
+
+
+	// todo : go away
+
+	/**
+	 * @deprecated use the Repository instead, available from {@link #getRefliteRepository}
+	 */
+	@Deprecated
+	public <T> Class<T> locateClassByName(String name);
+
+	/**
+	 * todo : maybe a `Type makeDomainType(TypeDescriptor)` method instead?
+	 *
+	 * @deprecated use the Repository instead, available from {@link #getRefliteRepository}
+	 */
+	@Deprecated
+	public Type makeDomainType(String className);
+
+	/**
+	 * @deprecated use the Repository instead, available from {@link #getRefliteRepository}
+	 */
+	@Deprecated
+	public JavaClassReference makeJavaClassReference(String className);
+
+	/**
+	 * @deprecated use the Repository instead, available from {@link #getRefliteRepository}
+	 */
+	@Deprecated
+	public JavaClassReference makeJavaClassReference(Class<?> clazz);
+
+	/**
+	 * @deprecated use the Repository instead, available from {@link #getRefliteRepository}
+	 */
+	@Deprecated
+	public JavaClassReference makeJavaPropertyClassReference(
+			JavaClassReference propertyContainerClassReference,
+			String propertyName
+	);
+}

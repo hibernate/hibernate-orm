@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+
 /**
  * Models the concept class in the hierarchy with no persistent attributes.
  *
@@ -33,11 +35,11 @@ public class NonEntity extends AbstractAttributeContainer {
 	 * Constructor for the non-entity
 	 *
 	 * @param entityName The name of the non-entity
-	 * @param javaClassReference The reference to this non-entity's {@link Class}
+	 * @param typeDescriptor The descriptor for this non-entity's {@link Class}
 	 * @param superType The super type for this non-entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public NonEntity(String entityName, JavaClassReference javaClassReference, Hierarchical superType) {
-		super( entityName, javaClassReference, superType );
+	public NonEntity(String entityName, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		super( entityName, typeDescriptor, superType );
 	}
 
 	@Override

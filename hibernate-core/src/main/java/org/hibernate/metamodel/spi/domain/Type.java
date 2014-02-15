@@ -23,9 +23,12 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 
 /**
- * Basic information about a Java type, in regards to its role in particular set of mappings.
+ * Describes a "Java type" within a domain model.  This concept builds on top of the
+ * lower level {@link org.hibernate.metamodel.reflite} typing model applying more
+ * O/RM semantics (like what is an entity, a composite, etc).
  *
  * @author Steve Ebersole
  */
@@ -38,23 +41,23 @@ public interface Type {
 	public String getName();
 
 	/**
-	 * Obtain the java {@link Class} reference for this type
-	 *
-	 * @return The {@link Class} reference
-	 *
-	 * @throws org.hibernate.boot.registry.classloading.spi.ClassLoadingException Indicates the class reference
-	 * could not be determined.  Generally this is the case in reverse-engineering scenarios where the specified
-	 * domain model classes do not yet exist.
-	 */
-	public JavaClassReference getClassReference();
-
-	public boolean isAssociation();
-
-	/**
 	 * Is this attribute an aggregated composite (what JPA calls an Embeddable)?
 	 *
-	 * @return true, if this attribute is an aggregated composite;
-	 *         false, otherwise.
+	 * @return {@code true}, if this attribute is an aggregated composite; {@code false}, otherwise.
 	 */
 	public boolean isAggregate();
+
+	/**
+	 * Access the {@link org.hibernate.metamodel.reflite} descriptor corresponding to this
+	 * domain model type.
+	 *
+	 * @return The corresponding {@link org.hibernate.metamodel.reflite} JavaTypeDescriptor
+	 */
+	public JavaTypeDescriptor getDescriptor();
+
+	/**
+	 * @deprecated This belongs on the attribute, not on its type.
+	 */
+	@Deprecated
+	public boolean isAssociation();
 }

@@ -59,8 +59,13 @@ class DotNameAdapter implements Name {
 	}
 
 	@Override
-	public String toString() {
+	public String fullName() {
 		return dotName.toString();
+	}
+
+	@Override
+	public String toString() {
+		return "DotNameAdapter{dotName=" + dotName.toString() + '}';
 	}
 
 	@Override

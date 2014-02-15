@@ -23,28 +23,18 @@
  */
 package org.hibernate.metamodel.reflite.spi;
 
+import java.util.Collection;
+
 /**
+ * Describes a java type that represents an interface definition.
+ *
  * @author Steve Ebersole
  */
-public interface InterfaceDescriptor extends TypeDescriptor {
+public interface InterfaceDescriptor extends JavaTypeDescriptor {
 	/**
 	 * Get the interfaces extended by this interface
 	 *
 	 * @return The implemented interfaces
 	 */
-	public TypeDescriptor[] getExtendedInterfaceTypes();
-
-	/**
-	 * Get all the fields declared by this type.
-	 *
-	 * @return All fields declared by this type
-	 */
-	public FieldDescriptor[] getDeclaredFields();
-
-	/**
-	 * Get all the methods declared by this type.
-	 *
-	 * @return All fields declared by this type
-	 */
-	public MethodDescriptor[] getDeclaredMethods();
+	public Collection<InterfaceDescriptor> getExtendedInterfaceTypes();
 }

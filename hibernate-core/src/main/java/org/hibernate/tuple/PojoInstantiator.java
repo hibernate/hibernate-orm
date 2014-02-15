@@ -30,14 +30,14 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
+import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -56,8 +56,22 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	private final Class proxyInterface;
 	private final boolean isAbstract;
 
-	public PojoInstantiator(Component component, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = component.getComponentClass();
+	public PojoInstantiator(
+			ServiceRegistry serviceRegistry,
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			ReflectionOptimizer.InstantiationOptimizer optimizer) {
+		if ( isIdentifierMapper ) {
+			final EntityIdentifier entityIdentifier =
+					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+			this.mappedClass = entityIdentifier.getLookupClassBinding().getIdClassType();
+		}
+		else {
+			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+			this.mappedClass = cls.classForName(
+					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+			);
+		}
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.optimizer = optimizer;
 
@@ -74,54 +88,20 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	}
 
 	public PojoInstantiator(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
-			boolean isIdentifierMapper,
+			ServiceRegistry serviceRegistry,
+			EntityBinding entityBinding,
 			ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		if ( isIdentifierMapper ) {
-			final EntityIdentifier entityIdentifier =
-					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
-			this.mappedClass = entityIdentifier.getIdClassClass();
+		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		this.mappedClass = cls.classForName( entityBinding.getEntity().getDescriptor().getName().fullName() );
+		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
+		if ( entityBinding.getProxyInterfaceType() == null ) {
+			this.proxyInterface = null;
 		}
 		else {
-			this.mappedClass = compositeAttributeBindingContainer.getClassReference().getResolvedClass();
+			this.proxyInterface = cls.classForName(
+					entityBinding.getProxyInterfaceType().getName().fullName()
+			);
 		}
-		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
-		this.optimizer = optimizer;
-
-		this.proxyInterface = null;
-		this.embeddedIdentifier = false;
-
-		try {
-			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
-		}
-		catch ( PropertyNotFoundException pnfe ) {
-			LOG.noDefaultConstructor(mappedClass.getName());
-			constructor = null;
-		}
-	}
-
-	public PojoInstantiator(PersistentClass persistentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = persistentClass.getMappedClass();
-		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
-		this.proxyInterface = persistentClass.getProxyInterface();
-		this.embeddedIdentifier = persistentClass.hasEmbeddedIdentifier();
-		this.optimizer = optimizer;
-
-		try {
-			constructor = ReflectHelper.getDefaultConstructor( mappedClass );
-		}
-		catch ( PropertyNotFoundException pnfe ) {
-			LOG.noDefaultConstructor(mappedClass.getName());
-			constructor = null;
-		}
-	}
-
-	public PojoInstantiator(EntityBinding entityBinding, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = entityBinding.getEntity().getClassReference().getResolvedClass();
-		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
-		this.proxyInterface = entityBinding.getProxyInterfaceType() == null ?
-				null :
-				entityBinding.getProxyInterfaceType().getResolvedClass();
 		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite();
 		this.optimizer = optimizer;
 

@@ -33,12 +33,12 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -51,17 +51,18 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource, AnnotationAttributeSource {
 	private final EmbeddableClass embeddableClass;
-	private final JavaClassReference javaClassReference;
+	private final JavaTypeDescriptor typeDescriptor;
 	private final String path;
 	private final AccessType classAccessType;
 	private Map<String, AttributeOverride> attributeOverrideMap;
 	private Map<String, AssociationOverride> associationOverrideMap;
+
 	public ComponentAttributeSourceImpl(
 			final EmbeddableClass embeddableClass,
 			final String parentPath,
 			final AccessType classAccessType) {
 		this.embeddableClass = embeddableClass;
-		this.javaClassReference = getLocalBindingContext().makeJavaClassReference( embeddableClass.getConfiguredClass() );
+		this.typeDescriptor = getLocalBindingContext().typeDescriptor( embeddableClass.getConfiguredClass().getName() );
 		this.path = StringHelper.isEmpty( parentPath ) ? embeddableClass.getEmbeddedAttributeName() : parentPath + "." + embeddableClass.getEmbeddedAttributeName();
 		this.classAccessType = classAccessType;
 	}
@@ -92,8 +93,8 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource, A
 	}
 
 	@Override
-	public JavaClassReference getClassReference() {
-		return javaClassReference;
+	public JavaTypeDescriptor getTypeDescriptor() {
+		return typeDescriptor;
 	}
 
 	@Override

@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
@@ -59,10 +59,10 @@ public abstract class AbstractHbmSourceNode {
 		return sourceMappingDocument().getJaxbRoot();
 	}
 
-	protected JavaClassReference makeJavaClassReference(String className) {
+	protected JavaTypeDescriptor typeDescriptor(String className) {
 		return className == null ?
 				null :
-				bindingContext().makeJavaClassReference( bindingContext().qualifyClassName( className ) );
+				bindingContext().typeDescriptor( className );
 	}
 
 	protected MappingException makeMappingException(String message) {

@@ -35,6 +35,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.util.SchemaUtil;
@@ -49,6 +50,7 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8962" )
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimpleElement() throws Exception {

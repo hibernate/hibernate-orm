@@ -38,9 +38,9 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssoc
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AssociationSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
@@ -55,6 +55,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -174,11 +175,11 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 	}
 
 	@Override
-	public JavaClassReference getElementJavaClassReference() {
+	public JavaTypeDescriptor getElementTypeDescriptor() {
 		// needed for arrays
 		Class<?> attributeType = associationAttribute.getAttributeType();
 		if ( attributeType.isArray() ) {
-			return entityClass.getLocalBindingContext().makeJavaClassReference( attributeType.getComponentType() );
+			return entityClass.getLocalBindingContext().typeDescriptor( attributeType.getComponentType().getName() );
 		}
 		else {
 			return null;

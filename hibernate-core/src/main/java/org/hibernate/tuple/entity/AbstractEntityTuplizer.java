@@ -24,13 +24,13 @@
 package org.hibernate.tuple.entity;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -43,9 +43,9 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.Assigned;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -55,14 +55,13 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 
 /**
@@ -72,14 +71,9 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityTuplizer.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			AbstractEntityTuplizer.class.getName()
-	);
-
-	//TODO: currently keeps Getters and Setters (instead of PropertyAccessors) because of the way getGetter() and getSetter() are implemented currently; yuck!
-
+	private final ServiceRegistry serviceRegistry;
 	private final EntityMetamodel entityMetamodel;
 
 	private final Getter idGetter;
@@ -93,153 +87,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private final ProxyFactory proxyFactory;
 	private final CompositeType identifierMapperType;
 
-	public Type getIdentifierMapperType() {
-		return identifierMapperType;
-	}
-
-	/**
-	 * Build an appropriate Getter for the given property.
-	 *
-	 * @param mappedProperty The property to be accessed via the built Getter.
-	 * @param mappedEntity The entity information regarding the mapped entity owning this property.
-	 * @return An appropriate Getter instance.
-	 */
-	protected abstract Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity);
-
-	/**
-	 * Build an appropriate Setter for the given property.
-	 *
-	 * @param mappedProperty The property to be accessed via the built Setter.
-	 * @param mappedEntity The entity information regarding the mapped entity owning this property.
-	 * @return An appropriate Setter instance.
-	 */
-	protected abstract Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity);
-
-	/**
-	 * Build an appropriate Instantiator for the given mapped entity.
-	 *
-	 * @param mappingInfo The mapping information regarding the mapped entity.
-	 * @return An appropriate Instantiator instance.
-	 */
-	protected abstract Instantiator buildInstantiator(PersistentClass mappingInfo);
-
-	/**
-	 * Build an appropriate ProxyFactory for the given mapped entity.
-	 *
-	 * @param mappingInfo The mapping information regarding the mapped entity.
-	 * @param idGetter The constructed Getter relating to the entity's id property.
-	 * @param idSetter The constructed Setter relating to the entity's id property.
-	 * @return An appropriate ProxyFactory instance.
-	 */
-	protected abstract ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter);
-
-	/**
-	 * Build an appropriate Getter for the given property.
-	 *
-	 *
-	 * @param mappedProperty The property to be accessed via the built Getter.
-	 * @return An appropriate Getter instance.
-	 */
-	protected abstract Getter buildPropertyGetter(AttributeBinding mappedProperty);
-
-	/**
-	 * Build an appropriate Setter for the given property.
-	 *
-	 *
-	 * @param mappedProperty The property to be accessed via the built Setter.
-	 * @return An appropriate Setter instance.
-	 */
-	protected abstract Setter buildPropertySetter(AttributeBinding mappedProperty);
-
-	/**
-	 * Build an appropriate Instantiator for the given mapped entity.
-	 *
-	 * @param mappingInfo The mapping information regarding the mapped entity.
-	 * @return An appropriate Instantiator instance.
-	 */
-	protected abstract Instantiator buildInstantiator(EntityBinding mappingInfo);
-
-	/**
-	 * Build an appropriate ProxyFactory for the given mapped entity.
-	 *
-	 * @param mappingInfo The mapping information regarding the mapped entity.
-	 * @param idGetter The constructed Getter relating to the entity's id property.
-	 * @param idSetter The constructed Setter relating to the entity's id property.
-	 * @return An appropriate ProxyFactory instance.
-	 */
-	protected abstract ProxyFactory buildProxyFactory(EntityBinding mappingInfo, Getter idGetter, Setter idSetter);
-
 	/**
 	 * Constructs a new AbstractEntityTuplizer instance.
 	 *
 	 * @param entityMetamodel The "interpreted" information relating to the mapped entity.
 	 * @param mappingInfo The parsed "raw" mapping data relating to the given entity.
 	 */
-	public AbstractEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappingInfo) {
-		this.entityMetamodel = entityMetamodel;
-
-		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-			idGetter = buildPropertyGetter( mappingInfo.getIdentifierProperty(), mappingInfo );
-			idSetter = buildPropertySetter( mappingInfo.getIdentifierProperty(), mappingInfo );
-		}
-		else {
-			idGetter = null;
-			idSetter = null;
-		}
-
-		propertySpan = entityMetamodel.getPropertySpan();
-
-        getters = new Getter[propertySpan];
-		setters = new Setter[propertySpan];
-
-		Iterator itr = mappingInfo.getPropertyClosureIterator();
-		boolean foundCustomAccessor=false;
-		int i=0;
-		while ( itr.hasNext() ) {
-			//TODO: redesign how PropertyAccessors are acquired...
-			Property property = (Property) itr.next();
-			getters[i] = buildPropertyGetter(property, mappingInfo);
-			setters[i] = buildPropertySetter(property, mappingInfo);
-			if ( !property.isBasicPropertyAccessor() ) {
-				foundCustomAccessor = true;
-			}
-			i++;
-		}
-		hasCustomAccessors = foundCustomAccessor;
-
-        instantiator = buildInstantiator( mappingInfo );
-
-		if ( entityMetamodel.isLazy() ) {
-			proxyFactory = buildProxyFactory( mappingInfo, idGetter, idSetter );
-			if (proxyFactory == null) {
-				entityMetamodel.setLazy( false );
-			}
-		}
-		else {
-			proxyFactory = null;
-		}
-
-		Component mapper = mappingInfo.getIdentifierMapper();
-		if ( mapper == null ) {
-			identifierMapperType = null;
-			mappedIdentifierValueMarshaller = null;
-		}
-		else {
-			identifierMapperType = (CompositeType) mapper.getType();
-			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
-					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
-					(ComponentType) identifierMapperType
-			);
-		}
-	}
-
-	/**
-	 * Constructs a new AbstractEntityTuplizer instance.
-	 *
-	 * @param entityMetamodel The "interpreted" information relating to the mapped entity.
-	 * @param mappingInfo The parsed "raw" mapping data relating to the given entity.
-	 */
-	public AbstractEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappingInfo) {
+	public AbstractEntityTuplizer(ServiceRegistry serviceRegistry, EntityMetamodel entityMetamodel, EntityBinding mappingInfo) {
+		this.serviceRegistry = serviceRegistry;
 		this.entityMetamodel = entityMetamodel;
 
 		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
@@ -301,6 +156,61 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			);
 		}
 	}
+
+	private ClassLoaderService classLoaderService;
+
+	protected Class classForName(String name) {
+		if ( classLoaderService == null ) {
+			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		}
+
+		return classLoaderService.classForName( name );
+	}
+
+
+	protected ServiceRegistry serviceRegistry() {
+		return serviceRegistry;
+	}
+
+	public Type getIdentifierMapperType() {
+		return identifierMapperType;
+	}
+
+	/**
+	 * Build an appropriate Getter for the given property.
+	 *
+	 *
+	 * @param mappedProperty The property to be accessed via the built Getter.
+	 * @return An appropriate Getter instance.
+	 */
+	protected abstract Getter buildPropertyGetter(AttributeBinding mappedProperty);
+
+	/**
+	 * Build an appropriate Setter for the given property.
+	 *
+	 *
+	 * @param mappedProperty The property to be accessed via the built Setter.
+	 * @return An appropriate Setter instance.
+	 */
+	protected abstract Setter buildPropertySetter(AttributeBinding mappedProperty);
+
+	/**
+	 * Build an appropriate Instantiator for the given mapped entity.
+	 *
+	 * @param mappingInfo The mapping information regarding the mapped entity.
+	 * @return An appropriate Instantiator instance.
+	 */
+	protected abstract Instantiator buildInstantiator(EntityBinding mappingInfo);
+
+	/**
+	 * Build an appropriate ProxyFactory for the given mapped entity.
+	 *
+	 * @param mappingInfo The mapping information regarding the mapped entity.
+	 * @param idGetter The constructed Getter relating to the entity's id property.
+	 * @param idSetter The constructed Setter relating to the entity's id property.
+	 * @return An appropriate ProxyFactory instance.
+	 */
+	protected abstract ProxyFactory buildProxyFactory(EntityBinding mappingInfo, Getter idGetter, Setter idSetter);
 
 	/** Retreives the defined entity-name for the tuplized entity.
 	 *

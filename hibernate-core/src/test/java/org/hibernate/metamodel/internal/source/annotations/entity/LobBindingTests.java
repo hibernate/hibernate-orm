@@ -116,8 +116,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
     private void checkHibernateTypeDescriptor(ExpectedValue expectedValue, String attributeName) {
         HibernateTypeDescriptor descriptor = getTypeDescriptor( attributeName );
         assertEquals( expectedValue.explicitTypeName, descriptor.getExplicitTypeName() );
-        assertEquals( expectedValue.javaTypeName, descriptor.getClassReference().getName() );
-		assertEquals( expectedValue.javaTypeName, descriptor.getClassReference().getResolvedClass().getName() );
+        assertEquals( expectedValue.javaTypeName, descriptor.getJavaTypeDescriptor().getName().fullName() );
         assertEquals( expectedValue.isResolvedTypeMappingNull, descriptor.getResolvedTypeMapping() == null );
         assertEquals( expectedValue.resolvedTypeMappingClass, descriptor.getResolvedTypeMapping().getClass() );
         assertEquals( expectedValue.isTypeParametersNull, descriptor.getTypeParameters() == null );

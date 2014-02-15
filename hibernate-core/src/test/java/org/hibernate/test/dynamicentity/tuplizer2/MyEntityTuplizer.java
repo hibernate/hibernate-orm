@@ -23,38 +23,31 @@
  *
  */
 package org.hibernate.test.dynamicentity.tuplizer2;
+
 import org.hibernate.EntityNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.test.dynamicentity.tuplizer.MyEntityInstantiator;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
+
+import org.hibernate.test.dynamicentity.ProxyHelper;
+import org.hibernate.test.dynamicentity.tuplizer.MyEntityInstantiator;
 
 /**
  * @author Steve Ebersole
  */
 public class MyEntityTuplizer extends PojoEntityTuplizer {
-
-	public MyEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
-		super( entityMetamodel, mappedEntity );
-	}
-
-	public MyEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
-		super( entityMetamodel, mappedEntity );
+	public MyEntityTuplizer(ServiceRegistry serviceRegistry, EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
+		super( serviceRegistry, entityMetamodel, mappedEntity );
 	}
 
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return new EntityNameResolver[] { MyEntityNameResolver.INSTANCE };
-	}
-
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
-		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
 
 	protected Instantiator buildInstantiator(EntityBinding persistentClass) {
@@ -67,14 +60,6 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 			entityName = super.determineConcreteSubclassEntityName( entityInstance, factory );
 		}
 		return entityName;
-	}
-
-	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
-		// allows defining a custom proxy factory, which is responsible for
-		// generating lazy proxies for a given entity.
-		//
-		// Here we simply use the default...
-		return super.buildProxyFactory( persistentClass, idGetter, idSetter );
 	}
 
 	protected ProxyFactory buildProxyFactory(EntityBinding entityBinding, Getter idGetter, Setter idSetter) {

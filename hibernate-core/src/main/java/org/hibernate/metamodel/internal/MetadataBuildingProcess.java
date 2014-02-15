@@ -60,8 +60,10 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.reflite.internal.RepositoryImpl;
-import org.hibernate.metamodel.reflite.spi.Repository;
+import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.reflite.spi.Name;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jandex.Unifier;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
@@ -132,7 +134,7 @@ public class MetadataBuildingProcess {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// prep to start handling binding in earnest
 		final MappingDefaultsImpl mappingDefaults = new MappingDefaultsImpl( options );
-		final Repository typeRepository = new RepositoryImpl(
+		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
 				options.getTempClassLoader(),
 				options.getServiceRegistry()
 		);
@@ -143,7 +145,7 @@ public class MetadataBuildingProcess {
 		final RootBindingContextImpl rootBindingContext = new RootBindingContextImpl(
 				options,
 				mappingDefaults,
-				typeRepository,
+				javaTypeDescriptorRepository,
 				metadataCollector
 		);
 
@@ -498,7 +500,7 @@ public class MetadataBuildingProcess {
 	public static class RootBindingContextImpl implements BindingContext {
 		private final MetadataBuildingOptions options;
 		private final MappingDefaults mappingDefaults;
-		private final Repository typeRepository;
+		private final JavaTypeDescriptorRepository javaTypeDescriptorRepository;
 		private final InFlightMetadataCollectorImpl metadataCollector;
 		private final MetaAttributeContext globalMetaAttributeContext = new MetaAttributeContext();
 
@@ -507,11 +509,11 @@ public class MetadataBuildingProcess {
 		public RootBindingContextImpl(
 				MetadataBuildingOptions options,
 				MappingDefaults mappingDefaults,
-				Repository typeRepository,
+				JavaTypeDescriptorRepository javaTypeDescriptorRepository,
 				InFlightMetadataCollectorImpl metadataCollector) {
 			this.options = options;
 			this.mappingDefaults = mappingDefaults;
-			this.typeRepository = typeRepository;
+			this.javaTypeDescriptorRepository = javaTypeDescriptorRepository;
 			this.metadataCollector = metadataCollector;
 
 			this.classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
@@ -528,8 +530,8 @@ public class MetadataBuildingProcess {
 		}
 
 		@Override
-		public Repository getRefliteRepository() {
-			return typeRepository;
+		public JavaTypeDescriptorRepository getRefliteRepository() {
+			return javaTypeDescriptorRepository;
 		}
 
 		@Override
@@ -559,6 +561,11 @@ public class MetadataBuildingProcess {
 			return options.getDatabaseDefaults().isGloballyQuotedIdentifiers();
 		}
 
+		@Override
+		public JavaTypeDescriptor typeDescriptor(String name) {
+			return javaTypeDescriptorRepository.getType( javaTypeDescriptorRepository.buildName( qualifyClassName( name  ) ) );
+		}
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// BindingContext deprecated impls
 
@@ -569,7 +576,15 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public Type makeDomainType(String className) {
-			return new BasicType( className, makeJavaClassReference( className ) );
+			return new BasicType( className, typeDescriptor( className ) );
+		}
+
+		@Override
+		public Type makeDomainType(Name typeName) {
+			return new BasicType(
+					typeName.fullName(),
+					typeDescriptor( typeName.fullName() )
+			);
 		}
 
 		private Map<String, JavaClassReference> nameToJavaTypeMap = new HashMap<String, JavaClassReference>();
@@ -1057,7 +1072,7 @@ public class MetadataBuildingProcess {
 			}
 			entityBindingMap.put( entityName, entityBinding );
 			final boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
-			final String className = isPOJO ? entityBinding.getEntity().getClassReference().getName() : null;
+			final String className = isPOJO ? entityBinding.getEntity().getDescriptor().getName().fullName() : null;
 			if ( isPOJO && StringHelper.isEmpty( className ) ) {
 				throw new MappingException( "Entity[" + entityName + "] is mapped as pojo but don't have a class name" );
 			}

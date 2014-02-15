@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 
 /**
  * @author Gail Badner
@@ -31,5 +31,5 @@ import org.hibernate.metamodel.spi.domain.JavaClassReference;
 public interface CompositePluralAttributeIndexSource
 		extends PluralAttributeIndexSource, AttributeSourceContainer {
 
-	public JavaClassReference getClassReference();
+	public JavaTypeDescriptor getTypeDescriptor();
 }

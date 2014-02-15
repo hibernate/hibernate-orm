@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,9 +41,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.Setter;
-import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 
 /**
  * The mapping for a component, composite element,
@@ -177,9 +176,10 @@ public class Component extends SimpleValue implements MetaAttributable {
 	@Override
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
-		final ComponentMetamodel metamodel = new ComponentMetamodel( this );
-		final TypeFactory factory = getMappings().getTypeResolver().getTypeFactory();
-		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
+//		final ComponentMetamodel metamodel = new ComponentMetamodel( this );
+//		final TypeFactory factory = getMappings().getTypeResolver().getTypeFactory();
+//		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
+		return null;
 	}
 
 	@Override

@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
@@ -44,6 +45,7 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 
@@ -59,63 +61,32 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	private final Getter parentGetter;
 	private final Setter parentSetter;
 
-	public PojoComponentTuplizer(Component component) {
-		super( component );
-
-		this.componentClass = component.getComponentClass();
-
-		String[] getterNames = new String[propertySpan];
-		String[] setterNames = new String[propertySpan];
-		Class[] propTypes = new Class[propertySpan];
-		for ( int i = 0; i < propertySpan; i++ ) {
-			getterNames[i] = getters[i].getMethodName();
-			setterNames[i] = setters[i].getMethodName();
-			propTypes[i] = getters[i].getReturnType();
-		}
-
-		final String parentPropertyName = component.getParentProperty();
-		if ( parentPropertyName == null ) {
-			parentSetter = null;
-			parentGetter = null;
-		}
-		else {
-			PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( null );
-			parentSetter = pa.getSetter( componentClass, parentPropertyName );
-			parentGetter = pa.getGetter( componentClass, parentPropertyName );
-		}
-
-		if ( hasCustomAccessors || !Environment.useReflectionOptimizer() ) {
-			optimizer = null;
-		}
-		else {
-			// TODO: here is why we need to make bytecode provider global :(
-			// TODO : again, fix this after HHH-1907 is complete
-			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
-					componentClass, getterNames, setterNames, propTypes
-			);
-		}
-	}
-
 	public PojoComponentTuplizer(
+			ServiceRegistry serviceRegistry,
 			CompositeAttributeBindingContainer component,
 			boolean isIdentifierMapper) {
-		super( component, isIdentifierMapper );
+		super( serviceRegistry, component, isIdentifierMapper );
 
 		final EntityIdentifier entityIdentifier =
 				component.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 
-		this.componentClass =
-				isIdentifierMapper ?
-						entityIdentifier.getIdClassClass() :
-						component.getClassReference().getResolvedClass();
+		if ( isIdentifierMapper ) {
+			this.componentClass = entityIdentifier.getLookupClassBinding().getIdClassType();
+		}
+		else {
+			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+			this.componentClass = cls.classForName(
+					component.getAttributeContainer().getDescriptor().getName().fullName()
+			);
+		}
 
-		String[] getterNames = new String[propertySpan];
-		String[] setterNames = new String[propertySpan];
-		Class[] propTypes = new Class[propertySpan];
-		for ( int i = 0; i < propertySpan; i++ ) {
-			getterNames[i] = getters[i].getMethodName();
-			setterNames[i] = setters[i].getMethodName();
-			propTypes[i] = getters[i].getReturnType();
+		String[] getterNames = new String[ propertySpan() ];
+		String[] setterNames = new String[ propertySpan() ];
+		Class[] propTypes = new Class[ propertySpan() ];
+		for ( int i = 0; i < propertySpan(); i++ ) {
+			getterNames[i] = getters()[i].getMethodName();
+			setterNames[i] = setters()[i].getMethodName();
+			propTypes[i] = getters()[i].getReturnType();
 		}
 
 		final String parentPropertyName =
@@ -130,7 +101,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			parentGetter = pa.getGetter( componentClass, parentPropertyName );
 		}
 
-		if ( hasCustomAccessors || !Environment.useReflectionOptimizer() ) {
+		if ( hasCustomAccessors() || !Environment.useReflectionOptimizer() ) {
 			optimizer = null;
 		}
 		else {
@@ -148,7 +119,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	public Object[] getPropertyValues(Object component) throws HibernateException {
 		if ( component == BackrefPropertyAccessor.UNKNOWN ) {
-			return new Object[propertySpan];
+			return new Object[propertySpan()];
 		}
 		else if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return optimizer.getAccessOptimizer().getPropertyValues( component );
@@ -176,8 +147,8 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	public boolean isMethodOf(Method method) {
-		for ( int i = 0; i < propertySpan; i++ ) {
-			final Method getterMethod = getters[i].getMethod();
+		for ( int i = 0; i < propertySpan(); i++ ) {
+			final Method getterMethod = getters()[i].getMethod();
 			if ( getterMethod != null && getterMethod.equals( method ) ) {
 				return true;
 			}
@@ -189,38 +160,33 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		parentSetter.set( component, parent, factory );
 	}
 
-	protected Instantiator buildInstantiator(Component component) {
-		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( component.getComponentClass() ) ) {
-			return new ProxiedInstantiator( component );
-		}
-		if ( optimizer == null ) {
-			return new PojoInstantiator( component, null );
-		}
-		else {
-			return new PojoInstantiator( component, optimizer.getInstantiationOptimizer() );
-		}
-	}
-
-	protected Getter buildGetter(Component component, Property prop) {
-		return prop.getGetter( component.getComponentClass() );
-	}
-
-	protected Setter buildSetter(Component component, Property prop) {
-		return prop.getSetter( component.getComponentClass() );
-	}
-
+	@Override
 	protected Instantiator buildInstantiator(
 			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
 			boolean isIdentifierMapper) {
-		if ( !compositeAttributeBindingContainer.isAggregated() &&
-				ReflectHelper.isAbstractClass( compositeAttributeBindingContainer.getClassReference().getResolvedClass() ) ) {
-			return new ProxiedInstantiator( compositeAttributeBindingContainer );
+		final Class clazz = classForName(
+				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+		);
+
+		if ( !compositeAttributeBindingContainer.isAggregated() && ReflectHelper.isAbstractClass( clazz ) ) {
+			return new ProxiedInstantiator( clazz );
 		}
+
 		if ( optimizer == null ) {
-			return new PojoInstantiator( compositeAttributeBindingContainer, isIdentifierMapper, null );
+			return new PojoInstantiator(
+					serviceRegistry(),
+					compositeAttributeBindingContainer,
+					isIdentifierMapper,
+					null
+			);
 		}
 		else {
-			return new PojoInstantiator( compositeAttributeBindingContainer, isIdentifierMapper, optimizer.getInstantiationOptimizer() );
+			return new PojoInstantiator(
+					serviceRegistry(),
+					compositeAttributeBindingContainer,
+					isIdentifierMapper,
+					optimizer.getInstantiationOptimizer()
+			);
 		}
 	}
 
@@ -238,14 +204,18 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			final EntityIdentifier entityIdentifier =
 					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 			return getGetter(
-					entityIdentifier.getIdClassClass(),
+					entityIdentifier.getLookupClassBinding().getIdClassType(),
 					attributeBinding.getAttribute().getName(),
-					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getIdClassPropertyAccessorName() )
+					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getLookupClassBinding().getAccessStrategy() )
 			);
 		}
 		else {
+			final ClassLoaderService cls = serviceRegistry().getService( ClassLoaderService.class );
+			final Class clazz = cls.classForName(
+					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+			);
 			return getGetter(
-					compositeAttributeBindingContainer.getClassReference().getResolvedClass(),
+					clazz,
 					attributeBinding.getAttribute().getName(),
 					PropertyAccessorFactory.getPropertyAccessor( attributeBinding, EntityMode.POJO )
 			);
@@ -263,15 +233,18 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			final EntityIdentifier entityIdentifier =
 					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 			return getSetter(
-					entityIdentifier.getIdClassClass(),
+					entityIdentifier.getLookupClassBinding().getIdClassType(),
 					attributeBinding.getAttribute().getName(),
-					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getIdClassPropertyAccessorName() )
+					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getLookupClassBinding().getAccessStrategy() )
 			);
 
 		}
 		else {
+			final Class clazz = classForName(
+					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+			);
 			return getSetter(
-					compositeAttributeBindingContainer.getClassReference().getResolvedClass(),
+					clazz,
 					attributeBinding.getAttribute().getName(),
 					PropertyAccessorFactory.getPropertyAccessor( attributeBinding, EntityMode.POJO )
 			);
@@ -292,10 +265,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 		public ProxiedInstantiator(Component component) {
 			this( component.getComponentClass() );
-		}
-
-		public ProxiedInstantiator(CompositeAttributeBindingContainer compositeAttributeBindingContainer) {
-			this( compositeAttributeBindingContainer.getClassReference().getResolvedClass() );
 		}
 
 		private ProxiedInstantiator(Class<?> proxiedClass) {

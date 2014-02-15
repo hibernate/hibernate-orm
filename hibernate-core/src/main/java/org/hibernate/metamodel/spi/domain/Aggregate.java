@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+
 /**
  * Models the notion of an aggregated composite (what JPA calls an Embeddable).
  * <p/>
@@ -33,8 +35,8 @@ package org.hibernate.metamodel.spi.domain;
 public class Aggregate extends AbstractAttributeContainer {
 	final String roleBaseName;
 
-	public Aggregate(String roleBaseName, String name, JavaClassReference javaClassReference, Hierarchical superType) {
-		super( name, javaClassReference, superType );
+	public Aggregate(String roleBaseName, String name, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		super( name, typeDescriptor, superType );
 		this.roleBaseName = roleBaseName;
 	}
 

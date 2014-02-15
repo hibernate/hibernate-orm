@@ -29,11 +29,11 @@ import java.util.List;
 
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeIndexSource;
-import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -87,8 +87,8 @@ public class CompositePluralAttributeIndexSourceImpl extends AbstractPluralAttri
 		return false;
 	}
 
-	public JavaClassReference getClassReference() {
-		return getLocalBindingContext().makeJavaClassReference( pluralAssociationAttribute().getIndexType().getName() );
+	public JavaTypeDescriptor getTypeDescriptor() {
+		return getLocalBindingContext().typeDescriptor( pluralAssociationAttribute().getIndexType().getName() );
 	}
 
 	@Override

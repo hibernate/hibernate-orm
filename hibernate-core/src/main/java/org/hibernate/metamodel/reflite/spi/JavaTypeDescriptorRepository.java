@@ -24,33 +24,26 @@
 package org.hibernate.metamodel.reflite.spi;
 
 /**
- * Describes information about a class.
+ * The repository of reflite JavaTypeDescriptor info.
  *
  * @author Steve Ebersole
  */
-public interface TypeDescriptor {
-	public Name getName();
-
-	public int getModifiers();
+public interface JavaTypeDescriptorRepository {
+	/**
+	 * Builds a type-safe wrapper around a type/package name
+	 *
+	 * @param name The type/package name to wrap
+	 *
+	 * @return The type-safe wrapper.
+	 */
+	public Name buildName(String name);
 
 	/**
-	 * Is this type an interface (as opposed to a class)?
+	 * Obtain the reflite JavaTypeDescriptor for the given name
 	 *
-	 * @return {@code true} indicates it is a interface; {@code false} indicates it is a class.
-	 */
-	public boolean isInterface();
-
-	public boolean isVoid();
-
-	/**
+	 * @param typeName The name of the type for which to obtain the descriptor
 	 *
-	 * @return
+	 * @return The descriptor
 	 */
-	public boolean isArray();
-
-	/**
-	 *
-	 * @return
-	 */
-	public boolean isPrimitive();
+	public JavaTypeDescriptor getType(Name typeName);
 }

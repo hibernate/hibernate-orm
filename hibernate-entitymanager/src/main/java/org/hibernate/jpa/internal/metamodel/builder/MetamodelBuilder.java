@@ -38,6 +38,7 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.internal.metamodel.AbstractIdentifiableType;
@@ -126,7 +127,8 @@ public class MetamodelBuilder {
 
 	@SuppressWarnings("unchecked")
 	private EntityTypeImpl buildEntityType(EntityBinding entityBinding) {
-		final Class javaType = entityBinding.getClassReference().getResolvedClass();
+		final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
+		final Class javaType = cls.classForName( entityBinding.getEntity().getDescriptor().getName().fullName() );
 		final AbstractIdentifiableType superType = locateOrBuildSuperType( entityBinding.getEntity().getSuperType(), entityBinding );
 
 		EntityTypeImpl entityType = new EntityTypeImpl(

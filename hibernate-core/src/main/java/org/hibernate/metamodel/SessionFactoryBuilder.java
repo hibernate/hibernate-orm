@@ -31,7 +31,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**

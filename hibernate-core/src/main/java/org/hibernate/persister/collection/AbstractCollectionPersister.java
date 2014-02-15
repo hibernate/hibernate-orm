@@ -40,6 +40,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -559,7 +560,10 @@ public abstract class AbstractCollectionPersister
 
 		isInverse = keyBinding.isInverse();
 		if ( isArray ) {
-			elementClass = collection.getAttribute().getElementType().getClassReference().getResolvedClass();
+			final ClassLoaderService cls = factory.getServiceRegistry().getService( ClassLoaderService.class );
+			elementClass = cls.classForName(
+					collection.getAttribute().getElementType().getDescriptor().getName().fullName()
+			);
 		}
 		else {
 			// for non-arrays, we don't need to know the element class

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+
 /**
  * Models the concept of a (intermediate) superclass
  *
@@ -33,11 +35,11 @@ public class Superclass extends AbstractAttributeContainer {
 	 * Constructor for the entity
 	 *
 	 * @param entityName The name of the entity
-	 * @param javaClassReference The reference to this entity's {@link Class}
+	 * @param typeDescriptor The descriptor of this entity's {@link Class}
 	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public Superclass(String entityName, JavaClassReference javaClassReference, Hierarchical superType) {
-		super( entityName, javaClassReference, superType );
+	public Superclass(String entityName, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		super( entityName, typeDescriptor, superType );
 	}
 
 	@Override

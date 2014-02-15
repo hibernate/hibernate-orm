@@ -23,19 +23,24 @@
  */
 package org.hibernate.metamodel.reflite.internal;
 
-import org.hibernate.metamodel.reflite.spi.ArrayTypeDescriptor;
+import java.util.Collection;
+import java.util.Collections;
+
+import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
+import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
-import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class ArrayTypeDescriptorImpl implements ArrayTypeDescriptor {
+public class ArrayDescriptorImpl implements ArrayDescriptor {
 	private final Name name;
 	private final int modifiers;
-	private TypeDescriptor componentType;
+	private JavaTypeDescriptor componentType;
 
-	public ArrayTypeDescriptorImpl(Name name, int modifiers, TypeDescriptor componentType) {
+	public ArrayDescriptorImpl(Name name, int modifiers, JavaTypeDescriptor componentType) {
 		this.name = name;
 		this.modifiers = modifiers;
 		this.componentType = componentType;
@@ -52,27 +57,17 @@ public class ArrayTypeDescriptorImpl implements ArrayTypeDescriptor {
 	}
 
 	@Override
-	public TypeDescriptor getComponentTypeDescriptor() {
+	public Collection<FieldDescriptor> getDeclaredFields() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Collection<MethodDescriptor> getDeclaredMethods() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public JavaTypeDescriptor getComponentType() {
 		return componentType;
-	}
-
-	@Override
-	public boolean isInterface() {
-		return false;
-	}
-
-	@Override
-	public boolean isVoid() {
-		return false;
-	}
-
-	@Override
-	public boolean isArray() {
-		return true;
-	}
-
-	@Override
-	public boolean isPrimitive() {
-		return false;
 	}
 }

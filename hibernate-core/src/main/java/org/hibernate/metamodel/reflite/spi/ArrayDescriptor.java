@@ -24,11 +24,15 @@
 package org.hibernate.metamodel.reflite.spi;
 
 /**
- * The repository of reflite info.
+ * Describes a java type that represents an array definition.
  *
  * @author Steve Ebersole
  */
-public interface Repository {
-	public Name buildName(String name);
-	public TypeDescriptor getType(Name className);
+public interface ArrayDescriptor extends JavaTypeDescriptor {
+	/**
+	 * Obtain the type descriptor for the elements of the array
+	 *
+	 * @return The array element descriptor
+	 */
+	public JavaTypeDescriptor getComponentType();
 }

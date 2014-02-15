@@ -32,7 +32,25 @@ package org.hibernate.metamodel.reflite.spi;
  * @author Steve Ebersole
  */
 public interface Name {
+	/**
+	 * The name qualifier (e.g. the package name for a class)
+	 *
+	 * @return The qualifier
+	 */
 	public String getQualifier();
+
+	/**
+	 * The unqualified portion of the name (e.e. the name of the class without
+	 * its package).
+	 *
+	 * @return The unqualified name
+	 */
 	public String getUnqualifiedName();
-	public String toString();
+
+	/**
+	 * The full name (qualifier + unqualified)
+	 *
+	 * @return The full name
+	 */
+	public String fullName();
 }

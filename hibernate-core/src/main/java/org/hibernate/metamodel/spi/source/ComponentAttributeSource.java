@@ -23,14 +23,13 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public interface ComponentAttributeSource extends SingularAttributeSource, AttributeSourceContainer {
-
-	public JavaClassReference getClassReference();
+	public JavaTypeDescriptor getTypeDescriptor();
 
 	public String getParentReferenceAttributeName();
 

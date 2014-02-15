@@ -23,11 +23,16 @@
  */
 package org.hibernate.metamodel.reflite.internal;
 
-import org.hibernate.metamodel.reflite.spi.ArrayTypeDescriptor;
+import java.util.Collection;
+import java.util.Collections;
+
+import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
+import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.PrimitiveWrapperTypeDescriptor;
-import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -37,7 +42,7 @@ public class Primitives {
 		private final PrimitiveTypeDescriptor primitiveType;
 		private final PrimitiveWrapperTypeDescriptor primitiveWrapperType;
 
-		private final ArrayTypeDescriptor primitiveArrayType;
+		private final ArrayDescriptor primitiveArrayType;
 
 		public PrimitiveGroup(Class primitiveClass, Class primitiveArrayClass, Class wrapperClass) {
 			assert primitiveClass.isPrimitive();
@@ -47,7 +52,7 @@ public class Primitives {
 			this.primitiveType = new PrimitiveDescriptorImpl( primitiveClass, this );
 			this.primitiveWrapperType = new WrapperDescriptorImpl( wrapperClass, this );
 
-			this.primitiveArrayType = new ArrayTypeDescriptorImpl(
+			this.primitiveArrayType = new ArrayDescriptorImpl(
 					new DotNameAdapter( primitiveArrayClass.getName() ),
 					primitiveArrayClass.getModifiers(),
 					this.primitiveType
@@ -64,10 +69,10 @@ public class Primitives {
 	public static final PrimitiveGroup FLOAT = new PrimitiveGroup( float.class, float[].class, Float.class );
 	public static final PrimitiveGroup DOUBLE = new PrimitiveGroup( double.class, double[].class, Double.class );
 
-	public static TypeDescriptor resolveByName(Name name) {
+	public static JavaTypeDescriptor resolveByName(Name name) {
 		assert name != null;
 
-		final String typeNameString = name.toString();
+		final String typeNameString = name.fullName();
 
 		if ( char.class.getName().equals( typeNameString ) ) {
 			return CHAR.primitiveType;
@@ -121,7 +126,7 @@ public class Primitives {
 		return null;
 	}
 
-	public static TypeDescriptor primitiveArrayDescriptor(Class type) {
+	public static JavaTypeDescriptor primitiveArrayDescriptor(Class type) {
 		assert type != null;
 		assert type.isPrimitive();
 
@@ -181,28 +186,18 @@ public class Primitives {
 		}
 
 		@Override
+		public Collection<FieldDescriptor> getDeclaredFields() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public Collection<MethodDescriptor> getDeclaredMethods() {
+			return Collections.emptyList();
+		}
+
+		@Override
 		public PrimitiveWrapperTypeDescriptor getWrapperTypeDescriptor() {
 			return group.primitiveWrapperType;
-		}
-
-		@Override
-		public boolean isVoid() {
-			return false;
-		}
-
-		@Override
-		public boolean isInterface() {
-			return false;
-		}
-
-		@Override
-		public boolean isPrimitive() {
-			return true;
-		}
-
-		@Override
-		public boolean isArray() {
-			return false;
 		}
 	}
 
@@ -228,28 +223,18 @@ public class Primitives {
 		}
 
 		@Override
+		public Collection<FieldDescriptor> getDeclaredFields() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public Collection<MethodDescriptor> getDeclaredMethods() {
+			return Collections.emptyList();
+		}
+
+		@Override
 		public PrimitiveTypeDescriptor getPrimitiveTypeDescriptor() {
 			return group.primitiveType;
-		}
-
-		@Override
-		public boolean isInterface() {
-			return false;
-		}
-
-		@Override
-		public boolean isVoid() {
-			return false;
-		}
-
-		@Override
-		public boolean isArray() {
-			return false;
-		}
-
-		@Override
-		public boolean isPrimitive() {
-			return false;
 		}
 	}
 

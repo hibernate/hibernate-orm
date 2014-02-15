@@ -33,14 +33,14 @@ import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.usertype.DynamicParameterizedType;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
-import org.hibernate.usertype.DynamicParameterizedType;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -78,8 +78,7 @@ public class EnumeratedBindingTest extends BaseAnnotationBindingTestCase {
 		AttributeBinding attributeBinding = binding.locateAttributeBinding( "customerType" );
 		HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
 		assertEquals( org.hibernate.type.EnumType.class.getName(), descriptor.getExplicitTypeName() );
-		assertEquals( CustomerType.class.getName(), descriptor.getClassReference().getName() );
-		assertEquals( CustomerType.class, descriptor.getClassReference().getResolvedClass() );
+		assertEquals( CustomerType.class.getName(), descriptor.getJavaTypeDescriptor().getName().fullName() );
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertFalse( descriptor.getTypeParameters().isEmpty() );
 		assertEquals(
@@ -95,8 +94,7 @@ public class EnumeratedBindingTest extends BaseAnnotationBindingTestCase {
 		attributeBinding = binding.locateAttributeBinding( "orderType" );
 		descriptor = attributeBinding.getHibernateTypeDescriptor();
 		assertEquals( org.hibernate.type.EnumType.class.getName(), descriptor.getExplicitTypeName() );
-		assertEquals( OrderType.class.getName(), descriptor.getClassReference().getName() );
-		assertEquals( OrderType.class, descriptor.getClassReference().getResolvedClass() );
+		assertEquals( OrderType.class.getName(), descriptor.getJavaTypeDescriptor().getName().fullName() );
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertFalse( descriptor.getTypeParameters().isEmpty() );
 		assertEquals(

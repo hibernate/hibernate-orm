@@ -31,11 +31,11 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFilterElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
@@ -63,7 +63,8 @@ public abstract class AbstractPluralAttributeSourceImpl
 	private final PluralAttributeElementSource elementSource;
 	private final Caching caching;
 	private final FilterSource[] filterSources;
-	private JavaClassReference elementJavaClassReference;
+
+	private JavaTypeDescriptor elementTypeDescriptor;
 
 	protected AbstractPluralAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -130,7 +131,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			);
 		}
 		else if ( pluralAttributeElement.getCompositeElement() != null ) {
-			elementJavaClassReference = makeJavaClassReference(
+			elementTypeDescriptor = typeDescriptor(
 					pluralAttributeElement
 							.getCompositeElement().getClazz()
 			);
@@ -141,7 +142,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			);
 		}
 		else if ( pluralAttributeElement.getOneToMany() != null ) {
-			elementJavaClassReference = makeJavaClassReference(
+			elementTypeDescriptor = typeDescriptor(
 					pluralAttributeElement
 							.getOneToMany().getClazz()
 			);
@@ -153,7 +154,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			);
 		}
 		else if ( pluralAttributeElement.getManyToMany() != null ) {
-			elementJavaClassReference = makeJavaClassReference(
+			elementTypeDescriptor = typeDescriptor(
 					pluralAttributeElement
 							.getManyToMany().getClazz()
 			);
@@ -229,8 +230,8 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public JavaClassReference getElementJavaClassReference() {
-		return elementJavaClassReference;
+	public JavaTypeDescriptor getElementTypeDescriptor() {
+		return elementTypeDescriptor;
 	}
 
 	@Override

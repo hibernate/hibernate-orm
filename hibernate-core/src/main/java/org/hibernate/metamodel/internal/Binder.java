@@ -62,6 +62,7 @@ import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJ
 import org.hibernate.metamodel.internal.resolver.AssociationRelationalBindingResolver;
 import org.hibernate.metamodel.internal.resolver.MappedByAssociationRelationalBindingResolverImpl;
 import org.hibernate.metamodel.internal.resolver.StandardAssociationRelationalBindingResolverImpl;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
@@ -103,7 +104,6 @@ import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.IndexedPluralAttribute;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -246,18 +246,12 @@ public class Binder implements HelperContext {
 					final String proxy = entitySource.getProxy();
 					if ( proxy == null ) {
 						if ( entitySource.isLazy() ) {
-							entityBinding.setProxyInterfaceType( entityBinding.getEntity().getClassReference() );
+							entityBinding.setProxyInterfaceType( entityBinding.getEntity().getDescriptor() );
 							entityBinding.setLazy( true );
 						}
 					}
 					else {
-						entityBinding.setProxyInterfaceType(
-								bindingContext().makeJavaClassReference(
-										bindingContext().qualifyClassName(
-												proxy
-										)
-								)
-						);
+						entityBinding.setProxyInterfaceType( bindingContext().typeDescriptor( proxy ) );
 						entityBinding.setLazy( true );
 					}
 				}
@@ -278,12 +272,12 @@ public class Binder implements HelperContext {
 								new EntityBinding( superEntityBinding );
 				// Create domain entity
 				LocalBindingContext bindingContext = bindingContext();
-				final JavaClassReference entityClassReference = entitySource.getClassName() == null ?
+				final JavaTypeDescriptor entityTypeDescriptor = entitySource.getClassName() == null ?
 						null :
-						bindingContext.makeJavaClassReference( entitySource.getClassName() );
+						bindingContext.typeDescriptor( entitySource.getClassName() );
 				final Entity entity = new Entity(
 						entitySource.getEntityName(),
-						entityClassReference,
+						entityTypeDescriptor,
 						superEntityBinding == null ? null : superEntityBinding.getEntity()
 				);
 
@@ -641,7 +635,11 @@ public class Binder implements HelperContext {
 						idClassPropertyAccessorName
 				);
 
-				typeHelper.bindNonAggregatedCompositeIdentifierType( syntheticAttributeBinding, syntheticAttribute );
+				typeHelper.bindNonAggregatedCompositeIdentifierType(
+						bindingContext().getServiceRegistry(),
+						syntheticAttributeBinding,
+						syntheticAttribute
+				);
 			}
 
 			private void bindIdentifier(
@@ -1051,6 +1049,7 @@ public class Binder implements HelperContext {
 			if ( allResolved ) {
 				// All are resolved, so we can bind the type.
 				typeHelper.bindAggregatedCompositeAttributeType(
+						bindingContext().getServiceRegistry(),
 						false,
 						(Aggregate) compositeAttributeBinding.getAttribute().getSingularAttributeType(),
 						null, // TODO: don't have the default value at this point; shouldn't be needed...
@@ -1153,14 +1152,14 @@ public class Binder implements HelperContext {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Entity binding relates methods
 
 	private EntityBinding locateEntityBinding(
-			final JavaClassReference entityJavaClassReference,
+			final JavaTypeDescriptor referencedEntityTypeDescriptor,
 			final String explicitEntityName) {
 		final String referencedEntityName;
 		if ( explicitEntityName != null ) {
 			referencedEntityName = explicitEntityName;
 		}
-		else if ( entityJavaClassReference != null ) {
-			referencedEntityName = entityJavaClassReference.getName();
+		else if ( referencedEntityTypeDescriptor != null ) {
+			referencedEntityName = referencedEntityTypeDescriptor.getName().fullName();
 		}
 		else {
 			throw new IllegalArgumentException( "explicitEntityName and entityJavaClassReference cannot both be null." );
@@ -1549,13 +1548,19 @@ public class Binder implements HelperContext {
 		if ( attributeBinding != null ) {
 			return attributeBinding;
 		}
-		return attributeSource.isSingular() ?
-				bindSingularAttribute(
-						attributeBindingContainer,
-						SingularAttributeSource.class.cast( attributeSource ),
-						false
-				) :
-				bindPluralAttribute( attributeBindingContainer, PluralAttributeSource.class.cast( attributeSource ) );
+		if ( attributeSource.isSingular() ) {
+			return bindSingularAttribute(
+					attributeBindingContainer,
+					SingularAttributeSource.class.cast( attributeSource ),
+					false
+			);
+		}
+		else {
+			return bindPluralAttribute(
+					attributeBindingContainer,
+					PluralAttributeSource.class.cast( attributeSource )
+			);
+		}
 	}
 
 	private BasicAttributeBinding bindBasicAttribute(
@@ -1636,6 +1641,7 @@ public class Binder implements HelperContext {
 		);
 		bindAttributes( attributeBinding, attributeSource );
 		typeHelper.bindAggregatedCompositeAttributeType(
+				bindingContext().getServiceRegistry(),
 				isAttributeIdentifier,
 				(Aggregate) attributeBinding.getAttribute().getSingularAttributeType(),
 				null, // TODO: don't have the default value at this point; shouldn't be needed...
@@ -1652,12 +1658,12 @@ public class Binder implements HelperContext {
 		final String roleBase =
 				attributeBindingContainer.getAttributeContainer().getRoleBaseName() + '.' + attributeSource.getPath();
 		if ( attribute == null ) {
-			final JavaClassReference aggregateJavaClassReference;
-			if ( attributeSource.getClassReference() != null ) {
-				aggregateJavaClassReference = attributeSource.getClassReference();
+			final JavaTypeDescriptor compositeTypeDescriptor;
+			if ( attributeSource.getTypeDescriptor() != null ) {
+				compositeTypeDescriptor = attributeSource.getTypeDescriptor();
 			}
 			else {
-				aggregateJavaClassReference = typeHelper.determineJavaType(
+				compositeTypeDescriptor = typeHelper.determineJavaType(
 						attributeSource,
 						attributeBindingContainer.getAttributeContainer()
 				);
@@ -1665,7 +1671,7 @@ public class Binder implements HelperContext {
 			composite = new Aggregate(
 					roleBase,
 					attributeSource.getPath(),
-					aggregateJavaClassReference,
+					compositeTypeDescriptor,
 					null
 			);
 			attribute = attributeBindingContainer.getAttributeContainer().createCompositeAttribute(
@@ -1720,12 +1726,12 @@ public class Binder implements HelperContext {
 		}
 		throwExceptionIfNotFoundIgnored( attributeSource.isNotFoundAnException() );
 
-		final JavaClassReference referencedEntityJavaClassReference = typeHelper.determineJavaType(
+		final JavaTypeDescriptor referencedEntityTypeDescriptor = typeHelper.determineJavaType(
 				attributeSource,
 				attributeBindingContainer.getAttributeContainer()
 		);
 		final EntityBinding referencedEntityBinding = locateEntityBinding(
-				referencedEntityJavaClassReference,
+				referencedEntityTypeDescriptor,
 				attributeSource.getReferencedEntityName()
 		);
 
@@ -1803,7 +1809,7 @@ public class Binder implements HelperContext {
 		typeHelper.bindHibernateTypeDescriptor(
 				attributeBinding.getHibernateTypeDescriptor(),
 				attributeSource.getTypeInformation(),
-				referencedEntityJavaClassReference,
+				referencedEntityTypeDescriptor,
 				resolvedType
 		);
 
@@ -1824,7 +1830,7 @@ public class Binder implements HelperContext {
 		if ( attribute == null ) {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
-		final JavaClassReference referencedEntityJavaClassReference = typeHelper.determineJavaType(
+		final JavaTypeDescriptor referencedEntityJavaClassReference = typeHelper.determineJavaType(
 				attributeSource,
 				attributeBindingContainer.getAttributeContainer()
 		);
@@ -2021,7 +2027,9 @@ public class Binder implements HelperContext {
 		attributeBinding.setWhere( attributeSource.getWhere() );
 		attributeBinding.setMutable( attributeSource.isMutable() );
 		attributeBinding.setBatchSize( attributeSource.getBatchSize() );
+		ClassLoaderService cls = bindingContext().getServiceRegistry().getService( ClassLoaderService.class );
 		ReflectedCollectionJavaTypes reflectedCollectionJavaTypes = HibernateTypeHelper.getReflectedCollectionJavaTypes(
+				cls,
 				attributeBinding
 		);
 		switch ( attributeSource.getElementSource().getNature() ) {
@@ -2048,20 +2056,20 @@ public class Binder implements HelperContext {
 				);
 		}
 		// Cannot resolve plural attribute type until after the element binding is bound.
-		final Type resolvedType = typeHelper.resolvePluralType( attributeBinding, attributeSource, nature );
+		final Type resolvedType = typeHelper.resolvePluralType( cls, attributeBinding, attributeSource, nature );
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		JavaClassReference defaultCollectionClassReference = typeHelper.reflectedCollectionClassReference(
+		JavaTypeDescriptor defaultCollectionTypeDescriptor = typeHelper.reflectedCollectionClassReference(
 				reflectedCollectionJavaTypes
 		);
-		if ( defaultCollectionClassReference == null ) {
-			defaultCollectionClassReference = bindingContext().makeJavaClassReference(
-					attributeSource.getNature().reportedJavaType()
+		if ( defaultCollectionTypeDescriptor == null ) {
+			defaultCollectionTypeDescriptor = bindingContext().typeDescriptor(
+					attributeSource.getNature().reportedJavaType().getName()
 			);
 		}
 		typeHelper.bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				attributeSource.getTypeInformation(),
-				defaultCollectionClassReference,
+				defaultCollectionTypeDescriptor,
 				resolvedType
 		);
 		if ( attributeBinding.hasIndex() ) {
@@ -2185,11 +2193,13 @@ public class Binder implements HelperContext {
 	private void bindBasicCollectionElement(
 			final BasicPluralAttributeElementBinding elementBinding,
 			final BasicPluralAttributeElementSource elementSource,
-			final JavaClassReference defaultElementJavaClassReference) {
+			final JavaTypeDescriptor defaultElementJavaClassReference) {
 		bindBasicPluralElementRelationalValues( elementSource, elementBinding );
 		typeHelper.bindBasicCollectionElementType( elementBinding, elementSource, defaultElementJavaClassReference );
 		elementBinding.getPluralAttributeBinding().getAttribute().setElementType(
-				bindingContext().makeDomainType( elementBinding.getHibernateTypeDescriptor().getClassReference().getName() )
+				bindingContext().makeDomainType(
+						elementBinding.getHibernateTypeDescriptor().getJavaTypeDescriptor().getName()
+				)
 		);
 	}
 
@@ -2226,24 +2236,24 @@ public class Binder implements HelperContext {
 	private void bindCompositeCollectionElement(
 			final CompositePluralAttributeElementBinding elementBinding,
 			final CompositePluralAttributeElementSource elementSource,
-			final JavaClassReference reflectedElementJavaClassReference) {
+			final JavaTypeDescriptor reflectedElementTypeDescriptor) {
 		final PluralAttributeBinding pluralAttributeBinding = elementBinding.getPluralAttributeBinding();
 		// Create the aggregate type
 		// TODO: aggregateName should be set to elementSource.getPath() (which is currently not implemented)
 		//       or Binder should define AttributeBindingContainer paths instead.
 		final String aggregateName = "element";
 		String roleBase = pluralAttributeBinding.getAttribute().getRole() + '.' + aggregateName;
-		final JavaClassReference elementClassReference;
-		if ( elementSource.getClassReference() != null ) {
-			elementClassReference = elementSource.getClassReference();
+		final JavaTypeDescriptor elementTypeDescriptor;
+		if ( elementSource.getTypeDescriptor() != null ) {
+			elementTypeDescriptor = elementSource.getTypeDescriptor();
 		}
 		else {
-			elementClassReference = reflectedElementJavaClassReference;
+			elementTypeDescriptor = reflectedElementTypeDescriptor;
 		}
 		final Aggregate aggregate = new Aggregate(
 				roleBase,
 				aggregateName,
-				elementClassReference,
+				elementTypeDescriptor,
 				null
 		);
 		final SingularAttribute parentAttribute =
@@ -2263,14 +2273,14 @@ public class Binder implements HelperContext {
 		bindAttributes( compositeAttributeBindingContainer, elementSource );
 		pluralAttributeBinding.getAttribute().setElementType( aggregate );
 		Type resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().component(
-				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
+				new ComponentMetamodel( rootBindingContext.getServiceRegistry(), compositeAttributeBindingContainer, false, false )
 		);
 		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
 		typeHelper.bindHibernateTypeDescriptor(
 				elementBinding.getHibernateTypeDescriptor(),
-				aggregate.getClassReference().getName(),
+				aggregate.getDescriptor().getName().fullName(),
 				null,
-				reflectedElementJavaClassReference == null ? null : reflectedElementJavaClassReference,
+				reflectedElementTypeDescriptor == null ? null : reflectedElementTypeDescriptor,
 				resolvedType
 		);
 		/**
@@ -2302,14 +2312,14 @@ public class Binder implements HelperContext {
 	private void bindEntityAttributePluralAttributeIndex(
 			final IndexedPluralAttributeBinding attributeBinding,
 			final EntityAttributePluralAttributeIndexSource indexSource,
-			final JavaClassReference defaultIndexJavaClassReference) {
+			final JavaTypeDescriptor defaultIndexTypeDescriptor) {
 		throw new NotYetImplementedException( "Plural attribute index that is an attribute of the referenced entity is not supported yet." );
 	}
 
 	private void bindBasicCollectionIndex(
 			final IndexedPluralAttributeBinding attributeBinding,
 			final BasicPluralAttributeIndexSource indexSource,
-			final JavaClassReference defaultIndexJavaClassReference) {
+			final JavaTypeDescriptor defaultIndexTypeDescriptor) {
 		final BasicPluralAttributeIndexBinding indexBinding =
 				(BasicPluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding();
 		// TODO: need to resolve default column names.
@@ -2328,7 +2338,7 @@ public class Binder implements HelperContext {
 		typeHelper.bindHibernateTypeDescriptor(
 				indexBinding.getHibernateTypeDescriptor(),
 				indexSource.getTypeInformation(),
-				defaultIndexJavaClassReference
+				defaultIndexTypeDescriptor
 		);
 		typeHelper.bindJdbcDataType(
 				indexBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
@@ -2337,33 +2347,44 @@ public class Binder implements HelperContext {
 		IndexedPluralAttribute indexedPluralAttribute =
 				(IndexedPluralAttribute) indexBinding.getIndexedPluralAttributeBinding().getAttribute();
 
+		// todo : we need to centralize this stuff somewhere...
 		final HibernateTypeDescriptor hibernateTypeDescriptor = indexBinding.getHibernateTypeDescriptor();
 		final BasicType basicType;
-		if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
-			basicType = new BasicType(
-					hibernateTypeDescriptor.getExplicitTypeName(),
-					hibernateTypeDescriptor.getClassReference()
+		if ( hibernateTypeDescriptor.getJavaTypeDescriptor() != null ) {
+			basicType = (BasicType) bindingContext().makeDomainType(
+					hibernateTypeDescriptor.getJavaTypeDescriptor().getName()
+			);
+		}
+		else if ( hibernateTypeDescriptor.getResolvedTypeMapping() != null ) {
+			basicType = (BasicType) bindingContext().makeDomainType(
+					hibernateTypeDescriptor.getResolvedTypeMapping().getName()
+			);
+		}
+		else if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
+			basicType = (BasicType) bindingContext().makeDomainType(
+					hibernateTypeDescriptor.getExplicitTypeName()
 			);
 		}
 		else {
-			basicType = new BasicType( hibernateTypeDescriptor.getClassReference() );
+			basicType = new BasicType( hibernateTypeDescriptor.getJavaTypeDescriptor() );
 		}
+
 		indexedPluralAttribute.setIndexType( basicType );
 	}
 
 	private void bindCompositeCollectionIndex(
 		final CompositePluralAttributeIndexBinding indexBinding,
 		final IndexedPluralAttributeSource indexedPluralAttributeSource,
-		final JavaClassReference reflectedIndexJavaClassReference) {
+		final JavaTypeDescriptor reflectedIndexTypeDescriptor) {
 		final PluralAttributeBinding pluralAttributeBinding = indexBinding.getIndexedPluralAttributeBinding();
 		final CompositePluralAttributeIndexSource indexSource =
 				(CompositePluralAttributeIndexSource) indexedPluralAttributeSource.getIndexSource();
-		final JavaClassReference indexJavaClassReference;
-		if ( indexSource.getClassReference() != null ) {
-			indexJavaClassReference = indexSource.getClassReference();
+		final JavaTypeDescriptor indexTypeDescriptor;
+		if ( indexSource.getTypeDescriptor() != null ) {
+			indexTypeDescriptor = indexSource.getTypeDescriptor();
 		}
 		else {
-			indexJavaClassReference = reflectedIndexJavaClassReference;
+			indexTypeDescriptor = reflectedIndexTypeDescriptor;
 		}
 		// Create the aggregate type
 		// TODO: aggregateName should be set to elementSource.getPath() (which is currently not implemented)
@@ -2373,7 +2394,7 @@ public class Binder implements HelperContext {
 		final Aggregate aggregate = new Aggregate(
 				roleBase,
 				aggregateName,
-				indexJavaClassReference,
+				indexTypeDescriptor,
 				null
 		);
 		final CompositeAttributeBindingContainer compositeAttributeBindingContainer =
@@ -2386,14 +2407,19 @@ public class Binder implements HelperContext {
 		bindAttributes( compositeAttributeBindingContainer, indexSource );
 
 		Type resolvedType = rootBindingContext.getMetadataCollector().getTypeResolver().getTypeFactory().component(
-				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
+				new ComponentMetamodel(
+						rootBindingContext.getServiceRegistry(),
+						compositeAttributeBindingContainer,
+						false,
+						false
+				)
 		);
 		// TODO: binding the HibernateTypeDescriptor should be simplified since we know the class name already
 		typeHelper.bindHibernateTypeDescriptor(
 				indexBinding.getHibernateTypeDescriptor(),
-				aggregate.getClassReference().getName(),
+				aggregate.getDescriptor().getName().fullName(),
 				null,
-				indexJavaClassReference == null ? null : indexJavaClassReference,
+				indexTypeDescriptor == null ? null : indexTypeDescriptor,
 				resolvedType
 		);
 		IndexedPluralAttribute indexedPluralAttribute =
@@ -2405,7 +2431,7 @@ public class Binder implements HelperContext {
 			final OneToManyPluralAttributeElementBinding elementBinding,
 			final OneToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
-			final JavaClassReference defaultElementJavaClassReference) {
+			final JavaTypeDescriptor defaultElementTypeDescriptor) {
 		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		elementBinding.setElementEntityIdentifier(
 				referencedEntityBinding.getKeyRelationalValueBindings()
@@ -2421,18 +2447,18 @@ public class Binder implements HelperContext {
 				false
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
-		final JavaClassReference elementJavaClassReference;
-		if ( defaultElementJavaClassReference != null ) {
-			elementJavaClassReference = defaultElementJavaClassReference;
+		final JavaTypeDescriptor elementTypeDescriptor;
+		if ( defaultElementTypeDescriptor != null ) {
+			elementTypeDescriptor = defaultElementTypeDescriptor;
 		}
 		else {
-			elementJavaClassReference = referencedEntityBinding.getClassReference();
+			elementTypeDescriptor = referencedEntityBinding.getEntity().getDescriptor();
 		}
 		typeHelper.bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				referencedEntityBinding.getEntity().getName(),
 				null,
-				elementJavaClassReference,
+				elementTypeDescriptor,
 				resolvedElementType
 		);
 		// no need to bind JDBC data types because element is referenced EntityBinding's ID
@@ -2444,7 +2470,7 @@ public class Binder implements HelperContext {
 			final ManyToManyPluralAttributeElementBinding elementBinding,
 			final ManyToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
-			final JavaClassReference defaultElementJavaClassReference) {
+			final JavaTypeDescriptor defaultElementTypeDescriptor) {
 		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		final TableSpecification collectionTable =
 				elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable();
@@ -2486,7 +2512,7 @@ public class Binder implements HelperContext {
 				elementBinding,
 				elementSource,
 				referencedEntityBinding,
-				defaultElementJavaClassReference
+				defaultElementTypeDescriptor
 		);
 		elementBinding.getPluralAttributeBinding().getAttribute().setElementType( referencedEntityBinding.getEntity() );
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
@@ -2545,14 +2571,15 @@ public class Binder implements HelperContext {
 			final IndexedPluralAttributeSource attributeSource,
 			final IndexedPluralAttributeBinding attributeBinding,
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
-		final JavaClassReference reflectedCollectionIndexJavaClassReference =
-				typeHelper.reflectedCollectionIndexClassReference( reflectedCollectionJavaTypes );
+		final JavaTypeDescriptor reflectedIndexTypeDescriptor = typeHelper.reflectedCollectionIndexClassReference(
+				reflectedCollectionJavaTypes
+		);
 		final PluralAttributeIndexSource indexSource = attributeSource.getIndexSource();
 		if ( indexSource.isReferencedEntityAttribute() ) {
 			bindEntityAttributePluralAttributeIndex(
 					attributeBinding,
 					(EntityAttributePluralAttributeIndexSource) indexSource,
-					reflectedCollectionIndexJavaClassReference
+					reflectedIndexTypeDescriptor
 			);
 		}
 		else {
@@ -2561,7 +2588,7 @@ public class Binder implements HelperContext {
 					bindBasicCollectionIndex(
 							attributeBinding,
 							(BasicPluralAttributeIndexSource) attributeSource.getIndexSource(),
-							reflectedCollectionIndexJavaClassReference
+							reflectedIndexTypeDescriptor
 					);
 					break;
 				}
@@ -2569,7 +2596,7 @@ public class Binder implements HelperContext {
 					bindCompositeCollectionIndex(
 							(CompositePluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding(),
 							attributeSource,
-							reflectedCollectionIndexJavaClassReference
+							reflectedIndexTypeDescriptor
 					);
 					break;
 				}
@@ -2613,10 +2640,10 @@ public class Binder implements HelperContext {
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
 		final ManyToManyPluralAttributeElementSource elementSource =
 				(ManyToManyPluralAttributeElementSource) attributeSource.getElementSource();
-		final JavaClassReference reflectedElementJavaClassReference = typeHelper.reflectedCollectionElementJavaType(
+		final JavaTypeDescriptor reflectedElementTypeDescriptor = typeHelper.reflectedCollectionElementJavaType(
 				reflectedCollectionJavaTypes
 		);
-		if ( elementSource.getReferencedEntityName() == null && reflectedElementJavaClassReference == null ) {
+		if ( elementSource.getReferencedEntityName() == null && reflectedElementTypeDescriptor == null ) {
 			throw bindingContext().makeMappingException(
 					String.format(
 							"The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
@@ -2625,7 +2652,7 @@ public class Binder implements HelperContext {
 			);
 		}
 		EntityBinding referencedEntityBinding = locateEntityBinding(
-				reflectedElementJavaClassReference,
+				reflectedElementTypeDescriptor,
 				elementSource.getReferencedEntityName()
 		);
 		ManyToManyPluralAttributeElementBinding manyToManyPluralAttributeElementBinding = (ManyToManyPluralAttributeElementBinding) attributeBinding
@@ -2646,7 +2673,7 @@ public class Binder implements HelperContext {
 				manyToManyPluralAttributeElementBinding,
 				(ManyToManyPluralAttributeElementSource) attributeSource.getElementSource(),
 				referencedEntityBinding,
-				reflectedElementJavaClassReference
+				reflectedElementTypeDescriptor
 		);
 	}
 
@@ -2656,10 +2683,10 @@ public class Binder implements HelperContext {
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
 		final OneToManyPluralAttributeElementSource elementSource =
 				(OneToManyPluralAttributeElementSource) attributeSource.getElementSource();
-		final JavaClassReference defaultElementJavaClassReference = typeHelper.reflectedCollectionElementJavaType(
+		final JavaTypeDescriptor defaultElementTypeDescriptor = typeHelper.reflectedCollectionElementJavaType(
 				reflectedCollectionJavaTypes
 		);
-		if ( elementSource.getReferencedEntityName() == null && defaultElementJavaClassReference == null ) {
+		if ( elementSource.getReferencedEntityName() == null && defaultElementTypeDescriptor == null ) {
 			throw bindingContext().makeMappingException(
 					String.format(
 							"The mapping for the entity associated with one-to-many attribute (%s) is undefined.",
@@ -2668,7 +2695,7 @@ public class Binder implements HelperContext {
 			);
 		}
 		EntityBinding referencedEntityBinding = locateEntityBinding(
-				defaultElementJavaClassReference,
+				defaultElementTypeDescriptor,
 				elementSource.getReferencedEntityName()
 		);
 		bindOneToManyCollectionKey( attributeBinding, attributeSource, referencedEntityBinding );
@@ -2676,7 +2703,7 @@ public class Binder implements HelperContext {
 				(OneToManyPluralAttributeElementBinding) attributeBinding.getPluralAttributeElementBinding(),
 				(OneToManyPluralAttributeElementSource) attributeSource.getElementSource(),
 				referencedEntityBinding,
-				defaultElementJavaClassReference
+				defaultElementTypeDescriptor
 		);
 	}
 

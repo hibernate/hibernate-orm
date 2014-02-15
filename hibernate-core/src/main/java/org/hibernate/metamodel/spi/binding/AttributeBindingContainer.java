@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -103,14 +102,6 @@ public interface AttributeBindingContainer {
 	 * @return The entity binding
 	 */
 	EntityBinding seekEntityBinding();
-
-	/**
-	 * Obtain the {@link JavaClassReference} for this attribute container.  Generally this is used to perform reflection
-	 * on the attributes.
-	 *
-	 * @return The {@link JavaClassReference}
-	 */
-	JavaClassReference getClassReference();
 
 	/**
 	 * Obtain the meta-attribute context for this container.

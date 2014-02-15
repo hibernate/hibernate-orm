@@ -24,31 +24,53 @@
 package org.hibernate.metamodel.reflite.spi;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
- * Describes a java type that represents a class definition.
+ * Descriptor for the special java 'void' type.
  *
  * @author Steve Ebersole
  */
-public interface ClassDescriptor extends JavaTypeDescriptor {
+public class VoidDescriptor implements JavaTypeDescriptor {
 	/**
-	 * Did the class define a default (no-arg) constructor?
-	 *
-	 * @return {@code true} indicates the class did have a default (no arg) constructor.
+	 * Singleton access
 	 */
-	public boolean hasDefaultConstructor();
+	public static final VoidDescriptor INSTANCE = new VoidDescriptor();
 
-	/**
-	 * The super type for this type (if it is a class)
-	 *
-	 * @return The super type
-	 */
-	public ClassDescriptor getSuperType();
+	private final Name name = new Name() {
+		@Override
+		public String getQualifier() {
+			return null;
+		}
 
-	/**
-	 * Get the interfaces implemented by this type
-	 *
-	 * @return The implemented interfaces
-	 */
-	public Collection<InterfaceDescriptor> getInterfaceTypes();
+		@Override
+		public String getUnqualifiedName() {
+			return "void";
+		}
+
+		@Override
+		public String fullName() {
+			return getUnqualifiedName();
+		}
+	};
+
+	@Override
+	public Name getName() {
+		return name;
+	}
+
+	@Override
+	public int getModifiers() {
+		return Void.class.getModifiers();
+	}
+
+	@Override
+	public Collection<FieldDescriptor> getDeclaredFields() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Collection<MethodDescriptor> getDeclaredMethods() {
+		return Collections.emptyList();
+	}
 }

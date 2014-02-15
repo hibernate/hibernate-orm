@@ -31,7 +31,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -41,6 +40,7 @@ import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
 
@@ -53,12 +53,8 @@ import org.hibernate.tuple.Instantiator;
 public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DynamicMapEntityTuplizer.class );
 
-	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
-		super(entityMetamodel, mappedEntity);
-	}
-
-	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
-		super(entityMetamodel, mappedEntity);
+	DynamicMapEntityTuplizer(ServiceRegistry serviceRegistry, EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
+		super( serviceRegistry, entityMetamodel, mappedEntity );
 	}
 
 	@Override
@@ -66,50 +62,9 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		return EntityMode.MAP;
 	}
 
-	private PropertyAccessor buildPropertyAccessor(Property mappedProperty) {
-		if ( mappedProperty.isBackRef() ) {
-			return mappedProperty.getPropertyAccessor(null);
-		}
-		else {
-			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
-		}
-	}
-
 	@Override
-    protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
-	}
-
-	@Override
-    protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
-	}
-
-	@Override
-    protected Instantiator buildInstantiator(PersistentClass mappingInfo) {
-        return new DynamicMapInstantiator( mappingInfo );
-	}
-
-	@Override
-    protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
-
-		ProxyFactory pf = new MapProxyFactory();
-		try {
-			//TODO: design new lifecycle for ProxyFactory
-			pf.postInstantiate(
-					getEntityName(),
-					null,
-					null,
-					null,
-					null,
-					null
-			);
-		}
-		catch ( HibernateException he ) {
-			LOG.unableToCreateProxyFactory( getEntityName(), he );
-			pf = null;
-		}
-		return pf;
+	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
+		return buildPropertyAccessor( mappedProperty ).getGetter( null, mappedProperty.getAttribute().getName() );
 	}
 
 	private PropertyAccessor buildPropertyAccessor(AttributeBinding mappedProperty) {
@@ -119,11 +74,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		else {
 			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
 		}
-	}
-
-	@Override
-	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		return buildPropertyAccessor( mappedProperty ).getGetter( null, mappedProperty.getAttribute().getName() );
 	}
 
 	@Override

@@ -35,6 +35,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.QueryStatistics;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -161,6 +162,7 @@ public class StatsTest extends BaseUnitTestCase {
 //	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8962" )
 	public void testQueryStatGathering() {
 		SessionFactory sf = buildBaseConfiguration()
 				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )

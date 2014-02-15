@@ -26,8 +26,8 @@ package org.hibernate.metamodel.internal.source;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.MetadataBuildingProcess;
-import org.hibernate.metamodel.reflite.internal.RepositoryImpl;
-import org.hibernate.metamodel.reflite.spi.Repository;
+import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
@@ -44,7 +44,7 @@ public class RootBindingContextBuilder {
 		final MetadataBuildingProcess.MappingDefaultsImpl  mappingDefaults = new MetadataBuildingProcess.MappingDefaultsImpl(
 				options
 		);
-		final Repository typeRepository = new RepositoryImpl( null, serviceRegistry );
+		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl( null, serviceRegistry );
 		final MetadataBuildingProcess.InFlightMetadataCollectorImpl metadataCollector = new MetadataBuildingProcess.InFlightMetadataCollectorImpl(
 				options,
 				new TypeResolver( basicTypeRegistry, new TypeFactory() )
@@ -52,7 +52,7 @@ public class RootBindingContextBuilder {
 		return new MetadataBuildingProcess.RootBindingContextImpl(
 				options,
 				mappingDefaults,
-				typeRepository,
+				javaTypeDescriptorRepository,
 				metadataCollector
 		);
 	}

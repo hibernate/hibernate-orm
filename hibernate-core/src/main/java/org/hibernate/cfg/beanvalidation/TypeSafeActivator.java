@@ -43,14 +43,13 @@ import javax.validation.metadata.PropertyDescriptor;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.binding.AbstractSingularAssociationAttributeBinding;
@@ -170,21 +169,17 @@ class TypeSafeActivator {
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
 
 		for ( EntityBinding entityBinding : activationContext.getMetadata().getEntityBindings() ) {
-			final String className = entityBinding.getEntity().getClassReference().getName();
+			final String className = entityBinding.getEntity().getDescriptor().getName().fullName();
 
 			if ( className == null || className.length() == 0 ) {
 				continue;
 			}
-			Class<?> clazz;
-			try {
-				clazz = ReflectHelper.classForName( className, TypeSafeActivator.class );
-			}
-			catch ( ClassNotFoundException e ) {
-				throw new AssertionFailure( "Entity class not found", e );
-			}
 
+			final ClassLoaderService classLoaderService = activationContext.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			final Class<?> clazz = classLoaderService.classForName( className );
 			try {
-				applyDDL( "", entityBinding, clazz, factory, groups, true, dialect );
+				applyDDL( "", entityBinding, clazz, factory, groups, true, dialect, classLoaderService );
 			}
 			catch ( Exception e ) {
 				LOG.unableToApplyConstraints( className, e );
@@ -199,7 +194,7 @@ class TypeSafeActivator {
 			ValidatorFactory factory,
 			Set<Class<?>> groups,
 			boolean activateNotNull,
-			Dialect dialect) {
+			Dialect dialect, ClassLoaderService classLoaderService) {
 		final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
 
 		// no bean level constraints can be applied, just iterate the properties
@@ -228,8 +223,9 @@ class TypeSafeActivator {
 				if ( attribute.isSingular() ) {
 					final SingularAttribute singularAttribute = (SingularAttribute) attribute;
 					if ( singularAttribute.getSingularAttributeType().isAggregate() ) {
-						final Class<?> componentClass = singularAttribute.getSingularAttributeType()
-								.getClassReference().getResolvedClass();
+						final Class<?> componentClass = classLoaderService.classForName(
+								singularAttribute.getSingularAttributeType().getDescriptor().getName().fullName()
+						);
 						final boolean canSetNotNullOnColumns = activateNotNull && hasNotNull;
 						applyDDL(
 								prefix + propertyDescriptor.getPropertyName() + ".",
@@ -238,7 +234,8 @@ class TypeSafeActivator {
 								factory,
 								groups,
 								canSetNotNullOnColumns,
-								dialect
+								dialect,
+								classLoaderService
 						);
 					}
 				}

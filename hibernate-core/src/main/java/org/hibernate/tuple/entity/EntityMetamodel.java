@@ -36,6 +36,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -48,7 +49,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -150,263 +150,6 @@ public class EntityMetamodel implements Serializable {
 	private final EntityTuplizer entityTuplizer;
 	private final EntityInstrumentationMetadata instrumentationMetadata;
 
-	public EntityMetamodel(
-			PersistentClass persistentClass,
-			AbstractEntityPersister persister,
-			SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
-		this.persister = persister;
-
-		name = persistentClass.getEntityName();
-		rootName = persistentClass.getRootClass().getEntityName();
-		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
-
-		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
-				persistentClass,
-				sessionFactory.getIdentifierGenerator( rootName )
-		);
-
-		versioned = persistentClass.isVersioned();
-
-		instrumentationMetadata = persistentClass.hasPojoRepresentation()
-				? Environment.getBytecodeProvider().getEntityInstrumentationMetadata( persistentClass.getMappedClass() )
-				: new NonPojoInstrumentationMetadata( persistentClass.getEntityName() );
-
-		boolean hasLazy = false;
-
-		propertySpan = persistentClass.getPropertyClosureSpan();
-		properties = new NonIdentifierAttribute[propertySpan];
-		List<Integer> naturalIdNumbers = new ArrayList<Integer>();
-		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		propertyNames = new String[propertySpan];
-		propertyTypes = new Type[propertySpan];
-		propertyUpdateability = new boolean[propertySpan];
-		propertyInsertability = new boolean[propertySpan];
-		nonlazyPropertyUpdateability = new boolean[propertySpan];
-		propertyCheckability = new boolean[propertySpan];
-		propertyNullability = new boolean[propertySpan];
-		propertyVersionability = new boolean[propertySpan];
-		propertyLaziness = new boolean[propertySpan];
-		cascadeStyles = new CascadeStyle[propertySpan];
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		this.inMemoryValueGenerationStrategies = new InMemoryValueGenerationStrategy[propertySpan];
-		this.inDatabaseValueGenerationStrategies = new InDatabaseValueGenerationStrategy[propertySpan];
-
-		boolean foundPreInsertGeneratedValues = false;
-		boolean foundPreUpdateGeneratedValues = false;
-		boolean foundPostInsertGeneratedValues = false;
-		boolean foundPostUpdateGeneratedValues = false;
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		Iterator iter = persistentClass.getPropertyClosureIterator();
-		int i = 0;
-		int tempVersionProperty = NO_VERSION_INDX;
-		boolean foundCascade = false;
-		boolean foundCollection = false;
-		boolean foundMutable = false;
-		boolean foundNonIdentifierPropertyNamedId = false;
-		boolean foundInsertGeneratedValue = false;
-		boolean foundUpdateGeneratedValue = false;
-		boolean foundUpdateableNaturalIdProperty = false;
-
-		while ( iter.hasNext() ) {
-			Property prop = ( Property ) iter.next();
-
-			if ( prop == persistentClass.getVersion() ) {
-				tempVersionProperty = i;
-				properties[i] = PropertyFactory.buildVersionProperty(
-						persister,
-						sessionFactory,
-						i,
-						prop,
-						instrumentationMetadata.isInstrumented()
-				);
-			}
-			else {
-				properties[i] = PropertyFactory.buildEntityBasedAttribute(
-						persister,
-						sessionFactory,
-						i,
-						prop,
-						instrumentationMetadata.isInstrumented()
-				);
-			}
-
-			if ( prop.isNaturalIdentifier() ) {
-				naturalIdNumbers.add( i );
-				if ( prop.isUpdateable() ) {
-					foundUpdateableNaturalIdProperty = true;
-				}
-			}
-
-			if ( "id".equals( prop.getName() ) ) {
-				foundNonIdentifierPropertyNamedId = true;
-			}
-
-			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			boolean lazy = prop.isLazy() && instrumentationMetadata.isInstrumented();
-			if ( lazy ) hasLazy = true;
-			propertyLaziness[i] = lazy;
-
-			propertyNames[i] = properties[i].getName();
-			propertyTypes[i] = properties[i].getType();
-			propertyNullability[i] = properties[i].isNullable();
-			propertyUpdateability[i] = properties[i].isUpdateable();
-			propertyInsertability[i] = properties[i].isInsertable();
-			propertyVersionability[i] = properties[i].isVersionable();
-			nonlazyPropertyUpdateability[i] = properties[i].isUpdateable() && !lazy;
-			propertyCheckability[i] = propertyUpdateability[i] ||
-					( propertyTypes[i].isAssociationType() && ( (AssociationType) propertyTypes[i] ).isAlwaysDirtyChecked() );
-
-			cascadeStyles[i] = properties[i].getCascadeStyle();
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			GenerationStrategyPair pair = buildGenerationStrategyPair( sessionFactory, prop );
-			inMemoryValueGenerationStrategies[i] = pair.getInMemoryStrategy();
-			inDatabaseValueGenerationStrategies[i] = pair.getInDatabaseStrategy();
-
-			if ( pair.getInMemoryStrategy() != null ) {
-				final GenerationTiming timing = pair.getInMemoryStrategy().getGenerationTiming();
-				if ( timing != GenerationTiming.NEVER ) {
-					final ValueGenerator generator = pair.getInMemoryStrategy().getValueGenerator();
-					if ( generator != null ) {
-						// we have some level of generation indicated
-						if ( timing == GenerationTiming.INSERT ) {
-							foundPreInsertGeneratedValues = true;
-						}
-						else if ( timing == GenerationTiming.ALWAYS ) {
-							foundPreInsertGeneratedValues = true;
-							foundPreUpdateGeneratedValues = true;
-						}
-					}
-				}
-			}
-			if (  pair.getInDatabaseStrategy() != null ) {
-				final GenerationTiming timing =  pair.getInDatabaseStrategy().getGenerationTiming();
-				if ( timing == GenerationTiming.INSERT ) {
-					foundPostInsertGeneratedValues = true;
-				}
-				else if ( timing == GenerationTiming.ALWAYS ) {
-					foundPostInsertGeneratedValues = true;
-					foundPostUpdateGeneratedValues = true;
-				}
-			}
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-			if ( properties[i].isLazy() ) {
-				hasLazy = true;
-			}
-
-			if ( properties[i].getCascadeStyle() != CascadeStyles.NONE ) {
-				foundCascade = true;
-			}
-
-			if ( indicatesCollection( properties[i].getType() ) ) {
-				foundCollection = true;
-			}
-
-			if ( propertyTypes[i].isMutable() && propertyCheckability[i] ) {
-				foundMutable = true;
-			}
-
-			mapPropertyToIndex(prop, i);
-			i++;
-		}
-
-		if (naturalIdNumbers.size()==0) {
-			naturalIdPropertyNumbers = null;
-			hasImmutableNaturalId = false;
-			hasCacheableNaturalId = false;
-		}
-		else {
-			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
-			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
-			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
-		}
-
-		this.hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
-		this.hasPreUpdateGeneratedValues = foundPreUpdateGeneratedValues;
-		this.hasInsertGeneratedValues = foundPostInsertGeneratedValues;
-		this.hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
-
-		hasCascades = foundCascade;
-		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
-		versionPropertyIndex = tempVersionProperty;
-		hasLazyProperties = hasLazy;
-        if (hasLazyProperties) LOG.lazyPropertyFetchingAvailable(name);
-
-		lazy = persistentClass.isLazy() && (
-				// TODO: this disables laziness even in non-pojo entity modes:
-				!persistentClass.hasPojoRepresentation() ||
-				!ReflectHelper.isFinalClass( persistentClass.getProxyInterface() )
-		);
-		mutable = persistentClass.isMutable();
-		if ( persistentClass.isAbstract() == null ) {
-			// legacy behavior (with no abstract attribute specified)
-			isAbstract = persistentClass.hasPojoRepresentation() &&
-			             ReflectHelper.isAbstractClass( persistentClass.getMappedClass() );
-		}
-		else {
-			isAbstract = persistentClass.isAbstract().booleanValue();
-			if ( !isAbstract && persistentClass.hasPojoRepresentation() &&
-			     ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
-                LOG.entityMappedAsNonAbstract(name);
-			}
-		}
-		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
-		dynamicUpdate = persistentClass.useDynamicUpdate();
-		dynamicInsert = persistentClass.useDynamicInsert();
-
-		polymorphic = persistentClass.isPolymorphic();
-		explicitPolymorphism = persistentClass.isExplicitPolymorphism();
-		inherited = persistentClass.isInherited();
-		superclass = inherited ?
-				persistentClass.getSuperclass().getEntityName() :
-				null;
-		hasSubclasses = persistentClass.hasSubclasses();
-
-		optimisticLockStyle = persistentClass.getOptimisticLockStyle();
-		final boolean isAllOrDirty =
-				optimisticLockStyle == OptimisticLockStyle.ALL
-						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;
-		if ( isAllOrDirty && !dynamicUpdate ) {
-			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
-		}
-		if ( versionPropertyIndex != NO_VERSION_INDX && isAllOrDirty ) {
-			throw new MappingException( "version and optimistic-lock=all|dirty are not a valid combination : " + name );
-		}
-
-		hasCollections = foundCollection;
-		hasMutableProperties = foundMutable;
-
-		iter = persistentClass.getSubclassIterator();
-		while ( iter.hasNext() ) {
-			subclassEntityNames.add( ( (PersistentClass) iter.next() ).getEntityName() );
-		}
-		subclassEntityNames.add( name );
-
-		if ( persistentClass.hasPojoRepresentation() ) {
-			entityNameByInheritenceClassMap.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
-			iter = persistentClass.getSubclassIterator();
-			while ( iter.hasNext() ) {
-				final PersistentClass pc = ( PersistentClass ) iter.next();
-				entityNameByInheritenceClassMap.put( pc.getMappedClass(), pc.getEntityName() );
-			}
-		}
-
-		entityMode = persistentClass.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
-		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
-		final String tuplizerClassName = persistentClass.getTuplizerImplClassName( entityMode );
-		if ( tuplizerClassName == null ) {
-			entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, persistentClass );
-		}
-		else {
-			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, this, persistentClass );
-		}
-	}
 
 	private static GenerationStrategyPair buildGenerationStrategyPair(
 			final SessionFactoryImplementor sessionFactory,
@@ -795,10 +538,11 @@ public class EntityMetamodel implements Serializable {
 		Class<?> proxyInterfaceClass = null;
 		Class<?> mappedClass = null;
 		if ( isPOJO ) {
-			mappedClass = entityBinding.getEntity().getClassReference().getResolvedClass();
-			proxyInterfaceClass = entityBinding.getProxyInterfaceType() == null ?
-					null :
-					entityBinding.getProxyInterfaceType().getResolvedClass();
+			final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
+			mappedClass = cls.classForName( entityBinding.getEntity().getDescriptor().getName().fullName() );
+			if ( entityBinding.getProxyInterfaceType() != null ) {
+				proxyInterfaceClass = cls.classForName( entityBinding.getProxyInterfaceType().getName().fullName() );
+			}
 			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 		}
 		else {
@@ -989,13 +733,14 @@ public class EntityMetamodel implements Serializable {
 		hasCollections = foundCollection;
 		hasMutableProperties = foundMutable;
 
-		for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
-			// TODO: is the following correct???
-			subclassEntityNames.add( subEntityBinding.getEntity().getName() );
-			if ( isPOJO ) {
-				entityNameByInheritenceClassMap.put(
-						subEntityBinding.getEntity().getClassReference().getResolvedClass(),
-						subEntityBinding.getEntity().getName() );
+		if ( isPOJO ) {
+			final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
+			for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
+				subclassEntityNames.add( subEntityBinding.getEntity().getName() );
+				final Class subclassClass = cls.classForName(
+						subEntityBinding.getEntity().getDescriptor().getName().fullName()
+				);
+				entityNameByInheritenceClassMap.put( subclassClass, subEntityBinding.getEntity().getName() );
 			}
 		}
 		subclassEntityNames.add( name );
@@ -1005,13 +750,12 @@ public class EntityMetamodel implements Serializable {
 
 		entityMode = isPOJO ? EntityMode.POJO : EntityMode.MAP;
 		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
-		Class<? extends EntityTuplizer> tuplizerClass = entityBinding.getCustomTuplizerClass();
-
-		if ( tuplizerClass == null ) {
+		Class<? extends EntityTuplizer> tuplizerClassName = entityBinding.getCustomTuplizerClass();
+		if ( tuplizerClassName == null ) {
 			entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, entityBinding );
 		}
 		else {
-			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClass, this, entityBinding );
+			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, this, entityBinding );
 		}
 	}
 

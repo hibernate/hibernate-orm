@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 
 /**
  * Convenient base class for {@link AttributeContainer}.  Because in our model all
@@ -39,15 +40,15 @@ import org.hibernate.internal.util.StringHelper;
  */
 public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
 	private final String name;
-	private final JavaClassReference javaClassReference;
+	private final JavaTypeDescriptor typeDescriptor;
 	private final Hierarchical superType;
 
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
 	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
-	public AbstractAttributeContainer(String name, JavaClassReference javaClassReference, Hierarchical superType) {
+	public AbstractAttributeContainer(String name, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
 		this.name = name;
-		this.javaClassReference = javaClassReference;
+		this.typeDescriptor = typeDescriptor;
 		this.superType = superType;
 	}
 
@@ -57,8 +58,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public JavaClassReference getClassReference() {
-		return javaClassReference;
+	public JavaTypeDescriptor getDescriptor() {
+		return typeDescriptor;
 	}
 
 	@Override
@@ -113,12 +114,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "AbstractAttributeContainer" );
-		sb.append( "{name='" ).append( name ).append( '\'' );
-		sb.append( ", superType=" ).append( superType );
-		sb.append( '}' );
-		return sb.toString();
+		return "AbstractAttributeContainer" + "{name='" + name + "', superType=" + superType + '}';
 	}
 
 

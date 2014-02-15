@@ -23,9 +23,46 @@
  */
 package org.hibernate.metamodel.reflite.spi;
 
+import java.util.Collection;
+
 /**
+ * Describes information about a Java type.  Might (more concretely) be any of:<ul>
+ *     <li>{@link ClassDescriptor}</li>
+ *     <li>{@link InterfaceDescriptor}</li>
+ *     <li>{@link PrimitiveTypeDescriptor}</li>
+ *     <li>{@link PrimitiveWrapperTypeDescriptor}</li>
+ *     <li>{@link ArrayDescriptor}</li>
+ *     <li>{@link VoidDescriptor}</li>
+ * </ul>
+ *
  * @author Steve Ebersole
  */
-public interface ArrayTypeDescriptor extends TypeDescriptor {
-	public TypeDescriptor getComponentTypeDescriptor();
+public interface JavaTypeDescriptor {
+	/**
+	 * Retrieve the type name
+	 *
+	 * @return The type name
+	 */
+	public Name getName();
+
+	/**
+	 * Access the type's modifiers.  See {@link java.lang.reflect.Modifier}
+	 *
+	 * @return The modifiers
+	 */
+	public int getModifiers();
+
+	/**
+	 * Get all the fields declared by this type.
+	 *
+	 * @return All fields declared by this type
+	 */
+	public Collection<FieldDescriptor> getDeclaredFields();
+
+	/**
+	 * Get all the methods declared by this type.
+	 *
+	 * @return All fields declared by this type
+	 */
+	public Collection<MethodDescriptor> getDeclaredMethods();
 }

@@ -26,7 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.type.Type;
 
 /**
@@ -39,7 +39,7 @@ public class HibernateTypeDescriptor {
 	private Map<String, String> typeParameters = new HashMap<String, String>(  );
 
 	private Type resolvedTypeMapping;
-	private JavaClassReference javaClassReference;
+	private JavaTypeDescriptor typeDescriptor;
 
 	public String getExplicitTypeName() {
 		return explicitTypeName;
@@ -49,12 +49,12 @@ public class HibernateTypeDescriptor {
 		this.explicitTypeName = explicitTypeName;
 	}
 
-	public JavaClassReference getClassReference() {
-		return javaClassReference;
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return typeDescriptor;
 	}
 
-	public void setClassReference(JavaClassReference javaClassReference) {
-		this.javaClassReference = javaClassReference;
+	public void setJavaTypeDescriptor(JavaTypeDescriptor typeDescriptor) {
+		this.typeDescriptor = typeDescriptor;
 	}
 
 	public boolean isToOne() {
@@ -74,7 +74,7 @@ public class HibernateTypeDescriptor {
 	}
 
 	public void copyFrom(HibernateTypeDescriptor hibernateTypeDescriptor) {
-		setClassReference( hibernateTypeDescriptor.getClassReference() );
+		setJavaTypeDescriptor( hibernateTypeDescriptor.getJavaTypeDescriptor() );
 		setExplicitTypeName( hibernateTypeDescriptor.getExplicitTypeName() );
 		getTypeParameters().putAll( hibernateTypeDescriptor.getTypeParameters() );
 		setResolvedTypeMapping( hibernateTypeDescriptor.getResolvedTypeMapping() );

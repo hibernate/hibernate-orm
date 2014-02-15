@@ -23,11 +23,12 @@
  */
 package org.hibernate.metamodel.reflite.internal;
 
+import java.util.Collection;
+
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
-import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -36,9 +37,10 @@ public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 	private final Name name;
 	private final int modifiers;
 
-	private TypeDescriptor[] extendedInterfaceTypes;
-	private FieldDescriptor[] declaredFields;
-	private MethodDescriptor[] declaredMethods;
+	private Collection<InterfaceDescriptor> extendedInterfaceTypes;
+
+	private Collection<FieldDescriptor> declaredFields;
+	private Collection<MethodDescriptor> declaredMethods;
 
 	public InterfaceDescriptorImpl(Name name, int modifiers) {
 		this.name = name;
@@ -56,54 +58,34 @@ public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 	}
 
 	@Override
-	public boolean isInterface() {
-		return true;
-	}
-
-	@Override
-	public boolean isVoid() {
-		return false;
-	}
-
-	@Override
-	public boolean isArray() {
-		return false;
-	}
-
-	@Override
-	public boolean isPrimitive() {
-		return false;
-	}
-
-	@Override
-	public TypeDescriptor[] getExtendedInterfaceTypes() {
+	public Collection<InterfaceDescriptor> getExtendedInterfaceTypes() {
 		return extendedInterfaceTypes;
 	}
 
 	@Override
-	public FieldDescriptor[] getDeclaredFields() {
+	public Collection<FieldDescriptor> getDeclaredFields() {
 		return declaredFields;
 	}
 
 	@Override
-	public MethodDescriptor[] getDeclaredMethods() {
+	public Collection<MethodDescriptor> getDeclaredMethods() {
 		return declaredMethods;
-	}
-
-	void setExtendedInterfaceTypes(TypeDescriptor[] extendedInterfaceTypes) {
-		this.extendedInterfaceTypes = extendedInterfaceTypes;
-	}
-
-	void setDeclaredFields(FieldDescriptor[] declaredFields) {
-		this.declaredFields = declaredFields;
-	}
-
-	void setDeclaredMethods(MethodDescriptor[] declaredMethods) {
-		this.declaredMethods = declaredMethods;
 	}
 
 	@Override
 	public String toString() {
 		return "InterfaceDescriptorImpl{" + name.toString() + '}';
+	}
+
+	void setExtendedInterfaceTypes(Collection<InterfaceDescriptor> extendedInterfaceTypes) {
+		this.extendedInterfaceTypes = extendedInterfaceTypes;
+	}
+
+	void setDeclaredFields(Collection<FieldDescriptor> declaredFields) {
+		this.declaredFields = declaredFields;
+	}
+
+	void setDeclaredMethods(Collection<MethodDescriptor> declaredMethods) {
+		this.declaredMethods = declaredMethods;
 	}
 }

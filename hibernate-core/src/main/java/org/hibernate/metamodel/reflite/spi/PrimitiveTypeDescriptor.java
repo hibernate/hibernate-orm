@@ -24,8 +24,15 @@
 package org.hibernate.metamodel.reflite.spi;
 
 /**
+ * Describes the java type for the Java primitive types.
+ *
  * @author Steve Ebersole
  */
-public interface PrimitiveTypeDescriptor extends TypeDescriptor {
+public interface PrimitiveTypeDescriptor extends JavaTypeDescriptor {
+	/**
+	 * The descriptor for the wrapper "equivalent".
+	 *
+	 * @return The descriptor for the wrapper "equivalent".
+	 */
 	public PrimitiveWrapperTypeDescriptor getWrapperTypeDescriptor();
 }

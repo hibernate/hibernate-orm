@@ -35,12 +35,15 @@ import org.hibernate.property.Getter;
 import org.hibernate.tuple.Tuplizer;
 
 /**
- * Defines further responsibilities reagarding tuplization based on
+ * Defines further responsibilities regarding tuplization based on
  * a mapped entity.
  * <p/>
- * EntityTuplizer implementations should have the following constructor signatures:
- *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.mapping.PersistentClass)
- *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.metamodel.spi.binding.EntityBinding)
+ * EntityTuplizer implementations should define a constructor with the following arguments:<ol>
+ *     <li>{@link org.hibernate.service.ServiceRegistry serviceRegistry}</li>
+ *     <li>{@link org.hibernate.tuple.entity.EntityMetamodel}</li>
+ *     <li>{@link org.hibernate.metamodel.spi.binding.EntityBinding}</li>
+ * </ol>
+ * An easy way to check this is to extend the {@link org.hibernate.tuple.entity.AbstractEntityTuplizer} class.
  *
  * @author Gavin King
  * @author Steve Ebersole

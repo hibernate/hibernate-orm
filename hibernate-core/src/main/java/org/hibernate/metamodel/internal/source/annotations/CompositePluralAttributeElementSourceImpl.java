@@ -33,11 +33,11 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOv
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.CascadeType;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
-import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
@@ -128,8 +128,10 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 
 	@Override
-	public JavaClassReference getClassReference() {
-		return getLocalBindingContext().makeJavaClassReference( associationAttribute.getReferencedEntityType() );
+	public JavaTypeDescriptor getTypeDescriptor() {
+		return getLocalBindingContext().typeDescriptor(
+				associationAttribute.getReferencedEntityType()
+		);
 	}
 
 	@Override

@@ -175,7 +175,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertEquals( expectedNullable, manyToOneAttributeBinding.isNullable() );
 		HibernateTypeDescriptor hibernateTypeDescriptor = manyToOneAttributeBinding.getHibernateTypeDescriptor();
 		Assert.assertNull( hibernateTypeDescriptor.getExplicitTypeName() );
-		Assert.assertEquals( referencedEntityName, hibernateTypeDescriptor.getClassReference().getName() );
+		Assert.assertEquals(
+				referencedEntityName,
+				hibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+		);
 		assertTrue( hibernateTypeDescriptor.isToOne() );
 		assertTrue( hibernateTypeDescriptor.getTypeParameters().isEmpty() );		
 
@@ -192,7 +195,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		);
 		Entity simpleEntityAttributeType = (Entity) simpleEntitySingularAttribute.getSingularAttributeType();
 		assertEquals( referencedEntityName, simpleEntityAttributeType.getName() );
-		Assert.assertEquals( referencedEntityName, simpleEntityAttributeType.getClassReference().getName());
+		Assert.assertEquals(
+				referencedEntityName,
+				simpleEntityAttributeType.getDescriptor().getName().fullName()
+		);
 		Assert.assertTrue( simpleEntityAttributeType.isAssociation() );
 		assertFalse( simpleEntityAttributeType.isAggregate() );
 
@@ -272,7 +278,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertFalse( singularIdAttributeBinding.isNullable() );
 		SingularAttribute singularIdAttribute =  ( SingularAttribute ) idAttributeBinding.getAttribute();
 		BasicType basicIdAttributeType = ( BasicType ) singularIdAttribute.getSingularAttributeType();
-		assertSame( Long.class, basicIdAttributeType.getClassReference().getResolvedClass() );
+		assertEquals( Long.class.getName(), basicIdAttributeType.getDescriptor().getName().fullName() );
 
 		assertTrue( singularIdAttributeBinding.getRelationalValueBindings().size() == 1 );
 		Value value = singularIdAttributeBinding.getRelationalValueBindings().get( 0 ).getValue();
@@ -293,7 +299,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding.getRelationalValueBindings().size() );
 		SingularAttribute singularNameAttribute =  nameBinding.getAttribute();
 		BasicType basicNameAttributeType = (BasicType) singularNameAttribute.getSingularAttributeType();
-		assertSame( String.class, basicNameAttributeType.getClassReference().getResolvedClass() );
+		assertEquals( String.class.getName(), basicNameAttributeType.getDescriptor().getName().fullName() );
 		Assert.assertEquals( 1, nameBinding.getRelationalValueBindings().size() );
 		Value nameValue = nameBinding.getRelationalValueBindings().get( 0 ).getValue();
 		assertTrue( nameValue instanceof Column );

@@ -33,9 +33,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
+import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -54,7 +59,6 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.AbstractValue;
@@ -67,6 +71,7 @@ import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -142,11 +147,11 @@ class HibernateTypeHelper {
 		}
 	}
 
-	JavaClassReference reflectedCollectionElementJavaType(
+	JavaTypeDescriptor reflectedCollectionElementJavaType(
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
 		if ( reflectedCollectionJavaTypes != null &&
 				reflectedCollectionJavaTypes.getCollectionElementTypeName() != null ) {
-			return bindingContext().makeJavaClassReference(
+			return bindingContext().typeDescriptor(
 					reflectedCollectionJavaTypes.getCollectionElementTypeName()
 			);
 		}
@@ -155,29 +160,32 @@ class HibernateTypeHelper {
 		}
 	}
 
-	JavaClassReference reflectedCollectionIndexClassReference(
+	JavaTypeDescriptor reflectedCollectionIndexClassReference(
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
 		if ( reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionIndexTypeName() != null ) {
-			return bindingContext().makeJavaClassReference( reflectedCollectionJavaTypes.getCollectionIndexTypeName() );
+			return bindingContext().typeDescriptor( reflectedCollectionJavaTypes.getCollectionIndexTypeName() );
 		}
 		else {
 			return null;
 		}
 	}
 
-	JavaClassReference reflectedCollectionClassReference(
+	JavaTypeDescriptor reflectedCollectionClassReference(
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
 		if( reflectedCollectionJavaTypes != null && reflectedCollectionJavaTypes.getCollectionTypeName() != null ) {
-			return bindingContext().makeJavaClassReference( reflectedCollectionJavaTypes.getCollectionTypeName() );
+			return bindingContext().typeDescriptor( reflectedCollectionJavaTypes.getCollectionTypeName() );
 		}
 		else {
 			return null;
 		}
 	}
+
 	static ReflectedCollectionJavaTypes getReflectedCollectionJavaTypes(
+			ClassLoaderService classLoaderService,
 			final PluralAttributeBinding attributeBinding) {
-		return determineReflectedCollectionJavaTypes( attributeBinding.getAttribute() );
+		return determineReflectedCollectionJavaTypes( classLoaderService, attributeBinding.getAttribute() );
 	}
+
 	//--------------------------------------------------------------------------------
 
 	/**
@@ -196,12 +204,12 @@ class HibernateTypeHelper {
 	 * 		Explicit type name defined in the mapping or resolved from referenced attribute.
 	 * 		<code>null</code> is accepted.
 	 *
-	 * @param explictTypeParameters
+	 * @param explicitTypeParameters
 	 *
 	 * 		Explicit type parameters defined in the mapping or resolved from refrenced attribute type.
 	 * 		<code>null</code> is accepted.
 	 *
-	 * @param defaultJavaClassReference
+	 * @param defaultTypeDescriptor
 	 *
 	 * 		Attribute java type. <code>null</code> is accepted.
 	 *
@@ -212,8 +220,8 @@ class HibernateTypeHelper {
 	void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final String explicitTypeName,
-			final Map<String, String> explictTypeParameters,
-			final JavaClassReference defaultJavaClassReference,
+			final Map<String, String> explicitTypeParameters,
+			final JavaTypeDescriptor defaultTypeDescriptor,
 			final Type resolvedType) {
 		Type type;
 		if ( resolvedType != null ) {
@@ -224,8 +232,8 @@ class HibernateTypeHelper {
 			preProcessHibernateTypeDescriptor(
 					hibernateTypeDescriptor,
 					explicitTypeName,
-					explictTypeParameters,
-					defaultJavaClassReference
+					explicitTypeParameters,
+					defaultTypeDescriptor
 			);
 			//2. resolve hibernate type
 			type = getHeuristicType(
@@ -237,15 +245,20 @@ class HibernateTypeHelper {
 			//todo how to deal with this?
 		}
 
-		//3. now set hibernateTypeDescripter's ResolvedTypeMapping and defaultJavaType (if not yet)
+		//3. now set hibernateTypeDescriptor ResolvedTypeMapping and defaultJavaType (if not yet)
 		hibernateTypeDescriptor.setResolvedTypeMapping( type );
 
-		if ( hibernateTypeDescriptor.getClassReference() == null ) {
-			if ( defaultJavaClassReference != null ) {
-				hibernateTypeDescriptor.setClassReference( defaultJavaClassReference );
+		if ( hibernateTypeDescriptor.getJavaTypeDescriptor() == null ) {
+			if ( defaultTypeDescriptor != null ) {
+				hibernateTypeDescriptor.setJavaTypeDescriptor( defaultTypeDescriptor );
 			}
 			else if ( type != null && ! type.isAssociationType() ) {
-				hibernateTypeDescriptor.setClassReference( bindingContext().makeJavaClassReference( type.getReturnedClass() ) );
+				hibernateTypeDescriptor.setJavaTypeDescriptor(
+						bindingContext().typeDescriptor(
+								type.getReturnedClass()
+										.getName()
+						)
+				);
 			}
 		}
 	}
@@ -254,12 +267,12 @@ class HibernateTypeHelper {
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final String explicitTypeName,
 			final Map<String, String> explictTypeParameters,
-			final JavaClassReference defaultJavaClassReference) {
+			final JavaTypeDescriptor defaultTypeDescriptor) {
 		bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				explicitTypeName,
 				explictTypeParameters,
-				defaultJavaClassReference,
+				defaultTypeDescriptor,
 				null
 		);
 	}
@@ -268,14 +281,14 @@ class HibernateTypeHelper {
 	void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final HibernateTypeSource explicitTypeSource,
-			final JavaClassReference defaultJavaClassReference){
-		bindHibernateTypeDescriptor( hibernateTypeDescriptor, explicitTypeSource, defaultJavaClassReference, null);
+			final JavaTypeDescriptor defaultTypeDescriptor){
+		bindHibernateTypeDescriptor( hibernateTypeDescriptor, explicitTypeSource, defaultTypeDescriptor, null);
 	}
 
 	void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final HibernateTypeSource explicitTypeSource,
-			final JavaClassReference defaultJavaClassReference,
+			final JavaTypeDescriptor defaultTypeDescriptor,
 			final Type resolvedType) {
 		final String explicitTypeName = explicitTypeSource != null ? explicitTypeSource.getName() : null;
 		final Map<String, String> parameters = explicitTypeSource != null ? explicitTypeSource.getParameters() : null;
@@ -283,7 +296,7 @@ class HibernateTypeHelper {
 				hibernateTypeDescriptor,
 				explicitTypeName,
 				parameters,
-				defaultJavaClassReference,
+				defaultTypeDescriptor,
 				resolvedType
 		);
 	}
@@ -351,18 +364,24 @@ class HibernateTypeHelper {
 	}
 
 	void bindAggregatedCompositeAttributeType(
+			final ServiceRegistry serviceRegistry,
 			final boolean isAttributeIdentifier,
 			final Aggregate composite,
-			final JavaClassReference defaultJavaClassReference,
+			final JavaTypeDescriptor defaultTypeDescriptor,
 			final CompositeAttributeBinding attributeBinding) {
 		Type resolvedType = typeFactory().component(
-				new ComponentMetamodel( attributeBinding, isAttributeIdentifier, false )
+				new ComponentMetamodel(
+						serviceRegistry,
+						attributeBinding,
+						isAttributeIdentifier,
+						false
+				)
 		);
 		bindHibernateTypeDescriptor(
 				attributeBinding.getHibernateTypeDescriptor(),
-				composite.getClassReference().getName(),
+				composite.getDescriptor().getName().fullName(),
 				null,
-				defaultJavaClassReference,
+				defaultTypeDescriptor,
 				resolvedType
 		);
 	}
@@ -370,11 +389,11 @@ class HibernateTypeHelper {
 	void bindBasicCollectionElementType(
 			final BasicPluralAttributeElementBinding elementBinding,
 			final BasicPluralAttributeElementSource elementSource,
-			final JavaClassReference defaultElementJavaClassReference) {
+			final JavaTypeDescriptor defaultElementTypeDescriptor) {
 		bindHibernateTypeDescriptor(
 				elementBinding.getHibernateTypeDescriptor(),
 				elementSource.getExplicitHibernateTypeSource(),
-				defaultElementJavaClassReference
+				defaultElementTypeDescriptor
 		);
 		bindJdbcDataType(
 				elementBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(),
@@ -382,15 +401,16 @@ class HibernateTypeHelper {
 		);
 	}
 	void bindNonAggregatedCompositeIdentifierType(
+			final ServiceRegistry serviceRegistry,
 			final CompositeAttributeBinding syntheticAttributeBinding,
 			final SingularAttribute syntheticAttribute) {
 		final Type resolvedType = typeFactory().embeddedComponent(
-				new ComponentMetamodel( syntheticAttributeBinding, true, false )
+				new ComponentMetamodel( serviceRegistry, syntheticAttributeBinding, true, false )
 		);
 		final HibernateTypeDescriptor typeDescriptor = syntheticAttributeBinding.getHibernateTypeDescriptor();
-		final String className = syntheticAttribute.getSingularAttributeType().getClassReference() == null ?
+		final String className = syntheticAttribute.getSingularAttributeType().getDescriptor() == null ?
 				null :
-				syntheticAttribute.getSingularAttributeType().getClassReference().getName();
+				syntheticAttribute.getSingularAttributeType().getDescriptor().getName().fullName();
 		bindHibernateTypeDescriptor(
 				typeDescriptor,
 				className,
@@ -403,7 +423,7 @@ class HibernateTypeHelper {
 			final ManyToManyPluralAttributeElementBinding elementBinding,
 			final ManyToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
-			final JavaClassReference defaultElementJavaClassReference) {
+			final JavaTypeDescriptor defaultElementTypeDescriptor) {
 		final Type resolvedElementType = typeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
 				elementSource.getReferencedEntityAttributeName(),
@@ -417,7 +437,7 @@ class HibernateTypeHelper {
 				hibernateTypeDescriptor,
 				referencedEntityBinding.getEntity().getName(),
 				null,
-				defaultElementJavaClassReference,
+				defaultElementTypeDescriptor,
 				resolvedElementType
 		);
 		bindJdbcDataType(
@@ -431,7 +451,7 @@ class HibernateTypeHelper {
 				discriminator.getExplicitHibernateTypeDescriptor(),
 				null,
 				null,
-				bindingContext().makeJavaClassReference( String.class )
+				bindingContext().typeDescriptor( String.class.getName() )
 		);
 		bindJdbcDataType( discriminator.getExplicitHibernateTypeDescriptor().getResolvedTypeMapping(), value );
 	}
@@ -441,27 +461,26 @@ class HibernateTypeHelper {
 			final SingularAttributeBinding attributeBinding) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding
 				.getHibernateTypeDescriptor();
-		final JavaClassReference attributeJavaClassReference =  determineJavaType(
+		final JavaTypeDescriptor attributeTypeDescriptor =  determineJavaType(
 				attributeSource,
 				attributeBinding.getAttribute().getAttributeContainer()
 		);
 		//try to resolve this attribute's java type first
-		final JavaClassReference defaultJavaClassReference;
-		if ( attributeJavaClassReference != null ) {
+		final JavaTypeDescriptor defaultTypeDescriptor;
+		if ( attributeTypeDescriptor != null ) {
 			attributeBinding.getAttribute().resolveType(
-					makeDomainType(
-							attributeJavaClassReference.getName()
-					)
+					makeDomainType( attributeTypeDescriptor.getName().fullName() )
 			);
-			defaultJavaClassReference = attributeJavaClassReference;
-		} else {
-			defaultJavaClassReference = null;
+			defaultTypeDescriptor = attributeTypeDescriptor;
+		}
+		else {
+			defaultTypeDescriptor = null;
 		}
 		//do our best to full fill hibernateTypeDescriptor
 		bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				attributeSource.getTypeInformation(),
-				defaultJavaClassReference
+				defaultTypeDescriptor
 		);
 
 		processSingularAttributeTypeInformation(
@@ -473,6 +492,7 @@ class HibernateTypeHelper {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ hibernate type resolver
 	Type resolvePluralType(
+			ClassLoaderService classLoaderService,
 			final PluralAttributeBinding pluralAttributeBinding,
 			final PluralAttributeSource pluralAttributeSource,
 			final PluralAttributeSource.Nature nature) {
@@ -483,17 +503,22 @@ class HibernateTypeHelper {
 			final String role = pluralAttributeBinding.getAttribute().getRole();
 			final String propertyRef = getReferencedPropertyNameIfNotId( pluralAttributeBinding );
 			switch ( nature ) {
-				case BAG:
+				case BAG: {
 					return typeFactory().bag( role, propertyRef );
-				case LIST:
+				}
+				case LIST: {
 					return typeFactory().list( role, propertyRef );
-				case ARRAY:
+				}
+				case ARRAY: {
 					return typeFactory().array(
 							role,
 							propertyRef,
-							pluralAttributeSource.getElementJavaClassReference().getResolvedClass()
+							classLoaderService.classForName(
+									pluralAttributeSource.getElementTypeDescriptor().getName().fullName()
+							)
 					);
-				case MAP:
+				}
+				case MAP: {
 					if ( pluralAttributeBinding.isSorted() ) {
 						return typeFactory().sortedMap(
 								role,
@@ -505,7 +530,8 @@ class HibernateTypeHelper {
 					else {
 						return typeFactory().map( role, propertyRef );
 					}
-				case SET:
+				}
+				case SET: {
 					if ( pluralAttributeBinding.isSorted() ) {
 						return typeFactory().sortedSet(
 								role,
@@ -523,8 +549,10 @@ class HibernateTypeHelper {
 					else {
 						return typeFactory().set( role, propertyRef );
 					}
-				default:
+				}
+				default: {
 					throw new NotYetImplementedException( nature + " is to be implemented" );
+				}
 			}
 		}
 	}
@@ -537,7 +565,7 @@ class HibernateTypeHelper {
 			final SingularAttribute singularAttribute) {
 		if ( singularAttribute.getSingularAttributeType() != null ) {
 			return getHeuristicType(
-					singularAttribute.getSingularAttributeType().getClassReference().getName(),
+					singularAttribute.getSingularAttributeType().getDescriptor().getName().fullName(),
 					null
 			);
 		}
@@ -603,28 +631,28 @@ class HibernateTypeHelper {
 
 		if ( resolvedType != null ) {
 			pushHibernateTypeInformationDown( attributeSource, attributeBinding, resolvedType );
-		} else{
-			//todo throw exception??
 		}
+
+		//todo throw exception??
 	}
 
 	private void preProcessHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
 			final String explicitTypeName,
 			final Map<String, String> explictTypeParameters,
-			final JavaClassReference defaultJavaClassReference) {
+			final JavaTypeDescriptor defaultTypeDescriptor) {
 		if ( explicitTypeName == null ) {
-			if ( defaultJavaClassReference != null ) {
-				if ( hibernateTypeDescriptor.getClassReference() != null ) {
+			if ( defaultTypeDescriptor != null ) {
+				if ( hibernateTypeDescriptor.getJavaTypeDescriptor() != null ) {
 					throw bindingContext().makeMappingException(
 							String.format(
 									"Attempt to re-initialize (non-explicit) Java type name; current=%s new=%s",
-									hibernateTypeDescriptor.getClassReference(),
-									defaultJavaClassReference
+									hibernateTypeDescriptor.getJavaTypeDescriptor(),
+									defaultTypeDescriptor
 							)
 					);
 				}
-				hibernateTypeDescriptor.setClassReference( defaultJavaClassReference );
+				hibernateTypeDescriptor.setJavaTypeDescriptor( defaultTypeDescriptor );
 			}
 		}
 		else {
@@ -633,7 +661,7 @@ class HibernateTypeHelper {
 			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
 				throw bindingContext().makeMappingException(
 						String.format(
-								"Attempt to re-initialize explicity-mapped Java type name; current=%s new=%s",
+								"Attempt to re-initialize explicitly-mapped Java type name; current=%s new=%s",
 								hibernateTypeDescriptor.getExplicitTypeName(),
 								explicitTypeName
 						)
@@ -664,18 +692,20 @@ class HibernateTypeHelper {
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() == null ) {
 			hibernateTypeDescriptor.setResolvedTypeMapping( resolvedHibernateType );
 		}
-		if ( hibernateTypeDescriptor.getClassReference() == null ) {
+		if ( hibernateTypeDescriptor.getJavaTypeDescriptor() == null ) {
 			// try to get Java type name from attribute because it may not be available from
 			// resolvedHibernateType until after persisters are available.
 			if ( attributeBinding.getAttribute().isTypeResolved() ) {
-				hibernateTypeDescriptor.setClassReference(
-						attributeBinding.getAttribute().getSingularAttributeType().getClassReference()
+				hibernateTypeDescriptor.setJavaTypeDescriptor(
+						attributeBinding.getAttribute().getSingularAttributeType().getDescriptor()
 				);
 			}
 			else {
-				hibernateTypeDescriptor.setClassReference( bindingContext().makeJavaClassReference(
-						resolvedHibernateType.getReturnedClass()
-				) );
+				hibernateTypeDescriptor.setJavaTypeDescriptor(
+						bindingContext().typeDescriptor(
+								resolvedHibernateType.getReturnedClass().getName()
+						)
+				);
 			}
 		}
 
@@ -705,8 +735,8 @@ class HibernateTypeHelper {
 			final Type resolvedHibernateType) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		final SingularAttribute singularAttribute = attributeBinding.getAttribute();
-		if ( !singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getClassReference() != null ) {
-			singularAttribute.resolveType( makeDomainType( hibernateTypeDescriptor.getClassReference().getName() ) );
+		if ( !singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getJavaTypeDescriptor() != null ) {
+			singularAttribute.resolveType( makeDomainType( hibernateTypeDescriptor.getJavaTypeDescriptor().getName() ) );
 		}
 		bindJdbcDataType( resolvedHibernateType, attributeBinding.getRelationalValueBindings() );
 	}
@@ -719,8 +749,8 @@ class HibernateTypeHelper {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 
 		final SingularAttribute singularAttribute = attributeBinding.getAttribute();
-		if ( !singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getClassReference() != null ) {
-			singularAttribute.resolveType( makeDomainType( hibernateTypeDescriptor.getClassReference().getName() ) );
+		if ( !singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getJavaTypeDescriptor() != null ) {
+			singularAttribute.resolveType( makeDomainType( hibernateTypeDescriptor.getJavaTypeDescriptor().getName() ) );
 		}
 
 		Iterator<AttributeSource> subAttributeSourceIterator = attributeSource.attributeSources().iterator();
@@ -753,38 +783,89 @@ class HibernateTypeHelper {
 		return bindingContext().makeDomainType( name );
 	}
 
+	private org.hibernate.metamodel.spi.domain.Type makeDomainType(Name name) {
+		return bindingContext().makeDomainType( name );
+	}
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~ private static methods
-	private static String determineTypeName(
-			final HibernateTypeDescriptor hibernateTypeDescriptor) {
+	private static String determineTypeName(final HibernateTypeDescriptor hibernateTypeDescriptor) {
 		return hibernateTypeDescriptor.getExplicitTypeName() != null
 				? hibernateTypeDescriptor.getExplicitTypeName()
-				: hibernateTypeDescriptor.getClassReference().getName();
+				: hibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName();
 	}
 
 
-	public JavaClassReference determineJavaType(
+	public JavaTypeDescriptor determineJavaType(
 			final AttributeSource attributeSource,
 			final AttributeContainer attributeContainer) {
 		if ( attributeSource.getTypeInformation() != null && attributeSource.getTypeInformation().getJavaType() != null ) {
-			return bindingContext().makeJavaClassReference( attributeSource.getTypeInformation().getJavaType() );
+			return bindingContext().typeDescriptor( attributeSource.getTypeInformation().getJavaType().getName() );
 		}
-		else if ( attributeContainer.getClassReference() == null ) {
+		else if ( attributeContainer.getDescriptor() == null ) {
 			return null;
 		}
 		else {
-			return bindingContext().makeJavaPropertyClassReference(
-					attributeContainer.getClassReference(),
-					attributeSource.getName()
-			);
+			return determineAttributeType( attributeContainer.getDescriptor(), attributeSource.getName() );
 		}
 	}
 
+	public static JavaTypeDescriptor determineAttributeType(
+			JavaTypeDescriptor containerTypeDescriptor,
+			String attributeName) {
+		// todo : this needs to change once we figure out what to do with declared/non-declared attributes
+		//		and generics...
 
-	private static ReflectedCollectionJavaTypes determineReflectedCollectionJavaTypes(PluralAttribute attribute) {
-		if ( attribute.getAttributeContainer().getClassReference() == null ) {
+		// check fields...
+		for ( FieldDescriptor field : containerTypeDescriptor.getDeclaredFields() ) {
+			if ( field.getName().equals( attributeName ) ) {
+				return field.getType();
+			}
+		}
+
+		// check methods...
+		final String attributeNameCapitalized = capitalize( attributeName );
+		final String setterName = "set" + attributeNameCapitalized;
+		final String getterName = "get" + attributeNameCapitalized;
+		final String isGetterName = "is" + attributeNameCapitalized;
+		for ( MethodDescriptor method : containerTypeDescriptor.getDeclaredMethods() ) {
+			// look for a setter...
+			if ( method.getName().equals( setterName ) ) {
+				if ( method.getParameterTypes().size() == 1 ) {
+					// technically the setters could be overloaded. but we'll assume this was it...
+					return method.getParameterTypes().iterator().next();
+				}
+			}
+
+			// look for a getter
+			if ( method.getName().equals( getterName ) || method.getName().equals( isGetterName ) ) {
+				return method.getReturnType();
+			}
+
+		}
+
+		return null;
+	}
+
+	private static String capitalize(String attributeName) {
+		return Character.toUpperCase( attributeName.charAt( 0 ) ) + attributeName.substring( 1 );
+	}
+
+
+	/**
+	 * TODO : this should really use the field/methods descriptors to determine this information
+	 * <p/>
+	 * In the meantime we force load the Collection using ClassLoaderService and use Class to
+	 * decide
+	 */
+	private static ReflectedCollectionJavaTypes determineReflectedCollectionJavaTypes(
+			ClassLoaderService classLoaderService,
+			PluralAttribute attribute) {
+		if ( attribute.getAttributeContainer().getDescriptor() == null ) {
 			return null; // EARLY RETURN
 		}
-		final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference().getResolvedClass();
+
+		final String ownerClassName = attribute.getAttributeContainer().getDescriptor().getName().fullName();
+		final Class ownerClass = classLoaderService.classForName( ownerClassName );
 		try {
 			PluralAttributeJavaTypeDeterminerDelegate delegate = new PluralAttributeJavaTypeDeterminerDelegate(
 					ownerClass,
@@ -797,7 +878,7 @@ class HibernateTypeHelper {
 			log.debugf(
 					"Unable to locate attribute [%s] on class [%s]",
 					attribute.getName(),
-					attribute.getAttributeContainer().getClassReference().getName()
+					ownerClassName
 			);
 		}
 		return null;
@@ -836,7 +917,7 @@ class HibernateTypeHelper {
 	}
 
 	/**
-	 * @see HibernateTypeHelper#determineReflectedCollectionJavaTypes(PluralAttribute)
+	 * @see HibernateTypeHelper#determineReflectedCollectionJavaTypes
 	 */
 	private static class PluralAttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
 		private final Class<?> ownerClass;

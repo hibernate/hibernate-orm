@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+
 /**
  * Models the notion of an entity
  *
@@ -34,11 +36,11 @@ public class Entity extends AbstractAttributeContainer {
 	 * Constructor for the entity
 	 *
 	 * @param entityName The name of the entity
-	 * @param javaClassReference The {@link JavaClassReference} reference to this entity's {@link Class}
+	 * @param typeDescriptor The reflite {@link org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor} describing this entity's class
 	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public Entity(String entityName, JavaClassReference javaClassReference, Hierarchical superType) {
-		super( entityName, javaClassReference, superType );
+	public Entity(String entityName, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		super( entityName, typeDescriptor, superType );
 	}
 
 	@Override

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.domain;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+
 /**
  * Models a basic type.
  *
@@ -30,15 +32,15 @@ package org.hibernate.metamodel.spi.domain;
  */
 public class BasicType implements Type {
 	private final String name;
-	private final JavaClassReference javaClassReference;
+	private final JavaTypeDescriptor typeDescriptor;
 
-	public BasicType(String name, JavaClassReference javaClassReference) {
+	public BasicType(String name, JavaTypeDescriptor typeDescriptor) {
 		this.name = name;
-		this.javaClassReference = javaClassReference;
+		this.typeDescriptor = typeDescriptor;
 	}
 
-	public BasicType(JavaClassReference javaClassReference) {
-		this( javaClassReference.getName(), javaClassReference );
+	public BasicType(JavaTypeDescriptor typeDescriptor) {
+		this( typeDescriptor.getName().fullName(), typeDescriptor );
 	}
 
 	@Override
@@ -47,8 +49,8 @@ public class BasicType implements Type {
 	}
 
 	@Override
-	public JavaClassReference getClassReference() {
-		return javaClassReference;
+	public JavaTypeDescriptor getDescriptor() {
+		return typeDescriptor;
 	}
 
 	@Override

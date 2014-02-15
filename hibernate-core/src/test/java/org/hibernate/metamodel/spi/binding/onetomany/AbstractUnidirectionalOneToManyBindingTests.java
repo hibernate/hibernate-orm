@@ -193,8 +193,13 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		final HibernateTypeDescriptor collectionHibernateTypeDescriptor = collectionBinding.getHibernateTypeDescriptor();
 		assertNull( collectionHibernateTypeDescriptor.getExplicitTypeName() );
-		assertEquals( expectedCollectionJavaType.getName(), collectionHibernateTypeDescriptor.getClassReference().getName() );
-		assertEquals( expectedCollectionJavaType, collectionHibernateTypeDescriptor.getClassReference().getResolvedClass() );
+		assertEquals(				expectedCollectionJavaType.getName(),
+				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+		);
+		assertEquals(
+				expectedCollectionJavaType.getName(),
+				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+		);
 		assertTrue( collectionHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( expectedCollectionTypeClass.isInstance( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ) );
 		assertFalse( collectionHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
@@ -239,13 +244,16 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		assertEquals(
 				expectedElementEntityBinding.getEntity().getName(),
-				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getClassReference().getName()
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
 		);
 	}
 
 	private void checkEquals(HibernateTypeDescriptor expected, HibernateTypeDescriptor actual) {
 		assertEquals( expected.getExplicitTypeName(), actual.getExplicitTypeName() );
-		assertEquals( expected.getClassReference(), actual.getClassReference() );
+		assertEquals(
+				expected.getJavaTypeDescriptor().getName(),
+				actual.getJavaTypeDescriptor().getName()
+		);
 		assertEquals( expected.getTypeParameters(), actual.getTypeParameters() );
 		assertEquals( expected.getResolvedTypeMapping(), actual.getResolvedTypeMapping() );
 		assertEquals( expected.isToOne(), actual.isToOne() );

@@ -96,9 +96,15 @@ public class SchemaUtil {
 		Iterator<PluralAttributeBinding> collectionBindings = metadata.getCollectionBindings().iterator();
 		while ( collectionBindings.hasNext() ) {
 			PluralAttributeBinding collectionBinding = collectionBindings.next();
-			if ( collectionBinding.getAttribute().getName().equals( fieldName ) && entityClass.equals(
-					collectionBinding.getAttribute().getAttributeContainer().getClassReference().getResolvedClass() ) ) {
-				return collectionBinding;
+			if ( collectionBinding.getAttribute().getName().equals( fieldName ) ) {
+				final String collectionOwnerName = collectionBinding.getAttribute()
+						.getAttributeContainer()
+						.getDescriptor()
+						.getName()
+						.fullName();
+				if ( entityClass.getName().equals( collectionOwnerName ) ) {
+					return collectionBinding;
+				}
 			}
 		}
 		return null;

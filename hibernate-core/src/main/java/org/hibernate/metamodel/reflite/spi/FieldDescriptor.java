@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.reflite.spi;
 
 /**
- * Describes a field in a class
+ * Describes a field in a java type
  *
  * @author Steve Ebersole
  */
@@ -41,7 +41,7 @@ public interface FieldDescriptor {
 	 *
 	 * @return The type of the field.
 	 */
-	public TypeDescriptor getType();
+	public JavaTypeDescriptor getType();
 
 	public int getModifiers();
 
@@ -50,5 +50,5 @@ public interface FieldDescriptor {
 	 *
 	 * @return
 	 */
-	public TypeDescriptor getDeclaringType();
+	public JavaTypeDescriptor getDeclaringType();
 }

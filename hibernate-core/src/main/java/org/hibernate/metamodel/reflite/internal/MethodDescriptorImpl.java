@@ -23,25 +23,27 @@
  */
 package org.hibernate.metamodel.reflite.internal;
 
+import java.util.Collection;
+
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
-import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class MethodDescriptorImpl implements MethodDescriptor {
 	private final String name;
-	private final TypeDescriptor declaringType;
+	private final JavaTypeDescriptor declaringType;
 	private final int modifiers;
-	private final TypeDescriptor returnType;
-	private final TypeDescriptor[] parameterTypes;
+	private final JavaTypeDescriptor returnType;
+	private final Collection<JavaTypeDescriptor> parameterTypes;
 
 	public MethodDescriptorImpl(
 			String name,
-			TypeDescriptor declaringType,
+			JavaTypeDescriptor declaringType,
 			int modifiers,
-			TypeDescriptor returnType,
-			TypeDescriptor[] parameterTypes) {
+			JavaTypeDescriptor returnType,
+			Collection<JavaTypeDescriptor> parameterTypes) {
 		this.name = name;
 		this.declaringType = declaringType;
 		this.modifiers = modifiers;
@@ -55,7 +57,7 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	}
 
 	@Override
-	public TypeDescriptor getDeclaringType() {
+	public JavaTypeDescriptor getDeclaringType() {
 		return declaringType;
 	}
 
@@ -65,12 +67,12 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	}
 
 	@Override
-	public TypeDescriptor getReturnType() {
+	public JavaTypeDescriptor getReturnType() {
 		return returnType;
 	}
 
 	@Override
-	public TypeDescriptor[] getParameterTypes() {
+	public Collection<JavaTypeDescriptor> getParameterTypes() {
 		return parameterTypes;
 	}
 

@@ -158,8 +158,10 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		assertSame( collectionBinding, keyBinding.getPluralAttributeBinding() );
 		HibernateTypeDescriptor collectionHibernateTypeDescriptor = collectionBinding.getHibernateTypeDescriptor();
 		assertNull( collectionHibernateTypeDescriptor.getExplicitTypeName() );
-		assertEquals( expectedCollectionJavaClass, collectionHibernateTypeDescriptor.getClassReference().getResolvedClass() );
-		assertEquals( expectedCollectionJavaClass.getName(), collectionHibernateTypeDescriptor.getClassReference().getName() );
+		assertEquals(
+				expectedCollectionJavaClass.getName(),
+				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+		);
 		assertTrue( collectionHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( expectedCollectionTypeClass.isInstance( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ) );
 		assertFalse( collectionHibernateTypeDescriptor.getResolvedTypeMapping().isComponentType() );
@@ -199,12 +201,8 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 				collectionBinding.getPluralAttributeElementBinding().getNature()
 		);
 		assertEquals(
-				expectedElementJavaClass,
-				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getClassReference().getResolvedClass()
-		);
-		assertEquals(
 				expectedElementJavaClass.getName(),
-				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getClassReference().getName()
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
 		);
 		assertEquals(
 				expectedElementJavaClass,
@@ -231,7 +229,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 
 	private void checkEquals(HibernateTypeDescriptor expected, HibernateTypeDescriptor actual) {
 		assertEquals( expected.getExplicitTypeName(), actual.getExplicitTypeName() );
-		assertEquals( expected.getClassReference(), actual.getClassReference() );
+		assertEquals( expected.getJavaTypeDescriptor(), actual.getJavaTypeDescriptor() );
 		assertEquals( expected.getTypeParameters(), actual.getTypeParameters() );
 		assertEquals( expected.getResolvedTypeMapping(), actual.getResolvedTypeMapping() );
 		assertEquals( expected.isToOne(), actual.isToOne() );

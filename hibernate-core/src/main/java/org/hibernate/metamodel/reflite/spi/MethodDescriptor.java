@@ -23,17 +23,46 @@
  */
 package org.hibernate.metamodel.reflite.spi;
 
+import java.util.Collection;
+
 /**
- * Describes a method in a class
+ * Describes a method in a java type
  *
  * @author Steve Ebersole
  */
 public interface MethodDescriptor {
+	/**
+	 * The name of the method
+	 *
+	 * @return The name of the method
+	 */
 	public String getName();
-	public TypeDescriptor getDeclaringType();
 
+	/**
+	 * The type declaring this method
+	 *
+	 * @return The type declaring this method
+	 */
+	public JavaTypeDescriptor getDeclaringType();
+
+	/**
+	 * The modifiers for this method.  See {@link java.lang.reflect.Modifier}
+	 *
+	 * @return The modifiers for this method
+	 */
 	public int getModifiers();
 
-	public TypeDescriptor getReturnType();
-	public TypeDescriptor[] getParameterTypes();
+	/**
+	 * The descriptor of the method's return type
+	 *
+	 * @return The descriptor of the method's return type
+	 */
+	public JavaTypeDescriptor getReturnType();
+
+	/**
+	 * The descriptor of the method's argument types
+	 *
+	 * @return The descriptor of the method's argument types
+	 */
+	public Collection<JavaTypeDescriptor> getParameterTypes();
 }

@@ -28,6 +28,7 @@ import java.lang.reflect.Constructor;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -140,7 +141,12 @@ public final class PropertyFactory {
 		final Type type;
 		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper() ) {
 			type = sessionFactory.getTypeResolver().getTypeFactory().component(
-					new ComponentMetamodel( ( (CompositeAttributeBinding) attributeBinding ), true, true )
+					new ComponentMetamodel(
+							sessionFactory.getServiceRegistry(),
+							( (CompositeAttributeBinding) attributeBinding ),
+							true,
+							true
+					)
 			);
 		}
 		else {
@@ -149,9 +155,12 @@ public final class PropertyFactory {
 
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 				mappedUnsavedValue,
-				getGetter( attributeBinding ),
+				getGetter( attributeBinding, sessionFactory ),
 				type,
-				getConstructor( mappedEntity )
+				getConstructor(
+						mappedEntity,
+						sessionFactory.getServiceRegistry().getService( ClassLoaderService.class )
+				)
 		);
 
 		if ( attributeBinding.getAttribute().isSynthetic()  ) {
@@ -239,9 +248,12 @@ public final class PropertyFactory {
 		final String mappedUnsavedValue = entityBinding.getHierarchyDetails().getEntityVersion().getUnsavedValue();
 		final VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
-				getGetter( property ),
+				getGetter( property, sessionFactory ),
 				(VersionType) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
-				getConstructor( (EntityBinding) property.getContainer() )
+				getConstructor(
+						(EntityBinding) property.getContainer(),
+						sessionFactory.getServiceRegistry().getService( ClassLoaderService.class )
+				)
 		);
 
 		boolean lazy = lazyAvailable && property.isLazy();
@@ -621,13 +633,17 @@ public final class PropertyFactory {
 		}
 	}
 
-	private static Constructor getConstructor(EntityBinding entityBinding) {
+	private static Constructor getConstructor(EntityBinding entityBinding, ClassLoaderService cls) {
 		if ( entityBinding == null || entityBinding.getEntity() == null ) {
 			return null;
 		}
 
 		try {
-			return ReflectHelper.getDefaultConstructor( entityBinding.getEntity().getClassReference().getResolvedClass() );
+			return ReflectHelper.getDefaultConstructor(
+					cls.classForName(
+							entityBinding.getEntity().getDescriptor().getName().fullName()
+					)
+			);
 		}
 		catch( Throwable t ) {
 			return null;
@@ -643,16 +659,20 @@ public final class PropertyFactory {
 		return pa.getGetter( mappingProperty.getPersistentClass().getMappedClass(), mappingProperty.getName() );
 	}
 
-	private static Getter getGetter(AttributeBinding mappingProperty) {
+	private static Getter getGetter(AttributeBinding mappingProperty, SessionFactoryImplementor sessionFactory) {
 		final EntityMode entityMode =
 				mappingProperty.getContainer().seekEntityBinding().getHierarchyDetails().getEntityMode();
 		if ( mappingProperty == null || entityMode != EntityMode.POJO ) {
 			return null;
 		}
 
-		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
+		final PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
+		final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
+		final Class clazz = cls.classForName(
+				mappingProperty.getContainer().getAttributeContainer().getDescriptor().getName().fullName()
+		);
 		return pa.getGetter(
-				mappingProperty.getContainer().getClassReference().getResolvedClass(),
+				clazz,
 				mappingProperty.getAttribute().getName()
 		);
 	}

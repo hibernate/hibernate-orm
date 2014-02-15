@@ -77,8 +77,10 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	public void testSubclassEntitySuperType() {
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
 		assertNotNull( entityBinding.getEntity().getSuperType() );
-		assertSame( RootOfSingleTableInheritance.class, entityBinding.getEntity().getSuperType().getClassReference().getResolvedClass() );
-		assertEquals( RootOfSingleTableInheritance.class.getName(), entityBinding.getEntity().getSuperType().getClassReference().getName() );
+		assertEquals(
+				RootOfSingleTableInheritance.class.getName(),
+				entityBinding.getEntity().getSuperType().getDescriptor().getName().fullName()
+		);
 		assertNull( entityBinding.getEntity().getSuperType().getSuperType() );
 	}
 

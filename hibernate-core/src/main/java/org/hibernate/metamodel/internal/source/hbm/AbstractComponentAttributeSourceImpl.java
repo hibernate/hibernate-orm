@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.ComponentSourceElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbAnyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbArrayElement;
@@ -42,7 +43,6 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbPrimitiveArrayElemen
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbPropertyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSetElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
@@ -59,7 +59,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	private final AttributeSourceContainer parentContainer;
 	private final List<AttributeSource> subAttributeSources;
 	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
-	private final JavaClassReference javaClassReference;
+	private final JavaTypeDescriptor componentTypeDescriptor;
 	private final String logicalTableName;
 	private final String path;
 
@@ -73,7 +73,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 		this.componentSourceElement = componentSourceElement;
 		this.parentContainer = parentContainer;
 		this.naturalIdMutability = naturalIdMutability;
-		this.javaClassReference = makeJavaClassReference( componentSourceElement.getClazz() );
+		this.componentTypeDescriptor = typeDescriptor( componentSourceElement.getClazz() );
 		this.logicalTableName = logicalTableName;
 		this.path = parentContainer.getPath() + '.' + componentSourceElement.getName();
 		
@@ -187,8 +187,8 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	@Override
-	public JavaClassReference getClassReference() {
-		return javaClassReference;
+	public JavaTypeDescriptor getTypeDescriptor() {
+		return componentTypeDescriptor;
 	}
 
 	@Override

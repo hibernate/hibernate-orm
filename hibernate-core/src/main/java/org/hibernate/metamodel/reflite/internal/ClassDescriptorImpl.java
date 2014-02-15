@@ -23,11 +23,13 @@
  */
 package org.hibernate.metamodel.reflite.internal;
 
+import java.util.Collection;
+
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
+import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
-import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 
 /**
  * Implementation of a type descriptor
@@ -37,14 +39,14 @@ import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
 public class ClassDescriptorImpl implements ClassDescriptor {
 	private final Name name;
 
-	private TypeDescriptor superType;
-	private TypeDescriptor[] interfaces;
-
 	private final int modifiers;
 	private final boolean hasDefaultConstructor;
 
-	private FieldDescriptor[] fieldDescriptors;
-	private MethodDescriptor[] methodDescriptors;
+	private ClassDescriptor superType;
+	private Collection<InterfaceDescriptor> interfaces;
+
+	private Collection<FieldDescriptor> fieldDescriptors;
+	private Collection<MethodDescriptor> methodDescriptors;
 
 	public ClassDescriptorImpl(Name name, int modifiers, boolean hasDefaultConstructor) {
 		this.name = name;
@@ -63,32 +65,12 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 	}
 
 	@Override
-	public boolean isInterface() {
-		return false;
-	}
-
-	@Override
-	public boolean isVoid() {
-		return false;
-	}
-
-	@Override
-	public boolean isPrimitive() {
-		return false;
-	}
-
-	@Override
-	public boolean isArray() {
-		return false;
-	}
-
-	@Override
-	public TypeDescriptor getSuperType() {
+	public ClassDescriptor getSuperType() {
 		return superType;
 	}
 
 	@Override
-	public TypeDescriptor[] getInterfaceTypes() {
+	public Collection<InterfaceDescriptor> getInterfaceTypes() {
 		return interfaces;
 	}
 
@@ -98,33 +80,33 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 	}
 
 	@Override
-	public FieldDescriptor[] getDeclaredFields() {
+	public Collection<FieldDescriptor> getDeclaredFields() {
 		return fieldDescriptors;
 	}
 
 	@Override
-	public MethodDescriptor[] getDeclaredMethods() {
+	public Collection<MethodDescriptor> getDeclaredMethods() {
 		return methodDescriptors;
-	}
-
-	void setSuperType(TypeDescriptor superType) {
-		this.superType = superType;
-	}
-
-	void setInterfaces(TypeDescriptor[] interfaces) {
-		this.interfaces = interfaces;
-	}
-
-	void setFields(FieldDescriptor[] fieldDescriptors) {
-		this.fieldDescriptors = fieldDescriptors;
-	}
-
-	void setMethods(MethodDescriptor[] methodDescriptors) {
-		this.methodDescriptors = methodDescriptors;
 	}
 
 	@Override
 	public String toString() {
 		return "ClassDescriptorImpl{" + name.toString() + '}';
+	}
+
+	void setSuperType(ClassDescriptor superType) {
+		this.superType = superType;
+	}
+
+	void setInterfaces(Collection<InterfaceDescriptor> interfaces) {
+		this.interfaces = interfaces;
+	}
+
+	void setFields(Collection<FieldDescriptor> fieldDescriptors) {
+		this.fieldDescriptors = fieldDescriptors;
+	}
+
+	void setMethods(Collection<MethodDescriptor> methodDescriptors) {
+		this.methodDescriptors = methodDescriptors;
 	}
 }

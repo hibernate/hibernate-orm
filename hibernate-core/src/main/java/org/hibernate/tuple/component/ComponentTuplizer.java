@@ -33,9 +33,11 @@ import org.hibernate.tuple.Tuplizer;
  * Defines further responsibilities regarding tuplization based on
  * a mapped components.
  * </p>
- * ComponentTuplizer implementations should have the following constructor signature:
- *      ({@link org.hibernate.mapping.Component})
- *      ({@link org.hibernate.metamodel.spi.binding.CompositeAttributeBinding}, boolean)
+ * ComponentTuplizer implementations should have the following constructor with the following arguments:<ol>
+ *     <li>{@link org.hibernate.service.ServiceRegistry}</li>
+ *     <li>{@link org.hibernate.metamodel.spi.binding.CompositeAttributeBinding}</li>
+ *     <li>boolean (whether the composite is a mapped identifier)</li>
+ * </ol>
  *
  * @author Gavin King
  * @author Steve Ebersole

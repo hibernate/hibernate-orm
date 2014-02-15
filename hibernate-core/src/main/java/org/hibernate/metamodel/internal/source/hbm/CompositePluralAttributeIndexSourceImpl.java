@@ -26,18 +26,18 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.internal.Binder;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeIndexElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeMapKeyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
-import org.hibernate.metamodel.internal.Binder;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -107,8 +107,8 @@ public class CompositePluralAttributeIndexSourceImpl
 	}
 
 	@Override
-	public JavaClassReference getClassReference() {
-		return bindingContext().makeJavaClassReference( className );
+	public JavaTypeDescriptor getTypeDescriptor() {
+		return bindingContext().typeDescriptor( className );
 	}
 
 	@Override

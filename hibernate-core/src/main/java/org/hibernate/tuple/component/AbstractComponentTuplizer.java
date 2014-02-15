@@ -23,17 +23,17 @@
  *
  */
 package org.hibernate.tuple.component;
+
 import java.lang.reflect.Method;
-import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Instantiator;
 
 /**
@@ -43,61 +43,25 @@ import org.hibernate.tuple.Instantiator;
  * @author Steve Ebersole
  */
 public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
-	protected final Getter[] getters;
-	protected final Setter[] setters;
-	protected final int propertySpan;
-	protected final Instantiator instantiator;
-	protected final boolean hasCustomAccessors;
+	private final ServiceRegistry serviceRegistry;
 
-	protected abstract Instantiator buildInstantiator(Component component);
-	protected abstract Getter buildGetter(Component component, Property prop);
-	protected abstract Setter buildSetter(Component component, Property prop);
+	private final Getter[] getters;
+	private final Setter[] setters;
+	private final int propertySpan;
+	private final Instantiator instantiator;
+	private final boolean hasCustomAccessors;
 
-	protected abstract Instantiator buildInstantiator(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
-			boolean isIdentifierMapper
-	);
-	protected abstract Getter buildGetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
-			boolean isIdentifierMapper,
-			AttributeBinding attributeBinding
-	);
-	protected abstract Setter buildSetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
-			boolean isIdentifierMapper,
-			AttributeBinding attributeBinding
-	);
-
-
-	protected AbstractComponentTuplizer(Component component) {
-		propertySpan = component.getPropertySpan();
-		getters = new Getter[propertySpan];
-		setters = new Setter[propertySpan];
-
-		Iterator iter = component.getPropertyIterator();
-		boolean foundCustomAccessor=false;
-		int i = 0;
-		while ( iter.hasNext() ) {
-			Property prop = ( Property ) iter.next();
-			getters[i] = buildGetter( component, prop );
-			setters[i] = buildSetter( component, prop );
-			if ( !prop.isBasicPropertyAccessor() ) {
-				foundCustomAccessor = true;
-			}
-			i++;
-		}
-		hasCustomAccessors = foundCustomAccessor;
-		instantiator = buildInstantiator( component );
-	}
-
-	// TODO: Get rid of the need for isIdentifierMapper arg.
-	// Instead the CompositeAttributeBinding should be wrapped (e.g., by a proxy)
-	// so it can provide the information needed to create getters and setters
-	// for an identifier mapper.
 	protected AbstractComponentTuplizer(
+			ServiceRegistry serviceRegistry,
 			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
-			boolean isIdentifierMapper
-	) {
+			boolean isIdentifierMapper) {
+		// TODO: Get rid of the need for isIdentifierMapper arg.
+		// Instead the CompositeAttributeBinding should be wrapped (e.g., by a proxy)
+		// so it can provide the information needed to create getters and setters
+		// for an identifier mapper.
+
+		this.serviceRegistry = serviceRegistry;
+
 		propertySpan = compositeAttributeBindingContainer.attributeBindingSpan();
 		getters = new Getter[propertySpan];
 		setters = new Setter[propertySpan];
@@ -116,6 +80,58 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 		hasCustomAccessors = foundCustomAccessor;
 		instantiator = buildInstantiator( compositeAttributeBindingContainer, isIdentifierMapper );
 	}
+
+	protected ServiceRegistry serviceRegistry() {
+		return serviceRegistry;
+	}
+
+	protected Getter[] getters() {
+		return getters;
+	}
+
+	protected Setter[] setters() {
+		return setters;
+	}
+
+	protected int propertySpan() {
+		return propertySpan;
+	}
+
+	protected Instantiator instantiator() {
+		return instantiator;
+	}
+
+	protected boolean hasCustomAccessors() {
+		return hasCustomAccessors;
+	}
+
+	private ClassLoaderService classLoaderService;
+
+	protected Class classForName(String name) {
+		if ( classLoaderService == null ) {
+			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		}
+
+		return classLoaderService.classForName( name );
+	}
+
+	protected abstract Instantiator buildInstantiator(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper
+	);
+
+	protected abstract Getter buildGetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding
+	);
+
+	protected abstract Setter buildSetter(
+			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			boolean isIdentifierMapper,
+			AttributeBinding attributeBinding
+	);
+
 
 	public Object getPropertyValue(Object component, int i) throws HibernateException {
 		return getters[i].get( component );

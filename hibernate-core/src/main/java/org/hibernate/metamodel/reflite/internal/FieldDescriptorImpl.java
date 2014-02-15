@@ -24,20 +24,20 @@
 package org.hibernate.metamodel.reflite.internal;
 
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
-import org.hibernate.metamodel.reflite.spi.TypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class FieldDescriptorImpl implements FieldDescriptor {
 	private final String name;
-	private final TypeDescriptor fieldType;
+	private final JavaTypeDescriptor fieldType;
 
 	private final int modifiers;
 
-	private final TypeDescriptor declaringType;
+	private final JavaTypeDescriptor declaringType;
 
-	public FieldDescriptorImpl(String name, TypeDescriptor fieldType, int modifiers, TypeDescriptor declaringType) {
+	public FieldDescriptorImpl(String name, JavaTypeDescriptor fieldType, int modifiers, JavaTypeDescriptor declaringType) {
 		this.name = name;
 		this.fieldType = fieldType;
 		this.modifiers = modifiers;
@@ -50,7 +50,7 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	}
 
 	@Override
-	public TypeDescriptor getType() {
+	public JavaTypeDescriptor getType() {
 		return fieldType;
 	}
 
@@ -60,7 +60,7 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	}
 
 	@Override
-	public TypeDescriptor getDeclaringType() {
+	public JavaTypeDescriptor getDeclaringType() {
 		return declaringType;
 	}
 

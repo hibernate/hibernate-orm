@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.OverriddenMappingDefaults;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFetchProfileElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
@@ -105,6 +106,11 @@ public class MappingDocument {
 		@Override
 		public String qualifyClassName(String unqualifiedName) {
 			return Helper.qualifyIfNeeded( unqualifiedName, getMappingDefaults().getPackageName() );
+		}
+
+		@Override
+		public JavaTypeDescriptor typeDescriptor(String name) {
+			return super.typeDescriptor( qualifyClassName( name ) );
 		}
 
 		@Override

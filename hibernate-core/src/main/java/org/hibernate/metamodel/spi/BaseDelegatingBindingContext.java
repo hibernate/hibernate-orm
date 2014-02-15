@@ -23,7 +23,9 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.metamodel.reflite.spi.Repository;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
@@ -46,7 +48,7 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	}
 
 	@Override
-	public Repository getRefliteRepository() {
+	public JavaTypeDescriptorRepository getRefliteRepository() {
 		return parent.getRefliteRepository();
 	}
 
@@ -88,6 +90,16 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	@Override
 	public Type makeDomainType(String className) {
 		return parent.makeDomainType( className );
+	}
+
+	@Override
+	public JavaTypeDescriptor typeDescriptor(String name) {
+		return parent.typeDescriptor( name );
+	}
+
+	@Override
+	public Type makeDomainType(Name typeName) {
+		return parent.makeDomainType( typeName );
 	}
 
 	@Override

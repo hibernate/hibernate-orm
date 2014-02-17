@@ -57,12 +57,9 @@ import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-@FailureExpectedWithNewMetamodel( message = "Caused by: java.lang.IllegalArgumentException: resolvedHibernateType must be non-null." )
 public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

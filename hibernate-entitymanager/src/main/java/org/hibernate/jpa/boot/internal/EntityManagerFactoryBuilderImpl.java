@@ -331,7 +331,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private List<String> collectNamesOfClassesToEnhance(MetadataImplementor metadata) {
 		final List<String> entityClassNames = new ArrayList<String>();
 		for ( EntityBinding eb : metadata.getEntityBindings() ) {
-			entityClassNames.add( eb.getEntity().getClassReference().getName() );
+			entityClassNames.add( eb.getEntity().getDescriptor().getName().fullName() );
 		}
 		return entityClassNames;
 	}

@@ -48,6 +48,7 @@ import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
 import org.hibernate.jpa.internal.metamodel.MappedSuperclassTypeImpl;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
@@ -79,6 +80,8 @@ public class MetamodelBuilder {
 			MetamodelBuilder.class.getName()
 	);
 	private final SessionFactoryImplementor sessionFactory;
+	private final ClassLoaderService classLoaderService;
+
 
 	// these maps eventually make up the JPA Metamodel
 	private final Map<Class<?>,EntityTypeImpl<?>> entityTypeMap = new HashMap<Class<?>, EntityTypeImpl<?>>();
@@ -106,6 +109,7 @@ public class MetamodelBuilder {
 
 	public MetamodelBuilder(SessionFactoryImplementor sessionFactory, JpaMetaModelPopulationSetting populationSetting) {
 		this.sessionFactory = sessionFactory;
+		this.classLoaderService = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
 		this.populationSetting = populationSetting;
 		this.attributeBuilder = new AttributeBuilder( new AttributeBuilderContext() );
 	}
@@ -153,52 +157,58 @@ public class MetamodelBuilder {
 	 * </ol>
 	 * Make sure changes fit both uses
 	 *
-	 * @param superDescriptor Hibernate metamodel descriptor of the super class
+	 * @param hierarchical Hibernate metamodel descriptor of the super class
 	 * @param entityBinding The Hibernate metamodel entity binding; could be describing different class between the
 	 * 2 use cases described above.
 	 *
 	 * @return The super type.
 	 */
-	private AbstractIdentifiableType locateOrBuildSuperType(Hierarchical superDescriptor, EntityBinding entityBinding) {
-		if ( superDescriptor == null ) {
+	private AbstractIdentifiableType locateOrBuildSuperType(Hierarchical hierarchical, EntityBinding entityBinding) {
+		if ( hierarchical == null ) {
 			return null;
 		}
 
 		// the super type here could be either a "mapped superclass" or an entity
-		if ( Entity.class.isInstance( superDescriptor ) ) {
+		if ( Entity.class.isInstance( hierarchical ) ) {
 			// make sure super entity binding points to same...
 			final EntityBinding superBinding = entityBinding.getSuperEntityBinding();
 			if ( superBinding == null ) {
 				throw new IllegalStateException( "EntityBinding with super class of Entity type did not specify super entity binding" );
 			}
-			if ( superBinding.getEntity() != superDescriptor )  {
+			if ( superBinding.getEntity() != hierarchical )  {
 				throw new IllegalStateException( "Super entity binding and descriptor referenced different descriptors" );
 			}
 			return locateOrBuildEntityType( superBinding );
 		}
-		else if ( Superclass.class.isInstance( superDescriptor ) ) {
-			return locateOrBuildMappedSuperclassType( (Superclass) superDescriptor, entityBinding );
+		else if ( Superclass.class.isInstance( hierarchical ) ) {
+			return locateOrBuildMappedSuperclassType( (Superclass) hierarchical, entityBinding );
 		}
 		else {
 			throw new IllegalStateException(
 					"Unexpected type for entity super descriptor; expecting Entity or Superclass, found ["
-							+ superDescriptor.getClassReference().getName() + "]"
+							+ hierarchical.getDescriptor().getName().fullName() + "]"
 			);
 		}
 	}
 
-	private MappedSuperclassTypeImpl locateOrBuildMappedSuperclassType(Superclass superDescriptor, EntityBinding entityBinding) {
-		MappedSuperclassTypeImpl mappedSuperclassType = mappedSuperclassTypeMap.get( superDescriptor.getClassReference().getResolvedClass() );
+	private MappedSuperclassTypeImpl locateOrBuildMappedSuperclassType(Superclass superclass, EntityBinding entityBinding) {
+		MappedSuperclassTypeImpl mappedSuperclassType = mappedSuperclassTypeMap.get(
+				loadClass( superclass.getDescriptor() )
+		);
 		if ( mappedSuperclassType == null ) {
-			mappedSuperclassType = buildMappedSuperclassType( superDescriptor, entityBinding );
+			mappedSuperclassType = buildMappedSuperclassType( superclass, entityBinding );
 		}
 		return mappedSuperclassType;
 	}
 
+	private Class<?> loadClass(JavaTypeDescriptor descriptor) {
+		return classLoaderService.classForName( descriptor.getName().fullName() );
+	}
+
 	@SuppressWarnings("unchecked")
-	private MappedSuperclassTypeImpl buildMappedSuperclassType(Superclass superDescriptor, EntityBinding entityBinding) {
-		final Class javaType = superDescriptor.getClassReference().getResolvedClass();
-		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType( superDescriptor, entityBinding );
+	private MappedSuperclassTypeImpl buildMappedSuperclassType(Superclass superclass, EntityBinding entityBinding) {
+		final Class javaType = loadClass( superclass.getDescriptor() );
+		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType( superclass, entityBinding );
 
 		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
 				javaType,
@@ -256,30 +266,30 @@ public class MetamodelBuilder {
 	/**
 	 * Performs a depth-first traversal of the super types...
 	 *
-	 * @param descriptor The type descriptor to process
+	 * @param hierarchical The type descriptor to process
 	 * @param entityBinding
 	 */
-	private void processType(Hierarchical descriptor, EntityBinding entityBinding) {
-		if ( descriptor == null ) {
+	private void processType(Hierarchical hierarchical, EntityBinding entityBinding) {
+		if ( hierarchical == null ) {
 			return;
 		}
 
-		if ( alreadyProcessed.contains( descriptor ) ) {
+		if ( alreadyProcessed.contains( hierarchical ) ) {
 			return;
 		}
-		alreadyProcessed.add( descriptor );
+		alreadyProcessed.add( hierarchical );
 
 		// perform a depth-first traversal of the super types...
-		processSuperType( descriptor, entityBinding );
+		processSuperType( hierarchical, entityBinding );
 
-		final AbstractIdentifiableType jpaDescriptor = Entity.class.isInstance( descriptor )
-				? entityTypeByNameMap.get( descriptor.getName() )
-				: mappedSuperclassTypeMap.get(  descriptor.getClassReference() );
+		final AbstractIdentifiableType jpaDescriptor = Entity.class.isInstance( hierarchical )
+				? entityTypeByNameMap.get( hierarchical.getName() )
+				: mappedSuperclassTypeMap.get( loadClass( hierarchical.getDescriptor() ) );
 		if ( jpaDescriptor == null && entityBinding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ) {
 			return;
 		}
-		applyIdMetadata( descriptor, entityBinding.getHierarchyDetails(), jpaDescriptor );
-		applyVersionAttribute( descriptor, entityBinding.getHierarchyDetails(), jpaDescriptor );
+		applyIdMetadata( hierarchical, entityBinding.getHierarchyDetails(), jpaDescriptor );
+		applyVersionAttribute( hierarchical, entityBinding.getHierarchyDetails(), jpaDescriptor );
 
 		for ( AttributeBinding attributeBinding : entityBinding.attributeBindings() ) {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {

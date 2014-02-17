@@ -24,11 +24,16 @@
 package org.hibernate.metamodel.reflite.internal;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
@@ -36,15 +41,22 @@ import org.hibernate.metamodel.reflite.spi.Name;
 public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 	private final Name name;
 	private final int modifiers;
+	private final Map<DotName, AnnotationInstance> annotationMap;
 
 	private Collection<InterfaceDescriptor> extendedInterfaceTypes;
 
-	private Collection<FieldDescriptor> declaredFields;
-	private Collection<MethodDescriptor> declaredMethods;
+	private Collection<FieldDescriptor> fields;
+	private Collection<MethodDescriptor> methods;
 
-	public InterfaceDescriptorImpl(Name name, int modifiers) {
+	public InterfaceDescriptorImpl(
+			Name name,
+			int modifiers,
+			Map<DotName, AnnotationInstance> annotationMap) {
 		this.name = name;
 		this.modifiers = modifiers;
+		this.annotationMap = annotationMap != null
+				? annotationMap
+				: Collections.<DotName, AnnotationInstance>emptyMap();
 	}
 
 	@Override
@@ -63,13 +75,18 @@ public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 	}
 
 	@Override
+	public Map<DotName, AnnotationInstance> getAnnotations() {
+		return annotationMap;
+	}
+
+	@Override
 	public Collection<FieldDescriptor> getDeclaredFields() {
-		return declaredFields;
+		return fields;
 	}
 
 	@Override
 	public Collection<MethodDescriptor> getDeclaredMethods() {
-		return declaredMethods;
+		return methods;
 	}
 
 	@Override
@@ -81,11 +98,11 @@ public class InterfaceDescriptorImpl implements InterfaceDescriptor {
 		this.extendedInterfaceTypes = extendedInterfaceTypes;
 	}
 
-	void setDeclaredFields(Collection<FieldDescriptor> declaredFields) {
-		this.declaredFields = declaredFields;
+	void setFields(Collection<FieldDescriptor> fields) {
+		this.fields = fields;
 	}
 
-	void setDeclaredMethods(Collection<MethodDescriptor> declaredMethods) {
-		this.declaredMethods = declaredMethods;
+	void setMethods(Collection<MethodDescriptor> methods) {
+		this.methods = methods;
 	}
 }

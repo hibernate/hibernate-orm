@@ -23,8 +23,14 @@
  */
 package org.hibernate.metamodel.reflite.internal;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
@@ -36,12 +42,21 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	private final int modifiers;
 
 	private final JavaTypeDescriptor declaringType;
+	private final Map<DotName, AnnotationInstance> annotationMap;
 
-	public FieldDescriptorImpl(String name, JavaTypeDescriptor fieldType, int modifiers, JavaTypeDescriptor declaringType) {
+	public FieldDescriptorImpl(
+			String name,
+			JavaTypeDescriptor fieldType,
+			int modifiers,
+			JavaTypeDescriptor declaringType,
+			Map<DotName, AnnotationInstance> annotationMap) {
 		this.name = name;
 		this.fieldType = fieldType;
 		this.modifiers = modifiers;
 		this.declaringType = declaringType;
+		this.annotationMap = annotationMap != null
+				? annotationMap
+				: Collections.<DotName, AnnotationInstance>emptyMap();
 	}
 
 	@Override
@@ -62,6 +77,11 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	@Override
 	public JavaTypeDescriptor getDeclaringType() {
 		return declaringType;
+	}
+
+	@Override
+	public Map<DotName, AnnotationInstance> getAnnotations() {
+		return annotationMap;
 	}
 
 	@Override

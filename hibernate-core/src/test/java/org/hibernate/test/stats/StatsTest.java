@@ -162,7 +162,6 @@ public class StatsTest extends BaseUnitTestCase {
 //	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8962" )
 	public void testQueryStatGathering() {
 		SessionFactory sf = buildBaseConfiguration()
 				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )

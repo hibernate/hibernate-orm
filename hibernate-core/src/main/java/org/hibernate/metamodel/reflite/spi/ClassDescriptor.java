@@ -24,6 +24,10 @@
 package org.hibernate.metamodel.reflite.spi;
 
 import java.util.Collection;
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * Describes a java type that represents a class definition.
@@ -51,4 +55,11 @@ public interface ClassDescriptor extends JavaTypeDescriptor {
 	 * @return The implemented interfaces
 	 */
 	public Collection<InterfaceDescriptor> getInterfaceTypes();
+
+	/**
+	 * Get the annotations defined on this type.
+	 *
+	 * @return The annotations.
+	 */
+	public Map<DotName, AnnotationInstance> getAnnotations();
 }

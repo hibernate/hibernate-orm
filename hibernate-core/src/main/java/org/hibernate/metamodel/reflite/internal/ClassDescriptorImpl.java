@@ -24,12 +24,17 @@
 package org.hibernate.metamodel.reflite.internal;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * Implementation of a type descriptor
@@ -41,6 +46,7 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 
 	private final int modifiers;
 	private final boolean hasDefaultConstructor;
+	private final Map<DotName,AnnotationInstance> annotationMap;
 
 	private ClassDescriptor superType;
 	private Collection<InterfaceDescriptor> interfaces;
@@ -48,10 +54,17 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 	private Collection<FieldDescriptor> fieldDescriptors;
 	private Collection<MethodDescriptor> methodDescriptors;
 
-	public ClassDescriptorImpl(Name name, int modifiers, boolean hasDefaultConstructor) {
+	public ClassDescriptorImpl(
+			Name name,
+			int modifiers,
+			boolean hasDefaultConstructor,
+			Map<DotName,AnnotationInstance> annotationMap) {
 		this.name = name;
 		this.modifiers = modifiers;
 		this.hasDefaultConstructor = hasDefaultConstructor;
+		this.annotationMap = annotationMap != null
+				? annotationMap
+				: Collections.<DotName, AnnotationInstance>emptyMap();
 	}
 
 	@Override
@@ -72,6 +85,11 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 	@Override
 	public Collection<InterfaceDescriptor> getInterfaceTypes() {
 		return interfaces;
+	}
+
+	@Override
+	public Map<DotName, AnnotationInstance> getAnnotations() {
+		return annotationMap;
 	}
 
 	@Override

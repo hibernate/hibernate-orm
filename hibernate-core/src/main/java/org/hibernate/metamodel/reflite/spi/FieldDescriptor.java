@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.reflite.spi;
 
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
+
 /**
  * Describes a field in a java type
  *
@@ -51,4 +56,11 @@ public interface FieldDescriptor {
 	 * @return
 	 */
 	public JavaTypeDescriptor getDeclaringType();
+
+	/**
+	 * Get the annotations defined on this field.
+	 *
+	 * @return The annotations.
+	 */
+	public Map<DotName, AnnotationInstance> getAnnotations();
 }

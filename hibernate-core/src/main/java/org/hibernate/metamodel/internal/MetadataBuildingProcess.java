@@ -135,6 +135,7 @@ public class MetadataBuildingProcess {
 		// prep to start handling binding in earnest
 		final MappingDefaultsImpl mappingDefaults = new MappingDefaultsImpl( options );
 		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
+				jandexView,
 				options.getTempClassLoader(),
 				options.getServiceRegistry()
 		);

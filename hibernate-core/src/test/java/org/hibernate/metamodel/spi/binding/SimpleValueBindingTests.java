@@ -110,6 +110,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 
 	private final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
 			null,
+			null,
 			classLoaderService
 	);
 

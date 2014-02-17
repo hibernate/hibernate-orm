@@ -24,9 +24,14 @@
 package org.hibernate.metamodel.reflite.internal;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
@@ -37,18 +42,23 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	private final int modifiers;
 	private final JavaTypeDescriptor returnType;
 	private final Collection<JavaTypeDescriptor> parameterTypes;
+	private final Map<DotName, AnnotationInstance> annotationMap;
 
 	public MethodDescriptorImpl(
 			String name,
 			JavaTypeDescriptor declaringType,
 			int modifiers,
 			JavaTypeDescriptor returnType,
-			Collection<JavaTypeDescriptor> parameterTypes) {
+			Collection<JavaTypeDescriptor> parameterTypes,
+			Map<DotName, AnnotationInstance> annotationMap) {
 		this.name = name;
 		this.declaringType = declaringType;
 		this.modifiers = modifiers;
 		this.returnType = returnType;
 		this.parameterTypes = parameterTypes;
+		this.annotationMap = annotationMap != null
+				? annotationMap
+				: Collections.<DotName, AnnotationInstance>emptyMap();
 	}
 
 	@Override
@@ -74,6 +84,11 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	@Override
 	public Collection<JavaTypeDescriptor> getParameterTypes() {
 		return parameterTypes;
+	}
+
+	@Override
+	public Map<DotName, AnnotationInstance> getAnnotations() {
+		return annotationMap;
 	}
 
 	@Override

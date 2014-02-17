@@ -44,7 +44,11 @@ public class RootBindingContextBuilder {
 		final MetadataBuildingProcess.MappingDefaultsImpl  mappingDefaults = new MetadataBuildingProcess.MappingDefaultsImpl(
 				options
 		);
-		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl( null, serviceRegistry );
+		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
+				null,
+				null,
+				serviceRegistry
+		);
 		final MetadataBuildingProcess.InFlightMetadataCollectorImpl metadataCollector = new MetadataBuildingProcess.InFlightMetadataCollectorImpl(
 				options,
 				new TypeResolver( basicTypeRegistry, new TypeFactory() )

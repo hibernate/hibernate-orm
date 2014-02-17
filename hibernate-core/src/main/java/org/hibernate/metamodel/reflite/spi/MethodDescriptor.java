@@ -24,6 +24,10 @@
 package org.hibernate.metamodel.reflite.spi;
 
 import java.util.Collection;
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * Describes a method in a java type
@@ -65,4 +69,12 @@ public interface MethodDescriptor {
 	 * @return The descriptor of the method's argument types
 	 */
 	public Collection<JavaTypeDescriptor> getParameterTypes();
+
+	/**
+	 * Get the annotations defined on this method.
+	 *
+	 * @return The annotations.
+	 */
+	public Map<DotName, AnnotationInstance> getAnnotations();
+
 }

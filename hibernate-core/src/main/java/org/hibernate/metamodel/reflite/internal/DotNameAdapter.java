@@ -63,6 +63,10 @@ class DotNameAdapter implements Name {
 		return dotName.toString();
 	}
 
+	DotName jandexName() {
+		return dotName;
+	}
+
 	@Override
 	public String toString() {
 		return "DotNameAdapter{dotName=" + dotName.toString() + '}';

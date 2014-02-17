@@ -149,6 +149,22 @@ public class TableHelper {
 		return table.locateOrCreateColumn( resolvedColumnName );
 	}
 
+	public Column locateColumn(
+			final TableSpecification table,
+			final String columnName,
+			final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper) {
+		if ( columnName == null && namingStrategyHelper == null ) {
+			throw bindingContext().makeMappingException(
+					"Cannot resolve name for column because no name was specified and namingStrategyHelper is null."
+			);
+		}
+		final String resolvedColumnName = normalizeDatabaseIdentifier(
+				columnName,
+				namingStrategyHelper
+		);
+		return table.locateColumn( resolvedColumnName );
+	}
+
 	public Column locateOrCreateColumn(
 			final TableSpecification table,
 			final ColumnSource columnSource,

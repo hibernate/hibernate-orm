@@ -7,11 +7,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -22,9 +21,8 @@ import org.junit.Test;
  */
 public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 
-	@Test(expected = AnnotationException.class)
+	@Test(expected = MappingException.class)
 	@TestForIssue(jiraKey = "HHH-4084")
-	@FailureExpectedWithNewMetamodel
 	public void testUniqueConstraintWithEmptyColumnName() {
 		buildSessionFactory(EmptyColumnNameEntity.class);
 	}
@@ -34,8 +32,7 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 		buildSessionFactory(EmptyColumnNameListEntity.class);
 	}
 
-	@Test(expected = AnnotationException.class)
-	@FailureExpectedWithNewMetamodel
+	@Test(expected = MappingException.class)
 	public void testUniqueConstraintWithNotExistsColumnName() {
 		buildSessionFactory(NotExistsColumnEntity.class);
 	}

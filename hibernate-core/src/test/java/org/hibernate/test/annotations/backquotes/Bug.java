@@ -11,7 +11,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(indexes = @Index(name="`titleindex`", columnList = "title"))
+@Table(indexes = @Index(name="`titleindex`", columnList = "`title`"))
 public class Bug 
 {
 	@Id

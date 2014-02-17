@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal;
 
+import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
+import org.hibernate.MappingException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
@@ -162,8 +165,6 @@ import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-
-import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
@@ -1119,28 +1120,23 @@ public class Binder implements HelperContext {
 				final EntityBinding entityBinding = bindingContextContext.getEntityBinding();
 				final EntitySource entitySource = bindingContextContext.getEntitySource();
 					for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
-						if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
-							final UniqueConstraintSource uniqueConstraintSource = (UniqueConstraintSource) constraintSource;
-
-							final TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
-
-							final List<Column> columns = new ArrayList<Column>();
-							for ( final String columnName : uniqueConstraintSource.columnNames() ) {
-								columns.add( tableHelper.locateOrCreateColumn( table, columnName,
-										new ColumnNamingStrategyHelper( null, false ) ) );
+						final TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
+						final List<Column> columns = new ArrayList<Column>();
+						for ( final String columnName : constraintSource.columnNames() ) {
+							final Column column = tableHelper.locateColumn( table, columnName,
+									new ColumnNamingStrategyHelper( null, false ) );
+							if (column == null) {
+								throw new MappingException( "While creating a constraint, could not find column "
+										+ columnName + " on table "+ table.getLogicalName().getText() );
 							}
+							columns.add( column );
+						}
+						
+						if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
 							tableHelper.createUniqueKey( table, columns, constraintSource.name() );
 						}
 						else if ( IndexConstraintSource.class.isInstance( constraintSource ) ) {
 							final IndexConstraintSource indexConstraintSource = (IndexConstraintSource) constraintSource;
-
-							final TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
-
-							final List<Column> columns = new ArrayList<Column>();
-							for ( final String columnName : indexConstraintSource.columnNames() ) {
-								columns.add( tableHelper.locateOrCreateColumn( table, columnName,
-										new ColumnNamingStrategyHelper( null, false ) ) );
-							}
 							tableHelper.createIndex( table, columns, indexConstraintSource.name(),
 									indexConstraintSource.isUnique() );
 						}

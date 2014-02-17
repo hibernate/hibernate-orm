@@ -614,6 +614,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public boolean canUseReferenceCacheEntries() {
 			return false;
 		}
+
+		@Override
+		public String getRole() {
+			return null;
+		}
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {

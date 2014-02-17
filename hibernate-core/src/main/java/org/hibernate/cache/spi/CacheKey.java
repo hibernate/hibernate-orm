@@ -25,8 +25,10 @@ package org.hibernate.cache.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.cache.internal.SurrogatePersister;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.persister.Persister;
 import org.hibernate.type.Type;
 
 /**
@@ -35,12 +37,12 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public class CacheKey implements Serializable {
+
 	private final Serializable key;
-	private final Type type;
-	private final String entityOrRoleName;
-	private final String tenantId;
+	private final Persister persister;
 	private final int hashCode;
 
 	/**
@@ -49,25 +51,45 @@ public class CacheKey implements Serializable {
 	 * name, not a subclass entity name.
 	 *
 	 * @param id The identifier associated with the cached data
-	 * @param type The Hibernate type mapping
-	 * @param entityOrRoleName The entity or collection-role name.
+	 * @param persister The EntityPersister or CollectionPersister associated with this type
 	 * @param tenantId The tenant identifier associated this data.
 	 * @param factory The session factory for which we are caching
 	 */
+	public CacheKey(
+			final Serializable id,
+			final Persister persister,
+			final SessionFactoryImplementor factory) {
+		this( id, persister, factory, null );
+	}
+
+	@Deprecated
 	public CacheKey(
 			final Serializable id,
 			final Type type,
 			final String entityOrRoleName,
 			final String tenantId,
 			final SessionFactoryImplementor factory) {
-		this.key = id;
-		this.type = type;
-		this.entityOrRoleName = entityOrRoleName;
-		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( type, factory );
+		this( id, new SurrogatePersister( type, entityOrRoleName ), factory, null );
 	}
 
-	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
+	/**
+	 * Used by subclasses: need to specify a tenantId
+	 * @param id The identifier associated with the cached data
+	 * @param persister The EntityPersister or CollectionPersister associated with this type
+	 * @param factory The session factory for which we are caching
+	 * @param tenantId The tenant identifier associated this data.
+	 */
+	protected CacheKey(
+			final Serializable id,
+			final Persister typePersister,
+			final SessionFactoryImplementor factory,
+			final String tenantId) {
+		this.key = id;
+		this.persister = typePersister;
+		this.hashCode = calculateHashCode( persister.getIdentifierType(), factory, tenantId );
+	}
+
+	private int calculateHashCode(Type type, SessionFactoryImplementor factory, String tenantId) {
 		int result = type.getHashCode( key, factory );
 		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
 		return result;
@@ -78,11 +100,11 @@ public class CacheKey implements Serializable {
 	}
 
 	public String getEntityOrRoleName() {
-		return entityOrRoleName;
+		return persister.getRole();
 	}
 
 	public String getTenantId() {
-		return tenantId;
+		return null;
 	}
 
 	@Override
@@ -97,10 +119,11 @@ public class CacheKey implements Serializable {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
+		//Warning: this equals implementation needs to work correctly also for the subclass
 		final CacheKey that = (CacheKey) other;
-		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
-				&& type.isEqual( key, that.key )
-				&& EqualsHelper.equals( tenantId, that.tenantId );
+		return EqualsHelper.equals( getEntityOrRoleName(), that.getEntityOrRoleName() )
+				&& persister.getIdentifierType().isEqual( key, that.key )
+				&& EqualsHelper.equals( getTenantId(), that.getTenantId() );
 	}
 
 	@Override
@@ -111,6 +134,6 @@ public class CacheKey implements Serializable {
 	@Override
 	public String toString() {
 		// Used to be required for OSCache
-		return entityOrRoleName + '#' + key.toString();
+		return getEntityOrRoleName() + '#' + key.toString();
 	}
 }

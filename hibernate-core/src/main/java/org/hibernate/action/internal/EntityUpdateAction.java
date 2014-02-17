@@ -145,8 +145,7 @@ public final class EntityUpdateAction extends EntityAction {
 		if ( persister.hasCache() ) {
 			ck = session.generateCacheKey(
 					id, 
-					persister.getIdentifierType(), 
-					persister.getRootEntityName()
+					persister
 			);
 			lock = persister.getCacheAccessStrategy().lockItem( ck, previousVersion );
 		}
@@ -315,8 +314,7 @@ public final class EntityUpdateAction extends EntityAction {
 			
 			final CacheKey ck = getSession().generateCacheKey(
 					getId(),
-					persister.getIdentifierType(), 
-					persister.getRootEntityName()
+					persister
 			);
 			
 			if ( success && cacheEntry!=null /*!persister.isCacheInvalidationRequired()*/ ) {

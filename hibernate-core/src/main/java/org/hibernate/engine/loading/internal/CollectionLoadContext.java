@@ -347,7 +347,7 @@ public class CollectionLoadContext {
 		}
 
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
-		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister.getKeyType(), persister.getRole() );
+		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister );
 
 		try {
 			session.getEventListenerManager().cachePutStart();

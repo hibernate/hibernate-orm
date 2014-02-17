@@ -45,6 +45,7 @@ import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.persister.Persister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -89,8 +90,20 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * @param entityOrRoleName The entity name or collection role.
 	 *
 	 * @return The cache key
+	 * @deprecated use {@link #generateCacheKey(Serializable, Persister)}
 	 */
+	@Deprecated
 	public CacheKey generateCacheKey(Serializable id, final Type type, final String entityOrRoleName);
+
+	/**
+	 * Hide the changing requirements of cache key creation.
+	 *
+	 * @param id The entity identifier or collection key.
+	 * @param typePersister The type of the entity or collection
+	 *
+	 * @return The cache key
+	 */
+	public CacheKey generateCacheKey(Serializable id, Persister typePersister);
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.

@@ -815,6 +815,7 @@ public abstract class AbstractCollectionPersister
 		return sqlDeleteRowString;
 	}
 
+	@Deprecated//use getIdentifierType
 	@Override
 	public Type getKeyType() {
 		return keyType;

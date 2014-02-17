@@ -133,7 +133,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		}
 
 		final SessionFactoryImplementor factory = source.getFactory();
-		final CacheKey ck = source.generateCacheKey( id, persister.getKeyType(), persister.getRole() );
+		final CacheKey ck = source.generateCacheKey( id, persister );
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {

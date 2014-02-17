@@ -38,6 +38,8 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.cache.internal.SurrogatePersister;
+import org.hibernate.cache.internal.TenantAwareCacheKey;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -58,6 +60,7 @@ import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.persister.Persister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -329,7 +332,17 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
-		return new CacheKey( id, type, entityOrRoleName, getTenantIdentifier(), getFactory() );
+		return generateCacheKey( id, new SurrogatePersister( type, entityOrRoleName ) );
+	}
+
+	public CacheKey generateCacheKey(Serializable id, Persister typePersister) {
+		final String tenantIdentifier = getTenantIdentifier();
+		if ( tenantIdentifier == null ) {
+			return new CacheKey( id, typePersister, getFactory() );
+		}
+		else {
+			return new TenantAwareCacheKey( id, typePersister, getFactory(), tenantIdentifier );
+		}
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

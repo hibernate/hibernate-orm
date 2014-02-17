@@ -130,7 +130,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 					session
 			);
 			cacheEntry = persister.getCacheEntryStructure().structure( ce );
-			final CacheKey ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
+			final CacheKey ck = session.generateCacheKey( id, persister );
 
 			final boolean put = cacheInsert( persister, ck );
 
@@ -212,7 +212,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
-			final CacheKey ck = getSession().generateCacheKey( getId(), persister.getIdentifierType(), persister.getRootEntityName() );
+			final CacheKey ck = getSession().generateCacheKey( getId(), persister );
 			final boolean put = cacheAfterInsert( persister, ck );
 
 			if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {

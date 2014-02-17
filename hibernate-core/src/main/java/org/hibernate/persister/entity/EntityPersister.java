@@ -45,6 +45,7 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.Persister;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -63,7 +64,7 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends OptimisticCacheSource, EntityDefinition {
+public interface EntityPersister extends OptimisticCacheSource, EntityDefinition, Persister {
 
 	/**
 	 * The property name of the "special" identifier property in HQL

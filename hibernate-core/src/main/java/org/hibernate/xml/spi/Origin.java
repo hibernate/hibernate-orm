@@ -26,6 +26,8 @@ package org.hibernate.xml.spi;
 import java.io.Serializable;
 import java.util.Locale;
 
+import org.hibernate.internal.util.compare.EqualsHelper;
+
 /**
  * Describes the origin of an xml document
  *
@@ -70,16 +72,10 @@ public class Origin implements Serializable {
 			return false;
 		}
 
-		Origin origin = (Origin) o;
+		final Origin other = (Origin) o;
+		return type == other.type
+				&& EqualsHelper.equals( name, other.name );
 
-		if ( name != null ? !name.equals( origin.name ) : origin.name != null ) {
-			return false;
-		}
-		if ( type != origin.type ) {
-			return false;
-		}
-
-		return true;
 	}
 
 	@Override

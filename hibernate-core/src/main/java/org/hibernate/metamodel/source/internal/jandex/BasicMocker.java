@@ -54,7 +54,7 @@ public class BasicMocker extends PropertyMocker {
 		MockHelper.booleanValue( "optional", basic.isOptional(), annotationValueList );
 		MockHelper.enumValue( "fetch", FETCH_TYPE, basic.getFetch(), annotationValueList );
 		create( BASIC, annotationValueList );
-		parseColumn( basic.getColumn(), getTarget() );
+		parseColumnOrFormulas( basic.getColumnOrFormula(), getTarget() );
 		parseEnumType( basic.getEnumerated(), getTarget() );
 		parseLob( basic.getLob(), getTarget() );
 		parseTemporalType( basic.getTemporal(), getTarget() );

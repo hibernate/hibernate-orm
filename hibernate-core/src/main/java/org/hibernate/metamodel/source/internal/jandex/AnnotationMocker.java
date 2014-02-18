@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.internal.jandex;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +33,9 @@ import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAssociationOverride;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributeOverride;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCollectionTable;
@@ -124,6 +127,41 @@ public abstract class AnnotationMocker extends AbstractMocker {
 			return values;
 		}
 		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	protected AnnotationInstance parseColumnOrFormulas(List<Serializable> columnOrFormulas, AnnotationTarget target) {
+		if ( columnOrFormulas.isEmpty() ) {
+			return null;
+		}
+
+		// todo : add @ColumnOrFormulas and @ColumnOrFormula annotations
+
+		if ( columnOrFormulas.size() == 1 ) {
+			final Object columnOrFormula = columnOrFormulas.get( 0 );
+			if ( String.class.isInstance( columnOrFormula ) ) {
+				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+				MockHelper.stringValue( "value", (String) columnOrFormula, annotationValueList );
+				return create( HibernateDotNames.FORMULA, target, annotationValueList );
+			}
+			else {
+				return parseColumn( (JaxbColumn) columnOrFormula, target );
+			}
+		}
+		else {
+			final List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			for ( Object columnOrFormula : columnOrFormulas ) {
+				// currently formulas are not supported in mix
+				if ( String.class.isInstance( columnOrFormula ) ) {
+					throw new NotYetImplementedException( "Requires @ColumnOrFormulas" );
+				}
+
+				AnnotationInstance annotationInstance = parseColumn( (JaxbColumn) columnOrFormula, null );
+				annotationValueList.add( MockHelper.nestedAnnotationValue( "", annotationInstance ) );
+			}
+
+			return create( HibernateDotNames.COLUMNS, target, MockHelper.toArray( annotationValueList ) );
+		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

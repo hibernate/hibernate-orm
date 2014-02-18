@@ -65,7 +65,7 @@ public class UnifiedMappingBinder extends AbstractUnifiedBinder<JaxbEntityMappin
 
 			XMLEventReader hbmReader = new HbmEventReader( staxEventReader );
 			JaxbHibernateMapping hbmBindings = jaxb( hbmReader, LocalSchema.HBM.getSchema(), JaxbHibernateMapping.class, origin );
-			return HbmXmlTransformer.INSTANCE.transform( hbmBindings );
+			return HbmXmlTransformer.INSTANCE.transform( hbmBindings, origin );
 		}
 		else {
 			final XMLEventReader reader = new UnifiedMappingEventReader( staxEventReader );

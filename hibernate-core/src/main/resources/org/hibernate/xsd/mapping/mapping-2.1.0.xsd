@@ -375,7 +375,7 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="tooling-hint" type="orm:hbm-tooling-hint" minOccurs="0" maxOccurs="unbounded" />
-            <xsd:choice minOccurs="0">
+            <xsd:choice minOccurs="0" maxOccurs="unbounded">
                 <xsd:element name="column" type="orm:column" />
                 <xsd:element name="formula" type="xsd:string" />
             </xsd:choice>
@@ -403,6 +403,7 @@
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="natural-id" type="xsd:boolean" />
     </xsd:complexType>
 
 
@@ -741,6 +742,7 @@
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="natural-id" type="xsd:boolean" />
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -781,12 +783,11 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="description" type="xsd:string" minOccurs="0" />
-            <!-- hbm: "meta information", used by tooling -->
             <xsd:element name="tooling-hint" type="orm:hbm-tooling-hint" minOccurs="0" maxOccurs="unbounded" />
             <!-- hbm: is the entity considered abstract -->
             <xsd:element name="abstract" type="xsd:boolean" minOccurs="0" />
             <!-- hbm: The size for batch fetching : @BatchSize -->
-            <xsd:element name="batch-size" type="xsd:string" minOccurs="0" />
+            <xsd:element name="batch-size" type="xsd:int" minOccurs="0" />
             <!-- hbm : Hibernate specific caching configuration : @Cache -->
             <xsd:element name="cache" type="orm:cache-element" minOccurs="0" />
             <!-- hbm : should INSERT statements be dynamically generated : @DynamicInsert -->
@@ -836,7 +837,10 @@
 
             <xsd:element name="inheritance" type="orm:inheritance" minOccurs="0"/>
             <xsd:element name="discriminator-value" type="orm:discriminator-value" minOccurs="0"/>
-            <xsd:element name="discriminator-column" type="orm:discriminator-column" minOccurs="0"/>
+            <xsd:choice minOccurs="0" maxOccurs="1">
+                <xsd:element name="discriminator-column" type="orm:discriminator-column" />
+                <xsd:element name="discriminator-formula" type="xsd:string" />
+            </xsd:choice>
             <!-- hbm : used in query language to control how inherited "abstract schema" references are handled : @Polymorphism -->
             <xsd:element name="polymorphism" default="implicit" minOccurs="0">
                 <xsd:simpleType>
@@ -880,6 +884,7 @@
             <xsd:element name="named-entity-graph" type="orm:named-entity-graph" minOccurs="0" maxOccurs="unbounded"/>
 
             <xsd:element name="persister" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="tuplizer" type="xsd:string" minOccurs="0" maxOccurs="1" />
             <xsd:element name="entity-mode" minOccurs="0" maxOccurs="1">
                 <xsd:simpleType>
                     <xsd:restriction base="xsd:token">
@@ -888,10 +893,9 @@
                     </xsd:restriction>
                 </xsd:simpleType>
             </xsd:element>
-            <xsd:element name="tuplizer" type="xsd:string" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="extends" type="xsd:string" minOccurs="0" maxOccurs="1" />
 
             <xsd:element name="loader" type="orm:hbm-loader" minOccurs="0" maxOccurs="1" />
-
             <xsd:element name="sql-insert" type="orm:hbm-custom-sql" minOccurs="0" maxOccurs="1" />
             <xsd:element name="sql-update" type="orm:hbm-custom-sql" minOccurs="0" maxOccurs="1" />
             <xsd:element name="sql-delete" type="orm:hbm-custom-sql" minOccurs="0" maxOccurs="1" />
@@ -1364,6 +1368,7 @@
         <xsd:attribute name="custom-access" type="xsd:string" />
         <xsd:attribute name="maps-id" type="xsd:string"/>
         <xsd:attribute name="id" type="xsd:boolean"/>
+        <xsd:attribute name="natural-id" type="xsd:boolean" />
     </xsd:complexType>
 
 
@@ -2390,11 +2395,10 @@
 
     <xsd:complexType name="hbm-tooling-hint" mixed="true">
         <xsd:annotation>
-            <xsd:documentation>
-                Hibernate-specific element used to assign meta-level attributes to a
-                class or property.  Is currently used by tooling (code generators) as
-                a placeholder for values that is not directly related to O/R mappings.
-            </xsd:documentation>
+            <xsd:documentation><![CDATA[
+                Equivalent to the legacy <meta/> tags from hbm.xml dtd; renamed here for
+                self-documentation.  This information is intended mainly for tooling.
+            ]]></xsd:documentation>
         </xsd:annotation>
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">

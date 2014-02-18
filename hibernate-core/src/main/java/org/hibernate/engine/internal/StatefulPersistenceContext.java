@@ -98,7 +98,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
 	
-	private static final int DEFAULT_INITIAL_CAPACITY = 8;
+	private static final int DEFAULT_INITIAL_CAPACITY = 16;
 	private final int initialCapacity;
 
 	private SessionImplementor session;

@@ -98,7 +98,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-	private static final int DEFAULT_INITIAL_CAPACITY = 8;
+	private static final int DEFAULT_INITIAL_CAPACITY = 16;
 	private final int initialCapacity;
 
 	private SessionImplementor session;

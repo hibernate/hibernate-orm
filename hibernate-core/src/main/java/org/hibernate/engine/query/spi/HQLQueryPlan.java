@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -53,6 +51,7 @@ import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Defines a query execution plan for an HQL query (or filter).
@@ -172,10 +171,13 @@ public class HQLQueryPlan implements Serializable {
 			LOG.tracev( "Find: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
-		boolean hasLimit = queryParameters.getRowSelection() != null &&
-		                   queryParameters.getRowSelection().definesLimits();
-		boolean needsLimit = hasLimit && translators.length > 1;
-		QueryParameters queryParametersToUse;
+
+		final RowSelection rowSelection = queryParameters.getRowSelection();
+		final boolean hasLimit = rowSelection != null
+				&& rowSelection.definesLimits();
+		final boolean needsLimit = hasLimit && translators.length > 1;
+
+		final QueryParameters queryParametersToUse;
 		if ( needsLimit ) {
 			LOG.needsLimit();
 			RowSelection selection = new RowSelection();
@@ -187,8 +189,9 @@ public class HQLQueryPlan implements Serializable {
 			queryParametersToUse = queryParameters;
 		}
 
-		List combinedResults = new ArrayList();
-		IdentitySet distinction = new IdentitySet();
+		final int guessedResultSize = guessResultSize( rowSelection );
+		final List combinedResults = new ArrayList( guessedResultSize );
+		final IdentitySet distinction = new IdentitySet( guessedResultSize );
 		int includedCount = -1;
 		translator_loop:
 		for ( QueryTranslator translator : translators ) {
@@ -223,6 +226,42 @@ public class HQLQueryPlan implements Serializable {
 		return combinedResults;
 	}
 
+	/**
+	 * If we're able to guess a likely size of the results we can optimize allocation
+	 * of our datastructures.
+	 * Essentially if we detect the user is not using pagination, we attempt to use the FetchSize
+	 * as a reasonable hint. If fetch size is not being set either, it is reasonable to expect
+	 * that we're going to have a single hit. In such a case it would be tempting to return a constant
+	 * of value one, but that's dangerous as it doesn't scale up appropriately for example
+	 * with an ArrayList if the guess is wrong.
+	 *
+	 * @param rowSelection
+	 * @return a reasonable size to use for allocation
+	 */
+	private final int guessResultSize(RowSelection rowSelection) {
+		if ( rowSelection != null ) {
+			final int maxReasonableAllocation = rowSelection.getFetchSize() != null ? rowSelection.getFetchSize().intValue() : 100;
+			if ( rowSelection.getMaxRows() != null && rowSelection.getMaxRows().intValue() > 0 ) {
+				return Math.min( maxReasonableAllocation, rowSelection.getMaxRows().intValue() );
+			}
+			else if ( rowSelection.getFetchSize() != null && rowSelection.getFetchSize().intValue() > 0 ) {
+				return rowSelection.getFetchSize().intValue();
+			}
+		}
+		return 7;//magic number guessed as a reasonable default.
+	}
+
+	/**
+	 * Coordinates the efforts to perform an iterate across all the included query translators.
+	 *
+	 * @param queryParameters The query parameters
+	 * @param session The session
+	 *
+	 * @return The query result iterator
+	 *
+	 * @throws HibernateException Indicates a problem performing the query
+	 */
+	@SuppressWarnings("unchecked")
 	public Iterator performIterate(
 			QueryParameters queryParameters,
 	        EventSource session) throws HibernateException {

@@ -263,7 +263,6 @@ public class CustomerEnhancerTest extends BaseUnitTestCase {
 				LockMode.NONE,
 				false,
 				null,
-				EntityMode.POJO,
 				null,
 				false,
 				false,

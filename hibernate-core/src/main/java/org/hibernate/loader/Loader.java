@@ -2104,15 +2104,17 @@ public abstract class Loader {
 	}
 
 	private ColumnNameCache retreiveColumnNameToIndexCache(final ResultSet rs) throws SQLException {
-		if ( columnNameCache == null ) {
-			synchronized ( this ) {
-				if ( columnNameCache == null ) {
-					LOG.trace( "Building columnName -> columnIndex cache" );
-					columnNameCache = new ColumnNameCache( rs.getMetaData().getColumnCount() );
-				}
-			}
+		final ColumnNameCache cache = columnNameCache;
+		if ( cache == null ) {
+			//there is no need for a synchronized second check, as in worst case
+			//we'll have allocated an unnecessary ColumnNameCache
+			LOG.trace( "Building columnName -> columnIndex cache" );
+			columnNameCache = new ColumnNameCache( rs.getMetaData().getColumnCount() );
+			return columnNameCache;
 		}
-		return columnNameCache;
+		else {
+			return cache;
+		}
 	}
 
 	/**

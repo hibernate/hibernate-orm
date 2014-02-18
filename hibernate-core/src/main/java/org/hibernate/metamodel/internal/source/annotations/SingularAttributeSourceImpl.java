@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
@@ -167,7 +168,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource, Ann
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return Collections.emptySet();
 	}
 

@@ -38,7 +38,7 @@ import org.hibernate.xml.spi.Origin;
  *
  * @author Steve Ebersole
  */
-public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer, MetaSource {
+public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer, ToolingHintSourceContainer {
 
 	/**
 	 * Obtain the origin of this source.

@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
@@ -344,7 +345,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return pluralAttributeElement.getMeta();
 	}
 

@@ -28,7 +28,7 @@ package org.hibernate.metamodel.spi.source;
  *
  * @author Steve Ebersole
  */
-public interface AttributeSource extends MetaSource{
+public interface AttributeSource extends ToolingHintSourceContainer {
 	/**
 	 * Obtain the attribute name.
 	 *

@@ -60,7 +60,7 @@ import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
@@ -223,12 +223,12 @@ public class Helper {
 	}
 
 	public static MetaAttributeContext extractMetaAttributeContext(
-			List<? extends MetaAttributeSource> metaAttributeSourceList,
+			List<? extends ToolingHintSource> metaAttributeSourceList,
 			boolean onlyInheritable,
 			MetaAttributeContext parentContext) {
 		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );
 
-		for ( MetaAttributeSource meta : metaAttributeSourceList ) {
+		for ( ToolingHintSource meta : metaAttributeSourceList ) {
 			if ( onlyInheritable & !meta.isInheritable() ) {
 				continue;
 			}

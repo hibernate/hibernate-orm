@@ -139,7 +139,7 @@ import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
@@ -318,7 +318,7 @@ public class Binder implements HelperContext {
 				}
 				entityBinding.setMetaAttributeContext(
 						createMetaAttributeContext(
-								entitySource.getMetaAttributeSources(),
+								entitySource.getToolingHintSources(),
 								true,
 								bindingContext.getGlobalMetaAttributeContext()
 						)
@@ -466,7 +466,7 @@ public class Binder implements HelperContext {
 				// Create/Bind root-specific information
 				bindIdentifier( rootEntityBinding, rootEntitySource );
 				bindSecondaryTables( rootEntityBinding, rootEntitySource );
-				bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
+				bindVersion( rootEntityBinding, rootEntitySource.getVersionAttributeSource() );
 				bindDiscriminator( rootEntityBinding, rootEntitySource );
 				bindMultiTenancy( rootEntityBinding, rootEntitySource );
 				rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
@@ -624,7 +624,7 @@ public class Binder implements HelperContext {
 				final CompositeAttributeBinding syntheticAttributeBinding =
 						rootEntityBinding.makeVirtualCompositeAttributeBinding(
 								syntheticAttribute,
-								createMetaAttributeContext( rootEntityBinding, identifierSource.getMetaAttributeSources() ),
+								createMetaAttributeContext( rootEntityBinding, identifierSource.getToolingHintSources() ),
 								idAttributeBindings
 						);
 				// Create the synthetic attribute binding.
@@ -2261,7 +2261,7 @@ public class Binder implements HelperContext {
 						aggregate,
 						createMetaAttributeContext(
 								pluralAttributeBinding.getContainer(),
-								elementSource.getMetaAttributeSources()
+								elementSource.getToolingHintSources()
 						),
 						parentAttribute
 				);
@@ -3038,12 +3038,12 @@ public class Binder implements HelperContext {
 	private static MetaAttributeContext createMetaAttributeContext(
 			final AttributeBindingContainer attributeBindingContainer,
 			final AttributeSource attributeSource) {
-		return createMetaAttributeContext( attributeBindingContainer, attributeSource.getMetaAttributeSources() );
+		return createMetaAttributeContext( attributeBindingContainer, attributeSource.getToolingHintSources() );
 	}
 
 	private static MetaAttributeContext createMetaAttributeContext(
 			final AttributeBindingContainer attributeBindingContainer,
-			final Iterable<? extends MetaAttributeSource> metaAttributeSources) {
+			final Iterable<? extends ToolingHintSource> metaAttributeSources) {
 		return createMetaAttributeContext(
 				metaAttributeSources,
 				false,
@@ -3052,21 +3052,21 @@ public class Binder implements HelperContext {
 	}
 
 	private static MetaAttributeContext createMetaAttributeContext(
-			final Iterable<? extends MetaAttributeSource> metaAttributeSources,
+			final Iterable<? extends ToolingHintSource> metaAttributeSources,
 			final boolean onlyInheritable,
 			final MetaAttributeContext parentContext) {
 		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );
-		for ( final MetaAttributeSource metaAttributeSource : metaAttributeSources ) {
-			if ( onlyInheritable && !metaAttributeSource.isInheritable() ) {
+		for ( final ToolingHintSource toolingHintSource : metaAttributeSources ) {
+			if ( onlyInheritable && !toolingHintSource.isInheritable() ) {
 				continue;
 			}
-			final String name = metaAttributeSource.getName();
+			final String name = toolingHintSource.getName();
 			MetaAttribute metaAttribute = subContext.getLocalMetaAttribute( name );
 			if ( metaAttribute == null || metaAttribute == parentContext.getMetaAttribute( name ) ) {
 				metaAttribute = new MetaAttribute( name );
 				subContext.add( metaAttribute );
 			}
-			metaAttribute.addValue( metaAttributeSource.getValue() );
+			metaAttribute.addValue( toolingHintSource.getValue() );
 		}
 		return subContext;
 	}

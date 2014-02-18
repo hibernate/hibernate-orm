@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -32,7 +33,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClas
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 
 /**
  * @author Hardy Ferentschik
@@ -119,7 +120,7 @@ class AggregatedCompositeIdentifierSourceImpl implements AggregatedCompositeIden
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		// not relevant for annotations
 		return Collections.emptySet();
 	}

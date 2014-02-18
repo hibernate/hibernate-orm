@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.EntityMode;
@@ -50,7 +51,7 @@ import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -121,7 +122,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	}
 
 	@Override
-	public VersionAttributeSource getVersioningAttributeSource() {
+	public VersionAttributeSource getVersionAttributeSource() {
 		if ( entityElement().getVersion() != null ) {
 			return new VersionAttributeSourceImpl(
 					sourceMappingDocument(),
@@ -397,7 +398,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		public Collection<? extends ToolingHintSource> getToolingHintSources() {
 			return entityElement().getId().getMeta();
 		}
 
@@ -467,7 +468,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		public Collection<? extends ToolingHintSource> getToolingHintSources() {
 			return entityElement().getId().getMeta();
 		}
 	}
@@ -621,7 +622,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+		public Collection<? extends ToolingHintSource> getToolingHintSources() {
 			return entityElement().getCompositeId().getMeta();
 		}
 	}

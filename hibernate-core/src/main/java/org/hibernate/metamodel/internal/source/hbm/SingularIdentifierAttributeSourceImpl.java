@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIdElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
@@ -191,7 +192,7 @@ class SingularIdentifierAttributeSourceImpl
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return idElement.getMeta();
 	}
 }

@@ -86,7 +86,7 @@
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='meta-element']">
-            <inheritance:implements>org.hibernate.metamodel.spi.source.MetaAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.spi.source.ToolingHintSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='filter-param-element']">
             <inheritance:implements>org.hibernate.metamodel.spi.source.FilterParameterSource</inheritance:implements>

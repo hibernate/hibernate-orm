@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,7 +33,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttri
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
@@ -108,7 +109,7 @@ class NonAggregatedCompositeIdentifierSourceImpl implements NonAggregatedComposi
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		// not relevant for annotations
 		return Collections.emptySet();
 	}

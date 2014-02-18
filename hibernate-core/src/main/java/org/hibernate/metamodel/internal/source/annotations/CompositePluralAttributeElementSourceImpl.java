@@ -20,6 +20,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +39,7 @@ import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.CascadeType;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
 /**
@@ -122,7 +123,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		// HBM only
 		return Collections.emptyList();
 	}

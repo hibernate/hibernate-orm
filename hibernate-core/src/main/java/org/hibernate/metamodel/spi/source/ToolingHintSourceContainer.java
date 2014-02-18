@@ -23,31 +23,19 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.Collection;
+
 /**
- * Describes incoming {@link org.hibernate.mapping.MetaAttribute} values.  This is only from {@code hbm} via the
- * {@code <meta/>} element(s).
+ * Describes the source of tooling hints.
  *
+ * @author Strong Liu
  * @author Steve Ebersole
  */
-public interface MetaAttributeSource {
+public interface ToolingHintSourceContainer {
 	/**
-	 * Obtain the supplied meta-attribute name
+	 * Obtain the tooling hint sources associated with this container.
 	 *
-	 * @return The meta-attribute name
+	 * @return The tooling hint sources.
 	 */
-	public String getName();
-
-	/**
-	 * Obtain the supplied meta-attribute value.
-	 *
-	 * @return The meta-attribute value
-	 */
-	public String getValue();
-
-	/**
-	 * Is the meta-attribute value inheritable?
-	 *
-	 * @return Is the value inheritable?
-	 */
-	public boolean isInheritable();
+	public Collection<? extends ToolingHintSource> getToolingHintSources();
 }

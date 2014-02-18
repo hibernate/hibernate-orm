@@ -46,11 +46,11 @@ public interface RootEntitySource extends EntitySource {
 	public IdentifierSource getIdentifierSource();
 
 	/**
-	 * Obtain the source information about the attribute used for versioning.
+	 * Obtain the source information about the attribute used for optimistic locking.
 	 *
-	 * @return the source information about the attribute used for versioning
+	 * @return the source information about the attribute used for optimistic locking
 	 */
-	public VersionAttributeSource getVersioningAttributeSource();
+	public VersionAttributeSource getVersionAttributeSource();
 
 	/**
 	 * Obtain the source information about the discriminator attribute for single table inheritance

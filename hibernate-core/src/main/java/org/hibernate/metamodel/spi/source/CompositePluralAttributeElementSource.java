@@ -29,7 +29,7 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface CompositePluralAttributeElementSource
-		extends PluralAttributeElementSource, AttributeSourceContainer, CascadeStyleSource, MetaSource {
+		extends PluralAttributeElementSource, AttributeSourceContainer, CascadeStyleSource, ToolingHintSourceContainer {
 
 	public JavaTypeDescriptor getTypeDescriptor();
 

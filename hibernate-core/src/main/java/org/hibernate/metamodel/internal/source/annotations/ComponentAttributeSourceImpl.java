@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -163,7 +164,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource, A
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		// not relevant for annotations
 		return Collections.emptySet();
 	}

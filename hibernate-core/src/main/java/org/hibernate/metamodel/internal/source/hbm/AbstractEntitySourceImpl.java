@@ -63,7 +63,7 @@ import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.metamodel.spi.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
@@ -537,7 +537,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+	public java.util.Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return entityElement.getMeta();
 	}
 

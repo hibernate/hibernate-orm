@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
@@ -48,7 +49,7 @@ import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
@@ -243,7 +244,7 @@ public abstract class AbstractComponentAttributeSourceImpl extends AbstractHbmSo
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return componentSourceElement.getMeta();
 	}
 }

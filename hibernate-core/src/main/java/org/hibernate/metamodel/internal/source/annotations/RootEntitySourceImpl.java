@@ -76,7 +76,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	}
 
 	@Override
-	public VersionAttributeSource getVersioningAttributeSource() {
+	public VersionAttributeSource getVersionAttributeSource() {
 		final EntityClass entityClass = getEntityClass();
 		if ( entityClass.getVersionAttribute() == null ) {
 			return null;

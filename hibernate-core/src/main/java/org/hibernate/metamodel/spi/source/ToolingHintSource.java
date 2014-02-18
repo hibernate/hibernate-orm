@@ -24,13 +24,33 @@
 package org.hibernate.metamodel.spi.source;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * Describes the source of a tooling hint.
+ * <p/>
+ * This is equivalent to the legacy {@link org.hibernate.mapping.MetaAttribute} and only
+ * comes from {@code hbm} via the {@code <meta/>} element(s) and the new unified
+ * XML schema as a {@code <tooling-hint/>}.
+ *
+ * @author Steve Ebersole
  */
-public interface MetaSource {
+public interface ToolingHintSource {
 	/**
-	 * Obtain the meta-attribute sources associated with this attribute.
+	 * Obtain the supplied meta-attribute name
 	 *
-	 * @return The meta-attribute sources.
+	 * @return The meta-attribute name
 	 */
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources();
+	public String getName();
+
+	/**
+	 * Obtain the supplied meta-attribute value.
+	 *
+	 * @return The meta-attribute value
+	 */
+	public String getValue();
+
+	/**
+	 * Is the meta-attribute value inheritable?
+	 *
+	 * @return Is the value inheritable?
+	 */
+	public boolean isInheritable();
 }

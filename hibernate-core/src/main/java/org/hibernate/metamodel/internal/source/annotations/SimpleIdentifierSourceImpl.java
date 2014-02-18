@@ -23,14 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.Collection;
 import java.util.Collections;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
-import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
@@ -89,7 +89,7 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return Collections.emptySet();
 	}
 }

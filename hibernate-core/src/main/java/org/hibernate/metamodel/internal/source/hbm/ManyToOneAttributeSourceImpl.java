@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbManyToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.ToolingHintSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.type.ForeignKeyDirection;
 
@@ -175,7 +176,7 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
-	public Iterable<? extends MetaAttributeSource> getMetaAttributeSources() {
+	public Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return manyToOneElement.getMeta();
 	}
 

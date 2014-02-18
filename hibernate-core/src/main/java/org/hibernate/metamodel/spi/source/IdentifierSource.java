@@ -31,7 +31,7 @@ import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
  *
  * @author Steve Ebersole
  */
-public interface IdentifierSource extends MetaSource {
+public interface IdentifierSource extends ToolingHintSourceContainer {
     /**
      * Obtain the identifier generator source.
 	 *

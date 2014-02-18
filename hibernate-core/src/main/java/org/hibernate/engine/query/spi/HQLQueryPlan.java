@@ -205,8 +205,9 @@ public class HQLQueryPlan implements Serializable {
 			queryParameters.traceParameters( session.getFactory() );
 		}
 
-		final boolean hasLimit = queryParameters.getRowSelection() != null
-				&& queryParameters.getRowSelection().definesLimits();
+		final RowSelection rowSelection = queryParameters.getRowSelection();
+		final boolean hasLimit = rowSelection != null
+				&& rowSelection.definesLimits();
 		final boolean needsLimit = hasLimit && translators.length > 1;
 
 		final QueryParameters queryParametersToUse;
@@ -221,8 +222,9 @@ public class HQLQueryPlan implements Serializable {
 			queryParametersToUse = queryParameters;
 		}
 
-		final List combinedResults = new ArrayList();
-		final IdentitySet distinction = new IdentitySet();
+		final int guessedResultSize = guessResultSize( rowSelection );
+		final List combinedResults = new ArrayList( guessedResultSize );
+		final IdentitySet distinction = new IdentitySet( guessedResultSize );
 		int includedCount = -1;
 		translator_loop:
 		for ( QueryTranslator translator : translators ) {
@@ -255,6 +257,31 @@ public class HQLQueryPlan implements Serializable {
 			}
 		}
 		return combinedResults;
+	}
+
+	/**
+	 * If we're able to guess a likely size of the results we can optimize allocation
+	 * of our datastructures.
+	 * Essentially if we detect the user is not using pagination, we attempt to use the FetchSize
+	 * as a reasonable hint. If fetch size is not being set either, it is reasonable to expect
+	 * that we're going to have a single hit. In such a case it would be tempting to return a constant
+	 * of value one, but that's dangerous as it doesn't scale up appropriately for example
+	 * with an ArrayList if the guess is wrong.
+	 *
+	 * @param rowSelection
+	 * @return a reasonable size to use for allocation
+	 */
+	private final int guessResultSize(RowSelection rowSelection) {
+		if ( rowSelection != null ) {
+			final int maxReasonableAllocation = rowSelection.getFetchSize() != null ? rowSelection.getFetchSize().intValue() : 100;
+			if ( rowSelection.getMaxRows() != null && rowSelection.getMaxRows().intValue() > 0 ) {
+				return Math.min( maxReasonableAllocation, rowSelection.getMaxRows().intValue() );
+			}
+			else if ( rowSelection.getFetchSize() != null && rowSelection.getFetchSize().intValue() > 0 ) {
+				return rowSelection.getFetchSize().intValue();
+			}
+		}
+		return 7;//magic number guessed as a reasonable default.
 	}
 
 	/**

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.reflite.spi;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -62,4 +63,11 @@ public interface ClassDescriptor extends JavaTypeDescriptor {
 	 * @return The annotations.
 	 */
 	public Map<DotName, AnnotationInstance> getAnnotations();
+
+	/**
+	 * Get any parameters defined on the type.
+	 *
+	 * @return Any type parameters.
+	 */
+	public List<JavaTypeDescriptor> getTypeParameters();
 }

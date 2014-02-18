@@ -117,13 +117,17 @@ public class ForeignKeyHelper {
 		}
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
-		final AttributeBinding referencedAttributeBinding = explicitName != null
-				? referencedEntityBinding.locateAttributeBindingByPath( explicitName, true )
-				: referencedEntityBinding.locateAttributeBinding(
-				resolutionDelegate.getReferencedTable( resolutionContext ),
-				resolutionDelegate.getJoinColumns( resolutionContext ),
-				true
-		);
+		final AttributeBinding referencedAttributeBinding;
+		if ( explicitName != null ) {
+			referencedAttributeBinding = referencedEntityBinding.locateAttributeBindingByPath( explicitName, true );
+		}
+		else {
+			referencedAttributeBinding = referencedEntityBinding.locateAttributeBinding(
+					resolutionDelegate.getReferencedTable( resolutionContext ),
+					resolutionDelegate.getJoinColumns( resolutionContext ),
+					true
+			);
+		}
 
 		if ( referencedAttributeBinding == null ) {
 			if ( explicitName != null ) {

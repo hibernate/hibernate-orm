@@ -25,11 +25,13 @@ package org.hibernate.metamodel.reflite.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.Name;
 
@@ -53,6 +55,7 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 
 	private Collection<FieldDescriptor> fieldDescriptors;
 	private Collection<MethodDescriptor> methodDescriptors;
+	private List<JavaTypeDescriptor> typeParameters;
 
 	public ClassDescriptorImpl(
 			Name name,
@@ -126,5 +129,14 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 
 	void setMethods(Collection<MethodDescriptor> methodDescriptors) {
 		this.methodDescriptors = methodDescriptors;
+	}
+
+	public void setTypeParameters(List<JavaTypeDescriptor> typeParameters) {
+		this.typeParameters = typeParameters;
+	}
+
+	@Override
+	public List<JavaTypeDescriptor> getTypeParameters() {
+		return typeParameters;
 	}
 }

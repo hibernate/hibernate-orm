@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.manytoone;
 import java.io.Serializable;
 import javax.persistence.CascadeType;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -34,7 +35,7 @@ public class Node implements Serializable {
 		return id.hashCode();
 	}
 
-	@Id
+	@EmbeddedId
 	public NodePk getId() {
 		return id;
 	}

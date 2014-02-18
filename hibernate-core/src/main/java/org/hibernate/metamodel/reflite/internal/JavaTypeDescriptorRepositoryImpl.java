@@ -25,6 +25,7 @@ package org.hibernate.metamodel.reflite.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,6 +54,11 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.logging.Logger;
 
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.TypeResolver;
+
 /**
  * This is the "interim" implementation of JavaTypeDescriptorRepository that loads Classes to ascertain this
  * information.  Ultimately the goal is to hand this responsibility off to Jandex once
@@ -63,9 +69,13 @@ import org.jboss.logging.Logger;
 public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepository {
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRepositoryImpl.class );
 
-	private ClassLoader jpaTempClassLoader;
+	private final ClassLoader jpaTempClassLoader;
 	private final ClassLoaderService classLoaderService;
+
 	private final IndexView jandexIndex;
+
+	private final TypeResolver classmateTypeResolver;
+	private final MemberResolver classmateMemberResolver;
 
 	private Map<Name,JavaTypeDescriptor> typeDescriptorMap = new HashMap<Name, JavaTypeDescriptor>();
 
@@ -83,6 +93,9 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		this.jandexIndex = jandexIndex;
 		this.jpaTempClassLoader = jpaTempClassLoader;
 		this.classLoaderService = classLoaderService;
+
+		this.classmateTypeResolver = new TypeResolver();
+		this.classmateMemberResolver = new MemberResolver( classmateTypeResolver );
 	}
 
 	@Override
@@ -176,8 +189,14 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 			typeDescriptorMap.put( typeName, typeDescriptor );
 
 			typeDescriptor.setExtendedInterfaceTypes( extractInterfaces( clazz ) );
+
+			final ResolvedType resolvedType = classmateTypeResolver.resolve( clazz );
+			typeDescriptor.setTypeParameters( extractTypeParameters( resolvedType ) );
+//			final ResolvedTypeWithMembers resolvedTypeWithMembers = classmateMemberResolver.resolve( resolvedType, null, null );
+
 			typeDescriptor.setFields( extractFields( clazz, typeDescriptor, jandexPivot ) );
 			typeDescriptor.setMethods( extractMethods( clazz, typeDescriptor, jandexPivot ) );
+
 
 			return typeDescriptor;
 		}
@@ -192,11 +211,27 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 
 			typeDescriptor.setSuperType( extractSuper( clazz ) );
 			typeDescriptor.setInterfaces( extractInterfaces( clazz ) );
+
+			final ResolvedType resolvedType = classmateTypeResolver.resolve( clazz );
+			typeDescriptor.setTypeParameters( extractTypeParameters( resolvedType ) );
+
 			typeDescriptor.setFields( extractFields( clazz, typeDescriptor, jandexPivot ) );
 			typeDescriptor.setMethods( extractMethods( clazz, typeDescriptor, jandexPivot ) );
 
 			return typeDescriptor;
 		}
+	}
+
+	private List<JavaTypeDescriptor> extractTypeParameters(ResolvedType resolvedType) {
+		if ( resolvedType.getTypeParameters().isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final List<JavaTypeDescriptor> result = CollectionHelper.arrayList( resolvedType.getTypeParameters().size() );
+		for ( ResolvedType typeParameter : resolvedType.getTypeParameters() ) {
+			result.add( getType( buildName( typeParameter.getErasedSignature() ) ) );
+		}
+		return result;
 	}
 
 	private DotName toJandexName(Name typeName) {

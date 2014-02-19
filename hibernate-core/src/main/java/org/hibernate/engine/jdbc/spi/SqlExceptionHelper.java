@@ -268,6 +268,10 @@ public class SqlExceptionHelper {
 	public void logAndClearWarnings(Connection connection) {
 		handleAndClearWarnings( connection, STANDARD_WARNING_HANDLER );
 	}
+	
+	public void logAndClearWarnings(Statement statement) {
+		handleAndClearWarnings( statement, STANDARD_WARNING_HANDLER );
+	}
 
 	/**
 	 * General purpose handling of warnings associated with a JDBC {@link Connection}.

@@ -523,6 +523,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@SuppressWarnings({ "unchecked" })
 	protected void close(Statement statement) {
 		LOG.tracev( "Closing prepared statement [{0}]", statement );
+		
+		// Important for Statement caching -- some DBs (especially Sybase) log warnings on every Statement under
+		// certain situations.
+		sqlExceptionHelper().logAndClearWarnings( statement );
 
 		if ( statement instanceof InvalidatableWrapper ) {
 			final InvalidatableWrapper<Statement> wrapper = (InvalidatableWrapper<Statement>) statement;

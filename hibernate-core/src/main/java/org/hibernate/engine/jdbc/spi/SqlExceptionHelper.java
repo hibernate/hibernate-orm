@@ -28,15 +28,14 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import org.jboss.logging.Logger;
-import org.jboss.logging.Logger.Level;
-
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.jboss.logging.Logger;
+import org.jboss.logging.Logger.Level;
 
 /**
  * Helper for handling SQLExceptions in various manners.
@@ -246,6 +245,10 @@ public class SqlExceptionHelper {
     public void logAndClearWarnings( Connection connection ) {
         handleAndClearWarnings(connection, STANDARD_WARNING_HANDLER);
     }
+	
+	public void logAndClearWarnings(Statement statement) {
+		handleAndClearWarnings( statement, STANDARD_WARNING_HANDLER );
+	}
 
     /**
      * General purpose handling of warnings associated with a JDBC {@link Connection}.
@@ -294,5 +297,4 @@ public class SqlExceptionHelper {
             LOG.debug("could not clear warnings", sqle);
         }
     }
-
 }

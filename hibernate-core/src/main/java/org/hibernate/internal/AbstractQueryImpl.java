@@ -175,8 +175,8 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setMaxResults(int maxResults) {
-		if ( maxResults < 0 ) {
-			// treat negatives specically as meaning no limit...
+		if ( maxResults <= 0 ) {
+			// treat zero and negatives specically as meaning no limit...
 			selection.setMaxRows( null );
 		}
 		else {

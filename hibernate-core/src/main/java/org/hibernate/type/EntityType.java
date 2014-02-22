@@ -62,6 +62,19 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private final boolean unwrapProxy;
 	private final boolean referenceToPrimaryKey;
 
+	/**
+	 * Cached because of performance
+	 * @see #getIdentifierType(SessionImplementor)
+	 * @see #getIdentifierType(Mapping)
+	 */
+	private transient volatile Type associatedIdentifierType;
+
+	/**
+	 * Cached because of performance
+	 * @see #getAssociatedEntityPersister
+	 */
+	private transient volatile EntityPersister associatedEntityPersister;
+
 	private transient Class returnedClass;
 
 	/**
@@ -240,7 +253,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @throws MappingException Generally indicates an invalid entity name.
 	 */
 	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) throws MappingException {
-		return ( Joinable ) factory.getEntityPersister( associatedEntityName );
+		return ( Joinable ) getAssociatedEntityPersister( factory );
 	}
 
 	/**
@@ -359,7 +372,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * {@inheritDoc}
 	 */
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
-		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
+		EntityPersister persister = getAssociatedEntityPersister( factory );
 		if ( !persister.canExtractIdOutOfEntity() ) {
 			return super.getHashCode( x );
 		}
@@ -387,7 +400,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return x == y;
 		}
 
-		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
+		EntityPersister persister = getAssociatedEntityPersister( factory );
 		if ( !persister.canExtractIdOutOfEntity() ) {
 			return super.isEqual(x, y );
 		}
@@ -497,7 +510,18 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
-		return factory.getEntityPersister( associatedEntityName ).getIdentifierType();
+		return getAssociatedEntityPersister( factory ).getIdentifierType();
+	}
+
+	protected EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
+		final EntityPersister persister = associatedEntityPersister;
+		if ( persister == null ) {
+			associatedEntityPersister = factory.getEntityPersister( getAssociatedEntityName() );
+			return associatedEntityPersister;
+		}
+		else {
+			return persister;
+		}
 	}
 
 	protected final Object getIdentifier(Object value, SessionImplementor session) throws HibernateException {
@@ -512,7 +536,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return null;
 		}
 		else {
-			EntityPersister entityPersister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
+			EntityPersister entityPersister = getAssociatedEntityPersister( session.getFactory() );
 			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
@@ -549,7 +573,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return "null";
 		}
 		
-		EntityPersister persister = factory.getEntityPersister( associatedEntityName );
+		EntityPersister persister = getAssociatedEntityPersister( factory );
 		StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
@@ -597,8 +621,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param factory The mappings...
 	 * @return The identifier type
 	 */
-	Type getIdentifierType(Mapping factory) {
-		return factory.getIdentifierType( getAssociatedEntityName() );
+	Type getIdentifierType(final Mapping factory) {
+		final Type type = associatedIdentifierType;
+		if ( type == null ) {
+			associatedIdentifierType = factory.getIdentifierType( getAssociatedEntityName() );
+			return associatedIdentifierType;
+		}
+		else {
+			return type;
+		}
 	}
 
 	/**
@@ -607,8 +638,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param session The originating session
 	 * @return The identifier type
 	 */
-	Type getIdentifierType(SessionImplementor session) {
-		return getIdentifierType( session.getFactory() );
+	Type getIdentifierType(final SessionImplementor session) {
+		final Type type = associatedIdentifierType;
+		if ( type == null ) {
+			associatedIdentifierType = getIdentifierType( session.getFactory() );
+			return associatedIdentifierType;
+		}
+		else {
+			return type;
+		}
 	}
 
 	/**
@@ -664,8 +702,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	protected final Object resolveIdentifier(Serializable id, SessionImplementor session) throws HibernateException {
 		boolean isProxyUnwrapEnabled = unwrapProxy &&
-				session.getFactory()
-						.getEntityPersister( getAssociatedEntityName() )
+				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
 
 		Object proxyOrEntity = session.internalLoad(

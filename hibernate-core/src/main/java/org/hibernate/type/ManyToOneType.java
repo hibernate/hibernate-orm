@@ -200,7 +200,7 @@ public class ManyToOneType extends EntityType {
 	private void scheduleBatchLoadIfNeeded(Serializable id, SessionImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
-			final EntityPersister persister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
+			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
 			if ( persister.isBatchLoadable() ) {
 				final EntityKey entityKey = session.generateEntityKey( id, persister );
 				if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
@@ -209,7 +209,7 @@ public class ManyToOneType extends EntityType {
 			}
 		}
 	}
-	
+
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}

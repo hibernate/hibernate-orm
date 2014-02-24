@@ -62,6 +62,29 @@ public final class EntityEntry implements Serializable {
 	private final transient Object rowId;
 	private final transient PersistenceContext persistenceContext;
 
+	/**
+	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
+	 * Use the other constructor!
+	 */
+	@Deprecated
+	public EntityEntry(
+			final Status status,
+			final Object[] loadedState,
+			final Object rowId,
+			final Serializable id,
+			final Object version,
+			final LockMode lockMode,
+			final boolean existsInDatabase,
+			final EntityPersister persister,
+			final EntityMode entityMode,
+			final String tenantId,
+			final boolean disableVersionIncrement,
+			final boolean lazyPropertiesAreUnfetched,
+			final PersistenceContext persistenceContext) {
+		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
+				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
+	}
+
 	public EntityEntry(
 			final Status status,
 			final Object[] loadedState,

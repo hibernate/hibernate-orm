@@ -302,7 +302,6 @@ public class EnhancerTest extends BaseUnitTestCase {
 				LockMode.NONE,
 				false,
 				null,
-				null,
 				false,
 				false,
 				null

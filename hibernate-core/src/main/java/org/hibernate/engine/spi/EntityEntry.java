@@ -53,8 +53,6 @@ public final class EntityEntry implements Serializable {
 	private boolean existsInDatabase;
 	private Object version;
 	private transient EntityPersister persister; // for convenience to save some lookups
-	private final EntityMode entityMode;
-	private final String tenantId;
 	private final String entityName;
 	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	private boolean isBeingReplicated;
@@ -62,6 +60,11 @@ public final class EntityEntry implements Serializable {
 	private final transient Object rowId;
 	private final transient PersistenceContext persistenceContext;
 
+	/**
+	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
+	 * Use the other constructor!
+	 */
+	@Deprecated
 	public EntityEntry(
 			final Status status,
 			final Object[] loadedState,
@@ -73,6 +76,22 @@ public final class EntityEntry implements Serializable {
 			final EntityPersister persister,
 			final EntityMode entityMode,
 			final String tenantId,
+			final boolean disableVersionIncrement,
+			final boolean lazyPropertiesAreUnfetched,
+			final PersistenceContext persistenceContext) {
+		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
+				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
+	}
+
+	public EntityEntry(
+			final Status status,
+			final Object[] loadedState,
+			final Object rowId,
+			final Serializable id,
+			final Object version,
+			final LockMode lockMode,
+			final boolean existsInDatabase,
+			final EntityPersister persister,
 			final boolean disableVersionIncrement,
 			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
@@ -90,8 +109,6 @@ public final class EntityEntry implements Serializable {
 		this.isBeingReplicated=disableVersionIncrement;
 		this.loadedWithLazyPropertiesUnfetched = lazyPropertiesAreUnfetched;
 		this.persister=persister;
-		this.entityMode = entityMode;
-		this.tenantId = tenantId;
 		this.entityName = persister == null ? null : persister.getEntityName();
 		this.persistenceContext = persistenceContext;
 	}
@@ -104,8 +121,6 @@ public final class EntityEntry implements Serializable {
 			final SessionFactoryImplementor factory,
 			final String entityName,
 			final Serializable id,
-			final EntityMode entityMode,
-			final String tenantId,
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,
@@ -119,8 +134,6 @@ public final class EntityEntry implements Serializable {
 		this.entityName = entityName;
 		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
 		this.id = id;
-		this.entityMode = entityMode;
-		this.tenantId = tenantId;
 		this.status = status;
 		this.previousStatus = previousStatus;
 		this.loadedState = loadedState;
@@ -402,8 +415,6 @@ public final class EntityEntry implements Serializable {
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( entityName );
 		oos.writeObject( id );
-		oos.writeObject( entityMode.toString() );
-		oos.writeObject( tenantId );
 		oos.writeObject( status.name() );
 		oos.writeObject( (previousStatus == null ? "" : previousStatus.name()) );
 		// todo : potentially look at optimizing these two arrays
@@ -438,8 +449,6 @@ public final class EntityEntry implements Serializable {
 				( persistenceContext.getSession() == null ? null : persistenceContext.getSession().getFactory() ),
 				(String) ois.readObject(),
 				( Serializable ) ois.readObject(),
-				EntityMode.parse( (String) ois.readObject() ),
-				(String) ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
 				( ( previousStatusString = ( String ) ois.readObject() ).length() == 0 ?
 							null :

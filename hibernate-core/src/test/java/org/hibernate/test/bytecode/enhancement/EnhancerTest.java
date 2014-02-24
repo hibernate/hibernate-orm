@@ -304,8 +304,6 @@ public class EnhancerTest extends BaseUnitTestCase {
 				LockMode.NONE,
 				false,
 				null,
-				EntityMode.POJO,
-				null,
 				false,
 				false,
 				null

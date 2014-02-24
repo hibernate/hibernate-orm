@@ -503,8 +503,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				lockMode,
 				existsInDatabase,
 				persister,
-				persister.getEntityMode(),
-				session.getTenantIdentifier(),
 				disableVersionIncrement,
 				lazyPropertiesAreUnfetched,
 				this

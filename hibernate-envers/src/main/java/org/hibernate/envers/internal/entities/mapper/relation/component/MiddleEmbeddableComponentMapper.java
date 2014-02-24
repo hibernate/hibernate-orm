@@ -118,7 +118,12 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 				);
 			}
 			else {
-				parameters.addWhere( prefix1 + '.' + propertyName, false, "=", prefix2 + '.' + propertyName, false );
+				// (p1.prop = p2.prop or (p1.prop is null and p2.prop is null))
+				Parameters sub1 = parameters.addSubParameters( "or" );
+				sub1.addWhere( prefix1 + '.' + propertyName, false, "=", prefix2 + '.' + propertyName, false );
+				Parameters sub2 = sub1.addSubParameters( "and" );
+				sub2.addNullRestriction( prefix1 + '.' + propertyName, false );
+				sub2.addNullRestriction( prefix2 + '.' + propertyName, false );
 			}
 		}
 	}

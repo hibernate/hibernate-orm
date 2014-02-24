@@ -64,19 +64,19 @@ public class LoadEvent extends AbstractEvent {
 	private Object result;
 
 	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
-		this(entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source);
+		this( entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source );
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source) {
-		this(entityId, entityClassName, null, lockMode, false, source);
+		this( entityId, entityClassName, null, lockMode, false, source );
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, LockOptions lockOptions, EventSource source) {
-		this(entityId, entityClassName, null, lockOptions, false, source);
+		this( entityId, entityClassName, null, lockOptions, false, source );
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
-		this(entityId, entityClassName, null, DEFAULT_LOCK_OPTIONS, isAssociationFetch, source);
+		this( entityId, entityClassName, null, DEFAULT_LOCK_OPTIONS, isAssociationFetch, source );
 	}
 	
 	public boolean isAssociationFetch() {
@@ -90,8 +90,8 @@ public class LoadEvent extends AbstractEvent {
 			LockMode lockMode,
 			boolean isAssociationFetch,
 			EventSource source) {
-		this(entityId, entityClassName, instanceToLoad,
-				lockMode == DEFAULT_LOCK_MODE ? DEFAULT_LOCK_OPTIONS : new LockOptions().setLockMode(lockMode),
+		this( entityId, entityClassName, instanceToLoad,
+				lockMode == DEFAULT_LOCK_MODE ? DEFAULT_LOCK_OPTIONS : new LockOptions().setLockMode( lockMode ),
 				isAssociationFetch, source );
 	}
 
@@ -158,7 +158,7 @@ public class LoadEvent extends AbstractEvent {
 	public void setLockMode(LockMode lockMode) {
 		if ( lockMode != lockOptions.getLockMode() ) {
 			writingOnLockOptions();
-			this.lockOptions.setLockMode(lockMode);
+			this.lockOptions.setLockMode( lockMode );
 		}
 	}
 
@@ -171,7 +171,7 @@ public class LoadEvent extends AbstractEvent {
 	public void setLockTimeout(int timeout) {
 		if ( timeout != lockOptions.getTimeOut() ) {
 			writingOnLockOptions();
-			this.lockOptions.setTimeOut(timeout);
+			this.lockOptions.setTimeOut( timeout );
 		}
 	}
 
@@ -182,7 +182,7 @@ public class LoadEvent extends AbstractEvent {
 	public void setLockScope(boolean cascade) {
 		if ( lockOptions.getScope() != cascade ) {
 			writingOnLockOptions();
-			this.lockOptions.setScope(cascade);
+			this.lockOptions.setScope( cascade );
 		}
 	}
 

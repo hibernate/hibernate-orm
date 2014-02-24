@@ -23,10 +23,12 @@
  */
 package org.hibernate.envers.test.entities.components;
 
-import javax.persistence.Embedded;
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,8 +44,8 @@ public class ComponentSetTestEntity {
 	@GeneratedValue
 	private Integer id;
 
-	@Embedded
-	@Audited
+	@ElementCollection
+	@CollectionTable(name = "CompTestEntityComps", joinColumns = @JoinColumn(name = "entity_id"))
 	private Set<Component1> comps = new HashSet<Component1>();
 
 	public ComponentSetTestEntity() {

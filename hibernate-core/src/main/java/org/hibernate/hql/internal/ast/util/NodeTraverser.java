@@ -25,7 +25,6 @@
 package org.hibernate.hql.internal.ast.util;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Stack;
 
 import antlr.collections.AST;
 

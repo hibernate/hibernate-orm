@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Stack;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -58,6 +57,8 @@ import org.jboss.logging.Logger;
  * @see org.hibernate.engine.spi.CascadingAction
  */
 public final class Cascade {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Cascade.class.getName());
 
 	/**
 	 * A cascade point that occurs just after the insertion of the parent entity and
@@ -102,9 +103,7 @@ public final class Cascade {
 	 */
 	public static final int BEFORE_MERGE = 0;
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Cascade.class.getName());
-
-
+	private int componentPathStackDepth = 0;
 	private int cascadeTo;
 	private EventSource eventSource;
 	private CascadingAction action;
@@ -230,7 +229,7 @@ public final class Cascade {
 				final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
 				if ( entry != null && entry.getStatus() != Status.SAVING ) {
 					final Object loadedValue;
-					if ( componentPathStack.isEmpty() ) {
+					if ( componentPathStackDepth == 0 ) {
 						// association defined on entity
 						loadedValue = entry.getLoadedValue( propertyName );
 					}
@@ -298,8 +297,6 @@ public final class Cascade {
 		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
-	private Stack componentPathStack = new Stack();
-
 	private boolean cascadeAssociationNow(AssociationType associationType) {
 		return associationType.getForeignKeyDirection().cascadeNow(cascadeTo);
 	}
@@ -310,7 +307,7 @@ public final class Cascade {
 			final CompositeType componentType,
 			final String componentPropertyName,
 			final Object anything) {
-		componentPathStack.push( componentPropertyName );
+		componentPathStackDepth++;
 		Object[] children = componentType.getPropertyValues( child, eventSource );
 		Type[] types = componentType.getSubtypes();
 		for ( int i=0; i<types.length; i++ ) {
@@ -328,7 +325,7 @@ public final class Cascade {
 					);
 			}
 		}
-		componentPathStack.pop();
+		componentPathStackDepth--;
 	}
 
 	private void cascadeAssociation(

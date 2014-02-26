@@ -182,18 +182,15 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public boolean isEqual(Object x, Object y)
-			throws HibernateException {
+	public boolean isEqual(final Object x, final Object y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
 		if ( x == null || y == null ) {
 			return false;
 		}
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isEqual( xvalues[i], yvalues[i] ) ) {
+			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ) ) ) {
 				return false;
 			}
 		}
@@ -201,18 +198,15 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory)
-			throws HibernateException {
+	public boolean isEqual(final Object x, final Object y, final SessionFactoryImplementor factory) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
 		if ( x == null || y == null ) {
 			return false;
 		}
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isEqual( xvalues[i], yvalues[i], factory ) ) {
+			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ), factory ) ) {
 				return false;
 			}
 		}
@@ -220,14 +214,12 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public int compare(Object x, Object y) {
+	public int compare(final Object x, final Object y) {
 		if ( x == y ) {
 			return 0;
 		}
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int propertyCompare = propertyTypes[i].compare( xvalues[i], yvalues[i] );
+			int propertyCompare = propertyTypes[i].compare( getPropertyValue( x, i ), getPropertyValue( y, i ) );
 			if ( propertyCompare != 0 ) {
 				return propertyCompare;
 			}
@@ -240,11 +232,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public int getHashCode(Object x) {
+	public int getHashCode(final Object x) {
 		int result = 17;
-		Object[] values = getPropertyValues( x, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			Object y = values[i];
+			Object y = getPropertyValue( x, i );
 			result *= 37;
 			if ( y != null ) {
 				result += propertyTypes[i].getHashCode( y );
@@ -254,11 +245,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public int getHashCode(Object x, SessionFactoryImplementor factory) {
+	public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
 		int result = 17;
-		Object[] values = getPropertyValues( x, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			Object y = values[i];
+			Object y = getPropertyValue( x, i );
 			result *= 37;
 			if ( y != null ) {
 				result += propertyTypes[i].getHashCode( y, factory );
@@ -268,40 +258,34 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public boolean isDirty(Object x, Object y, SessionImplementor session)
-			throws HibernateException {
+	public boolean isDirty(final Object x, final Object y, final SessionImplementor session) throws HibernateException {
 		if ( x == y ) {
 			return false;
 		}
 		if ( x == null || y == null ) {
 			return true;
 		}
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
-		for ( int i = 0; i < xvalues.length; i++ ) {
-			if ( propertyTypes[i].isDirty( xvalues[i], yvalues[i], session ) ) {
+		for ( int i = 0; i < propertySpan; i++ ) {
+			if ( propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public boolean isDirty(Object x, Object y, boolean[] checkable, SessionImplementor session)
-			throws HibernateException {
+	public boolean isDirty(final Object x, final Object y, final boolean[] checkable, final SessionImplementor session) throws HibernateException {
 		if ( x == y ) {
 			return false;
 		}
 		if ( x == null || y == null ) {
 			return true;
 		}
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
 		int loc = 0;
-		for ( int i = 0; i < xvalues.length; i++ ) {
+		for ( int i = 0; i < propertySpan; i++ ) {
 			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
 			if ( len <= 1 ) {
 				final boolean dirty = ( len == 0 || checkable[loc] ) &&
-				                      propertyTypes[i].isDirty( xvalues[i], yvalues[i], session );
+				                      propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session );
 				if ( dirty ) {
 					return true;
 				}
@@ -309,7 +293,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			else {
 				boolean[] subcheckable = new boolean[len];
 				System.arraycopy( checkable, loc, subcheckable, 0, len );
-				final boolean dirty = propertyTypes[i].isDirty( xvalues[i], yvalues[i], subcheckable, session );
+				final boolean dirty = propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), subcheckable, session );
 				if ( dirty ) {
 					return true;
 				}
@@ -320,23 +304,20 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-    public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
-			throws HibernateException {
-
+	public boolean isModified(final Object old, final Object current, final boolean[] checkable, final SessionImplementor session) throws HibernateException {
 		if ( current == null ) {
 			return old != null;
 		}
 		if ( old == null ) {
 			return true;
 		}
-		Object[] currentValues = getPropertyValues( current, session );
 		Object[] oldValues = ( Object[] ) old;
 		int loc = 0;
-		for ( int i = 0; i < currentValues.length; i++ ) {
+		for ( int i = 0; i < propertySpan; i++ ) {
 			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
 			boolean[] subcheckable = new boolean[len];
 			System.arraycopy( checkable, loc, subcheckable, 0, len );
-			if ( propertyTypes[i].isModified( oldValues[i], currentValues[i], subcheckable, session ) ) {
+			if ( propertyTypes[i].isModified( oldValues[i], getPropertyValue( current, i ), subcheckable, session ) ) {
 				return true;
 			}
 			loc += len;
@@ -410,13 +391,26 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	@Override
 	public Object getPropertyValue(Object component, int i, SessionImplementor session)
 			throws HibernateException {
-		return getPropertyValue( component, i, entityMode );
+		return getPropertyValue( component, i );
 	}
-
 	public Object getPropertyValue(Object component, int i, EntityMode entityMode)
 			throws HibernateException {
-		return componentTuplizer.getPropertyValue( component, i );
+		return getPropertyValue( component, i );
 	}
+
+	public Object getPropertyValue(Object component, int i)
+			throws HibernateException {
+		if ( component instanceof Object[] ) {
+			// A few calls to hashCode pass the property values already in an
+			// Object[] (ex: QueryKey hash codes for cached queries).
+			// It's easiest to just check for the condition here prior to
+			// trying reflection.
+			return (( Object[] ) component)[i];
+		} else {
+			return componentTuplizer.getPropertyValue( component, i );
+		}
+	}
+
 	@Override
 	public Object[] getPropertyValues(Object component, SessionImplementor session)
 			throws HibernateException {

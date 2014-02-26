@@ -677,7 +677,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				? propertyPath.substring( 0, loc )
 				: propertyPath;
 		final int index = findSubPropertyIndex( type, basePropertyName );
-		final Object baseValue = type.getPropertyValue( component, index, getEntityMode() );
+		final Object baseValue = type.getPropertyValue( component, index );
 		if ( loc > 0 ) {
 			if ( baseValue == null ) {
 				return null;

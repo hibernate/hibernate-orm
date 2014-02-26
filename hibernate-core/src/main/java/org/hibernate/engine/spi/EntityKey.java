@@ -71,24 +71,6 @@ public final class EntityKey implements Serializable {
 		this.hashCode = generateHashCode();
 	}
 
-	/**
-	 * Used to reconstruct an EntityKey during deserialization. Note that this constructor
-	 * is used only in very specific situations: the SessionFactory isn't actually available
-	 * and so both equals and hashcode implementations can't be implemented correctly.
-	 *
-	 * @param identifier The identifier value
-	 * @param persister The EntityPersister
-	 * @param hashCode The hashCode needs to be provided as it can't be calculated correctly without the SessionFactory.
-	 */
-	private EntityKey(Serializable identifier, EntityPersister persister, int hashCode) {
-		this.persister = persister;
-		if ( identifier == null ) {
-			throw new AssertionFailure( "null identifier" );
-		}
-		this.identifier = identifier;
-		this.hashCode = hashCode;
-	}
-
 	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );

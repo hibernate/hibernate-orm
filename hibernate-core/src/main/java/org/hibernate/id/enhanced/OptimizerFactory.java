@@ -507,21 +507,21 @@ public class OptimizerFactory {
 	public static class PooledLoOptimizer extends OptimizerSupport {
 		private IntegralDataTypeHolder lastSourceValue; // last value read from db source
 		private IntegralDataTypeHolder value; // the current generator value
+		private IntegralDataTypeHolder upperLimitValue; // the value at which we'll hit the db again
 
 		public PooledLoOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
 			if ( incrementSize < 1 ) {
 				throw new HibernateException( "increment size cannot be less than 1" );
 			}
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Creating pooled optimizer (lo) with [incrementSize={0}; returnClass=]", incrementSize, returnClass.getName() );
-			}
+			LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 		}
 
 		@Override
 		public synchronized Serializable generate(AccessCallback callback) {
-			if ( lastSourceValue == null || ! value.lt( lastSourceValue.copy().add( incrementSize ) ) ) {
+			if ( lastSourceValue == null || ! value.lt( upperLimitValue ) ) {
 				lastSourceValue = callback.getNextValue();
+				upperLimitValue = lastSourceValue.copy().add( incrementSize );
 				value = lastSourceValue.copy();
 				// handle cases where initial-value is less that one (hsqldb for instance).
 				while ( value.lt( 1 ) ) {

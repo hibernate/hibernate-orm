@@ -51,9 +51,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.loading.internal.LoadContexts;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
@@ -78,6 +76,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -97,9 +96,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	);
 
 	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
-	
-	private static final int DEFAULT_INITIAL_CAPACITY = 8;
-	private final int initialCapacity;
+	private static final int INIT_COLL_SIZE = 8;
 
 	private SessionImplementor session;
 
@@ -164,23 +161,20 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	public StatefulPersistenceContext(SessionImplementor session) {
 		this.session = session;
-		
-		initialCapacity = session.getFactory().getServiceRegistry().getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.SESSION_INITIAL_CAPACITY, Integer.class, DEFAULT_INITIAL_CAPACITY );
 
-		entitiesByKey = new HashMap<EntityKey, Object>( initialCapacity );
-		entitiesByUniqueKey = new HashMap<EntityUniqueKey, Object>( initialCapacity );
+		entitiesByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
+		entitiesByUniqueKey = new HashMap<EntityUniqueKey, Object>( INIT_COLL_SIZE );
 		//noinspection unchecked
-		proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>( initialCapacity, .75f, 1, ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK, null );
-		entitySnapshotsByKey = new HashMap<EntityKey, Object>( initialCapacity );
+		proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>( INIT_COLL_SIZE, .75f, 1, ConcurrentReferenceHashMap.ReferenceType.STRONG, ConcurrentReferenceHashMap.ReferenceType.WEAK, null );
+		entitySnapshotsByKey = new HashMap<EntityKey, Object>( INIT_COLL_SIZE );
 
 		entityEntryContext = new EntityEntryContext();
-//		entityEntries = IdentityMap.instantiateSequenced( initialCapacity );
-		collectionEntries = IdentityMap.instantiateSequenced( initialCapacity );
-		parentsByChild = new IdentityHashMap<Object,Object>( initialCapacity );
+//		entityEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
+		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
+		parentsByChild = new IdentityHashMap<Object,Object>( INIT_COLL_SIZE );
 
-		collectionsByKey = new HashMap<CollectionKey, PersistentCollection>( initialCapacity );
-		arrayHolders = new IdentityHashMap<Object, PersistentCollection>( initialCapacity );
+		collectionsByKey = new HashMap<CollectionKey, PersistentCollection>( INIT_COLL_SIZE );
+		arrayHolders = new IdentityHashMap<Object, PersistentCollection>( INIT_COLL_SIZE );
 
 		nullifiableEntityKeys = new HashSet<EntityKey>();
 
@@ -188,8 +182,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private void initTransientState() {
-		nullAssociations = new HashSet<AssociationKey>( initialCapacity );
-		nonlazyCollections = new ArrayList<PersistentCollection>( initialCapacity );
+		nullAssociations = new HashSet<AssociationKey>( INIT_COLL_SIZE );
+		nonlazyCollections = new ArrayList<PersistentCollection>( INIT_COLL_SIZE );
 	}
 
 	@Override
@@ -213,7 +207,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
 		if (unownedCollections==null) {
-			unownedCollections = new HashMap<CollectionKey,PersistentCollection>(initialCapacity);
+			unownedCollections = new HashMap<CollectionKey,PersistentCollection>(INIT_COLL_SIZE);
 		}
 		unownedCollections.put( key, collection );
 	}
@@ -1445,9 +1439,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
 		SessionFactoryImplementor sfi = session.getFactory();
-		
-		int initialCapacity = sfi.getServiceRegistry().getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.SESSION_INITIAL_CAPACITY, Integer.class, DEFAULT_INITIAL_CAPACITY );
 
 		// during deserialization, we need to reconnect all proxies and
 		// collections to this session, as well as the EntityEntry and
@@ -1463,7 +1454,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
-			rtn.entitiesByKey = new HashMap<EntityKey,Object>( count < initialCapacity ? initialCapacity : count );
+			rtn.entitiesByKey = new HashMap<EntityKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1472,7 +1463,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
-			rtn.entitiesByUniqueKey = new HashMap<EntityUniqueKey,Object>( count < initialCapacity ? initialCapacity : count );
+			rtn.entitiesByUniqueKey = new HashMap<EntityUniqueKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 			}
@@ -1483,7 +1474,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			//noinspection unchecked
 			rtn.proxiesByKey = new ConcurrentReferenceHashMap<EntityKey, Object>(
-					count < initialCapacity ? initialCapacity : count,
+					count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count,
 					.75f,
 					1,
 					ConcurrentReferenceHashMap.ReferenceType.STRONG,
@@ -1509,7 +1500,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
-			rtn.entitySnapshotsByKey = new HashMap<EntityKey,Object>( count < initialCapacity ? initialCapacity : count );
+			rtn.entitySnapshotsByKey = new HashMap<EntityKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1520,7 +1511,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
-			rtn.collectionsByKey = new HashMap<CollectionKey,PersistentCollection>( count < initialCapacity ? initialCapacity : count );
+			rtn.collectionsByKey = new HashMap<CollectionKey,PersistentCollection>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), (PersistentCollection) ois.readObject() );
 			}
@@ -1529,7 +1520,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
 			}
-			rtn.collectionEntries = IdentityMap.instantiateSequenced( count < initialCapacity ? initialCapacity : count );
+			rtn.collectionEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				final PersistentCollection pc = (PersistentCollection) ois.readObject();
 				final CollectionEntry ce = CollectionEntry.deserialize( ois, session );
@@ -1541,7 +1532,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) {
 				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
-			rtn.arrayHolders = new IdentityHashMap<Object, PersistentCollection>( count < initialCapacity ? initialCapacity : count );
+			rtn.arrayHolders = new IdentityHashMap<Object, PersistentCollection>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.arrayHolders.put( ois.readObject(), (PersistentCollection) ois.readObject() );
 			}

@@ -27,7 +27,6 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-
 import org.jboss.logging.Logger;
 
 /**

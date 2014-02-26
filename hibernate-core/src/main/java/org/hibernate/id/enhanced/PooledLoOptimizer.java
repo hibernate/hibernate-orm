@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
-
+import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
@@ -41,7 +41,10 @@ import org.jboss.logging.Logger;
  * @see PooledOptimizer
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
-	private static final Logger log = Logger.getLogger( PooledLoOptimizer.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			PooledLoOptimizer.class.getName()
+	);
 
 	private static class GenerationState {
 		// last value read from db source
@@ -61,9 +64,7 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Creating pooled optimizer (lo) with [incrementSize={0}; returnClass=]", incrementSize, returnClass.getName() );
-		}
+		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override

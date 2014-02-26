@@ -1646,4 +1646,8 @@ public interface CoreMessageLogger extends BasicLogger {
 					"(%2$s=true)"
 	)
 	void applyingExplicitDiscriminatorColumnForJoined(String className, String overrideSetting);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 458)
+	void creatingPooledLoOptimizer(int incrementSize, String name);
 }

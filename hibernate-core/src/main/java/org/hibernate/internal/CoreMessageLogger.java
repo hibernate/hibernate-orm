@@ -1716,4 +1716,8 @@ public interface CoreMessageLogger extends BasicLogger {
 			"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
 			"Using AccessType.PROPERTY on the field has no effect", id = 466)
 	String accessTypeOverrideShouldBeField( String className );
+	
+	@LogMessage(level = DEBUG)
+	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
+	void creatingPooledLoOptimizer(int incrementSize, String name);
 }

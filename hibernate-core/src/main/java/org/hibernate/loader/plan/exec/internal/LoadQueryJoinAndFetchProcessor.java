@@ -571,12 +571,12 @@ public class LoadQueryJoinAndFetchProcessor {
 			);
 
 			// add SQL ORDER-BY fragments
-			final String manyToManyOrdering = queryableCollection.getManyToManyOrderByString( collectionTableAlias );
+			final String manyToManyOrdering = queryableCollection.getManyToManyOrderByString( elementTableAlias );
 			if ( StringHelper.isNotEmpty( manyToManyOrdering ) ) {
 				selectStatementBuilder.appendOrderByFragment( manyToManyOrdering );
 			}
 
-			final String ordering = queryableCollection.getSQLOrderByString( collectionTableAlias );
+			final String ordering = queryableCollection.getSQLOrderByString( elementTableAlias );
 			if ( StringHelper.isNotEmpty( ordering ) ) {
 				selectStatementBuilder.appendOrderByFragment( ordering );
 			}

@@ -513,9 +513,7 @@ public class OptimizerFactory {
 			if ( incrementSize < 1 ) {
 				throw new HibernateException( "increment size cannot be less than 1" );
 			}
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Creating pooled optimizer (lo) with [incrementSize={0}; returnClass=]", incrementSize, returnClass.getName() );
-			}
+			LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 		}
 
 		@Override

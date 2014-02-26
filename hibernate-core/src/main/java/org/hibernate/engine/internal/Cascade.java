@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Stack;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -59,6 +58,7 @@ import org.hibernate.type.Type;
 public final class Cascade {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Cascade.class );
 
+	private int componentPathStackDepth = 0;
 	private final CascadingAction action;
 	private final EventSource eventSource;
 	private CascadePoint cascadePoint;
@@ -183,7 +183,7 @@ public final class Cascade {
 				final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
 				if ( entry != null && entry.getStatus() != Status.SAVING ) {
 					final Object loadedValue;
-					if ( componentPathStack.isEmpty() ) {
+					if ( componentPathStackDepth == 0 ) {
 						// association defined on entity
 						loadedValue = entry.getLoadedValue( propertyName );
 					}
@@ -251,8 +251,6 @@ public final class Cascade {
 		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
-	private Stack<String> componentPathStack = new Stack<String>();
-
 	private boolean cascadeAssociationNow(AssociationType associationType) {
 		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
@@ -263,7 +261,7 @@ public final class Cascade {
 			final CompositeType componentType,
 			final String componentPropertyName,
 			final Object anything) {
-		componentPathStack.push( componentPropertyName );
+		componentPathStackDepth++;
 		final Object[] children = componentType.getPropertyValues( child, eventSource );
 		final Type[] types = componentType.getSubtypes();
 		for ( int i=0; i<types.length; i++ ) {
@@ -281,7 +279,7 @@ public final class Cascade {
 					);
 			}
 		}
-		componentPathStack.pop();
+		componentPathStackDepth--;
 	}
 
 	private void cascadeAssociation(

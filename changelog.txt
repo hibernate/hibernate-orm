@@ -5,6 +5,68 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.9 (2014.02.26)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-2188] - Query metadata gives NPE for polymorphic queries
+    * [HHH-2988] - UnionSubclassEntityPersister.generateSubquery() does not use column.getQuotedName()
+    * [HHH-3051] - NPE while query.list on a Native SQL, using L2 cache
+    * [HHH-3453] - mess in a list of supported dialects (OracleDialect, H2Dialect, etc.)
+    * [HHH-3482] - UnsupportedOperationException with StatelessSession
+    * [HHH-3541] - wrong xml tags in documentation examples
+    * [HHH-3604] - Creation of  table for HiLoGenerator fails to create table of the correct to for MySQL InnoDB
+    * [HHH-7205] - org.hibernate.ObjectNotFoundException while using Get
+    * [HHH-7630] - JOINED classes cause exception when referenced as a Collection and using @OrderBy
+    * [HHH-8404] - ListIndexExpression seems to be rendered incorrectly
+    * [HHH-8638] - Unable to create unique key constraint on foreign key annotated with @UniqueConstraint
+    * [HHH-8655] - Classloader conflicts with embedded OSGi frameworks
+    * [HHH-8699] - Criteria API multiselect not working with Predicates
+    * [HHH-8747] - evictQueryRegions does not evict default query region
+    * [HHH-8765] - Column not found in Turkish locale because of toLowerCase()
+    * [HHH-8777] - enhance-maven-plugin error : No plugin descriptor found at META-INF/maven/plugin.xml
+    * [HHH-8779] - Bundle symbolic name error - duplicate name
+    * [HHH-8790] - The "ESCAPE" key word is not recognized by a Hibernate filter.
+    * [HHH-8814] - Sequence generators on HSQLDB starts by default on 0
+    * [HHH-8822] - java.io.NotSerializableException: org.hibernate.internal.util.ValueHolder
+    * [HHH-8850] - UnsupportedOperationException when using addScalar on querys created via NamedSQLQueryDefinition
+    * [HHH-8863] - org.hibernate.engine.internal.StatisticalLoggingSessionEventListener not displaying properly time for partial flushes
+    * [HHH-8864] - PostgreSQL & H2 dialect incorrect for count distinct tuples
+    * [HHH-8900] - annotations OneToOne test fail with some sequence supporting dialects
+    * [HHH-8922] - ClassLoaderServiceImpl introduces random classpath ordering via HashSet
+    * [HHH-8930] - BaseCoreFunctionalTestCase#rebuildSessionFactory() not releasing sessions
+    * [HHH-8942] - correct logging hotspots
+    * [HHH-8983] - SQLWarning objects attached to Sybase statements contribute to significant growth in memory footprint
+    * [HHH-8989] - Logic Mismatch Between AbstractQueryImpl and LimitHelper For setMaxResults(0)
+
+** Deprecation
+    * [HHH-8674] - Hibernate 4.1 documentation uses method buildSessionFactory() on Configuration object despite its deprecation.
+
+** Improvement
+    * [HHH-2298] - Hibernate only uses info level on logger message to disencourage Hibernate Pool Manager. This should be a warning.
+    * [HHH-5289] - Remove unnecessary security checks in property accessors
+    * [HHH-6911] - Read/write DiscriminatorValue from/to DiscriminatorColumn when combined with InheritanceType#JOINED
+    * [HHH-8831] - Give a better message about where a problem with a mapping could be
+    * [HHH-8845] - More informative error message for EntityType.replace 
+    * [HHH-8878] - Improve scalability of TableGenerator: PooledLoOptimizer
+    * [HHH-8939] - Reduce contention on initialization of ColumnNameCache instances by loaders
+    * [HHH-8946] - Optimize JdbcCoordinatorImpl for CPU performance
+    * [HHH-8947] - Optimize performance of ServiceRegistry for intense lookup, small contents and almost no writes
+    * [HHH-8950] - Avoid array allocation in #getColumnSpan(Mapping)
+    * [HHH-8954] - Avoid LockOptions allocation in LoadEvent unless strictly required
+    * [HHH-8961] - Reduce allocation cost of org.hibernate.cache.spi.CacheKey instances
+    * [HHH-8977] - Smarter allocation prediction for HQLQueryPlan.performList
+    * [HHH-8984] - Remove unnecessary fields from EntityEntry
+    * [HHH-8991] - Avoid frequent lookup of EntityPersister
+    * [HHH-9001] - Unnecessary Stack object being allocated in org.hibernate.engine.internal.Cascade
+    * [HHH-9003] - Avoid allocating arrays in most methods of ComponentType
+
+** Patch
+    * [HHH-4638] - Allow hibernate connect to Firebird database without set "hibernate.dialect" property
+
+** Task
+    * [HHH-8990] - Improve backwards compatibility of 4.2 branch by reintroducing the deleted NonFlushedChanges interface
+
 Changes in version 4.2.8 (2013.12.04)
 ------------------------------------------------------------------------------------------------------------------------
 

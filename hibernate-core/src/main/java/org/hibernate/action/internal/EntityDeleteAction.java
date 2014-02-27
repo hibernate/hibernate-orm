@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
@@ -170,7 +171,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void postCommitDelete() {
+	private void postCommitDelete(boolean success) {
 		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_DELETE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -182,8 +183,19 @@ public class EntityDeleteAction extends EntityAction {
 				getPersister(),
 				eventSource()
 		);
-		for( PostDeleteEventListener listener : listenerGroup.listeners() ){
-			listener.onPostDelete( event );
+		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
+			if ( PostCommitDeleteEventListener.class.isInstance( listener ) ) {
+				if ( success ) {
+					listener.onPostDelete( event );
+				}
+				else {
+					((PostCommitDeleteEventListener) listener).onPostDeleteCommitFailed( event );
+				}
+			}
+			else {
+				//default to the legacy implementation that always fires the event
+				listener.onPostDelete( event );
+			}
 		}
 	}
 
@@ -197,7 +209,7 @@ public class EntityDeleteAction extends EntityAction {
 			);
 			getPersister().getCacheAccessStrategy().unlockItem( ck, lock );
 		}
-		postCommitDelete();
+		postCommitDelete( success );
 	}
 
 	@Override

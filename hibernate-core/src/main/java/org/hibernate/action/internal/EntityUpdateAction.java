@@ -39,6 +39,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCommitUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
@@ -277,7 +278,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void postCommitUpdate() {
+	private void postCommitUpdate(boolean success) {
 		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -292,7 +293,18 @@ public final class EntityUpdateAction extends EntityAction {
 				eventSource()
 		);
 		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdate( event );
+			if ( PostCommitUpdateEventListener.class.isInstance( listener ) ) {
+				if ( success ) {
+					listener.onPostUpdate( event );
+				}
+				else {
+					((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
+				}
+			}
+			else {
+				//default to the legacy implementation that always fires the event
+				listener.onPostUpdate( event );
+			}
 		}
 	}
 
@@ -330,7 +342,7 @@ public final class EntityUpdateAction extends EntityAction {
 				persister.getCacheAccessStrategy().unlockItem( ck, lock );
 			}
 		}
-		postCommitUpdate();
+		postCommitUpdate( success );
 	}
 
 	private boolean cacheAfterUpdate(EntityPersister persister, CacheKey ck) {

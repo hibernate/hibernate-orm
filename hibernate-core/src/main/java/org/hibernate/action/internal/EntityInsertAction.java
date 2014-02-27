@@ -36,6 +36,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -177,7 +178,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	private void postCommitInsert() {
+	private void postCommitInsert(boolean success) {
 		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -190,7 +191,18 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 				eventSource()
 		);
 		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostInsert( event );
+			if ( PostCommitInsertEventListener.class.isInstance( listener ) ) {
+				if ( success ) {
+					listener.onPostInsert( event );
+				}
+				else {
+					((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+				}
+			}
+			else {
+				//default to the legacy implementation that always fires the event
+				listener.onPostInsert( event );
+			}
 		}
 	}
 
@@ -220,7 +232,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 						.secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 			}
 		}
-		postCommitInsert();
+		postCommitInsert( success );
 	}
 
 	private boolean cacheAfterInsert(EntityPersister persister, CacheKey ck) {

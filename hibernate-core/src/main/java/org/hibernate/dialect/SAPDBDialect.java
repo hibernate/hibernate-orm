@@ -233,5 +233,19 @@ public class SAPDBDialect extends Dialect {
 	public String generateTemporaryTableName(String baseTableName) {
 		return "temp." + super.generateTemporaryTableName( baseTableName );
 	}
+	
+	@Override
+        public boolean supportsIdentityColumns() {
+		return true;
+	}
 
+	@Override
+       	public String getIdentitySelectString(String table, String column, int type) {
+		return "select "+table+".currval from dual";
+	}
+
+	@Override
+	public String getIdentityColumnString() {
+		return "not null serial"; //starts with 1, implicitly
+	}
 }

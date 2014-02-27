@@ -5,6 +5,50 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.2.Final (2014.02.27)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-3482] - UnsupportedOperationException with StatelessSession
+    * [HHH-7205] - org.hibernate.ObjectNotFoundException while using Get
+    * [HHH-8243] - FK violation in ValidityAuditStrategy when when flush mode is COMMIT
+    * [HHH-8602] - Hibernate Envers AuditReader ignores dedicated hibernate column type defined in audited entity
+    * [HHH-8747] - evictQueryRegions does not evict default query region
+    * [HHH-8777] - enhance-maven-plugin error : No plugin descriptor found at META-INF/maven/plugin.xml
+    * [HHH-8814] - Sequence generators on HSQLDB starts by default on 0
+    * [HHH-8822] - java.io.NotSerializableException: org.hibernate.internal.util.ValueHolder
+    * [HHH-8853] - Tomcat jdbc-pool interceptor exception
+    * [HHH-8864] - PostgreSQL & H2 dialect incorrect for count distinct tuples
+    * [HHH-8900] - annotations OneToOne test fail with some sequence supporting dialects
+    * [HHH-8903] - Inverse @OneToMany ignored in entity graph
+    * [HHH-8912] - @NotFound applied to *-to-one relation in superclass
+    * [HHH-8914] - Double negation in CriteriaBuilderImpl
+    * [HHH-8921] - in-memory value generation (INSERT) only works if hibernate.id.new_generator_mappings is enabled
+    * [HHH-8922] - ClassLoaderServiceImpl introduces random classpath ordering via HashSet
+    * [HHH-8930] - BaseCoreFunctionalTestCase#rebuildSessionFactory() not releasing sessions
+    * [HHH-8942] - correct logging hotspots
+    * [HHH-8968] - AuditReader does not return components inside a collection
+    * [HHH-8983] - SQLWarning objects attached to Sybase statements contribute to significant growth in memory footprint
+    * [HHH-8989] - Logic Mismatch Between AbstractQueryImpl and LimitHelper For setMaxResults(0)
+
+** Deprecation
+    * [HHH-8674] - Hibernate 4.1 documentation uses method buildSessionFactory() on Configuration object despite its deprecation.
+
+** Improvement
+    * [HHH-8845] - More informative error message for EntityType.replace 
+    * [HHH-8878] - Improve scalability of TableGenerator: PooledLoOptimizer
+    * [HHH-8939] - Reduce contention on initialization of ColumnNameCache instances by loaders
+    * [HHH-8946] - Optimize JdbcCoordinatorImpl for CPU performance
+    * [HHH-8947] - Optimize performance of ServiceRegistry for intense lookup, small contents and almost no writes
+    * [HHH-8950] - Avoid array allocation in #getColumnSpan(Mapping)
+    * [HHH-8954] - Avoid LockOptions allocation in LoadEvent unless strictly required
+    * [HHH-8961] - Reduce allocation cost of org.hibernate.cache.spi.CacheKey instances
+    * [HHH-8977] - Smarter allocation prediction for HQLQueryPlan.performList
+    * [HHH-8984] - Remove unnecessary fields from EntityEntry
+    * [HHH-8991] - Avoid frequent lookup of EntityPersister
+    * [HHH-9001] - Unnecessary Stack object being allocated in org.hibernate.engine.internal.Cascade
+    * [HHH-9003] - Avoid allocating arrays in most methods of ComponentType
+
 Changes in version 4.3.1.Final (2014.01.22)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/15351

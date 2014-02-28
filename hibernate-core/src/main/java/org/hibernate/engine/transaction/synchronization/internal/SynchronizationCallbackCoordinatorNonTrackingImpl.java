@@ -123,7 +123,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 			} catch ( RuntimeException re ) {
 				RuntimeException exceptionWithinFinally = exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
 				if (primaryException != null) {
-					primaryException.addSuppressed(exceptionWithinFinally);
+					//primaryException.addSuppressed(exceptionWithinFinally);
 					throw primaryException;
 				}
 				throw exceptionWithinFinally;

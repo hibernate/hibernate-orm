@@ -60,6 +60,8 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.Type;
 
 /**
@@ -614,6 +616,12 @@ public class ActionQueue {
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
+		if ( rescuedEntity instanceof HibernateProxy ) {
+			LazyInitializer initializer = ( ( HibernateProxy ) rescuedEntity ).getHibernateLazyInitializer();
+			if ( !initializer.isUninitialized() ) {
+				rescuedEntity = initializer.getImplementation( session );
+			}
+		}
 		for ( int i = 0; i < deletions.size(); i++ ) {
 			EntityDeleteAction action = deletions.get( i );
 			if ( action.getInstance() == rescuedEntity ) {

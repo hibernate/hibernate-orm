@@ -5,11 +5,16 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 4.3.3.Final (2014.02.28)
+Changes in version 4.3.4.Final (2014.03.03)
 ------------------------------------------------------------------------------------------------------------------------
 
 ** Task
     * [HHH-9010] - Revert HHH-8961
+
+Changes in version 4.3.3.Final (2014.02.28)
+------------------------------------------------------------------------------------------------------------------------
+
+None -- this release should not be used.  See announcements.
 
 Changes in version 4.3.2.Final (2014.02.27)
 ------------------------------------------------------------------------------------------------------------------------

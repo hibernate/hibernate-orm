@@ -65,6 +65,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 	private final CascadeStyle[] cascade;
 	private final FetchMode[] joinedFetch;
 	private final boolean isKey;
+	private boolean hasNotNullProperty;
 
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
@@ -87,6 +88,9 @@ public class ComponentType extends AbstractType implements CompositeType {
 			this.propertyNullability[i] = prop.isNullable();
 			this.cascade[i] = prop.getCascadeStyle();
 			this.joinedFetch[i] = prop.getFetchMode();
+			if (!prop.isNullable()) {
+				hasNotNullProperty = true;
+			}
 		}
 
 		this.entityMode = metamodel.getEntityMode();
@@ -722,5 +726,9 @@ public class ComponentType extends AbstractType implements CompositeType {
 		throw new PropertyNotFoundException(
 				"Unable to locate property named " + name + " on " + getReturnedClass().getName()
 		);
+	}
+	
+	public boolean hasNotNullProperty() {
+		return hasNotNullProperty;
 	}
 }

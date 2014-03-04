@@ -45,13 +45,14 @@ public class TestBasicOps extends BaseCoreFunctionalTestCase {
 	public void testLoadAndStore() {
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( new Query( new Location( "first", Location.Type.COUNTY ) ) );
+		Query q = new Query( new Location( "first", Location.Type.COUNTY ) );
+		s.save( q );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		Query q = (Query) s.get( Query.class, 1L );
+		q = (Query) s.get( Query.class, q.getId() );
 		assertEquals( 1, q.getIncludedLocations().size() );
 		Location l = q.getIncludedLocations().iterator().next();
 		assertEquals( Location.Type.COUNTY, l.getType() );
@@ -93,6 +94,7 @@ public class TestBasicOps extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		q = (Query) s.get( Query.class, q.getId() );
 		assertEquals( 1, q.getIncludedLocations().size() );
+		s.delete( q );
 		s.getTransaction().commit();
 		s.close();
 	}

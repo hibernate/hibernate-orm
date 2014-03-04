@@ -29,6 +29,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -312,9 +313,25 @@ public class HSQLDialect extends Dialect {
 		return true;
 	}
 
+	/**
+	 * HSQL will start with 0, by default.  In order for Hibernate to know that this not transient,
+	 * manually start with 1.
+	 */
 	@Override
 	protected String getCreateSequenceString(String sequenceName) {
 		return "create sequence " + sequenceName + " start with 1";
+	}
+	
+	/**
+	 * Because of the overridden {@link #getCreateSequenceString(String)}, we must also override
+	 * {@link #getCreateSequenceString(String, int, int)} to prevent 2 instances of "start with".
+	 */
+	@Override
+	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
+		if ( supportsPooledSequences() ) {
+			return "create sequence " + sequenceName + " start with " + initialValue + " increment by " + incrementSize;
+		}
+		throw new MappingException( getClass().getName() + " does not support pooled sequences" );
 	}
 
 	@Override

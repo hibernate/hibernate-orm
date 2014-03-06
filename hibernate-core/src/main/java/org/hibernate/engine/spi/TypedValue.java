@@ -23,6 +23,8 @@
  */
 package org.hibernate.engine.spi;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
@@ -39,19 +41,12 @@ public final class TypedValue implements Serializable {
 	private final Type type;
 	private final Object value;
 	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
-	private final transient ValueHolder<Integer> hashcode;
+	private transient ValueHolder<Integer> hashcode;
 
 	public TypedValue(final Type type, final Object value) {
 		this.type = type;
 		this.value = value;
-		this.hashcode = new ValueHolder<Integer>(
-				new ValueHolder.DeferredInitializer<Integer>() {
-					@Override
-					public Integer initialize() {
-						return value == null ? 0 : type.getHashCode( value );
-					}
-				}
-		);
+		initTransients();
 	}
 
 	/**
@@ -90,9 +85,18 @@ public final class TypedValue implements Serializable {
 				&& type.isEqual( that.value, value );
 	}
 
+	private void readObject(ObjectInputStream ois)
+			throws ClassNotFoundException, IOException {
+		ois.defaultReadObject();
+		initTransients();
+	}
+
+	private void initTransients() {
+		this.hashcode = new ValueHolder<Integer>( new ValueHolder.DeferredInitializer<Integer>() {
+			@Override
+			public Integer initialize() {
+				return value == null ? 0 : type.getHashCode( value );
+			}
+		} );
+	}
 }
-
-
-
-
-

@@ -23,24 +23,21 @@
  */
 package org.hibernate.test.cache.polymorphism;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
  * @author Guillaume Smet
+ * @author Brett Meyer
  */
 @TestForIssue(jiraKey = "HHH-9028")
 public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-	}
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { AbstractCachedItem.class, CachedItem1.class, CachedItem2.class };
@@ -48,14 +45,14 @@ public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testPolymorphismAndCache() throws Exception {
-		final CachedItem1 cachedItem1 = new CachedItem1( "name 1" );
-		final CachedItem2 cachedItem2 = new CachedItem2( "name 2" );
+		final CachedItem1 item1 = new CachedItem1( "name 1" );
+		final CachedItem2 item2 = new CachedItem2( "name 2" );
 
 		// create the 2 items
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( cachedItem1 );
-		s.save( cachedItem2 );
+		s.save( item1 );
+		s.save( item2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -64,16 +61,45 @@ public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 		// As the first item is supposed to be a CachedItem1, it shouldn't be returned.
 		// Note that the Session API is not type safe but, when using the EntityManager.find API, you get a ClassCastException
 		// if calling find returns the object.
-		Object thisObjectShouldBeNull = s.get( CachedItem2.class, cachedItem1.getId() );
+		Object thisObjectShouldBeNull = s.get( CachedItem2.class, item1.getId() );
 		assertNull( thisObjectShouldBeNull );
+		s.getTransaction().commit();
+		s.close();
+		
+		// test updating
+		s = openSession();
+		s.beginTransaction();
+		item1.setName( "updated" );
+		s.update( item1 );
+		s.getTransaction().commit();
+		s.clear();
+		s.beginTransaction();
+		CachedItem1 cachedItem1 = (CachedItem1) s.get( CachedItem1.class, item1.getId() );
+		CachedItem2 cachedItem2 = (CachedItem2) s.get( CachedItem2.class, item2.getId() );
+		assertEquals( "updated", cachedItem1.getName() );
+		assertEquals( item2.getName(), cachedItem2.getName() );
+		s.getTransaction().commit();
+		s.close();
+		
+		// test deleting
+		s = openSession();
+		s.beginTransaction();
+		s.delete( item1 );
+		s.getTransaction().commit();
+		s.clear();
+		s.beginTransaction();
+		cachedItem1 = (CachedItem1) s.get( CachedItem1.class, item1.getId() );
+		cachedItem2 = (CachedItem2) s.get( CachedItem2.class, item2.getId() );
+		assertNull( cachedItem1 );
+		assertNotNull( cachedItem2 );
+		assertEquals( item2.getName(), cachedItem2.getName() );
 		s.getTransaction().commit();
 		s.close();
 
 		// cleanup
 		s = openSession();
 		s.beginTransaction();
-		s.delete( cachedItem1 );
-		s.delete( cachedItem2 );
+		s.createQuery( "DELETE FROM AbstractCachedItem" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 	}

@@ -118,9 +118,4 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "importers_id", column.getColumnName().getText() );
 		assertSame( table, index.getTable() );
 	}
-
-	@Test
-	public void testTableGeneratorIndex(){
-		//todo
-	}
 }

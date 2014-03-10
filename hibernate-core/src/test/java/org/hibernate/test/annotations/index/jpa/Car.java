@@ -25,6 +25,7 @@ package org.hibernate.test.annotations.index.jpa;
 
 import java.util.List;
 import java.util.Set;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
@@ -33,28 +34,37 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToMany;
 import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
+import javax.persistence.TableGenerator;
 
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 @Entity
-@Table(indexes = {
-		@Index(unique = true, columnList = "brand, producer")
-		, @Index(name = "Car_idx", columnList = "since DESC")
+@Table(indexes = { @Index(unique = true, columnList = "brand, producer"),
+		@Index(name = "Car_idx", columnList = "since DESC")
 })
+@TableGenerator(name = "idGen", table = "ID_GEN", valueColumnName="GEN_VALUE",
+		indexes = @Index(columnList = "GEN_VALUE"))
 @SecondaryTable(name = "T_DEALER", indexes = @Index(columnList = "dealer_name ASC, rate DESC"))
 public class Car {
 	@Id
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = "idGen")
 	private long id;
+	
 	private String brand;
+	
 	private String producer;
+	
 	private long since;
+	
 	@AttributeOverrides({
 			@AttributeOverride(name = "name", column = @Column(name = "dealer_name", table = "T_DEALER")),
 			@AttributeOverride(name = "rate", column = @Column(table = "T_DEALER"))

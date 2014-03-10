@@ -23,6 +23,18 @@
  */
 package org.hibernate.test.annotations.index.jpa;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Iterator;
+
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
+import org.junit.Test;
+
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -37,5 +49,18 @@ public class IndexTest extends AbstractJPAIndexTest {
 		};
 	}
 
+	@Test
+	public void testTableGeneratorIndex(){
+		TableSpecification table = SchemaUtil.getTable( "ID_GEN", metadata() );
 
+		Iterator<org.hibernate.metamodel.spi.relational.Index> indexes = table.getIndexes().iterator();
+		assertTrue( indexes.hasNext() );
+		org.hibernate.metamodel.spi.relational.Index index = indexes.next();
+		assertFalse( indexes.hasNext() );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertEquals( 1, index.getColumnSpan() );
+		org.hibernate.metamodel.spi.relational.Column column = index.getColumns().get( 0 );
+		assertEquals( "GEN_VALUE", column.getColumnName().getText() );
+		assertSame( table, index.getTable() );
+	}
 }

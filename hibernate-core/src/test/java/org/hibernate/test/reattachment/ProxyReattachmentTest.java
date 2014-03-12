@@ -23,16 +23,16 @@
  */
 package org.hibernate.test.reattachment;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Test of proxy reattachment semantics
@@ -247,6 +247,26 @@ public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 		for ( Object parent : parents ) {
 			s.delete( parent );
 		}
+		s.getTransaction().commit();
+		s.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-8374")
+	public void testRemoveAndReattachProxyEntity() {
+		Session s = openSession();
+		s.beginTransaction();
+		Parent p = new Parent("foo");
+		s.persist( p );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		p = (Parent) s.load( Parent.class, p.getName() );
+		s.delete( p );
+		// re-attach
+		s.persist( p );
 		s.getTransaction().commit();
 		s.close();
 	}

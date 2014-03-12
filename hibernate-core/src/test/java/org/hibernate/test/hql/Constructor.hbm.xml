@@ -3,7 +3,7 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hibernate.test.hql">
-    <class name="Constructor">
+    <class name="Constructor" table="`Constructor`">
         <id name="id" column="ID" type="long">
             <generator class="increment"/>
         </id>

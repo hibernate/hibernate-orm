@@ -33,6 +33,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -41,14 +42,12 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -127,7 +126,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		query = "select " +
 			columnName +
 			" from " +
-			dialect.appendLockHint(LockMode.PESSIMISTIC_WRITE, tableName) +
+			dialect.appendLockHint(new LockOptions( LockMode.PESSIMISTIC_WRITE ), tableName) +
 			dialect.getForUpdateString();
 
 		update = "update " +

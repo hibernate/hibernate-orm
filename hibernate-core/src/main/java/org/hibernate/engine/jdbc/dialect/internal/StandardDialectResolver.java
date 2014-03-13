@@ -131,7 +131,7 @@ public class StandardDialectResolver implements DialectResolver {
 				return new DerbyTenFiveDialect();
 			}
 			else {
-				return new DerbyDialect();
+				return new DB2Dialect();
 			}
 		}
 

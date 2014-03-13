@@ -318,7 +318,7 @@ public class HSQLDialect extends Dialect {
 	 * manually start with 1.
 	 */
 	@Override
-	protected String getCreateSequenceString(String sequenceName) {
+	public String getCreateSequenceString(String sequenceName) {
 		return "create sequence " + sequenceName + " start with 1";
 	}
 	

@@ -35,7 +35,6 @@ import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -69,11 +68,6 @@ public class SQLExceptionConverterFactory {
 		String converterClassName = (String) properties.get( Environment.SQL_EXCEPTION_CONVERTER );
 		if ( StringHelper.isNotEmpty( converterClassName ) ) {
 			converter = constructConverter( converterClassName, dialect.getViolatedConstraintNameExtracter() );
-		}
-
-		if ( converter == null ) {
-			LOG.trace( "Using dialect defined converter" );
-			converter = dialect.buildSQLExceptionConverter();
 		}
 
 		if ( converter instanceof Configurable ) {

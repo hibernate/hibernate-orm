@@ -23,18 +23,16 @@
  */
 package org.hibernate.test.inheritancediscriminator;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Pawel Stawicki
  */
-@RequiresDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, jiraKey = "HHH-6580" )
+@RequiresDialect( value = {PostgreSQL81Dialect.class}, jiraKey = "HHH-6580" )
 public class PersistChildEntitiesWithDiscriminatorTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

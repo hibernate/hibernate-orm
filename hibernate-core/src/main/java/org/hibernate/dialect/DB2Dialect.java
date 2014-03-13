@@ -36,8 +36,6 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.unique.DB2UniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -53,8 +51,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
-	
-	private final UniqueDelegate uniqueDelegate;
 	
 	private final DB2UniqueKeyExporter uniqueKeyExporter = new DB2UniqueKeyExporter( this );
 
@@ -186,8 +182,6 @@ public class DB2Dialect extends Dialect {
 		registerKeyword( "only" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
-		
-		uniqueDelegate = new DB2UniqueDelegate( this );
 	}
 
 	@Override
@@ -479,12 +473,6 @@ public class DB2Dialect extends Dialect {
 				return null;
 			}
 		};
-	}
-	
-	@Override
-	@Deprecated
-	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
 	}
 	
 	@Override

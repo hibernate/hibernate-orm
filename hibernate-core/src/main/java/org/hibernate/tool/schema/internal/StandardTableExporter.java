@@ -118,8 +118,6 @@ public class StandardTableExporter implements Exporter<Table> {
 					.append( table.getPrimaryKey().sqlConstraintStringInCreateTable( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table ) );
-
 		applyTableCheck( table, buf );
 
 		buf.append( ')' );

@@ -29,8 +29,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -42,6 +40,7 @@ import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * <b>sequence</b><br>
@@ -167,7 +166,7 @@ public class SequenceGenerator
 	@Override
 	@SuppressWarnings( {"deprecation"})
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		String[] ddl = dialect.getCreateSequenceStrings( sequenceName );
+		String[] ddl = new String[] { dialect.getCreateSequenceString( sequenceName ) };
 		if ( parameters != null ) {
 			ddl[ddl.length - 1] += ' ' + parameters;
 		}

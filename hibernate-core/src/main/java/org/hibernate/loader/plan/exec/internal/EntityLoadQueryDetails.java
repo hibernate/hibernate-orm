@@ -131,7 +131,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		}
 		else if ( getQueryBuildingParameters().getLockMode() != null ) {
 			fromTableFragment = getSessionFactory().getDialect().appendLockHint(
-					getQueryBuildingParameters().getLockMode(),
+					getQueryBuildingParameters().getLockOptions(),
 					outerJoinLoadable.fromTableFragment( rootAlias )
 			);
 			select.setLockMode( getQueryBuildingParameters().getLockMode() );

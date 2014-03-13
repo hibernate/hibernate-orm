@@ -31,9 +31,7 @@ import org.hibernate.engine.spi.RowSelection;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@SuppressWarnings("deprecation")
 public class LegacyLimitHandler extends AbstractLimitHandler {
-	private final Dialect dialect;
 
 	/**
 	 * Constructs a LegacyLimitHandler
@@ -44,47 +42,46 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 	 */
 	public LegacyLimitHandler(Dialect dialect, String sql, RowSelection selection) {
 		super( sql, selection );
-		this.dialect = dialect;
 	}
 
 	@Override
 	public boolean supportsLimit() {
-		return dialect.supportsLimit();
+		return false;
 	}
 
 	@Override
 	public boolean supportsLimitOffset() {
-		return dialect.supportsLimitOffset();
+		return supportsLimit();
 	}
 
 	@Override
 	public boolean supportsVariableLimit() {
-		return dialect.supportsVariableLimit();
+		return supportsLimit();
 	}
 
 	@Override
 	public boolean bindLimitParametersInReverseOrder() {
-		return dialect.bindLimitParametersInReverseOrder();
+		return false;
 	}
 
 	@Override
 	public boolean bindLimitParametersFirst() {
-		return dialect.bindLimitParametersFirst();
+		return false;
 	}
 
 	@Override
 	public boolean useMaxForLimit() {
-		return dialect.useMaxForLimit();
+		return false;
 	}
 
 	@Override
 	public boolean forceLimitUsage() {
-		return dialect.forceLimitUsage();
+		return false;
 	}
 
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return dialect.convertToFirstRowValue( zeroBasedFirstResult );
+		return zeroBasedFirstResult;
 	}
 
 	@Override
@@ -93,10 +90,6 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 				&& supportsLimitOffset()
 				&& LimitHelper.hasFirstRow( selection )
 				&& LimitHelper.hasMaxRows( selection );
-		return dialect.getLimitString(
-				sql,
-				useLimitOffset ? LimitHelper.getFirstRow( selection ) : 0,
-				getMaxOrLimit()
-		);
+		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
 	}
 }

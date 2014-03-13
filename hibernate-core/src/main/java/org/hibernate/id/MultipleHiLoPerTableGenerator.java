@@ -33,6 +33,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -55,7 +56,6 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -323,7 +323,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		query = "select " +
 			valueColumnName +
 			" from " +
-			dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+			dialect.appendLockHint( new LockOptions( LockMode.PESSIMISTIC_WRITE ), tableName ) +
 			" where " + pkColumnName + " = '" + keyValue + "'" +
 			dialect.getForUpdateString();
 

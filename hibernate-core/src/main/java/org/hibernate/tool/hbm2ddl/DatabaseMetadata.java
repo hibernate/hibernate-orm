@@ -39,12 +39,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -61,7 +62,7 @@ public class DatabaseMetadata {
 	private final boolean extras;
 
 	private DatabaseMetaData meta;
-	private SQLExceptionConverter sqlExceptionConverter;
+	private SqlExceptionHelper sqlExceptionHelper;
 
 	private final String[] types;
 	/**
@@ -86,7 +87,14 @@ public class DatabaseMetadata {
 
 	public DatabaseMetadata(Connection connection, Dialect dialect, Configuration config, boolean extras)
 			throws SQLException {
-		sqlExceptionConverter = dialect.buildSQLExceptionConverter();
+		// TODO: Duplicates JdbcEnvironmentImpl#buildSqlExceptionHelper
+		final StandardSQLExceptionConverter sqlExceptionConverter = new StandardSQLExceptionConverter();
+		sqlExceptionConverter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
+		sqlExceptionConverter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
+		// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
+		sqlExceptionConverter.addDelegate( new SQLStateConversionDelegate( dialect ) );
+		sqlExceptionHelper = new SqlExceptionHelper( sqlExceptionConverter );
+		
 		meta = connection.getMetaData();
 		this.extras = extras;
 		initSequences( connection, dialect );
@@ -153,8 +161,7 @@ public class DatabaseMetadata {
 				}
 			}
 			catch (SQLException sqlException) {
-				throw new SqlExceptionHelper( sqlExceptionConverter )
-						.convert( sqlException, "could not get table metadata: " + name );
+				throw sqlExceptionHelper.convert( sqlException, "could not get table metadata: " + name );
 			}
 		}
 

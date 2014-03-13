@@ -52,7 +52,6 @@ import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.relational.Identifier;
@@ -198,15 +197,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 	@SuppressWarnings("deprecation")
 	private SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect) {
-		SQLExceptionConverter sqlExceptionConverter = dialect.buildSQLExceptionConverter();
-		if ( sqlExceptionConverter == null ) {
-			final StandardSQLExceptionConverter converter = new StandardSQLExceptionConverter();
-			sqlExceptionConverter = converter;
-			converter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
-			converter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
-			// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
-			converter.addDelegate( new SQLStateConversionDelegate( dialect ) );
-		}
+		final StandardSQLExceptionConverter sqlExceptionConverter = new StandardSQLExceptionConverter();
+		sqlExceptionConverter.addDelegate( dialect.buildSQLExceptionConversionDelegate() );
+		sqlExceptionConverter.addDelegate( new SQLExceptionTypeDelegate( dialect ) );
+		// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
+		sqlExceptionConverter.addDelegate( new SQLStateConversionDelegate( dialect ) );
 		return new SqlExceptionHelper( sqlExceptionConverter );
 	}
 

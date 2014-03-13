@@ -43,11 +43,8 @@ import org.jboss.logging.Logger;
  * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
  *
  * @author Simon Johnston
- *
- * @deprecated HHH-6073
  */
-@Deprecated
-public class DerbyDialect extends DB2Dialect {
+public abstract class DerbyDialect extends DB2Dialect {
 	@SuppressWarnings("deprecation")
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,

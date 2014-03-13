@@ -62,8 +62,6 @@ import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.RowSelection;
@@ -150,8 +148,6 @@ public abstract class Dialect implements ConversionContext {
 	private final Properties properties = new Properties();
 	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
 	private final Set<String> sqlKeywords = new HashSet<String>();
-
-	private final UniqueDelegate uniqueDelegate;
 
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -240,8 +236,6 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getName() );
 		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
 		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
-
-		uniqueDelegate = new DefaultUniqueDelegate( this );
 	}
 
 	/**
@@ -913,19 +907,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The multiline script used to create a sequence.
-	 *
-	 * @param sequenceName The name of the sequence
-	 * @return The sequence creation commands
-	 * @throws MappingException If sequences are not supported.
-	 * @deprecated Use {@link #getCreateSequenceString(String, int, int)} instead
-	 */
-	@Deprecated
-	public String[] getCreateSequenceStrings(String sequenceName) throws MappingException {
-		return new String[] { getCreateSequenceString( sequenceName ) };
-	}
-
-	/**
 	 * An optional multi-line form for databases which {@link #supportsPooledSequences()}.
 	 *
 	 * @param sequenceName The name of the sequence
@@ -952,7 +933,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The sequence creation command
 	 * @throws MappingException If sequences are not supported.
 	 */
-	protected String getCreateSequenceString(String sequenceName) throws MappingException {
+	public String getCreateSequenceString(String sequenceName) throws MappingException {
 		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
@@ -1034,156 +1015,6 @@ public abstract class Dialect implements ConversionContext {
 
 
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Does this dialect support some form of limiting query results
-	 * via a SQL clause?
-	 *
-	 * @return True if this dialect supports some form of LIMIT.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsLimit() {
-		return false;
-	}
-
-	/**
-	 * Does this dialect's LIMIT support (if any) additionally
-	 * support specifying an offset?
-	 *
-	 * @return True if the dialect supports an offset within the limit support.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsLimitOffset() {
-		return supportsLimit();
-	}
-
-	/**
-	 * Does this dialect support bind variables (i.e., prepared statement
-	 * parameters) for its limit/offset?
-	 *
-	 * @return True if bind variables can be used; false otherwise.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsVariableLimit() {
-		return supportsLimit();
-	}
-
-	/**
-	 * ANSI SQL defines the LIMIT clause to be in the form LIMIT offset, limit.
-	 * Does this dialect require us to bind the parameters in reverse order?
-	 *
-	 * @return true if the correct order is limit, offset
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean bindLimitParametersInReverseOrder() {
-		return false;
-	}
-
-	/**
-	 * Does the <tt>LIMIT</tt> clause come at the start of the
-	 * <tt>SELECT</tt> statement, rather than at the end?
-	 *
-	 * @return true if limit parameters should come before other parameters
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	/**
-	 * Does the <tt>LIMIT</tt> clause take a "maximum" row number instead
-	 * of a total number of returned rows?
-	 * <p/>
-	 * This is easiest understood via an example.  Consider you have a table
-	 * with 20 rows, but you only want to retrieve rows number 11 through 20.
-	 * Generally, a limit with offset would say that the offset = 11 and the
-	 * limit = 10 (we only want 10 rows at a time); this is specifying the
-	 * total number of returned rows.  Some dialects require that we instead
-	 * specify offset = 11 and limit = 20, where 20 is the "last" row we want
-	 * relative to offset (i.e. total number of rows = 20 - 11 = 9)
-	 * <p/>
-	 * So essentially, is limit relative from offset?  Or is limit absolute?
-	 *
-	 * @return True if limit is relative from offset; false otherwise.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean useMaxForLimit() {
-		return false;
-	}
-
-	/**
-	 * Generally, if there is no limit applied to a Hibernate query we do not apply any limits
-	 * to the SQL query.  This option forces that the limit be written to the SQL query.
-	 *
-	 * @return True to force limit into SQL query even if none specified in Hibernate query; false otherwise.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean forceLimitUsage() {
-		return false;
-	}
-
-	/**
-	 * Given a limit and an offset, apply the limit clause to the query.
-	 *
-	 * @param query The query to which to apply the limit.
-	 * @param offset The offset of the limit
-	 * @param limit The limit of the limit ;)
-	 * @return The modified query statement with the limit applied.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public String getLimitString(String query, int offset, int limit) {
-		return getLimitString( query, ( offset > 0 || forceLimitUsage() )  );
-	}
-
-	/**
-	 * Apply s limit clause to the query.
-	 * <p/>
-	 * Typically dialects utilize {@link #supportsVariableLimit() variable}
-	 * limit clauses when they support limits.  Thus, when building the
-	 * select command we do not actually need to know the limit or the offest
-	 * since we will just be using placeholders.
-	 * <p/>
-	 * Here we do still pass along whether or not an offset was specified
-	 * so that dialects not supporting offsets can generate proper exceptions.
-	 * In general, dialects will override one or the other of this method and
-	 * {@link #getLimitString(String, int, int)}.
-	 *
-	 * @param query The query to which to apply the limit.
-	 * @param hasOffset Is the query requesting an offset?
-	 * @return the modified SQL
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	protected String getLimitString(String query, boolean hasOffset) {
-		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
-	}
-
-	/**
-	 * Hibernate APIs explicitly state that setFirstResult() should be a zero-based offset. Here we allow the
-	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
-	 * <p/>
-	 * NOTE: what gets passed into {@link #getLimitString(String,int,int)} is the zero-based offset.  Dialects which
-	 * do not {@link #supportsVariableLimit} should take care to perform any needed first-row-conversion calls prior
-	 * to injecting the limit values into the SQL string.
-	 *
-	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
-	 * @return The corresponding db/dialect specific offset.
-	 * @see org.hibernate.Query#setFirstResult
-	 * @see org.hibernate.Criteria#setFirstResult
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
-	 */
-	@Deprecated
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return zeroBasedFirstResult;
-	}
 
 	/**
 	 * Build delegate managing LIMIT clause.
@@ -1429,21 +1260,6 @@ public abstract class Dialect implements ConversionContext {
 		return getForUpdateString( aliases );
 	}
 
-	/**
-	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
-	 * whereby a "lock hint" is appends to the table name in the from clause.
-	 * <p/>
-	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
-	 *
-	 * @param mode The lock mode to apply
-	 * @param tableName The name of the table to which to apply the lock hint.
-	 * @return The table with any required lock hints.
-	 * @deprecated use {@code appendLockHint(LockOptions,String)} instead
-	 */
-	@Deprecated
-	public String appendLockHint(LockMode mode, String tableName) {
-		return appendLockHint( new LockOptions( mode ), tableName );
-	}
 	/**
 	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
 	 * whereby a "lock hint" is appends to the table name in the from clause.
@@ -1726,42 +1542,6 @@ public abstract class Dialect implements ConversionContext {
 
 
 	// SQLException support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Build an instance of the SQLExceptionConverter preferred by this dialect for
-	 * converting SQLExceptions into Hibernate's JDBCException hierarchy.
-	 * <p/>
-	 * The preferred method is to not override this method; if possible,
-	 * {@link #buildSQLExceptionConversionDelegate()} should be overridden
-	 * instead.
-	 *
-	 * If this method is not overridden, the default SQLExceptionConverter
-	 * implementation executes 3 SQLException converter delegates:
-	 * <ol>
-	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
-	 *     <li>the vendor-specific delegate returned by {@link #buildSQLExceptionConversionDelegate()};
-	 *         (it is strongly recommended that specific Dialect implementations
-	 *         override {@link #buildSQLExceptionConversionDelegate()})</li>
-	 *     <li>a delegate that interprets SQLState codes for either X/Open or SQL-2003 codes,
-	 *         depending on java.sql.DatabaseMetaData#getSQLStateType</li>
-	 * </ol>
-	 * <p/>
-	 * If this method is overridden, it is strongly recommended that the
-	 * returned {@link SQLExceptionConverter} interpret SQL errors based on
-	 * vendor-specific error codes rather than the SQLState since the
-	 * interpretation is more accurate when using vendor-specific ErrorCodes.
-	 *
-	 * @return The Dialect's preferred SQLExceptionConverter, or null to
-	 * indicate that the default {@link SQLExceptionConverter} should be used.
-	 *
-	 * @see {@link #buildSQLExceptionConversionDelegate()}
-	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
-	 * overridden instead.
-	 */
-	@Deprecated
-	public SQLExceptionConverter buildSQLExceptionConverter() {
-		return null;
-	}
 
 	/**
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
@@ -2691,18 +2471,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getNotExpression(String expression) {
 		return "not " + expression;
-	}
-
-	/**
-	 * Get the UniqueDelegate supported by this dialect
-	 *
-	 * @return The UniqueDelegate
-	 * 
-	 * @deprecated
-	 */
-	@Deprecated
-	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
 	}
 	
 	public String[] applyConstraints(Iterable<Table> tables, JdbcEnvironment jdbcEnvironment) {

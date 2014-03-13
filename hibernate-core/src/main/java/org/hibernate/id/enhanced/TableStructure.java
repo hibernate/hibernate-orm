@@ -31,6 +31,7 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -49,7 +50,6 @@ import org.hibernate.metamodel.spi.relational.InitCommand;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -93,7 +93,7 @@ public class TableStructure implements DatabaseStructure {
 		String valueColumnNameText = valueColumnName.getText( dialect );
 
 		selectQuery = "select " + valueColumnNameText + " as id_val" +
-				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				" from " + dialect.appendLockHint( new LockOptions( LockMode.PESSIMISTIC_WRITE ), tableName ) +
 				dialect.getForUpdateString();
 
 		updateQuery = "update " + tableName +

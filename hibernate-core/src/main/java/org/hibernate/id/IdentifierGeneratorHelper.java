@@ -119,10 +119,11 @@ public final class IdentifierGeneratorHelper {
 			}
 		}
 		int columnCount = 1;
-		try{
+		try {
 			columnCount = rs.getMetaData().getColumnCount();
-		}catch(Exception e){
-			//Oracle driver will throw NPE
+		}
+		catch (Exception e) {
+			// Oracle driver can throw NPE on rs.getMetaData()
 		}
 		Class clazz = type.getReturnedClass();
 		if (columnCount == 1) {

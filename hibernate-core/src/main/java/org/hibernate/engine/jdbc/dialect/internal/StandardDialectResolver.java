@@ -42,6 +42,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
@@ -204,7 +205,7 @@ public class StandardDialectResolver implements DialectResolver {
 
 			switch ( majorVersion ) {
 				case 12:
-					// fall through
+					return new Oracle12cDialect();
 				case 11:
 					// fall through
 				case 10:

@@ -37,12 +37,15 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -57,7 +60,6 @@ import org.jboss.logging.Logger;
  *
  * @author Ploski and Hanson
  */
-@SuppressWarnings("deprecation")
 public class RDMSOS2200Dialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -329,27 +331,33 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		if ( hasOffset ) {
+        			throw new UnsupportedOperationException( "query result offset is not supported" );
+        		}
+        		return sql + " fetch first ? rows only ";
+        	}
 
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
 
-	@Override
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return sql + " fetch first " + limit + " rows only ";
-	}
+        	@Override
+        	public boolean supportsLimitOffset() {
+        		return false;
+        	}
 
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
+        	@Override
+        	public boolean supportsVariableLimit() {
+        		return false;
+        	}
+        };
+    }
 
 	@Override
 	public boolean supportsUnionAll() {

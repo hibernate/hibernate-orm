@@ -37,6 +37,9 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
@@ -169,35 +172,9 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( 6, " first " + limit )
-				.toString();
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new FirstLimitHandler(sql, selection);
+    }
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {

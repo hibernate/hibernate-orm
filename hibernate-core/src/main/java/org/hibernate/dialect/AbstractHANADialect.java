@@ -41,9 +41,13 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.NClobImplementer;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -307,11 +311,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
-
-	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return new SQLExceptionConversionDelegate() {
 			@Override
@@ -428,12 +427,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		return getForUpdateString( lockMode ) + " of " + aliases;
-	}
-
-	@Override
-	public String getLimitString(final String sql, final boolean hasOffset) {
-		return new StringBuilder( sql.length() + 20 ).append( sql )
-				.append( hasOffset ? " limit ? offset ?" : " limit ?" ).toString();
 	}
 
 	@Override
@@ -605,11 +598,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsPooledSequences() {
 		return true;
 	}
@@ -670,4 +658,26 @@ public abstract class AbstractHANADialect extends Dialect {
 			final String referencedTable, final String[] primaryKey, final boolean referencesPrimaryKey) {
 		return super.getAddForeignKeyConstraintString(constraintName, foreignKey, referencedTable, primaryKey, referencesPrimaryKey) + " on update cascade";
 	}
+	
+	@Override
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		return new StringBuilder( sql.length() + 20 ).append( sql )
+        				.append( hasOffset ? " limit ? offset ?" : " limit ?" ).toString();
+        	}
+
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean bindLimitParametersInReverseOrder() {
+        		return true;
+        	}
+        };
+    }
 }

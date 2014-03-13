@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
-	protected final String sql;
+	protected String sql;
 	protected final RowSelection selection;
 
 	/**

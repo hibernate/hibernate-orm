@@ -44,6 +44,10 @@ import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
@@ -52,7 +56,6 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -67,7 +70,6 @@ import org.jboss.logging.Logger;
  * @author Phillip Baird
  * @author Fred Toussi
  */
-@SuppressWarnings("deprecation")
 public class HSQLDialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -268,30 +270,36 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		if ( hsqldbVersion < 20 ) {
+        			return new StringBuilder( sql.length() + 10 )
+        					.append( sql )
+        					.insert(
+        							sql.toLowerCase().indexOf( "select" ) + 6,
+        							hasOffset ? " limit ? ?" : " top ?"
+        					)
+        					.toString();
+        		}
+        		else {
+        			return sql + (hasOffset ? " offset ? limit ?" : " limit ?");
+        		}
+        	}
 
-	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		if ( hsqldbVersion < 20 ) {
-			return new StringBuilder( sql.length() + 10 )
-					.append( sql )
-					.insert(
-							sql.toLowerCase().indexOf( "select" ) + 6,
-							hasOffset ? " limit ? ?" : " top ?"
-					)
-					.toString();
-		}
-		else {
-			return sql + (hasOffset ? " offset ? limit ?" : " limit ?");
-		}
-	}
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
 
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return hsqldbVersion < 20;
-	}
+        	@Override
+        	public boolean bindLimitParametersFirst() {
+        		return hsqldbVersion < 20;
+        	}
+        };
+    }
 
 	@Override
 	public boolean supportsIfExistsAfterTableName() {

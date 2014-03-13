@@ -27,6 +27,10 @@ import java.sql.Types;
 
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -153,32 +157,32 @@ public class Ingres9Dialect extends IngresDialect {
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		final StringBuilder soff = new StringBuilder( " offset ?" );
+        		final StringBuilder slim = new StringBuilder( " fetch first ? rows only" );
+        		final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
+        				.append( sql );
+        		if ( LimitHelper.hasFirstRow(selection) ) {
+        			sb.append( soff );
+        		}
+        		if ( LimitHelper.hasMaxRows(selection) ) {
+        			sb.append( slim );
+        		}
+        		return sb.toString();
+        	}
 
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
 
-	@Override
-	public boolean useMaxForLimit() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		final StringBuilder soff = new StringBuilder( " offset " + offset );
-		final StringBuilder slim = new StringBuilder( " fetch first " + limit + " rows only" );
-		final StringBuilder sb = new StringBuilder( querySelect.length() + soff.length() + slim.length() )
-				.append( querySelect );
-		if ( offset > 0 ) {
-			sb.append( soff );
-		}
-		if ( limit > 0 ) {
-			sb.append( slim );
-		}
-		return sb.toString();
-	}
+        	@Override
+        	public boolean supportsVariableLimit() {
+        		return false;
+        	}
+        };
+    }
 }

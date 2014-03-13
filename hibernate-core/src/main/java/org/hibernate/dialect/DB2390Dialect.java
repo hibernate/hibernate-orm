@@ -23,6 +23,11 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
+
 
 /**
  * An SQL dialect for DB2/390. This class provides support for
@@ -42,35 +47,31 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		if ( LimitHelper.hasFirstRow(selection) ) {
+        			throw new UnsupportedOperationException( "query result offset is not supported" );
+        		}
+    			return sql + " fetch first ? rows only";
+        	}
 
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
 
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
+        	@Override
+        	public boolean useMaxForLimit() {
+        		return true;
+        	}
 
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		if ( limit == 0 ) {
-			return sql;
-		}
-		return sql + " fetch first " + limit + " rows only ";
-	}
+        	@Override
+        	public boolean supportsVariableLimit() {
+        		return false;
+        	}
+        };
+    }
 
 }

@@ -26,6 +26,10 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.CaseFragment;
 
@@ -58,40 +62,61 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	}
 
 	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		sql = sql.trim();
-		String forUpdateClause = null;
-		boolean isForUpdate = false;
-		final int forUpdateIndex = sql.toLowerCase().lastIndexOf( "for update") ;
-		if ( forUpdateIndex > -1 ) {
-			// save 'for update ...' and then remove it
-			forUpdateClause = sql.substring( forUpdateIndex );
-			sql = sql.substring( 0, forUpdateIndex-1 );
-			isForUpdate = true;
-		}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		sql = sql.trim();
+        		String forUpdateClause = null;
+        		boolean isForUpdate = false;
+        		final int forUpdateIndex = sql.toLowerCase().lastIndexOf( "for update") ;
+        		if ( forUpdateIndex > -1 ) {
+        			// save 'for update ...' and then remove it
+        			forUpdateClause = sql.substring( forUpdateIndex );
+        			sql = sql.substring( 0, forUpdateIndex-1 );
+        			isForUpdate = true;
+        		}
 
-		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-		if (hasOffset) {
-			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
-		}
-		else {
-			pagingSelect.append( "select * from ( " );
-		}
-		pagingSelect.append( sql );
-		if (hasOffset) {
-			pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
-		}
-		else {
-			pagingSelect.append( " ) where rownum <= ?" );
-		}
+        		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
+        		if (hasOffset) {
+        			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
+        		}
+        		else {
+        			pagingSelect.append( "select * from ( " );
+        		}
+        		pagingSelect.append( sql );
+        		if (hasOffset) {
+        			pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
+        		}
+        		else {
+        			pagingSelect.append( " ) where rownum <= ?" );
+        		}
 
-		if ( isForUpdate ) {
-			pagingSelect.append( " " );
-			pagingSelect.append( forUpdateClause );
-		}
+        		if ( isForUpdate ) {
+        			pagingSelect.append( " " );
+        			pagingSelect.append( forUpdateClause );
+        		}
 
-		return pagingSelect.toString();
-	}
+        		return pagingSelect.toString();
+        	}
+
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean bindLimitParametersInReverseOrder() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean useMaxForLimit() {
+        		return true;
+        	}
+        };
+    }
 
 	@Override
 	public String getSelectClauseNullString(int sqlType) {

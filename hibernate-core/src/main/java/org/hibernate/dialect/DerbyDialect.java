@@ -29,11 +29,14 @@ import java.sql.Types;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -135,20 +138,9 @@ public abstract class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return isTenPointFiveReleaseOrNewer();
-	}
-
-	@Override
 	public boolean supportsCommentOn() {
 		//HHH-4531
 		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return isTenPointFiveReleaseOrNewer();
 	}
 
 	@Override
@@ -164,61 +156,6 @@ public abstract class DerbyDialect extends DB2Dialect {
 	@Override
 	public String getReadLockString(int timeout) {
 		return " for read only with rs";
-	}
-
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * From Derby 10.5 Docs:
-	 * <pre>
-	 * Query
-	 * [ORDER BY clause]
-	 * [result offset clause]
-	 * [fetch first clause]
-	 * [FOR UPDATE clause]
-	 * [WITH {RR|RS|CS|UR}]
-	 * </pre>
-	 */
-	@Override
-	public String getLimitString(String query, final int offset, final int limit) {
-		final StringBuilder sb = new StringBuilder(query.length() + 50);
-		final String normalizedSelect = query.toLowerCase().trim();
-		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
-
-		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append( query.substring( 0, forUpdateIndex-1 ) );
-		}
-		else if ( hasWithClause( normalizedSelect ) ) {
-			sb.append( query.substring( 0, getWithIndex( query ) - 1 ) );
-		}
-		else {
-			sb.append( query );
-		}
-
-		if ( offset == 0 ) {
-			sb.append( " fetch first " );
-		}
-		else {
-			sb.append( " offset " ).append( offset ).append( " rows fetch next " );
-		}
-
-		sb.append( limit ).append( " rows only" );
-
-		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append( ' ' );
-			sb.append( query.substring( forUpdateIndex ) );
-		}
-		else if ( hasWithClause( normalizedSelect ) ) {
-			sb.append( ' ' ).append( query.substring( getWithIndex( query ) ) );
-		}
-		return sb.toString();
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		// we bind the limit and offset values directly into the sql...
-		return false;
 	}
 
 	private boolean hasForUpdateClause(int forUpdateIndex) {
@@ -241,6 +178,75 @@ public abstract class DerbyDialect extends DB2Dialect {
 	public String getQuerySequencesString() {
 		return null ;
 	}
+
+	@Override
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	/**
+        	 * {@inheritDoc}
+        	 * <p/>
+        	 * From Derby 10.5 Docs:
+        	 * <pre>
+        	 * Query
+        	 * [ORDER BY clause]
+        	 * [result offset clause]
+        	 * [fetch first clause]
+        	 * [FOR UPDATE clause]
+        	 * [WITH {RR|RS|CS|UR}]
+        	 * </pre>
+        	 */
+        	@Override
+        	public String getProcessedSql() {
+        		final StringBuilder sb = new StringBuilder(sql.length() + 50);
+        		final String normalizedSelect = sql.toLowerCase().trim();
+        		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
+
+        		if ( hasForUpdateClause( forUpdateIndex ) ) {
+        			sb.append( sql.substring( 0, forUpdateIndex-1 ) );
+        		}
+        		else if ( hasWithClause( normalizedSelect ) ) {
+        			sb.append( sql.substring( 0, getWithIndex( sql ) - 1 ) );
+        		}
+        		else {
+        			sb.append( sql );
+        		}
+
+        		if ( LimitHelper.hasFirstRow(selection) ) {
+        			sb.append( " offset ? rows fetch next " );
+        		}
+        		else {
+        			sb.append( " fetch first " );
+        		}
+
+        		sb.append( "? rows only" );
+
+        		if ( hasForUpdateClause( forUpdateIndex ) ) {
+        			sb.append( ' ' );
+        			sb.append( sql.substring( forUpdateIndex ) );
+        		}
+        		else if ( hasWithClause( normalizedSelect ) ) {
+        			sb.append( ' ' ).append( sql.substring( getWithIndex( sql ) ) );
+        		}
+        		return sb.toString();
+        	}
+
+        	@Override
+        	public boolean supportsLimit() {
+        		return isTenPointFiveReleaseOrNewer();
+        	}
+
+        	@Override
+        	@SuppressWarnings("deprecation")
+        	public boolean supportsLimitOffset() {
+        		return isTenPointFiveReleaseOrNewer();
+        	}
+
+        	@Override
+        	public boolean supportsVariableLimit() {
+        		return false;
+        	}
+        };
+    }
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

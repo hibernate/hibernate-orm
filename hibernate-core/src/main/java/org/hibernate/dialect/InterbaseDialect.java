@@ -27,6 +27,10 @@ import java.sql.Types;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -34,7 +38,6 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class InterbaseDialect extends Dialect {
 
 	/**
@@ -112,24 +115,20 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		final boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
+        	}
 
-	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
-	}
-
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return false;
-	}
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
+        };
+    }
 
 	@Override
 	public String getCurrentTimestampSelectString() {

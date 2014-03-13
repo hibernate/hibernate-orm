@@ -38,6 +38,10 @@ import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -60,7 +64,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("deprecation")
 public class Oracle8iDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
@@ -244,35 +247,56 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		sql = sql.trim();
-		boolean isForUpdate = false;
-		if ( sql.toLowerCase().endsWith( " for update" ) ) {
-			sql = sql.substring( 0, sql.length()-11 );
-			isForUpdate = true;
-		}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		sql = sql.trim();
+        		boolean isForUpdate = false;
+        		if ( sql.toLowerCase().endsWith( " for update" ) ) {
+        			sql = sql.substring( 0, sql.length()-11 );
+        			isForUpdate = true;
+        		}
 
-		final StringBuilder pagingSelect = new StringBuilder( sql.length()+100 );
-		if (hasOffset) {
-			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
-		}
-		else {
-			pagingSelect.append( "select * from ( " );
-		}
-		pagingSelect.append( sql );
-		if (hasOffset) {
-			pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
-		}
-		else {
-			pagingSelect.append( " ) where rownum <= ?" );
-		}
+        		final StringBuilder pagingSelect = new StringBuilder( sql.length()+100 );
+        		if (hasOffset) {
+        			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
+        		}
+        		else {
+        			pagingSelect.append( "select * from ( " );
+        		}
+        		pagingSelect.append( sql );
+        		if (hasOffset) {
+        			pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
+        		}
+        		else {
+        			pagingSelect.append( " ) where rownum <= ?" );
+        		}
 
-		if ( isForUpdate ) {
-			pagingSelect.append( " for update" );
-		}
+        		if ( isForUpdate ) {
+        			pagingSelect.append( " for update" );
+        		}
 
-		return pagingSelect.toString();
-	}
+        		return pagingSelect.toString();
+        	}
+
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean bindLimitParametersInReverseOrder() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean useMaxForLimit() {
+        		return true;
+        	}
+        };
+    }
 
 	/**
 	 * Allows access to the basic {@link Dialect#getSelectClauseNullString}
@@ -365,11 +389,6 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
@@ -377,16 +396,6 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString() + " of " + aliases + " nowait";
-	}
-
-	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
 	}
 
 	@Override

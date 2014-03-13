@@ -46,6 +46,9 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -583,53 +586,9 @@ public class Cache71Dialect extends Dialect {
 	// LIMIT support (ala TOP) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean bindLimitParametersFirst() {
-		// Does the LIMIT clause come at the start of the SELECT statement, rather than at the end?
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		// Does the LIMIT clause take a "maximum" row number instead of a total number of returned rows?
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, boolean hasOffset) {
-		if ( hasOffset ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-
-		// This does not support the Cache SQL 'DISTINCT BY (comma-list)' extensions,
-		// but this extension is not supported through Hibernate anyway.
-		final int insertionPoint = sql.startsWith( "select distinct" ) ? 15 : 6;
-
-		return new StringBuilder( sql.length() + 8 )
-				.append( sql )
-				.insert( insertionPoint, " TOP ? " )
-				.toString();
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+            return new TopLimitHandler(sql, selection, true, true);
+    }
 
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -30,6 +30,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -72,23 +75,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return "default values";
 	}
 
-	static int getAfterSelectInsertPoint(String sql) {
-		final int selectIndex = sql.toLowerCase().indexOf( "select" );
-		final int selectDistinctIndex = sql.toLowerCase().indexOf( "select distinct" );
-		return selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( getAfterSelectInsertPoint( querySelect ), " top " + limit )
-				.toString();
-	}
-
 	/**
 	 * Use <tt>insert table(...) values(...) select SCOPE_IDENTITY()</tt>
 	 * <p/>
@@ -98,26 +84,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public String appendIdentitySelectToInsert(String insertSQL) {
 		return insertSQL + " select scope_identity()";
 	}
-
+	
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+            return new TopLimitHandler(sql, selection, false, false);
+    }
 
 	@Override
 	public char closeQuote() {

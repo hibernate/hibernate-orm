@@ -52,9 +52,8 @@ public class SQL2008StandardLimitHandler extends AbstractLimitHandler {
 	@Override
 	public String getProcessedSql() {
 		if (LimitHelper.useLimit(this, selection)) {
-			return sql
-					+ (LimitHelper.hasFirstRow(selection) ? " offset ? rows fetch next ? rows only"
-							: " fetch first ? rows only");
+			return sql + (LimitHelper.hasFirstRow(selection) ?
+					" offset ? rows fetch next ? rows only" : " fetch first ? rows only");
 		} else {
 			// or return unaltered SQL
 			return sql;

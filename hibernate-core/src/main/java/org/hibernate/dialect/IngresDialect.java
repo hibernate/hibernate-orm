@@ -30,6 +30,9 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -56,7 +59,6 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Max Rydahl Andersen
  * @author Raymond Fan
  */
-@SuppressWarnings("deprecation")
 public class IngresDialect extends Dialect {
 	/**
 	 * Constructs a IngresDialect
@@ -230,35 +232,9 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 16 )
-				.append( querySelect )
-				.insert( 6, " first " + limit )
-				.toString();
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new FirstLimitHandler(sql, selection);
+    }
 
 	@Override
 	public boolean supportsTemporaryTables() {

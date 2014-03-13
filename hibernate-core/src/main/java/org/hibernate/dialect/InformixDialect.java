@@ -29,6 +29,9 @@ import java.sql.Types;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.constraint.InformixUniqueKeyExporter;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -190,35 +193,9 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( querySelect.toLowerCase().indexOf( "select" ) + 6, " first " + limit )
-				.toString();
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new FirstLimitHandler(sql, selection);
+    }
 
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {

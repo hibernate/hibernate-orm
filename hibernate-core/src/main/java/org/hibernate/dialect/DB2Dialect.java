@@ -36,6 +36,10 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -251,51 +255,8 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	@SuppressWarnings("deprecation")
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset == 0 ) {
-			return sql + " fetch first " + limit + " rows only";
-		}
-		//nest the main query in an outer select
-		return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
-				+ sql + " fetch first " + limit + " rows only ) as inner2_ ) as inner1_ where rownumber_ > "
-				+ offset + " order by rownumber_";
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 *
-	 * DB2 does have a one-based offset, however this was actually already handled in the limit string building
-	 * (the '?+1' bit).  To not mess up inheritors, I'll leave that part alone and not touch the offset here.
-	 */
-	@Override
-	@SuppressWarnings("deprecation")
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return zeroBasedFirstResult;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
 	public String getForUpdateString() {
 		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean useMaxForLimit() {
-		return true;
 	}
 
 	@Override
@@ -484,5 +445,36 @@ public class DB2Dialect extends Dialect {
 	public String getNotExpression( String expression ) {
 		return "not (" + expression + ")";
 	}
+	
+	@Override
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		if ( LimitHelper.hasFirstRow(selection) ) {
+            		//nest the main query in an outer select
+            		return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
+            				+ sql + " fetch first ? rows only ) as inner2_ ) as inner1_ where rownumber_ > "
+            				+ "? order by rownumber_";
+        		}
+    			return sql + " fetch first ? rows only";
+        	}
+
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean useMaxForLimit() {
+        		return true;
+        	}
+
+        	@Override
+        	public boolean supportsVariableLimit() {
+        		return false;
+        	}
+        };
+    }
 
 }

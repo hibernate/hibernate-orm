@@ -23,7 +23,10 @@
  */
 package org.hibernate.dialect.resolver;
 
-import java.sql.Connection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +41,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
@@ -47,7 +49,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -68,15 +69,9 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -158,7 +153,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "PostgreSQL", 8, 2, PostgreSQL82Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 9, 0, PostgreSQL9Dialect.class, resolver );
 		testDetermination( "EnterpriseDB", 9, 2, PostgresPlusDialect.class, resolver );
-		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
+		testDetermination( "Apache Derby", 10, 4, DB2Dialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 5, DerbyTenFiveDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 6, DerbyTenSixDialect.class, resolver );
 		testDetermination( "Apache Derby", 11, 5, DerbyTenSevenDialect.class, resolver );

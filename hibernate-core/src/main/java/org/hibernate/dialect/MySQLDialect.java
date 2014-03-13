@@ -33,6 +33,10 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -45,7 +49,6 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class MySQLDialect extends Dialect {
 
 	/**
@@ -242,19 +245,25 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
 	public String getDropForeignKeyString() {
 		return " drop foreign key ";
 	}
 
 	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ?, ?" : " limit ?");
-	}
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new AbstractLimitHandler(sql, selection) {
+        	@Override
+        	public String getProcessedSql() {
+        		final boolean hasOffset = LimitHelper.hasFirstRow(selection);
+        		return sql + (hasOffset ? " limit ?, ?" : " limit ?");
+        	}
+
+        	@Override
+        	public boolean supportsLimit() {
+        		return true;
+        	}
+        };
+    }
 
 	@Override
 	public char closeQuote() {

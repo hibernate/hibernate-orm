@@ -24,6 +24,7 @@
 package org.hibernate.testing;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.RowSelection;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -106,13 +107,15 @@ abstract public class DialectChecks {
 
 	public static class SupportLimitCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit();
+			// TODO: Stupid -- better way?
+			return dialect.buildLimitHandler( "", new RowSelection() ).supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit() && dialect.supportsLimitOffset();
+			// TODO: Stupid -- better way?
+			return dialect.buildLimitHandler( "", new RowSelection() ).supportsLimitOffset();
 		}
 	}
 

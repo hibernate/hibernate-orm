@@ -442,6 +442,73 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, employee.getAssets().get( 1 ).getIdAsset().intValue() );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-9002" )
+	public void testOrderByOneToManyWithJoinTable() {
+		A a = new A();
+		a.setName( "a" );
+		B b1 = new B();
+		b1.setName( "b1" );
+		B b2 = new B();
+		b2.setName( "b2" );
+		C c11 = new C();
+		c11.setName( "c11" );
+		C c12 = new C();
+		c12.setName( "c12" );
+		C c21 = new C();
+		c21.setName( "c21" );
+		C c22 = new C();
+		c22.setName( "c22" );
+
+		a.getBs().add( b1 );
+		a.getBs().add( b2 );
+		b1.getCs().add( c11 );
+		b1.getCs().add( c12 );
+		b2.getCs().add( c21 );
+		b2.getCs().add( c22 );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.persist( a );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+
+		b1 =  (B) s.get( B.class, b1.getId() );
+		assertEquals( "b1", b1.getName() );
+		List<C> cs = b1.getCs();
+		assertEquals( 2, cs.size() );
+		assertEquals( "c11", cs.get( 0 ).getName() );
+		assertEquals( "c12", cs.get( 1 ).getName() );
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+
+		a = (A) s.get( A.class, a.getId() );
+		assertEquals( "a", a.getName() );
+		assertEquals( 2, a.getBs().size() );
+		List<B> bs = a.getBs();
+		assertEquals( "b1", bs.get( 0 ).getName() );
+		assertEquals( "b2", bs.get( 1 ).getName() );
+		List<C> b1cs = bs.get( 0 ).getCs();
+		assertEquals( 2, b1cs.size() );
+		assertEquals( "c11", b1cs.get( 0 ).getName() );
+		assertEquals( "c12", b1cs.get( 1 ).getName() );
+		List<C> b2cs = bs.get( 1 ).getCs();
+		assertEquals( 2, b2cs.size() );
+		assertEquals( "c21", b2cs.get( 0 ).getName() );
+		assertEquals( "c22", b2cs.get( 1 ).getName() );
+
+		s.delete( a );
+
+		s.getTransaction().commit();
+		s.close();
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -450,7 +517,8 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 				Monkey.class, Visitor.class, Box.class, Item.class,
 				BankAccount.class, Transaction.class,
 				Comment.class, Forum.class, Post.class, User.class,
-				Asset.class, Computer.class, Employee.class
+				Asset.class, Computer.class, Employee.class,
+				A.class, B.class, C.class
 		};
 	}
 }

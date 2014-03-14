@@ -576,7 +576,7 @@ public class LoadQueryJoinAndFetchProcessor {
 				selectStatementBuilder.appendOrderByFragment( manyToManyOrdering );
 			}
 
-			final String ordering = queryableCollection.getSQLOrderByString( collectionTableAlias );
+			final String ordering = queryableCollection.getSQLOrderByString( elementTableAlias );
 			if ( StringHelper.isNotEmpty( ordering ) ) {
 				selectStatementBuilder.appendOrderByFragment( ordering );
 			}

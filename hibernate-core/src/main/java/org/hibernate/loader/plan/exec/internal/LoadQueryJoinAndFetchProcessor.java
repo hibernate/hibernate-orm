@@ -571,7 +571,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			);
 
 			// add SQL ORDER-BY fragments
-			final String manyToManyOrdering = queryableCollection.getManyToManyOrderByString( collectionTableAlias );
+			final String manyToManyOrdering = queryableCollection.getManyToManyOrderByString( elementTableAlias );
 			if ( StringHelper.isNotEmpty( manyToManyOrdering ) ) {
 				selectStatementBuilder.appendOrderByFragment( manyToManyOrdering );
 			}

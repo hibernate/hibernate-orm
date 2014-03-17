@@ -29,13 +29,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -76,7 +76,7 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { SubclassOfNoEntity.class, NoEntity.class })
 	public void testNonEntityBaseClass() {
 		EntityBinding binding = getEntityBinding( SubclassOfNoEntity.class );
-		assertEquals( "Wrong entity name", SubclassOfNoEntity.class.getName(), binding.getEntity().getName() );
+		assertEquals( "Wrong entity name", SubclassOfNoEntity.class.getName(), binding.getEntityName() );
 		assertNull( "Supertype should not be mapped", binding.getEntity().getSuperType() );
 	}
 

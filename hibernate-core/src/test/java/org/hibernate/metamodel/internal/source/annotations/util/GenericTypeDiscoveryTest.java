@@ -47,10 +47,10 @@ public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 //		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 //
 //		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
-//		ConfiguredClass configuredClass = iter.next();
+//		ManagedTypeMetadata configuredClass = iter.next();
 //		ClassInfo info = configuredClass.getClassInfo();
 //		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
-//		MappedAttribute property = configuredClass.getMappedAttribute( "value" );
+//		PersistentAttribute property = configuredClass.getMappedAttribute( "value" );
 //		assertEquals( Price.class, property.getJavaType() );
 //
 //		assertTrue( iter.hasNext() );

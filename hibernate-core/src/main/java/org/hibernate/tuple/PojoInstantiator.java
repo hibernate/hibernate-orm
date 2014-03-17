@@ -69,7 +69,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		else {
 			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 			this.mappedClass = cls.classForName(
-					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
 			);
 		}
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
@@ -92,14 +92,14 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			EntityBinding entityBinding,
 			ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-		this.mappedClass = cls.classForName( entityBinding.getEntity().getDescriptor().getName().fullName() );
+		this.mappedClass = cls.classForName( entityBinding.getEntity().getDescriptor().getName().toString() );
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		if ( entityBinding.getProxyInterfaceType() == null ) {
 			this.proxyInterface = null;
 		}
 		else {
 			this.proxyInterface = cls.classForName(
-					entityBinding.getProxyInterfaceType().getName().fullName()
+					entityBinding.getProxyInterfaceType().getName().toString()
 			);
 		}
 		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite();

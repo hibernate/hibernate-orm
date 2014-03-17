@@ -23,20 +23,21 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.junit.Test;
-
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
+import org.hibernate.metamodel.source.internal.jandex.EntityMocker;
+import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbGeneratedValue;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbId;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
-import org.hibernate.metamodel.source.internal.jandex.EntityMocker;
-import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
+
+import org.junit.Test;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
 
 import static org.junit.Assert.assertEquals;
 

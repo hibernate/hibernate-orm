@@ -57,10 +57,10 @@ public class DynamicMapInstantiator implements Instantiator {
 	}
 
 	public DynamicMapInstantiator(EntityBinding mappingInfo) {
-		this.entityName = mappingInfo.getEntity().getName();
+		this.entityName = mappingInfo.getEntityName();
 		isInstanceEntityNames.add( entityName );
 		for ( EntityBinding subEntityBinding : mappingInfo.getPostOrderSubEntityBindingClosure() ) {
-			isInstanceEntityNames.add( subEntityBinding.getEntity().getName() );
+			isInstanceEntityNames.add( subEntityBinding.getEntityName() );
 		}
 	}
 

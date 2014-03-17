@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * @author Gail Badner

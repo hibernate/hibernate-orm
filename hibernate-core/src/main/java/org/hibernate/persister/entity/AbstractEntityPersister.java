@@ -619,7 +619,7 @@ public abstract class AbstractEntityPersister
 
 		// VERSION
 
-		if ( entityBinding.isVersioned() ) {
+		if ( entityBinding.getHierarchyDetails().isVersioned() ) {
 			final BasicAttributeBinding versionAttributeBinding =  entityBinding.getHierarchyDetails()
 					.getEntityVersion()
 					.getVersioningAttributeBinding();
@@ -643,8 +643,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		//WHERE STRING
-
-		sqlWhereString = StringHelper.isNotEmpty( entityBinding.getWhereFilter() ) ? "( " + entityBinding.getWhereFilter() + ") " : null;
+		sqlWhereString = StringHelper.isNotEmpty( entityBinding.getHierarchyDetails().getWhere() )
+				? "( " + entityBinding.getHierarchyDetails().getWhere() + ") "
+				: null;
 		sqlWhereStringTemplate = getTemplateFromString( sqlWhereString, factory );
 
 		// PROPERTIES
@@ -676,7 +677,7 @@ public abstract class AbstractEntityPersister
 		for ( AttributeBinding attributeBinding : entityBinding.getNonIdAttributeBindingClosure() ) {
 			thisClassProperties.add( attributeBinding );
 
-			propertySubclassNames[i] = attributeBinding.getContainer().seekEntityBinding().getEntity().getName();
+			propertySubclassNames[i] = attributeBinding.getContainer().seekEntityBinding().getEntityName();
 
 			int span = attributeBinding.getAttribute().isSingular() ?
 					( (SingularAttributeBinding) attributeBinding).getRelationalValueBindings().size() :
@@ -777,7 +778,7 @@ public abstract class AbstractEntityPersister
 
 		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
 			names.add( attributeBinding.getAttribute().getName() );
-			classes.add( ( (EntityBinding) attributeBinding.getContainer() ).getEntity().getName() );
+			classes.add( ( (EntityBinding) attributeBinding.getContainer() ).getEntityName() );
 			boolean isDefinedBySubclass = ! thisClassProperties.contains( attributeBinding );
 			definedBySubclass.add( isDefinedBySubclass );
 			final boolean propIsNullable;

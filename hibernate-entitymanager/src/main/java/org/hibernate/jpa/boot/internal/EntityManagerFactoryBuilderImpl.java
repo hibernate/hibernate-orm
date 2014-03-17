@@ -331,7 +331,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private List<String> collectNamesOfClassesToEnhance(MetadataImplementor metadata) {
 		final List<String> entityClassNames = new ArrayList<String>();
 		for ( EntityBinding eb : metadata.getEntityBindings() ) {
-			entityClassNames.add( eb.getEntity().getDescriptor().getName().fullName() );
+			entityClassNames.add( eb.getEntity().getDescriptor().getName().toString() );
 		}
 		return entityClassNames;
 	}
@@ -410,7 +410,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	@SuppressWarnings("unchecked")
 	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
-			Map integrationSettings,
+			Map<?,?> integrationSettings,
 			final BootstrapServiceRegistry bsr) {
 		final MergedSettings mergedSettings = new MergedSettings(
 				determineJaccContext( integrationSettings, persistenceUnit.getProperties() )
@@ -446,7 +446,18 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// finally, apply integration-supplied settings (per JPA spec, integration settings should override other sources)
-		mergedSettings.configurationValues.putAll( integrationSettings );
+		for ( Map.Entry<?,?> entry : integrationSettings.entrySet() ) {
+			if ( entry.getKey() == null ) {
+				continue;
+			}
+
+			if ( entry.getValue() == null ) {
+				mergedSettings.configurationValues.remove( entry.getKey() );
+			}
+			else {
+				mergedSettings.configurationValues.put( entry.getKey(), entry.getValue() );
+			}
+		}
 
 		if ( !mergedSettings.configurationValues.containsKey( VALIDATION_MODE ) ) {
 			if ( persistenceUnit.getValidationMode() != null ) {
@@ -609,7 +620,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					.append( role )
 					.append( ' ' )
 					.append( value )
-					.append( ".  Was expecting configuration, but found none" );
+					.append( ".  Was expecting configuration (usage[,region[,lazy]]), but found none" );
 			throw persistenceException( error.toString() );
 		}
 

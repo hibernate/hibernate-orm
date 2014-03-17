@@ -28,11 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.FetchTiming;
@@ -48,12 +43,17 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -183,7 +183,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 		final String role = collectionBinding.getAttribute().getRole();
 		assertEquals(
 				role,
-				collectionOwnerBinding.getEntity().getName() + "." + collectionBinding.getAttribute().getName()
+				collectionOwnerBinding.getEntityName() + "." + collectionBinding.getAttribute().getName()
 		);
 
 		final PluralAttributeKeyBinding keyBinding = collectionBinding.getPluralAttributeKeyBinding();
@@ -194,11 +194,11 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 		final HibernateTypeDescriptor collectionHibernateTypeDescriptor = collectionBinding.getHibernateTypeDescriptor();
 		assertNull( collectionHibernateTypeDescriptor.getExplicitTypeName() );
 		assertEquals(				expectedCollectionJavaType.getName(),
-				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().toString()
 		);
 		assertEquals(
 				expectedCollectionJavaType.getName(),
-				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().toString()
 		);
 		assertTrue( collectionHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( expectedCollectionTypeClass.isInstance( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ) );
@@ -243,8 +243,8 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 		);
 
 		assertEquals(
-				expectedElementEntityBinding.getEntity().getName(),
-				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
+				expectedElementEntityBinding.getEntityName(),
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
 		);
 	}
 

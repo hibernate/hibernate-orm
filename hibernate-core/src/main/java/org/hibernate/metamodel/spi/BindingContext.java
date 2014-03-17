@@ -23,14 +23,15 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
-import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.service.ServiceRegistry;
+
+import org.jboss.jandex.DotName;
 
 /**
  * Describes the context in which binding (the process of build Metadata out of
@@ -54,7 +55,7 @@ public interface BindingContext {
 	 *
 	 * @return The reflite type repo
 	 */
-	public JavaTypeDescriptorRepository getRefliteRepository();
+	public JavaTypeDescriptorRepository getJavaTypeDescriptorRepository();
 
 	/**
 	 * Access to mapping defaults in effect for this context
@@ -95,7 +96,7 @@ public interface BindingContext {
 	// todo : go away
 
 	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getRefliteRepository}
+	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
 	 */
 	@Deprecated
 	public <T> Class<T> locateClassByName(String name);
@@ -103,27 +104,27 @@ public interface BindingContext {
 	/**
 	 * todo : maybe a `Type makeDomainType(JavaTypeDescriptor)` method instead?
 	 *
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getRefliteRepository}
+	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
 	 */
 	@Deprecated
 	public Type makeDomainType(String className);
 
-	public Type makeDomainType(Name typeName);
+	public Type makeDomainType(DotName typeName);
 
 	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getRefliteRepository}
+	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
 	 */
 	@Deprecated
 	public JavaClassReference makeJavaClassReference(String className);
 
 	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getRefliteRepository}
+	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
 	 */
 	@Deprecated
 	public JavaClassReference makeJavaClassReference(Class<?> clazz);
 
 	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getRefliteRepository}
+	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
 	 */
 	@Deprecated
 	public JavaClassReference makeJavaPropertyClassReference(

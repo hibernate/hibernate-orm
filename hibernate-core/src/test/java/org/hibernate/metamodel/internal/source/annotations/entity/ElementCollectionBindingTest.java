@@ -31,16 +31,16 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
-import org.junit.Test;
-
-import org.hibernate.xml.spi.SourceType;
+import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.spi.binding.BagBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.xml.spi.SourceType;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -82,7 +82,7 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 		catch ( MappingException e ) {
 			assertEquals( "Unexpected error origin", TestEntity.class.getName(), e.getOrigin().getName() );
 			assertEquals( "Unexpected type", SourceType.ANNOTATION, e.getOrigin().getType() );
-			assertTrue( "Wrong error message", e.getMessage().startsWith( "HHH000460" ) );
+			assertTrue( "Wrong error message", e.getMessage().contains( "HHH000460" ) );
 		}
 	}
 
@@ -115,7 +115,7 @@ public class ElementCollectionBindingTest extends BaseAnnotationBindingTestCase 
 		catch ( MappingException e ) {
 			assertEquals( "Unexpected error origin", TestEntity2.class.getName(), e.getOrigin().getName() );
 			assertEquals( "Unexpected type", SourceType.ANNOTATION, e.getOrigin().getType() );
-			assertTrue( "Wrong error message", e.getMessage().startsWith( "HHH000458" ) );
+			assertTrue( "Wrong error message", e.getMessage().contains( "HHH000458" ) );
 		}
 	}
 

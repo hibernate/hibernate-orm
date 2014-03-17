@@ -46,7 +46,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimple() throws Exception {

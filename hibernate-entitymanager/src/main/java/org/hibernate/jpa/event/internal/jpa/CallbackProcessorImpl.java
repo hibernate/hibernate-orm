@@ -32,9 +32,9 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
+import org.hibernate.metamodel.source.spi.JpaCallbackSource;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.source.JpaCallbackSource;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
@@ -66,7 +66,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 			return;
 		}
 		final Class entityClass = classLoaderService.classForName(
-				entityBinding.getEntity().getDescriptor().getName().fullName()
+				entityBinding.getEntity().getDescriptor().getName().toString()
 		);
 		for ( final Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
 			callbackRegistry.addEntityCallbacks(

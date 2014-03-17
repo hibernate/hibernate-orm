@@ -34,15 +34,15 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.validation.Schema;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.metamodel.source.spi.MappingException;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.internal.stax.BufferedXMLEventReader;
 import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.spi.XmlBinder;
+
+import org.jboss.logging.Logger;
 
 /**
  * Base implementation (template) of the XmlBinder contract.

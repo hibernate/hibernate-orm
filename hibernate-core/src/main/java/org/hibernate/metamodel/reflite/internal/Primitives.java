@@ -25,14 +25,18 @@ package org.hibernate.metamodel.reflite.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
-import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.PrimitiveWrapperTypeDescriptor;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
@@ -53,7 +57,7 @@ public class Primitives {
 			this.primitiveWrapperType = new WrapperDescriptorImpl( wrapperClass, this );
 
 			this.primitiveArrayType = new ArrayDescriptorImpl(
-					new DotNameAdapter( primitiveArrayClass.getName() ),
+					DotName.createSimple( primitiveArrayClass.getName() ),
 					primitiveArrayClass.getModifiers(),
 					this.primitiveType
 			);
@@ -69,10 +73,10 @@ public class Primitives {
 	public static final PrimitiveGroup FLOAT = new PrimitiveGroup( float.class, float[].class, Float.class );
 	public static final PrimitiveGroup DOUBLE = new PrimitiveGroup( double.class, double[].class, Double.class );
 
-	public static JavaTypeDescriptor resolveByName(Name name) {
+	public static JavaTypeDescriptor resolveByName(DotName name) {
 		assert name != null;
 
-		final String typeNameString = name.fullName();
+		final String typeNameString = name.toString();
 
 		if ( char.class.getName().equals( typeNameString ) ) {
 			return CHAR.primitiveType;
@@ -133,50 +137,100 @@ public class Primitives {
 		final String typeNameString = type.getName();
 
 		if ( char.class.getName().equals( typeNameString ) ) {
-			return CHAR.primitiveType;
+			return CHAR.primitiveArrayType;
 		}
 		else if ( boolean.class.getName().equals( typeNameString ) ) {
-			return BOOLEAN.primitiveType;
+			return BOOLEAN.primitiveArrayType;
 		}
 		else if ( byte.class.getName().equals( typeNameString ) ) {
-			return BYTE.primitiveType;
+			return BYTE.primitiveArrayType;
 		}
 		else if ( short.class.getName().equals( typeNameString ) ) {
-			return SHORT.primitiveType;
+			return SHORT.primitiveArrayType;
 		}
 		else if ( int.class.getName().equals( typeNameString ) ) {
-			return INTEGER.primitiveType;
+			return INTEGER.primitiveArrayType;
 		}
 		else if ( long.class.getName().equals( typeNameString ) ) {
-			return LONG.primitiveType;
+			return LONG.primitiveArrayType;
 		}
 		else if ( float.class.getName().equals( typeNameString ) ) {
-			return FLOAT.primitiveType;
+			return FLOAT.primitiveArrayType;
 		}
 		else if ( double.class.getName().equals( typeNameString ) ) {
-			return DOUBLE.primitiveType;
-		}
-		else if ( double.class.getName().equals( typeNameString ) ) {
-			return DOUBLE.primitiveWrapperType;
+			return DOUBLE.primitiveArrayType;
 		}
 
 		return null;
 	}
 
+	public static ArrayDescriptor primitiveArrayDescriptor(PrimitiveTypeDescriptor componentType) {
+		if ( componentType == null ) {
+			return null;
+		}
+
+		return ( (PrimitiveDescriptorImpl) componentType ).group.primitiveArrayType;
+	}
+
+	public static JavaTypeDescriptor decipherArrayComponentCode(char arrayComponentCode) {
+		switch ( arrayComponentCode ) {
+			case 'C': {
+				return CHAR.primitiveType;
+			}
+			case 'Z': {
+				return BOOLEAN.primitiveType;
+			}
+			case 'B': {
+				return BYTE.primitiveType;
+			}
+			case 'S': {
+				return SHORT.primitiveType;
+			}
+			case 'I': {
+				return INTEGER.primitiveType;
+			}
+			case 'J': {
+				return LONG.primitiveType;
+			}
+			case 'F': {
+				return FLOAT.primitiveType;
+			}
+			case 'D': {
+				return DOUBLE.primitiveType;
+			}
+			default: {
+				throw new IllegalArgumentException(
+						"Unexpected character passed in as primitive array component code : "
+								+ arrayComponentCode
+				);
+			}
+		}
+	}
+
+	public static void main(String... args) {
+		System.out.println( "   char : " + char[].class );
+		System.out.println( "boolean : " + boolean[].class );
+		System.out.println( "   byte : " + byte[].class );
+		System.out.println( "  short : " + short[].class );
+		System.out.println( "    int : " + int[].class );
+		System.out.println( "   long : " + long[].class );
+		System.out.println( "  float : " + float[].class );
+		System.out.println( " double : " + double[].class );
+	}
 
 	private static class PrimitiveDescriptorImpl implements PrimitiveTypeDescriptor {
-		private final Name name;
+		private final DotName name;
 		private final int modifiers;
 		private final PrimitiveGroup group;
 
 		protected PrimitiveDescriptorImpl(Class clazz, PrimitiveGroup group) {
-			this.name = new DotNameAdapter( clazz.getName() );
+			this.name = DotName.createSimple( clazz.getName() );
 			this.modifiers = clazz.getModifiers();
 			this.group = group;
 		}
 
 		@Override
-		public Name getName() {
+		public DotName getName() {
 			return name;
 		}
 
@@ -193,6 +247,56 @@ public class Primitives {
 		@Override
 		public Collection<MethodDescriptor> getDeclaredMethods() {
 			return Collections.emptyList();
+		}
+
+		@Override
+		public AnnotationInstance findTypeAnnotation(DotName annotationType) {
+			return null;
+		}
+
+		@Override
+		public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
+			return null;
+		}
+
+		@Override
+		public Collection<AnnotationInstance> findAnnotations(DotName annotationType) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public Collection<AnnotationInstance> findLocalAnnotations(DotName annotationType) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public boolean isAssignableFrom(JavaTypeDescriptor check) {
+			if ( check == null ) {
+				throw new IllegalArgumentException( "Descriptor to check cannot be null" );
+			}
+
+			if ( equals( check ) ) {
+				return true;
+			}
+
+//			if ( PrimitiveWrapperTypeDescriptor.class.isInstance( check ) ) {
+//				final PrimitiveWrapperTypeDescriptor wrapper = (PrimitiveWrapperTypeDescriptor) check;
+//				if ( equals( wrapper.getPrimitiveTypeDescriptor() ) ) {
+//					return true;
+//				}
+//			}
+//
+			return false;
+		}
+
+		@Override
+		public List<JavaTypeDescriptor> getResolvedParameterTypes() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public ClassInfo getJandexClassInfo() {
+			return null;
 		}
 
 		@Override
@@ -202,18 +306,18 @@ public class Primitives {
 	}
 
 	private static class WrapperDescriptorImpl implements PrimitiveWrapperTypeDescriptor {
-		private final Name name;
+		private final DotName name;
 		private final int modifiers;
 		private final PrimitiveGroup group;
 
 		private WrapperDescriptorImpl(Class clazz, PrimitiveGroup group) {
-			this.name = new DotNameAdapter( clazz.getName() );
+			this.name = DotName.createSimple( clazz.getName() );
 			this.modifiers = clazz.getModifiers();
 			this.group = group;
 		}
 
 		@Override
-		public Name getName() {
+		public DotName getName() {
 			return name;
 		}
 
@@ -230,6 +334,56 @@ public class Primitives {
 		@Override
 		public Collection<MethodDescriptor> getDeclaredMethods() {
 			return Collections.emptyList();
+		}
+
+		@Override
+		public AnnotationInstance findTypeAnnotation(DotName annotationType) {
+			return null;
+		}
+
+		@Override
+		public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
+			return null;
+		}
+
+		@Override
+		public Collection<AnnotationInstance> findAnnotations(DotName annotationType) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public Collection<AnnotationInstance> findLocalAnnotations(DotName annotationType) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public boolean isAssignableFrom(JavaTypeDescriptor check) {
+			if ( check == null ) {
+				throw new IllegalArgumentException( "Descriptor to check cannot be null" );
+			}
+
+			if ( equals( check ) ) {
+				return true;
+			}
+
+//			if ( PrimitiveTypeDescriptor.class.isInstance( check ) ) {
+//				final PrimitiveTypeDescriptor primitive = (PrimitiveTypeDescriptor) check;
+//				if ( equals( primitive.getWrapperTypeDescriptor() ) ) {
+//					return true;
+//				}
+//			}
+//
+			return false;
+		}
+
+		@Override
+		public List<JavaTypeDescriptor> getResolvedParameterTypes() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public ClassInfo getJandexClassInfo() {
+			return null;
 		}
 
 		@Override

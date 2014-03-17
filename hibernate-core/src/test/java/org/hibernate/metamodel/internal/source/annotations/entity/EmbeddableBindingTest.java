@@ -31,15 +31,15 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -334,6 +334,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 				componentName
 		);
 
+		assertNotNull( "No parent reference binding", compositeBinding.getParentReference() );
 		assertEquals( "Wrong parent reference name", "parent", compositeBinding.getParentReference().getName() );
 	}
 

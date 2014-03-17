@@ -78,7 +78,7 @@ public class EntityIdentifier {
 	}
 
 	public void prepareAsSimpleIdentifier(
-			SingularNonAssociationAttributeBinding attributeBinding,
+			SingularAttributeBinding attributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue,
 			Class lookupIdClass,
@@ -137,7 +137,7 @@ public class EntityIdentifier {
 		return entityIdentifierBinding.getNature();
 	}
 
-	public SingularNonAssociationAttributeBinding getAttributeBinding() {
+	public SingularAttributeBinding getAttributeBinding() {
 		ensureBound();
 		return entityIdentifierBinding.getAttributeBinding();
 	}
@@ -267,14 +267,14 @@ public class EntityIdentifier {
 
 	private abstract class EntityIdentifierBinding {
 		private final EntityIdentifierNature nature;
-		private final SingularNonAssociationAttributeBinding identifierAttributeBinding;
+		private final SingularAttributeBinding identifierAttributeBinding;
 		private final IdentifierGeneratorDefinition identifierGeneratorDefinition;
 		private final String unsavedValue;
 		private final int columnCount;
 
 		protected EntityIdentifierBinding(
 				EntityIdentifierNature nature,
-				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				SingularAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
 			this.nature = nature;
@@ -294,7 +294,7 @@ public class EntityIdentifier {
 			return nature;
 		}
 
-		public SingularNonAssociationAttributeBinding getAttributeBinding() {
+		public SingularAttributeBinding getAttributeBinding() {
 			return identifierAttributeBinding;
 		}
 
@@ -349,7 +349,7 @@ public class EntityIdentifier {
 				}
 			}
 
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+			params.setProperty( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntityName() );
 			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, entityBinding.getJpaEntityName() );
 
 			//init the table here instead of earlier, so that we can get a quoted table name
@@ -383,7 +383,7 @@ public class EntityIdentifier {
 
 	private class SimpleAttributeIdentifierBindingImpl extends EntityIdentifierBinding {
 		SimpleAttributeIdentifierBindingImpl(
-				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				SingularAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
 			super( SIMPLE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
@@ -455,7 +455,7 @@ public class EntityIdentifier {
 			CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
 					new CompositeNestedGeneratedValueGenerator.GenerationContextLocator() {
 						public Serializable locateGenerationContext( SessionImplementor session, Object incomingObject) {
-							return session.getEntityPersister( entityBinding.getEntity().getName(), incomingObject )
+							return session.getEntityPersister( entityBinding.getEntityName(), incomingObject )
 									.getIdentifier( incomingObject, session );
 						}
 					};
@@ -516,7 +516,7 @@ public class EntityIdentifier {
 			this.externalAggregatingPropertyAccessorName = externalAggregatingPropertyAccessorName;
 			if ( identifierAttributeBinding.attributeBindingSpan() == 0 ) {
 				throw new MappingException(
-						"A composite ID has 0 attributes for " + entityBinding.getEntity().getName()
+						"A composite ID has 0 attributes for " + entityBinding.getEntityName()
 				);
 			}
 			for ( AttributeBinding attributeBinding : identifierAttributeBinding.attributeBindings() ) {
@@ -524,7 +524,7 @@ public class EntityIdentifier {
 					throw new MappingException(
 							String.format(
 									"The composite ID for [%s] contains an attribute [%s} that is plural.",
-									entityBinding.getEntity().getName(),
+									entityBinding.getEntityName(),
 									attributeBinding.getAttribute().getName()
 							)
 					);
@@ -575,7 +575,7 @@ public class EntityIdentifier {
 			CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
 					new CompositeNestedGeneratedValueGenerator.GenerationContextLocator() {
 						public Serializable locateGenerationContext( SessionImplementor session, Object incomingObject) {
-							return session.getEntityPersister( entityBinding.getEntity().getName(), incomingObject )
+							return session.getEntityPersister( entityBinding.getEntityName(), incomingObject )
 									.getIdentifier( incomingObject, session );
 						}
 					};

@@ -23,16 +23,8 @@
  */
 package org.hibernate.test.loadplans.plans;
 
-import static junit.framework.Assert.assertNotNull;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-//import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan.build.internal.returns.CollectionFetchableElementEntityGraph;
 import org.hibernate.loader.plan.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
@@ -41,6 +33,9 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.cid.keymanytoone.Card;
 import org.hibernate.test.annotations.cid.keymanytoone.CardField;
@@ -50,9 +45,16 @@ import org.hibernate.test.annotations.collectionelement.Boy;
 import org.hibernate.test.annotations.collectionelement.Matrix;
 import org.hibernate.test.annotations.collectionelement.TestCourse;
 import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProcessorTest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import static junit.framework.Assert.assertNotNull;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+//import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
 
 /**
  * Used to assert that "fetch graphs" between JoinWalker and LoadPlan are same.
@@ -96,7 +98,6 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdNoFetches1() {
 		// CardField is an entity with a composite identifier mapped via a @EmbeddedId class (CardFieldPK) defining
 		// a @ManyToOne
@@ -118,7 +119,6 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdNoFetches2() {
 		// Parent is an entity with a composite identifier mapped via a @EmbeddedId class (ParentPK) which is defined
 		// using just basic types (strings, ints, etc)

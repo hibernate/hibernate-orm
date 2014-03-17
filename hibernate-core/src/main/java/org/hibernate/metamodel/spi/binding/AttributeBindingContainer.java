@@ -26,12 +26,12 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.tuple.Tuplizer;
 
 /**

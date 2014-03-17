@@ -192,6 +192,14 @@ public final class StandardBasicTypes {
 	public static final CalendarDateType CALENDAR_DATE = CalendarDateType.INSTANCE;
 
 	/**
+	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
+	 * {@link java.sql.Types#TIME TIME}.
+	 *
+	 * @see CalendarDateType
+	 */
+	public static final CalendarTimeType CALENDAR_TIME = CalendarTimeType.INSTANCE;
+
+	/**
 	 * The standard Hibernate type for mapping {@link Class} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see ClassType

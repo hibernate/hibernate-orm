@@ -30,13 +30,36 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class PropertyPath {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
+
+	private final char delimiter;
 	private final PropertyPath parent;
 	private final String property;
 	private final String fullPath;
 
-	public PropertyPath(PropertyPath parent, String property) {
+	public PropertyPath() {
+		this( null, "", '.' );
+	}
+
+	public PropertyPath(char delimiter) {
+		this( null, "", delimiter );
+	}
+
+	public PropertyPath(String base) {
+		this( null, base, '.' );
+	}
+
+	public PropertyPath(String base, char delimiter) {
+		this( null, base, delimiter );
+	}
+
+	private PropertyPath(PropertyPath parent, String property) {
+		this( parent, property, parent.delimiter );
+	}
+
+	private PropertyPath(PropertyPath parent, String property, char delimiter) {
 		this.parent = parent;
 		this.property = property;
+		this.delimiter = delimiter;
 
 		// the _identifierMapper is a "hidden" property on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
@@ -52,7 +75,7 @@ public class PropertyPath {
 					prefix = "";
 				}
 				else {
-					prefix = resolvedParent + '.';
+					prefix = resolvedParent + delimiter;
 				}
 			}
 			else {
@@ -61,14 +84,6 @@ public class PropertyPath {
 
 			this.fullPath = prefix + property;
 		}
-	}
-
-	public PropertyPath(String property) {
-		this( null, property );
-	}
-
-	public PropertyPath() {
-		this( "" );
 	}
 
 	public PropertyPath append(String property) {
@@ -87,8 +102,12 @@ public class PropertyPath {
 		return fullPath;
 	}
 
+	public char getDelimiter() {
+		return delimiter;
+	}
+
 	public boolean isRoot() {
-		return parent == null && StringHelper.isEmpty( property );
+		return parent == null;
 	}
 
 	@Override

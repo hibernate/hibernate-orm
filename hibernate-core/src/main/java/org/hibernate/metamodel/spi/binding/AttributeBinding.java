@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * The basic contract for binding a {@link #getAttribute() attribute} from the domain model to the relational model.
@@ -78,4 +78,6 @@ public interface AttributeBinding {
 	public boolean isAlternateUniqueKey();
 
 	public boolean isLazy();
+
+	public String getAttributePath();
 }

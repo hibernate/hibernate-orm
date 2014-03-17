@@ -53,6 +53,7 @@ public class PersistenceMetadataMocker extends AbstractMocker {
 			create( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS, null );
 		}
 		if ( persistenceUnitDefaults.getEntityListeners() != null ) {
+
 			new DefaultListenerMocker( indexBuilder, null ).parse( persistenceUnitDefaults.getEntityListeners() );
 		}
 		indexBuilder.finishGlobalConfigurationMocking( globalAnnotations );

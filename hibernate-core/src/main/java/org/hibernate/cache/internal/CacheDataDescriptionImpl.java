@@ -96,7 +96,11 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	 * @return The constructed CacheDataDescriptionImpl
 	 */
 	public static CacheDataDescriptionImpl decode(EntityBinding model) {
-		return new CacheDataDescriptionImpl( model.isMutable(), model.isVersioned(), getVersionComparator( model ) );
+		return new CacheDataDescriptionImpl(
+				model.getHierarchyDetails().isMutable(),
+				model.getHierarchyDetails().isVersioned(),
+				getVersionComparator( model )
+		);
 	}
 
 	/**
@@ -126,13 +130,13 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	public static CacheDataDescriptionImpl decode(PluralAttributeBinding model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
-				model.getContainer().seekEntityBinding().isVersioned(),
+				model.getContainer().seekEntityBinding().getHierarchyDetails().isVersioned(),
 				getVersionComparator( model.getContainer().seekEntityBinding() )
 		);
 	}
 
 	private static Comparator getVersionComparator(EntityBinding model ) {
-		if ( model.isVersioned() ) {
+		if ( model.getHierarchyDetails().isVersioned() ) {
 			final VersionType versionType = (VersionType) model.getHierarchyDetails()
 					.getEntityVersion().getVersioningAttributeBinding()
 					.getHibernateTypeDescriptor()

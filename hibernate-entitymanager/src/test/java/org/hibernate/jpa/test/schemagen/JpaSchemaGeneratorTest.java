@@ -25,7 +25,6 @@ package org.hibernate.jpa.test.schemagen;
 
 import java.net.URL;
 import java.util.Map;
-
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.dialect.H2Dialect;
@@ -34,6 +33,8 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -46,6 +47,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9061" )
 public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase {
 	private static final String LOAD_SQL = "org/hibernate/jpa/test/schemagen/load-script-source.sql";
 	private static final String CREATE_SQL = "org/hibernate/jpa/test/schemagen/create-script-source.sql";

@@ -35,7 +35,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAssociationOverride;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributeOverride;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCollectionTable;

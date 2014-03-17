@@ -23,16 +23,16 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.idclass;
 
-import javax.persistence.EntityManagerFactory;
 import java.util.Arrays;
+import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 
-import org.junit.Test;
-
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -40,13 +40,14 @@ import static org.junit.Assert.assertNotNull;
  * @author Alexis Bataille
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9055" )
 public class MappedSuperclassWithEntityWithIdClassTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5024" )
 	public void testStaticMetamodel() {
 		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
 				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( ProductAttribute.class )
+				Arrays.asList( ProductAttribute.class, ProductAttributeId.class )
 		);
 
 		assertNotNull( "'ProductAttribute_.value' should not be null)", ProductAttribute_.value );

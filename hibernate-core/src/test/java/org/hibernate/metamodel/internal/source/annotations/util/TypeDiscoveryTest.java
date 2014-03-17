@@ -25,10 +25,10 @@ package org.hibernate.metamodel.internal.source.annotations.util;
 
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
+
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
@@ -41,9 +41,9 @@ public class TypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 //		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 //
 //		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
-//		ConfiguredClass configuredClass = iter.next();
+//		ManagedTypeMetadata configuredClass = iter.next();
 //
-//		MappedAttribute property = configuredClass.getMappedAttribute( "id" );
+//		PersistentAttribute property = configuredClass.getMappedAttribute( "id" );
 //		assertEquals( "Unexpected property type", int.class, property.getJavaType() );
 //
 //		property = configuredClass.getMappedAttribute( "string" );

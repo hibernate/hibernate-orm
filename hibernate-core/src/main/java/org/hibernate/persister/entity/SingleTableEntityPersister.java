@@ -399,19 +399,19 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		if ( entityBinding.isPolymorphic() ) {
 			int k=1;
 			for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
-				subclassClosure[k++] = subEntityBinding.getEntity().getName();
+				subclassClosure[k++] = subEntityBinding.getEntityName();
 				if ( subEntityBinding.isDiscriminatorMatchValueNull() ) {
-					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
+					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, subEntityBinding.getEntityName() );
 				}
 				else if ( subEntityBinding.isDiscriminatorMatchValueNotNull() ) {
-					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
+					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntityName() );
 				}
 				else {
 					try {
 						DiscriminatorType dtype = (DiscriminatorType) discriminatorType;
 						addSubclassByDiscriminatorValue(
 							dtype.stringToObject( subEntityBinding.getDiscriminatorMatchValue() ),
-							subEntityBinding.getEntity().getName()
+							subEntityBinding.getEntityName()
 						);
 					}
 					catch (ClassCastException cce) {

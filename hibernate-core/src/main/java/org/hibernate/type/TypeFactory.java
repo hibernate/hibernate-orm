@@ -128,7 +128,7 @@ public final class TypeFactory implements Serializable {
 
 	public static void injectParameters(Object type, Properties parameters) {
 		if ( ParameterizedType.class.isInstance( type ) ) {
-			( (ParameterizedType) type ).setParameterValues(parameters);
+			( (ParameterizedType) type ).setParameterValues( parameters );
 		}
 		else if ( parameters!=null && !parameters.isEmpty() ) {
 			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );

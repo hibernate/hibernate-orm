@@ -69,11 +69,25 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public class EnumType implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
+public class EnumType implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, Serializable {
     private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
 
+	/**
+	 * Keys the enum Class in the config settings
+	 */
 	public static final String ENUM = "enumClass";
+
+	/**
+	 * Keys the boolean decision of whether named value mapping should be
+	 * used, as opposed to ordinal.
+	 */
 	public static final String NAMED = "useNamed";
+
+	/**
+	 * Keys the JDBC type code to be used to represent the enum values.
+	 * Typically this is either {@link java.sql.Types#INTEGER} (ORDINAL) or
+	 * {@link java.sql.Types#VARCHAR} (NAMED)
+	 */
 	public static final String TYPE = "type";
 
 	private Class<? extends Enum> enumClass;

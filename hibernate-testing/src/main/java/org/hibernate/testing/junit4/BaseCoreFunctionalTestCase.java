@@ -37,6 +37,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.TruthValue;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -62,7 +63,6 @@ import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.type.Type;
 
@@ -209,51 +209,60 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public void applyCacheSettings(MetadataImplementor metadataImplementor) {
-		if ( StringHelper.isEmpty( getCacheConcurrencyStrategy() ) ) {
+		if ( !overrideCacheStrategy() || StringHelper.isEmpty( getCacheConcurrencyStrategy() ) ) {
 			return;
 		}
 
 		for ( EntityBinding entityBinding : metadataImplementor.getEntityBindings() ) {
-			boolean hasLob = false;
-			for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-				if ( attributeBinding.getAttribute().isSingular() ) {
-					Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-					String typeName = type.getName();
-					if ( "blob".equals( typeName ) || "clob".equals( typeName ) ) {
-						hasLob = true;
-					}
-					if ( Blob.class.getName().equals( typeName ) || Clob.class.getName().equals( typeName ) ) {
-						hasLob = true;
-					}
+			if ( entityBinding.getSuperEntityBinding() == null ) {
+				overrideEntityCache( entityBinding );
+			}
+			overrideCollectionCachesForEntity( entityBinding );
+		}
+	}
+
+	private void overrideEntityCache(EntityBinding entityBinding) {
+		boolean hasLob = false;
+		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+				String typeName = type.getName();
+				if ( "blob".equals( typeName ) || "clob".equals( typeName ) ) {
+					hasLob = true;
+					break;
+				}
+				if ( Blob.class.getName().equals( typeName ) || Clob.class.getName().equals( typeName ) ) {
+					hasLob = true;
+					break;
 				}
 			}
-			if ( !hasLob && entityBinding.getSuperEntityBinding() == null && overrideCacheStrategy() ) {
-				Caching caching = entityBinding.getHierarchyDetails().getCaching();
-				if ( caching == null ) {
-					caching = new Caching();
-				}
-				caching.setRegion( entityBinding.getEntity().getName() );
-				caching.setCacheLazyProperties( true );
-				caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
-				entityBinding.getHierarchyDetails().setCaching( caching );
-			}
-			for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-				if ( !attributeBinding.getAttribute().isSingular() ) {
-					AbstractPluralAttributeBinding binding = AbstractPluralAttributeBinding.class.cast( attributeBinding );
-					Caching caching = binding.getCaching();
-					if ( caching == null ) {
-						caching = new Caching();
-					}
-					caching.setRegion(
-							StringHelper.qualify(
-									entityBinding.getEntity().getName(),
-									attributeBinding.getAttribute().getName()
-							)
-					);
-					caching.setCacheLazyProperties( true );
-					caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
-					binding.setCaching( caching );
-				}
+		}
+		if ( !hasLob && entityBinding.getSuperEntityBinding() == null ) {
+			entityBinding.getHierarchyDetails().getCaching().setRequested( TruthValue.TRUE );
+			entityBinding.getHierarchyDetails().getCaching().setRegion( entityBinding.getEntityName() );
+			entityBinding.getHierarchyDetails().getCaching().setCacheLazyProperties( true );
+			entityBinding.getHierarchyDetails().getCaching().setAccessType(
+					AccessType.fromExternalName(
+							getCacheConcurrencyStrategy()
+					)
+			);
+		}
+	}
+
+	private void overrideCollectionCachesForEntity(EntityBinding entityBinding) {
+		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+			if ( !attributeBinding.getAttribute().isSingular() ) {
+				AbstractPluralAttributeBinding binding = AbstractPluralAttributeBinding.class.cast( attributeBinding );
+
+				binding.getCaching().setRequested( TruthValue.TRUE );
+				binding.getCaching().setRegion(
+						StringHelper.qualify(
+								entityBinding.getEntityName(),
+								attributeBinding.getAttribute().getName()
+						)
+				);
+				binding.getCaching().setCacheLazyProperties( true );
+				binding.getCaching().setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
 			}
 		}
 	}

@@ -51,6 +51,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Aggregate;
@@ -521,9 +522,9 @@ public class EntityMetamodel implements Serializable {
 		this.sessionFactory = sessionFactory;
 		this.persister = persister;
 
-		name = entityBinding.getEntity().getName();
+		name = entityBinding.getEntityName();
 
-		rootName = entityBinding.getHierarchyDetails().getRootEntityBinding().getEntity().getName();
+		rootName = entityBinding.getHierarchyDetails().getRootEntityBinding().getEntityName();
 		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
 		identifierAttribute = PropertyFactory.buildIdentifierProperty(
@@ -532,21 +533,21 @@ public class EntityMetamodel implements Serializable {
 				sessionFactory
 		);
 
-		versioned = entityBinding.isVersioned();
+		versioned = entityBinding.getHierarchyDetails().isVersioned();
 
 		boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
 		Class<?> proxyInterfaceClass = null;
 		Class<?> mappedClass = null;
 		if ( isPOJO ) {
 			final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
-			mappedClass = cls.classForName( entityBinding.getEntity().getDescriptor().getName().fullName() );
+			mappedClass = cls.classForName( entityBinding.getEntity().getDescriptor().getName().toString() );
 			if ( entityBinding.getProxyInterfaceType() != null ) {
-				proxyInterfaceClass = cls.classForName( entityBinding.getProxyInterfaceType().getName().fullName() );
+				proxyInterfaceClass = cls.classForName( entityBinding.getProxyInterfaceType().getName().toString() );
 			}
 			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 		}
 		else {
-			instrumentationMetadata = new NonPojoInstrumentationMetadata( entityBinding.getEntity().getName() );
+			instrumentationMetadata = new NonPojoInstrumentationMetadata( entityBinding.getEntityName() );
 		}
 
 		boolean hasLazy = false;
@@ -592,9 +593,12 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateGeneratedValue = false;
 		boolean foundUpdateableNaturalIdProperty = false;
 
-		for ( AttributeBinding attributeBinding : attributeBindings ) {
+		BasicAttributeBinding versionBinding = entityBinding.getHierarchyDetails().getEntityVersion() == null
+				? null
+				: entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding();
 
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
+		for ( AttributeBinding attributeBinding : attributeBindings ) {
+			if ( attributeBinding == versionBinding ) {
 				tempVersionProperty = i;
 				properties[i] = PropertyFactory.buildVersionProperty(
 						persister,
@@ -693,7 +697,7 @@ public class EntityMetamodel implements Serializable {
 				! isPOJO ||
 				! ReflectHelper.isFinalClass( proxyInterfaceClass )
 		);
-		mutable = entityBinding.isMutable();
+		mutable = entityBinding.getHierarchyDetails().isMutable();
 		if ( entityBinding.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)
 			isAbstract = isPOJO &&
@@ -736,11 +740,11 @@ public class EntityMetamodel implements Serializable {
 		if ( isPOJO ) {
 			final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
 			for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
-				subclassEntityNames.add( subEntityBinding.getEntity().getName() );
+				subclassEntityNames.add( subEntityBinding.getEntityName() );
 				final Class subclassClass = cls.classForName(
-						subEntityBinding.getEntity().getDescriptor().getName().fullName()
+						subEntityBinding.getEntity().getDescriptor().getName().toString()
 				);
-				entityNameByInheritenceClassMap.put( subclassClass, subEntityBinding.getEntity().getName() );
+				entityNameByInheritenceClassMap.put( subclassClass, subEntityBinding.getEntityName() );
 			}
 		}
 		subclassEntityNames.add( name );

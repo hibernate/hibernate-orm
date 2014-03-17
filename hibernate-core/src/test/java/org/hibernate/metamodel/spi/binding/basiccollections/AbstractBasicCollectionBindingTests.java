@@ -27,11 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.FetchTiming;
@@ -50,10 +45,15 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.SetType;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -160,7 +160,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		assertNull( collectionHibernateTypeDescriptor.getExplicitTypeName() );
 		assertEquals(
 				expectedCollectionJavaClass.getName(),
-				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName()
+				collectionHibernateTypeDescriptor.getJavaTypeDescriptor().getName().toString()
 		);
 		assertTrue( collectionHibernateTypeDescriptor.getTypeParameters().isEmpty() );
 		assertTrue( expectedCollectionTypeClass.isInstance( collectionHibernateTypeDescriptor.getResolvedTypeMapping() ) );
@@ -168,7 +168,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		final String role = collectionBinding.getAttribute().getRole();
 		assertEquals(
 				role,
-				collectionOwnerBinding.getEntity().getName() + "." + collectionBinding.getAttribute().getName()
+				collectionOwnerBinding.getEntityName() + "." + collectionBinding.getAttribute().getName()
 		);
 		assertEquals(
 				role,
@@ -202,7 +202,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		);
 		assertEquals(
 				expectedElementJavaClass.getName(),
-				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
+				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
 		);
 		assertEquals(
 				expectedElementJavaClass,

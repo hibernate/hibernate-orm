@@ -83,7 +83,7 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 	}
 
 	public String getEntityName() {
-		return pluralAttributeBinding.getContainer().seekEntityBinding().getEntity().getName();
+		return pluralAttributeBinding.getContainer().seekEntityBinding().getEntityName();
 	}
 
 	@Override

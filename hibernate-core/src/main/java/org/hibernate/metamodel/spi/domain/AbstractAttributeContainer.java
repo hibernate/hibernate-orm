@@ -39,22 +39,25 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
-	private final String name;
 	private final JavaTypeDescriptor typeDescriptor;
 	private final Hierarchical superType;
 
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
 	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
-	public AbstractAttributeContainer(String name, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
-		this.name = name;
+	public AbstractAttributeContainer(JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
 		this.typeDescriptor = typeDescriptor;
 		this.superType = superType;
 	}
 
 	@Override
 	public String getName() {
-		return name;
+		return typeDescriptor.getName().toString();
+	}
+
+	@Override
+	public String getRoleBaseName() {
+		return getName();
 	}
 
 	@Override
@@ -114,7 +117,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public String toString() {
-		return "AbstractAttributeContainer" + "{name='" + name + "', superType=" + superType + '}';
+		return "AbstractAttributeContainer" + "{name='" + getName() + "', superType=" + superType + '}';
 	}
 
 

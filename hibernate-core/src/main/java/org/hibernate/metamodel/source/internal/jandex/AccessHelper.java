@@ -32,8 +32,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;

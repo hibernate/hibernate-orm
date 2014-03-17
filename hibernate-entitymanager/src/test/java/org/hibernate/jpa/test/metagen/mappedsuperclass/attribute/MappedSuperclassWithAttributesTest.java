@@ -23,17 +23,15 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
 
-import javax.persistence.EntityManagerFactory;
 import java.util.Arrays;
+import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -43,7 +41,6 @@ import static org.junit.Assert.assertNotNull;
 @TestForIssue( jiraKey = "HHH-5024" )
 public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testStaticMetamodel() {
 
 		// spent too much time digging into this.  problem is ultimately that metamodel binding

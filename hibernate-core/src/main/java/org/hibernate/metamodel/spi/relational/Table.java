@@ -50,6 +50,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	private boolean isPhysicalTable = true;
 	private boolean hasDenormalizedTables = false;
 
+	private String rowId;
+
 	private final Set<Index> indexes = new LinkedHashSet<Index>();
 	private final Set<UniqueKey> uniqueKeys = new LinkedHashSet<UniqueKey>();
 	private final List<CheckConstraint> checkConstraints = new ArrayList<CheckConstraint>();
@@ -193,6 +195,14 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		comments.add( comment );
 	}
 
+	public String getRowId() {
+		return rowId;
+	}
+
+	public void setRowId(String rowId) {
+		this.rowId = rowId;
+	}
+
 	@Override
 	public String getQualifiedName(Dialect dialect) {
 		return qualifiedName.toText( dialect );
@@ -229,11 +239,9 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	public String[] sqlAlterStrings(TableInformation tableInformation, JdbcEnvironment jdbcEnvironment) {
 		final Dialect dialect = jdbcEnvironment.getDialect();
-		final String baseAlterCommand = new StringBuilder( "alter table " )
-				.append( jdbcEnvironment.getQualifiedObjectNameSupport().formatName( getTableName() ) )
-				.append( ' ' )
-				.append( dialect.getAddColumnString() )
-				.toString();
+		final String baseAlterCommand = "alter table "
+				+ jdbcEnvironment.getQualifiedObjectNameSupport().formatName( getTableName() )
+				+ ' ' + dialect.getAddColumnString();
 
 		final List<String> commands = new ArrayList<String>();
 

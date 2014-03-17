@@ -33,8 +33,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.internal.util.StringHelper;
@@ -43,8 +41,10 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.Value;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -79,7 +79,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertNotNull( entityBinding.getEntity().getSuperType() );
 		assertEquals(
 				RootOfSingleTableInheritance.class.getName(),
-				entityBinding.getEntity().getSuperType().getDescriptor().getName().fullName()
+				entityBinding.getEntity().getSuperType().getDescriptor().getName().toString()
 		);
 		assertNull( entityBinding.getEntity().getSuperType().getSuperType() );
 	}
@@ -171,7 +171,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		EntityBinding subclassOfSubclassEntityBinding = getEntityBinding( SubclassOfSubclassOfSingleTableInheritance.class );
 
 		assertTrue( rootEntityBinding.isRoot() );
-		assertEquals( StringHelper.unqualify( rootEntityBinding.getEntity().getName() ), rootEntityBinding.getDiscriminatorMatchValue() );
+		assertEquals( StringHelper.unqualify( rootEntityBinding.getEntityName() ), rootEntityBinding.getDiscriminatorMatchValue() );
 		assertNull( rootEntityBinding.getSuperEntityBinding() );
 		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ) );
 		assertTrue( rootEntityBinding.isPolymorphic() );

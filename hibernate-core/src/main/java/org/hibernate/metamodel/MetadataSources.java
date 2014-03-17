@@ -51,23 +51,27 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.MetadataBuilderImpl;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbConverter;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddable;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityListener;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityListeners;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbMappedSuperclass;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitDefaults;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbClassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSubclassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbUnionSubclassElement;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbConverter;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddable;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbMappedSuperclass;
-import org.hibernate.metamodel.internal.MetadataBuilderImpl;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.source.InvalidMappingException;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.MappingNotFoundException;
+import org.hibernate.metamodel.source.spi.InvalidMappingException;
+import org.hibernate.metamodel.source.spi.MappingException;
+import org.hibernate.metamodel.source.spi.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
@@ -826,6 +830,14 @@ public class MetadataSources {
 		private void indexOrmXmlReferences(JaxbEntityMappings ormXmlRoot) {
 			final String packageName = ormXmlRoot.getPackage();
 
+			final JaxbPersistenceUnitMetadata puMetadata = ormXmlRoot.getPersistenceUnitMetadata();
+			if ( puMetadata != null ) {
+				final JaxbPersistenceUnitDefaults puDefaults = puMetadata.getPersistenceUnitDefaults();
+				if ( puDefaults != null ) {
+					indexEntityListeners( puDefaults.getEntityListeners(), packageName );
+				}
+			}
+
 			for ( JaxbConverter jaxbConverter : ormXmlRoot.getConverter() ) {
 				indexClassName( toDotName( jaxbConverter.getClazz(), packageName ) );
 			}
@@ -840,6 +852,19 @@ public class MetadataSources {
 
 			for ( JaxbEntity jaxbEntity : ormXmlRoot.getEntity() ) {
 				indexClassName( toDotName( jaxbEntity.getClazz(), packageName ) );
+				indexEntityListeners( jaxbEntity.getEntityListeners(), packageName );
+			}
+		}
+
+		private void indexEntityListeners(JaxbEntityListeners listeners, String packageName) {
+			if ( listeners == null ) {
+				return;
+			}
+
+			for ( JaxbEntityListener listener : listeners.getEntityListener() ) {
+				if ( StringHelper.isNotEmpty( listener.getClazz() ) ) {
+					indexClassName( toDotName( listener.getClazz(), packageName ) );
+				}
 			}
 		}
 	}

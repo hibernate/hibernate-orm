@@ -31,9 +31,13 @@ import java.lang.annotation.RetentionPolicy;
  * Grouping of tuplizers.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated Specifying multiple entity modes and/or tuplizers for a thing
+ * is no longer supported
  */
 @java.lang.annotation.Target( {ElementType.TYPE, ElementType.FIELD, ElementType.METHOD} )
 @Retention( RetentionPolicy.RUNTIME )
+@Deprecated
 public @interface Tuplizers {
 	/**
 	 * The grouping of tuplizers.

@@ -101,7 +101,7 @@ public class SchemaUtil {
 						.getAttributeContainer()
 						.getDescriptor()
 						.getName()
-						.fullName();
+						.toString();
 				if ( entityClass.getName().equals( collectionOwnerName ) ) {
 					return collectionBinding;
 				}
@@ -117,10 +117,6 @@ public class SchemaUtil {
 
 	/**
 	 * Do all of the given columns have associated UKs?
-	 * 
-	 * @param table
-	 * @param columnNames
-	 * @return
 	 */
 	public static boolean columnHasUniqueKey(TableSpecification table, String columnName) {
 		return table.hasUniqueKey( table.locateColumn( columnName ) );

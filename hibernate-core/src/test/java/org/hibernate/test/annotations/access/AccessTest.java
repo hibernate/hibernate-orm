@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.access;
 
-import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,7 +39,6 @@ import static org.junit.Assert.assertNull;
  */
 public class AccessTest extends BaseCoreFunctionalTestCase {
 	@Test
-    @FailureExpectedWithNewMetamodel
 	public void testSuperclassOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setColor( "Black" );
@@ -75,6 +74,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
 	public void testPropertyOverriding() throws Exception {
 		Furniture fur = new Furniture();
@@ -91,6 +91,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
 	public void testNonOverridenSubclass() throws Exception {
 		Chair chair = new Chair();
@@ -107,6 +108,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
 	public void testOverridenSubclass() throws Exception {
 		BigBed bed = new BigBed();
@@ -125,8 +127,8 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Test
-    @FailureExpectedWithNewMetamodel
 	public void testFieldsOverriding() throws Exception {
 		Gardenshed gs = new Gardenshed();
 		gs.floors = 4;
@@ -143,6 +145,7 @@ public class AccessTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
     @Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {

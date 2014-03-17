@@ -23,8 +23,6 @@
  */
 package org.hibernate.jpa.test.procedure;
 
-import javax.persistence.EntityManager;
-import javax.persistence.StoredProcedureQuery;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -35,6 +33,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -45,12 +45,12 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
@@ -173,47 +173,69 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9059" )
 	public void testSettingInParamDefinedOnNamedStoredProcedureQuery() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
 			query.setParameter( 1, 1 );
+			em.getTransaction().commit();
+		}
+		catch (RuntimeException e) {
+			em.getTransaction().rollback();
+			throw e;
 		}
 		finally {
-			em.getTransaction().commit();
 			em.close();
 		}
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9059" )
 	public void testSettingNonExistingParams() {
 		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
 
 		try {
 			// non-existing positional param
+			em.getTransaction().begin();
+			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
 			try {
-				StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
 				query.setParameter( 99, 1 );
 				fail( "Expecting an exception" );
 			}
 			catch (IllegalArgumentException expected) {
 				// this is the expected condition
 			}
+			finally {
+				if ( em.getTransaction().getRollbackOnly() ) {
+					em.getTransaction().rollback();
+				}
+				else {
+					em.getTransaction().commit();
+				}
+			}
 
 			// non-existing named param
+			em.getTransaction().begin();
+			query = em.createNamedStoredProcedureQuery( "positional-param" );
 			try {
-				StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
 				query.setParameter( "does-not-exist", 1 );
 				fail( "Expecting an exception" );
 			}
 			catch (IllegalArgumentException expected) {
 				// this is the expected condition
 			}
+			finally {
+				if ( em.getTransaction().getRollbackOnly() ) {
+					em.getTransaction().rollback();
+				}
+				else {
+					em.getTransaction().commit();
+				}
+			}
 		}
 		finally {
-			em.getTransaction().commit();
 			em.close();
 		}
 	}

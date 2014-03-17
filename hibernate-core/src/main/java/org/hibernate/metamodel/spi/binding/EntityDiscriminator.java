@@ -34,40 +34,45 @@ import org.hibernate.metamodel.spi.relational.Value;
 public class EntityDiscriminator {
 	private final HibernateTypeDescriptor explicitHibernateTypeDescriptor = new HibernateTypeDescriptor();
 
-	private final Value relationalValue;
-	private final boolean inserted;
-	private final boolean forced;
+	private Value relationalValue;
+	private boolean inserted;
+	private boolean forced;
 
-	public EntityDiscriminator(Value relationalValue, boolean inserted, boolean forced) {
-		this.relationalValue = relationalValue;
-		this.inserted = inserted;
-		this.forced = forced;
+	public EntityDiscriminator() {
 	}
 
 	public Value getRelationalValue() {
 		return relationalValue;
 	}
 
-	public HibernateTypeDescriptor getExplicitHibernateTypeDescriptor() {
-		return explicitHibernateTypeDescriptor;
-	}
-
-	public boolean isForced() {
-		return forced;
+	public void setRelationalValue(Value relationalValue) {
+		this.relationalValue = relationalValue;
 	}
 
 	public boolean isInserted() {
 		return inserted;
 	}
 
+	public void setInserted(boolean inserted) {
+		this.inserted = inserted;
+	}
+
+	public boolean isForced() {
+		return forced;
+	}
+
+	public void setForced(boolean forced) {
+		this.forced = forced;
+	}
+
+	public HibernateTypeDescriptor getExplicitHibernateTypeDescriptor() {
+		return explicitHibernateTypeDescriptor;
+	}
+
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "EntityDiscriminator" );
-		sb.append( "{relationalValue=" ).append( relationalValue );
-		sb.append( ", forced=" ).append( forced );
-		sb.append( ", inserted=" ).append( inserted );
-		sb.append( '}' );
-		return sb.toString();
+		return "EntityDiscriminator{relationalValue=" + relationalValue
+				+ ", forced=" + forced
+				+ ", inserted=" + inserted + '}';
 	}
 }

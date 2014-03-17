@@ -33,11 +33,8 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class Aggregate extends AbstractAttributeContainer {
-	final String roleBaseName;
-
-	public Aggregate(String roleBaseName, String name, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
-		super( name, typeDescriptor, superType );
-		this.roleBaseName = roleBaseName;
+	public Aggregate(JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		super( typeDescriptor, superType );
 	}
 
 	@Override
@@ -48,10 +45,5 @@ public class Aggregate extends AbstractAttributeContainer {
 	@Override
 	public boolean isAggregate() {
 		return true;
-	}
-
-	@Override
-	public String getRoleBaseName() {
-		return roleBaseName;
 	}
 }

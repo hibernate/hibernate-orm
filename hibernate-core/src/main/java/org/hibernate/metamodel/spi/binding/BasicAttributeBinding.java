@@ -26,12 +26,10 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
- * TODO : this really needs an overhaul...  mainly, get rid of the KeyValueBinding concept...
- *
  * @author Steve Ebersole
  */
 public class BasicAttributeBinding

@@ -23,44 +23,10 @@
  */
 package org.hibernate.metamodel.reflite.spi;
 
-import java.util.Map;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
 /**
  * Describes a field in a java type
  *
  * @author Steve Ebersole
  */
-public interface FieldDescriptor {
-	/**
-	 * The field name
-	 *
-	 * @return The field name
-	 */
-	public String getName();
-
-	/**
-	 * The type of the field.
-	 *
-	 * @return The type of the field.
-	 */
-	public JavaTypeDescriptor getType();
-
-	public int getModifiers();
-
-	/**
-	 * The declaring type
-	 *
-	 * @return
-	 */
-	public JavaTypeDescriptor getDeclaringType();
-
-	/**
-	 * Get the annotations defined on this field.
-	 *
-	 * @return The annotations.
-	 */
-	public Map<DotName, AnnotationInstance> getAnnotations();
+public interface FieldDescriptor extends MemberDescriptor {
 }

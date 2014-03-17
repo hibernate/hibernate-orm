@@ -23,13 +23,6 @@
  */
 package org.hibernate.test.annotations.entity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
@@ -45,12 +38,20 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -100,7 +101,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	@FailureExpectedWithNewMetamodel
 	public void testVersioning() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -665,9 +665,11 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			fail("Did not throw expected exception");
 		}
 		catch( AnnotationException ex ) {
-			assertEquals(
-					"Either name or defaultForType (or both) must be set on TypeDefinition [org.hibernate.test.annotations.entity.PhoneNumberType]",
-					ex.getMessage());
+			assertTrue(
+					ex.getMessage().startsWith(
+							"Either name or defaultForType (or both) must be set on TypeDefinition [org.hibernate.test.annotations.entity.PhoneNumberType]"
+					)
+			);
 		} finally {
 			if( sf != null){
 				sf.close();

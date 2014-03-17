@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.internal.jandex.filter;
 
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
 
 /**
  * @author Strong Liu

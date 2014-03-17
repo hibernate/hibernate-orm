@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source;
 import java.util.Iterator;
 
 import org.hibernate.EntityMode;
+import org.hibernate.TruthValue;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.id.EntityIdentifierNature;
@@ -33,23 +34,25 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.internal.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.spi.EntityHierarchySource;
+import org.hibernate.metamodel.source.spi.EntitySource;
+import org.hibernate.metamodel.source.spi.IdentifierGeneratorSource;
+import org.hibernate.metamodel.source.spi.IdentifierSource;
+import org.hibernate.metamodel.source.spi.SimpleIdentifierSource;
+import org.hibernate.metamodel.source.spi.SingularAttributeSource;
+import org.hibernate.metamodel.source.spi.TableSource;
+import org.hibernate.metamodel.source.spi.TableSpecificationSource;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
-import org.hibernate.metamodel.spi.source.IdentifierSource;
-import org.hibernate.metamodel.spi.source.RootEntitySource;
-import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.TableSource;
-import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import org.jboss.jandex.IndexView;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -64,7 +67,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 	final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build() ;
 
 	@Test
-	public void testUserEntitySources() {
+	public void testUserEntitySourcesHbm() {
 		BindingContext rootContext = RootBindingContextBuilder.buildBindingContext( serviceRegistry );
 
 		MetadataSources hbm = new MetadataSources( serviceRegistry );
@@ -74,13 +77,20 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 				hbm
 		);
 		testUserEntitySources( hbmProcessor, rootContext );
+	}
 
+	@Test
+	public void testUserEntitySourcesAnnotations() {
 		MetadataSources ann = new MetadataSources( serviceRegistry );
 		ann.addAnnotatedClass( User.class );
 		ann.addAnnotatedClass( User.Name.class );
+
+		final IndexView indexView = ann.buildJandexView();
+		BindingContext rootContext = RootBindingContextBuilder.buildBindingContext( serviceRegistry, indexView );
+
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
 				rootContext,
-				ann.buildJandexView()
+				indexView
 		);
 		testUserEntitySources( annProcessor, rootContext );
 	}
@@ -96,22 +106,23 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 			);
 		}
 
-		Iterator<EntityHierarchy> hierarchies = processor.extractEntityHierarchies().iterator();
+		Iterator<EntityHierarchySource> hierarchies = processor.extractEntityHierarchies().iterator();
 		assertTrue( hierarchies.hasNext() );
-		EntityHierarchy hierarchy = hierarchies.next();
+		EntityHierarchySource hierarchy = hierarchies.next();
 		assertFalse( hierarchies.hasNext() );
 		assertTrue( hierarchy.getHierarchyInheritanceType() == InheritanceType.NO_INHERITANCE );
 
-		RootEntitySource entitySource = hierarchy.getRootEntitySource();
-		assertFalse( entitySource.subclassEntitySources().iterator().hasNext() );
+		EntitySource entitySource = hierarchy.getRoot();
+		assertNotNull( entitySource );
+		assertEquals( 0, entitySource.getSubTypes().size() );
 
 		assertEquals( User.class.getName(), entitySource.getClassName() );
 		assertEquals( User.class.getName(), entitySource.getEntityName() );
 		assertEquals( StringHelper.unqualify( User.class.getName() ), entitySource.getJpaEntityName() );
 
-		assertEquals( EntityMode.POJO, entitySource.getEntityMode() );
-		assertNull( entitySource.getCaching() );
-		assertNull( entitySource.getDiscriminatorSource() );
+		assertEquals( EntityMode.POJO, hierarchy.getEntityMode() );
+		assertEquals( TruthValue.FALSE, hierarchy.getCaching().getRequested() );
+		assertNull( hierarchy.getDiscriminatorSource() );
 		assertNull( entitySource.getDiscriminatorMatchValue() );
 
 		assertTrue( entitySource.getJpaCallbackClasses() == null || entitySource.getJpaCallbackClasses().isEmpty() );
@@ -130,7 +141,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 				ArrayHelper.isEmpty( entitySource.getSynchronizedTableNames() )
 		);
 
-		IdentifierSource identifierSource = entitySource.getIdentifierSource();
+		IdentifierSource identifierSource = hierarchy.getIdentifierSource();
 		assertNotNull( identifierSource );
 		assertEquals( EntityIdentifierNature.SIMPLE, identifierSource.getNature() );
 		SimpleIdentifierSource simpleIdentifierSource = (SimpleIdentifierSource) identifierSource;
@@ -188,22 +199,23 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.OrderPk.class );
+		IndexView indexView = ann.buildJandexView();
 		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
-				RootBindingContextBuilder.buildBindingContext( serviceRegistry ),
-				ann.buildJandexView()
+				RootBindingContextBuilder.buildBindingContext( serviceRegistry, indexView ),
+				indexView
 		);
 		testOrderEntitySources( annProcessor );
 	}
 
 	private void testOrderEntitySources(MetadataSourceProcessor processor) {
-		Iterator<EntityHierarchy> hierarchies = processor.extractEntityHierarchies().iterator();
+		Iterator<EntityHierarchySource> hierarchies = processor.extractEntityHierarchies().iterator();
 		assertTrue( hierarchies.hasNext() );
-		EntityHierarchy hierarchy = hierarchies.next();
+		EntityHierarchySource hierarchy = hierarchies.next();
 		assertFalse( hierarchies.hasNext() );
 		assertTrue( hierarchy.getHierarchyInheritanceType() == InheritanceType.NO_INHERITANCE );
 
-		RootEntitySource entitySource = hierarchy.getRootEntitySource();
-		assertFalse( entitySource.subclassEntitySources().iterator().hasNext() );
+		EntitySource entitySource = hierarchy.getRoot();
+		assertEquals( 0, entitySource.getSubTypes().size() );
 
 		assertEquals( Order.class.getName(), entitySource.getClassName() );
 		assertEquals( Order.class.getName(), entitySource.getEntityName() );
@@ -216,22 +228,24 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.class );
 		ann.addAnnotatedClass( Order.OrderPk.class );
-		MetadataSourceProcessor annProcessor = new AnnotationMetadataSourceProcessorImpl(
-				RootBindingContextBuilder.buildBindingContext( serviceRegistry ),
-				ann.buildJandexView()
+		MetadataSourceProcessor annProcessor;
+		final IndexView indexView = ann.buildJandexView();
+		annProcessor = new AnnotationMetadataSourceProcessorImpl(
+				RootBindingContextBuilder.buildBindingContext( serviceRegistry, indexView ),
+				indexView
 		);
 		testOrderNonAggregatedEntitySources( annProcessor );
 	}
 
 	private void testOrderNonAggregatedEntitySources(MetadataSourceProcessor processor) {
-		Iterator<EntityHierarchy> hierarchies = processor.extractEntityHierarchies().iterator();
+		Iterator<EntityHierarchySource> hierarchies = processor.extractEntityHierarchies().iterator();
 		assertTrue( hierarchies.hasNext() );
-		EntityHierarchy hierarchy = hierarchies.next();
+		EntityHierarchySource hierarchy = hierarchies.next();
 		assertFalse( hierarchies.hasNext() );
 		assertTrue( hierarchy.getHierarchyInheritanceType() == InheritanceType.NO_INHERITANCE );
 
-		RootEntitySource entitySource = hierarchy.getRootEntitySource();
-		assertFalse( entitySource.subclassEntitySources().iterator().hasNext() );
+		EntitySource entitySource = hierarchy.getRoot();
+		assertEquals( 0, entitySource.getSubTypes().size() );
 
 		assertEquals( Order.class.getName(), entitySource.getClassName() );
 		assertEquals( Order.class.getName(), entitySource.getEntityName() );

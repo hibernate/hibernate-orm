@@ -40,7 +40,7 @@ public class BasicType implements Type {
 	}
 
 	public BasicType(JavaTypeDescriptor typeDescriptor) {
-		this( typeDescriptor.getName().fullName(), typeDescriptor );
+		this( typeDescriptor.getName().toString(), typeDescriptor );
 	}
 
 	@Override

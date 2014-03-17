@@ -31,20 +31,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.source.spi.JpaCallbackSource;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.JpaCallbackSource;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -84,8 +83,6 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private MetaAttributeContext metaAttributeContext;
 
 	private boolean lazy;
-	private boolean mutable;
-	private String whereFilter;
 	private String rowId;
 
 	private boolean dynamicUpdate;
@@ -110,16 +107,17 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private int nextSubEntityBindingId = 0;
 	//for joined sub entitybinding only
 	private boolean isCascadeDeleteEnabled = false;
-	/**
-	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
-	 *
-	 * @param inheritanceType The inheritance type for the hierarchy
-	 * @param entityMode The entity mode used in this hierarchy.
-	 */
-	public EntityBinding(InheritanceType inheritanceType, EntityMode entityMode) {
+
+	public EntityBinding(HierarchyDetails hierarchyDetails) {
+		this.hierarchyDetails = hierarchyDetails;
 		this.superEntityBinding = null;
-		this.hierarchyDetails = new HierarchyDetails( this, inheritanceType, entityMode );
 		this.subEntityBindingId = 0;
+	}
+
+	public EntityBinding makeSubBinding() {
+		final EntityBinding sub = new EntityBinding( this );
+		subEntityBindings.add( sub );
+		return sub;
 	}
 
 	/**
@@ -129,11 +127,11 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	 */
 	public EntityBinding(EntityBinding superEntityBinding) {
 		this.superEntityBinding = superEntityBinding;
-		this.superEntityBinding.subEntityBindings.add( this );
-		// TODO: the ID attribute binding needs to be recreated for this EntityBinding
-		// otherwise, this !=  hierarchyDetails.getEntityIdentifier().getAttributeBinding().getContainer()
 		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
 		this.subEntityBindingId = superEntityBinding.nextSubEntityBindingId();
+
+		// TODO: the ID attribute binding needs to be recreated for this EntityBinding
+		// otherwise, this !=  hierarchyDetails.getEntityIdentifier().getAttributeBinding().getContainer()
 	}
 
 	private int nextSubEntityBindingId(){
@@ -269,10 +267,6 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		return Collections.unmodifiableMap( secondaryTables );
 	}
 
-	public boolean isVersioned() {
-		return getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() != null;
-	}
-
 	public boolean isDiscriminatorMatchValueNull() {
 		return NULL_DISCRIMINATOR_MATCH_VALUE.equals( discriminatorMatchValue );
 	}
@@ -333,14 +327,6 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		this.metaAttributeContext = metaAttributeContext;
 	}
 
-	public boolean isMutable() {
-		return mutable;
-	}
-
-	public void setMutable(boolean mutable) {
-		this.mutable = mutable;
-	}
-
 	public boolean isCascadeDeleteEnabled() {
 		return isCascadeDeleteEnabled;
 	}
@@ -363,22 +349,6 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 
 	public void setProxyInterfaceType(JavaTypeDescriptor proxyInterfaceType) {
 		this.proxyInterfaceType = proxyInterfaceType;
-	}
-
-	public String getWhereFilter() {
-		if ( StringHelper.isNotEmpty( whereFilter ) ) {
-			return whereFilter;
-		}
-		else if ( superEntityBinding != null ) {
-			return superEntityBinding.getWhereFilter();
-		}
-		else {
-			return null;
-		}
-	}
-
-	public void setWhereFilter(String whereFilter) {
-		this.whereFilter = whereFilter;
 	}
 
 	public String getRowId() {
@@ -525,7 +495,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public String toString() {
 		return String.format(
 				"EntityBinding(%s)",
-				entity != null ? StringHelper.collapse( entity.getName() ) : "<not set>"
+				entity != null ? StringHelper.collapse( getEntityName() ) : "<not set>"
 		);
 	}
 

@@ -25,11 +25,16 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 /**
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
 public class MappingReorderedAliasTest extends AliasTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Table2.class, Table1.class, ConfEntity.class, UserConfEntity.class, UserEntity.class };
+	}
+
+	@Override
+	@FailureExpectedWithNewMetamodel
+	public void testUnderscoreInColumnName() throws Throwable {
+		super.testUnderscoreInColumnName();
 	}
 }

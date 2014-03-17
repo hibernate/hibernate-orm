@@ -157,6 +157,18 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
+	public MetadataBuilder withExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
+		options.explicitDiscriminatorsForJoinedInheritanceSupported = supported;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder withImplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
+		options.implicitDiscriminatorsForJoinedInheritanceSupported = supported;
+		return this;
+	}
+
+	@Override
 	public MetadataBuilder with(BasicType type) {
 		options.basicTypeRegistrations.add( type );
 		return this;
@@ -273,6 +285,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private boolean useNewIdentifierGenerators;
 		private MultiTenancyStrategy multiTenancyStrategy;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
+		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
+		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 
 		// todo : go away
 		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
@@ -302,6 +316,18 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			);
 
 			multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
+
+			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
+					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
+					StandardConverters.BOOLEAN,
+					false
+			);
+
+			explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
+					AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
+					StandardConverters.BOOLEAN,
+					false
+			);
 		}
 
 		@Override
@@ -357,6 +383,16 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		@Override
 		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
 			return cacheRegionDefinitions;
+		}
+
+		@Override
+		public boolean ignoreExplicitDiscriminatorsForJoinedInheritance() {
+			return !explicitDiscriminatorsForJoinedInheritanceSupported;
+		}
+
+		@Override
+		public boolean createImplicitDiscriminatorsForJoinedInheritance() {
+			return implicitDiscriminatorsForJoinedInheritanceSupported;
 		}
 
 		@Override

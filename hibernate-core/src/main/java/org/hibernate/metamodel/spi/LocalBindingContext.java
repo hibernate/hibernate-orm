@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.xml.spi.Origin;
 
 /**

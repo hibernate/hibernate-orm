@@ -25,6 +25,11 @@ package org.hibernate.metamodel.reflite.spi;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * Descriptor for the special java 'void' type.
@@ -37,26 +42,11 @@ public class VoidDescriptor implements JavaTypeDescriptor {
 	 */
 	public static final VoidDescriptor INSTANCE = new VoidDescriptor();
 
-	private final Name name = new Name() {
-		@Override
-		public String getQualifier() {
-			return null;
-		}
-
-		@Override
-		public String getUnqualifiedName() {
-			return "void";
-		}
-
-		@Override
-		public String fullName() {
-			return getUnqualifiedName();
-		}
-	};
+	public static final DotName NAME = DotName.createSimple( "void" );
 
 	@Override
-	public Name getName() {
-		return name;
+	public DotName getName() {
+		return NAME;
 	}
 
 	@Override
@@ -72,5 +62,44 @@ public class VoidDescriptor implements JavaTypeDescriptor {
 	@Override
 	public Collection<MethodDescriptor> getDeclaredMethods() {
 		return Collections.emptyList();
+	}
+
+	@Override
+	public AnnotationInstance findTypeAnnotation(DotName annotationType) {
+		return null;
+	}
+
+	@Override
+	public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
+		return null;
+	}
+
+	@Override
+	public Collection<AnnotationInstance> findAnnotations(DotName annotationType) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Collection<AnnotationInstance> findLocalAnnotations(DotName annotationType) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public boolean isAssignableFrom(JavaTypeDescriptor check) {
+		if ( check == null ) {
+			throw new IllegalArgumentException( "Descriptor to check cannot be null" );
+		}
+
+		return equals( check );
+	}
+
+	@Override
+	public List<JavaTypeDescriptor> getResolvedParameterTypes() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public ClassInfo getJandexClassInfo() {
+		return null;
 	}
 }

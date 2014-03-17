@@ -41,14 +41,13 @@ import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -70,11 +69,7 @@ import org.hibernate.metamodel.spi.relational.Column;
  * @author Steve Ebersole
  */
 class TypeSafeActivator {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			TypeSafeActivator.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TypeSafeActivator.class );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -169,7 +164,7 @@ class TypeSafeActivator {
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
 
 		for ( EntityBinding entityBinding : activationContext.getMetadata().getEntityBindings() ) {
-			final String className = entityBinding.getEntity().getDescriptor().getName().fullName();
+			final String className = entityBinding.getEntity().getDescriptor().getName().toString();
 
 			if ( className == null || className.length() == 0 ) {
 				continue;
@@ -224,7 +219,7 @@ class TypeSafeActivator {
 					final SingularAttribute singularAttribute = (SingularAttribute) attribute;
 					if ( singularAttribute.getSingularAttributeType().isAggregate() ) {
 						final Class<?> componentClass = classLoaderService.classForName(
-								singularAttribute.getSingularAttributeType().getDescriptor().getName().fullName()
+								singularAttribute.getSingularAttributeType().getDescriptor().getName().toString()
 						);
 						final boolean canSetNotNullOnColumns = activateNotNull && hasNotNull;
 						applyDDL(

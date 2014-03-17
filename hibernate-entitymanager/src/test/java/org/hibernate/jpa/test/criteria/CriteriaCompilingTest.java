@@ -36,10 +36,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.jpa.test.callbacks.RemoteControl;
+import org.hibernate.jpa.test.callbacks.Television;
+import org.hibernate.jpa.test.callbacks.VideoSystem;
+import org.hibernate.jpa.test.inheritance.Fruit;
+import org.hibernate.jpa.test.inheritance.Strawberry;
 import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Alias;
 import org.hibernate.jpa.test.metamodel.Country;
@@ -52,15 +54,10 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.callbacks.RemoteControl;
-import org.hibernate.jpa.test.callbacks.Television;
-import org.hibernate.jpa.test.callbacks.VideoSystem;
-import org.hibernate.jpa.test.inheritance.Fruit;
-import org.hibernate.jpa.test.inheritance.Strawberry;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -194,7 +191,8 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testSerialization() {
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8995" )
+	public void testSerialization() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
@@ -212,24 +210,18 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	private <T> T serializeDeserialize(T object) {
-		T serializedObject = null;
-		try {
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			ObjectOutput out = new ObjectOutputStream( stream );
-			out.writeObject( object );
-			out.close();
-			byte[] serialized = stream.toByteArray();
-			stream.close();
-			ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
-			ObjectInputStream in = new ObjectInputStream( byteIn );
-			serializedObject = (T) in.readObject();
-			in.close();
-			byteIn.close();
-		}
-		catch (Exception e) {
-			Assert.fail( "Unable to serialize / deserialize the object: " + e.getMessage() );
-		}
+	private <T> T serializeDeserialize(T object) throws Exception {
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		ObjectOutput out = new ObjectOutputStream( stream );
+		out.writeObject( object );
+		out.close();
+		byte[] serialized = stream.toByteArray();
+		stream.close();
+		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
+		ObjectInputStream in = new ObjectInputStream( byteIn );
+		T serializedObject = (T) in.readObject();
+		in.close();
+		byteIn.close();
 		return serializedObject;
 	}
 

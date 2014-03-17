@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -61,8 +60,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.TruthValue;
 import org.hibernate.TypeHelper;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
@@ -120,6 +119,7 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -143,6 +143,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+
 import org.jboss.logging.Logger;
 
 
@@ -762,7 +763,7 @@ public final class SessionFactoryImpl
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			if ( entityBinding.isRoot() ) {
 				identifierGenerators.put(
-						entityBinding.getEntity().getName(),
+						entityBinding.getEntityName(),
 						entityBinding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator()
 				);
 			}
@@ -772,84 +773,93 @@ public final class SessionFactoryImpl
 		// Prepare persisters and link them up with their cache
 		// region/access-strategy
 
-		StringBuilder stringBuilder = new StringBuilder();
-		if ( settings.getCacheRegionPrefix() != null) {
-			stringBuilder
-					.append( settings.getCacheRegionPrefix() )
-					.append( '.' );
-		}
-		RegionFactory regionFactory = cacheAccess.getRegionFactory();
-		final String cacheRegionPrefix = stringBuilder.toString();
 		entityPersisters = new HashMap<String,EntityPersister>();
 		Map<String, RegionAccessStrategy> entityAccessStrategies = new HashMap<String, RegionAccessStrategy>();
 		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
+
+		final RegionFactory regionFactory = cacheAccess.getRegionFactory();
 		for ( EntityBinding model : metadata.getEntityBindings() ) {
 			// TODO: should temp table prep happen when metadata is being built?
 			//model.prepareTemporaryTables( metadata, getDialect() );
-			// cache region is defined by the root-class in the hierarchy...
-			EntityBinding rootEntityBinding = metadata.getRootEntityBinding( model.getEntity().getName() );
+
 			EntityRegionAccessStrategy accessStrategy = null;
-			if ( settings.isSecondLevelCacheEnabled() &&
-					rootEntityBinding.getHierarchyDetails().getCaching() != null &&
-					model.getHierarchyDetails().getCaching() != null  ) {
-				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails().getCaching().getRegion();
-				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
-				if ( accessStrategy == null ) {
-					AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
-					if ( accessType == null ) {
-						accessType = regionFactory.getDefaultAccessType();
-					}
-					if ( traceEnabled ) {
-						LOG.tracev( "Building cache for entity data [{0}]", model.getEntity().getName() );
-					}
-					EntityRegion entityRegion = regionFactory.buildEntityRegion(
-							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
-					);
-					accessStrategy = entityRegion.buildAccessStrategy( accessType );
-					entityAccessStrategies.put( cacheRegionName, accessStrategy );
-					cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
-				}
-			}
 			NaturalIdRegionAccessStrategy naturalIdAccessStrategy = null;
-			if ( settings.isSecondLevelCacheEnabled() &&
-					rootEntityBinding.getHierarchyDetails().getNaturalIdCaching() != null &&
-					model.getHierarchyDetails().getNaturalIdCaching() != null ) {
-				final String naturalIdCacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails()
-						.getNaturalIdCaching()
-						.getRegion();
-				naturalIdAccessStrategy = (NaturalIdRegionAccessStrategy) entityAccessStrategies.get(
-						naturalIdCacheRegionName
-				);
-				if ( naturalIdAccessStrategy == null ) {
-					final CacheDataDescriptionImpl naturaIdCacheDataDescription = CacheDataDescriptionImpl.decode( model );
-					NaturalIdRegion naturalIdRegion = null;
-					try {
-						naturalIdRegion = regionFactory.buildNaturalIdRegion(
+
+			if ( settings.isSecondLevelCacheEnabled() ) {
+				// caching is defined per hierarchy.. so only do this for the root of the hierarchy
+				if (  model.getSuperEntityBinding() == null ) {
+					if ( model.getHierarchyDetails().getCaching().getRequested() == TruthValue.TRUE ) {
+						String baseRegionName = model.getHierarchyDetails().getCaching().getRegion();
+						if ( baseRegionName == null ) {
+							baseRegionName = model.getEntityName();
+						}
+						final String cacheRegionName = StringHelper.makePath(
+								settings.getCacheRegionPrefix(),
+								baseRegionName
+						);
+						accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
+						if ( accessStrategy == null ) {
+							AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
+							if ( accessType == null ) {
+								accessType = regionFactory.getDefaultAccessType();
+							}
+							if ( traceEnabled ) {
+								LOG.tracev( "Building cache for entity data [{0}]", model.getEntityName() );
+							}
+							EntityRegion entityRegion = regionFactory.buildEntityRegion(
+									cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+							);
+							accessStrategy = entityRegion.buildAccessStrategy( accessType );
+							entityAccessStrategies.put( cacheRegionName, accessStrategy );
+							cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
+						}
+					}
+
+					if (  model.getHierarchyDetails().getNaturalIdCaching().getRequested() == TruthValue.TRUE ) {
+						String baseRegionName = model.getHierarchyDetails().getNaturalIdCaching().getRegion();
+						if ( StringHelper.isEmpty( baseRegionName ) ) {
+							baseRegionName = model.getEntityName() + "##NaturalId";
+						}
+						final String naturalIdCacheRegionName = StringHelper.makePath(
+								settings.getCacheRegionPrefix(),
+								baseRegionName
+						);
+						naturalIdAccessStrategy = (NaturalIdRegionAccessStrategy) entityAccessStrategies.get(
+								naturalIdCacheRegionName
+						);
+						if ( naturalIdAccessStrategy == null ) {
+							final CacheDataDescriptionImpl naturalIdCacheDataDescription = CacheDataDescriptionImpl.decode( model );
+							NaturalIdRegion naturalIdRegion = null;
+							try {
+								naturalIdRegion = regionFactory.buildNaturalIdRegion(
 										naturalIdCacheRegionName,
 										properties,
-										naturaIdCacheDataDescription
+										naturalIdCacheDataDescription
 								);
-					}
-					catch ( UnsupportedOperationException e ) {
-						LOG.warnf(
-								"Shared cache region factory [%s] does not support natural id caching; " +
-										"shared NaturalId caching will be disabled for not be enabled for %s",
-								regionFactory.getClass().getName(),
-								model.getEntity().getName()
-						);
-					}
-					if ( naturalIdRegion != null ) {
-						naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( regionFactory.getDefaultAccessType() );
-						entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
-						cacheAccess.addCacheRegion( naturalIdCacheRegionName, naturalIdRegion );
+							}
+							catch ( UnsupportedOperationException e ) {
+								LOG.warnf(
+										"Shared cache region factory [%s] does not support natural id caching; " +
+												"shared NaturalId caching will be disabled for not be enabled for %s",
+										regionFactory.getClass().getName(),
+										model.getEntityName()
+								);
+							}
+							if ( naturalIdRegion != null ) {
+								naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( regionFactory.getDefaultAccessType() );
+								entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+								cacheAccess.addCacheRegion( naturalIdCacheRegionName, naturalIdRegion );
+							}
+						}
 					}
 				}
 			}
+
 			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
 					model, accessStrategy, naturalIdAccessStrategy, this, metadata
 			);
-			entityPersisters.put( model.getEntity().getName(), cp );
-			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );
+			entityPersisters.put( model.getEntityName(), cp );
+			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
@@ -866,15 +876,21 @@ public final class SessionFactoryImpl
 				);
 			}
 			CollectionRegionAccessStrategy accessStrategy = null;
-			if ( settings.isSecondLevelCacheEnabled() &&
-					model.getCaching() != null ) {
-
-				final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
+			if ( settings.isSecondLevelCacheEnabled()
+					&& model.getCaching().getRequested() == TruthValue.TRUE ) {
+				String baseRegionName = model.getCaching().getRegion();
+				if ( baseRegionName == null ) {
+					baseRegionName = model.getAttributePath();
+				}
+				final String cacheRegionName = StringHelper.makePath(
+						settings.getCacheRegionPrefix(),
+						baseRegionName
+				);
 				AccessType accessType = model.getCaching().getAccessType();
-				if( accessType == null ){
+				if ( accessType == null ) {
 					accessType = regionFactory.getDefaultAccessType();
 				}
-				if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
+				if ( accessType != null ) {
 					if ( traceEnabled ) {
 						LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
 					}

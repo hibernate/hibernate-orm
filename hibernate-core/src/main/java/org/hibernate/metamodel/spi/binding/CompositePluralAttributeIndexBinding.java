@@ -27,9 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#AGGREGATE} elements
@@ -53,17 +53,15 @@ public class CompositePluralAttributeIndexBinding extends AbstractPluralAttribut
 	public CompositeAttributeBindingContainer createCompositeAttributeBindingContainer(
 			Aggregate aggregate,
 			MetaAttributeContext metaAttributeContext,
-			SingularAttribute parentReference
-	) {
+			SingularAttribute parentReference) {
 		compositeAttributeBindingContainer =
 				new AbstractCompositeAttributeBindingContainer(
 						getIndexedPluralAttributeBinding().getContainer().seekEntityBinding(),
 						aggregate,
 						getIndexedPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
-						aggregate.getRoleBaseName(),
+						getIndexedPluralAttributeBinding().getAttribute().getRole() + ".key",
 						metaAttributeContext,
-						parentReference
-				) {
+						parentReference) {
 					final Map<String,AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
 
 					@Override

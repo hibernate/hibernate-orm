@@ -29,8 +29,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
@@ -41,12 +39,14 @@ import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
-import org.hibernate.metamodel.spi.source.MappingException;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -158,7 +158,7 @@ public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-			assertTrue( e.getMessage().startsWith( "Unable to find named generator" ) );
+			assertTrue( e.getMessage().contains( "Unable to find named generator" ) );
 		}
 	}
 

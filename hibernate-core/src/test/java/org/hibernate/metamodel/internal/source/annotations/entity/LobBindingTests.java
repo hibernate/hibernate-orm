@@ -31,13 +31,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
-import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
-import org.hibernate.testing.junit4.Resources;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.CharacterArrayClobType;
 import org.hibernate.type.ClobType;
@@ -47,6 +43,10 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
+
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -116,7 +116,7 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
     private void checkHibernateTypeDescriptor(ExpectedValue expectedValue, String attributeName) {
         HibernateTypeDescriptor descriptor = getTypeDescriptor( attributeName );
         assertEquals( expectedValue.explicitTypeName, descriptor.getExplicitTypeName() );
-        assertEquals( expectedValue.javaTypeName, descriptor.getJavaTypeDescriptor().getName().fullName() );
+        assertEquals( expectedValue.javaTypeName, descriptor.getJavaTypeDescriptor().getName().toString() );
         assertEquals( expectedValue.isResolvedTypeMappingNull, descriptor.getResolvedTypeMapping() == null );
         assertEquals( expectedValue.resolvedTypeMappingClass, descriptor.getResolvedTypeMapping().getClass() );
         assertEquals( expectedValue.isTypeParametersNull, descriptor.getTypeParameters() == null );

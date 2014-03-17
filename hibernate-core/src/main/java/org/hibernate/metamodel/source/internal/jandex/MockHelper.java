@@ -35,7 +35,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCascadeType;
 import org.hibernate.service.ServiceRegistry;
 

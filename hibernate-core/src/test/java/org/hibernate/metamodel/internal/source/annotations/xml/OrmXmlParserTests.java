@@ -23,14 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml;
 
-import org.junit.Test;
-
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.InvalidMappingException;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.source.MappingException;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
 
@@ -57,7 +57,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		assertNotNull( binding );
 	}
 
-	@Test(expected = org.hibernate.metamodel.spi.source.InvalidMappingException.class)
+	@Test(expected = InvalidMappingException.class)
 	public void testInvalidOrmXmlThrowsException() {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-invalid.xml" );

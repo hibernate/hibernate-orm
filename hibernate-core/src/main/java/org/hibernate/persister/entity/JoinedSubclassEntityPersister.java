@@ -48,7 +48,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Join;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -58,7 +57,7 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Hierarchical;
-import org.hibernate.metamodel.spi.domain.Superclass;
+import org.hibernate.metamodel.spi.domain.MappedSuperclass;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -238,7 +237,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		classNames.add( persistentClass.getEntityName() );
 
 		if ( ! isBase ) {
-			MappedSuperclass msc = persistentClass.getSuperMappedSuperclass();
+			org.hibernate.mapping.MappedSuperclass msc = persistentClass.getSuperMappedSuperclass();
 			while ( msc != null ) {
 				classNames.add( msc.getMappedClass().getName() );
 				msc = msc.getSuperMappedSuperclass();
@@ -276,8 +275,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( ! isBase ) {
 			Hierarchical superType = entityBinding.getEntity().getSuperType();
 			while ( superType != null ) {
-				if ( Superclass.class.isInstance( superType ) ) {
-					classNames.add( superType.getDescriptor().getName().fullName() );
+				if ( MappedSuperclass.class.isInstance( superType ) ) {
+					classNames.add( superType.getDescriptor().getName().toString() );
 				}
 				superType = superType.getSuperType();
 			}

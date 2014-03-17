@@ -12,11 +12,11 @@ import java.net.URL;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
-import org.hibernate.metamodel.spi.source.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.metamodel.spi.source.MappingNotFoundException;
+import org.hibernate.metamodel.source.spi.InvalidMappingException;
+import org.hibernate.metamodel.source.spi.MappingNotFoundException;
 import org.hibernate.xml.spi.SourceType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;

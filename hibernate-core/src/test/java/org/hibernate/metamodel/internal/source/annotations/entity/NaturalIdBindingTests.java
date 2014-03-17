@@ -1,29 +1,30 @@
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
-
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.TruthValue;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.test.util.SchemaUtil;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.hibernate.test.util.SchemaUtil;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -43,7 +44,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = NaturalIdBindingTests.SimpleEntityWithNaturalId.class)
 	public void testSimpleNaturalIdAttributeBinding() {
 		EntityBinding entityBinding = getEntityBinding( SimpleEntityWithNaturalId.class );
-		assertNull( entityBinding.getHierarchyDetails().getNaturalIdCaching() );
+		assertEquals( TruthValue.FALSE, entityBinding.getHierarchyDetails().getNaturalIdCaching().getRequested() );
 
 		SingularAttributeBinding attributeBinding = (SingularAttributeBinding) entityBinding.locateAttributeBinding(
 				"name"
@@ -115,7 +116,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { EntityWithEmbedded.class, Component.class })
 	public void testEmbeddedNaturalIdAttributeBinding() {
 		EntityBinding entityBinding = getEntityBinding( EntityWithEmbedded.class );
-		assertNull( entityBinding.getHierarchyDetails().getNaturalIdCaching() );
+		assertEquals( TruthValue.FALSE, entityBinding.getHierarchyDetails().getNaturalIdCaching().getRequested() );
 
 		SingularAttributeBinding attributeBinding = (SingularAttributeBinding) entityBinding.locateAttributeBinding(
 				"component"
@@ -168,7 +169,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 	public void testAssociationNaturalIdBinding() {
 		EntityBinding entityBinding = getEntityBinding( EntityWithAssociation.class );
 		assertNotNull( entityBinding.getHierarchyDetails().getNaturalIdCaching() );
-		assertNotNull( entityBinding.getHierarchyDetails().getNaturalIdCaching().getRegion() );
+		assertNull( entityBinding.getHierarchyDetails().getNaturalIdCaching().getRegion() );
 
 		SingularAttributeBinding attributeBinding = (SingularAttributeBinding)entityBinding.locateAttributeBinding( "simpleEntity" );
 		assertEquals( SingularAttributeBinding.NaturalIdMutability.IMMUTABLE, attributeBinding.getNaturalIdMutability() );

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.reflite.spi;
 
+import org.jboss.jandex.DotName;
+
 /**
  * The repository of reflite JavaTypeDescriptor info.
  *
@@ -36,7 +38,7 @@ public interface JavaTypeDescriptorRepository {
 	 *
 	 * @return The type-safe wrapper.
 	 */
-	public Name buildName(String name);
+	public DotName buildName(String name);
 
 	/**
 	 * Obtain the reflite JavaTypeDescriptor for the given name
@@ -45,5 +47,43 @@ public interface JavaTypeDescriptorRepository {
 	 *
 	 * @return The descriptor
 	 */
-	public JavaTypeDescriptor getType(Name typeName);
+	public JavaTypeDescriptor getType(DotName typeName);
+
+	/**
+	 * Create a reflite JavaTypeDescriptor representing an array of the
+	 * given type
+	 *
+	 * @param componentType The array component (element) type
+	 *
+	 * @return The array descriptor
+	 */
+	public ArrayDescriptor arrayType(JavaTypeDescriptor componentType);
+
+	/**
+	 * Convenient access to the descriptor for the JDK {@link java.util.Collection} type
+	 *
+	 * @return The descriptor for the JDK {@link java.util.Collection} type
+	 */
+	public InterfaceDescriptor jdkCollectionDescriptor();
+
+	/**
+	 * Convenient access to the descriptor for the JDK {@link java.util.List} type
+	 *
+	 * @return The descriptor for the JDK {@link java.util.List} type
+	 */
+	public InterfaceDescriptor jdkListDescriptor();
+
+	/**
+	 * Convenient access to the descriptor for the JDK {@link java.util.Set} type
+	 *
+	 * @return The descriptor for the JDK {@link java.util.Set} type
+	 */
+	public InterfaceDescriptor jdkSetDescriptor();
+
+	/**
+	 * Convenient access to the descriptor for the JDK {@link java.util.Map} type
+	 *
+	 * @return The descriptor for the JDK {@link java.util.Map} type
+	 */
+	public InterfaceDescriptor jdkMapDescriptor();
 }

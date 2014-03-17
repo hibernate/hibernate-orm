@@ -32,12 +32,12 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
@@ -50,8 +50,10 @@ public class CompositeAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularNonAssociationAttributeBinding, CompositeAttributeBindingContainer, Cascadeable {
 
+	private final String pathBase;
 	private final AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
 	private Class<? extends ComponentTuplizer> customComponentTuplizerClass = null;
+
 	private CompositeAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
@@ -70,6 +72,7 @@ public class CompositeAttributeBinding
 				naturalIdMutability,
 				metaAttributeContext
 		);
+		this.pathBase = attribute.getName();
 		this.compositeAttributeBindingContainer = compositeAttributeBindingContainer;
 	}
 
@@ -184,9 +187,9 @@ public class CompositeAttributeBinding
 	}
 
 	private static String createContainerPath(AttributeBindingContainer container, SingularAttribute attribute) {
-		return StringHelper.isEmpty( container.getPathBase() ) ?
-				attribute.getName() :
-				container.getPathBase() + '.' + attribute.getName();
+		return StringHelper.isEmpty( container.getPathBase() )
+				? attribute.getName()
+				: container.getPathBase() + '.' + attribute.getName();
 
 	}
 
@@ -321,7 +324,7 @@ public class CompositeAttributeBinding
 
 	@Override
 	public String getPathBase() {
-		return compositeAttributeBindingContainer.getPathBase();
+		return pathBase;
 	}
 
 	@Override

@@ -1,8 +1,5 @@
 package org.hibernate.test.joinedsubclass;
 
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
@@ -97,6 +94,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest extends BaseCoreFunctio
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9050", message = "The WrongCLassException stuff")
 	public void basicUsageTest() {
 		Session session = openSession();
 		session.beginTransaction();

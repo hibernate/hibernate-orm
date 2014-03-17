@@ -33,14 +33,6 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import com.fasterxml.classmate.TypeResolver;
-import com.fasterxml.classmate.members.ResolvedField;
-import com.fasterxml.classmate.members.ResolvedMethod;
-import com.fasterxml.classmate.types.ResolvedArrayType;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
@@ -50,6 +42,14 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
+
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.classmate.members.ResolvedField;
+import com.fasterxml.classmate.members.ResolvedMethod;
+import com.fasterxml.classmate.types.ResolvedArrayType;
 
 /**
  * Utility class for various reflection operations.
@@ -409,18 +409,23 @@ public final class ReflectHelper {
 		}
 
 		if ( member instanceof Method ) {
-			String methodName = member.getName();
-			if ( methodName.startsWith( "is" ) ) {
-				name = Introspector.decapitalize( methodName.substring( 2 ) );
-			}
-			else if ( methodName.startsWith( "has" ) ) {
-				name = Introspector.decapitalize( methodName.substring( 3 ) );
-			}
-			else if ( methodName.startsWith( "get" ) ) {
-				name = Introspector.decapitalize( methodName.substring( 3 ) );
-			}
+			name = getPropertyNameFromGetterMethod( member.getName() );
 		}
 		return name;
+	}
+
+	public static String getPropertyNameFromGetterMethod(String methodName) {
+		if ( methodName.startsWith( "is" ) ) {
+			return Introspector.decapitalize( methodName.substring( 2 ) );
+		}
+		else if ( methodName.startsWith( "has" ) ) {
+			return Introspector.decapitalize( methodName.substring( 3 ) );
+		}
+		else if ( methodName.startsWith( "get" ) ) {
+			return Introspector.decapitalize( methodName.substring( 3 ) );
+		}
+
+		return null;
 	}
 
 	public static boolean isProperty(Member m) {

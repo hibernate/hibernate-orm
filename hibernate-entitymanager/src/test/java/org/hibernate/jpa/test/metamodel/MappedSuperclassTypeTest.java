@@ -29,10 +29,9 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -40,7 +39,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class MappedSuperclassTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 	// spent too much time digging into this.  problem is ultimately that metamodel binding
@@ -62,6 +60,7 @@ public class MappedSuperclassTypeTest extends BaseEntityManagerFunctionalTestCas
 	@Test
 	@TestForIssue( jiraKey = "HHH-8533" )
 	@SuppressWarnings("unchecked")
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9058", message = "Declared versus non-declared" )
 	public void testAttributeAccess() {
 		final EntityType<SomeMappedSuperclassSubclass> entityType =  entityManagerFactory().getMetamodel().entity( SomeMappedSuperclassSubclass.class );
 		final IdentifiableType<SomeMappedSuperclass> mappedSuperclassType = (IdentifiableType<SomeMappedSuperclass>) entityType.getSupertype();

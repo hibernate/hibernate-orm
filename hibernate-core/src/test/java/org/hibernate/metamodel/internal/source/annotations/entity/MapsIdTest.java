@@ -26,17 +26,18 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import java.util.List;
 import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
 
-import org.junit.Test;
-
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.source.spi.MappingException;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -62,7 +63,7 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	public class Dependent {
 		// should be @EmbeddedId, but embedded id are not working atm
-		@Id
+		@EmbeddedId
 		DependentId id;
 
 		@MapsId("empid")
@@ -82,7 +83,7 @@ public class MapsIdTest extends BaseAnnotationBindingTestCase {
 		}
 		catch ( MappingException e ) {
 			assertTrue(
-					e.getMessage().startsWith(
+					e.getMessage().contains(
 							"@MapsId can only be specified on a many-to-one or one-to-one associations"
 					)
 			);

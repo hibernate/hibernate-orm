@@ -47,7 +47,6 @@ import static org.junit.Assert.fail;
  * 
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
 public class AliasTest extends BaseCoreFunctionalTestCase {
 	
 	/**
@@ -67,7 +66,11 @@ public class AliasTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-8371" )
-	public final void testUnderscoreInColumnName() throws Throwable {
+	@FailureExpectedWithNewMetamodel(
+			jiraKey = "HHH-9048",
+			message = "I think its the same underlying problem as HHH-9048; here the manifestation is in @IdClass with the basic form of the to-one pk"
+	)
+	public void testUnderscoreInColumnName() throws Throwable {
 		final Session s = openSession();
 		s.getTransaction().begin();
 		

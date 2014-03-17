@@ -26,8 +26,8 @@ package org.hibernate;
 /**
  * An enumeration of truth values.
  * <p/>
- * Yes this *could* be handled with Boolean, but then you run into potential problems with premature
- * auto-unboxing.
+ * Yes this *could* be handled with Boolean, but then you run into potential
+ * problems with unwanted auto-unboxing.
  *
  * @author Steve Ebersole
  */
@@ -36,6 +36,7 @@ public enum TruthValue {
 	FALSE,
 	UNKNOWN;
 
+	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean toBoolean(TruthValue value, boolean defaultValue) {
 		if ( value == TruthValue.TRUE ) {
 			return true;

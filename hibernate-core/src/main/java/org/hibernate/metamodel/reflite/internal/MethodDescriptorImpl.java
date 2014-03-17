@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
+import org.hibernate.metamodel.reflite.spi.ParameterizedType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
@@ -40,22 +41,22 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	private final String name;
 	private final JavaTypeDescriptor declaringType;
 	private final int modifiers;
-	private final JavaTypeDescriptor returnType;
-	private final Collection<JavaTypeDescriptor> parameterTypes;
+	private final ParameterizedType returnType;
+	private final Collection<JavaTypeDescriptor> argumentTypes;
 	private final Map<DotName, AnnotationInstance> annotationMap;
 
 	public MethodDescriptorImpl(
 			String name,
 			JavaTypeDescriptor declaringType,
 			int modifiers,
-			JavaTypeDescriptor returnType,
-			Collection<JavaTypeDescriptor> parameterTypes,
+			ParameterizedType returnType,
+			Collection<JavaTypeDescriptor> argumentTypes,
 			Map<DotName, AnnotationInstance> annotationMap) {
 		this.name = name;
 		this.declaringType = declaringType;
 		this.modifiers = modifiers;
 		this.returnType = returnType;
-		this.parameterTypes = parameterTypes;
+		this.argumentTypes = argumentTypes;
 		this.annotationMap = annotationMap != null
 				? annotationMap
 				: Collections.<DotName, AnnotationInstance>emptyMap();
@@ -64,6 +65,11 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public ParameterizedType getType() {
+		return getReturnType();
 	}
 
 	@Override
@@ -77,18 +83,48 @@ public class MethodDescriptorImpl implements MethodDescriptor {
 	}
 
 	@Override
-	public JavaTypeDescriptor getReturnType() {
+	public ParameterizedType getReturnType() {
 		return returnType;
 	}
 
 	@Override
-	public Collection<JavaTypeDescriptor> getParameterTypes() {
-		return parameterTypes;
+	public Collection<JavaTypeDescriptor> getArgumentTypes() {
+		return argumentTypes;
 	}
 
 	@Override
 	public Map<DotName, AnnotationInstance> getAnnotations() {
 		return annotationMap;
+	}
+
+	@Override
+	public String toLoggableForm() {
+		return declaringType.getName().toString() + '#' + name;
+	}
+
+	private String signatureForm;
+
+	@Override
+	public String toSignatureForm() {
+		if ( signatureForm == null ) {
+			signatureForm = buildSignatureForm();
+		}
+		return signatureForm;
+	}
+
+	private String buildSignatureForm() {
+		StringBuilder sb = new StringBuilder();
+		sb.append( returnType.getErasedType().getName().toString() );
+		sb.append( ' ' );
+		sb.append( name ).append( '(' );
+		String delimiter = "";
+		for ( JavaTypeDescriptor argumentType : argumentTypes ) {
+			sb.append( delimiter );
+			sb.append( argumentType.getName().toString() );
+			delimiter = ", ";
+		}
+		sb.append( ')' );
+		return sb.toString();
 	}
 
 	@Override

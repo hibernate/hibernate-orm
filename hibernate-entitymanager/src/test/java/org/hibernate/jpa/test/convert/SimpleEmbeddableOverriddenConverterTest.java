@@ -23,19 +23,17 @@
  */
 package org.hibernate.jpa.test.convert;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
@@ -44,10 +42,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 
@@ -61,7 +57,6 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseUnitTestCase {
 	 * Test outcome of annotations exclusively.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-8932" )
 	public void testSimpleConvertOverrides() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

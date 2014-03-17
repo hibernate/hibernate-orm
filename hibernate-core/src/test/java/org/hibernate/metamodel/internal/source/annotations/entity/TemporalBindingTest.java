@@ -29,14 +29,14 @@ import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.type.TimestampType;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
-import org.hibernate.type.TimestampType;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -63,7 +63,7 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );
         HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
         assertEquals( "timestamp", descriptor.getExplicitTypeName() );
-        assertEquals( Date.class.getName(), descriptor.getJavaTypeDescriptor().getName().fullName() );
+        assertEquals( Date.class.getName(), descriptor.getJavaTypeDescriptor().getName().toString() );
         assertNotNull( descriptor.getResolvedTypeMapping() );
         assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
         assertNotNull( descriptor.getTypeParameters() );
@@ -84,7 +84,7 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );
         HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
         assertEquals( "timestamp", descriptor.getExplicitTypeName() );
-        assertEquals( Date.class.getName(), descriptor.getJavaTypeDescriptor().getName().fullName() );
+        assertEquals( Date.class.getName(), descriptor.getJavaTypeDescriptor().getName().toString() );
         assertNotNull( descriptor.getResolvedTypeMapping() );
         assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
         assertNotNull( descriptor.getTypeParameters() );

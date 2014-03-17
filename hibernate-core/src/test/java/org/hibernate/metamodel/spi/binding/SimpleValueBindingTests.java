@@ -28,15 +28,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-
-import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -45,7 +42,9 @@ import org.hibernate.metamodel.spi.relational.JdbcDataType;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
 
@@ -71,8 +70,9 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		table.getPrimaryKey().addColumn( idColumn );
 		table.getPrimaryKey().setName( "my_table_pk" );
 
-		Entity entity = new Entity( "TheEntity", makeJavaType( "NoSuchClass" ), null );
-		EntityBinding entityBinding = new EntityBinding( InheritanceType.NO_INHERITANCE, EntityMode.POJO );
+		Entity entity = new Entity( makeJavaType( "NoSuchClass" ), null );
+		HierarchyDetails hierarchyDetails = new HierarchyDetails.Builder().createHierarchyDetails();
+		EntityBinding entityBinding = hierarchyDetails.getRootEntityBinding();
 		entityBinding.setEntity( entity );
 		entityBinding.setPrimaryTable( table );
 

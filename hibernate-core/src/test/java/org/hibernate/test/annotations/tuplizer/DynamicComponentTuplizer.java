@@ -22,7 +22,7 @@ public class DynamicComponentTuplizer extends PojoComponentTuplizer {
 			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
 			boolean isIdentifierMapper) {
 		return new DynamicInstantiator(
-				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
 		);
 	}
 }

@@ -27,9 +27,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.Attribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * Basic support for {@link AttributeBinding} implementors
@@ -49,7 +48,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private boolean isAlternateUniqueKey;
 
 	private final MetaAttributeContext metaAttributeContext;
-	private final ValueHolder<String> roleHolder;
+	private final String attributePath;
 
 	protected AbstractAttributeBinding(
 			AttributeBindingContainer container,
@@ -62,14 +61,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.propertyAccessorName = propertyAccessorName;
 		this.includedInOptimisticLocking = includedInOptimisticLocking;
 		this.metaAttributeContext = metaAttributeContext;
-		this.roleHolder = new ValueHolder<String>(
-				new ValueHolder.DeferredInitializer<String>() {
-					@Override
-					public String initialize() {
-						return getContainer().getPathBase() + '.' + getAttribute().getName();
-					}
-				}
-		);
+		this.attributePath = getContainer().getPathBase() + '.' + getAttribute().getName();
 	}
 
 	@Override
@@ -82,8 +74,9 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return attribute;
 	}
 
-	protected String getRole() {
-		return roleHolder.getValue();
+	@Override
+	public String getAttributePath() {
+		return attributePath;
 	}
 
 	@Override
@@ -144,10 +137,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "AbstractAttributeBinding" );
-		sb.append( "{attribute=" ).append( attribute.getName() );
-		sb.append( '}' );
-		return sb.toString();
+		return "AbstractAttributeBinding{attribute=" + attribute.getName() + ", path=" + attributePath + '}';
 	}
 }

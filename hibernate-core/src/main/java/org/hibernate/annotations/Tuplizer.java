@@ -23,14 +23,14 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Retention;
+
+import org.hibernate.EntityMode;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-
-import org.hibernate.EntityMode;
 
 /**
  * Define a tuplizer for an entity or a component.
@@ -47,6 +47,10 @@ public @interface Tuplizer {
 
 	/**
 	 * The entity mode.
+	 *
+	 * @deprecated Specifying multiple entity modes and/or tuplizers for a thing
+	 * is no longer supported
 	 */
+	@Deprecated
 	EntityMode entityModeType() default EntityMode.POJO;
 }

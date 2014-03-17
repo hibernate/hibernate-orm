@@ -25,8 +25,8 @@ package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  *

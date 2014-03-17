@@ -24,25 +24,22 @@
 package org.hibernate.metamodel.internal.source.annotations.util;
 
 import java.util.Set;
-import javax.persistence.AccessType;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.RootBindingContextBuilder;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
-import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableHierarchy;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
+import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContextImpl;
+import org.hibernate.metamodel.source.internal.annotations.util.EntityHierarchyBuilder;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.spi.EntityHierarchySource;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 
 import org.jboss.jandex.IndexView;
-
-import com.fasterxml.classmate.ResolvedType;
 
 /**
  * @author Hardy Ferentschik
@@ -59,31 +56,18 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 	public void tearDown() {
 	}
 
-	public Set<EntityHierarchy> createEntityHierarchies(Class<?>... clazz) {
+	public Set<EntityHierarchySource> createEntityHierarchies(Class<?>... clazz) {
 		IndexView index = JandexHelper.indexForClass(
 				serviceRegistry.getService( ClassLoaderService.class ),
 				clazz
 		);
 		AnnotationBindingContext context = new AnnotationBindingContextImpl(
-				RootBindingContextBuilder.buildBindingContext( serviceRegistry ),
+				RootBindingContextBuilder.buildBindingContext( serviceRegistry, index ),
 				index
 		);
 		return EntityHierarchyBuilder.createEntityHierarchies( context );
 	}
 
-	public EmbeddableHierarchy createEmbeddableHierarchy(AccessType accessType,SingularAttributeBinding.NaturalIdMutability naturalIdMutability, Class<?>... configuredClasses) {
-		IndexView index = JandexHelper.indexForClass(
-				serviceRegistry.getService( ClassLoaderService.class ),
-				configuredClasses
-		);
-		AnnotationBindingContext context = new AnnotationBindingContextImpl(
-				RootBindingContextBuilder.buildBindingContext( serviceRegistry ),
-				index
-		);
-		ResolvedType resolvedType = context.getTypeResolver().resolve( configuredClasses[0] );
-		return EmbeddableHierarchy.createEmbeddableHierarchy( configuredClasses[0], "",resolvedType, accessType,
-				naturalIdMutability,null, context );
-	}
 }
 
 

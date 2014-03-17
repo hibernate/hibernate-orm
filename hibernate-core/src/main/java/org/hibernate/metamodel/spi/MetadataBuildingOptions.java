@@ -133,6 +133,29 @@ public interface MetadataBuildingOptions {
 	 */
 	List<CacheRegionDefinition> getCacheRegionDefinitions();
 
+	/**
+	 * Whether explicit discriminator declarations should be ignored for joined
+	 * subclass style inheritance.
+	 *
+	 * @return {@code true} indicates they should be ignored; {@code false}
+	 * indicates they should not be ignored.
+	 *
+	 * @see org.hibernate.metamodel.MetadataBuilder#withExplicitDiscriminatorsForJoinedSubclassSupport
+	 * @see org.hibernate.cfg.AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
+	 */
+	boolean ignoreExplicitDiscriminatorsForJoinedInheritance();
+
+	/**
+	 * Whether we should do discrimination implicitly joined subclass style inheritance when no
+	 * discriminator info is provided.
+	 *
+	 * @return {@code true} indicates we should do discrimination; {@code false} we should not.
+	 *
+	 * @see org.hibernate.metamodel.MetadataBuilder#withImplicitDiscriminatorsForJoinedSubclassSupport
+	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
+	 */
+	boolean createImplicitDiscriminatorsForJoinedInheritance();
+
 
 	// todo : these 2 will go away...
 

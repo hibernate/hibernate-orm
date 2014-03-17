@@ -25,29 +25,33 @@ package org.hibernate.metamodel.reflite.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
-import org.hibernate.metamodel.reflite.spi.Name;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
  */
 public class ArrayDescriptorImpl implements ArrayDescriptor {
-	private final Name name;
+	private final DotName name;
 	private final int modifiers;
 	private JavaTypeDescriptor componentType;
 
-	public ArrayDescriptorImpl(Name name, int modifiers, JavaTypeDescriptor componentType) {
+	public ArrayDescriptorImpl(DotName name, int modifiers, JavaTypeDescriptor componentType) {
 		this.name = name;
 		this.modifiers = modifiers;
 		this.componentType = componentType;
 	}
 
 	@Override
-	public Name getName() {
+	public DotName getName() {
 		return name;
 	}
 
@@ -67,7 +71,73 @@ public class ArrayDescriptorImpl implements ArrayDescriptor {
 	}
 
 	@Override
+	public AnnotationInstance findTypeAnnotation(DotName annotationType) {
+		return null;
+	}
+
+	@Override
+	public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
+		return null;
+	}
+
+	@Override
+	public Collection<AnnotationInstance> findAnnotations(DotName annotationType) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Collection<AnnotationInstance> findLocalAnnotations(DotName annotationType) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public boolean isAssignableFrom(JavaTypeDescriptor check) {
+		if ( check == null ) {
+			throw new IllegalArgumentException( "Descriptor to check cannot be null" );
+		}
+
+		if ( equals( check ) ) {
+			return true;
+		}
+
+		if ( ArrayDescriptor.class.isInstance( check ) ) {
+			final ArrayDescriptor other = (ArrayDescriptor) check;
+			return getComponentType().isAssignableFrom( other.getComponentType() );
+		}
+
+		return false;
+	}
+
+	@Override
+	public List<JavaTypeDescriptor> getResolvedParameterTypes() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public ClassInfo getJandexClassInfo() {
+		return null;
+	}
+
+	@Override
 	public JavaTypeDescriptor getComponentType() {
 		return componentType;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final ArrayDescriptorImpl that = (ArrayDescriptorImpl) o;
+		return name.equals( that.name );
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 }

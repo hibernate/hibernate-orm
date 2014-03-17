@@ -28,16 +28,16 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Version;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
-import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
-import org.hibernate.testing.junit4.Resources;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.LongType;
+
+import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
+import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -58,7 +58,7 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = VersionBindingTests.Item1.class)
 	public void testNoVersionAnnotation() {
-		assertFalse( getEntityBinding( Item1.class ).isVersioned() );
+		assertFalse( getEntityBinding( Item1.class ).getHierarchyDetails().isVersioned() );
 	}
 
 	@Entity
@@ -91,14 +91,14 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = VersionBindingTests.Item2.class)
 	public void testVersionTypeAttribute() {
 		EntityBinding binding = getEntityBinding( Item2.class );
-		assertTrue( binding.isVersioned() );
+		assertTrue( binding.getHierarchyDetails().isVersioned() );
 		HibernateTypeDescriptor descriptor = binding.getHierarchyDetails()
 				.getEntityVersion()
 				.getVersioningAttributeBinding()
 				.getHibernateTypeDescriptor();
 //		assertEquals( "Long", descriptor.getExplicitTypeName() );
 		assertEquals(				Long.class.getName(),
-				descriptor.getJavaTypeDescriptor().getName().fullName()
+				descriptor.getJavaTypeDescriptor().getName().toString()
 		);
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertEquals( LongType.class, descriptor.getResolvedTypeMapping().getClass() );
@@ -110,7 +110,7 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = VersionBindingTests.Item2.class)
 	public void testVersionUnsavedValue() {
 		EntityBinding binding = getEntityBinding( Item2.class );
-		assertTrue( binding.isVersioned() );
+		assertTrue( binding.getHierarchyDetails().isVersioned() );
 		assertEquals( "undefined", binding.getHierarchyDetails().getEntityVersion().getUnsavedValue() );
 	}
 	
@@ -127,7 +127,7 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = VersionBindingTests.Item3.class)
 	public void testVersionAttributeWithSource() {
 		EntityBinding binding = getEntityBinding( Item3.class );
-		assertTrue( binding.isVersioned() );
+		assertTrue( binding.getHierarchyDetails().isVersioned() );
 		HibernateTypeDescriptor descriptor = binding.getHierarchyDetails()
 				.getEntityVersion()
 				.getVersioningAttributeBinding()
@@ -135,7 +135,7 @@ public class VersionBindingTests extends BaseAnnotationBindingTestCase {
 		assertEquals( "dbtimestamp", descriptor.getExplicitTypeName() );
 		assertEquals(
 				Date.class.getName(),
-				descriptor.getJavaTypeDescriptor().getName().fullName()
+				descriptor.getJavaTypeDescriptor().getName().toString()
 		);
 		assertNotNull( descriptor.getResolvedTypeMapping() );
 		assertEquals( DbTimestampType.class, descriptor.getResolvedTypeMapping().getClass() );

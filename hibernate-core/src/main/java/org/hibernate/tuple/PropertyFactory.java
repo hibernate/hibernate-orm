@@ -641,7 +641,7 @@ public final class PropertyFactory {
 		try {
 			return ReflectHelper.getDefaultConstructor(
 					cls.classForName(
-							entityBinding.getEntity().getDescriptor().getName().fullName()
+							entityBinding.getEntity().getDescriptor().getName().toString()
 					)
 			);
 		}
@@ -669,7 +669,7 @@ public final class PropertyFactory {
 		final PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
 		final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
 		final Class clazz = cls.classForName(
-				mappingProperty.getContainer().getAttributeContainer().getDescriptor().getName().fullName()
+				mappingProperty.getContainer().getAttributeContainer().getDescriptor().getName().toString()
 		);
 		return pa.getGetter(
 				clazz,

@@ -37,9 +37,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * Accesses property values via a get/set pair, which may be nonpublic.
@@ -308,10 +305,8 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		BasicGetter result = getGetterOrNull(theClass, propertyName);
 		if (result==null) {
 			throw new PropertyNotFoundException(
-					"Could not find a getter for " +
-					propertyName +
-					" in class " +
-					theClass.getName()
+					"Could not find a getter for [" + propertyName
+							+ "] in class [" + theClass.getName() + "]"
 			);
 		}
 		return result;

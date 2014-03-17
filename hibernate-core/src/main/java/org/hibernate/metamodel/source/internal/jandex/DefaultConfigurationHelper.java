@@ -29,8 +29,8 @@ import java.util.Map;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.jandex.filter.IndexedAnnotationFilter;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbTable;

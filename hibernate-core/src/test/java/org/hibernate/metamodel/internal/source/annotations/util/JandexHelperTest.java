@@ -23,15 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
-import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -44,17 +38,27 @@ import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.IndexView;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 /**
- * Tests for the helper class {@link JandexHelper}.
+ * Tests for the helper class {@link org.hibernate.metamodel.source.internal.annotations.util.JandexHelper}.
  *
  * @author Hardy Ferentschik
  */

@@ -31,16 +31,26 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public class Entity extends AbstractAttributeContainer {
+public class Entity extends AbstractAttributeContainer implements IdentifiableType {
 	/**
 	 * Constructor for the entity
 	 *
-	 * @param entityName The name of the entity
 	 * @param typeDescriptor The reflite {@link org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor} describing this entity's class
 	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public Entity(String entityName, JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
-		super( entityName, typeDescriptor, superType );
+	public Entity(JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		super( typeDescriptor, superType );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * Specifically here we are returning the name of the java type.  This is
+	 * not (usually) the same as the entity-name.
+	 */
+	@Override
+	public String getName() {
+		return super.getName();
 	}
 
 	@Override

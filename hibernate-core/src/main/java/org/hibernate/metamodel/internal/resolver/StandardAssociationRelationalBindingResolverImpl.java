@@ -30,12 +30,22 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.metamodel.internal.Binder;
-import org.hibernate.metamodel.internal.ForeignKeyHelper;
-import org.hibernate.metamodel.internal.HelperContext;
-import org.hibernate.metamodel.internal.ManyToManyCollectionTableNamingStrategyHelper;
-import org.hibernate.metamodel.internal.RelationalValueBindingHelper;
-import org.hibernate.metamodel.internal.TableHelper;
+import org.hibernate.metamodel.internal.binder.Binder;
+import org.hibernate.metamodel.internal.binder.BinderRootContext;
+import org.hibernate.metamodel.internal.binder.ForeignKeyHelper;
+import org.hibernate.metamodel.internal.binder.ManyToManyCollectionTableNamingStrategyHelper;
+import org.hibernate.metamodel.internal.binder.RelationalValueBindingHelper;
+import org.hibernate.metamodel.internal.binder.TableHelper;
+import org.hibernate.metamodel.source.spi.AssociationSource;
+import org.hibernate.metamodel.source.spi.ForeignKeyContributingSource;
+import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeElementSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeKeySource;
+import org.hibernate.metamodel.source.spi.PluralAttributeSource;
+import org.hibernate.metamodel.source.spi.RelationalValueSourceContainer;
+import org.hibernate.metamodel.source.spi.SingularAttributeSource;
+import org.hibernate.metamodel.source.spi.TableSpecificationSource;
+import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -44,25 +54,15 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.AssociationSource;
-import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
-import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
-import org.hibernate.metamodel.spi.source.PluralAttributeSource;
-import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.TableSpecificationSource;
-import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
  + * @author Gail Badner
  + */
 public class StandardAssociationRelationalBindingResolverImpl implements AssociationRelationalBindingResolver {
-	private final HelperContext helperContext;
+	private final BinderRootContext helperContext;
 
-	public StandardAssociationRelationalBindingResolverImpl(HelperContext helperContext) {
+	public StandardAssociationRelationalBindingResolverImpl(BinderRootContext helperContext) {
 		this.helperContext = helperContext;
 	}
 
@@ -90,7 +90,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 					defaultTable,
 					false,
 					attributeSource.getDefaultNamingStrategies(
-							attributeBindingContainer.seekEntityBinding().getEntity().getName(),
+							attributeBindingContainer.seekEntityBinding().getEntityName(),
 							defaultTable.getLogicalName().getText(),
 							referencedAttributeBinding
 					)
@@ -163,7 +163,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 				defaultTable,
 				false,
 				attributeSource.getDefaultNamingStrategies(
-						attributeBindingContainer.seekEntityBinding().getEntity().getName(),
+						attributeBindingContainer.seekEntityBinding().getEntityName(),
 						defaultTable.getLogicalName().getText(),
 						referencedAttributeBinding
 				)

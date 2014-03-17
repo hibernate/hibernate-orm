@@ -25,11 +25,12 @@ package org.hibernate.test.annotations.derivedidentities.e4.a;
 
 import java.util.Date;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.test.util.SchemaUtil;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.util.SchemaUtil;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,6 +39,10 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel(
+		jiraKey = "HHH-9048",
+		message = "Failures have to do with the lookups for MedicalHistory using its derived id (the simple Person id value)"
+)
 public class DerivedIdentitySimpleParentSimpleDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {

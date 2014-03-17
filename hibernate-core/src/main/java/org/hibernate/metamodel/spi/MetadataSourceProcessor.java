@@ -23,10 +23,12 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.metamodel.spi.source.EntityHierarchy;
-import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
-import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
+import java.util.Collection;
+
+import org.hibernate.metamodel.source.spi.EntityHierarchySource;
+import org.hibernate.metamodel.source.spi.FilterDefinitionSource;
+import org.hibernate.metamodel.source.spi.IdentifierGeneratorSource;
+import org.hibernate.metamodel.source.spi.TypeDescriptorSource;
 
 /**
  * Handles the processing of metadata sources in a dependency-ordered manner.
@@ -60,7 +62,7 @@ public interface MetadataSourceProcessor {
 	 *
 	 * @return The entity hierarchies
 	 */
-	Iterable<EntityHierarchy> extractEntityHierarchies();
+	Collection<EntityHierarchySource> extractEntityHierarchies();
 
 	/**
 	 * Process the parts of the metadata that depend on mapping (entities, et al) information having been

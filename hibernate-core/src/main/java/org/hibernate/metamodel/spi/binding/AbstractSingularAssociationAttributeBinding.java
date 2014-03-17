@@ -30,11 +30,11 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -93,7 +93,7 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 
 	@Override
 	public final String getReferencedEntityName() {
-		return referencedEntityBinding.getEntity().getName();
+		return referencedEntityBinding.getEntityName();
 	}
 
 	@Override

@@ -25,12 +25,13 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
-import org.hibernate.metamodel.reflite.spi.Name;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.service.ServiceRegistry;
+
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
@@ -42,14 +43,18 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 		this.parent = parent;
 	}
 
+	protected BindingContext parent() {
+		return parent;
+	}
+
 	@Override
 	public MetadataBuildingOptions getBuildingOptions() {
 		return parent.getBuildingOptions();
 	}
 
 	@Override
-	public JavaTypeDescriptorRepository getRefliteRepository() {
-		return parent.getRefliteRepository();
+	public JavaTypeDescriptorRepository getJavaTypeDescriptorRepository() {
+		return parent.getJavaTypeDescriptorRepository();
 	}
 
 	@Override
@@ -98,7 +103,7 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	}
 
 	@Override
-	public Type makeDomainType(Name typeName) {
+	public Type makeDomainType(DotName typeName) {
 		return parent.makeDomainType( typeName );
 	}
 

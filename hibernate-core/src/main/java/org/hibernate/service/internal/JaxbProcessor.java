@@ -50,11 +50,11 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.xml.spi.Origin;
-import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationException;
-import org.hibernate.metamodel.spi.source.MappingException;
-import org.hibernate.metamodel.spi.source.XsdException;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
+import org.hibernate.metamodel.source.spi.MappingException;
+import org.hibernate.metamodel.source.spi.XsdException;
+import org.hibernate.xml.spi.Origin;
 
 import org.jboss.logging.Logger;
 

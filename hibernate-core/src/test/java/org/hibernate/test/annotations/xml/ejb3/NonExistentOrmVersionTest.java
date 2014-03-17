@@ -25,7 +25,7 @@ package org.hibernate.test.annotations.xml.ejb3;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.source.InvalidMappingException;
+import org.hibernate.metamodel.source.spi.InvalidMappingException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

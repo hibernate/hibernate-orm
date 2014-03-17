@@ -33,19 +33,25 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 
+import org.jboss.jandex.IndexView;
+
 /**
  * @author Steve Ebersole
  */
 public class RootBindingContextBuilder {
 
 	public static BindingContext buildBindingContext(StandardServiceRegistry serviceRegistry) {
+		return buildBindingContext( serviceRegistry, null );
+	}
+
+	public static BindingContext buildBindingContext(StandardServiceRegistry serviceRegistry, IndexView index) {
 		final BasicTypeRegistry basicTypeRegistry = new BasicTypeRegistry();
 		final MetadataBuilderImpl.Options options = new MetadataBuilderImpl.Options( serviceRegistry );
 		final MetadataBuildingProcess.MappingDefaultsImpl  mappingDefaults = new MetadataBuildingProcess.MappingDefaultsImpl(
 				options
 		);
 		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
-				null,
+				index,
 				null,
 				serviceRegistry
 		);

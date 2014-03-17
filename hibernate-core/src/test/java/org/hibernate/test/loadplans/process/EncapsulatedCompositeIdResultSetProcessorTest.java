@@ -23,11 +23,6 @@
  */
 package org.hibernate.test.loadplans.process;
 
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,6 +30,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
@@ -46,13 +46,12 @@ import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.type.Type;
 
-import org.junit.Test;
-
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -93,8 +92,8 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 				new Callback() {
 					@Override
 					public void bind(PreparedStatement ps) throws SQLException {
-						ps.setString( 1, "Joe" );
-						ps.setString( 2, "Blow" );
+						ps.setString( 1, "Blow" );
+						ps.setString( 2, "Joe" );
 					}
 
 					@Override

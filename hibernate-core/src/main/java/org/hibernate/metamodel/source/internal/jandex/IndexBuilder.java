@@ -227,6 +227,9 @@ public class IndexBuilder {
 		if ( StringHelper.isEmpty( className ) ) {
 			throw new AssertionFailure( "Class Name used to create ClassInfo is empty." );
 		}
+
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
 		Class clazz = null;
 		try {
 			clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );

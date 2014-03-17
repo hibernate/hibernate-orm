@@ -23,6 +23,8 @@
  */
 package org.hibernate.jpa.test.query;
 
+import java.util.Date;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
@@ -33,18 +35,13 @@ import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
-import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import java.util.Date;
-import java.util.List;
-
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
@@ -52,6 +49,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9060" )
 public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity( name = "Person" )
 	@SqlResultSetMappings(

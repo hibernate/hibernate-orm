@@ -32,16 +32,18 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import junit.framework.Assert;
+import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
+import junit.framework.Assert;
 
 /**
  * @author Erich Heard
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9055" )
 public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 
 	@Override

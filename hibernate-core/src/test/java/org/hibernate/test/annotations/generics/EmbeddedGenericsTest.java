@@ -23,13 +23,15 @@
  */
 package org.hibernate.test.annotations.generics;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9049" )
 public class EmbeddedGenericsTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testWorksWithGenericEmbedded() {

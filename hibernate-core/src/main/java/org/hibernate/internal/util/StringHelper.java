@@ -783,4 +783,16 @@ public final class StringHelper {
 	public static String[] toArrayElement(String s) {
 		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] { s };
 	}
+
+	public static String makePath(String base, String name) {
+		if ( isEmpty( name ) ) {
+			throw new IllegalArgumentException( "Name used to make path cannot be empty" );
+		}
+
+		return isEmpty( base ) ? name : base + '.' + name;
+	}
+
+	public static String nullIfEmpty(String value) {
+		return isEmpty( value ) ? null : value;
+	}
 }

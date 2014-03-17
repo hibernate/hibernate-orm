@@ -26,12 +26,13 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.RowId;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.Table;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -45,14 +46,14 @@ public class RowIdBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = NoRowIdEntity.class)
 	public void testNoRowId() {
 		EntityBinding binding = getEntityBinding( NoRowIdEntity.class );
-		assertEquals( "Wrong row id", null, binding.getRowId() );
+		assertEquals( "Wrong row id", null, ( (Table) binding.getPrimaryTable() ).getRowId() );
 	}
 
 	@Test
 	@Resources(annotatedClasses = RowIdEntity.class)
 	public void testRowId() {
 		EntityBinding binding = getEntityBinding( RowIdEntity.class );
-		assertEquals( "Wrong row id", "rowid", binding.getRowId() );
+		assertEquals( "Wrong row id", "rowid", ( (Table) binding.getPrimaryTable() ).getRowId() );
 	}
 
 	@Entity

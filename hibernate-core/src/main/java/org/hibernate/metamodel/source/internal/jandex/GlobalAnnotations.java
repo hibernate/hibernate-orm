@@ -35,7 +35,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
@@ -46,7 +46,7 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbSequenceGenerator;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMapping;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbTableGenerator;
 import org.hibernate.metamodel.source.internal.jaxb.SchemaAware;
-import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.source.spi.MappingException;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;

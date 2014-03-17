@@ -35,7 +35,7 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 
-import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.xml.internal.stax.BufferedXMLEventReader;
 import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.xml.spi.Origin;

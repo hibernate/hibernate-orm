@@ -6,7 +6,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
@@ -17,7 +16,6 @@ import org.junit.Test;
  */
 public class DuplicateTest extends BaseUnitTestCase {
     @Test
-	@FailureExpectedWithNewMetamodel
 	public void testDuplicateEntityName() throws Exception {
 		Configuration cfg = new Configuration();
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

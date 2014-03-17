@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.ParameterizedType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
@@ -37,7 +38,7 @@ import org.jboss.jandex.DotName;
  */
 public class FieldDescriptorImpl implements FieldDescriptor {
 	private final String name;
-	private final JavaTypeDescriptor fieldType;
+	private final ParameterizedType fieldType;
 
 	private final int modifiers;
 
@@ -46,7 +47,7 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 
 	public FieldDescriptorImpl(
 			String name,
-			JavaTypeDescriptor fieldType,
+			ParameterizedType fieldType,
 			int modifiers,
 			JavaTypeDescriptor declaringType,
 			Map<DotName, AnnotationInstance> annotationMap) {
@@ -65,7 +66,7 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	}
 
 	@Override
-	public JavaTypeDescriptor getType() {
+	public ParameterizedType getType() {
 		return fieldType;
 	}
 
@@ -82,6 +83,16 @@ public class FieldDescriptorImpl implements FieldDescriptor {
 	@Override
 	public Map<DotName, AnnotationInstance> getAnnotations() {
 		return annotationMap;
+	}
+
+	@Override
+	public String toLoggableForm() {
+		return declaringType.getName().toString() + '#' + name;
+	}
+
+	@Override
+	public String toSignatureForm() {
+		return fieldType.getErasedType().getName().toString() + ' ' + name;
 	}
 
 	@Override

@@ -288,7 +288,7 @@ public abstract class AbstractCollectionPersister
 
 		collectionType = (CollectionType) collection.getHibernateTypeDescriptor().getResolvedTypeMapping();
 		role = collection.getAttribute().getRole();
-		entityName = collection.getContainer().seekEntityBinding().getEntity().getName();
+		entityName = collection.getContainer().seekEntityBinding().getEntityName();
 		ownerPersister = factory.getEntityPersister( entityName );
 		queryLoaderName = collection.getCustomLoaderName();
 		// TODO: is nodeName obsolete?
@@ -562,7 +562,7 @@ public abstract class AbstractCollectionPersister
 		if ( isArray ) {
 			final ClassLoaderService cls = factory.getServiceRegistry().getService( ClassLoaderService.class );
 			elementClass = cls.classForName(
-					collection.getAttribute().getElementType().getDescriptor().getName().fullName()
+					collection.getAttribute().getElementType().getDescriptor().getName().toString()
 			);
 		}
 		else {

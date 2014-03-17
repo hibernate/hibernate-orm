@@ -29,8 +29,7 @@ import org.hibernate.tuple.component.ComponentTuplizer;
 /**
  * @author Gail Badner
  */
-public interface CompositeAttributeBindingContainer
-		extends AttributeBindingContainer {
+public interface CompositeAttributeBindingContainer extends AttributeBindingContainer {
 	boolean isAggregated();
 	SingularAttribute getParentReference();
 

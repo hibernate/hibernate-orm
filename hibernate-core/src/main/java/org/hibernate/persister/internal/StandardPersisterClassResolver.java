@@ -72,7 +72,7 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 			}
 			default: {
 				throw new UnknownPersisterException(
-						"Could not determine persister implementation for entity [" + metadata.getEntity().getName() + "]"
+						"Could not determine persister implementation for entity [" + metadata.getEntityName() + "]"
 				);
 			}
 

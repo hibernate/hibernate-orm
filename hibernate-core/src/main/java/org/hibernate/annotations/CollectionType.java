@@ -30,11 +30,15 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Names a custom collection type for a persistent collection.  The collection can also name a @Type, which defines
- * the Hibernate Type of the collection elements.
+ * Names a custom collection type for a persistent collection.  The collection
+ * can also name a @Type, which defines the Hibernate Type of the collection
+ * elements.  If the collection is a Map, can als use @MapKeyType to define the
+ * Hibernate Type of the map key.
  *
  * @see org.hibernate.type.CollectionType
  * @see org.hibernate.usertype.UserCollectionType
+ * @see org.hibernate.annotations.Type
+ * @see org.hibernate.annotations.MapKeyType
  *
  * @author Steve Ebersole
  */
@@ -42,18 +46,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CollectionType {
 	/**
-	 * Names the type.
+	 * Name of the collection type to use.
 	 *
-	 * Could name the implementation class (an implementation of {@link org.hibernate.type.CollectionType} or
-	 * {@link org.hibernate.usertype.UserCollectionType}).  Could also name a custom type defined via a
-	 * {@link TypeDef @TypeDef}
+	 * Could name either:<ul>
+	 *     <li>the implementation class (an implementation of {@link org.hibernate.type.CollectionType}</li>
+	 *     <li>the implementation class (an implementation of {@link org.hibernate.usertype.UserCollectionType}</li>
+	 *     <li>a type defined via a {@link TypeDef @TypeDef}</li>
+	 * </ul>
 	 */
 	String type();
 
 	/**
-	 * Specifies configuration information for the type.  Note that if the named type is a
-	 * {@link org.hibernate.usertype.UserCollectionType}, it must also implement 
-	 * {@link org.hibernate.usertype.ParameterizedType} in order to receive these values.
+	 * Specifies configuration information for the type.  Note that if the named
+	 * type is a {@link org.hibernate.usertype.UserCollectionType}, it must also
+	 * implement {@link org.hibernate.usertype.ParameterizedType} in order to
+	 * receive these values.
 	 */
 	Parameter[] parameters() default {};
 }

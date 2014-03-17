@@ -32,9 +32,9 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.validation.Schema;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
-import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
+import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.internal.stax.LocalSchema;
 import org.hibernate.xml.internal.stax.SupportedOrmXsdVersion;

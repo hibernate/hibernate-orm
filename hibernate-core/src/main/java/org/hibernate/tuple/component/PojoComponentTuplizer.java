@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.tuple.component;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
@@ -36,7 +37,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
@@ -76,7 +76,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		else {
 			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 			this.componentClass = cls.classForName(
-					component.getAttributeContainer().getDescriptor().getName().fullName()
+					component.getAttributeContainer().getDescriptor().getName().toString()
 			);
 		}
 
@@ -165,7 +165,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
 			boolean isIdentifierMapper) {
 		final Class clazz = classForName(
-				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
 		);
 
 		if ( !compositeAttributeBindingContainer.isAggregated() && ReflectHelper.isAbstractClass( clazz ) ) {
@@ -212,7 +212,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		else {
 			final ClassLoaderService cls = serviceRegistry().getService( ClassLoaderService.class );
 			final Class clazz = cls.classForName(
-					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
 			);
 			return getGetter(
 					clazz,
@@ -241,7 +241,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		else {
 			final Class clazz = classForName(
-					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().fullName()
+					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
 			);
 			return getSetter(
 					clazz,

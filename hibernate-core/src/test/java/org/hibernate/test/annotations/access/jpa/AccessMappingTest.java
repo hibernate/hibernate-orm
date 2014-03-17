@@ -23,10 +23,6 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
@@ -35,12 +31,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.entity.EntityTuplizer;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import org.hibernate.tuple.entity.EntityTuplizer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -68,7 +67,6 @@ public class AccessMappingTest extends BaseUnitTestCase {
     }
 
     @Test
-	@FailureExpectedWithNewMetamodel
     public void testInconsistentAnnotationPlacement() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course1.class );
@@ -182,7 +180,6 @@ public class AccessMappingTest extends BaseUnitTestCase {
     }
 
     @Test
-	@FailureExpectedWithNewMetamodel
     public void testExplicitPropertyAccessAnnotationsWithJpaStyleOverride() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         Class<?> classUnderTest = Course5.class;

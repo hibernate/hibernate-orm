@@ -30,12 +30,12 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 

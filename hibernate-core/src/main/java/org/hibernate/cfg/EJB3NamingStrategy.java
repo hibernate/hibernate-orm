@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.internal.HashedNameUtil;
+import org.hibernate.metamodel.internal.binder.HashedNameUtil;
 
 /**
  * Naming strategy implementing the EJB3 standards

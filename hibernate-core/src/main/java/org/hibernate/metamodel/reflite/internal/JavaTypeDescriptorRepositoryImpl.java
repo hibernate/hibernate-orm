@@ -25,23 +25,27 @@ package org.hibernate.metamodel.reflite.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
-import org.hibernate.metamodel.reflite.spi.Name;
+import org.hibernate.metamodel.reflite.spi.ParameterizedType;
+import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.VoidDescriptor;
 import org.hibernate.service.ServiceRegistry;
 
@@ -58,6 +62,9 @@ import com.fasterxml.classmate.MemberResolver;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.classmate.members.ResolvedField;
+import com.fasterxml.classmate.members.ResolvedMember;
+import com.fasterxml.classmate.members.ResolvedMethod;
 
 /**
  * This is the "interim" implementation of JavaTypeDescriptorRepository that loads Classes to ascertain this
@@ -77,7 +84,12 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	private final TypeResolver classmateTypeResolver;
 	private final MemberResolver classmateMemberResolver;
 
-	private Map<Name,JavaTypeDescriptor> typeDescriptorMap = new HashMap<Name, JavaTypeDescriptor>();
+	private Map<DotName,JavaTypeDescriptor> typeDescriptorMap = new HashMap<DotName, JavaTypeDescriptor>();
+
+	private final InterfaceDescriptor jdkCollectionDescriptor;
+	private final InterfaceDescriptor jdkListDescriptor;
+	private final InterfaceDescriptor jdkSetDescriptor;
+	private final InterfaceDescriptor jdkMapDescriptor;
 
 	public JavaTypeDescriptorRepositoryImpl(
 			IndexView jandexIndex,
@@ -96,22 +108,27 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 
 		this.classmateTypeResolver = new TypeResolver();
 		this.classmateMemberResolver = new MemberResolver( classmateTypeResolver );
+
+		this.jdkCollectionDescriptor = (InterfaceDescriptor) getType( DotName.createSimple( Collection.class.getName() ) );
+		this.jdkListDescriptor = (InterfaceDescriptor) getType( DotName.createSimple( List.class.getName() ) );
+		this.jdkSetDescriptor = (InterfaceDescriptor) getType( DotName.createSimple( Set.class.getName() ) );
+		this.jdkMapDescriptor = (InterfaceDescriptor) getType( DotName.createSimple( Map.class.getName() ) );
 	}
 
 	@Override
-	public Name buildName(String name) {
-		return new DotNameAdapter( name );
+	public DotName buildName(String name) {
+		return DotName.createSimple( name );
 	}
 
 	@Override
-	public JavaTypeDescriptor getType(Name typeName) {
-		if ( typeName == null ) {
-			return null;
-		}
-
-		final String typeNameString = typeName.fullName();
+	public JavaTypeDescriptor getType(DotName typeName) {
+		final String typeNameString = typeName.toString();
 		if ( "void".equals( typeNameString ) ) {
 			return VoidDescriptor.INSTANCE;
+		}
+
+		if ( typeNameString.startsWith( "[" ) ) {
+			return decipherArrayTypeRequest( typeNameString );
 		}
 
 		JavaTypeDescriptor descriptor = typeDescriptorMap.get( typeName );
@@ -127,8 +144,86 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		return descriptor;
 	}
 
-	protected JavaTypeDescriptor makeTypeDescriptor(Name typeName) {
-		final String classNameToLoad = typeName.fullName();
+	private JavaTypeDescriptor decipherArrayTypeRequest(String typeNameString) {
+		final String componentTypeNameString = typeNameString.substring( 1 );
+		final JavaTypeDescriptor componentType = resolveArrayComponent( componentTypeNameString );
+		if ( componentType == null ) {
+			throw new IllegalArgumentException(
+					"Could not interpret requested array component to descriptor : " + typeNameString
+			);
+		}
+
+		return new ArrayDescriptorImpl(
+				DotName.createSimple( typeNameString ),
+				Modifier.PUBLIC,
+				componentType
+		);
+	}
+
+	private JavaTypeDescriptor resolveArrayComponent(String componentTypeName) {
+		if ( componentTypeName.startsWith( "[" ) ) {
+			// the component itself is an array (multiple dimension array)
+			return decipherArrayTypeRequest( componentTypeName );
+		}
+
+		final char arrayComponentCode = componentTypeName.charAt( 0 );
+		if ( arrayComponentCode == 'L' ) {
+			// the array component is an object.. we need to strip
+			// off the leading 'L' and the trailing ';' and resolve
+			// the component descriptor
+			final String componentClassName = componentTypeName.substring( 1, componentTypeName.length() - 1 );
+			return getType( DotName.createSimple( componentClassName ) );
+		}
+		else {
+			// should indicate we have a primitive array
+			// ask the Primitives class to help us decipher it
+			return Primitives.decipherArrayComponentCode( arrayComponentCode );
+		}
+	}
+
+	@Override
+	public ArrayDescriptor arrayType(JavaTypeDescriptor componentType) {
+		if ( PrimitiveTypeDescriptor.class.isInstance( componentType ) ) {
+			return Primitives.primitiveArrayDescriptor( (PrimitiveTypeDescriptor) componentType );
+		}
+
+		final String componentTypeName = componentType.getName().toString();
+		final String arrayTypeName;
+		if ( ArrayDescriptor.class.isInstance( componentType ) ) {
+			arrayTypeName = '[' + componentTypeName;
+		}
+		else {
+			arrayTypeName = "[L" + componentTypeName + ';';
+		}
+		return new ArrayDescriptorImpl(
+				DotName.createSimple( arrayTypeName ),
+				Modifier.PUBLIC,
+				componentType
+		);
+	}
+
+	@Override
+	public InterfaceDescriptor jdkCollectionDescriptor() {
+		return jdkCollectionDescriptor;
+	}
+
+	@Override
+	public InterfaceDescriptor jdkListDescriptor() {
+		return jdkListDescriptor;
+	}
+
+	@Override
+	public InterfaceDescriptor jdkSetDescriptor() {
+		return jdkSetDescriptor;
+	}
+
+	@Override
+	public InterfaceDescriptor jdkMapDescriptor() {
+		return jdkMapDescriptor;
+	}
+
+	protected JavaTypeDescriptor makeTypeDescriptor(DotName typeName) {
+		final String classNameToLoad = typeName.toString();
 
 		if ( isSafeClass( typeName ) ) {
 			return makeTypeDescriptor( typeName, classLoaderService.classForName( classNameToLoad ) );
@@ -168,8 +263,8 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		}
 	}
 
-	private boolean isSafeClass(Name className) {
-		final String classNameString = className.fullName();
+	private boolean isSafeClass(DotName className) {
+		final String classNameString = className.toString();
 		// classes in any of these packages are safe to load through the "live" ClassLoader
 		return classNameString.startsWith( "java." )
 				|| classNameString.startsWith( "javax." )
@@ -177,14 +272,15 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 
 	}
 
-	private JavaTypeDescriptor makeTypeDescriptor(Name typeName, Class clazz) {
-		final JandexPivot jandexPivot = pivotAnnotations( toJandexName( typeName ) );
+	private JavaTypeDescriptor makeTypeDescriptor(DotName typeName, Class clazz) {
+		final JandexPivot jandexPivot = pivotAnnotations( typeName );
 
 		if ( clazz.isInterface() ) {
 			final InterfaceDescriptorImpl typeDescriptor = new InterfaceDescriptorImpl(
-					typeName,
+					jandexPivot.classInfo,
 					clazz.getModifiers(),
-					jandexPivot.typeAnnotations
+					jandexPivot.typeAnnotations,
+					jandexPivot.allAnnotations
 			);
 			typeDescriptorMap.put( typeName, typeDescriptor );
 
@@ -192,31 +288,38 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 
 			final ResolvedType resolvedType = classmateTypeResolver.resolve( clazz );
 			typeDescriptor.setTypeParameters( extractTypeParameters( resolvedType ) );
-//			final ResolvedTypeWithMembers resolvedTypeWithMembers = classmateMemberResolver.resolve( resolvedType, null, null );
+			final ResolvedTypeWithMembers resolvedTypeWithMembers = classmateMemberResolver.resolve( resolvedType, null, null );
 
-			typeDescriptor.setFields( extractFields( clazz, typeDescriptor, jandexPivot ) );
-			typeDescriptor.setMethods( extractMethods( clazz, typeDescriptor, jandexPivot ) );
+			//interface fields would need to be static, and we don't care about static fields
+			//we exclude the statics in extractFields but why even bother iterating them as here
+			//we will exclude them all
+			//typeDescriptor.setFields( extractFields( clazz, typeDescriptor, jandexPivot, resolvedTypeWithMembers ) );
+			typeDescriptor.setMethods( extractMethods( clazz, typeDescriptor, jandexPivot, resolvedTypeWithMembers ) );
 
 
 			return typeDescriptor;
 		}
 		else {
 			final ClassDescriptorImpl typeDescriptor = new ClassDescriptorImpl(
-					typeName,
+					jandexPivot.classInfo,
 					clazz.getModifiers(),
 					hasDefaultCtor( clazz ),
-					jandexPivot.typeAnnotations
+					jandexPivot.typeAnnotations,
+					jandexPivot.allAnnotations
 			);
 			typeDescriptorMap.put( typeName, typeDescriptor );
 
 			typeDescriptor.setSuperType( extractSuper( clazz ) );
 			typeDescriptor.setInterfaces( extractInterfaces( clazz ) );
 
-			final ResolvedType resolvedType = classmateTypeResolver.resolve( clazz );
-			typeDescriptor.setTypeParameters( extractTypeParameters( resolvedType ) );
+			if ( !Object.class.equals( clazz ) ) {
+				final ResolvedType resolvedType = classmateTypeResolver.resolve( clazz );
+				typeDescriptor.setTypeParameters( extractTypeParameters( resolvedType ) );
+				final ResolvedTypeWithMembers resolvedTypeWithMembers = classmateMemberResolver.resolve( resolvedType, null, null );
 
-			typeDescriptor.setFields( extractFields( clazz, typeDescriptor, jandexPivot ) );
-			typeDescriptor.setMethods( extractMethods( clazz, typeDescriptor, jandexPivot ) );
+				typeDescriptor.setFields( extractFields( clazz, typeDescriptor, jandexPivot, resolvedTypeWithMembers ) );
+				typeDescriptor.setMethods( extractMethods( clazz, typeDescriptor, jandexPivot, resolvedTypeWithMembers ) );
+			}
 
 			return typeDescriptor;
 		}
@@ -234,16 +337,7 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		return result;
 	}
 
-	private DotName toJandexName(Name typeName) {
-		if ( DotNameAdapter.class.isInstance( typeName ) ) {
-			return ( (DotNameAdapter) typeName ).jandexName();
-		}
-		else {
-			return DotName.createSimple( typeName.fullName() );
-		}
-	}
-
-	private static final JandexPivot NO_JANDEX_PIVOT = new JandexPivot();
+	private static final JandexPivot NO_JANDEX_PIVOT = new JandexPivot( null );
 
 	private JandexPivot pivotAnnotations(DotName typeName) {
 		if ( jandexIndex == null ) {
@@ -252,11 +346,19 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 
 		final ClassInfo jandexClassInfo = jandexIndex.getClassByName( typeName );
 		if ( jandexClassInfo == null ) {
-			return NO_JANDEX_PIVOT;
+			return new JandexPivot(
+					ClassInfo.create(
+							typeName,
+							null,
+							(short)0,
+							new DotName[0],
+							Collections.<DotName, List<AnnotationInstance>>emptyMap()
+					)
+			);
 		}
 
 		final Map<DotName, List<AnnotationInstance>> annotations = jandexClassInfo.annotations();
-		final JandexPivot pivot = new JandexPivot();
+		final JandexPivot pivot = new JandexPivot( jandexClassInfo );
 		for ( Map.Entry<DotName, List<AnnotationInstance>> annotationInstances : annotations.entrySet() ) {
 			for ( AnnotationInstance annotationInstance : annotationInstances.getValue() ) {
 				if ( MethodParameterInfo.class.isInstance( annotationInstance.target() ) ) {
@@ -336,10 +438,6 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		return buff.append( ')' ).toString();
 	}
 
-	private Collection<AnnotationInstance> getAnnotations(DotName dotName) {
-		return jandexIndex.getAnnotations( dotName );
-	}
-
 	private ClassDescriptor extractSuper(Class clazz) {
 		final Class superclass = clazz.getSuperclass();
 		if ( superclass == null ) {
@@ -365,7 +463,8 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	private Collection<FieldDescriptor> extractFields(
 			Class clazz,
 			JavaTypeDescriptor declaringType,
-			JandexPivot jandexPivot) {
+			JandexPivot jandexPivot,
+			ResolvedTypeWithMembers resolvedTypeWithMembers) {
 		final Field[] declaredFields = clazz.getDeclaredFields();
 		final Field[] fields = clazz.getFields();
 
@@ -373,13 +472,22 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 			return Collections.emptyList();
 		}
 
+		final ResolvedField[] resolvedFields = resolvedTypeWithMembers.getMemberFields();
 		final List<FieldDescriptor> fieldDescriptors = CollectionHelper.arrayList( fields.length );
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// first,  extract declared fields
 		for ( Field field : declaredFields ) {
+			if ( Modifier.isStatic( field.getModifiers() ) ) {
+				continue;
+			}
 			fieldDescriptors.add(
 					new FieldDescriptorImpl(
 							field.getName(),
-							toTypeDescriptor( field.getType() ),
+							makeParameterizedType(
+									toTypeDescriptor( field.getType() ),
+									findResolvedFieldInfo( field, resolvedFields )
+							),
 							field.getModifiers(),
 							declaringType,
 							jandexPivot.fieldAnnotations.get( field.getName() )
@@ -387,24 +495,75 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 			);
 		}
 
-		for ( Field field : fields ) {
-			if ( clazz.equals( field.getDeclaringClass() ) ) {
-				continue;
-			}
-
-			final JavaTypeDescriptor fieldDeclarer = getType( buildName( field.getDeclaringClass().getName() ) );
-			fieldDescriptors.add(
-					new FieldDescriptorImpl(
-							field.getName(),
-							toTypeDescriptor( field.getType() ),
-							field.getModifiers(),
-							fieldDeclarer,
-							jandexPivot.fieldAnnotations.get( field.getName() )
-					)
-			);
-		}
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// then, extract all fields
+//		for ( Field field : fields ) {
+//			if ( clazz.equals( field.getDeclaringClass() ) ) {
+//				// skip declared fields, since we already processed them above
+//				continue;
+//			}
+//
+//			if ( Modifier.isStatic( field.getModifiers() ) ) {
+//				continue;
+//			}
+//
+//			final JavaTypeDescriptor fieldDeclarer = getType( buildName( field.getDeclaringClass().getName() ) );
+//			fieldDescriptors.add(
+//					new FieldDescriptorImpl(
+//							field.getName(),
+//							makeParameterizedType(
+//									toTypeDescriptor( field.getType() ),
+//									findResolvedFieldInfo( field, resolvedFields )
+//							),
+//							field.getModifiers(),
+//							fieldDeclarer,
+//							jandexPivot.fieldAnnotations.get( field.getName() )
+//					)
+//			);
+//		}
 		return fieldDescriptors;
 	}
+
+	private ResolvedField findResolvedFieldInfo(Field field, ResolvedField[] resolvedFields) {
+		for ( ResolvedField resolvedField : resolvedFields ) {
+			if ( resolvedField.getName().equals( field.getName() ) ) {
+				return resolvedField;
+			}
+		}
+//		throw new AssertionFailure(
+//				String.format(
+//						"Unable to resolve type information of field : %s",
+//						field.toGenericString()
+//				)
+//		);
+		return null;
+	}
+
+	private ParameterizedType makeParameterizedType(
+			JavaTypeDescriptor erasedTypeDescriptor,
+			ResolvedMember resolvedMember) {
+		if ( resolvedMember == null
+				|| resolvedMember.getType() == null ) {
+			return new ParameterizedTypeImpl(
+					erasedTypeDescriptor,
+					Collections.<JavaTypeDescriptor>emptyList()
+			);
+		}
+
+		List<ResolvedType> classmateResolvedTypes = resolvedMember.getType().getTypeParameters();
+		if ( classmateResolvedTypes.isEmpty() ) {
+			return new ParameterizedTypeImpl( erasedTypeDescriptor, Collections.<JavaTypeDescriptor>emptyList() );
+		}
+
+		List<JavaTypeDescriptor> resolvedTypeDescriptors = new ArrayList<JavaTypeDescriptor>();
+		for ( ResolvedType classmateResolvedType : classmateResolvedTypes ) {
+			resolvedTypeDescriptors.add(
+					toTypeDescriptor( classmateResolvedType.getErasedType() )
+			);
+		}
+		return new ParameterizedTypeImpl( erasedTypeDescriptor, resolvedTypeDescriptors );
+	}
+
 
 	private JavaTypeDescriptor toTypeDescriptor(Class clazz) {
 		final JavaTypeDescriptor fieldTypeDescriptor;
@@ -431,7 +590,7 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		}
 		else {
 			return new ArrayDescriptorImpl(
-					buildName( "[" + type.getName() ),
+					buildName( "[L" + type.getName() + ";" ),
 					type.getModifiers(),
 					getType( buildName( type.getName() ) )
 			);
@@ -441,7 +600,8 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	private Collection<MethodDescriptor> extractMethods(
 			Class clazz,
 			JavaTypeDescriptor declaringType,
-			JandexPivot jandexPivot) {
+			JandexPivot jandexPivot,
+			ResolvedTypeWithMembers resolvedTypeWithMembers) {
 		final Method[] declaredMethods = clazz.getDeclaredMethods();
 		final Method[] methods = clazz.getMethods();
 
@@ -449,20 +609,32 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 			return Collections.emptyList();
 		}
 
+		final ResolvedMethod[] resolvedMethods = resolvedTypeWithMembers.getMemberMethods();
 		final List<MethodDescriptor> methodDescriptors = CollectionHelper.arrayList( methods.length );
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// first,  extract declared methods
 		for ( Method method : declaredMethods ) {
-			methodDescriptors.add( fromMethod( method, declaringType, jandexPivot ) );
-		}
-
-		for ( Method method : methods ) {
-			if ( clazz.equals( method.getDeclaringClass() ) ) {
+			if ( Modifier.isStatic( method.getModifiers() ) ) {
 				continue;
 			}
-
-			final JavaTypeDescriptor methodDeclarer = getType( buildName( method.getDeclaringClass().getName() ) );
-			methodDescriptors.add( fromMethod( method, methodDeclarer, jandexPivot ) );
+			methodDescriptors.add( fromMethod( method, declaringType, jandexPivot, resolvedMethods ) );
 		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// then, extract all methods
+//		for ( Method method : methods ) {
+//			if ( clazz.equals( method.getDeclaringClass() ) ) {
+//				// skip declared methods, since we already processed them above
+//				continue;
+//			}
+//			if ( Modifier.isStatic( method.getModifiers() ) ) {
+//				continue;
+//			}
+//
+//			final JavaTypeDescriptor methodDeclarer = getType( buildName( method.getDeclaringClass().getName() ) );
+//			methodDescriptors.add( fromMethod( method, methodDeclarer, jandexPivot, resolvedMethods ) );
+//		}
 
 		return methodDescriptors;
 	}
@@ -470,7 +642,8 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	private MethodDescriptor fromMethod(
 			Method method,
 			JavaTypeDescriptor declaringType,
-			JandexPivot jandexPivot) {
+			JandexPivot jandexPivot,
+			ResolvedMethod[] resolvedMethods) {
 		final Class[] parameterTypes = method.getParameterTypes();
 		final Collection<JavaTypeDescriptor> argumentTypes;
 		if ( parameterTypes.length == 0 ) {
@@ -487,15 +660,35 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 				method.getName(),
 				declaringType,
 				method.getModifiers(),
-				toTypeDescriptor( method.getReturnType() ),
+				makeParameterizedType(
+						toTypeDescriptor( method.getReturnType() ),
+						findResolvedMethodInfo( method, resolvedMethods )
+				),
 				argumentTypes,
 				jandexPivot.methodAnnotations.get( buildMethodAnnotationsKey( method ) )
 		);
 	}
 
+	private ResolvedMethod findResolvedMethodInfo(Method method, ResolvedMethod[] resolvedMethods) {
+		for ( ResolvedMethod resolvedMethod : resolvedMethods ) {
+			if ( resolvedMethod.getName().equals( method.getName() ) ) {
+				// todo : we really need to check signatures too
+				return resolvedMethod;
+			}
+		}
+//		throw new AssertionFailure(
+//				String.format(
+//						"Unable to resolve type information of method : %s",
+//						method.toGenericString()
+//				)
+//		);
+		return null;
+	}
+
 	private String buildMethodAnnotationsKey(Method method) {
 		StringBuilder buff = new StringBuilder();
 		buff.append( method.getReturnType().getName() )
+				.append( ' ' )
 				.append( method.getName() )
 				.append( '(' );
 		for ( int i = 0; i < method.getParameterTypes().length; i++ ) {
@@ -519,14 +712,14 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	}
 
 	private static class NoSuchClassTypeDescriptor implements JavaTypeDescriptor {
-		private final Name name;
+		private final DotName name;
 
-		private NoSuchClassTypeDescriptor(Name name) {
+		private NoSuchClassTypeDescriptor(DotName name) {
 			this.name = name;
 		}
 
 		@Override
-		public Name getName() {
+		public DotName getName() {
 			return name;
 		}
 
@@ -544,15 +737,58 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		public Collection<MethodDescriptor> getDeclaredMethods() {
 			return Collections.emptyList();
 		}
+
+		@Override
+		public AnnotationInstance findTypeAnnotation(DotName annotationType) {
+			return null;
+		}
+
+		@Override
+		public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
+			return null;
+		}
+
+		@Override
+		public Collection<AnnotationInstance> findAnnotations(DotName annotationType) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public Collection<AnnotationInstance> findLocalAnnotations(DotName annotationType) {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public boolean isAssignableFrom(JavaTypeDescriptor check) {
+			return false;
+		}
+
+		@Override
+		public List<JavaTypeDescriptor> getResolvedParameterTypes() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public ClassInfo getJandexClassInfo() {
+			return null;
+		}
 	}
 
 	private static class JandexPivot {
-		private Map<DotName,AnnotationInstance> typeAnnotations
-				= new HashMap<DotName, AnnotationInstance>();
-		private Map<String,Map<DotName,AnnotationInstance>> fieldAnnotations
-				= new HashMap<String, Map<DotName, AnnotationInstance>>();
-		private Map<String,Map<DotName,AnnotationInstance>> methodAnnotations
-				= new HashMap<String, Map<DotName, AnnotationInstance>>();
+		private final ClassInfo classInfo;
+
+		private Map<DotName,List<AnnotationInstance>> allAnnotations;
+		private Map<DotName,AnnotationInstance> typeAnnotations = new HashMap<DotName, AnnotationInstance>();
+		private Map<String,Map<DotName,AnnotationInstance>> fieldAnnotations = new HashMap<String, Map<DotName, AnnotationInstance>>();
+		private Map<String,Map<DotName,AnnotationInstance>> methodAnnotations = new HashMap<String, Map<DotName, AnnotationInstance>>();
+
+		private JandexPivot(ClassInfo classInfo) {
+			this.classInfo = classInfo;
+			this.allAnnotations = classInfo == null
+					? Collections.<DotName, List<AnnotationInstance>>emptyMap()
+					: classInfo.annotations();
+		}
+
 	}
 
 }

@@ -29,11 +29,12 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.TruthValue;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -50,7 +51,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	private int batchSize = -1;
 
-	private Caching caching;
+	private Caching caching = new Caching( TruthValue.UNKNOWN );
 
 	private boolean mutable = true;
 
@@ -220,6 +221,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	}
 
 	public void setCaching(Caching caching) {
+		assert caching != null;
 		this.caching = caching;
 	}
 

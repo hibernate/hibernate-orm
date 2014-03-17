@@ -24,20 +24,23 @@
 package org.hibernate.test.annotations.idmanytoone;
 
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel(
+		message = "The problem here is actually the combination of @ManyToOne and @Basic on attributes; need to determine if that's really valid"
+)
 public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testFkCreationOrdering() throws Exception {

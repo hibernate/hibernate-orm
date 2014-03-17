@@ -23,16 +23,15 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.embeddedid;
 
-import javax.persistence.EntityManagerFactory;
 import java.util.Arrays;
+import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 import org.hibernate.jpa.AvailableSettings;
-
-import org.junit.Test;
+import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -45,7 +44,7 @@ public class MappedSuperclassWithEmbeddedIdTest extends BaseUnitTestCase {
 	public void testStaticMetamodel() {
 		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
 				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( Product.class )
+				Arrays.asList( AbstractProduct.class, ProductId.class, Product.class )
 		);
 
 		assertNotNull( "'Product_.description' should not be null)", Product_.description );

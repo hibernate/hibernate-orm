@@ -23,19 +23,21 @@
  */
 package org.hibernate.test.annotations.generics;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
+
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9049" )
 public class GenericsTest extends BaseCoreFunctionalTestCase {
 	
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "known bug in HANA: rs.next() returns false for org.hibernate.id.enhanced.SequenceStructure$1.getNextValue() for this test")

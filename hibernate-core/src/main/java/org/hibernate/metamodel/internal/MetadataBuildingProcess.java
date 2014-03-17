@@ -58,14 +58,20 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
-import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.internal.binder.Binder;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
-import org.hibernate.metamodel.reflite.spi.Name;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.internal.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.source.internal.jandex.Unifier;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.source.spi.FilterDefinitionSource;
+import org.hibernate.metamodel.source.spi.FilterParameterSource;
+import org.hibernate.metamodel.source.spi.IdentifierGeneratorSource;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.source.spi.TypeDescriptorSource;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
@@ -74,10 +80,8 @@ import org.hibernate.metamodel.spi.MetadataContributor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
-import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
-import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
@@ -98,12 +102,6 @@ import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
-import org.hibernate.metamodel.spi.source.FilterParameterSource;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
-import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
@@ -112,6 +110,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.xml.spi.BindResult;
 
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
@@ -453,37 +452,29 @@ public class MetadataBuildingProcess {
 			return;
 		}
 
-		for ( CacheRegionDefinition cacheRegionDefinition : bindingContext.getBuildingOptions().getCacheRegionDefinitions() ) {
-			final String role = cacheRegionDefinition.getRole();
-			if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-				final EntityBinding entityBinding = bindingContext.getMetadataCollector().getEntityBinding( role );
-				if ( entityBinding != null ) {
-					entityBinding.getHierarchyDetails().setCaching(
-							new Caching(
-									cacheRegionDefinition.getRegion(),
-									AccessType.fromExternalName( cacheRegionDefinition.getUsage() ),
-									cacheRegionDefinition.isCacheLazy()
-							)
-					);
-				}
-				else {
-					//logging?
-					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
-				}
+		for ( CacheRegionDefinition override : bindingContext.getBuildingOptions().getCacheRegionDefinitions() ) {
+			final String role = override.getRole();
+
+			// NOTE : entity region overrides are already handled when building the
+			if ( override.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
+//				final EntityBinding entityBinding = bindingContext.getMetadataCollector().getEntityBinding( role );
+//				if ( entityBinding != null ) {
+//					entityBinding.getHierarchyDetails().getCaching().setRegion( override.getRegion() );
+//					entityBinding.getHierarchyDetails().getCaching().setAccessType( AccessType.fromExternalName( override.getUsage() ) );
+//					entityBinding.getHierarchyDetails().getCaching().setCacheLazyProperties( override.isCacheLazy() );
+//				}
+//				else {
+//					//logging?
+//					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
+//				}
 
 			}
-			else if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
+			else if ( override.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
 				final PluralAttributeBinding pluralAttributeBinding = bindingContext.getMetadataCollector().getCollection(
 						role
 				);
 				if ( pluralAttributeBinding != null ) {
-					AbstractPluralAttributeBinding.class.cast( pluralAttributeBinding ).setCaching(
-							new Caching(
-									cacheRegionDefinition.getRegion(),
-									AccessType.fromExternalName( cacheRegionDefinition.getUsage() ),
-									cacheRegionDefinition.isCacheLazy()
-							)
-					);
+					pluralAttributeBinding.getCaching().overlay( override );
 				}
 				else {
 					//logging?
@@ -531,7 +522,7 @@ public class MetadataBuildingProcess {
 		}
 
 		@Override
-		public JavaTypeDescriptorRepository getRefliteRepository() {
+		public JavaTypeDescriptorRepository getJavaTypeDescriptorRepository() {
 			return javaTypeDescriptorRepository;
 		}
 
@@ -581,10 +572,10 @@ public class MetadataBuildingProcess {
 		}
 
 		@Override
-		public Type makeDomainType(Name typeName) {
+		public Type makeDomainType(DotName typeName) {
 			return new BasicType(
-					typeName.fullName(),
-					typeDescriptor( typeName.fullName() )
+					typeName.toString(),
+					typeDescriptor( typeName.toString() )
 			);
 		}
 
@@ -1067,13 +1058,13 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void addEntity(EntityBinding entityBinding) {
-			final String entityName = entityBinding.getEntity().getName();
+			final String entityName = entityBinding.getEntityName();
 			if ( entityBindingMap.containsKey( entityName ) ) {
 				throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
 			}
 			entityBindingMap.put( entityName, entityBinding );
 			final boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
-			final String className = isPOJO ? entityBinding.getEntity().getDescriptor().getName().fullName() : null;
+			final String className = isPOJO ? entityBinding.getEntity().getDescriptor().getName().toString() : null;
 			if ( isPOJO && StringHelper.isEmpty( className ) ) {
 				throw new MappingException( "Entity[" + entityName + "] is mapped as pojo but don't have a class name" );
 			}

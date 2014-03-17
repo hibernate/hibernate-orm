@@ -25,6 +25,9 @@ package org.hibernate.metamodel.internal.resolver;
 
 import java.util.List;
 
+import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeSource;
+import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -32,9 +35,6 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeSource;
-import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
  + * @author Gail Badner

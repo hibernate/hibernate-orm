@@ -27,9 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
-import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#AGGREGATE} elements
@@ -44,6 +44,8 @@ public class CompositePluralAttributeElementBinding
 	// TODO: Come up with a more descriptive name for compositeAttributeBindingContainer.
 	private AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
 	private CascadeStyle cascadeStyle;
+
+
 
 	public CompositePluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
@@ -62,17 +64,15 @@ public class CompositePluralAttributeElementBinding
 	public CompositeAttributeBindingContainer createCompositeAttributeBindingContainer(
 			Aggregate aggregate,
 			MetaAttributeContext metaAttributeContext,
-			SingularAttribute parentReference
-	) {
+			SingularAttribute parentReference) {
 		compositeAttributeBindingContainer =
 				new AbstractCompositeAttributeBindingContainer(
 						getPluralAttributeBinding().getContainer().seekEntityBinding(),
 						aggregate,
 						getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
-						aggregate.getRoleBaseName(),
+						getPluralAttributeBinding().getAttribute().getRole() + ".element",
 						metaAttributeContext,
-						parentReference
-				) {
+						parentReference) {
 					final Map<String,AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
 
 					@Override

@@ -25,9 +25,6 @@ package org.hibernate.metamodel;
 
 import javax.persistence.SharedCacheMode;
 
-import org.jboss.jandex.IndexView;
-import org.xml.sax.EntityResolver;
-
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
@@ -35,6 +32,10 @@ import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
+import org.jboss.jandex.IndexView;
+
+import org.xml.sax.EntityResolver;
 
 /**
  * Contract for specifying various overrides to be used in metamodel building.
@@ -120,6 +121,15 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled);
+
+	/**
+	 *
+	 * @param enabled
+	 * @return
+	 */
+	public MetadataBuilder withExplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled);
+
+	public MetadataBuilder withImplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled);
 
 	/**
 	 * Specify an additional or overridden basic type mapping.

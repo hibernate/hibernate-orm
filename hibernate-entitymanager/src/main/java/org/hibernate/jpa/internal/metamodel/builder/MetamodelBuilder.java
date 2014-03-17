@@ -54,10 +54,10 @@ import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HierarchyDetails;
-import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.Hierarchical;
-import org.hibernate.metamodel.spi.domain.Superclass;
+import org.hibernate.metamodel.spi.domain.MappedSuperclass;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -132,7 +132,7 @@ public class MetamodelBuilder {
 	@SuppressWarnings("unchecked")
 	private EntityTypeImpl buildEntityType(EntityBinding entityBinding) {
 		final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
-		final Class javaType = cls.classForName( entityBinding.getEntity().getDescriptor().getName().fullName() );
+		final Class javaType = cls.classForName( entityBinding.getEntity().getDescriptor().getName().toString() );
 		final AbstractIdentifiableType superType = locateOrBuildSuperType( entityBinding.getEntity().getSuperType(), entityBinding );
 
 		EntityTypeImpl entityType = new EntityTypeImpl(
@@ -142,7 +142,7 @@ public class MetamodelBuilder {
 				entityBinding.getJpaEntityName(),
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass(),
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
-				entityBinding.isVersioned()
+				entityBinding.getHierarchyDetails().isVersioned()
 		);
 
 		entityTypeMap.put( javaType, entityType );
@@ -180,35 +180,35 @@ public class MetamodelBuilder {
 			}
 			return locateOrBuildEntityType( superBinding );
 		}
-		else if ( Superclass.class.isInstance( hierarchical ) ) {
-			return locateOrBuildMappedSuperclassType( (Superclass) hierarchical, entityBinding );
+		else if ( MappedSuperclass.class.isInstance( hierarchical ) ) {
+			return locateOrBuildMappedSuperclassType( (MappedSuperclass) hierarchical, entityBinding );
 		}
 		else {
 			throw new IllegalStateException(
 					"Unexpected type for entity super descriptor; expecting Entity or Superclass, found ["
-							+ hierarchical.getDescriptor().getName().fullName() + "]"
+							+ hierarchical.getDescriptor().getName().toString() + "]"
 			);
 		}
 	}
 
-	private MappedSuperclassTypeImpl locateOrBuildMappedSuperclassType(Superclass superclass, EntityBinding entityBinding) {
+	private MappedSuperclassTypeImpl locateOrBuildMappedSuperclassType(MappedSuperclass mappedSuperclass, EntityBinding entityBinding) {
 		MappedSuperclassTypeImpl mappedSuperclassType = mappedSuperclassTypeMap.get(
-				loadClass( superclass.getDescriptor() )
+				loadClass( mappedSuperclass.getDescriptor() )
 		);
 		if ( mappedSuperclassType == null ) {
-			mappedSuperclassType = buildMappedSuperclassType( superclass, entityBinding );
+			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, entityBinding );
 		}
 		return mappedSuperclassType;
 	}
 
 	private Class<?> loadClass(JavaTypeDescriptor descriptor) {
-		return classLoaderService.classForName( descriptor.getName().fullName() );
+		return classLoaderService.classForName( descriptor.getName().toString() );
 	}
 
 	@SuppressWarnings("unchecked")
-	private MappedSuperclassTypeImpl buildMappedSuperclassType(Superclass superclass, EntityBinding entityBinding) {
-		final Class javaType = loadClass( superclass.getDescriptor() );
-		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType( superclass, entityBinding );
+	private MappedSuperclassTypeImpl buildMappedSuperclassType(MappedSuperclass mappedSuperclass, EntityBinding entityBinding) {
+		final Class javaType = loadClass( mappedSuperclass.getDescriptor() );
+		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType( mappedSuperclass.getSuperType(), entityBinding );
 
 		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
 				javaType,
@@ -216,11 +216,11 @@ public class MetamodelBuilder {
 				entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite()
 						&& entityBinding.getHierarchyDetails().getEntityIdentifier().getIdClassClass() != null,
 				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
-				entityBinding.isVersioned()
+				entityBinding.getHierarchyDetails().isVersioned()
 		);
 
 		mappedSuperclassTypeMap.put( javaType, mappedSuperclassType );
-		mappedSuperclassEntityNameMap.put( mappedSuperclassType, entityBinding.getEntity().getName() );
+		mappedSuperclassEntityNameMap.put( mappedSuperclassType, entityBinding.getEntityName() );
 		return mappedSuperclassType;
 	}
 
@@ -259,7 +259,7 @@ public class MetamodelBuilder {
 	}
 
 	private void processHierarchy(EntityBinding entityBinding) {
-		LOG.trace( "  Starting binding [" + entityBinding.getEntity().getName() + "]" );
+		LOG.trace( "  Starting binding [" + entityBinding.getEntityName() + "]" );
 		processType( entityBinding.getEntity(), entityBinding );
 	}
 
@@ -295,9 +295,11 @@ public class MetamodelBuilder {
 			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
 				continue;
 			}
-			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
-				// skip the version property, it was already handled previously.
-				continue;
+			if ( entityBinding.getHierarchyDetails().isVersioned() ) {
+				if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
+					// skip the version property, it was already handled previously.
+					continue;
+				}
 			}
 			final Attribute attribute = attributeBuilder.buildAttribute( jpaDescriptor, attributeBinding );
 			if ( attribute != null ) {
@@ -323,7 +325,7 @@ public class MetamodelBuilder {
 			AbstractIdentifiableType jpaDescriptor) {
 		switch ( hierarchyDetails.getEntityIdentifier().getNature() ) {
 			case SIMPLE: {
-				SingularNonAssociationAttributeBinding idAttributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+				SingularAttributeBinding idAttributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
 				if ( idAttributeBinding != null ) {
 					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
 						//noinspection unchecked
@@ -369,6 +371,10 @@ public class MetamodelBuilder {
 			Hierarchical descriptor,
 			HierarchyDetails hierarchyDetails,
 			AbstractIdentifiableType jpaDescriptor) {
+		if ( !hierarchyDetails.isVersioned() ) {
+			return;
+		}
+
 		final BasicAttributeBinding versionBinding = hierarchyDetails.getEntityVersion().getVersioningAttributeBinding();
 		if ( versionBinding != null ) {
 			if ( versionBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {

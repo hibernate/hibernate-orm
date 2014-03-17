@@ -26,12 +26,12 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.Proxy;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -51,7 +51,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong proxy interface",
 				ProxiedEntity.class.getName(),
-				binding.getProxyInterfaceType().getName().fullName()
+				binding.getProxyInterfaceType().getName().toString()
 		);
 	}
 
@@ -63,7 +63,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong proxy interface",
 				NoProxyEntity.class.getName(),
-				binding.getProxyInterfaceType().getName().fullName()
+				binding.getProxyInterfaceType().getName().toString()
 		);
 	}
 
@@ -83,7 +83,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong proxy interface",
 				ProxyBindingTest.ProxyInterfaceEntity.class.getName(),
-				binding.getProxyInterfaceType().getName().fullName()
+				binding.getProxyInterfaceType().getName().toString()
 		);
 	}
 

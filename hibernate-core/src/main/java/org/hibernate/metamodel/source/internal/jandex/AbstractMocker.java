@@ -28,7 +28,7 @@ import java.util.List;
 import javax.persistence.AccessType;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbIndex;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbUniqueConstraint;
 

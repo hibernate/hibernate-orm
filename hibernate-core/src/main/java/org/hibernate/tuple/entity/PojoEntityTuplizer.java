@@ -81,10 +81,10 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	public PojoEntityTuplizer(ServiceRegistry serviceRegistry, EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super( serviceRegistry, entityMetamodel, mappedEntity );
 		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-		this.mappedClass = cls.classForName( mappedEntity.getEntity().getDescriptor().getName().fullName() );
+		this.mappedClass = cls.classForName( mappedEntity.getEntity().getDescriptor().getName().toString() );
 		if ( mappedEntity.getProxyInterfaceType() != null ) {
 			this.proxyInterface = cls.classForName(
-					mappedEntity.getProxyInterfaceType().getName().fullName()
+					mappedEntity.getProxyInterfaceType().getName().toString()
 			);
 		}
 		else {
@@ -150,7 +150,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			if ( subclassProxy!=null && !subclassClass.equals( subclassProxy ) ) {
 				if ( ! subclassProxy.isInterface() ) {
 					throw new MappingException(
-							"proxy must be either an interface, or the class itself: " + subEntityBinding.getEntity().getName()
+							"proxy must be either an interface, or the class itself: " + subEntityBinding.getEntityName()
 					);
 				}
 				proxyInterfaces.add( subclassProxy );
@@ -162,11 +162,15 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		for ( AttributeBinding property : entityBinding.attributeBindings() ) {
 			Method method = getGetter( property ).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.gettersOfLazyClassesCannotBeFinal(entityBinding.getEntity().getName(), property.getAttribute().getName());
+				LOG.gettersOfLazyClassesCannotBeFinal(
+						entityBinding.getEntityName(), property.getAttribute().getName()
+				);
 			}
 			method = getSetter( property ).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.settersOfLazyClassesCannotBeFinal(entityBinding.getEntity().getName(), property.getAttribute().getName());
+				LOG.settersOfLazyClassesCannotBeFinal(
+						entityBinding.getEntityName(), property.getAttribute().getName()
+				);
 			}
 		}
 
@@ -210,7 +214,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			return null;
 		}
 
-		return classForName( td.getName().fullName() );
+		return classForName( td.getName().toString() );
 	}
 
 	protected ProxyFactory buildProxyFactoryInternal(EntityBinding entityBinding, Getter idGetter, Setter idSetter) {

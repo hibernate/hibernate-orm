@@ -23,13 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
+
+import org.junit.Test;
+
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.junit.Test;
-
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
 
 import static org.junit.Assert.assertEquals;
 

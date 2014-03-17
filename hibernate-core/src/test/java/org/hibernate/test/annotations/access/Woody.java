@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.access;
+
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.AttributeAccessor;
@@ -8,6 +9,7 @@ import org.hibernate.annotations.AttributeAccessor;
  * @author Emmanuel Bernard
  */
 @MappedSuperclass
+//@Access(AccessType.PROPERTY)
 @AttributeAccessor("property")
 public class Woody extends Thingy {
 	private String color;

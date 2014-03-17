@@ -54,6 +54,8 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -205,7 +207,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8699" )
+	@TestForIssue(jiraKey = "HHH-8699")
+	// For now, restrict to H2.  Selecting w/ predicate functions cause issues for too many dialects.
+	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-9052")
 	public void testBooleanPredicate() {
 		final Session session = openSession();
 

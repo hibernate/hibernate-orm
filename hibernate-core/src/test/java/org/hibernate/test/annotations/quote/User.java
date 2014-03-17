@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -40,9 +41,12 @@ public class User implements Serializable {
 	private Long house1;
 	@Column(name = "`house`", insertable = false, updatable = false )
 	private Long house2;
-	@ManyToOne
+	
+	// test UK on FK w/ global quoting -- see HHH-8638
+	// This MUST be initialized.  Several DBs do not allow multiple null values in a unique column.
+	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "house3")
-	private House house3; // test UK on FK w/ global quoting -- see HHH-8638
+	private House house3 = new House();
 
 	public long getId() {
 		return id;

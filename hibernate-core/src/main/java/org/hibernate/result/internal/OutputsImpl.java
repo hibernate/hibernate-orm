@@ -198,15 +198,6 @@ public class OutputsImpl implements Outputs {
 						hasExtendedReturns()
 				);
 			}
-			// todo : temporary for tck testing...
-			System.out.println(
-					String.format(
-							"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
-							isResultSet(),
-							getUpdateCount(),
-							hasExtendedReturns()
-					)
-			);
 
 			if ( isResultSet() ) {
 				return buildResultSetOutput( extractCurrentResults() );

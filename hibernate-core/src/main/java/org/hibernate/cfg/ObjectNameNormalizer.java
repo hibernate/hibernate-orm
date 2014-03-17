@@ -108,6 +108,12 @@ public abstract class ObjectNameNormalizer {
 			return '`' + identifier.substring( 1, identifier.length() - 1 ) + '`';
 		}
 
+		// Convert SQLServer style quoting
+		// TODO: This really should be tied to Dialect#openQuote/closeQuote
+		if ( identifier.startsWith( "[" ) && identifier.endsWith( "]" ) ) {
+			return '`' + identifier.substring( 1, identifier.length() - 1 ) + '`';
+		}
+
 		// If the user has requested "global" use of quoted identifiers, quote this identifier (using back ticks)
 		// if not already
 		if ( isUseQuotedIdentifiersGlobally() && ! ( identifier.startsWith( "`" ) && identifier.endsWith( "`" ) ) ) {

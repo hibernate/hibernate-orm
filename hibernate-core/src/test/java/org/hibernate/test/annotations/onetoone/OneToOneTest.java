@@ -421,21 +421,23 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	    private static final long serialVersionUID = -3689681272273261051L;
 	    
 	    private int expectedNumberOfJoins = 0;
-	    private String nextValString;
+	    private String nextValRegex;
 	            
 	    public JoinCounter(int val) {
 	        super();
 	        this.expectedNumberOfJoins = val;
 	        try {
-	            nextValString = getDialect().getSequenceNextValString("");
+	        	nextValRegex = ".*" + getDialect().getSelectSequenceNextValString(".*") + ".*";
+	        	nextValRegex = nextValRegex.replace( "(", "\\(" );
+	        	nextValRegex = nextValRegex.replace( ")", "\\)" );
 	        } catch (MappingException ex) {
-	            nextValString = "nextval";
+	        	nextValRegex = "nextval";
 	        }
 	    }
 
 	    public String onPrepareStatement(String sql) {
 	        int numberOfJoins = 0;
-	        if (sql.startsWith("select") & !sql.contains(nextValString)) {
+	        if (sql.startsWith("select") & !sql.matches(nextValRegex)) {
 	             numberOfJoins = count(sql, "join");
 	             assertEquals( sql,  expectedNumberOfJoins, numberOfJoins );
 	        }

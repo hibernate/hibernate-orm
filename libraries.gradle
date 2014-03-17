@@ -108,10 +108,10 @@ ext {
             jnp_client:      "org.jboss.naming:jnp-client:${jnpVersion}",
             jnp_server:      "org.jboss.naming:jnpserver:${jnpVersion}",
 
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~ c3p0
             c3p0:            "com.mchange:c3p0:0.9.2.1",
             ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
             proxool:         "proxool:proxool:0.8.3"
+            hikaricp:        "com.zaxxer:HikariCP:1.3.0"
 
         ]
 }

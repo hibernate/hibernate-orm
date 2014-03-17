@@ -1,0 +1,17 @@
+dependencies {
+    compile project( ':hibernate-core' )
+    compile( libraries.hikaricp )
+    testCompile project( ':hibernate-testing' )
+}
+
+def pomName() {
+    return 'Hibernate/HikariCP Integration'
+}
+
+def pomDescription() {
+    return 'Integration for HikariCP into Hibernate O/RM'
+}
+
+def osgiDescription() {
+	return pomDescription()
+}

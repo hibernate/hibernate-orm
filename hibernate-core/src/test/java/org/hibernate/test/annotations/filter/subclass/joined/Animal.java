@@ -17,29 +17,18 @@ import org.hibernate.annotations.ParamDef;
 @Table(name="ZOOLOGY_ANIMAL")
 @FilterDef(name="ignoreSome", parameters={@ParamDef(name="name", type="string")})
 @Filter(name="ignoreSome", condition=":name <> ANIMAL_NAME")
-public class Animal {
+public class Animal extends Named {
 	@Id
 	@GeneratedValue
 	@Column(name="ANIMAL_ID")
 	private Integer id;
 	
-	@Column(name="ANIMAL_NAME")
-	private String name;
-
 	public Integer getId() {
 		return id;
 	}
 
 	public void setId(Integer id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 }

@@ -9,7 +9,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.*;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -55,7 +55,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 							MetadataImplementor metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
+					integrate( serviceRegistry );
 					}
 
 					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {

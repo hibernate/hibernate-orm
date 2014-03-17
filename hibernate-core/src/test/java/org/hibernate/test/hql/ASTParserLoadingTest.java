@@ -54,8 +54,6 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;

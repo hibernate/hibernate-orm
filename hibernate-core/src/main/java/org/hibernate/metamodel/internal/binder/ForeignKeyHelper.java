@@ -155,7 +155,8 @@ public class ForeignKeyHelper {
 			final List<Column> sourceColumns,
 			final TableSpecification targetTable,
 			final List<Column> targetColumns,
-			boolean isCascadeDeleteEnabled) {
+			boolean isCascadeDeleteEnabled,
+			boolean createConstraint) {
 		final String foreignKeyName = helperContext.relationalIdentifierHelper().normalizeDatabaseIdentifier(
 				explicitForeignKeyName, new ForeignKeyNamingStrategyHelper(
 						sourceTable, sourceColumns, targetTable, targetColumns ) );
@@ -163,7 +164,7 @@ public class ForeignKeyHelper {
 		ForeignKey foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
 		if ( foreignKey == null ) {
 			// no foreign key found; create one
-			foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName );
+			foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName, createConstraint );
 			bindForeignKeyColumns( foreignKey, sourceTable, sourceColumns, targetTable, targetColumns );
 		}
 		if ( isCascadeDeleteEnabled ) {

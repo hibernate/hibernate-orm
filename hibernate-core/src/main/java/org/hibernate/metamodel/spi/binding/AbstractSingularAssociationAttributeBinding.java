@@ -48,7 +48,7 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
 	private boolean isUnWrapProxy;
-	private final boolean isNotFoundAnException;
+	private final boolean isIgnoreNotFound;
 
 	public AbstractSingularAssociationAttributeBinding(
 			AttributeBindingContainer container,
@@ -56,7 +56,7 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean isLazy,
-			boolean isNotFoundAnException,
+			boolean isIgnoreNotFound,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
@@ -78,12 +78,12 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 		}
 		this.referencedEntityBinding = referencedEntityBinding;
 		this.referencedAttributeBinding = referencedAttributeBinding;
-		this.isNotFoundAnException = isNotFoundAnException;
+		this.isIgnoreNotFound = isIgnoreNotFound;
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return isNotFoundAnException;
+	public boolean isIgnoreNotFound() {
+		return isIgnoreNotFound;
 	}
 
 	@Override

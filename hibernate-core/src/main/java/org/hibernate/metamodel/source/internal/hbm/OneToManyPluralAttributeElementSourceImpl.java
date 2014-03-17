@@ -63,9 +63,8 @@ public class OneToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return oneToManyElement.getNotFound() == null
-				|| ! "ignore".equals( oneToManyElement.getNotFound().value() );
+	public boolean isIgnoreNotFound() {
+		return oneToManyElement.getNotFound() != null && "ignore".equalsIgnoreCase( oneToManyElement.getNotFound().value() );
 	}
 
 	@Override

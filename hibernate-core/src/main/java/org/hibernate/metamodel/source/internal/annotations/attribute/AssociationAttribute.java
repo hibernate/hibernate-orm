@@ -37,6 +37,6 @@ public interface AssociationAttribute {
 	public boolean isOrphanRemoval();
 
 	public boolean isOptional();
-	public boolean getShouldIgnoreNotFound();
+	public boolean isIgnoreNotFound();
 	public boolean isUnWrapProxy();
 }

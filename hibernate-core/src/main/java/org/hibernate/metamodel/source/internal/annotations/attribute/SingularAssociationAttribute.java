@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Set;
+
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 
@@ -40,7 +41,6 @@ import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotName
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.spi.AttributePath;
 import org.hibernate.metamodel.source.spi.AttributeRole;
-
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -190,7 +190,7 @@ public class SingularAssociationAttribute
 	}
 
 	@Override
-	public boolean getShouldIgnoreNotFound() {
+	public boolean isIgnoreNotFound() {
 		return ignoreNotFound;
 	}
 

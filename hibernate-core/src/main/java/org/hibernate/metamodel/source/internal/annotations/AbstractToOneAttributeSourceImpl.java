@@ -73,8 +73,8 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return !associationAttribute.getShouldIgnoreNotFound();
+	public boolean isIgnoreNotFound() {
+		return associationAttribute.isIgnoreNotFound();
 	}
 
 	@Override

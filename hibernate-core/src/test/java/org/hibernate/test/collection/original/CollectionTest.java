@@ -22,9 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.collection.original;
-import java.sql.SQLException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.sql.SQLException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -33,17 +37,11 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7916")
 public class CollectionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -51,6 +49,7 @@ public class CollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExtraLazy() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

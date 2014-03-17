@@ -88,8 +88,8 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return true;
+	public boolean isIgnoreNotFound() {
+		return false;
 	}
 
 	@Override
@@ -261,6 +261,12 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
 			return context.resolveTableForAttribute( propertyRef );
 		}
+	}
+	
+	@Override
+	public boolean createForeignKeyConstraint() {
+		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?
+		return true;
 	}
 
 }

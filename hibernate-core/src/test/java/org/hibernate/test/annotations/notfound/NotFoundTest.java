@@ -23,19 +23,16 @@
  */
 package org.hibernate.test.annotations.notfound;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel(jiraKey = "HHH-7916")
 public class NotFoundTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {

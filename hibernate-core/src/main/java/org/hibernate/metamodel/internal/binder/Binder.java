@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.internal.binder;
 
+import static org.hibernate.MultiTenancyStrategy.DISCRIMINATOR;
+import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -60,6 +63,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.binder.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.internal.resolver.AssociationRelationalBindingResolver;
 import org.hibernate.metamodel.internal.resolver.MappedByAssociationRelationalBindingResolverImpl;
 import org.hibernate.metamodel.internal.resolver.StandardAssociationRelationalBindingResolverImpl;
@@ -165,12 +169,7 @@ import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-
 import org.jboss.jandex.DotName;
-
-import static org.hibernate.MultiTenancyStrategy.DISCRIMINATOR;
-import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
-import static org.hibernate.metamodel.internal.binder.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
@@ -753,7 +752,8 @@ public class Binder {
 							joinRelationalValueBindings,
 							foreignKeyHelper().determineForeignKeyTargetTable( entityBinding, secondaryTableSource ),
 							targetColumns,
-							secondaryTableSource.isCascadeDeleteEnabled()
+							secondaryTableSource.isCascadeDeleteEnabled(),
+							secondaryTableSource.createForeignKeyConstraint()
 					);
 					SecondaryTable secondaryTable = new SecondaryTable( table, foreignKey );
 					if ( secondaryTableSource.getFetchStyle()!=null ) {
@@ -1002,7 +1002,8 @@ public class Binder {
 									subclassEntitySource
 							),
 							targetColumns,
-							subclassEntitySource.isCascadeDeleteEnabled()
+							subclassEntitySource.isCascadeDeleteEnabled(),
+							subclassEntitySource.createForeignKeyConstraint()
 					);
 
 					if ( subclassEntitySource.isCascadeDeleteEnabled() ) {
@@ -1461,7 +1462,8 @@ public class Binder {
 				extractColumnsFromRelationalValueBindings( ownerAssociationAttributeBinding.getRelationalValueBindings() ),
 				entityBinding.getPrimaryTable(),
 				targetColumns,
-				attributeSource.isCascadeDeleteEnabled()
+				attributeSource.isCascadeDeleteEnabled(),
+				true
 		);
 		if ( foreignKey == null ) {
 			throw new AssertionFailure( "Foreign key not found; should have been defined by owner side of association." );
@@ -1553,14 +1555,16 @@ public class Binder {
 			final List<RelationalValueBinding> sourceRelationalValueBindings,
 			final TableSpecification targetTable,
 			final List<Column> targetColumns,
-			boolean isCascadeDeleteEnabled) {
+			boolean isCascadeDeleteEnabled,
+			boolean createConstraint) {
 		return foreignKeyHelper().locateOrCreateForeignKey(
 				foreignKeyName,
 				sourceTable,
 				extractColumnsFromRelationalValueBindings( sourceRelationalValueBindings ),
 				targetTable,
 				targetColumns,
-				isCascadeDeleteEnabled
+				isCascadeDeleteEnabled,
+				createConstraint
 		);
 	}
 
@@ -1840,16 +1844,6 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	/**
-	 * todo: if the not found exception is ignored, here we should create an unique key instead of FK
-	 * this guard method should be removed after we implement this.
-	 */
-	private void throwExceptionIfNotFoundIgnored(boolean isNotFoundAnException) {
-		if ( !isNotFoundAnException ) {
-			throw new NotYetImplementedException( "association of ignored not found exception is not yet implemented" );
-		}
-	}
-
 	private ManyToOneAttributeBinding bindManyToOneAttribute(
 			final AttributeBindingContainer attributeBindingContainer,
 			final ToOneAttributeSource attributeSource,
@@ -1857,7 +1851,6 @@ public class Binder {
 		if ( attribute == null ) {
 			attribute = createSingularAttribute( attributeBindingContainer, attributeSource );
 		}
-		throwExceptionIfNotFoundIgnored( attributeSource.isNotFoundAnException() );
 
 		final JavaTypeDescriptor referencedEntityTypeDescriptor = typeHelper().determineJavaType(
 				attributeSource,
@@ -1885,7 +1878,7 @@ public class Binder {
 				propertyAccessorName( attributeSource ),
 				attributeSource.isIncludedInOptimisticLocking(),
 				attributeSource.isLazy(),
-				attributeSource.isNotFoundAnException(),
+				attributeSource.isIgnoreNotFound(),
 				attributeSource.getNaturalIdMutability(),
 				createMetaAttributeContext( attributeBindingContainer, attributeSource ),
 				referencedEntityBinding,
@@ -1936,7 +1929,7 @@ public class Binder {
 				uniqueKeyAttributeName,
 				attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 				attributeSource.isUnWrapProxy(),
-				!attributeSource.isNotFoundAnException(),
+				attributeSource.isIgnoreNotFound(),
 				attributeSource.isUnique()
 		);
 		typeHelper().bindHibernateTypeDescriptor(
@@ -2558,7 +2551,6 @@ public class Binder {
 			final OneToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
 			final JavaTypeDescriptor defaultElementTypeDescriptor) {
-		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		elementBinding.setElementEntityIdentifier(
 				referencedEntityBinding.getKeyRelationalValueBindings()
 		);
@@ -2569,7 +2561,7 @@ public class Binder {
 				null,
 				false,
 				false,
-				!elementSource.isNotFoundAnException(), //TODO: should be attributeBinding.isIgnoreNotFound(),
+				elementSource.isIgnoreNotFound(),
 				false
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
@@ -2597,7 +2589,6 @@ public class Binder {
 			final ManyToManyPluralAttributeElementSource elementSource,
 			final EntityBinding referencedEntityBinding,
 			final JavaTypeDescriptor defaultElementTypeDescriptor) {
-		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		final TableSpecification collectionTable =
 				elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable();
 		final AssociationRelationalBindingResolver resolver = getAssociationRelationalBindingResolver(

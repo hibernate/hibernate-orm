@@ -23,13 +23,17 @@
  */
 package org.hibernate.metamodel.source.internal.annotations.entity;
 
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.ENTITY;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.AccessType;
 
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.binder.ForeignKeyDelegate;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
@@ -39,12 +43,9 @@ import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotName
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
-
-import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.ENTITY;
 
 /**
  * Representation of metadata (configured via annotations or orm.xml) attached
@@ -68,13 +69,11 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 	private final String discriminatorMatchValue;
 	private final boolean isLazy;
 	private final String proxy;
+	private final ForeignKeyDelegate foreignKeyDelegate;
 
-
+	private final ClassLoaderService classLoaderService;
 
 	// todo : ???
-
-	private final String inverseForeignKeyName;
-	private final String explicitForeignKeyName;
 	private final OnDeleteAction onDeleteAction;
 	private final List<PrimaryKeyJoinColumn> joinedSubclassPrimaryKeyJoinColumnSources;
 
@@ -87,6 +86,8 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 			AccessType defaultAccessType,
 			AnnotationBindingContext bindingContext) {
 		super( javaTypeDescriptor, defaultAccessType, true, bindingContext );
+		
+		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 
 		this.explicitEntityName = determineExplicitEntityName();
 		this.customLoaderQueryName = determineCustomLoader();
@@ -119,7 +120,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					dynamicInsertAnnotation,
 					"value",
 					Boolean.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		else {
@@ -136,7 +137,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					dynamicUpdateAnnotation,
 					"value",
 					Boolean.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		else {
@@ -154,7 +155,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					selectBeforeUpdateAnnotation,
 					"value",
 					Boolean.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		else {
@@ -205,14 +206,14 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 		else {
 			this.discriminatorMatchValue = null;
 		}
+		
+		// TODO: bind JPA @ForeignKey?
+		foreignKeyDelegate = new ForeignKeyDelegate();
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// todo : which (if any) of these to keep?
 		this.joinedSubclassPrimaryKeyJoinColumnSources = determinePrimaryKeyJoinColumns();
-		// TODO: bind JPA @ForeignKey?
-		this.explicitForeignKeyName = null;
-		this.inverseForeignKeyName = null;
 		this.onDeleteAction = determineOnDeleteAction();
 	}
 
@@ -226,7 +227,8 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 			AccessType defaultAccessType,
 			AnnotationBindingContext bindingContext) {
 		super( javaTypeDescriptor, superType, defaultAccessType, bindingContext );
-
+		
+		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 
 		this.explicitEntityName = determineExplicitEntityName();
 		this.customLoaderQueryName = determineCustomLoader();
@@ -259,7 +261,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					dynamicInsertAnnotation,
 					"value",
 					Boolean.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		else {
@@ -276,7 +278,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					dynamicUpdateAnnotation,
 					"value",
 					Boolean.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		else {
@@ -294,7 +296,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					selectBeforeUpdateAnnotation,
 					"value",
 					Boolean.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		else {
@@ -345,14 +347,14 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 		else {
 			this.discriminatorMatchValue = null;
 		}
+		
+		// TODO: bind JPA @ForeignKey?
+		foreignKeyDelegate = new ForeignKeyDelegate();
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// todo : which (if any) of these to keep?
 		this.joinedSubclassPrimaryKeyJoinColumnSources = determinePrimaryKeyJoinColumns();
-		// TODO: bind JPA @ForeignKey?
-		this.explicitForeignKeyName = null;
-		this.inverseForeignKeyName = null;
 		this.onDeleteAction = determineOnDeleteAction();
 	}
 
@@ -422,7 +424,7 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 					onDeleteAnnotation,
 					"action",
 					OnDeleteAction.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
+					classLoaderService
 			);
 		}
 		return null;
@@ -499,11 +501,14 @@ public class EntityTypeMetadata extends IdentifiableTypeMetadata {
 
 
 	public String getInverseForeignKeyName() {
-		return inverseForeignKeyName;
+		return foreignKeyDelegate.getInverseForeignKeyName();
 	}
 	public String getExplicitForeignKeyName(){
-		return explicitForeignKeyName;
+		return foreignKeyDelegate.getExplicitForeignKeyName();
 	}
+	public boolean createForeignKeyConstraint(){
+		return foreignKeyDelegate.createForeignKeyConstraint();
+ 	}
 
 	public OnDeleteAction getOnDeleteAction() {
 		return onDeleteAction;

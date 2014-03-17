@@ -82,6 +82,11 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 	}
 
 	@Override
+	public boolean createForeignKeyConstraint() {
+		return getEntityClass().createForeignKeyConstraint();
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return fkColumnResolutionDelegate;
 	}

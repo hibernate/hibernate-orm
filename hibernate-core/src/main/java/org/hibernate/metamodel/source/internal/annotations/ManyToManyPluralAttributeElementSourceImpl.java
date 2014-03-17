@@ -71,6 +71,11 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
+	public boolean createForeignKeyConstraint() {
+		return pluralAssociationAttribute().createForeignKeyConstraint();
+	}
+
+	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return false;
 	}

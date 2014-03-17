@@ -112,8 +112,8 @@ public abstract class AbstractSingularAssociationAttributeSource
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return !getPersistentAttribute().getShouldIgnoreNotFound();
+	public boolean isIgnoreNotFound() {
+		return getPersistentAttribute().isIgnoreNotFound();
 	}
 
 	@Override

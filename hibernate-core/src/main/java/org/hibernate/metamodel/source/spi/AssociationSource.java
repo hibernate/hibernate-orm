@@ -39,7 +39,7 @@ public interface AssociationSource extends CascadeStyleSource {
 	 */
 	public String getReferencedEntityName();
 
-	public boolean isNotFoundAnException();
+	public boolean isIgnoreNotFound();
 
 	/**
 	 * Returns the attribute source that is owned by this {@link AssociationSource},

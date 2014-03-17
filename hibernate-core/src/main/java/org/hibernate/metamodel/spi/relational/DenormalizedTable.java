@@ -100,7 +100,7 @@ public class DenormalizedTable extends Table {
 	}
 
 	private void copyFK(ForeignKey fk, String fkName) {
-		ForeignKey copiedFK = createForeignKey( fk.getTargetTable(), fkName );
+		ForeignKey copiedFK = createForeignKey( fk.getTargetTable(), fkName, fk.createConstraint() );
 		copiedFK.setDeleteRule( fk.getDeleteRule() );
 		copiedFK.setUpdateRule( fk.getUpdateRule() );
 		Iterable<ForeignKey.ColumnMapping> columnMappings = fk.getColumnMappings();

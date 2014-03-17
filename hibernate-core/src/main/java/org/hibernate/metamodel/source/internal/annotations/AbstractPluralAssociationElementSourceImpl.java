@@ -51,8 +51,8 @@ public abstract class AbstractPluralAssociationElementSourceImpl
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return !pluralAssociationAttribute().getShouldIgnoreNotFound();
+	public boolean isIgnoreNotFound() {
+		return pluralAssociationAttribute().isIgnoreNotFound();
 	}
 
 	public AttributeSource getAttributeSource() {

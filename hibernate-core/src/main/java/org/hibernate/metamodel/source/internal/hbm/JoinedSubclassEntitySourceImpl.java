@@ -93,6 +93,12 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 	public String getExplicitForeignKeyName() {
 		return key.getForeignKey();
 	}
+	
+	@Override
+	public boolean createForeignKeyConstraint() {
+		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?
+		return true;
+	}
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
@@ -115,7 +121,6 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 			}
 		};
 	}
-
 
 	@Override
 	public List<ColumnSource> getPrimaryKeyColumnSources() {

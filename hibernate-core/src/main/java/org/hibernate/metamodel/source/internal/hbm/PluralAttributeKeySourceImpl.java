@@ -85,6 +85,12 @@ public class PluralAttributeKeySourceImpl
 	public String getExplicitForeignKeyName() {
 		return keyElement.getForeignKey();
 	}
+	
+	@Override
+	public boolean createForeignKeyConstraint() {
+		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?
+		return true;
+	}
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {

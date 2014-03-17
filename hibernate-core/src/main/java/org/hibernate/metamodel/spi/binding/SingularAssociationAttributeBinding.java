@@ -45,7 +45,7 @@ public interface SingularAssociationAttributeBinding extends SingularAttributeBi
 
 	public SingularAttributeBinding getReferencedAttributeBinding();
 
-	public boolean isNotFoundAnException();
+	public boolean isIgnoreNotFound();
 
 	public TableSpecification getTable();
 

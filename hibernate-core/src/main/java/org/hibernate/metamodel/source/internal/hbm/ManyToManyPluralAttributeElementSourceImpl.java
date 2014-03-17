@@ -140,8 +140,8 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public boolean isNotFoundAnException() {
-		return manyToManyElement.getNotFound() == null || !"ignore".equals( manyToManyElement.getNotFound().value() );
+	public boolean isIgnoreNotFound() {
+		return manyToManyElement.getNotFound() != null && "ignore".equalsIgnoreCase( manyToManyElement.getNotFound().value() );
 	}
 
 	@Override
@@ -256,6 +256,12 @@ public class ManyToManyPluralAttributeElementSourceImpl
 		public TableSpecification getReferencedTable(JoinColumnResolutionContext context) {
 			return context.resolveTableForAttribute( manyToManyElement.getPropertyRef() );
 		}
+	}
+	
+	@Override
+	public boolean createForeignKeyConstraint() {
+		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?
+		return true;
 	}
 
 }

@@ -22,7 +22,13 @@ public class ManyToManyMappedByPluralAttributeElementSourceImpl
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		throw new UnsupportedOperationException( "Not supported for attributes with mappedBy specified." );	}
+		throw new UnsupportedOperationException( "Not supported for attributes with mappedBy specified." );
+	}
+
+	@Override
+	public boolean createForeignKeyConstraint() {
+		throw new UnsupportedOperationException( "Not supported for attributes with mappedBy specified." );
+	}
 
 	@Override
 	public boolean isCascadeDeleteEnabled() {

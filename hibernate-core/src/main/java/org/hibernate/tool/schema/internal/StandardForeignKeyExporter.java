@@ -44,6 +44,10 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		if ( ! dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
+		
+		if ( ! foreignKey.createConstraint() ) {
+			return NO_COMMANDS;
+		}
 
 		final int numberOfColumns = foreignKey.getColumnSpan();
 		final String[] columnNames = new String[ numberOfColumns ];
@@ -93,6 +97,10 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	@Override
 	public String[] getSqlDropStrings(ForeignKey foreignKey, JdbcEnvironment jdbcEnvironment) {
 		if ( ! dialect.hasAlterTable() ) {
+			return NO_COMMANDS;
+		}
+		
+		if ( ! foreignKey.createConstraint() ) {
 			return NO_COMMANDS;
 		}
 

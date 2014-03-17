@@ -33,6 +33,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.binder.Binder;
+import org.hibernate.metamodel.internal.binder.ForeignKeyDelegate;
 import org.hibernate.metamodel.source.internal.annotations.attribute.AbstractPersistentAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.source.internal.annotations.attribute.Column;
@@ -49,7 +50,6 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -59,10 +59,9 @@ import org.jboss.jandex.AnnotationInstance;
 public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl implements ToOneAttributeSource {
 	private final List<RelationalValueSource> relationalValueSources;
 	private final String containingTableName;
-	private final String explicitForeignKeyName;
-
 	private final EntityBindingContext bindingContext;
 	private final ClassLoaderService cls;
+	private final ForeignKeyDelegate foreignKeyDelegate;
 
 	public ToOneAttributeSourceImpl(
 			SingularAssociationAttribute associationAttribute,
@@ -85,7 +84,8 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		// Need to initialize logicalJoinTableName before determining nature.
 		this.containingTableName = resolveContainingTableName( associationAttribute, relationalValueSources );
 		setNature( determineNatureIfPossible( associationAttribute ) );
-		this.explicitForeignKeyName = resolveForeignKeyName( associationAttribute );
+		this.foreignKeyDelegate = new ForeignKeyDelegate(
+				associationAttribute().getBackingMember().getAnnotations(), cls);
 	}
 
 	private Nature determineNatureIfPossible(
@@ -116,27 +116,6 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 			throw new AssertionError(String.format( "Wrong attribute nature[%s] for toOne attribute: %s",
 					associationAttribute.getNature(), associationAttribute.getRole() ));
 		}
-	}
-	
-	private String resolveForeignKeyName(SingularAssociationAttribute attribute) {
-		final AnnotationInstance joinColumnAnnotation = attribute.getBackingMember()
-				.getAnnotations()
-				.get( JPADotNames.JOIN_COLUMN );
-		if ( joinColumnAnnotation == null ) {
-			return null;
-		}
-
-		final AnnotationInstance jpaFkAnnotation = JandexHelper.getValue(
-				joinColumnAnnotation,
-				"foreignKey",
-				AnnotationInstance.class,
-				cls
-		);
-		if ( jpaFkAnnotation == null ) {
-			return null;
-		}
-
-		return JandexHelper.getValue( jpaFkAnnotation, "name", String.class, cls );
 	}
 	
 	@Override
@@ -289,7 +268,12 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 
 	@Override
 	public String getExplicitForeignKeyName() {
-		return explicitForeignKeyName;
+		return foreignKeyDelegate.getExplicitForeignKeyName();
+	}
+	
+	@Override
+	public boolean createForeignKeyConstraint() {
+		return foreignKeyDelegate.createForeignKeyConstraint();
 	}
 
 	@Override

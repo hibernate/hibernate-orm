@@ -110,7 +110,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Column pageBookId = page.locateOrCreateColumn( "BOOK_ID" );
 		pageId.setJdbcDataType( INTEGER );
 		pageId.setSize( Size.precision( 18, 0 ) );
-		ForeignKey pageBookFk = page.createForeignKey( book, "PAGE_BOOK_FK" );
+		ForeignKey pageBookFk = page.createForeignKey( book, "PAGE_BOOK_FK", true );
 		pageBookFk.addColumn( pageBookId );
 
 		assertEquals( page, pageBookFk.getSourceTable() );

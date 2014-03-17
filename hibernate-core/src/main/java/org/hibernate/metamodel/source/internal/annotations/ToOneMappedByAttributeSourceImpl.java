@@ -121,6 +121,11 @@ public class ToOneMappedByAttributeSourceImpl
 	}
 
 	@Override
+	public boolean createForeignKeyConstraint() {
+		throw new UnsupportedOperationException( "Not supported for a \"mappedBy\" association." );
+	}
+
+	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return false;
 	}

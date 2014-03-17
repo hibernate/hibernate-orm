@@ -166,8 +166,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	}
 
 	@Override
-	public ForeignKey createForeignKey(TableSpecification targetTable, String name) {
-		ForeignKey fk = new ForeignKey( this, targetTable, name );
+	public ForeignKey createForeignKey(TableSpecification targetTable, String name, boolean createConstraint) {
+		ForeignKey fk = new ForeignKey( this, targetTable, name, createConstraint );
 		foreignKeys.add( fk );
 		return fk;
 	}

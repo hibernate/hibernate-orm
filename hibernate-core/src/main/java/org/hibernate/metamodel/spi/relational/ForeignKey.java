@@ -52,17 +52,21 @@ public class ForeignKey extends AbstractConstraint {
 
 	private ReferentialAction deleteRule = ReferentialAction.NO_ACTION;
 	private ReferentialAction updateRule = ReferentialAction.NO_ACTION;
+	
+	private boolean createConstraint;
 
-	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name) {
+	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name,
+			boolean createConstraint) {
 		super( sourceTable, name );
 		if ( targetTable == null ) {
 			throw new IllegalArgumentException( "targetTable must be non-null." );
 		}
 		this.targetTable = targetTable;
+		this.createConstraint = createConstraint;
 	}
 
 	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable) {
-		this( sourceTable, targetTable, null );
+		this( sourceTable, targetTable, null, true );
 	}
 
 	public TableSpecification getSourceTable() {
@@ -215,5 +219,9 @@ public class ForeignKey extends AbstractConstraint {
 	@Override
 	public String getExportIdentifier() {
 		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
+	}
+	
+	public boolean createConstraint() {
+		return createConstraint;
 	}
 }

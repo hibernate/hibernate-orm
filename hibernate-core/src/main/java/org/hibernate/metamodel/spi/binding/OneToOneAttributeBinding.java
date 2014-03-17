@@ -52,7 +52,7 @@ public class OneToOneAttributeBinding
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				lazy,
-				true, //always true
+				false,
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding,

@@ -41,6 +41,13 @@ public interface ForeignKeyContributingSource {
 	 * @return The user supplied foreign key name.
 	 */
 	public String getExplicitForeignKeyName();
+	
+	/**
+	 * Primarily exists to support JPA's @ForeignKey(NO_CONSTRAINT).
+	 * 
+	 * @return True if the FK constraint should be created, false if not.
+	 */
+	public boolean createForeignKeyConstraint();
 
 	/**
 	 * Is "cascade delete" enabled for the foreign key? In other words, if a record in the parent (referenced)

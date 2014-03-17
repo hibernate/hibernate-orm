@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 
@@ -44,6 +45,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.binder.ForeignKeyDelegate;
 import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MemberDescriptor;
@@ -64,7 +66,6 @@ import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
@@ -117,8 +118,7 @@ public class PluralAttribute
 
 	// information about the FK
 	private final OnDeleteAction onDeleteAction;
-	private String inverseForeignKeyName;
-	private String explicitForeignKeyName;
+	private final ForeignKeyDelegate foreignKeyDelegate;
 
 	private final AttributeTypeResolver collectionTypeResolver;
 
@@ -131,6 +131,8 @@ public class PluralAttribute
 	private final AnnotationInstance joinTableAnnotation;
 	private ArrayList<Column> joinColumnValues = new ArrayList<Column>();
 	private ArrayList<Column> inverseJoinColumnValues = new ArrayList<Column>();
+	
+	private final ClassLoaderService classLoaderService;
 
 	public PluralAttribute(
 			ManagedTypeMetadata container,
@@ -153,6 +155,8 @@ public class PluralAttribute
 				accessType,
 				accessorStrategy
 		);
+		
+		this.classLoaderService = getContext().getServiceRegistry().getService( ClassLoaderService.class );
 
 		// just to get the error the test expects
 		// todo : I'd really rather see this driven from the class-level, not the attribute-level
@@ -204,24 +208,7 @@ public class PluralAttribute
 		this.whereClause = determineWereClause( backingMember );
 		this.orderBy = determineOrderBy( backingMember );
 
-		final AnnotationInstance joinTable = backingMember.getAnnotations().get( JPADotNames.JOIN_TABLE );
-		final AnnotationInstance collectionTable = backingMember.getAnnotations().get( JPADotNames.COLLECTION_TABLE );
-		if ( joinTable != null ) {
-			AnnotationInstance jpaFkAnnotation = JandexHelper.extractAnnotationValue( joinTable, "foreignKey" );
-			this.explicitForeignKeyName = jpaFkAnnotation != null
-					? jpaFkAnnotation.value( "name" ).asString()
-					: null;
-			jpaFkAnnotation = JandexHelper.extractAnnotationValue( joinTable, "inverseForeignKey" );
-			this.inverseForeignKeyName = jpaFkAnnotation != null
-					? jpaFkAnnotation.value( "name" ).asString()
-					: null;
-		}
-		if ( collectionTable != null) {
-			final AnnotationInstance jpaFkAnnotation = JandexHelper.extractAnnotationValue( collectionTable, "foreignKey" );
-			explicitForeignKeyName = jpaFkAnnotation != null
-					? jpaFkAnnotation.value( "name" ).asString()
-					: null;
-		}
+		this.foreignKeyDelegate = new ForeignKeyDelegate( backingMember.getAnnotations(), classLoaderService );
 
 		this.caching = determineCachingSettings( backingMember );
 
@@ -331,7 +318,7 @@ public class PluralAttribute
 				collectionId,
 				"columns",
 				AnnotationInstance[].class,
-				getContext().getServiceRegistry().getService( ClassLoaderService.class )
+				classLoaderService
 		);
 		final List<Column> idColumns = CollectionHelper.arrayList( columnAnnotations.length );
 		for ( AnnotationInstance columnAnnotation : columnAnnotations ) {
@@ -346,7 +333,7 @@ public class PluralAttribute
 				type,
 				"parameters",
 				AnnotationInstance[].class,
-				getContext().getServiceRegistry().getService( ClassLoaderService.class )
+				classLoaderService
 		);
 		if ( paramAnnotations == null || paramAnnotations.length == 0 ) {
 			return Collections.emptyMap();
@@ -658,7 +645,7 @@ public class PluralAttribute
 	}
 
 	@Override
-	public boolean getShouldIgnoreNotFound() {
+	public boolean isIgnoreNotFound() {
 		return ignoreNotFound;
 	}
 
@@ -702,11 +689,14 @@ public class PluralAttribute
 	}
 
 	public String getInverseForeignKeyName() {
-		return inverseForeignKeyName;
+		return foreignKeyDelegate.getInverseForeignKeyName();
 	}
 	public String getExplicitForeignKeyName(){
-		return explicitForeignKeyName;
+		return foreignKeyDelegate.getExplicitForeignKeyName();
 	}
+	public boolean createForeignKeyConstraint(){
+		return foreignKeyDelegate.createForeignKeyConstraint();
+ 	}
 
 	public Caching getCaching() {
 		return caching;

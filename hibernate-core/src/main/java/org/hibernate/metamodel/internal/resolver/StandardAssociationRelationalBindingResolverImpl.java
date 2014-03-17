@@ -134,7 +134,8 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 				sourceColumns,
 				targetTable,
 				targetColumns,
-				attributeSource.isCascadeDeleteEnabled()
+				attributeSource.isCascadeDeleteEnabled(),
+				attributeSource.createForeignKeyConstraint()
 		);
 	}
 
@@ -392,7 +393,8 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 				extractColumnsFromRelationalValueBindings( sourceRelationalValueBindings ),
 				targetTable,
 				targetColumns,
-				foreignKeyContributingSource.isCascadeDeleteEnabled()
+				foreignKeyContributingSource.isCascadeDeleteEnabled(),
+				foreignKeyContributingSource.createForeignKeyConstraint()
 		);
 	}
 

@@ -34,7 +34,7 @@ public interface ManyToManyPluralAttributeElementSource
 
 	public String getReferencedEntityAttributeName();
 
-	public boolean isNotFoundAnException();
+	public boolean isIgnoreNotFound();
 
 	public String getExplicitForeignKeyName();
 

@@ -29,5 +29,5 @@ package org.hibernate.metamodel.source.spi;
 public interface OneToManyPluralAttributeElementSource extends PluralAttributeElementSource, AssociationSource {
 	public String getReferencedEntityName();
 
-	public boolean isNotFoundAnException();
+	public boolean isIgnoreNotFound();
 }

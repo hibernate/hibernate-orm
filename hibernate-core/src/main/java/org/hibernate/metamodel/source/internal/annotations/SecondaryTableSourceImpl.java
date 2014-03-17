@@ -126,6 +126,12 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 	}
 
 	@Override
+	public boolean createForeignKeyConstraint() {
+		// not supported from annotations, unless docs for @ForeignKey are wrong...
+		return true;
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return fkColumnResolutionDelegate;
 	}

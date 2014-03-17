@@ -104,7 +104,8 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 				sourceColumns,
 				targetTable,
 				targetColumns,
-				attributeSource.isCascadeDeleteEnabled()
+				attributeSource.isCascadeDeleteEnabled(),
+				attributeSource.createForeignKeyConstraint()
 		);
 	}
 

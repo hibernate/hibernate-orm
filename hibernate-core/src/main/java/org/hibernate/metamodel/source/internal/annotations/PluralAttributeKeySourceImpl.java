@@ -74,6 +74,11 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 	}
 
 	@Override
+	public boolean createForeignKeyConstraint() {
+		return attribute.createForeignKeyConstraint();
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		if ( attribute.getMappedByAttributeName() != null ) {
 			throw new IllegalStateException( "Cannot determine foreign key information because association is not the owner." );

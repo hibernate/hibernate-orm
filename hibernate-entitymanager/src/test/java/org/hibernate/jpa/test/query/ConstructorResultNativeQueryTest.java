@@ -49,7 +49,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9060" )
 public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity( name = "Person" )
 	@SqlResultSetMappings(

@@ -5,6 +5,30 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.11 (2014.03.17)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-7072] - ElementCollection not updated correctly if the Embeddable component has a nullable property
+    * [HHH-8374] - Removing and persisting an entity still fails for proxies
+    * [HHH-8739] - Tracking of JTA Synch registration thread 
+    * [HHH-8815] - Example code for session scoped interceptor is incorrect (out of date)
+    * [HHH-9017] - HHH-8814 breaks pooled sequences
+    * [HHH-9028] - ClassCastException with second level cache and entityManager.find(clazz, id)
+    * [HHH-9034] - org.hibernate.test.hql.ASTParserLoadingTest fails with postgresplus92
+    * [HHH-9039] - Correct minor typos in docs and /etc
+    * [HHH-9052] - Unsupported SQL generated when constructors are used with predicates as arguments
+    * [HHH-9054] - org.hibernate.test.annotations.quote.QuoteTest violates unique key constraint on some DBs
+    * [HHH-9056] - OneToOneTest.testPkOneToOneSelectStatementDoesNotGenerateExtraJoin fails on oracle and postresql databases
+    * [HHH-9057] - Correct ObjectNameNormalizer for mssql-style quoting
+
+** Improvement
+    * [HHH-9037] - Improve the ClassCastException message in JavassistLazyInitializer
+    * [HHH-9040] - Check "haltOnError" in SchemaExport#importScript
+
+** New Feature
+    * [HHH-8440] - Support sequences with a new SQLServer2012Dialect
+
 Changes in version 4.2.10 (2014.02.28)
 ------------------------------------------------------------------------------------------------------------------------
 

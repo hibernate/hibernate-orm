@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -74,6 +76,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, IdentifierGeneratorDefinition> idGenerators = new HashMap<String, IdentifierGeneratorDefinition>();
 	private final Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
 	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
+	private final Map<String, NamedStoredProcedureQueryDefinition> namedStoredProcedureQueryDefinitionMap = new HashMap<String, NamedStoredProcedureQueryDefinition>();
 	private final Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>(  );
 	private final Map<Identifier, SecondaryTable> secondaryTableMap = new HashMap<Identifier, SecondaryTable>(  );
@@ -92,6 +95,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, IdentifierGeneratorDefinition> idGenerators,
 			Map<String, NamedQueryDefinition> namedQueryDefs,
 			Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs,
+			Map<String, NamedStoredProcedureQueryDefinition> namedStoredProcedureQueryDefinitionMap,
 			Map<String, ResultSetMappingDefinition> resultSetMappings,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<Identifier, SecondaryTable> secondaryTableMap) {
@@ -129,6 +133,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 		if ( resultSetMappings != null ) {
 			this.resultSetMappings.putAll( resultSetMappings );
+		}
+		if ( namedStoredProcedureQueryDefinitionMap != null ) {
+			this.namedStoredProcedureQueryDefinitionMap.putAll( namedStoredProcedureQueryDefinitionMap );
 		}
 		if ( namedEntityGraphMap != null ) {
 			this.namedEntityGraphMap.putAll( namedEntityGraphMap );
@@ -189,6 +196,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
 		return namedNativeQueryDefs.values();
+	}
+
+	@Override
+	public Collection<NamedStoredProcedureQueryDefinition> getNamedStoredProcedureQueryDefinitions() {
+		return namedStoredProcedureQueryDefinitionMap.values();
 	}
 
 	@Override

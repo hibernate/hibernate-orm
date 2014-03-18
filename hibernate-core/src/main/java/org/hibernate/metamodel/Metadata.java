@@ -23,7 +23,10 @@
  */
 package org.hibernate.metamodel;
 
+import java.util.Collection;
 import java.util.Map;
+
+import javax.persistence.NamedStoredProcedureQuery;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
@@ -74,15 +77,17 @@ public interface Metadata {
 	Iterable<PluralAttributeBinding> getCollectionBindings();
 	Iterable<EntityBinding> getEntityBindings();
 	Iterable<TypeDefinition> getTypeDefinitions();
-	Iterable<NamedQueryDefinition> getNamedQueryDefinitions();
-	Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
 	Iterable<FetchProfile> getFetchProfiles();
 
 	Map<Identifier, SecondaryTable> getSecondaryTables();
 	Map<String, FilterDefinition> getFilterDefinitions();
 	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
-	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
+
 	Map<String,String> getImports();
 
 	NamedSQLQueryDefinition getNamedNativeQuery(String name);
+	Iterable<NamedQueryDefinition> getNamedQueryDefinitions();
+	Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
+	Collection<NamedStoredProcedureQueryDefinition> getNamedStoredProcedureQueryDefinitions();
+	Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions();
 }

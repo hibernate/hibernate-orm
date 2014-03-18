@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.binder.Binder;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
@@ -709,16 +711,28 @@ public class MetadataBuildingProcess {
 		private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
 		private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
 
-		private final Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
-		private final Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
-		private final Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
-		private final Map<String, String> imports = new HashMap<String, String>();
-		private final Map<String, IdentifierGeneratorDefinition> idGenerators = new HashMap<String, IdentifierGeneratorDefinition>();
-		private final Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
-		private final Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
-		private final Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>(  );
-		private final Map<Identifier, SecondaryTable> secondaryTableMap = new HashMap<Identifier, SecondaryTable>();
+		private final Map<String, EntityBinding> entityBindingMap =
+				new HashMap<String, EntityBinding>();
+		private final Map<String, PluralAttributeBinding> collectionBindingMap =
+				new HashMap<String, PluralAttributeBinding>();
+		private final Map<String, FetchProfile> fetchProfiles =
+				new HashMap<String, FetchProfile>();
+		private final Map<String, String> imports =
+				new HashMap<String, String>();
+		private final Map<String, IdentifierGeneratorDefinition> idGenerators =
+				new HashMap<String, IdentifierGeneratorDefinition>();
+		private final Map<String, NamedQueryDefinition> namedQueryDefs =
+				new HashMap<String, NamedQueryDefinition>();
+		private final Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs =
+				new HashMap<String, NamedSQLQueryDefinition>();
+		private final Map<String, NamedStoredProcedureQueryDefinition> namedStoredProcedureQueryDefinitionMap =
+				new HashMap<String, NamedStoredProcedureQueryDefinition>();
+		private final Map<String, ResultSetMappingDefinition> resultSetMappings =
+				new HashMap<String, ResultSetMappingDefinition>();
+		private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap =
+				new HashMap<String, NamedEntityGraphDefinition>(  );
+		private final Map<Identifier, SecondaryTable> secondaryTableMap =
+				new HashMap<Identifier, SecondaryTable>();
 
 		public InFlightMetadataCollectorImpl(MetadataBuildingOptions options, TypeResolver typeResolver) {
 			this.options = options;
@@ -964,6 +978,21 @@ public class MetadataBuildingProcess {
 			}
 		}
 
+
+		@Override
+		public void addNamedStoredProcedureQueryDefinition(NamedStoredProcedureQueryDefinition definition) {
+			if ( definition == null ) {
+				throw new IllegalArgumentException( "Named query definition is null" );
+			}
+
+			namedStoredProcedureQueryDefinitionMap.put( definition.getName(), definition );
+		}
+
+		@Override
+		public Collection<NamedStoredProcedureQueryDefinition> getNamedStoredProcedureQueryDefinitions() {
+			return namedStoredProcedureQueryDefinitionMap.values();
+		}
+
 		public NamedQueryDefinition getNamedQuery(String name) {
 			if ( name == null ) {
 				throw new IllegalArgumentException( "null is not a valid query name" );
@@ -1171,6 +1200,7 @@ public class MetadataBuildingProcess {
 					idGenerators,
 					namedQueryDefs,
 					namedNativeQueryDefs,
+					namedStoredProcedureQueryDefinitionMap,
 					resultSetMappings,
 					namedEntityGraphMap,
 					secondaryTableMap

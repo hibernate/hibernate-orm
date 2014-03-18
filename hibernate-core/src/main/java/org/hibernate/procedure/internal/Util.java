@@ -23,6 +23,7 @@
  */
 package org.hibernate.procedure.internal;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -130,6 +131,31 @@ public class Util {
 	 * @param resultSetMappingNames The names of the result-set-mappings to resolve
 	 */
 	public static void resolveResultSetMappings(ResultSetMappingResolutionContext context, String... resultSetMappingNames) {
+		for ( String resultSetMappingName : resultSetMappingNames ) {
+			log.tracef( "Starting attempt resolve named result-set-mapping : %s", resultSetMappingName );
+			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
+			if ( mapping == null ) {
+				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
+			}
+
+			log.tracef( "Found result-set-mapping : %s", mapping.traceLoggableFormat() );
+
+			context.addQueryReturns( mapping.getQueryReturns() );
+
+			final SQLQueryReturnProcessor processor =
+					new SQLQueryReturnProcessor( mapping.getQueryReturns(), context.getSessionFactory() );
+			final SQLQueryReturnProcessor.ResultAliasContext processResult = processor.process();
+			context.addQuerySpaces( processResult.collectQuerySpaces() );
+		}
+	}
+
+	/**
+	 * Resolve the given result set mapping names
+	 *
+	 * @param context The context for the resolution.  See {@link ResultSetMappingResolutionContext}
+	 * @param resultSetMappingNames The names of the result-set-mappings to resolve
+	 */
+	public static void resolveResultSetMappings(ResultSetMappingResolutionContext context, Collection<String> resultSetMappingNames) {
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			log.tracef( "Starting attempt resolve named result-set-mapping : %s", resultSetMappingName );
 			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );

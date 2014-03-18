@@ -26,10 +26,7 @@ package org.hibernate.metamodel.source.internal.annotations.global;
 import java.util.Collection;
 import java.util.HashMap;
 import javax.persistence.LockModeType;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
+import javax.persistence.ParameterMode;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -46,9 +43,11 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.LockModeConverter;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
@@ -56,70 +55,89 @@ import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
-import org.jboss.logging.Logger;
 
 /**
- * Binds {@link NamedQuery}, {@link NamedQueries}, {@link NamedNativeQuery}, {@link NamedNativeQueries},
- * {@link org.hibernate.annotations.NamedQuery}, {@link org.hibernate.annotations.NamedQueries},
- * {@link org.hibernate.annotations.NamedNativeQuery}, and {@link org.hibernate.annotations.NamedNativeQueries}.
+ * Handles processing of named queries defined via:<ul>
+ *     <li>
+ *       {@link javax.persistence.NamedQuery} (and
+ *       {@link javax.persistence.NamedQueries})
+ *     </li>
+ *     <li>
+ *         {@link javax.persistence.NamedNativeQuery} (and
+ *         {@link javax.persistence.NamedNativeQueries})
+ *     </li>
+ *     <li>
+ *         {@link javax.persistence.NamedStoredProcedureQuery} (and
+ *         {@link javax.persistence.NamedStoredProcedureQueries})
+ *     </li>
+ *     <li>
+ *         {@link org.hibernate.annotations.NamedQuery} (and
+ *         {@link org.hibernate.annotations.NamedQueries})
+ *     </li>
+ *     <li>
+ *         {@link org.hibernate.annotations.NamedNativeQuery} (and
+ *         {@link org.hibernate.annotations.NamedNativeQueries})
+ *     </li>
+ * </ul>
  *
  * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
 public class QueryProcessor {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryProcessor.class );
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			QueryProcessor.class.getName()
-	);
-
+	/**
+	 * Disallow direct instantiation
+	 */
 	private QueryProcessor() {
 	}
 
 	/**
-	 * Binds all {@link NamedQuery}, {@link NamedQueries}, {@link NamedNativeQuery}, {@link NamedNativeQueries},
-	 * {@link org.hibernate.annotations.NamedQuery}, {@link org.hibernate.annotations.NamedQueries},
-	 * {@link org.hibernate.annotations.NamedNativeQuery}, and {@link org.hibernate.annotations.NamedNativeQueries}
-	 * annotations to the supplied metadata.
+	 * Main entry point into named query processing
 	 *
 	 * @param bindingContext the context for annotation binding
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
-		final ClassLoaderService classLoaderService = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
-		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
+		Collection<AnnotationInstance> annotations = JandexHelper.collectionAnnotations(
 				bindingContext.getIndex(),
 				JPADotNames.NAMED_QUERY,
-				JPADotNames.NAMED_QUERIES,
-				classLoaderService
+				JPADotNames.NAMED_QUERIES
 		);
 		for ( AnnotationInstance query : annotations ) {
 			bindNamedQuery( bindingContext, query );
 		}
 
-		annotations = JandexHelper.getAnnotations(
+		annotations = JandexHelper.collectionAnnotations(
 				bindingContext.getIndex(),
 				JPADotNames.NAMED_NATIVE_QUERY,
-				JPADotNames.NAMED_NATIVE_QUERIES,
-				classLoaderService
+				JPADotNames.NAMED_NATIVE_QUERIES
 		);
 		for ( AnnotationInstance query : annotations ) {
 			bindNamedNativeQuery( query, bindingContext );
 		}
 
-		annotations = JandexHelper.getAnnotations(
+		annotations = JandexHelper.collectionAnnotations(
+				bindingContext.getIndex(),
+				JPADotNames.NAMED_STORED_PROCEDURE_QUERY,
+				JPADotNames.NAMED_STORED_PROCEDURE_QUERIES
+		);
+		for ( AnnotationInstance query : annotations ) {
+			bindNamedStoredProcedureQuery( query, bindingContext );
+		}
+
+		annotations = JandexHelper.collectionAnnotations(
 				bindingContext.getIndex(),
 				HibernateDotNames.NAMED_QUERY,
-				HibernateDotNames.NAMED_QUERIES,
-				classLoaderService
+				HibernateDotNames.NAMED_QUERIES
 		);
 		for ( AnnotationInstance query : annotations ) {
 			bindNamedQuery( bindingContext, query );
 		}
 
-		annotations = JandexHelper.getAnnotations(
+		annotations = JandexHelper.collectionAnnotations(
 				bindingContext.getIndex(),
 				HibernateDotNames.NAMED_NATIVE_QUERY,
-				HibernateDotNames.NAMED_NATIVE_QUERIES,
-				classLoaderService
+				HibernateDotNames.NAMED_NATIVE_QUERIES
 		);
 		for ( AnnotationInstance query : annotations ) {
 			bindNamedNativeQuery( query, bindingContext );
@@ -351,6 +369,98 @@ public class QueryProcessor {
 		}
 		bindingContext.getMetadataCollector().addNamedNativeQuery( def );
 		LOG.debugf( "Binding named native query: %s => %s", name, query );
+	}
+
+	private static void bindNamedStoredProcedureQuery(
+			AnnotationInstance query,
+			AnnotationBindingContext bindingContext) {
+		final String name = query.value( "name" ).asString();
+		final String procedureName = query.value( "procedureName" ).asString();
+		LOG.debugf( "Starting binding of @NamedStoredProcedureQuery(name=%s, procedureName=%s)", name, procedureName );
+		NamedStoredProcedureQueryDefinition.Builder builder = new NamedStoredProcedureQueryDefinition.Builder(
+				name,
+				procedureName
+		);
+
+		final AnnotationInstance[] parameterAnnotations = JandexHelper.extractAnnotationsValue(
+				query,
+				"parameters"
+		);
+		if ( parameterAnnotations != null && parameterAnnotations.length > 0 ) {
+			for ( AnnotationInstance parameterAnnotation : parameterAnnotations ) {
+				final AnnotationValue pNameValue = parameterAnnotation.value( "name" );
+				final String pName;
+				if ( pNameValue == null ) {
+					pName = null;
+				}
+				else {
+					pName = StringHelper.nullIfEmpty( pNameValue.asString() );
+				}
+
+				final AnnotationValue pModeValue = parameterAnnotation.value( "mode" );
+				final ParameterMode pMode;
+				if ( pModeValue == null ) {
+					pMode = ParameterMode.IN;
+				}
+				else {
+					final String pModeName = StringHelper.nullIfEmpty( pModeValue.asEnum() );
+					if ( pModeName == null ) {
+						pMode = ParameterMode.IN;
+					}
+					else {
+						pMode = ParameterMode.valueOf( pModeName );
+					}
+				}
+
+				final AnnotationValue javaTypeValue = parameterAnnotation.value( "type" );
+				final String pJavaType;
+				if ( javaTypeValue == null ) {
+					pJavaType = null;
+				}
+				else {
+					pJavaType = StringHelper.nullIfEmpty( javaTypeValue.asString() );
+				}
+
+				builder.addParameter( pName, pMode, pJavaType );
+			}
+		}
+
+		final AnnotationInstance[] hintAnnotations = JandexHelper.extractAnnotationsValue(
+				query,
+				"hints"
+		);
+		if ( hintAnnotations != null && hintAnnotations.length > 0 ) {
+			for ( AnnotationInstance hintAnnotation : hintAnnotations ) {
+				builder.addHint(
+						hintAnnotation.value( "name" ).asString(),
+						hintAnnotation.value( "value" ).asString()
+				);
+			}
+		}
+
+		final AnnotationValue resultClassesValue = query.value( "resultClasses" );
+		if ( resultClassesValue != null ) {
+			final String[] resultClassNames = resultClassesValue.asStringArray();
+			if ( resultClassNames != null ) {
+				for ( String resultClassName : resultClassNames ) {
+					builder.addResultClassName( resultClassName );
+				}
+			}
+		}
+
+		final AnnotationValue resultSetMappingsValue = query.value( "resultSetMappings" );
+		if ( resultSetMappingsValue != null ) {
+			final String[] resultSetMappingNames = resultSetMappingsValue.asStringArray();
+			if ( resultSetMappingNames != null ) {
+				for ( String resultSetMappingName : resultSetMappingNames ) {
+					builder.addResultSetMappingName( resultSetMappingName );
+				}
+			}
+		}
+
+		bindingContext.getMetadataCollector().addNamedStoredProcedureQueryDefinition(
+				builder.buildDefinition()
+		);
 	}
 
 	private static boolean getBoolean(AnnotationInstance[] hints, String element, String query, AnnotationBindingContext bindingContext) {

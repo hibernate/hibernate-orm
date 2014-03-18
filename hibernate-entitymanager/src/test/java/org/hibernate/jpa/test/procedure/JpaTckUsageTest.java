@@ -173,7 +173,6 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9059" )
 	public void testSettingInParamDefinedOnNamedStoredProcedureQuery() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
@@ -192,7 +191,6 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9059" )
 	public void testSettingNonExistingParams() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 

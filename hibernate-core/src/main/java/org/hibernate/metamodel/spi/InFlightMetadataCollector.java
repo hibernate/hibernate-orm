@@ -31,6 +31,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
@@ -38,6 +39,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -76,6 +78,8 @@ public interface InFlightMetadataCollector extends Mapping, Metadata {
 	void addNamedEntityGraph(NamedEntityGraphDefinition def);
 
 	void addNamedQuery(NamedQueryDefinition def);
+
+	void addNamedStoredProcedureQueryDefinition(NamedStoredProcedureQueryDefinition definition);
 
 	void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 

@@ -31,6 +31,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,6 +102,7 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -122,6 +124,7 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -131,6 +134,8 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
+import org.hibernate.procedure.internal.Util;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -643,18 +648,6 @@ public final class SessionFactoryImpl
 //		}
 //	}
 
-	private Map<String, ProcedureCallMemento> toProcedureCallMementos(
-			Map<String, NamedProcedureCallDefinition> definitions,
-			Map<String, ResultSetMappingDefinition> resultSetMappingMap) {
-		final Map<String, ProcedureCallMemento> rtn = new HashMap<String, ProcedureCallMemento>();
-		if ( definitions != null ) {
-			for (String name : definitions.keySet()){
-				rtn.put( name,  definitions.get( name ).toMemento( this, resultSetMappingMap ));
-			}
-		}
-		return rtn;
-	}
-
 	private JdbcConnectionAccess buildLocalConnectionAccess() {
 		return new JdbcConnectionAccess() {
 			@Override
@@ -946,7 +939,10 @@ public final class SessionFactoryImpl
 				metadata.getNamedQueryDefinitions(),
 				metadata.getNamedNativeQueryDefinitions(),
 				metadata.getResultSetMappingDefinitions().values(),
-				new HashMap<String, ProcedureCallMemento>(  )
+				toProcedureCallMementos(
+						metadata.getNamedStoredProcedureQueryDefinitions(),
+						metadata.getResultSetMappingDefinitions()
+				)
 		);
 
 		imports = new HashMap<String,String>();
@@ -1073,6 +1069,133 @@ public final class SessionFactoryImpl
 				settings.isSessionFactoryNameAlsoJndiName(),
 				this,
 				serviceRegistry.getService( JndiService.class )
+		);
+	}
+
+	private Map<String, ProcedureCallMemento> toProcedureCallMementos(
+			Map<String, NamedProcedureCallDefinition> definitions,
+			Map<String, ResultSetMappingDefinition> resultSetMappingMap) {
+		final Map<String, ProcedureCallMemento> rtn = new HashMap<String, ProcedureCallMemento>();
+		if ( definitions != null ) {
+			for (String name : definitions.keySet()){
+				rtn.put( name,  definitions.get( name ).toMemento( this, resultSetMappingMap ));
+			}
+		}
+		return rtn;
+	}
+
+	private Map<String, ProcedureCallMemento> toProcedureCallMementos(
+			Collection<NamedStoredProcedureQueryDefinition> procedureQueryDefinitions,
+			Map<String, ResultSetMappingDefinition> resultSetMappingDefinitions) {
+		final Map<String, ProcedureCallMemento> rtn = new HashMap<String, ProcedureCallMemento>();
+		if ( procedureQueryDefinitions != null ) {
+			for (NamedStoredProcedureQueryDefinition definition : procedureQueryDefinitions ) {
+				rtn.put(
+						definition.getName(),
+						toMemento( definition, resultSetMappingDefinitions )
+				);
+			}
+		}
+		return rtn;
+	}
+
+	private ProcedureCallMemento toMemento(
+			NamedStoredProcedureQueryDefinition definition,
+			final Map<String, ResultSetMappingDefinition> resultSetMappingDefinitions) {
+		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
+		final Set<String> collectedQuerySpaces = new HashSet<String>();
+
+		final boolean specifiesResultClasses = definition.getClassNames().size() > 0;
+		final boolean specifiesResultSetMappings = definition.getResultSetMappingNames().size() > 0;
+
+		final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
+
+		if ( specifiesResultClasses ) {
+			final Class[] classes = new Class[ definition.getClassNames().size() ];
+
+			List<String> classNames = definition.getClassNames();
+			for ( int i = 0, classNamesSize = classNames.size(); i < classNamesSize; i++ ) {
+				classes[i] = cls.classForName( classNames.get( i ) );
+			}
+
+			Util.resolveResultClasses(
+					new Util.ResultClassesResolutionContext() {
+						@Override
+						public SessionFactoryImplementor getSessionFactory() {
+							return SessionFactoryImpl.this;
+						}
+
+						@Override
+						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+							Collections.addAll( collectedQueryReturns, queryReturns );
+						}
+
+						@Override
+						public void addQuerySpaces(String... spaces) {
+							Collections.addAll( collectedQuerySpaces, spaces );
+						}
+					},
+					classes
+			);
+		}
+		else if ( specifiesResultSetMappings ) {
+			Util.resolveResultSetMappings(
+					new Util.ResultSetMappingResolutionContext() {
+						@Override
+						public SessionFactoryImplementor getSessionFactory() {
+							return SessionFactoryImpl.this;
+						}
+
+						@Override
+						public ResultSetMappingDefinition findResultSetMapping(String name) {
+							return resultSetMappingDefinitions.get( name );
+						}
+
+						@Override
+						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+							Collections.addAll( collectedQueryReturns, queryReturns );
+						}
+
+						@Override
+						public void addQuerySpaces(String... spaces) {
+							Collections.addAll( collectedQuerySpaces, spaces );
+						}
+					},
+					definition.getResultSetMappingNames()
+			);
+		}
+
+		return new ProcedureCallMementoImpl(
+				definition.getName(),
+				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
+				definition.getParameterStrategy(),
+				toParameterMementos( definition.getParameters(), cls ),
+				collectedQuerySpaces,
+				definition.getQueryHints()
+		);
+	}
+
+	private List<ProcedureCallMementoImpl.ParameterMemento> toParameterMementos(
+			List<NamedStoredProcedureQueryDefinition.Parameter> parameters,
+			ClassLoaderService cls) {
+		final List<ProcedureCallMementoImpl.ParameterMemento> mementos = new ArrayList<ProcedureCallMementoImpl.ParameterMemento>();
+		for ( int i = 0, parametersSize = parameters.size(); i < parametersSize; i++ ) {
+			NamedStoredProcedureQueryDefinition.Parameter definition = parameters.get( i );
+			mementos.add( toParameterMemento( i+1, definition, cls ) );
+		}
+		return mementos;
+	}
+
+	private ProcedureCallMementoImpl.ParameterMemento toParameterMemento(
+			int position,
+			NamedStoredProcedureQueryDefinition.Parameter definition,
+			ClassLoaderService cls) {
+		return new ProcedureCallMementoImpl.ParameterMemento(
+				position,
+				name,
+				definition.getMode(),
+				cls.classForName( definition.getJavaType() ),
+				getTypeResolver().heuristicType( definition.getJavaType() )
 		);
 	}
 

@@ -44,6 +44,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
+import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -65,33 +66,39 @@ import org.jboss.jandex.Type;
  */
 public class JandexHelper {
 	private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
+
 	public static final DotName OBJECT = DotName.createSimple( Object.class.getName() );
+
+	// todo : consider making JandexHelper non-static (looked up from context) and caching the ClassLoaderService as instance state
+
 	private JandexHelper() {
 	}
 
 	/**
 	 * Retrieves a jandex annotation element value. If the value is {@code null}, the default value specified in the
 	 * annotation class is retrieved instead.
-	 * <p>
+	 * <p/>
+	 * The following types are supported:<ul>
+	 *     <li>Byte</li>
+	 *     <li>Short</li>
+	 *     <li>Integer</li>
+	 *     <li>Character</li>
+	 *     <li>Float</li>
+	 *     <li>Double</li>
+	 *     <li>Long</li>
+	 *     <li>Boolean</li>
+	 *     <li>String</li>
+	 *     <li>AnnotationInstance</li>
+	 * </ul>
 	 * There are two special cases. {@code Class} parameters should be retrieved as strings (and then can later be
 	 * loaded) and enumerated values should be retrieved via {@link #getEnumValue}.
 	 * </p>
 	 *
-	 * @param annotation the annotation containing the element with the supplied name
-	 * @param element the name of the element value to be retrieve
-	 * @param type the type of element to retrieve. The following types are supported:
-	 * <ul>
-	 * <li>Byte</li>
-	 * <li>Short</li>
-	 * <li>Integer</li>
-	 * <li>Character</li>
-	 * <li>Float</li>
-	 * <li>Double</li>
-	 * <li>Long</li>
-	 * <li>Boolean</li>
-	 * <li>String</li>
-	 * <li>AnnotationInstance</li>
-	 * @param classLoaderService ClassLoaderService
+	 * @param annotation The annotation containing the attribute whose value we are to extract
+	 * @param attributeName The name of the attribute whose value we are to extract
+	 * @param type The type we are to return the extracted value in; see the list of supported types above.
+	 * @param classLoaderService The ClassLoaderService; used to resolve default
+	 * values defined on the annotation class.
 	 *
 	 * @return the value if not {@code null}, else the default value if not
 	 *         {@code null}, else {@code null}.
@@ -100,7 +107,10 @@ public class JandexHelper {
 	 * when retrieving the value.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T getValue(AnnotationInstance annotation, String element, Class<T> type,
+	public static <T> T getValue(
+			AnnotationInstance annotation,
+			String attributeName,
+			Class<T> type,
 			ClassLoaderService classLoaderService) throws AssertionFailure {
 		if ( Class.class.equals( type ) ) {
 			throw new AssertionFailure(
@@ -108,31 +118,63 @@ public class JandexHelper {
 			);
 		}
 
+		// todo : we should seriously consider mapping type to appropriate AnnotationValue.asXYZ calls
+
 		if ( type.isPrimitive() ) {
 			type = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( type ).getWrapperClass();
 		}
 
-		// try getting the untyped value from Jandex
-		AnnotationValue annotationValue = annotation.value( element );
+		AnnotationValue annotationValue = annotation.value( attributeName );
 
 		try {
+			// Jandex only reads stuff that is actually in the bytecode.  If
+			// an annotation usage does not include a defaulted attribute,
+			// Jandex reports the missing attribute inclusion as the returned
+			// AnnotationValue being {@code null} (quite nice actually).
+			//
+			// todo : couldn't null here indicate that the attributeName does
+			// not name an existing attribute on the annotation?
 			if ( annotationValue != null ) {
+				// the attribute was included in the annotation usage, so extract
+				// its typed value and return it
 				return explicitAnnotationParameter( annotationValue, type );
 			}
 			else {
-				return defaultAnnotationParameter( getDefaultValue( annotation, element, classLoaderService ), type );
+				// Here the attribute was left off.  So we look at the
+				// annotation class to see what its default value is.
+				return defaultAnnotationParameter(
+						getDefaultValue( annotation, attributeName, classLoaderService ),
+						type
+				);
 			}
 		}
 		catch ( ClassCastException e ) {
 			throw new AssertionFailure(
 					String.format(
 							"the annotation property [%s] of annotation [@%s] is not of type %s",
-							element,
+							attributeName,
 							annotation.name(),
 							type.getName()
 					)
 			);
 		}
+	}
+
+	public static Collection<AnnotationInstance> collectionAnnotations(
+			final IndexView indexView,
+			final DotName singularDotName,
+			final DotName pluralDotName) {
+		final List<AnnotationInstance> results = new ArrayList<AnnotationInstance>();
+
+		results.addAll( indexView.getAnnotations( singularDotName ) );
+
+		final Collection<AnnotationInstance> pluralAnnotations = indexView.getAnnotations( pluralDotName );
+		for ( AnnotationInstance plural : pluralAnnotations ) {
+			final AnnotationInstance[] singulars = extractAnnotationsValue( plural, "value" );
+			results.addAll( Arrays.asList( singulars ) );
+		}
+		return results;
+
 	}
 
 	/**
@@ -665,4 +707,5 @@ public class JandexHelper {
 		}
 		return targetName;
 	}
+
 }

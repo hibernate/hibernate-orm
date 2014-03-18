@@ -19,13 +19,18 @@ package org.hibernate.osgi.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 
+import org.hibernate.Hibernate;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.osgi.OsgiPersistenceProviderService;
 import org.hibernate.osgi.OsgiSessionFactoryService;
-import org.hibernate.osgi.test.result.OsgiTestResults;
+import org.hibernate.osgi.test.client.DataPoint;
+import org.hibernate.osgi.test.client.TestService;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
@@ -41,21 +46,15 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 /**
- * A separate sourceset, testClientBundle, contains a persistence unit and multiple uses of Native and JPA functionality.
- * Any failures that occur are logged in the OsgiTestResult service, contained in another sourceset (testResult).
- * 
- * The "unit tests" MUST reside in testClientBundle, rather than attempting to programmatically create a bundle and obtain an SF/EMF here.  There are
+ * A separate sourceset, testClientBundle, contains a persistence unit and an OSGi service interface providing
+ * multiple uses of Native and JPA functionality.  The use of a SF/EMF must occur in that separate bundle, rather than
+ * attempting to programmatically create a bundle and obtain/use an SF/EMF here.  There are
  * MANY ClassLoader issues with that sort of setup.  JPA annotations are "stripped", since one ClassLoader is used here
  * to create the entity's stream and another is used to parse it within core.  Further, the entire Felix framework
  * is given to hibernate-osgi as the "requestingBundle" in that setup, regardless of Arquillian vs. Pax Exam.  That
  * causes another slew of ClassLoader issues as well.
  * 
- * It is also important to keep OsgiTestResult in a third sourceset, rather than attempting to put it in test or
- * testClientBundle.  Adding testClientBundle to test's classpath causes more ClassLoader issues during runtime (and
- * vice versa), similar to the above.
- * 
- * The bottom line is that many, many alternatives were prototyped and all of them eventually hit brick walls.
- * Regardless, this is the most "realistic" type of test anyway with a *real* client bundle.
+ * This is the most "realistic" type of test anyway with a *real* client bundle.
  * 
  * IMPORTANT: There are a few maintenance points that need addressed for new versions of Hibernate and library upgrades:
  * 1.) Updated library versions in hibernate-osgi.gradle.  libraries.gradle is used wherever possible.  But, there
@@ -71,8 +70,8 @@ import org.osgi.framework.ServiceReference;
  *     stripped of the javax.transaction nonsense.  This may need to be repeated if Felix is ever updated in ORM
  *     (should be rare).
  *     
- * This should largerly be considered an integration test, rather than a granular unit test.  Depending on how you setup
- * the source directories and classpaths, this may not work in your IDE.
+ * This should largerly be considered an integration test, rather than a granular unit test.  Also, this is almost
+ * guaranteed to not work in your IDE.
  *
  * @author Brett Meyer
  */
@@ -97,8 +96,12 @@ public class OsgiTestCase {
 				final OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
 				builder.addBundleSymbolicName( archive.getName() );
 				builder.addBundleManifestVersion( 2 );
-				builder.addImportPackages( OsgiTestResults.class );
-				// needed primarily to test service cleanup in #testStop
+				builder.addImportPackages( TestService.class );
+				// ORM packages needed in the tests
+				builder.addImportPackages( Hibernate.class );
+				builder.addImportPackages( Integrator.class );
+				builder.addImportPackages( StrategyRegistrationProvider.class );
+				builder.addImportPackages( TypeContributor.class );
 				builder.addImportPackages( OsgiSessionFactoryService.class );
 				return builder.openStream();
 			}
@@ -121,13 +124,97 @@ public class OsgiTestCase {
 		assertNotNull( "The test client bundle was not found!", testClientBundle );
 		testClientBundle.start();
 		assertEquals( "The test client bundle was not activated!", Bundle.ACTIVE, testClientBundle.getState() );
+	}
+	
+	@Test
+	@InSequence(2)
+	public void testJpa() throws Exception {
+		commonTests();
 
-		final ServiceReference<?> serviceReference = context.getServiceReference( OsgiTestResults.class.getName() );
-		final OsgiTestResults testResults = (OsgiTestResults) context.getService( serviceReference );
+		final TestService testService = getTestService();
+		
+		DataPoint dp = new DataPoint();
+		dp.setName( "Brett" );
+		testService.saveJpa( dp );
 
-		if ( testResults.getFailures().size() > 0 ) {
-			fail( testResults.getFailures().get( 0 ).getFailure() );
-		}
+		dp = testService.getJpa(dp.getId());
+		assertNotNull( dp );
+		assertEquals( "Brett", dp.getName() );
+		
+		dp.setName( "Brett2" );
+		testService.updateJpa( dp );
+
+		dp = testService.getJpa(dp.getId());
+		assertNotNull( dp );
+		assertEquals( "Brett2", dp.getName() );
+
+		testService.deleteJpa();
+
+		dp = testService.getJpa(dp.getId());
+		assertNull( dp );
+	}
+	
+	@Test
+	@InSequence(2)
+	public void testNative() throws Exception {
+		commonTests();
+
+		final TestService testService = getTestService();
+		
+		DataPoint dp = new DataPoint();
+		dp.setName( "Brett" );
+		testService.saveNative( dp );
+
+		dp = testService.getNative(dp.getId());
+		assertNotNull( dp );
+		assertEquals( "Brett", dp.getName() );
+		
+		dp.setName( "Brett2" );
+		testService.updateNative( dp );
+
+		dp = testService.getNative(dp.getId());
+		assertNotNull( dp );
+		assertEquals( "Brett2", dp.getName() );
+
+		testService.deleteNative();
+
+		dp = testService.getNative(dp.getId());
+		assertNull( dp );
+	}
+	
+	@Test
+	@InSequence(2)
+	public void testLazyLoading() throws Exception {
+		commonTests();
+
+		final TestService testService = getTestService();
+		
+		DataPoint dp = new DataPoint();
+		dp.setName( "Brett" );
+		testService.saveNative( dp );
+		
+		// #lazyLoad will init dp on its own
+		dp = testService.lazyLoad( dp.getId() );
+		assertNotNull( dp );
+		assertTrue( Hibernate.isInitialized( dp ) );
+		assertEquals( "Brett", dp.getName() );
+	}
+	
+	@Test
+	@InSequence(2)
+	public void testExtensionPoints() throws Exception {
+		commonTests();
+		
+		final TestService testService = getTestService();
+
+		assertNotNull( testService.getTestIntegrator() );
+		assertTrue( testService.getTestIntegrator().passed() );
+		
+		assertNotNull( testService.getTestStrategyRegistrationProvider() );
+		assertTrue( testService.getTestStrategyRegistrationProvider().passed() );
+		
+		assertNotNull( testService.getTestTypeContributor() );
+		assertTrue( testService.getTestTypeContributor().passed() );
 	}
 	
 	/**
@@ -140,7 +227,7 @@ public class OsgiTestCase {
 	@Test
 	// Arquillian does not restart the container between runs (afaik).  Without the ordering, the tests will
 	// intermittently fail since this method stops the bundle.
-	@InSequence(2)
+	@InSequence(3)
 	public void testStop() throws Exception {
 		commonTests();
 
@@ -174,5 +261,10 @@ public class OsgiTestCase {
 
 		assertNotNull( "Bundle " + symbolicName + " was not found!", bundle );
 		assertEquals( "Bundle " + symbolicName + " was not in the expected state!", state, bundle.getState() );
+	}
+	
+	private TestService getTestService() {
+		final ServiceReference<?> serviceReference = context.getServiceReference( TestService.class.getName() );
+		return (TestService) context.getService( serviceReference );
 	}
 }

@@ -30,10 +30,14 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class TestTypeContributor implements TypeContributor {
 	
-	public boolean passed = false;
+	private boolean passed = false;
 
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		passed = true;
+	}
+	
+	public boolean passed() {
+		return passed;
 	}
 
 }

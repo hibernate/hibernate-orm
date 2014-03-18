@@ -30,10 +30,14 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
  */
 public class TestStrategyRegistrationProvider implements StrategyRegistrationProvider {
 	
-	public boolean passed = false;
+	private boolean passed = false;
 
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		passed = true;
 		return Collections.EMPTY_LIST;
+	}
+	
+	public boolean passed() {
+		return passed;
 	}
 }

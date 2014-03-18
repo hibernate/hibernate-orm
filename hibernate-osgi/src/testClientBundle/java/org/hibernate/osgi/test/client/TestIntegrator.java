@@ -32,7 +32,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class TestIntegrator implements Integrator {
 	
-	public boolean passed = false;
+	private boolean passed = false;
 
 	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		passed = true;
@@ -44,6 +44,10 @@ public class TestIntegrator implements Integrator {
 
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		passed = true;
+	}
+	
+	public boolean passed() {
+		return passed;
 	}
 
 }

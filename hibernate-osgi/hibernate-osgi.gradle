@@ -4,18 +4,12 @@ configurations {
 }
 
 sourceSets {
-	testResult
 	testClientBundle
 }
 
 sourceSets.test {
-	compileClasspath += sourceSets.testResult.output
-	runtimeClasspath += sourceSets.testResult.output
-}
-
-sourceSets.testClientBundle {
-	compileClasspath += sourceSets.testResult.output
-	runtimeClasspath += sourceSets.testResult.output
+	compileClasspath += sourceSets.testClientBundle.output
+	runtimeClasspath += sourceSets.testClientBundle.output
 }
 
 dependencies {
@@ -133,7 +127,7 @@ task felixProperties << {
 }
 
 task testClientBundleJar(type: Jar) {
-	from sourceSets.testClientBundle.output, sourceSets.testResult.output
+	from sourceSets.testClientBundle.output
 	destinationDir new File("$buildDir/osgi-lib")
 	archiveName "testClientBundle.jar"
 	

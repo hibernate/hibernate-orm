@@ -64,7 +64,6 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-6813")
-	@FailureExpectedWithNewMetamodel
 	public void testSelectWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();

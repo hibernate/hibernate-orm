@@ -103,11 +103,49 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
 
+		// There are 2 (related) cases we need to account for where JPA
+		// defines special handling for find-by-id in terms of the allowable
+		// id type:
+		//
+		//		FIRST, where the identifier for the entity to be loaded is a
+		//			to-one association to another entity  E.g.:
+		//				@Id
+		// 				@ManyToOne
+		// 				private Parent myParent;
+		//			here, JPA allows loading this "dependent" entity using the
+		//			identifier type of the "parent".  E.g.:
+		//				em.find( Dependent.class, parent.getId() );
+		//			rather than:
+		//				em.find( Dependent.class, parent );
+		final Type entityIdentifierType = persister.getIdentifierType();
+		if ( !entityIdentifierType.getReturnedClass().isInstance( event.getEntityId() ) ) {
+			if ( entityIdentifierType.isEntityType() ) {
+				final EntityType parentEntityType = (EntityType) entityIdentifierType;
+				final Type parentEntityIdentifierType = parentEntityType
+						.getIdentifierOrUniqueKeyType( source.getFactory() );
+				if ( parentEntityIdentifierType.getReturnedClass().isInstance( event.getEntityId() ) ) {
+					// So we have the described situation
+					final EntityPersister parentEntityPersister = source.getFactory()
+							.getEntityPersister( parentEntityType.getAssociatedEntityName() );
+					final EntityKey parentEntityKey = event.getSession()
+							.generateEntityKey( event.getEntityId(), parentEntityPersister );
+					final Object parent = doLoad( event, parentEntityPersister, parentEntityKey, loadType );
+					final EntityKey dependentEntityKey = event.getSession()
+							.generateEntityKey( (Serializable) parent, persister );
+					event.setEntityId( (Serializable) parent );
+					final Object dependent = doLoad( event, persister, dependentEntityKey, loadType );
+					event.setResult( dependent );
+
+					// EARLY EXIT!!
+					return;
+				}
+			}
+		}
+
+		//		SECOND, we have essentially the same situation described above,
+		//			but the to-one association is wrapped in a composition
 		final Class idClass = persister.getIdentifierType().getReturnedClass();
 		if ( idClass != null && !idClass.isInstance( event.getEntityId() ) ) {
-			// we may have the kooky jpa requirement of allowing find-by-id where
-			// "id" is the "simple pk value" of a dependent objects parent.  This
-			// is part of its generally goofy "derived identity" "feature"
 			if ( persister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
 				final EmbeddedComponentType dependentIdType =
 						(EmbeddedComponentType) persister.getEntityMetamodel().getIdentifierProperty().getType();
@@ -169,10 +207,10 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final EntityKey parentEntityKey = event.getSession().generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
-		final Serializable dependent = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
-		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, dependentPersister.getEntityMode() );
-		final EntityKey dependentEntityKey = event.getSession().generateEntityKey( dependent, dependentPersister );
-		event.setEntityId( dependent );
+		final Serializable dependentId = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
+		dependentIdType.setPropertyValues( dependentId, new Object[] {parent}, dependentPersister.getEntityMode() );
+		final EntityKey dependentEntityKey = event.getSession().generateEntityKey( dependentId, dependentPersister );
+		event.setEntityId( dependentId );
 
 		event.setResult( doLoad( event, dependentPersister, dependentEntityKey, options ) );
 	}

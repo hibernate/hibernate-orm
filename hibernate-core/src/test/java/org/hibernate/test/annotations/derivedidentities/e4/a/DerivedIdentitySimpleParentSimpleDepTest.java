@@ -39,10 +39,10 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel(
-		jiraKey = "HHH-9048",
-		message = "Failures have to do with the lookups for MedicalHistory using its derived id (the simple Person id value)"
-)
+//@FailureExpectedWithNewMetamodel(
+//		jiraKey = "HHH-9048",
+//		message = "Failures have to do with the lookups for MedicalHistory using its derived id (the simple Person id value)"
+//)
 public class DerivedIdentitySimpleParentSimpleDepTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {

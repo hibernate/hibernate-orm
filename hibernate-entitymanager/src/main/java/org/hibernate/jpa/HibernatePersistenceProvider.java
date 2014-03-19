@@ -34,9 +34,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
 
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
@@ -126,7 +128,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader );
+			return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader );
 		}
 
 		log.debug( "Found no matching persistence units" );
@@ -134,7 +136,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Map wrap(Map properties) {
+	protected static Map wrap(Map properties) {
 		return properties == null ? Collections.emptyMap() : Collections.unmodifiableMap( properties );
 	}
 
@@ -147,14 +149,14 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
 		log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
 
-		return Bootstrap.getEntityManagerFactoryBuilder( info, properties ).build();
+		return getEntityManagerFactoryBuilder( info, properties ).build();
 	}
 
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
 		log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
 
-		final EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder( info, map );
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder( info, map );
 		builder.generateSchema();
 	}
 
@@ -169,6 +171,15 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 		builder.generateSchema();
 		return true;
+	}
+
+	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map integration) {
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( info ), integration, null );
+	}
+
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration, ClassLoader providedClassLoader) {
+		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

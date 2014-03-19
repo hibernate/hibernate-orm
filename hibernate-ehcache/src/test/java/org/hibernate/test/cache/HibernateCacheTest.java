@@ -1,6 +1,7 @@
 package org.hibernate.test.cache;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -8,7 +9,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.hamcrest.CoreMatchers;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
@@ -156,7 +156,7 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 		// check the version value in the cache...
 		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
 				.getSecondLevelCacheStatistics( REGION_PREFIX + VersionedItem.class.getName() );
-		assertThat( slcs, CoreMatchers.<Object>notNullValue() );
+		assertNotNull( slcs );
 		final Map entries = slcs.getEntries();
 		Object entry = entries.get( item.getId() );
 		Long cachedVersionValue;

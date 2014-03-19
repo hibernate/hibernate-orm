@@ -23,21 +23,21 @@
  */
 package org.hibernate.jpa.test.criteria;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity_;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -83,52 +83,33 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-	@Entity
-	@Table( name = "ANIMAL" )
-	public static class Animal {
-		private Long id;
-		private Animal mother;
-		private Animal father;
+	@Test
+	public void treatPathClassTest() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Animal animal = new Animal();
+		animal.setId(100L);
+		animal.setName("2");
+		em.persist(animal);
+		Human human = new Human();
+		human.setId(200L);
+		human.setName("2");
+		em.persist(human);
+		em.getTransaction().commit();
 
-		@Id
-		public Long getId() {
-			return id;
-		}
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<String> criteria = builder.createQuery( String.class );
+		Root<Animal> root = criteria.from( Animal.class );
+		EntityType<Animal> Animal_ = em.getMetamodel().entity(Animal.class);
+		criteria.select(root.get(Animal_.getSingularAttribute("name", String.class)));
 
-		public void setId(Long id) {
-			this.id = id;
-		}
+		criteria.where(builder.like(builder.treat(root, Human.class).get(org.hibernate.jpa.test.criteria.Human_.name), "2%"));
+		List<String> animalList = em.createQuery( criteria ).getResultList();
+		Assert.assertEquals("treat(Animal as Human) was ignored",1, animalList.size());
 
-		@ManyToOne
-		public Animal getMother() {
-			return mother;
-		}
-
-		public void setMother(Animal mother) {
-			this.mother = mother;
-		}
-
-		@ManyToOne
-		public Animal getFather() {
-			return father;
-		}
-
-		public void setFather(Animal father) {
-			this.father = father;
-		}
+		em.close();
 	}
 
-	@Entity
-	@Table( name = "HUMAN" )
-	public static class Human extends Animal {
-		private String name;
 
-		public String getName() {
-			return name;
-		}
 
-		public void setName(String name) {
-			this.name = name;
-		}
-	}
 }

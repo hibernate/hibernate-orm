@@ -26,12 +26,6 @@ package org.hibernate.metamodel.source.internal.annotations;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.IndexView;
-
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.TypeResolver;
-
 /**
  * Defines an interface for providing additional annotation related context information.
  *
@@ -40,36 +34,5 @@ import com.fasterxml.classmate.TypeResolver;
  * @author Strong Liu
  */
 public interface AnnotationBindingContext extends BindingContext {
-	/**
-	 * The annotation repository that this context know about.
-	 *
-	 * @return The {@link IndexView} that this context know about.
-	 */
-	IndexView getIndex();
-
-	/**
-	 * Gets the class (or interface, or annotation) that was scanned during the
-	 * indexing phase.
-	 *
-	 * @param className the name of the class
-	 * @return information about the class or null if it is not known
-	 */
-	ClassInfo getClassInfo(String className);
-
-	/**
-	 * Gets the {@literal ClassMate} {@link TypeResolver} used in this context.
-	 *
-	 * @return The {@link TypeResolver} associated within this context.
-	 */
-	TypeResolver getTypeResolver();
-
-	/**
-	 * Gets the {@literal ClassMate} {@link MemberResolver} used in this context.
-	 *
-	 * @return The {@link MemberResolver} associated within this context.
-	 */
-	MemberResolver getMemberResolver();
-
-
 	IdentifierGeneratorDefinition findIdGenerator(String name);
 }

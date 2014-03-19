@@ -236,7 +236,7 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 
 		// EntityListeners "annotation" defined as default in orm.xml
 		final Collection<AnnotationInstance> defaultEntityListenersAnnotations =
-				getLocalBindingContext().getIndex().getAnnotations( PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
+				getLocalBindingContext().getJandexAccess().getIndex().getAnnotations( PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
 		// there really should be only one or none...
 		if ( defaultEntityListenersAnnotations != null ) {
 			if ( defaultEntityListenersAnnotations.size() > 1 ) {

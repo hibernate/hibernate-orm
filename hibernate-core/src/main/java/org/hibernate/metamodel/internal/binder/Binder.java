@@ -334,7 +334,7 @@ public class Binder {
 			final String customTuplizerClassName = source.getCustomTuplizerClassName();
 			if ( customTuplizerClassName != null ) {
 				binding.setCustomEntityTuplizerClass(
-						localBindingContext().<EntityTuplizer>locateClassByName(
+						localBindingContext().getClassLoaderAccess().<EntityTuplizer>classForName(
 								customTuplizerClassName
 						)
 				);
@@ -342,7 +342,7 @@ public class Binder {
 			final String customPersisterClassName = source.getCustomPersisterClassName();
 			if ( customPersisterClassName != null ) {
 				binding.setCustomEntityPersisterClass(
-						localBindingContext().<EntityPersister>locateClassByName(
+						localBindingContext().getClassLoaderAccess().<EntityPersister>classForName(
 								customPersisterClassName
 						)
 				);
@@ -2142,7 +2142,7 @@ public class Binder {
 
 		if ( StringHelper.isNotEmpty( attributeSource.getCustomPersisterClassName() ) ) {
 			attributeBinding.setExplicitPersisterClass(
-					localBindingContext().<CollectionPersister>locateClassByName(
+					localBindingContext().getClassLoaderAccess().<CollectionPersister>classForName(
 							attributeSource.getCustomPersisterClassName()
 					)
 			);
@@ -2845,8 +2845,9 @@ public class Binder {
 			attributeBinding.setSorted( sortable.isSorted() );
 			if ( sortable.isSorted()
 					&& !sortable.getComparatorName().equalsIgnoreCase( "natural" ) ) {
-				Class<Comparator<?>> comparatorClass =
-						localBindingContext().locateClassByName( sortable.getComparatorName() );
+				Class<Comparator<?>> comparatorClass = localBindingContext().
+						getClassLoaderAccess()
+						.classForName( sortable.getComparatorName() );
 				try {
 					attributeBinding.setComparator( comparatorClass.newInstance() );
 				}

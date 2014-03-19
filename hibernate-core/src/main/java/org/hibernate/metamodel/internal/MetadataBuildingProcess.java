@@ -54,7 +54,6 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
@@ -65,6 +64,8 @@ import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccess;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccessImpl;
 import org.hibernate.metamodel.source.internal.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.source.internal.jandex.Unifier;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
@@ -76,6 +77,7 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.TypeDescriptorSource;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
 import org.hibernate.metamodel.spi.BindingContext;
+import org.hibernate.metamodel.spi.ClassLoaderAccess;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.MetadataContributor;
@@ -97,7 +99,6 @@ import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.BasicType;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
@@ -135,10 +136,18 @@ public class MetadataBuildingProcess {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// prep to start handling binding in earnest
 		final MappingDefaultsImpl mappingDefaults = new MappingDefaultsImpl( options );
-		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
-				jandexView,
+		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
 				options.getTempClassLoader(),
 				options.getServiceRegistry()
+		);
+		final JandexAccessImpl jandexAccess = new JandexAccessImpl(
+				jandexView,
+				classLoaderAccess
+
+		);
+		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
+				jandexAccess,
+				classLoaderAccess
 		);
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
 				options,
@@ -148,6 +157,8 @@ public class MetadataBuildingProcess {
 				options,
 				mappingDefaults,
 				javaTypeDescriptorRepository,
+				jandexAccess,
+				classLoaderAccess,
 				metadataCollector
 		);
 
@@ -495,22 +506,24 @@ public class MetadataBuildingProcess {
 		private final MetadataBuildingOptions options;
 		private final MappingDefaults mappingDefaults;
 		private final JavaTypeDescriptorRepository javaTypeDescriptorRepository;
+		private final JandexAccessImpl jandexAccess;
+		private final ClassLoaderAccess classLoaderAccess;
 		private final InFlightMetadataCollectorImpl metadataCollector;
 		private final MetaAttributeContext globalMetaAttributeContext = new MetaAttributeContext();
 
-		private final ClassLoaderService classLoaderService;
-
 		public RootBindingContextImpl(
 				MetadataBuildingOptions options,
-				MappingDefaults mappingDefaults,
+				MappingDefaultsImpl mappingDefaults,
 				JavaTypeDescriptorRepository javaTypeDescriptorRepository,
+				JandexAccessImpl jandexAccess,
+				ClassLoaderAccess classLoaderAccess,
 				InFlightMetadataCollectorImpl metadataCollector) {
 			this.options = options;
 			this.mappingDefaults = mappingDefaults;
 			this.javaTypeDescriptorRepository = javaTypeDescriptorRepository;
+			this.jandexAccess = jandexAccess;
+			this.classLoaderAccess = classLoaderAccess;
 			this.metadataCollector = metadataCollector;
-
-			this.classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 		}
 
 		@Override
@@ -521,6 +534,11 @@ public class MetadataBuildingProcess {
 		@Override
 		public MappingDefaults getMappingDefaults() {
 			return mappingDefaults;
+		}
+
+		@Override
+		public JandexAccess getJandexAccess() {
+			return jandexAccess;
 		}
 
 		@Override
@@ -551,6 +569,11 @@ public class MetadataBuildingProcess {
 		}
 
 		@Override
+		public ClassLoaderAccess getClassLoaderAccess() {
+			return classLoaderAccess;
+		}
+
+		@Override
 		public boolean quoteIdentifiersInContext() {
 			return options.getDatabaseDefaults().isGloballyQuotedIdentifiers();
 		}
@@ -560,13 +583,9 @@ public class MetadataBuildingProcess {
 			return javaTypeDescriptorRepository.getType( javaTypeDescriptorRepository.buildName( qualifyClassName( name  ) ) );
 		}
 
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// BindingContext deprecated impls
-
-		@Override
-		public <T> Class<T> locateClassByName(String name) {
-			return classLoaderService.classForName( name );
-		}
 
 		@Override
 		public Type makeDomainType(String className) {
@@ -579,58 +598,6 @@ public class MetadataBuildingProcess {
 					typeName.toString(),
 					typeDescriptor( typeName.toString() )
 			);
-		}
-
-		private Map<String, JavaClassReference> nameToJavaTypeMap = new HashMap<String, JavaClassReference>();
-
-		@Override
-		public JavaClassReference makeJavaClassReference(String className) {
-			if ( className == null ) {
-				throw new IllegalArgumentException( "className must be non-null." );
-			}
-			JavaClassReference javaClassReference = nameToJavaTypeMap.get( className );
-			if ( javaClassReference == null ) {
-				javaClassReference = new JavaClassReference( className, classLoaderService );
-				nameToJavaTypeMap.put( className, javaClassReference );
-			}
-			return javaClassReference;
-		}
-
-		@Override
-		public JavaClassReference makeJavaClassReference(Class<?> clazz) {
-			if ( clazz == null ) {
-				throw new IllegalArgumentException( "clazz must be non-null." );
-			}
-			JavaClassReference javaClassReference = nameToJavaTypeMap.get( clazz.getName() );
-			if ( javaClassReference == null ) {
-				javaClassReference = new JavaClassReference( clazz );
-				nameToJavaTypeMap.put( clazz.getName(), javaClassReference );
-			}
-			return javaClassReference;
-		}
-
-		@Override
-		public JavaClassReference makeJavaPropertyClassReference(
-				JavaClassReference propertyContainerClassReference, String propertyName) {
-			if ( propertyContainerClassReference == null || propertyName == null ) {
-				throw new IllegalArgumentException( "propertyContainerClassReference and propertyName must be non-null." );
-			}
-			try {
-				return makeJavaClassReference(
-						ReflectHelper.reflectedPropertyClass(
-								propertyContainerClassReference.getResolvedClass(),
-								propertyName
-						)
-				);
-			}
-			catch ( Exception ignore ) {
-				log.debugf(
-						"Unable to locate attribute [%s] on class [%s]",
-						propertyName,
-						propertyContainerClassReference.getName()
-				);
-			}
-			return null;
 		}
 	}
 

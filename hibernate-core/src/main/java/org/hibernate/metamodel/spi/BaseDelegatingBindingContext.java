@@ -25,9 +25,9 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccess;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
-import org.hibernate.metamodel.spi.domain.JavaClassReference;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
@@ -53,8 +53,18 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	}
 
 	@Override
+	public JandexAccess getJandexAccess() {
+		return parent.getJandexAccess();
+	}
+
+	@Override
 	public JavaTypeDescriptorRepository getJavaTypeDescriptorRepository() {
 		return parent.getJavaTypeDescriptorRepository();
+	}
+
+	@Override
+	public ClassLoaderAccess getClassLoaderAccess() {
+		return parent.getClassLoaderAccess();
 	}
 
 	@Override
@@ -88,11 +98,6 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	}
 
 	@Override
-	public <T> Class<T> locateClassByName(String name) {
-		return parent.locateClassByName( name );
-	}
-
-	@Override
 	public Type makeDomainType(String className) {
 		return parent.makeDomainType( className );
 	}
@@ -105,21 +110,5 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	@Override
 	public Type makeDomainType(DotName typeName) {
 		return parent.makeDomainType( typeName );
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(String className) {
-		return parent.makeJavaClassReference( className );
-	}
-
-	@Override
-	public JavaClassReference makeJavaClassReference(Class<?> clazz) {
-		return parent.makeJavaClassReference( clazz );
-	}
-
-	@Override
-	public JavaClassReference makeJavaPropertyClassReference(
-			JavaClassReference propertyContainerClassReference, String propertyName) {
-		return parent.makeJavaPropertyClassReference( propertyContainerClassReference, propertyName );
 	}
 }

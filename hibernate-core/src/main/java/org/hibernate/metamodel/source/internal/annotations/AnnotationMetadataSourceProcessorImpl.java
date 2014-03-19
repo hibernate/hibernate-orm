@@ -66,14 +66,14 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			bindingContext.getMetadataCollector().setGloballyQuotedIdentifiers( true );
 		}
 
-		this.bindingContext = new AnnotationBindingContextImpl( bindingContext, jandexView );
+		this.bindingContext = new AnnotationBindingContextImpl( bindingContext );
 	}
 
 	@Override
 	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources() {
 		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				HibernateDotNames.TYPE_DEF,
 				HibernateDotNames.TYPE_DEFS,
 				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
@@ -88,7 +88,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources() {
 		List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				HibernateDotNames.FILTER_DEF,
 				HibernateDotNames.FILTER_DEFS,
 				bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )

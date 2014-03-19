@@ -57,13 +57,14 @@ public class FetchProfileProcessor {
 	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
 	public static void bind(AnnotationBindingContext bindingContext) {
 
-		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
+		Collection<AnnotationInstance> annotations = bindingContext.getJandexAccess()
+				.getIndex()
 				.getAnnotations( HibernateDotNames.FETCH_PROFILE );
 		for ( AnnotationInstance fetchProfile : annotations ) {
 			bind( bindingContext, fetchProfile );
 		}
 
-		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FETCH_PROFILES );
+		annotations = bindingContext.getJandexAccess().getIndex().getAnnotations( HibernateDotNames.FETCH_PROFILES );
 		for ( AnnotationInstance fetchProfiles : annotations ) {
 			AnnotationInstance[] fetchProfileAnnotations = JandexHelper.getValue(
 					fetchProfiles,

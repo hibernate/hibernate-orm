@@ -356,7 +356,10 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 			AnnotationBindingContext bindingContext) {
 		// ask Jandex for all the known *direct* subclasses of `superType`
 		// and iterate them to create the subclass metadata
-		final Collection<ClassInfo> classInfos = bindingContext.getIndex().getKnownDirectSubclasses( javaTypeDescriptor.getName() );
+		final Collection<ClassInfo> classInfos = bindingContext.getJandexAccess()
+				.getIndex()
+				.getKnownDirectSubclasses( javaTypeDescriptor.getName() );
+
 		for ( ClassInfo classInfo : classInfos ) {
 			final ClassDescriptor subclassTypeDescriptor = (ClassDescriptor) bindingContext.getJavaTypeDescriptorRepository().getType( classInfo.name() );
 

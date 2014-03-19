@@ -136,7 +136,7 @@ public class EntityHierarchyBuilder {
 		final Set<JavaTypeDescriptor> collectedDescriptors = new HashSet<JavaTypeDescriptor>();
 
 		final JavaTypeDescriptorRepository repo = bindingContext.getJavaTypeDescriptorRepository();
-		for ( ClassInfo classInfo : bindingContext.getIndex().getKnownClasses() ) {
+		for ( ClassInfo classInfo : bindingContext.getJandexAccess().getIndex().getKnownClasses() ) {
 			final JavaTypeDescriptor descriptor = repo.getType( repo.buildName( classInfo.name().toString() ) );
 			if ( descriptor == null ) {
 				continue;

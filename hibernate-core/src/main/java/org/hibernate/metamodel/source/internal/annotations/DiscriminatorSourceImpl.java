@@ -84,34 +84,38 @@ public class DiscriminatorSourceImpl
 		}
 
 		this.isFormula = discriminatorFormula != null;
-
 		if ( isFormula ) {
-			final String expression = JandexHelper.getValue(
-					discriminatorFormula,
-					"value",
-					String.class,
-					cls
-			);
+			final String expression = entityTypeMetadata.getLocalBindingContext()
+					.getJandexAccess()
+					.getTypedValueExtractor( String.class )
+					.extract( discriminatorFormula, "value" );
 			this.relationalValueSource = new DerivedValueSourceImpl( expression, null );
 		}
 		else {
-			discriminatorType = JandexHelper.getEnumValue(
-					discriminatorColumn,
-					"discriminatorType",
-					DiscriminatorType.class,
-					cls
-			);
+			discriminatorType = entityTypeMetadata.getLocalBindingContext()
+					.getJandexAccess()
+					.getTypedValueExtractor( DiscriminatorType.class )
+					.extract( discriminatorColumn, "discriminatorType" );
 
 			final Column column = new Column( null );
 			column.setNullable( false );
 			column.setName(
-					JandexHelper.getValue( discriminatorColumn, "name", String.class, cls )
+					entityTypeMetadata.getLocalBindingContext()
+							.getJandexAccess()
+							.getTypedValueExtractor( String.class )
+							.extract( discriminatorColumn, "name" )
 			);
 			column.setLength(
-					JandexHelper.getValue( discriminatorColumn, "length", Integer.class, cls )
+					entityTypeMetadata.getLocalBindingContext()
+							.getJandexAccess()
+							.getTypedValueExtractor( Integer.class )
+							.extract( discriminatorColumn, "length" )
 			);
 			column.setColumnDefinition(
-					JandexHelper.getValue( discriminatorColumn, "columnDefinition", String.class, cls )
+					entityTypeMetadata.getLocalBindingContext()
+							.getJandexAccess()
+							.getTypedValueExtractor( String.class )
+							.extract( discriminatorColumn, "columnDefinition" )
 			);
 
 			this.relationalValueSource = new ColumnSourceImpl( column );

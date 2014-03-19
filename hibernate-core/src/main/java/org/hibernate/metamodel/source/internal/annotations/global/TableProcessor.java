@@ -59,12 +59,12 @@ public class TableProcessor {
 	 * @param bindingContext the context for annotation binding
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
-		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLE );
+		Collection<AnnotationInstance> annotations = bindingContext.getJandexAccess().getIndex().getAnnotations( HibernateDotNames.TABLE );
 		for ( AnnotationInstance tableAnnotation : annotations ) {
 			bind( bindingContext, tableAnnotation );
 		}
 
-		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLES );
+		annotations = bindingContext.getJandexAccess().getIndex().getAnnotations( HibernateDotNames.TABLES );
 		for ( AnnotationInstance tables : annotations ) {
 			for ( AnnotationInstance table : JandexHelper.getValue( tables, "value", AnnotationInstance[].class,
 					bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) ) ) {

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.annotations.entity;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.internal.annotations.TypedValueExtractor;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
 import org.hibernate.metamodel.spi.LocalBindingContext;
@@ -35,8 +36,6 @@ import org.hibernate.xml.spi.SourceType;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.IndexView;
 
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.TypeResolver;
 
 /**
  * Annotation version of a local binding context.
@@ -72,26 +71,6 @@ public class EntityBindingContext
 	@Override
 	public MappingException makeMappingException(String message, Exception cause) {
 		return new AnnotationException( message, cause, getOrigin() );
-	}
-
-	@Override
-	public IndexView getIndex() {
-		return contextDelegate.getIndex();
-	}
-
-	@Override
-	public ClassInfo getClassInfo(String name) {
-		return contextDelegate.getClassInfo( name );
-	}
-
-	@Override
-	public MemberResolver getMemberResolver() {
-		return contextDelegate.getMemberResolver();
-	}
-
-	@Override
-	public TypeResolver getTypeResolver() {
-		return contextDelegate.getTypeResolver();
 	}
 
 	@Override

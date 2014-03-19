@@ -44,6 +44,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
+import org.hibernate.metamodel.source.internal.annotations.TypedValueExtractor;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.service.ServiceRegistry;
 
@@ -69,10 +70,29 @@ public class JandexHelper {
 
 	public static final DotName OBJECT = DotName.createSimple( Object.class.getName() );
 
-	// todo : consider making JandexHelper non-static (looked up from context) and caching the ClassLoaderService as instance state
+// todo : consider making JandexHelper non-static, resolved from the AnnotationBindingContext
+//	private final ClassLoaderService classLoaderService;
+//
+//	private JandexHelper(BindingContext context) {
+//		this.classLoaderService = context.getServiceRegistry().getService( ClassLoaderService.class );
+//	}
 
-	private JandexHelper() {
-	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/**
 	 * Retrieves a jandex annotation element value. If the value is {@code null}, the default value specified in the
@@ -598,6 +618,8 @@ public class JandexHelper {
 	}
 
 	private static Object getDefaultValue(AnnotationInstance annotation, String element, ClassLoaderService classLoaderService) {
+		//todo : would it be better to lookup each annotation class once and store this info in a Map primarily by the class?
+
 		String name = annotation.name().toString();
 		String fqElement = name + '.' + element;
 		Object val = DEFAULT_VALUES_BY_ELEMENT.get( fqElement );

@@ -62,8 +62,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 				clazz
 		);
 		AnnotationBindingContext context = new AnnotationBindingContextImpl(
-				RootBindingContextBuilder.buildBindingContext( serviceRegistry, index ),
-				index
+				RootBindingContextBuilder.buildBindingContext( serviceRegistry, index )
 		);
 		return EntityHierarchyBuilder.createEntityHierarchies( context );
 	}

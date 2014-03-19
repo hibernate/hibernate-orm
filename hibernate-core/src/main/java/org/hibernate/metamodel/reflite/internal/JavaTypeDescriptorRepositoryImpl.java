@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
@@ -47,13 +46,13 @@ import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.ParameterizedType;
 import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.VoidDescriptor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccessImpl;
+import org.hibernate.metamodel.spi.ClassLoaderAccess;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.logging.Logger;
@@ -76,10 +75,8 @@ import com.fasterxml.classmate.members.ResolvedMethod;
 public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepository {
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRepositoryImpl.class );
 
-	private final ClassLoader jpaTempClassLoader;
-	private final ClassLoaderService classLoaderService;
-
-	private final IndexView jandexIndex;
+	private final JandexAccessImpl jandexAccess;
+	private final ClassLoaderAccess classLoaderAccess;
 
 	private final TypeResolver classmateTypeResolver;
 	private final MemberResolver classmateMemberResolver;
@@ -92,19 +89,10 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	private final InterfaceDescriptor jdkMapDescriptor;
 
 	public JavaTypeDescriptorRepositoryImpl(
-			IndexView jandexIndex,
-			ClassLoader jpaTempClassLoader,
-			ServiceRegistry serviceRegistry) {
-		this( jandexIndex, jpaTempClassLoader, serviceRegistry.getService( ClassLoaderService.class ) );
-	}
-
-	public JavaTypeDescriptorRepositoryImpl(
-			IndexView jandexIndex,
-			ClassLoader jpaTempClassLoader,
-			ClassLoaderService classLoaderService) {
-		this.jandexIndex = jandexIndex;
-		this.jpaTempClassLoader = jpaTempClassLoader;
-		this.classLoaderService = classLoaderService;
+			JandexAccessImpl jandexAccess,
+			ClassLoaderAccess classLoaderAccess) {
+		this.jandexAccess = jandexAccess;
+		this.classLoaderAccess = classLoaderAccess;
 
 		this.classmateTypeResolver = new TypeResolver();
 		this.classmateMemberResolver = new MemberResolver( classmateTypeResolver );
@@ -224,52 +212,12 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 
 	protected JavaTypeDescriptor makeTypeDescriptor(DotName typeName) {
 		final String classNameToLoad = typeName.toString();
-
-		if ( isSafeClass( typeName ) ) {
-			return makeTypeDescriptor( typeName, classLoaderService.classForName( classNameToLoad ) );
+		try {
+			return makeTypeDescriptor( typeName, classLoaderAccess.classForName( classNameToLoad ) );
 		}
-		else {
-			if ( jpaTempClassLoader == null ) {
-				log.debug(
-						"Request to makeTypeDescriptor(%s) - but passed class is not known to be " +
-								"safe (it might be, it might not be). However, there was no " +
-								"temp ClassLoader provided; we will use the live ClassLoader"
-				);
-				try {
-					// this reference is "safe" because it was loaded from the live ClassLoader
-					return makeTypeDescriptor( typeName, classLoaderService.classForName( classNameToLoad ) );
-				}
-				catch (ClassLoadingException e) {
-					return new NoSuchClassTypeDescriptor( typeName );
-				}
-			}
-			else {
-				log.debug(
-						"Request to makeTypeDescriptor(%s) - passed class is not known to be " +
-								"safe (it might be, it might not be). There was a temp ClassLoader " +
-								"provided, so we will use that"
-				);
-				// this is the Class reference that is unsafe to keep around...
-				final Class unSafeReference;
-				try {
-					unSafeReference = jpaTempClassLoader.loadClass( classNameToLoad );
-				}
-				catch (ClassNotFoundException e) {
-					return new NoSuchClassTypeDescriptor( typeName );
-				}
-
-				return makeTypeDescriptor( typeName, unSafeReference );
-			}
+		catch (ClassLoadingException e) {
+			return new NoSuchClassTypeDescriptor( typeName );
 		}
-	}
-
-	private boolean isSafeClass(DotName className) {
-		final String classNameString = className.toString();
-		// classes in any of these packages are safe to load through the "live" ClassLoader
-		return classNameString.startsWith( "java." )
-				|| classNameString.startsWith( "javax." )
-				|| classNameString.startsWith( "org.hibernate" );
-
 	}
 
 	private JavaTypeDescriptor makeTypeDescriptor(DotName typeName, Class clazz) {
@@ -340,11 +288,11 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	private static final JandexPivot NO_JANDEX_PIVOT = new JandexPivot( null );
 
 	private JandexPivot pivotAnnotations(DotName typeName) {
-		if ( jandexIndex == null ) {
+		if ( jandexAccess.getIndex() == null ) {
 			return NO_JANDEX_PIVOT;
 		}
 
-		final ClassInfo jandexClassInfo = jandexIndex.getClassByName( typeName );
+		final ClassInfo jandexClassInfo = jandexAccess.getIndex().getClassByName( typeName );
 		if ( jandexClassInfo == null ) {
 			return new JandexPivot(
 					ClassInfo.create(

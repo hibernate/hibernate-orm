@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,26 +23,38 @@
  */
 package org.hibernate.metamodel.source.internal.annotations;
 
-import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
-import org.hibernate.metamodel.spi.BindingContext;
-import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.IndexView;
 
 /**
- * Default implementation of  {@code AnnotationBindingContext}
- *
- * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class AnnotationBindingContextImpl
-		extends BaseDelegatingBindingContext
-		implements AnnotationBindingContext {
+public interface JandexAccess {
+	/**
+	 * The annotation repository that this context know about.
+	 *
+	 * @return The {@link org.jboss.jandex.IndexView} that this context know about.
+	 */
+	IndexView getIndex();
 
-	public AnnotationBindingContextImpl(BindingContext rootBindingContext) {
-		super( rootBindingContext );
-	}
+	/**
+	 * Gets the class (or interface, or annotation) that was scanned during the
+	 * indexing phase.
+	 *
+	 * @param className the name of the class
+	 * @return information about the class or null if it is not known
+	 */
+	ClassInfo getClassInfo(String className);
 
-	@Override
-	public IdentifierGeneratorDefinition findIdGenerator(String name) {
-		return getMetadataCollector().getIdGenerator( name );
-	}
+	/**
+	 * Get a type-specific extractor for extracting attribute values from Jandex
+	 * AnnotationInstances.
+	 *
+	 * @param type The type of extractor we want
+	 * @param <T> The generic type of the extractor
+	 *
+	 * @return The typed extractor
+	 */
+	<T> TypedValueExtractor<T> getTypedValueExtractor(Class<T> type);
+
 }

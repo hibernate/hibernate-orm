@@ -31,9 +31,11 @@ import java.util.List;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.internal.ClassLoaderAccessImpl;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccessImpl;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -108,10 +110,10 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		);
 	}
 
+	private final ClassLoaderAccessImpl classLoaderAccess = new ClassLoaderAccessImpl( null, classLoaderService );
 	private final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
-			null,
-			null,
-			classLoaderService
+			new JandexAccessImpl( null, classLoaderAccess ),
+			classLoaderAccess
 	);
 
 	JavaTypeDescriptor makeJavaType(final String name) {

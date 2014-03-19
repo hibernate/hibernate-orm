@@ -99,7 +99,7 @@ public class QueryProcessor {
 	 */
 	public static void bind(AnnotationBindingContext bindingContext) {
 		Collection<AnnotationInstance> annotations = JandexHelper.collectionAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				JPADotNames.NAMED_QUERY,
 				JPADotNames.NAMED_QUERIES
 		);
@@ -108,7 +108,7 @@ public class QueryProcessor {
 		}
 
 		annotations = JandexHelper.collectionAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				JPADotNames.NAMED_NATIVE_QUERY,
 				JPADotNames.NAMED_NATIVE_QUERIES
 		);
@@ -117,7 +117,7 @@ public class QueryProcessor {
 		}
 
 		annotations = JandexHelper.collectionAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				JPADotNames.NAMED_STORED_PROCEDURE_QUERY,
 				JPADotNames.NAMED_STORED_PROCEDURE_QUERIES
 		);
@@ -126,7 +126,7 @@ public class QueryProcessor {
 		}
 
 		annotations = JandexHelper.collectionAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				HibernateDotNames.NAMED_QUERY,
 				HibernateDotNames.NAMED_QUERIES
 		);
@@ -135,7 +135,7 @@ public class QueryProcessor {
 		}
 
 		annotations = JandexHelper.collectionAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				HibernateDotNames.NAMED_NATIVE_QUERY,
 				HibernateDotNames.NAMED_NATIVE_QUERIES
 		);

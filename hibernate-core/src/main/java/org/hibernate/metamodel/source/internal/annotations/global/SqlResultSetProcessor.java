@@ -96,7 +96,7 @@ public class SqlResultSetProcessor {
 		// singular form
 		{
 			final Collection<AnnotationInstance> sqlResultSetMappingAnnotations =
-					bindingContext.getIndex().getAnnotations( SQL_RESULT_SET_MAPPING );
+					bindingContext.getJandexAccess().getIndex().getAnnotations( SQL_RESULT_SET_MAPPING );
 			for ( final AnnotationInstance sqlResultSetMappingAnnotation : sqlResultSetMappingAnnotations ) {
 				bindSqlResultSetMapping( sqlResultSetMappingAnnotation, bindingContext );
 			}
@@ -105,7 +105,7 @@ public class SqlResultSetProcessor {
 		// plural form
 		{
 			final Collection<AnnotationInstance> sqlResultSetMappingsAnnotations =
-					bindingContext.getIndex().getAnnotations( SQL_RESULT_SET_MAPPINGS );
+					bindingContext.getJandexAccess().getIndex().getAnnotations( SQL_RESULT_SET_MAPPINGS );
 			for ( final AnnotationInstance sqlResultSetMappingsAnnotationInstance : sqlResultSetMappingsAnnotations ) {
 				final AnnotationInstance[] sqlResultSetMappingAnnotations = JandexHelper.extractAnnotationsValue(
 						sqlResultSetMappingsAnnotationInstance,

@@ -45,7 +45,6 @@ import org.hibernate.metamodel.source.internal.annotations.entity.EntityTypeMeta
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.spi.ConstraintSource;
 import org.hibernate.metamodel.source.spi.EntitySource;
 import org.hibernate.metamodel.source.spi.FilterSource;
@@ -357,7 +356,9 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 					JPADotNames.SECONDARY_TABLE
 			);
 			if ( secondaryTable != null ) {
-				String tableName = JandexHelper.getValue( secondaryTable, "name", String.class, classLoaderService );
+				String tableName = getLocalBindingContext().getJandexAccess()
+						.getTypedValueExtractor( String.class )
+						.extract( secondaryTable, "name" );
 				addUniqueConstraints( constraintSources, secondaryTable, tableName );
 				addIndexConstraints( constraintSources, secondaryTable, tableName );
 
@@ -371,14 +372,13 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 					JPADotNames.SECONDARY_TABLES
 			);
 			if ( secondaryTables != null ) {
-				final AnnotationInstance[] secondaryTableArray = JandexHelper.getValue(
-						secondaryTables,
-						"value",
-						AnnotationInstance[].class,
-						classLoaderService
-				);
+				final AnnotationInstance[] secondaryTableArray = getLocalBindingContext().getJandexAccess()
+						.getTypedValueExtractor( AnnotationInstance[].class )
+						.extract( secondaryTables, "value" );
 				for ( AnnotationInstance secondaryTable : secondaryTableArray ) {
-					String tableName = JandexHelper.getValue( secondaryTable, "name", String.class, classLoaderService );
+					String tableName = getLocalBindingContext().getJandexAccess()
+							.getTypedValueExtractor( String.class )
+							.extract( secondaryTable, "name" );
 					addUniqueConstraints( constraintSources, secondaryTable, tableName );
 					addIndexConstraints( constraintSources, secondaryTable, tableName );
 				}
@@ -393,7 +393,9 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 
 			if ( collectionTables != null ) {
 				for ( AnnotationInstance collectionTable : collectionTables ) {
-					String tableName = JandexHelper.getValue( collectionTable, "name", String.class, classLoaderService );
+					String tableName = getLocalBindingContext().getJandexAccess()
+							.getTypedValueExtractor( String.class )
+							.extract( collectionTable, "name" );
 					addUniqueConstraints( constraintSources, collectionTable, tableName );
 					addIndexConstraints( constraintSources, collectionTable, tableName );
 				}
@@ -407,7 +409,9 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 			);
 			if ( joinTables != null ) {
 				for (AnnotationInstance joinTable : joinTables) {
-					String tableName = JandexHelper.getValue( joinTable, "name", String.class, classLoaderService );
+					String tableName = getLocalBindingContext().getJandexAccess()
+							.getTypedValueExtractor( String.class )
+							.extract( joinTable, "name" );
 					addUniqueConstraints( constraintSources, joinTable, tableName );
 					addIndexConstraints( constraintSources, joinTable, tableName );
 				}
@@ -421,7 +425,9 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 			);
 			if ( tableGenerators != null ) {
 				for (AnnotationInstance tableGenerator : tableGenerators) {
-					String tableName = JandexHelper.getValue( tableGenerator, "table", String.class, classLoaderService );
+					String tableName = getLocalBindingContext().getJandexAccess()
+							.getTypedValueExtractor( String.class )
+							.extract( tableGenerator, "table" );
 					addUniqueConstraints( constraintSources, tableGenerator, tableName );
 					addIndexConstraints( constraintSources, tableGenerator, tableName );
 				}
@@ -453,12 +459,9 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 					JPADotNames.SECONDARY_TABLES
 			);
 			if ( secondaryTables != null ) {
-				AnnotationInstance[] tableAnnotations = JandexHelper.getValue(
-						secondaryTables,
-						"value",
-						AnnotationInstance[].class,
-						classLoaderService
-				);
+				AnnotationInstance[] tableAnnotations = getLocalBindingContext().getJandexAccess()
+						.getTypedValueExtractor( AnnotationInstance[].class )
+						.extract( secondaryTables, "value" );
 				for ( AnnotationInstance secondaryTable : tableAnnotations ) {
 					secondaryTableSources.add( createSecondaryTableSource( secondaryTable, true ) );
 				}
@@ -556,12 +559,10 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 	private List<? extends Column> collectSecondaryTableKeys(
 			final AnnotationInstance tableAnnotation,
 			final boolean isPrimaryKeyJoinColumn) {
-		final AnnotationInstance[] joinColumnAnnotations = JandexHelper.getValue(
-				tableAnnotation,
-				isPrimaryKeyJoinColumn ? "pkJoinColumns" : "joinColumns",
-				AnnotationInstance[].class,
-				classLoaderService
-		);
+		final AnnotationInstance[] joinColumnAnnotations = getLocalBindingContext()
+				.getJandexAccess()
+				.getTypedValueExtractor( AnnotationInstance[].class )
+				.extract( tableAnnotation, isPrimaryKeyJoinColumn ? "pkJoinColumns" : "joinColumns" );
 
 		if ( joinColumnAnnotations == null ) {
 			return Collections.emptyList();

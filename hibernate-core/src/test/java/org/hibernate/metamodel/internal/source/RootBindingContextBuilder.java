@@ -24,11 +24,14 @@
 package org.hibernate.metamodel.internal.source;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.metamodel.internal.ClassLoaderAccessImpl;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
 import org.hibernate.metamodel.internal.MetadataBuildingProcess;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccessImpl;
 import org.hibernate.metamodel.spi.BindingContext;
+import org.hibernate.metamodel.spi.ClassLoaderAccess;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
@@ -50,10 +53,14 @@ public class RootBindingContextBuilder {
 		final MetadataBuildingProcess.MappingDefaultsImpl  mappingDefaults = new MetadataBuildingProcess.MappingDefaultsImpl(
 				options
 		);
-		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
+		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl( null, serviceRegistry );
+		final JandexAccessImpl jandexAccess = new JandexAccessImpl(
 				index,
-				null,
-				serviceRegistry
+				classLoaderAccess
+		);
+		final JavaTypeDescriptorRepository javaTypeDescriptorRepository = new JavaTypeDescriptorRepositoryImpl(
+				jandexAccess,
+				classLoaderAccess
 		);
 		final MetadataBuildingProcess.InFlightMetadataCollectorImpl metadataCollector = new MetadataBuildingProcess.InFlightMetadataCollectorImpl(
 				options,
@@ -63,6 +70,8 @@ public class RootBindingContextBuilder {
 				options,
 				mappingDefaults,
 				javaTypeDescriptorRepository,
+				jandexAccess,
+				classLoaderAccess,
 				metadataCollector
 		);
 	}

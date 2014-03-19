@@ -23,8 +23,10 @@
  */
 package org.hibernate.metamodel.spi;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
+import org.hibernate.metamodel.source.internal.annotations.JandexAccess;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
@@ -49,6 +51,8 @@ public interface BindingContext {
 	 * @return The options
 	 */
 	public MetadataBuildingOptions getBuildingOptions();
+
+	public JandexAccess getJandexAccess();
 
 	/**
 	 * Access to the "reflite" type repository
@@ -78,6 +82,13 @@ public interface BindingContext {
 	 */
 	public ServiceRegistry getServiceRegistry();
 
+	/**
+	 * Provides access to ClassLoader services when needed during binding
+	 *
+	 * @return The ClassLoaderAccess
+	 */
+	public ClassLoaderAccess getClassLoaderAccess();
+
 	public MetaAttributeContext getGlobalMetaAttributeContext();
 
 	/**
@@ -96,12 +107,6 @@ public interface BindingContext {
 	// todo : go away
 
 	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
-	 */
-	@Deprecated
-	public <T> Class<T> locateClassByName(String name);
-
-	/**
 	 * todo : maybe a `Type makeDomainType(JavaTypeDescriptor)` method instead?
 	 *
 	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
@@ -111,24 +116,4 @@ public interface BindingContext {
 
 	public Type makeDomainType(DotName typeName);
 
-	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
-	 */
-	@Deprecated
-	public JavaClassReference makeJavaClassReference(String className);
-
-	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
-	 */
-	@Deprecated
-	public JavaClassReference makeJavaClassReference(Class<?> clazz);
-
-	/**
-	 * @deprecated use the JavaTypeDescriptorRepository instead, available from {@link #getJavaTypeDescriptorRepository}
-	 */
-	@Deprecated
-	public JavaClassReference makeJavaPropertyClassReference(
-			JavaClassReference propertyContainerClassReference,
-			String propertyName
-	);
 }

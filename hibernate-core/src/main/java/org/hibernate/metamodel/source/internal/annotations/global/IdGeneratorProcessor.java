@@ -77,19 +77,20 @@ public class IdGeneratorProcessor {
 	 */
 	public static Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources(AnnotationBindingContext bindingContext) {
 		List<IdentifierGeneratorSource> identifierGeneratorSources = new ArrayList<IdentifierGeneratorSource>();
-		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
+		Collection<AnnotationInstance> annotations = bindingContext.getJandexAccess()
+				.getIndex()
 				.getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
 			bindSequenceGenerator( generator, identifierGeneratorSources, bindingContext );
 		}
 
-		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
+		annotations = bindingContext.getJandexAccess().getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
 			bindTableGenerator( generator, identifierGeneratorSources, bindingContext );
 		}
 
 		annotations = JandexHelper.getAnnotations(
-				bindingContext.getIndex(),
+				bindingContext.getJandexAccess().getIndex(),
 				HibernateDotNames.GENERIC_GENERATOR,
 				HibernateDotNames.GENERIC_GENERATORS,
 				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )

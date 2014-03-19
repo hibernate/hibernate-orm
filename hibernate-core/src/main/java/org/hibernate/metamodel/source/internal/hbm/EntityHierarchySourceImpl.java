@@ -621,8 +621,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		}
 
 		// todo : do we really want to be loading this?
-		return rootEntitySource.bindingContext().locateClassByName(
-				rootEntitySource.bindingContext().qualifyClassName( compositeId.getClazz() )
+		return rootEntitySource.bindingContext().getClassLoaderAccess().classForName(				rootEntitySource.bindingContext().qualifyClassName( compositeId.getClazz() )
 		);
 	}
 

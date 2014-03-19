@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.internal.annotations;
-
-import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
-import org.hibernate.metamodel.spi.BindingContext;
-import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+package org.hibernate.metamodel.spi;
 
 /**
- * Default implementation of  {@code AnnotationBindingContext}
+ * During the process of building this metamodel, accessing the ClassLoader
+ * is very discouraged.  However, sometimes it is needed.  This contract helps
+ * mitigate accessing the ClassLoader in these cases.
  *
- * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class AnnotationBindingContextImpl
-		extends BaseDelegatingBindingContext
-		implements AnnotationBindingContext {
-
-	public AnnotationBindingContextImpl(BindingContext rootBindingContext) {
-		super( rootBindingContext );
-	}
-
-	@Override
-	public IdentifierGeneratorDefinition findIdGenerator(String name) {
-		return getMetadataCollector().getIdGenerator( name );
-	}
+public interface ClassLoaderAccess {
+	/**
+	 * Obtain a Class reference by name
+	 *
+	 * @param name The name of the Class to get a reference to.
+	 *
+	 * @return The Class.
+	 */
+	public <T> Class<T> classForName(String name);
 }

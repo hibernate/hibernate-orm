@@ -106,6 +106,7 @@ public class MetadataSources {
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
+
 	private List<Class<? extends AttributeConverter>> converterClasses;
 
 	private boolean hasOrmXmlJaxbRoots;
@@ -298,6 +299,13 @@ public class MetadataSources {
 		return this;
 	}
 
+	/**
+	 * Adds an AttributeConverter by class.
+	 *
+	 * @param converterClass The AttributeConverter class.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
 	public MetadataSources addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
 		if ( converterClasses == null ) {
 			converterClasses = new ArrayList<Class<? extends AttributeConverter>>();

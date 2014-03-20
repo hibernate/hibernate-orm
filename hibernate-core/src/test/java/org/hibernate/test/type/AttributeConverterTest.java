@@ -39,6 +39,7 @@ import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -65,6 +66,38 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class AttributeConverterTest extends BaseUnitTestCase {
+	@Test
+	public void testErrorInstantiatingConverterClass() {
+		Configuration cfg = new Configuration();
+		try {
+			cfg.addAttributeConverter( BlowsUpConverter.class );
+			fail( "expecting an exception" );
+		}
+		catch (AnnotationException e) {
+			assertNotNull( e.getCause() );
+			assertTyping( BlewUpException.class, e.getCause() );
+		}
+	}
+
+	public static class BlewUpException extends RuntimeException {
+	}
+
+	public static class BlowsUpConverter implements AttributeConverter<String,String> {
+		public BlowsUpConverter() {
+			throw new BlewUpException();
+		}
+
+		@Override
+		public String convertToDatabaseColumn(String attribute) {
+			return null;
+		}
+
+		@Override
+		public String convertToEntityAttribute(String dbData) {
+			return null;
+		}
+	}
+
 	@Test
 	public void testBasicOperation() {
 		Configuration cfg = new Configuration();

@@ -24,8 +24,10 @@
 package org.hibernate.service.internal;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -65,6 +67,8 @@ public abstract class AbstractServiceRegistryImpl
 	// assume 20 services for initial sizing
 	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
+	private Set<ServiceRegistryImplementor> childRegistries;
+
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
 		this( (ServiceRegistryImplementor) null );
@@ -72,6 +76,7 @@ public abstract class AbstractServiceRegistryImpl
 
 	protected AbstractServiceRegistryImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
+		this.parent.registerChild( this );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -79,6 +84,7 @@ public abstract class AbstractServiceRegistryImpl
 			throw new IllegalArgumentException( "Boot-strap registry was not " );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
+		this.parent.registerChild( this );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -261,18 +267,36 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
+	private boolean active = true;
+
+	public boolean isActive() {
+		return active;
+	}
+
 	@Override
     @SuppressWarnings( {"unchecked"})
 	public void destroy() {
-		synchronized ( serviceBindingList ) {
-			ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator( serviceBindingList.size() );
-			while ( serviceBindingsIterator.hasPrevious() ) {
-				final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
-				serviceBinding.getLifecycleOwner().stopService( serviceBinding );
-			}
-			serviceBindingList.clear();
+		if ( !active ) {
+			return;
 		}
-		serviceBindingMap.clear();
+
+		active = false;
+		try {
+			synchronized (serviceBindingList) {
+				ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator(
+						serviceBindingList.size()
+				);
+				while ( serviceBindingsIterator.hasPrevious() ) {
+					final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
+					serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+				}
+				serviceBindingList.clear();
+			}
+			serviceBindingMap.clear();
+		}
+		finally {
+			parent.deRegisterChild( this );
+		}
 	}
 
 	@Override
@@ -285,6 +309,34 @@ public abstract class AbstractServiceRegistryImpl
 			catch ( Exception e ) {
 				LOG.unableToStopService( service.getClass(), e.toString() );
 			}
+		}
+	}
+
+	@Override
+	public void registerChild(ServiceRegistryImplementor child) {
+		if ( childRegistries == null ) {
+			childRegistries = new HashSet<ServiceRegistryImplementor>();
+		}
+		if ( !childRegistries.add( child ) ) {
+			LOG.warnf(
+					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
+					child
+			);
+		}
+	}
+
+	@Override
+	public void deRegisterChild(ServiceRegistryImplementor child) {
+		if ( childRegistries == null ) {
+			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
+		}
+		childRegistries.remove( child );
+		if ( childRegistries.isEmpty() ) {
+			LOG.debug(
+					"Implicitly destroying ServiceRegistry on de-registration " +
+							"of all child ServiceRegistries"
+			);
+			destroy();
 		}
 	}
 }

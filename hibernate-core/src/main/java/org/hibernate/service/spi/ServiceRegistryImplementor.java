@@ -46,4 +46,16 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 * Release resources
 	 */
 	public void destroy();
+
+	/**
+	 * When a registry is created with a parent, the parent is notified of the child
+	 * via this callback.
+	 */
+	public void registerChild(ServiceRegistryImplementor child);
+
+	/**
+	 * When a registry is created with a parent, the parent is notified of the child
+	 * via this callback.
+	 */
+	public void deRegisterChild(ServiceRegistryImplementor child);
 }

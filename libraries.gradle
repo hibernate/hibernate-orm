@@ -113,6 +113,8 @@ ext {
 
             c3p0:            "com.mchange:c3p0:0.9.2.1",
             ehcache:         "net.sf.ehcache:ehcache:2.10.1",
+            ehcache3:        "org.ehcache:ehcache:3.0.0",
+            jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP-java6:2.3.9"
 

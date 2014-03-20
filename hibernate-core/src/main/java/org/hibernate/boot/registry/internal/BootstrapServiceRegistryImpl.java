@@ -23,7 +23,9 @@
  */
 package org.hibernate.boot.registry.internal;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
@@ -33,6 +35,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -61,16 +64,17 @@ import org.jboss.logging.Logger;
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			BootstrapServiceRegistryImpl.class.getName()
-	);
-	
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
+
+	private boolean active = true;
+
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
 	private final ServiceBinding<StrategySelector> strategySelectorBinding;
 	private final ServiceBinding<IntegratorService> integratorServiceBinding;
+
+	private Set<ServiceRegistryImplementor> childRegistries;
 
 	/**
 	 * Constructs a BootstrapServiceRegistryImpl.
@@ -180,6 +184,10 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public void destroy() {
+		if ( !active ) {
+			return;
+		}
+		active = false;
 		destroy( classLoaderServiceBinding );
 		destroy( strategySelectorBinding );
 		destroy( integratorServiceBinding );
@@ -187,6 +195,10 @@ public class BootstrapServiceRegistryImpl
 	
 	private void destroy(ServiceBinding serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+	}
+
+	public boolean isActive() {
+		return active;
 	}
 
 	@Override
@@ -227,4 +239,31 @@ public class BootstrapServiceRegistryImpl
 		}
 	}
 
+	@Override
+	public void registerChild(ServiceRegistryImplementor child) {
+		if ( childRegistries == null ) {
+			childRegistries = new HashSet<ServiceRegistryImplementor>();
+		}
+		if ( !childRegistries.add( child ) ) {
+			LOG.warnf(
+					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
+					child
+			);
+		}
+	}
+
+	@Override
+	public void deRegisterChild(ServiceRegistryImplementor child) {
+		if ( childRegistries == null ) {
+			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
+		}
+		childRegistries.remove( child );
+		if ( childRegistries.isEmpty() ) {
+			LOG.debug(
+					"Implicitly destroying Boot-strap registry on de-registration " +
+							"of all child ServiceRegistries"
+			);
+			destroy();
+		}
+	}
 }

@@ -70,6 +70,7 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.After;
 import org.junit.Before;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -404,10 +405,16 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
-        if(serviceRegistry == null){
-            return;
-        }
-        serviceRegistry.destroy();
+        if ( serviceRegistry != null ) {
+			if ( serviceRegistry.isActive() ) {
+				try {
+					serviceRegistry.destroy();
+				}
+				catch (Exception ignore) {
+				}
+				fail( "StandardServiceRegistry was not closed down as expected" );
+			}
+		}
         serviceRegistry=null;
 	}
 

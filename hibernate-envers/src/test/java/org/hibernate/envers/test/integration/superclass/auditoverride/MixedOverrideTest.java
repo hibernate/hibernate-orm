@@ -4,21 +4,22 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4439")
+@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet.")
 public class MixedOverrideTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer mixedEntityId = null;
-	private Table mixedTable = null;
+	private TableSpecification mixedTable = null;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -37,20 +38,20 @@ public class MixedOverrideTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 		mixedEntityId = mixedEntity.getId();
 
-		mixedTable = getCfg().getClassMapping(
+		mixedTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.MixedOverrideEntity_AUD"
-		).getTable();
+		).getPrimaryTable();
 	}
 
 	@Test
 	public void testAuditedProperty() {
-		Assert.assertNotNull( mixedTable.getColumn( new Column( "number1" ) ) );
-		Assert.assertNotNull( mixedTable.getColumn( new Column( "str2" ) ) );
+		Assert.assertNotNull( mixedTable.locateColumn( "number1" ) );
+		Assert.assertNotNull( mixedTable.locateColumn( "str2" ) );
 	}
 
 	@Test
 	public void testNotAuditedProperty() {
-		Assert.assertNull( mixedTable.getColumn( new Column( "str1" ) ) );
+		Assert.assertNull( mixedTable.locateColumn( "str1" ) );
 	}
 
 	@Test

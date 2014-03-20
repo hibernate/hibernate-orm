@@ -47,7 +47,7 @@ public class BasicDetachedSetWithEmbId extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {EmbIdTestEntity.class, SetRefCollEntityEmbId.class};
+		return new Class[] {EmbIdTestEntity.class, SetRefCollEntityEmbId.class, EmbId.class};
 	}
 
 	@Test

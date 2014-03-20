@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.mapkey.IdMapKeyEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -40,6 +41,7 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
+@FailureExpectedWithNewMetamodel( message = "Plural attribute index that is an attribute of the referenced entity is not supported yet." )
 public class HasChangedIdMapKey extends AbstractModifiedFlagsEntityTest {
 	private Integer imke_id;
 

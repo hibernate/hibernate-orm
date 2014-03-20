@@ -23,12 +23,13 @@
  */
 package org.hibernate.envers.test.integration.accesstype;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.AccessType;
 import org.hibernate.envers.Audited;
 
 /**
@@ -40,7 +41,7 @@ public class MixedAccessTypeEntity {
 	@GeneratedValue
 	private Integer id;
 
-	@AccessType("property")
+	@Access(value = AccessType.PROPERTY)
 	private String data;
 
 	@Transient

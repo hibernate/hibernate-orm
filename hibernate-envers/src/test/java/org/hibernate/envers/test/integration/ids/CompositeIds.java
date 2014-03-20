@@ -51,7 +51,13 @@ public class CompositeIds extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {EmbIdTestEntity.class, MulIdTestEntity.class, EmbIdWithCustomTypeTestEntity.class};
+		return new Class[] {
+				EmbIdTestEntity.class,
+				MulIdTestEntity.class,
+				EmbIdWithCustomTypeTestEntity.class,
+				EmbId.class,
+				EmbIdWithCustomType.class
+		};
 	}
 
 	@Test

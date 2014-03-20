@@ -62,7 +62,7 @@ public class EmbeddableList2 extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {EmbeddableListEntity2.class, StrTestNoProxyEntity.class};
+		return new Class<?>[] {EmbeddableListEntity2.class, StrTestNoProxyEntity.class, ManyToOneEagerComponent.class};
 	}
 
 	@Test

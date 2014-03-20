@@ -23,12 +23,11 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
-
 import org.hibernate.MappingException;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
@@ -36,10 +35,14 @@ import org.hibernate.envers.internal.entities.mapper.id.EmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
-import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.id.EntityIdentifierNature;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -52,53 +55,57 @@ import org.dom4j.tree.DefaultElement;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class IdMetadataGenerator {
+	private final AuditConfiguration.AuditConfigurationContext context;
 	private final AuditMetadataGenerator mainGenerator;
 
-	IdMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
+	IdMetadataGenerator(AuditConfiguration.AuditConfigurationContext context, AuditMetadataGenerator auditMetadataGenerator) {
+		this.context = context;
 		mainGenerator = auditMetadataGenerator;
 	}
 
 	@SuppressWarnings({"unchecked"})
 	private boolean addIdProperties(
 			Element parent,
-			Iterator<Property> properties,
+			CompositeAttributeBinding compositeAttributeBinding,
 			SimpleMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			final Type propertyType = property.getType();
-			if ( !"_identifierMapper".equals( property.getName() ) ) {
-				boolean added = false;
-				if ( propertyType instanceof ManyToOneType ) {
-					added = mainGenerator.getBasicMetadataGenerator().addManyToOne(
-							parent,
-							getIdPersistentPropertyAuditingData( property ),
-							property.getValue(),
-							mapper
-					);
+		//if ( compositeAttributeBinding.getAttribute().isSynthetic() ) {
+		//	return true;
+		//}
+		for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+			final Type propertyType = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+			final boolean added;
+			if ( propertyType instanceof ManyToOneType ) {
+				added = mainGenerator.getBasicMetadataGenerator().addManyToOne(
+						parent,
+						getIdPersistentPropertyAuditingData( attributeBinding ),
+						(ManyToOneAttributeBinding) attributeBinding,
+						mapper
+				);
+			}
+			else {
+				final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+				// Last but one parameter: ids are always insertable
+				added = mainGenerator.getBasicMetadataGenerator().addBasic(
+						parent,
+						getIdPersistentPropertyAuditingData( singularAttributeBinding ),
+						singularAttributeBinding.getHibernateTypeDescriptor(),
+						singularAttributeBinding.getValues(),
+						singularAttributeBinding.isIncludedInInsert(),
+						mapper,
+						key
+				);
+			}
+			if ( !added ) {
+				// If the entity is audited, and a non-supported id component is used, throwing an exception.
+				// If the entity is not audited, then we simply don't support this entity, even in
+				// target relation mode not audited.
+				if ( audited ) {
+					throw new MappingException( "Type not supported: " + propertyType.getClass().getName() );
 				}
 				else {
-					// Last but one parameter: ids are always insertable
-					added = mainGenerator.getBasicMetadataGenerator().addBasic(
-							parent,
-							getIdPersistentPropertyAuditingData( property ),
-							property.getValue(),
-							mapper,
-							true,
-							key
-					);
-				}
-				if ( !added ) {
-					// If the entity is audited, and a non-supported id component is used, throwing an exception.
-					// If the entity is not audited, then we simply don't support this entity, even in
-					// target relation mode not audited.
-					if ( audited ) {
-						throw new MappingException( "Type not supported: " + propertyType.getClass().getName() );
-					}
-					else {
-						return false;
-					}
+					return false;
 				}
 			}
 		}
@@ -107,31 +114,30 @@ public final class IdMetadataGenerator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	IdMappingData addId(PersistentClass pc, boolean audited) {
+	IdMappingData addId(EntityBinding entityBinding, boolean audited) {
 		// Xml mapping which will be used for relations
 		final Element relIdMapping = new DefaultElement( "properties" );
 		// Xml mapping which will be used for the primary key of the versions table
 		final Element origIdMapping = new DefaultElement( "composite-id" );
 
-		final Property idProp = pc.getIdentifierProperty();
-		final Component idMapper = pc.getIdentifierMapper();
+		//final Property idProp = pc.getIdentifierProperty();
+		//final Component idMapper = pc.getIdentifierMapper();
 
 		// Checking if the id mapping is supported
-		if ( idMapper == null && idProp == null ) {
-			return null;
-		}
+		//if ( idMapper == null && idProp == null ) {
+		//	return null;
+		//}
 
+		final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 		SimpleIdMapperBuilder mapper;
-		if ( idMapper != null ) {
+		if ( entityIdentifier.getLookupClassBinding().definedIdClass() ) {
 			// Multiple id
-			final Class componentClass = ReflectionTools.loadClass(
-					( (Component) pc.getIdentifier() ).getComponentClassName(),
-					mainGenerator.getClassLoaderService()
-			);
+			final Class componentClass = entityIdentifier.getLookupClassBinding().getIdClassType();
+
 			mapper = new MultipleIdMapper( componentClass );
 			if ( !addIdProperties(
 					relIdMapping,
-					(Iterator<Property>) idMapper.getPropertyIterator(),
+					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
 					mapper,
 					false,
 					audited
@@ -142,7 +148,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(Iterator<Property>) idMapper.getPropertyIterator(),
+					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
 					null,
 					true,
 					audited
@@ -150,17 +156,16 @@ public final class IdMetadataGenerator {
 				return null;
 			}
 		}
-		else if ( idProp.isComposite() ) {
-			// Embedded id
-			final Component idComponent = (Component) idProp.getValue();
-			final Class embeddableClass = ReflectionTools.loadClass(
-					idComponent.getComponentClassName(),
-					mainGenerator.getClassLoaderService()
+		else if ( entityIdentifier.getNature() == EntityIdentifierNature.AGGREGATED_COMPOSITE ) {
+			// Embeddable id
+			// TODO: get rid of classloading.
+			final Class embeddableClass = context.getClassLoaderService().classForName(
+					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
 			);
-			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), embeddableClass );
+			mapper = new EmbeddedIdMapper( getIdPropertyData( entityIdentifier.getAttributeBinding() ), embeddableClass );
 			if ( !addIdProperties(
 					relIdMapping,
-					(Iterator<Property>) idComponent.getPropertyIterator(),
+					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
 					mapper,
 					false,
 					audited
@@ -171,7 +176,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(Iterator<Property>) idComponent.getPropertyIterator(),
+					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
 					null,
 					true,
 					audited
@@ -186,25 +191,27 @@ public final class IdMetadataGenerator {
 			// Last but one parameter: ids are always insertable
 			mainGenerator.getBasicMetadataGenerator().addBasic(
 					relIdMapping,
-					getIdPersistentPropertyAuditingData( idProp ),
-					idProp.getValue(),
+					getIdPersistentPropertyAuditingData( entityIdentifier.getAttributeBinding() ),
+					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor(),
+					entityIdentifier.getAttributeBinding().getValues(),
+					entityIdentifier.getAttributeBinding().isIncludedInInsert(),
 					mapper,
-					true,
 					false
 			);
 
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			mainGenerator.getBasicMetadataGenerator().addBasic(
 					origIdMapping,
-					getIdPersistentPropertyAuditingData( idProp ),
-					idProp.getValue(),
+					getIdPersistentPropertyAuditingData( entityIdentifier.getAttributeBinding() ),
+					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor(),
+					entityIdentifier.getAttributeBinding().getValues(),
+					entityIdentifier.getAttributeBinding().isIncludedInInsert(),
 					null,
-					true,
 					true
 			);
 		}
 
-		origIdMapping.addAttribute( "name", mainGenerator.getVerEntCfg().getOriginalIdPropName() );
+		origIdMapping.addAttribute( "name", context.getAuditEntitiesConfiguration().getOriginalIdPropName() );
 
 		// Adding a relation to the revision entity (effectively: the "revision number" property)
 		mainGenerator.addRevisionInfoRelation( origIdMapping );
@@ -212,16 +219,18 @@ public final class IdMetadataGenerator {
 		return new IdMappingData( mapper, origIdMapping, relIdMapping );
 	}
 
-	private PropertyData getIdPropertyData(Property property) {
+	private PropertyData getIdPropertyData(SingularNonAssociationAttributeBinding idAttributeBinding) {
 		return new PropertyData(
-				property.getName(), property.getName(), property.getPropertyAccessorName(),
+				idAttributeBinding.getAttribute().getName(),
+				idAttributeBinding.getAttribute().getName(),
+				idAttributeBinding.getPropertyAccessorName(),
 				ModificationStore.FULL
 		);
 	}
 
-	private PropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
+	private PropertyAuditingData getIdPersistentPropertyAuditingData(AttributeBinding property) {
 		return new PropertyAuditingData(
-				property.getName(), property.getPropertyAccessorName(),
+				property.getAttribute().getName(), property.getPropertyAccessorName(),
 				ModificationStore.FULL, RelationTargetAuditMode.AUDITED, null, null, false
 		);
 	}

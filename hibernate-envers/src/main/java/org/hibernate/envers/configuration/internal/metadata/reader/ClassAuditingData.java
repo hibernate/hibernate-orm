@@ -25,6 +25,8 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.util.Map;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.envers.AuditTable;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;

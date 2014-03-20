@@ -36,6 +36,8 @@ import java.util.Set;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -84,16 +86,14 @@ public class TestTools {
 		return result;
 	}
 
-	public static Set<String> extractModProperties(PersistentClass persistentClass) {
-		return extractModProperties( persistentClass, "_MOD" );
+	public static Set<String> extractModProperties(EntityBinding entityBinding) {
+		return extractModProperties( entityBinding, "_MOD" );
 	}
 
-	public static Set<String> extractModProperties(PersistentClass persistentClass, String suffix) {
+	public static Set<String> extractModProperties(EntityBinding entityBinding, String suffix) {
 		final Set<String> result = new HashSet<String>();
-		final Iterator iterator = persistentClass.getPropertyIterator();
-		while ( iterator.hasNext() ) {
-			final Property property = (Property) iterator.next();
-			final String propertyName = property.getName();
+		for ( AttributeBinding property : entityBinding.attributeBindings() ) {
+			final String propertyName = property.getAttribute().getName();
 			if ( propertyName.endsWith( suffix ) ) {
 				result.add( propertyName );
 			}

@@ -9,12 +9,14 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  */
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest {
 
 	private long id_car1;

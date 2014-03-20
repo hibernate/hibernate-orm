@@ -52,6 +52,7 @@ import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
 import org.junit.After;
 
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -85,8 +86,8 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		return serviceRegistry;
 	}
 
-	protected Configuration getCfg() {
-		return entityManagerFactoryBuilder.getHibernateConfiguration();
+	protected MetadataImplementor getMetadata() {
+		return entityManagerFactoryBuilder.getMetadata();
 	}
 
 	@BeforeClassOnce

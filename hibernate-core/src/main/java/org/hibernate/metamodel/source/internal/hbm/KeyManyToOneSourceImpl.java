@@ -202,4 +202,8 @@ class KeyManyToOneSourceImpl
 	public boolean isCascadeDeleteEnabled() {
 		return "cascade".equals( keyManyToOneElement.getOnDelete().value() );
 	}
+
+	protected String getClassName() {
+		return keyManyToOneElement.getClazz();
+	}
 }

@@ -8,12 +8,14 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  */
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 
 	private long id_pers1;
@@ -36,6 +38,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 
 	@Test
 	@Priority(10)
+	//@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 	public void initData() {
 
 		initializeSession();
@@ -79,6 +82,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 	public void testRetrieveRevisionsWithEntityName() {
 		List<Number> pers1Revs = getAuditReader().getRevisions( Person.class, "Personaje", id_pers1 );
 		List<Number> pers2Revs = getAuditReader().getRevisions( Person.class, "Personaje", id_pers2 );
@@ -90,6 +94,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 	public void testRetrieveAuditedEntityWithEntityName() {
 		person1_1 = getAuditReader().find( Person.class, "Personaje", id_pers1, 1 );
 		person1_2 = getAuditReader().find( Person.class, "Personaje", id_pers1, 2 );
@@ -102,6 +107,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 	public void testObtainEntityNameAuditedEntityWithEntityName() {
 		person1_1 = getAuditReader().find( Person.class, "Personaje", id_pers1, 1 );
 		person1_2 = getAuditReader().find( Person.class, "Personaje", id_pers1, 2 );
@@ -121,6 +127,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 	public void testRetrieveAuditedEntityWithEntityNameWithNewSession() {
 
 		// force a new session and AR

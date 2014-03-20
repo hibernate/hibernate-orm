@@ -23,11 +23,14 @@
  */
 package org.hibernate.envers.internal.tools;
 
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.ManyToOne;
-import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -51,30 +54,43 @@ public abstract class MappingTools {
 		return referencePropertyName + "_";
 	}
 
-	public static String getReferencedEntityName(Value value) {
-		if ( value instanceof ToOne ) {
-			return ((ToOne) value).getReferencedEntityName();
+	public static String getReferencedEntityName(AttributeBinding attributeBinding) {
+		if ( attributeBinding.getAttribute().isSingular() ) {
+			final SingularAttributeBinding singularAttributeBinding = (SingularAssociationAttributeBinding) attributeBinding;
+			if ( singularAttributeBinding.isAssociation() ) {
+				return SingularAssociationAttributeBinding.class.cast( singularAttributeBinding ).getReferencedEntityName();
+			}
 		}
-		else if ( value instanceof OneToMany ) {
-			return ((OneToMany) value).getReferencedEntityName();
+		else {
+			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
+			if ( pluralAttributeBinding.getPluralAttributeElementBinding().getNature().isAssociation() ) {
+				final PluralAttributeAssociationElementBinding associationPluralAttributeElementBinding =
+						(PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding();
+				final EntityType entityType =
+						(EntityType) associationPluralAttributeElementBinding
+								.getHibernateTypeDescriptor()
+								.getResolvedTypeMapping();
+				return entityType.getAssociatedEntityName();
+			}
 		}
-		else if ( value instanceof Collection ) {
-			return getReferencedEntityName( ((Collection) value).getElement() );
-		}
-
 		return null;
 	}
 
 	/**
-	 * @param value Persistent property.
+	 * @param attributeBinding Persistent property.
 	 * @return {@code false} if lack of associated entity shall raise an exception, {@code true} otherwise.
 	 */
-	public static boolean ignoreNotFound(Value value) {
-		if ( value instanceof ManyToOne ) {
-			return ( (ManyToOne) value ).isIgnoreNotFound();
+	public static boolean ignoreNotFound(AttributeBinding attributeBinding) {
+		if ( ManyToOneAttributeBinding.class.isInstance( attributeBinding )) {
+			return ! ( (ManyToOneAttributeBinding) attributeBinding ).isNotFoundAnException();
 		}
-		else if ( value instanceof OneToMany ) {
-			return ( (OneToMany) value ).isIgnoreNotFound();
+		else if ( attributeBinding instanceof PluralAttributeBinding ) {
+			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
+			final PluralAttributeElementBinding elementBinding = pluralAttributeBinding.getPluralAttributeElementBinding();
+			if ( elementBinding.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+				// TODO: FIX THIS!!!
+				//return !( (OneToManyPluralAttributeElementBinding) elementBinding ).isNotFoundAnException();
+			}
 		}
 		return false;
 	}

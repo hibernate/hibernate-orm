@@ -55,7 +55,7 @@ public class EmbeddableSet extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {EmbeddableSetEntity.class};
+		return new Class<?>[] {EmbeddableSetEntity.class, Component3.class, Component4.class};
 	}
 
 	@Test

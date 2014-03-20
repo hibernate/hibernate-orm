@@ -25,6 +25,7 @@ package org.hibernate.metamodel;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.persistence.NamedStoredProcedureQuery;
 
@@ -61,6 +62,12 @@ public interface Metadata {
 	 */
 	SessionFactory buildSessionFactory();
 
+	/**
+	 * Gets the {@link UUID} for this metamodel.
+	 *
+	 * @return the UUID.
+	 */
+	UUID getUUID();
 
 	EntityBinding getEntityBinding(String entityName);
 

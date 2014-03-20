@@ -35,6 +35,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
 import org.hibernate.envers.test.entities.manytomany.SortedSetEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
+@FailureExpectedWithNewMetamodel( message = "@MapKeyJoinColumn is not supported yet" )
 public class CustomComparatorEntityTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Integer id1;

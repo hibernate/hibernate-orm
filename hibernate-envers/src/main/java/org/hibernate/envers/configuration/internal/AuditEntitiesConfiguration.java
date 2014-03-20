@@ -25,11 +25,12 @@ package org.hibernate.envers.configuration.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Configuration of versions entities - names of fields, entities and tables created to store versioning information.
@@ -62,36 +63,48 @@ public class AuditEntitiesConfiguration {
 
 	private final String embeddableSetOrdinalPropertyName;
 
-	public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
+	public AuditEntitiesConfiguration(ServiceRegistry serviceRegistry,  String revisionInfoEntityName) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 
-		auditTablePrefix = ConfigurationHelper.getString( EnversSettings.AUDIT_TABLE_PREFIX, properties, "" );
-		auditTableSuffix = ConfigurationHelper.getString( EnversSettings.AUDIT_TABLE_SUFFIX, properties, "_AUD" );
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
-		auditStrategyName = ConfigurationHelper.getString(
-				EnversSettings.AUDIT_STRATEGY, properties, DefaultAuditStrategy.class.getName()
+		auditTablePrefix = configurationService.getSetting(
+				EnversSettings.AUDIT_TABLE_PREFIX, StandardConverters.STRING, ""
+		);
+		auditTableSuffix = configurationService.getSetting(
+				EnversSettings.AUDIT_TABLE_SUFFIX, StandardConverters.STRING, "_AUD"
+		);
+
+		auditStrategyName = configurationService.getSetting(
+				EnversSettings.AUDIT_STRATEGY, StandardConverters.STRING, DefaultAuditStrategy.class.getName()
 		);
 
 		originalIdPropName = "originalId";
 
-		revisionFieldName = ConfigurationHelper.getString( EnversSettings.REVISION_FIELD_NAME, properties, "REV" );
+		revisionFieldName = configurationService.getSetting(
+				EnversSettings.REVISION_FIELD_NAME, StandardConverters.STRING, "REV"
+		);
 
-		revisionTypePropName = ConfigurationHelper.getString(
-				EnversSettings.REVISION_TYPE_FIELD_NAME, properties, "REVTYPE"
+		revisionTypePropName = configurationService.getSetting(
+				EnversSettings.REVISION_TYPE_FIELD_NAME, StandardConverters.STRING, "REVTYPE"
 		);
 		revisionTypePropType = "byte";
 
-		revisionEndFieldName = ConfigurationHelper.getString(
-				EnversSettings.AUDIT_STRATEGY_VALIDITY_END_REV_FIELD_NAME, properties, "REVEND"
+		revisionEndFieldName = configurationService.getSetting(
+				EnversSettings.AUDIT_STRATEGY_VALIDITY_END_REV_FIELD_NAME, StandardConverters.STRING, "REVEND"
 		);
 
-		revisionEndTimestampEnabled = ConfigurationHelper.getBoolean(
-				EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, properties, false
+		revisionEndTimestampEnabled = configurationService.getSetting(
+				EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP,
+				StandardConverters.BOOLEAN,
+				false
 		);
 
 		if ( revisionEndTimestampEnabled ) {
-			revisionEndTimestampFieldName = ConfigurationHelper.getString(
-					EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME, properties, "REVEND_TSTMP"
+			revisionEndTimestampFieldName = configurationService.getSetting(
+					EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME,
+					StandardConverters.STRING,
+					"REVEND_TSTMP"
 			);
 		}
 		else {
@@ -103,8 +116,8 @@ public class AuditEntitiesConfiguration {
 		revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
 		revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
 
-		embeddableSetOrdinalPropertyName = ConfigurationHelper.getString(
-				EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME, properties, "SETORDINAL"
+		embeddableSetOrdinalPropertyName = configurationService.getSetting(
+				EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME, StandardConverters.STRING, "SETORDINAL"
 		);
 	}
 

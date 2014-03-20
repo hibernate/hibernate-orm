@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,9 +44,12 @@ public class NoneAudited extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevisionInfoTableNotCreated() {
-		@SuppressWarnings({"unchecked"}) List<PersistentClass> pcs = iteratorToList( getCfg().getClassMappings() );
+		@SuppressWarnings({"unchecked"}) List<EntityBinding> pcs = iteratorToList(
+				getMetadata().getEntityBindings()
+						.iterator()
+		);
 		Assert.assertEquals( 1, pcs.size() );
-		Assert.assertTrue( pcs.get( 0 ).getClassName().contains( "BasicTestEntity3" ) );
+		Assert.assertTrue( pcs.get( 0 ).getEntityName().contains( "BasicTestEntity3" ) );
 	}
 
 	private <T> List<T> iteratorToList(Iterator<T> it) {

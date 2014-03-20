@@ -24,12 +24,14 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
+import java.util.List;
 import javax.persistence.JoinColumn;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Selectable;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.Value;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -46,9 +48,11 @@ public final class MetadataTools {
 
 	public static Element addNativelyGeneratedId(
 			Element parent, String name, String type,
-			boolean useRevisionEntityWithNativeId) {
+			boolean useRevisionEntityWithNativeId,
+			String idColumnName) {
 		final Element idMapping = parent.addElement( "id" );
 		idMapping.addAttribute( "name", name ).addAttribute( "type", type );
+		MetadataTools.addColumn( idMapping, idColumnName, null, null, null, null, null, null, false );
 
 		final Element generatorMapping = idMapping.addElement( "generator" );
 		if ( useRevisionEntityWithNativeId ) {
@@ -87,9 +91,11 @@ public final class MetadataTools {
 		}
 
 		propMapping.addAttribute( "name", name );
-		propMapping.addAttribute( "insert", Boolean.toString( insertable ) );
-		propMapping.addAttribute( "update", Boolean.toString( updateable ) );
 
+		if ( !key ) {
+			propMapping.addAttribute( "insert", Boolean.toString( insertable ) );
+			propMapping.addAttribute( "update", Boolean.toString( updateable ) );
+		}
 		if ( type != null ) {
 			propMapping.addAttribute( "type", type );
 		}
@@ -151,7 +157,7 @@ public final class MetadataTools {
 	public static Element addColumn(
 			Element parent,
 			String name,
-			Integer length,
+			Long length,
 			Integer scale,
 			Integer precision,
 			String sqlType,
@@ -163,7 +169,7 @@ public final class MetadataTools {
 	public static Element addColumn(
 			Element parent,
 			String name,
-			Integer length,
+			Long length,
 			Integer scale,
 			Integer precision,
 			String sqlType,
@@ -215,16 +221,18 @@ public final class MetadataTools {
 			classMapping.addAttribute( "discriminator-value", discriminatorValue );
 		}
 
-		if ( !StringTools.isEmpty( auditTableData.getAuditTableName() ) ) {
-			classMapping.addAttribute( "table", auditTableData.getAuditTableName() );
-		}
+		if ( !"subclass".equals( type ) ) {
+			if ( !StringTools.isEmpty( auditTableData.getAuditTableName() ) ) {
+				classMapping.addAttribute( "table", auditTableData.getAuditTableName() );
+			}
 
-		if ( !StringTools.isEmpty( auditTableData.getSchema() ) ) {
-			classMapping.addAttribute( "schema", auditTableData.getSchema() );
-		}
+			if ( !StringTools.isEmpty( auditTableData.getSchema() ) ) {
+				classMapping.addAttribute( "schema", auditTableData.getSchema() );
+			}
 
-		if ( !StringTools.isEmpty( auditTableData.getCatalog() ) ) {
-			classMapping.addAttribute( "catalog", auditTableData.getCatalog() );
+			if ( !StringTools.isEmpty( auditTableData.getCatalog() ) ) {
+				classMapping.addAttribute( "catalog", auditTableData.getCatalog() );
+			}
 		}
 
 		if ( isAbstract != null ) {
@@ -282,13 +290,18 @@ public final class MetadataTools {
 		return joinMapping;
 	}
 
-	public static void addColumns(Element anyMapping, Iterator selectables) {
-		while ( selectables.hasNext() ) {
-			final Selectable selectable = (Selectable) selectables.next();
-			if ( selectable.isFormula() ) {
+	public static void addColumns(Element anyMapping, List<Column> columns) {
+		for ( Column column : columns ) {
+			addColumn( anyMapping, column );
+		}
+	}
+
+	public static void addValuesAsColumns(Element anyMapping, List<Value> values) {
+		for ( Value value : values ) {
+			if ( Value.ValueType.DERIVED_VALUE.equals( value.getValueType() ) ) {
 				throw new FormulaNotSupportedException();
 			}
-			addColumn( anyMapping, (Column) selectable );
+			addColumn( anyMapping, (Column) value );
 		}
 	}
 
@@ -303,14 +316,14 @@ public final class MetadataTools {
 	public static void addColumn(Element anyMapping, Column column) {
 		addColumn(
 				anyMapping,
-				column.getName(),
-				column.getLength(),
-				column.getScale(),
-				column.getPrecision(),
+				column.getColumnName().getText(),
+				column.getSize().getLength(),
+				column.getSize().getScale(),
+				column.getSize().getPrecision(),
 				column.getSqlType(),
-				column.getCustomRead(),
-				column.getCustomWrite(),
-				column.isQuoted()
+				column.getReadFragment(),
+				column.getWriteFragment(),
+				column.getColumnName().isQuoted()
 		);
 	}
 
@@ -350,9 +363,11 @@ public final class MetadataTools {
 
 				if ( changeToKey ) {
 					property.setName( "key-" + property.getName() );
+					// "insert" and "update" attributes are not allowed on key-many-to-one or key-property elements.
+					property.remove( property.attribute( "insert" ) );
+					property.remove( property.attribute( "update" ) );
 				}
-
-				if ( "property".equals( property.getName() ) ) {
+				else if ( "property".equals( property.getName() ) ) {
 					final Attribute insert = property.attribute( "insert" );
 					insert.setText( Boolean.toString( insertable ) );
 				}
@@ -366,25 +381,28 @@ public final class MetadataTools {
 	 * @param element Parent element.
 	 * @param formula Formula descriptor.
 	 */
-	public static void addFormula(Element element, Formula formula) {
-		element.addElement( "formula" ).setText( formula.getText() );
+	public static void addFormula(Element element, DerivedValue formula) {
+		element.addElement( "formula" ).setText( formula.getExpression() );
 	}
 
 	/**
 	 * Adds all <code>column</code> or <code>formula</code> elements.
 	 *
 	 * @param element Parent element.
-	 * @param columnIterator Iterator pointing at {@link org.hibernate.mapping.Column} and/or
-	 * {@link org.hibernate.mapping.Formula} objects.
+	 * @param values List of  {@link Column} and/or {@link DerivedValue} objects.
 	 */
-	public static void addColumnsOrFormulas(Element element, Iterator columnIterator) {
-		while ( columnIterator.hasNext() ) {
-			final Object o = columnIterator.next();
-			if ( o instanceof Column ) {
-				addColumn( element, (Column) o );
+	public static void addColumnsOrFormulas(Element element, List<Value> values) {
+		for ( Value value : values ) {
+			if ( value.getValueType() == Value.ValueType.COLUMN ) {
+				addColumn( element, (Column) value );
 			}
-			else if ( o instanceof Formula ) {
-				addFormula( element, (Formula) o );
+			else if ( value.getValueType() == Value.ValueType.DERIVED_VALUE  ) {
+				addFormula( element, (DerivedValue) value );
+			}
+			else {
+				throw new AssertionFailure(
+						String.format( "unknown type of value: %s", value.getValueType() )
+				);
 			}
 		}
 	}
@@ -395,18 +413,18 @@ public final class MetadataTools {
 	public static abstract class ColumnNameIterator implements Iterator<String> {
 	}
 
-	public static ColumnNameIterator getColumnNameIterator(final Iterator<Selectable> selectableIterator) {
+	public static ColumnNameIterator getColumnNameIterator(final Iterator<Value> selectableIterator) {
 		return new ColumnNameIterator() {
 			public boolean hasNext() {
 				return selectableIterator.hasNext();
 			}
 
 			public String next() {
-				final Selectable next = selectableIterator.next();
-				if ( next.isFormula() ) {
+				final Value next = selectableIterator.next();
+				if ( next.getValueType() == Value.ValueType.DERIVED_VALUE ) {
 					throw new FormulaNotSupportedException();
 				}
-				return ((Column) next).getName();
+				return ((Column) next).getColumnName().getText();
 			}
 
 			public void remove() {

@@ -239,7 +239,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	}
 
 	public void addProperty(Property p) {
-		properties.add(p);
+		properties.add( p );
 		declaredProperties.add(p);
 		p.setPersistentClass(this);
 	}
@@ -879,7 +879,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	}
 
 	public void addMappedsuperclassProperty(Property p) {
-		properties.add(p);
+		properties.add( p );
 		p.setPersistentClass(this);
 	}
 

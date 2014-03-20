@@ -1,9 +1,12 @@
 package org.hibernate.envers.test.entities.components;
 
 
+import javax.persistence.Embeddable;
+
 /**
  * @author Erik-Berndt Scheper
  */
+@Embeddable
 public class DefaultValueComponent2 {
 
 	private String str1 = "defaultValue";

@@ -23,16 +23,19 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Properties;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -46,18 +49,23 @@ import org.dom4j.Element;
 public final class BasicMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	boolean addBasic(
-			Element parent, PropertyAuditingData propertyAuditingData,
-			Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
-		final Type type = value.getType();
-
-		if ( type instanceof BasicType
-				|| type instanceof SerializableToBlobType
-				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals( type.getClass().getName() ) ) {
+			Element parent,
+			PropertyAuditingData propertyAuditingData,
+			HibernateTypeDescriptor hibernateTypeDescriptor,
+			List<Value> values,
+			boolean insertable,
+			SimpleMapperBuilder mapper,
+			boolean key) {
+		if ( hibernateTypeDescriptor.getResolvedTypeMapping() instanceof BasicType
+				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals(
+				hibernateTypeDescriptor.getJavaTypeDescriptor()
+						.getName()
+						.fullName()
+		) ) {
 			if ( parent != null ) {
-				final boolean addNestedType = (value instanceof SimpleValue)
-						&& ((SimpleValue) value).getTypeParameters() != null;
+				final boolean addNestedType = !hibernateTypeDescriptor.getTypeParameters().isEmpty();
 
-				final String typeName = resolveType( value );
+				final String typeName = resolveTypeName( hibernateTypeDescriptor );
 
 				final Element propMapping = MetadataTools.addProperty(
 						parent,
@@ -66,22 +74,22 @@ public final class BasicMetadataGenerator {
 						propertyAuditingData.isForceInsertable() || insertable,
 						key
 				);
-				MetadataTools.addColumns( propMapping, value.getColumnIterator() );
+				MetadataTools.addValuesAsColumns( propMapping, values );
 
 				if ( addNestedType ) {
-					final Properties typeParameters = ((SimpleValue) value).getTypeParameters();
+					final Map<String, String> typeParameters = hibernateTypeDescriptor.getTypeParameters();
 					final Element typeMapping = propMapping.addElement( "type" );
 					typeMapping.addAttribute( "name", typeName );
 
 					if ( "org.hibernate.type.EnumType".equals( typeName ) ) {
 						// Proper handling of enumeration type
-						mapEnumerationType( typeMapping, type, typeParameters );
+						mapEnumerationType( typeMapping, hibernateTypeDescriptor.getResolvedTypeMapping(), typeParameters );
 					}
 					else {
 						// By default copying all Hibernate properties
 						for ( Object object : typeParameters.keySet() ) {
 							final String keyType = (String) object;
-							final String property = typeParameters.getProperty( keyType );
+							final String property = typeParameters.get( keyType );
 
 							if ( property != null ) {
 								typeMapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
@@ -103,26 +111,23 @@ public final class BasicMetadataGenerator {
 		return true;
 	}
 
-	private String resolveType(Value value) {
-		final Type type = value.getType();
-		String typeName = null;
-		if ( value instanceof SimpleValue ) {
-			typeName = ( (SimpleValue) value ).getTypeName();
-		}
+	private String resolveTypeName(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		final Type type = hibernateTypeDescriptor.getResolvedTypeMapping();
+		String typeName = hibernateTypeDescriptor.getExplicitTypeName();
 		if ( typeName == null ) {
 			typeName = type.getName();
 		}
 		if ( typeName == null ) {
-			typeName = type.getClass().getName();
+			typeName = hibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName();
 		}
 		return typeName;
 	}
 
-	private void mapEnumerationType(Element parent, Type type, Properties parameters) {
-		if ( parameters.getProperty( EnumType.ENUM ) != null ) {
+	private void mapEnumerationType(Element parent, Type type, Map<String,String> parameters) {
+		if ( parameters.get( EnumType.ENUM ) != null ) {
 			parent.addElement( "param" )
 					.addAttribute( "name", EnumType.ENUM )
-					.setText( parameters.getProperty( EnumType.ENUM ) );
+					.setText( parameters.get( EnumType.ENUM ) );
 		}
 		else {
 			parent.addElement( "param" ).addAttribute( "name", EnumType.ENUM ).setText(
@@ -130,9 +135,9 @@ public final class BasicMetadataGenerator {
 							.getName()
 			);
 		}
-		if ( parameters.getProperty( EnumType.NAMED ) != null ) {
+		if ( parameters.get( EnumType.NAMED ) != null ) {
 			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED ).setText(
-					parameters.getProperty(
+					parameters.get(
 							EnumType.NAMED
 					)
 			);
@@ -151,15 +156,15 @@ public final class BasicMetadataGenerator {
 	boolean addManyToOne(
 			Element parent,
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			ManyToOneAttributeBinding attributeBinding,
 			SimpleMapperBuilder mapper) {
-		final Type type = value.getType();
+		final Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
 		// A null mapper occurs when adding to composite-id element
 		final Element manyToOneElement = parent.addElement( mapper != null ? "many-to-one" : "key-many-to-one" );
 		manyToOneElement.addAttribute( "name", propertyAuditingData.getName() );
 		manyToOneElement.addAttribute( "class", type.getName() );
-		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator() );
+		MetadataTools.addValuesAsColumns( manyToOneElement, attributeBinding.getValues() );
 
 		// A null mapper means that we only want to add xml mappings
 		if ( mapper != null ) {

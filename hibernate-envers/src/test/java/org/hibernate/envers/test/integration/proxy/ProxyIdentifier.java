@@ -38,11 +38,13 @@ import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAudi
 import org.hibernate.envers.test.entities.onetomany.OneToManyNotAuditedNullEntity;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Eugene Goroschenya
  */
+@FailureExpectedWithNewMetamodel( message = "@NotFound(action = NotFoundAction.IGNORE) not supported yet." )
 public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 	private TargetNotAuditedEntity tnae1 = null;
 	private ManyToOneNotAuditedNullEntity mtonane1 = null;

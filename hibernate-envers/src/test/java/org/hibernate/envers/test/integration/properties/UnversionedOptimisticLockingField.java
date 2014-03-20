@@ -31,8 +31,7 @@ import java.util.Map;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 import org.junit.Test;
 
@@ -92,11 +91,7 @@ public class UnversionedOptimisticLockingField extends BaseEnversJPAFunctionalTe
 
 	@Test
 	public void testMapping() {
-		PersistentClass pc = getCfg().getClassMapping( UnversionedOptimisticLockingFieldEntity.class.getName() + "_AUD" );
-		Iterator pi = pc.getPropertyIterator();
-		while ( pi.hasNext() ) {
-			Property p = (Property) pi.next();
-			assert !"optLocking".equals( p.getName() );
-		}
+		EntityBinding entityBinding = getMetadata().getEntityBinding( UnversionedOptimisticLockingFieldEntity.class.getName() + "_AUD" );
+		assert entityBinding.locateAttributeBinding( "optLocking" ) == null;
 	}
 }

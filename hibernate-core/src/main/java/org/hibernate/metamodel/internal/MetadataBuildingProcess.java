@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
@@ -36,6 +37,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
@@ -117,6 +119,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
+import static org.hibernate.metamodel.spi.AdditionalJaxbRootProducer.AdditionalJaxbRootProducerContext;
+
 /**
  * Represents the process of building a Metadata object.  The main entry point is the
  * static {@link #build}
@@ -126,7 +130,7 @@ import org.jboss.logging.Logger;
 public class MetadataBuildingProcess {
 	private static final Logger log = Logger.getLogger( MetadataBuildingProcess.class );
 
-	public static MetadataImpl build(MetadataSources sources, MetadataBuildingOptions options) {
+	public static MetadataImpl build(MetadataSources sources, final MetadataBuildingOptions options) {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// preliminary phases
 		final IndexView jandexView = handleJandex( options, sources );
@@ -195,8 +199,19 @@ public class MetadataBuildingProcess {
 		}
 
 		final List<BindResult> bindResults = new ArrayList<BindResult>();
+		final AdditionalJaxbRootProducerContext jaxbRootProducerContext = new AdditionalJaxbRootProducerContext() {
+			@Override
+			public IndexView getJandexIndex() {
+				return jandexView;
+			}
+
+			@Override
+			public StandardServiceRegistry getServiceRegistry() {
+				return options.getServiceRegistry();
+			}
+		};
 		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
-			bindResults.addAll( producer.produceRoots( metadataCollector, jandexView ) );
+			bindResults.addAll( producer.produceRoots( metadataCollector, jaxbRootProducerContext ) );
 		}
 		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( rootBindingContext, bindResults );
 		final Binder binder = new Binder( rootBindingContext );
@@ -671,6 +686,7 @@ public class MetadataBuildingProcess {
 		private final MetadataBuildingOptions options;
 		private final TypeResolver typeResolver;
 
+		private final UUID uuid;
 		private final Database database;
 		private final ObjectNameNormalizer nameNormalizer;
 		private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
@@ -702,6 +718,7 @@ public class MetadataBuildingProcess {
 				new HashMap<Identifier, SecondaryTable>();
 
 		public InFlightMetadataCollectorImpl(MetadataBuildingOptions options, TypeResolver typeResolver) {
+			this.uuid = UUID.randomUUID();
 			this.options = options;
 			this.typeResolver = typeResolver;
 
@@ -766,6 +783,10 @@ public class MetadataBuildingProcess {
 			);
 		}
 
+		@Override
+		public UUID getUUID() {
+			return null;
+		}
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1157,6 +1178,7 @@ public class MetadataBuildingProcess {
 					options.getServiceRegistry(),
 					database,
 					typeResolver,
+					uuid,
 					identifierGeneratorFactory,
 					typeDefinitionMap,
 					filterDefinitionMap,

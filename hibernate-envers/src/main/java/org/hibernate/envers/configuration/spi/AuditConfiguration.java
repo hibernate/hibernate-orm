@@ -24,18 +24,21 @@
 package org.hibernate.envers.configuration.spi;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
 import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationResult;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -46,8 +49,13 @@ import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.domain.Attribute;
+import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.property.Getter;
 
 /**
@@ -101,45 +109,37 @@ public class AuditConfiguration {
 		return classLoaderService;
 	}
 
-	public AuditConfiguration(Configuration cfg) {
-		this( cfg, null );
-	}
+	//public AuditConfiguration(Configuration cfg) {
+	//	this( cfg, null );
+	//}
 
-	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
-		// TODO: Temporarily allow Envers to continuing using
-		// hibernate-commons-annotations' for reflection and class loading.
-		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
+	public AuditConfiguration(AuditConfigurationContext context) {
+		this.globalCfg = context.getGlobalConfiguration();
+		this.auditEntCfg = context.getAuditEntitiesConfiguration();
 
-		final Properties properties = cfg.getProperties();
+		this.auditProcessManager = new AuditProcessManager( context.getRevisionInfoConfigurationResult().getRevisionInfoGenerator() );
+		this.revisionInfoQueryCreator = context.getRevisionInfoConfigurationResult().getRevisionInfoQueryCreator();
+		this.revisionInfoNumberReader = context.getRevisionInfoConfigurationResult().getRevisionInfoNumberReader();
+		this.modifiedEntityNamesReader = context.getRevisionInfoConfigurationResult().getModifiedEntityNamesReader();
 
-		final ReflectionManager reflectionManager = cfg.getReflectionManager();
-		this.globalCfg = new GlobalConfiguration( properties, classLoaderService );
-		final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
-		final RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure( cfg, reflectionManager );
-		this.auditEntCfg = new AuditEntitiesConfiguration( properties, revInfoCfgResult.getRevisionInfoEntityName() );
-		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
-		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
-		this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-		this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
-		this.classLoaderService = classLoaderService;
 		this.auditStrategy = initializeAuditStrategy(
-				revInfoCfgResult.getRevisionInfoClass(),
-				revInfoCfgResult.getRevisionInfoTimestampData()
+				context.getRevisionInfoConfigurationResult().getRevisionInfoClass(),
+				context.getRevisionInfoConfigurationResult().getRevisionInfoTimestampData()
 		);
 		this.entCfg = new EntitiesConfigurator().configure(
-				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy, classLoaderService,
-				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
+				context,
+				auditStrategy,
+				context.getRevisionInfoConfigurationResult().getRevisionInfoXmlMapping(),
+				context.getRevisionInfoConfigurationResult().getRevisionInfoRelationMapping()
 		);
 
-		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
 	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
 		AuditStrategy strategy;
 
 		try {
-			Class<?> auditStrategyClass = null;
+			Class<?> auditStrategyClass;
 			try {
 				auditStrategyClass = this.getClass().getClassLoader().loadClass( auditEntCfg.getAuditStrategyName() );
 			}
@@ -167,20 +167,19 @@ public class AuditConfiguration {
 		return strategy;
 	}
 
-	private static final Map<Configuration, AuditConfiguration> CFGS = new WeakHashMap<Configuration, AuditConfiguration>();
+	private static final Map<UUID, AuditConfiguration> CFGS = new WeakHashMap<UUID, AuditConfiguration>();
 
-	public synchronized static AuditConfiguration getFor(Configuration cfg) {
-		return getFor( cfg, null );
-	}
+	//public synchronized static AuditConfiguration register(MetadataImplementor metadata) {
+	//	return register( metadata, null );
+	//}
 
-	public synchronized static AuditConfiguration getFor(Configuration cfg, ClassLoaderService classLoaderService) {
-		AuditConfiguration verCfg = CFGS.get( cfg );
+	public synchronized static AuditConfiguration register(
+			AuditConfigurationContext context,  Metadata metadata) {
+		AuditConfiguration verCfg = CFGS.get( metadata.getUUID() );
 
 		if ( verCfg == null ) {
-			verCfg = new AuditConfiguration( cfg, classLoaderService );
-			CFGS.put( cfg, verCfg );
-
-			cfg.buildMappings();
+			verCfg = new AuditConfiguration( context );
+			CFGS.put( metadata.getUUID(), verCfg );
 		}
 
 		return verCfg;
@@ -188,7 +187,7 @@ public class AuditConfiguration {
 
 	public void destroy() {
 		synchronized (AuditConfiguration.class) {
-			for ( Map.Entry<Configuration, AuditConfiguration> c : new HashSet<Map.Entry<Configuration, AuditConfiguration>>(
+			for ( Map.Entry<UUID, AuditConfiguration> c : new HashSet<Map.Entry<UUID, AuditConfiguration>>(
 					CFGS.entrySet() ) ) {
 				if ( c.getValue() == this ) { // this is nasty cleanup fix, whole static CFGS should be reworked
 					CFGS.remove( c.getKey() );
@@ -196,5 +195,42 @@ public class AuditConfiguration {
 			}
 		}
 		classLoaderService = null;
+	}
+
+	public interface AuditConfigurationContext {
+		//InFlightMetadataCollector metadataCollector,
+		//AdditionalJaxbRootProducer.AdditionalJaxbRootProducerContext context,
+		//GlobalConfiguration globalCfg,
+		//AuditEntitiesConfiguration verEntCfg,
+		//AuditStrategy auditStrategy,
+
+		Metadata getMetadata();
+
+		EntityBinding getEntityBinding(String entityName);
+
+		EntityBinding getEntityBinding(ClassInfo classInfo);
+
+		IndexView getJandexIndex();
+
+		ClassInfo getClassInfo(String className);
+
+		ClassInfo getClassInfo(DotName classDotName);
+
+		ClassInfo getClassInfo(AttributeContainer attributeContainer);
+
+		ClassLoaderService getClassLoaderService();
+
+		<T> T getAnnotationProxy(AnnotationInstance annotationInstance, Class<T> annotationClass);
+
+		Map<DotName, List<AnnotationInstance>> locateAttributeAnnotations(Attribute attribute);
+		// return coreConfiguration.locateAttributeAnnotations;
+
+		GlobalConfiguration getGlobalConfiguration();
+
+		AuditEntitiesConfiguration getAuditEntitiesConfiguration();
+
+		public RevisionInfoConfigurationResult getRevisionInfoConfigurationResult();
+
+		void addDocument(org.w3c.dom.Document document);
 	}
 }

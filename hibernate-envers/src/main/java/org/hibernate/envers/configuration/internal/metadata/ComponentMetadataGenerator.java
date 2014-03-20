@@ -23,16 +23,16 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.EntityMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
-import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 import org.dom4j.Element;
 
@@ -43,29 +43,29 @@ import org.dom4j.Element;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public final class ComponentMetadataGenerator {
-    private final AuditMetadataGenerator mainGenerator;
+	private final AuditConfiguration.AuditConfigurationContext context;
 
-    ComponentMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
+	private final AuditMetadataGenerator mainGenerator;
+
+    ComponentMetadataGenerator(AuditConfiguration.AuditConfigurationContext context, AuditMetadataGenerator auditMetadataGenerator) {
+		this.context = context;
         mainGenerator = auditMetadataGenerator;
     }
 
     @SuppressWarnings({"unchecked"})
     public void addComponent(
             Element parent, PropertyAuditingData propertyAuditingData,
-            Value value, CompositeMapperBuilder mapper, String entityName,
+            CompositeAttributeBinding compositeAttributeBinding, CompositeMapperBuilder mapper, String entityName,
             EntityXmlMappingData xmlMappingData, boolean firstPass) {
-        final Component propComponent = (Component) value;
 
         final Class componentClass;
-        if (propComponent.isDynamic()) {
-            componentClass = ReflectionTools.loadClass(
-                    Map.class.getCanonicalName(),
-                    mainGenerator.getClassLoaderService());
-
+		final EntityMode entityMode = compositeAttributeBinding.seekEntityBinding().getHierarchyDetails().getEntityMode();
+        if ( entityMode == EntityMode.MAP ) {
+            componentClass = context.getClassLoaderService().classForName( Map.class.getCanonicalName() );
         } else {
-            componentClass = ReflectionTools.loadClass(
-                    propComponent.getComponentClassName(),
-                    mainGenerator.getClassLoaderService()
+			// TODO: get rid of classloading.
+            componentClass = context.getClassLoaderService().classForName(
+					compositeAttributeBinding.getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
             );
         }
         final CompositeMapperBuilder componentMapper = mapper.addComponent(
@@ -77,18 +77,16 @@ public final class ComponentMetadataGenerator {
         final ComponentAuditingData componentAuditingData = (ComponentAuditingData) propertyAuditingData;
 
         // Adding all properties of the component
-        final Iterator<Property> properties = (Iterator<Property>) propComponent.getPropertyIterator();
-        while (properties.hasNext()) {
-            final Property property = properties.next();
+        for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
 
             final PropertyAuditingData componentPropertyAuditingData =
-                    componentAuditingData.getPropertyAuditingData(property.getName());
+                    componentAuditingData.getPropertyAuditingData( attributeBinding.getAttribute().getName() );
 
             // Checking if that property is audited
             if (componentPropertyAuditingData != null) {
                 mainGenerator.addValue(
-                        parent, property.getValue(), componentMapper, entityName, xmlMappingData,
-                        componentPropertyAuditingData, property.isInsertable(), firstPass, false
+                        parent, attributeBinding, componentMapper, entityName, xmlMappingData,
+                        componentPropertyAuditingData, firstPass, false
                 );
             }
         }

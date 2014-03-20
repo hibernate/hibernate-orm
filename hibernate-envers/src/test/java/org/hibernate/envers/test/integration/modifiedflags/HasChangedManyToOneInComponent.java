@@ -46,7 +46,7 @@ public class HasChangedManyToOneInComponent extends AbstractModifiedFlagsEntityT
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ManyToOneComponentTestEntity.class, StrTestEntity.class};
+		return new Class[] {ManyToOneComponentTestEntity.class, StrTestEntity.class, ManyToOneComponent.class};
 	}
 
 	@Test

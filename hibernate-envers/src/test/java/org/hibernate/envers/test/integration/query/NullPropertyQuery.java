@@ -31,7 +31,8 @@ public class NullPropertyQuery extends BaseEnversJPAFunctionalTestCase {
 				SetRefEdEmbIdEntity.class,
 				SetRefIngEmbIdEntity.class,
 				CollectionRefEdEntity.class,
-				CollectionRefIngEntity.class
+				CollectionRefIngEntity.class,
+				EmbId.class
 		};
 	}
 

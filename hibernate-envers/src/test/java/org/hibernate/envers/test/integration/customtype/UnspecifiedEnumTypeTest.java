@@ -14,6 +14,7 @@ import org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -22,6 +23,7 @@ import org.hibernate.testing.TestForIssue;
  */
 @TestForIssue(jiraKey = "HHH-7780")
 @RequiresDialect(value = H2Dialect.class)
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	private Long id = null;
 

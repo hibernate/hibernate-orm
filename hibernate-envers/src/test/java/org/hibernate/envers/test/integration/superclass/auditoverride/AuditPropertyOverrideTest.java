@@ -4,25 +4,26 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4439")
+@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet.")
 public class AuditPropertyOverrideTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer propertyEntityId = null;
 	private Integer transitiveEntityId = null;
 	private Integer auditedEntityId = null;
-	private Table propertyTable = null;
-	private Table transitiveTable = null;
-	private Table auditedTable = null;
+	private TableSpecification propertyTable = null;
+	private TableSpecification transitiveTable = null;
+	private TableSpecification auditedTable = null;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -55,33 +56,33 @@ public class AuditPropertyOverrideTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 		auditedEntityId = auditedEntity.getId();
 
-		propertyTable = getCfg().getClassMapping(
+		propertyTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.PropertyOverrideEntity_AUD"
-		).getTable();
-		transitiveTable = getCfg().getClassMapping(
+		).getPrimaryTable();
+		transitiveTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.TransitiveOverrideEntity_AUD"
-		).getTable();
-		auditedTable = getCfg().getClassMapping(
+		).getPrimaryTable();
+		auditedTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.AuditedSpecialEntity_AUD"
-		).getTable();
+		).getPrimaryTable();
 	}
 
 	@Test
 	public void testNotAuditedProperty() {
-		Assert.assertNull( propertyTable.getColumn( new Column( "str1" ) ) );
+		Assert.assertNull( propertyTable.locateColumn( "str1" ) );
 	}
 
 	@Test
 	public void testAuditedProperty() {
-		Assert.assertNotNull( propertyTable.getColumn( new Column( "number1" ) ) );
-		Assert.assertNotNull( transitiveTable.getColumn( new Column( "number2" ) ) );
-		Assert.assertNotNull( auditedTable.getColumn( new Column( "str1" ) ) );
+		Assert.assertNotNull( propertyTable.locateColumn( "number1" ) );
+		Assert.assertNotNull( transitiveTable.locateColumn( "number2" ) );
+		Assert.assertNotNull( auditedTable.locateColumn( "str1" ) );
 	}
 
 	@Test
 	public void testTransitiveAuditedProperty() {
-		Assert.assertNotNull( transitiveTable.getColumn( new Column( "number1" ) ) );
-		Assert.assertNotNull( transitiveTable.getColumn( new Column( "str1" ) ) );
+		Assert.assertNotNull( transitiveTable.locateColumn( "number1" ) );
+		Assert.assertNotNull( transitiveTable.locateColumn( "str1" ) );
 	}
 
 	@Test

@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * @author Steve Ebersole
@@ -42,6 +43,8 @@ public interface PluralAttributeIndexBinding {
 	 * @return The relational values.
 	 */
 	public List<RelationalValueBinding> getRelationalValueBindings();
+
+	List<Value> getValues();
 
 	HibernateTypeDescriptor getHibernateTypeDescriptor();
 

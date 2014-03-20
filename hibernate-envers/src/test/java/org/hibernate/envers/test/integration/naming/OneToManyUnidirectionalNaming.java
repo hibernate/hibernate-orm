@@ -26,13 +26,14 @@ package org.hibernate.envers.test.integration.naming;
 import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Value;
 
 import org.junit.Test;
 
@@ -104,26 +105,25 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
 	@Test
 	public void testTableName() {
 		assert MIDDLE_VERSIONS_ENTITY_NAME.equals(
-				getCfg().getClassMapping( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getName()
+				getMetadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getPrimaryTableName()
 		);
 	}
 
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnName() {
-		Iterator<Column> columns =
-				getCfg().getClassMapping( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getColumnIterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;
 
-		while ( columns.hasNext() ) {
-			Column column = columns.next();
-			if ( "ID_1".equals( column.getName() ) ) {
+		final List<Value> values = getMetadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getPrimaryTable().values();
+		for ( Value value : values ) {
+			Column column = (Column) value;
+			if ( "ID_1".equals( column.getColumnName().getText() ) ) {
 				id1Found = true;
 			}
 
-			if ( "ID_2".equals( column.getName() ) ) {
+			if ( "ID_2".equals( column.getColumnName().getText() ) ) {
 				id2Found = true;
 			}
 		}

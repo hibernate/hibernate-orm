@@ -26,7 +26,6 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,14 +33,15 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.persistence.JoinColumn;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesReader;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditedPropertiesReader;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -78,17 +78,24 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.ManyToOne;
-import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.domain.PluralAttribute;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.type.BagType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
@@ -113,9 +120,10 @@ public final class CollectionMetadataGenerator {
 			CollectionMetadataGenerator.class.getName()
 	);
 
+	private final AuditConfiguration.AuditConfigurationContext context;
 	private final AuditMetadataGenerator mainGenerator;
 	private final String propertyName;
-	private final Collection propertyValue;
+	private final PluralAttributeBinding pluralAttributeBinding;
 	private final CompositeMapperBuilder currentMapper;
 	private final String referencingEntityName;
 	private final EntityXmlMappingData xmlMappingData;
@@ -129,7 +137,7 @@ public final class CollectionMetadataGenerator {
 
 	/**
 	 * @param mainGenerator Main generator, giving access to configuration and the basic mapper.
-	 * @param propertyValue Value of the collection, as mapped by Hibernate.
+	 * @param pluralAttributeBinding Value of the collection, as mapped by Hibernate.
 	 * @param currentMapper Mapper, to which the appropriate {@link PropertyMapper} will be added.
 	 * @param referencingEntityName Name of the entity that owns this collection.
 	 * @param xmlMappingData In case this collection requires a middle table, additional mapping documents will
@@ -139,12 +147,15 @@ public final class CollectionMetadataGenerator {
 	 * table and the value of the <code>@MapKey</code> annotation, if there was one.
 	 */
 	public CollectionMetadataGenerator(
+			AuditConfiguration.AuditConfigurationContext context,
 			AuditMetadataGenerator mainGenerator,
-			Collection propertyValue, CompositeMapperBuilder currentMapper,
+			PluralAttributeBinding pluralAttributeBinding,
+			CompositeMapperBuilder currentMapper,
 			String referencingEntityName, EntityXmlMappingData xmlMappingData,
 			PropertyAuditingData propertyAuditingData) {
+		this.context = context;
 		this.mainGenerator = mainGenerator;
-		this.propertyValue = propertyValue;
+		this.pluralAttributeBinding = pluralAttributeBinding;
 		this.currentMapper = currentMapper;
 		this.referencingEntityName = referencingEntityName;
 		this.xmlMappingData = xmlMappingData;
@@ -157,17 +168,24 @@ public final class CollectionMetadataGenerator {
 			throw new MappingException( "Unable to read auditing configuration for " + referencingEntityName + "!" );
 		}
 
-		referencedEntityName = MappingTools.getReferencedEntityName( propertyValue.getElement() );
+		referencedEntityName = MappingTools.getReferencedEntityName( pluralAttributeBinding );
 	}
 
 	void addCollection() {
-		final Type type = propertyValue.getType();
-		final Value value = propertyValue.getElement();
+		final Type type = pluralAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		final PluralAttributeElementBinding.Nature elementNature =
+				pluralAttributeBinding.getPluralAttributeElementBinding().getNature();
 
 		final boolean oneToManyAttachedType = type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType;
-		final boolean inverseOneToMany = (value instanceof OneToMany) && (propertyValue.isInverse());
-		final boolean owningManyToOneWithJoinTableBidirectional = (value instanceof ManyToOne) && (propertyAuditingData.getRelationMappedBy() != null);
-		final boolean fakeOneToManyBidirectional = (value instanceof OneToMany) && (propertyAuditingData.getAuditMappedBy() != null);
+		final boolean inverseOneToMany =
+				(elementNature == PluralAttributeElementBinding.Nature.ONE_TO_MANY) &&
+						( pluralAttributeBinding.getPluralAttributeKeyBinding().isInverse() );
+		final boolean owningManyToOneWithJoinTableBidirectional =
+				(elementNature == PluralAttributeAssociationElementBinding.Nature.MANY_TO_MANY) &&
+						(propertyAuditingData.getRelationMappedBy() != null);
+		final boolean fakeOneToManyBidirectional =
+				(elementNature == PluralAttributeElementBinding.Nature.ONE_TO_MANY)
+				&& (propertyAuditingData.getAuditMappedBy() != null);
 
 		if ( oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional) ) {
 			// A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
@@ -181,7 +199,7 @@ public final class CollectionMetadataGenerator {
 
 	private MiddleIdData createMiddleIdData(IdMappingData idMappingData, String prefix, String entityName) {
 		return new MiddleIdData(
-				mainGenerator.getVerEntCfg(), idMappingData, prefix, entityName,
+				context.getAuditEntitiesConfiguration(), idMappingData, prefix, entityName,
 				mainGenerator.getEntitiesConfigurations().containsKey( entityName )
 		);
 	}
@@ -194,7 +212,9 @@ public final class CollectionMetadataGenerator {
 				propertyName
 		);
 
-		final String mappedBy = getMappedBy( propertyValue );
+		final String mappedBy = getMappedBy(
+				(PluralAttributeAssociationElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding()
+		);
 
 		final IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(
 				referencingEntityName,
@@ -230,8 +250,8 @@ public final class CollectionMetadataGenerator {
 
 		// Generating the query generator - it should read directly from the related entity.
 		final RelationQueryGenerator queryGenerator = new OneAuditEntityQueryGenerator(
-				mainGenerator.getGlobalCfg(),
-				mainGenerator.getVerEntCfg(),
+				context.getGlobalConfiguration(),
+				context.getAuditEntitiesConfiguration(),
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				referencedEntityName,
@@ -241,7 +261,7 @@ public final class CollectionMetadataGenerator {
 
 		// Creating common mapper data.
 		final CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-				mainGenerator.getVerEntCfg(), referencedEntityName,
+				context.getAuditEntitiesConfiguration(), referencedEntityName,
 				propertyAuditingData.getPropertyData(),
 				referencingIdData, queryGenerator
 		);
@@ -327,19 +347,19 @@ public final class CollectionMetadataGenerator {
 		}
 	}
 
-	private String getMiddleTableName(Collection value, String entityName) {
+	private String getMiddleTableName(PluralAttributeBinding attributeBinding, String entityName) {
 		// We check how Hibernate maps the collection.
-		if ( value.getElement() instanceof OneToMany && !value.isInverse() ) {
+		if ( attributeBinding.getPluralAttributeElementBinding().getNature() ==
+				PluralAttributeElementBinding.Nature.ONE_TO_MANY &&
+				!attributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
 			// This must be a @JoinColumn+@OneToMany mapping. Generating the table name, as Hibernate doesn't use a
 			// middle table for mapping this relation.
 			return StringTools.getLastComponent( entityName ) + "_" + StringTools.getLastComponent(
-					MappingTools.getReferencedEntityName(
-							value.getElement()
-					)
+					MappingTools.getReferencedEntityName( attributeBinding )
 			);
 		}
 		// Hibernate uses a middle table for mapping this relation, so we get it's name directly.
-		return value.getCollectionTable().getName();
+		return attributeBinding.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().getName();
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -359,9 +379,9 @@ public final class CollectionMetadataGenerator {
 			auditMiddleEntityName = propertyAuditingData.getJoinTable().name();
 		}
 		else {
-			final String middleTableName = getMiddleTableName( propertyValue, referencingEntityName );
-			auditMiddleTableName = mainGenerator.getVerEntCfg().getAuditTableName( null, middleTableName );
-			auditMiddleEntityName = mainGenerator.getVerEntCfg().getAuditEntityName( middleTableName );
+			final String middleTableName = getMiddleTableName( pluralAttributeBinding, referencingEntityName );
+			auditMiddleTableName = context.getAuditEntitiesConfiguration().getAuditTableName( null, middleTableName );
+			auditMiddleEntityName = context.getAuditEntitiesConfiguration().getAuditEntityName( middleTableName );
 		}
 
 		LOG.debugf( "Using join table name: %s", auditMiddleTableName );
@@ -369,7 +389,7 @@ public final class CollectionMetadataGenerator {
 		// Generating the XML mapping for the middle entity, only if the relation isn't inverse.
 		// If the relation is inverse, will be later checked by comparing middleEntityXml with null.
 		Element middleEntityXml;
-		if ( !propertyValue.isInverse() ) {
+		if ( !pluralAttributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
 			// Generating a unique middle entity name
 			auditMiddleEntityName = mainGenerator.getAuditEntityNameRegister().createUnique( auditMiddleEntityName );
 
@@ -379,7 +399,7 @@ public final class CollectionMetadataGenerator {
 			middleEntityXml = createMiddleEntityXml(
 					auditMiddleTableName,
 					auditMiddleEntityName,
-					propertyValue.getWhere()
+					pluralAttributeBinding.getWhere()
 			);
 		}
 		else {
@@ -399,11 +419,11 @@ public final class CollectionMetadataGenerator {
 		String referencingPrefixRelated;
 		String referencedPrefix;
 
-		if ( propertyValue.isInverse() ) {
+		if ( pluralAttributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
 			// If the relation is inverse, then referencedEntityName is not null.
 			mappedBy = getMappedBy(
-					propertyValue.getCollectionTable(),
-					mainGenerator.getCfg().getClassMapping( referencedEntityName )
+					pluralAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable(),
+					context.getEntityBinding( referencedEntityName )
 			);
 
 			referencingPrefixRelated = mappedBy + "_";
@@ -427,8 +447,8 @@ public final class CollectionMetadataGenerator {
 		// references some entities (either from the element or index). At the end, this will be used to build
 		// a query generator to read the raw data collection from the middle table.
 		final QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(
-				mainGenerator.getGlobalCfg(),
-				mainGenerator.getVerEntCfg(),
+				context.getGlobalConfiguration(),
+				context.getAuditEntitiesConfiguration(),
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				auditMiddleEntityName,
@@ -440,7 +460,9 @@ public final class CollectionMetadataGenerator {
 			// Adding related-entity (in this case: the referencing's entity id) id mapping to the xml.
 			addRelatedToXmlMapping(
 					middleEntityXml, referencingPrefixRelated,
-					MetadataTools.getColumnNameIterator( propertyValue.getKey().getColumnIterator() ),
+					MetadataTools.getColumnNameIterator(
+							pluralAttributeBinding.getPluralAttributeKeyBinding().getValues().iterator()
+					),
 					referencingIdMapping
 			);
 		}
@@ -449,11 +471,11 @@ public final class CollectionMetadataGenerator {
 		// Generating the element mapping.
 		// ******
 		final MiddleComponentData elementComponentData = addValueToMiddleTable(
-				propertyValue.getElement(),
 				middleEntityXml,
 				queryGeneratorBuilder,
 				referencedPrefix,
-				propertyAuditingData.getJoinTable().inverseJoinColumns()
+				propertyAuditingData.getJoinTable().inverseJoinColumns(),
+				false
 		);
 
 		// ******
@@ -469,7 +491,7 @@ public final class CollectionMetadataGenerator {
 
 		// Creating common data
 		final CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-				mainGenerator.getVerEntCfg(),
+				context.getAuditEntitiesConfiguration(),
 				auditMiddleEntityName,
 				propertyAuditingData.getPropertyData(),
 				referencingIdData,
@@ -486,17 +508,18 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private MiddleComponentData addIndex(Element middleEntityXml, QueryGeneratorBuilder queryGeneratorBuilder) {
-		if ( propertyValue instanceof IndexedCollection ) {
-			final IndexedCollection indexedValue = (IndexedCollection) propertyValue;
+		if ( pluralAttributeBinding.getAttribute().getNature().isIndexable() ) {
+			final PluralAttributeIndexBinding indexBinding =
+					( (IndexedPluralAttributeBinding) pluralAttributeBinding ).getPluralAttributeIndexBinding();
 			final String mapKey = propertyAuditingData.getMapKey();
 			if ( mapKey == null ) {
 				// This entity doesn't specify a javax.persistence.MapKey. Mapping it to the middle entity.
 				return addValueToMiddleTable(
-						indexedValue.getIndex(),
 						middleEntityXml,
 						queryGeneratorBuilder,
 						"mapkey",
-						null
+						null,
+						true
 				);
 			}
 			else {
@@ -507,7 +530,7 @@ public final class CollectionMetadataGenerator {
 					// The key of the map is the id of the entity.
 					return new MiddleComponentData(
 							new MiddleMapKeyIdComponentMapper(
-									mainGenerator.getVerEntCfg(),
+									context.getAuditEntitiesConfiguration(),
 									referencedIdMapping.getIdMapper()
 							),
 							currentIndex
@@ -531,29 +554,46 @@ public final class CollectionMetadataGenerator {
 		}
 	}
 
+	private PluralAttributeIndexBinding getPluralAttributeIndexBinding() {
+		if ( !pluralAttributeBinding.getAttribute().getNature().isIndexable() ) {
+			throw new AssertionFailure( "This method is only valid for an indexed plural attribute binding." );
+		}
+		return ( (IndexedPluralAttributeBinding) pluralAttributeBinding ).getPluralAttributeIndexBinding();
+	}
+
 	/**
-	 * @param value Value, which should be mapped to the middle-table, either as a relation to another entity,
-	 * or as a simple value.
 	 * @param xmlMapping If not <code>null</code>, xml mapping for this value is added to this element.
 	 * @param queryGeneratorBuilder In case <code>value</code> is a relation to another entity, information about it
 	 * should be added to the given.
 	 * @param prefix Prefix for proeprty names of related entities identifiers.
 	 * @param joinColumns Names of columns to use in the xml mapping, if this array isn't null and has any elements.
+	 * @param isIndex true, if the value is for the collection index; false, if the value is for the collection element.
 	 *
 	 * @return Data for mapping this component.
 	 */
 	@SuppressWarnings({"unchecked"})
 	private MiddleComponentData addValueToMiddleTable(
-			Value value,
 			Element xmlMapping,
 			QueryGeneratorBuilder queryGeneratorBuilder,
 			String prefix,
-			JoinColumn[] joinColumns) {
-		final Type type = value.getType();
-		if ( type instanceof ManyToOneType ) {
+			JoinColumn[] joinColumns,
+			boolean isIndex) {
+
+		final HibernateTypeDescriptor hibernateTypeDescriptor;
+		final List<Value> values;
+		if ( isIndex ) {
+			hibernateTypeDescriptor = getPluralAttributeIndexBinding().getHibernateTypeDescriptor();
+			values = getPluralAttributeIndexBinding().getValues();
+		}
+		else {
+			hibernateTypeDescriptor = pluralAttributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor();
+			values = pluralAttributeBinding.getPluralAttributeElementBinding().getValues();
+
+		}				;
+		if ( hibernateTypeDescriptor.getResolvedTypeMapping() instanceof ManyToOneType ) {
 			final String prefixRelated = prefix + "_";
 
-			final String referencedEntityName = MappingTools.getReferencedEntityName( value );
+			final String referencedEntityName = MappingTools.getReferencedEntityName( pluralAttributeBinding );
 
 			final IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(
 					referencingEntityName,
@@ -569,7 +609,7 @@ public final class CollectionMetadataGenerator {
 						xmlMapping, prefixRelated,
 						joinColumns != null && joinColumns.length > 0
 								? MetadataTools.getColumnNameIterator( joinColumns )
-								: MetadataTools.getColumnNameIterator( value.getColumnIterator() ),
+								: MetadataTools.getColumnNameIterator( values.iterator() ),
 						referencedIdMapping
 				);
 			}
@@ -588,12 +628,20 @@ public final class CollectionMetadataGenerator {
 					queryGeneratorBuilder.getCurrentIndex()
 			);
 		}
-		else if ( type instanceof ComponentType ) {
+		else if ( hibernateTypeDescriptor.getResolvedTypeMapping() instanceof ComponentType ) {
+			final CompositeAttributeBindingContainer compositeAttributeBindingContainer;
+			if ( isIndex ) {
+				compositeAttributeBindingContainer =
+						( ( CompositePluralAttributeIndexBinding ) getPluralAttributeIndexBinding() ).getCompositeAttributeBindingContainer();
+			}
+			else {
+				compositeAttributeBindingContainer =
+						( (CompositePluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getCompositeAttributeBindingContainer();
+			}
 			// Collection of embeddable elements.
-			final Component component = (Component) value;
 			final Class componentClass = ReflectionTools.loadClass(
-					component.getComponentClassName(),
-					mainGenerator.getClassLoaderService()
+					hibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName(),
+					context.getClassLoaderService()
 			);
 			final MiddleEmbeddableComponentMapper componentMapper = new MiddleEmbeddableComponentMapper(
 					new MultiPropertyMapper(),
@@ -602,12 +650,15 @@ public final class CollectionMetadataGenerator {
 
 			final Element parentXmlMapping = xmlMapping.getParent();
 			final ComponentAuditingData auditData = new ComponentAuditingData();
-			final ReflectionManager reflectionManager = mainGenerator.getCfg().getReflectionManager();
 
 			new ComponentAuditedPropertiesReader(
-					ModificationStore.FULL,
-					new AuditedPropertiesReader.ComponentPropertiesSource( reflectionManager, component ),
-					auditData, mainGenerator.getGlobalCfg(), reflectionManager, ""
+					context,
+					auditData,
+					new AuditedPropertiesReader.ComponentPropertiesSource(
+							context.getClassInfo( compositeAttributeBindingContainer.getAttributeContainer() ),
+							compositeAttributeBindingContainer
+					),
+					""
 			).read();
 
 			// Emulating first pass.
@@ -615,11 +666,10 @@ public final class CollectionMetadataGenerator {
 				final PropertyAuditingData nestedAuditingData = auditData.getPropertyAuditingData( auditedPropertyName );
 				mainGenerator.addValue(
 						parentXmlMapping,
-						component.getProperty( auditedPropertyName ).getValue(),
+						compositeAttributeBindingContainer.locateAttributeBinding( auditedPropertyName ),
 						componentMapper,
 						prefix, xmlMappingData,
 						nestedAuditingData,
-						true,
 						true,
 						true
 				);
@@ -630,12 +680,11 @@ public final class CollectionMetadataGenerator {
 				final PropertyAuditingData nestedAuditingData = auditData.getPropertyAuditingData( auditedPropertyName );
 				mainGenerator.addValue(
 						parentXmlMapping,
-						component.getProperty( auditedPropertyName ).getValue(),
+						compositeAttributeBindingContainer.locateAttributeBinding( auditedPropertyName ),
 						componentMapper,
 						referencingEntityName,
 						xmlMappingData,
 						nestedAuditingData,
-						true,
 						false,
 						true
 				);
@@ -643,8 +692,8 @@ public final class CollectionMetadataGenerator {
 
 			// Add an additional column holding a number to make each entry unique within the set.
 			// Embeddable properties may contain null values, so cannot be stored within composite primary key.
-			if ( propertyValue.isSet() ) {
-				final String setOrdinalPropertyName = mainGenerator.getVerEntCfg()
+			if ( ( pluralAttributeBinding.getAttribute() ).getNature() == PluralAttribute.Nature.SET ) {
+				final String setOrdinalPropertyName = context.getAuditEntitiesConfiguration()
 						.getEmbeddableSetOrdinalPropertyName();
 				final Element ordinalProperty = MetadataTools.addProperty(
 						xmlMapping, setOrdinalPropertyName, "integer", true, true
@@ -669,21 +718,24 @@ public final class CollectionMetadataGenerator {
 							null,
 							false
 					),
-					value,
+					hibernateTypeDescriptor,
+					values,
+					true, // TODO: is this correct for collection element?
 					null,
-					true,
 					true
 			);
 
 			if ( mapped ) {
 				// Simple values are always stored in the first item of the array returned by the query generator.
 				return new MiddleComponentData(
-						new MiddleSimpleComponentMapper( mainGenerator.getVerEntCfg(), prefix ),
+						new MiddleSimpleComponentMapper( context.getAuditEntitiesConfiguration(), prefix ),
 						0
 				);
 			}
 			else {
-				mainGenerator.throwUnsupportedTypeException( type, referencingEntityName, propertyName );
+				mainGenerator.throwUnsupportedTypeException(
+						hibernateTypeDescriptor.getResolvedTypeMapping(), referencingEntityName, propertyName
+				);
 				// Impossible to get here.
 				throw new AssertionError();
 			}
@@ -694,7 +746,7 @@ public final class CollectionMetadataGenerator {
 			CommonCollectionMapperData commonCollectionMapperData,
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData) {
-		final Type type = propertyValue.getType();
+		final Type type = pluralAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 		final boolean embeddableElementType = isEmbeddableElementType();
 		if ( type instanceof SortedSetType ) {
 			currentMapper.addComposite(
@@ -704,7 +756,7 @@ public final class CollectionMetadataGenerator {
 							TreeSet.class,
 							SortedSetProxy.class,
 							elementComponentData,
-							propertyValue.getComparator(),
+							pluralAttributeBinding.getComparator(),
 							embeddableElementType,
 							embeddableElementType
 					)
@@ -733,7 +785,7 @@ public final class CollectionMetadataGenerator {
 							SortedMapProxy.class,
 							elementComponentData,
 							indexComponentData,
-							propertyValue.getComparator(),
+							pluralAttributeBinding.getComparator(),
 							embeddableElementType
 					)
 			);
@@ -785,7 +837,7 @@ public final class CollectionMetadataGenerator {
 	private void storeMiddleEntityRelationInformation(String mappedBy) {
 		// Only if this is a relation (when there is a referenced entity).
 		if ( referencedEntityName != null ) {
-			if ( propertyValue.isInverse() ) {
+			if ( pluralAttributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
 				referencingEntityConfiguration.addToManyMiddleNotOwningRelation(
 						propertyName,
 						mappedBy,
@@ -801,11 +853,11 @@ public final class CollectionMetadataGenerator {
 	private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName, String where) {
 		final String schema = mainGenerator.getSchema(
 				propertyAuditingData.getJoinTable().schema(),
-				propertyValue.getCollectionTable()
+				pluralAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable()
 		);
 		final String catalog = mainGenerator.getCatalog(
 				propertyAuditingData.getJoinTable().catalog(),
-				propertyValue.getCollectionTable()
+				pluralAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable()
 		);
 
 		final Element middleEntityXml = MetadataTools.createEntity(
@@ -819,7 +871,7 @@ public final class CollectionMetadataGenerator {
 			middleEntityXml.addAttribute( "where", where );
 		}
 
-		middleEntityXmlId.addAttribute( "name", mainGenerator.getVerEntCfg().getOriginalIdPropName() );
+		middleEntityXmlId.addAttribute( "name", context.getAuditEntitiesConfiguration().getOriginalIdPropName() );
 
 		// Adding the revision number as a foreign key to the revision info entity to the composite id of the
 		// middle table.
@@ -828,7 +880,8 @@ public final class CollectionMetadataGenerator {
 		// Adding the revision type property to the entity xml.
 		mainGenerator.addRevisionType(
 				isEmbeddableElementType() ? middleEntityXmlId : middleEntityXml,
-				middleEntityXml
+				middleEntityXml,
+				isEmbeddableElementType()
 		);
 
 		// All other properties should also be part of the primary key of the middle entity.
@@ -839,20 +892,15 @@ public final class CollectionMetadataGenerator {
 	 * Checks if the collection element is of {@link ComponentType} type.
 	 */
 	private boolean isEmbeddableElementType() {
-		return propertyValue.getElement().getType() instanceof ComponentType;
+		return pluralAttributeBinding.getPluralAttributeElementBinding()
+				.getHibernateTypeDescriptor().getResolvedTypeMapping().isComponentType();
 	}
 
-	private String getMappedBy(Collection collectionValue) {
-		PersistentClass referencedClass = null;
-		if ( collectionValue.getElement() instanceof OneToMany ) {
-			final OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
-			referencedClass = oneToManyValue.getAssociatedClass();
-		}
-		else if ( collectionValue.getElement() instanceof ManyToOne ) {
-			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
-			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getMappings().getClass( manyToOneValue.getReferencedEntityName() );
-		}
+	private String getMappedBy(PluralAttributeAssociationElementBinding elementBinding) {
+		EntityBinding referencedEntityBinding = null;
+		final EntityType entityType =
+				(EntityType) elementBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		referencedEntityBinding = context.getEntityBinding( entityType.getAssociatedEntityName() );
 
 		// If there's an @AuditMappedBy specified, returning it directly.
 		final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
@@ -861,27 +909,30 @@ public final class CollectionMetadataGenerator {
 		}
 
 		// searching in referenced class
-		String mappedBy = this.searchMappedBy( referencedClass, collectionValue );
+		String mappedBy = this.searchMappedBy( referencedEntityBinding );
 
 		if ( mappedBy == null ) {
 			LOG.debugf(
 					"Going to search the mapped by attribute for %s in superclasses of entity: %s",
 					propertyName,
-					referencedClass.getClassName()
+					referencedEntityBinding.getEntityName()
 			);
 
-			PersistentClass tempClass = referencedClass;
-			while ( (mappedBy == null) && (tempClass.getSuperclass() != null) ) {
-				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), collectionValue );
-				tempClass = tempClass.getSuperclass();
+			EntityBinding tempEntityBinding = referencedEntityBinding;
+			while ( (mappedBy == null) && (tempEntityBinding.getSuperEntityBinding() != null) ) {
+				LOG.debugf(
+						"Searching in superclass: %s",
+						tempEntityBinding.getSuperEntityBinding().getEntity().getDescriptor().getName()
+				);
+				mappedBy = this.searchMappedBy( tempEntityBinding.getSuperEntityBinding() );
+				tempEntityBinding = tempEntityBinding.getSuperEntityBinding();
 			}
 		}
 
 		if ( mappedBy == null ) {
 			throw new MappingException(
 					"Unable to read the mapped by attribute for " + propertyName + " in "
-							+ referencedClass.getClassName() + "!"
+							+ referencedEntityBinding.getEntity().getDescriptor().getName() + "!"
 			);
 		}
 
@@ -889,22 +940,30 @@ public final class CollectionMetadataGenerator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private String searchMappedBy(PersistentClass referencedClass, Collection collectionValue) {
-		final Iterator<Property> assocClassProps = referencedClass.getPropertyIterator();
-		while ( assocClassProps.hasNext() ) {
-			final Property property = assocClassProps.next();
+	private String searchMappedBy(EntityBinding referencedEntityBinding) {
+		for ( AttributeBinding attributeBinding : referencedEntityBinding.attributeBindings() ) {
+			if ( !attributeBinding.isAssociation() ) {
+				continue;
+			}
+			final List<Value> attributeValues;
+			if ( attributeBinding.getAttribute().isSingular() ) {
+				attributeValues = ( (SingularAttributeBinding) attributeBinding ).getValues();
+			}
+			else {
+				attributeValues = ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding().getValues();
+			}
 
 			if ( Tools.iteratorsContentEqual(
-					property.getValue().getColumnIterator(),
-					collectionValue.getKey().getColumnIterator()
+					attributeValues.iterator(),
+					pluralAttributeBinding.getPluralAttributeKeyBinding().getValues().iterator()
 			) ) {
-				return property.getName();
+				return attributeBinding.getAttribute().getName();
 			}
 		}
 		return null;
 	}
 
-	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
+	private String getMappedBy(TableSpecification collectionTable, EntityBinding referencedClass) {
 		// If there's an @AuditMappedBy specified, returning it directly.
 		final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
 		if ( auditMappedBy != null ) {
@@ -919,21 +978,24 @@ public final class CollectionMetadataGenerator {
 			LOG.debugf(
 					"Going to search the mapped by attribute for %s in superclasses of entity: %s",
 					propertyName,
-					referencedClass.getClassName()
+					referencedClass.getEntity().getDescriptor().getName()
 			);
 
-			PersistentClass tempClass = referencedClass;
-			while ( (mappedBy == null) && (tempClass.getSuperclass() != null) ) {
-				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), collectionTable );
-				tempClass = tempClass.getSuperclass();
+			EntityBinding tempClass = referencedClass;
+			while ( (mappedBy == null) && (tempClass.getSuperEntityBinding() != null) ) {
+				LOG.debugf(
+						"Searching in superclass: %s",
+						tempClass.getSuperEntityBinding().getEntity().getDescriptor().getName()
+				);
+				mappedBy = this.searchMappedBy( tempClass.getSuperEntityBinding(), collectionTable );
+				tempClass = tempClass.getSuperEntityBinding();
 			}
 		}
 
 		if ( mappedBy == null ) {
 			throw new MappingException(
 					"Unable to read the mapped by attribute for " + propertyName + " in "
-							+ referencedClass.getClassName() + "!"
+							+ referencedClass.getEntity().getDescriptor().getName() + "!"
 			);
 		}
 
@@ -941,15 +1003,14 @@ public final class CollectionMetadataGenerator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
-		final Iterator<Property> properties = referencedClass.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			if ( property.getValue() instanceof Collection ) {
+	private String searchMappedBy(EntityBinding referencedClass, TableSpecification collectionTable) {
+		for ( AttributeBinding attributeBinding : referencedClass.attributeBindings() ) {
+			if ( !attributeBinding.getAttribute().isSingular() ) {
 				// The equality is intentional. We want to find a collection property with the same collection table.
 				//noinspection ObjectEquality
-				if ( ((Collection) property.getValue()).getCollectionTable() == collectionTable ) {
-					return property.getName();
+				if ( ((PluralAttributeBinding) attributeBinding ).getPluralAttributeKeyBinding().getCollectionTable() ==
+						collectionTable ) {
+					return attributeBinding.getAttribute().getName();
 				}
 			}
 		}

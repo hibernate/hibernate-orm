@@ -2,6 +2,7 @@ package org.hibernate.envers.test.entities.collection;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -9,7 +10,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Version;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
@@ -29,8 +29,7 @@ public class MultipleCollectionRefEntity1 {
 	private String text;
 
 	@ManyToOne
-	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false)
-	@ForeignKey(name = "FK_RE1_MCE")
+	@JoinColumn(name = "MCE_ID", nullable = false, insertable = false, updatable = false, foreignKey = @ForeignKey(name = "FK_RE1_MCE") )
 	@NotAudited
 	private MultipleCollectionEntity multipleCollectionEntity;
 

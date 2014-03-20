@@ -4,23 +4,24 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4439")
+@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet." )
 public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer classAuditedEntityId = null;
 	private Integer classNotAuditedEntityId = null;
-	private Table classAuditedTable = null;
-	private Table classNotAuditedTable = null;
+	private TableSpecification classAuditedTable = null;
+	private TableSpecification classNotAuditedTable = null;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -50,26 +51,26 @@ public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 		classNotAuditedEntityId = classOverrideNotAuditedEntity.getId();
 
-		classAuditedTable = getCfg().getClassMapping(
+		classAuditedTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.ClassOverrideAuditedEntity_AUD"
-		).getTable();
-		classNotAuditedTable = getCfg().getClassMapping(
+		).getPrimaryTable();
+		classNotAuditedTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.ClassOverrideNotAuditedEntity_AUD"
-		).getTable();
+		).getPrimaryTable();
 	}
 
 	@Test
 	public void testAuditedProperty() {
-		Assert.assertNotNull( classAuditedTable.getColumn( new Column( "number1" ) ) );
-		Assert.assertNotNull( classAuditedTable.getColumn( new Column( "str1" ) ) );
-		Assert.assertNotNull( classAuditedTable.getColumn( new Column( "str2" ) ) );
-		Assert.assertNotNull( classNotAuditedTable.getColumn( new Column( "str2" ) ) );
+		Assert.assertNotNull( classAuditedTable.locateColumn( "number1" ) );
+		Assert.assertNotNull( classAuditedTable.locateColumn( "str1" ) );
+		Assert.assertNotNull( classAuditedTable.locateColumn( "str2" ) );
+		Assert.assertNotNull( classNotAuditedTable.locateColumn( "str2" ) );
 	}
 
 	@Test
 	public void testNotAuditedProperty() {
-		Assert.assertNull( classNotAuditedTable.getColumn( new Column( "number1" ) ) );
-		Assert.assertNull( classNotAuditedTable.getColumn( new Column( "str1" ) ) );
+		Assert.assertNull( classNotAuditedTable.locateColumn( "number1" ) );
+		Assert.assertNull( classNotAuditedTable.locateColumn( "str1" ) );
 	}
 
 	@Test

@@ -29,7 +29,7 @@ import java.util.Iterator;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Value;
 
 import org.junit.Test;
 
@@ -50,13 +50,12 @@ public class LongRevEntityInheritanceChildAuditing extends BaseEnversJPAFunction
 	@Test
 	public void testChildRevColumnType() {
 		// We need the second column
-		Iterator childEntityKeyColumnsIterator = getCfg()
-				.getClassMapping( "org.hibernate.envers.test.integration.inheritance.joined.ChildEntity_AUD" )
-				.getKey()
-				.getColumnIterator();
+		Iterator childEntityKeyColumnsIterator = getMetadata()
+				.getEntityBinding( "org.hibernate.envers.test.integration.inheritance.joined.ChildEntity_AUD" )
+				.getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getValues().iterator();
 		childEntityKeyColumnsIterator.next();
-		Column second = (Column) childEntityKeyColumnsIterator.next();
+		Value second = (Value) childEntityKeyColumnsIterator.next();
 
-		assertEquals( second.getSqlType(), "int" );
+		assertEquals( second.getJdbcDataType().getTypeName(), "int" );
 	}
 }

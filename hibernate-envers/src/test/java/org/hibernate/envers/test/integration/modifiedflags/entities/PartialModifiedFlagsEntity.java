@@ -75,25 +75,25 @@ public class PartialModifiedFlagsEntity {
 
 	@Audited(withModifiedFlag = true)
 	@ElementCollection
-	@JoinTable(name = "PartialModFlags_StrSet")
+	@CollectionTable(name = "PartialModFlags_StrSet")
 	@AuditJoinTable(name = "PartialModFlags_StrSet_AUD")
 	private Set<String> stringSet = new HashSet<String>();
 
 	@Audited(withModifiedFlag = true)
 	@ManyToMany
-	@CollectionTable(name = "ENTITIESSET")
+	@JoinTable(name = "ENTITIESSET")
 	private Set<StrTestEntity> entitiesSet = new HashSet<StrTestEntity>();
 
 	@Audited(withModifiedFlag = true)
 	@ElementCollection
 	@MapKeyColumn(nullable = false)
-	@JoinTable(name = "PartialModFlags_StrMap")
+	@CollectionTable(name = "PartialModFlags_StrMap")
 	@AuditJoinTable(name = "PartialModFlags_StrMap_AUD")
 	private Map<String, String> stringMap = new HashMap<String, String>();
 
 	@Audited(withModifiedFlag = true)
 	@ManyToMany
-	@CollectionTable(name = "ENTITIESMAP")
+	@JoinTable(name = "ENTITIESMAP")
 	@MapKeyColumn(nullable = false)
 	private Map<String, StrTestEntity> entitiesMap =
 			new HashMap<String, StrTestEntity>();

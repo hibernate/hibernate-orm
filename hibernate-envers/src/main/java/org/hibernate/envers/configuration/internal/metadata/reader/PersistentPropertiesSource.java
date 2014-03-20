@@ -24,9 +24,15 @@
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.util.Iterator;
+import java.util.List;
+
+import org.jboss.jandex.ClassInfo;
 
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
+import org.hibernate.metamodel.spi.domain.AttributeContainer;
 
 /**
  * A source of data on persistent properties of a class or component.
@@ -34,9 +40,11 @@ import org.hibernate.mapping.Property;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface PersistentPropertiesSource {
-	Iterator<Property> getPropertyIterator();
+	Iterable<AttributeBinding> getNonIdAttributeBindings();
 
-	Property getProperty(String propertyName);
+	AttributeBinding getAttributeBinding(String attributeName);
 
-	XClass getXClass();
+	AttributeBindingContainer getAttributeBindingContainer();
+
+	ClassInfo getClassInfo();
 }

@@ -21,7 +21,7 @@ public class UnidirectionalMulIdWithNulls extends BaseEnversJPAFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {EmbIdTestEntity.class, UniRefIngMulIdEntity.class};
+		return new Class[] {EmbIdTestEntity.class, UniRefIngMulIdEntity.class, EmbId.class};
 	}
 
 	@Test

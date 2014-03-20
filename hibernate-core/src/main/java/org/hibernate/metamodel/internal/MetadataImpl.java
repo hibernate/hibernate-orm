@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -67,6 +68,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final TypeResolver typeResolver;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
 
+	private final UUID uuid;
+
 	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
 	private final Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
@@ -85,6 +88,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			StandardServiceRegistry serviceRegistry,
 			Database database,
 			TypeResolver typeResolver,
+			UUID uuid,
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, TypeDefinition> typeDefinitionMap,
 			Map<String, FilterDefinition> filterDefinitionMap,
@@ -102,6 +106,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.serviceRegistry = serviceRegistry;
 		this.database = database;
 		this.typeResolver = typeResolver;
+		this.uuid = uuid;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 
 		if ( typeDefinitionMap != null ) {
@@ -277,6 +282,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public SessionFactory buildSessionFactory() {
 		return getSessionFactoryBuilder().build();
+	}
+
+	@Override
+	public UUID getUUID() {
+		return null;
 	}
 
 	@Override

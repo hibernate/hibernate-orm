@@ -25,37 +25,42 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.JoinColumn;
-import javax.persistence.MapKey;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AccessType;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.event.spi.EnversDotNames;
 import org.hibernate.envers.internal.tools.MappingTools;
-import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.domain.Attribute;
+import org.hibernate.metamodel.spi.domain.Hierarchical;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -72,11 +77,11 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class AuditedPropertiesReader {
-	protected final ModificationStore defaultStore;
-	private final PersistentPropertiesSource persistentPropertiesSource;
+	private final AuditConfiguration.AuditConfigurationContext context;
+	// TODO: is AttributeBindingContainer actually needed or is Hierarchical sufficient?
+	private final PersistentPropertiesSource processedPersistentPropertiesSource;
+	private final ClassInfo processedClassInfo;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
-	private final GlobalConfiguration globalCfg;
-	private final ReflectionManager reflectionManager;
 	private final String propertyNamePrefix;
 
 	private final Set<String> propertyAccessedPersistentProperties;
@@ -84,24 +89,23 @@ public class AuditedPropertiesReader {
 	// Mapping class field to corresponding <properties> element.
 	private final Map<String, String> propertiesGroupMapping;
 
-	private final Set<XProperty> overriddenAuditedProperties;
-	private final Set<XProperty> overriddenNotAuditedProperties;
+	private final Set<Attribute> overriddenAuditedProperties;
+	private final Set<Attribute> overriddenNotAuditedProperties;
 
-	private final Set<XClass> overriddenAuditedClasses;
-	private final Set<XClass> overriddenNotAuditedClasses;
+	private final Set<Hierarchical> overriddenAuditedClasses;
+	private final Set<Hierarchical> overriddenNotAuditedClasses;
 
 	public AuditedPropertiesReader(
-			ModificationStore defaultStore,
-			PersistentPropertiesSource persistentPropertiesSource,
+			AuditConfiguration.AuditConfigurationContext context,
 			AuditedPropertiesHolder auditedPropertiesHolder,
-			GlobalConfiguration globalCfg,
-			ReflectionManager reflectionManager,
+			PersistentPropertiesSource processedPersistentPropertiesSource,
 			String propertyNamePrefix) {
-		this.defaultStore = defaultStore;
-		this.persistentPropertiesSource = persistentPropertiesSource;
+		this.context = context;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
-		this.globalCfg = globalCfg;
-		this.reflectionManager = reflectionManager;
+		this.processedPersistentPropertiesSource = processedPersistentPropertiesSource;
+		this.processedClassInfo = context.getClassInfo(
+				processedPersistentPropertiesSource.getAttributeBindingContainer().getAttributeContainer()
+		);
 		this.propertyNamePrefix = propertyNamePrefix;
 
 		propertyAccessedPersistentProperties = newHashSet();
@@ -119,103 +123,122 @@ public class AuditedPropertiesReader {
 		// First reading the access types for the persistent properties.
 		readPersistentPropertiesAccess();
 
-		if ( persistentPropertiesSource instanceof DynamicComponentSource ) {
-			addPropertiesFromDynamicComponent( (DynamicComponentSource) persistentPropertiesSource );
+		if ( processedPersistentPropertiesSource instanceof DynamicComponentSource ) {
+			addPropertiesFromDynamicComponent( (DynamicComponentSource) processedPersistentPropertiesSource );
 		}
 		else {
 			// Retrieve classes and properties that are explicitly marked for auditing process by any superclass
 			// of currently mapped entity or itself.
-			final XClass clazz = persistentPropertiesSource.getXClass();
-			readAuditOverrides( clazz );
+			readAuditOverrides(
+					processedClassInfo,
+					(Hierarchical) processedPersistentPropertiesSource.getAttributeBindingContainer().getAttributeContainer()
+			);
 
 			// Adding all properties from the given class.
-			addPropertiesFromClass( clazz );
+			addPropertiesFromClass( processedPersistentPropertiesSource.getAttributeBindingContainer() );
 		}
+	}
+
+	protected AuditConfiguration.AuditConfigurationContext getContext() {
+		return context;
 	}
 
 	/**
 	 * Recursively constructs sets of audited and not audited properties and classes which behavior has been overridden
 	 * using {@link AuditOverride} annotation.
 	 *
-	 * @param clazz Class that is being processed. Currently mapped entity shall be passed during first invocation.
+	 * @param classInfo Class that is being processed. Currently mapped entity shall be passed during first invocation.
 	 */
-	private void readAuditOverrides(XClass clazz) {
-		/* TODO: Code to remove with @Audited.auditParents - start. */
-		final Audited allClassAudited = clazz.getAnnotation( Audited.class );
-		if ( allClassAudited != null && allClassAudited.auditParents().length > 0 ) {
-			for ( Class c : allClassAudited.auditParents() ) {
-				final XClass parentClass = reflectionManager.toXClass( c );
-				checkSuperclass( clazz, parentClass );
-				if ( !overriddenNotAuditedClasses.contains( parentClass ) ) {
-					// If the class has not been marked as not audited by the subclass.
-					overriddenAuditedClasses.add( parentClass );
-				}
-			}
-		}
-		/* TODO: Code to remove with @Audited.auditParents - finish. */
-		final List<AuditOverride> auditOverrides = computeAuditOverrides( clazz );
-		for ( AuditOverride auditOverride : auditOverrides ) {
-			if ( auditOverride.forClass() != void.class ) {
-				final XClass overrideClass = reflectionManager.toXClass( auditOverride.forClass() );
-				checkSuperclass( clazz, overrideClass );
-				final String propertyName = auditOverride.name();
+	private void readAuditOverrides(ClassInfo classInfo, Hierarchical hierarchical) {
+		final ClassLoaderService classLoaderService = context.getClassLoaderService() ;
+		// TODO: Remove auditParents.
+		final List<AnnotationInstance> auditOverrides = computeAuditOverrides( classInfo );
+		for (AnnotationInstance auditOverride : auditOverrides) {
+			final String overrideClassName = JandexHelper.getValue(
+					auditOverride, "forClass", String.class, classLoaderService
+			);
+			final boolean isAudited = JandexHelper.getValue(
+					auditOverride, "isAudited", boolean.class, classLoaderService
+			);
+			if ( !void.class.getName().equals( overrideClassName )) {
+				final ClassInfo overrideClassInfo = context.getClassInfo( overrideClassName );
+				checkSuperclass( classInfo, overrideClassInfo );
+				final Hierarchical overrideHierarchical = getSuperHierarchical( hierarchical, overrideClassName );
+				final String propertyName = JandexHelper.getValue( auditOverride, "name", String.class, classLoaderService );
 				if ( !StringTools.isEmpty( propertyName ) ) {
 					// Override @Audited annotation on property level.
-					final XProperty property = getProperty( overrideClass, propertyName );
-					if ( auditOverride.isAudited() ) {
-						if ( !overriddenNotAuditedProperties.contains( property ) ) {
+					final Attribute overrideAttribute = getAttribute( overrideHierarchical, propertyName );
+					if ( isAudited ) {
+						if ( !overriddenNotAuditedProperties.contains( overrideAttribute ) ) {
 							// If the property has not been marked as not audited by the subclass.
-							overriddenAuditedProperties.add( property );
+							overriddenAuditedProperties.add( overrideAttribute );
 						}
 					}
 					else {
-						if ( !overriddenAuditedProperties.contains( property ) ) {
+						if ( !overriddenAuditedProperties.contains( overrideAttribute ) ) {
 							// If the property has not been marked as audited by the subclass.
-							overriddenNotAuditedProperties.add( property );
+							overriddenNotAuditedProperties.add( overrideAttribute );
 						}
 					}
-				}
-				else {
+				} else {
 					// Override @Audited annotation on class level.
-					if ( auditOverride.isAudited() ) {
-						if ( !overriddenNotAuditedClasses.contains( overrideClass ) ) {
+					if ( isAudited ) {
+						if (!overriddenNotAuditedClasses.contains( overrideHierarchical )) {
 							// If the class has not been marked as not audited by the subclass.
-							overriddenAuditedClasses.add( overrideClass );
+							overriddenAuditedClasses.add( overrideHierarchical );
 						}
-					}
-					else {
-						if ( !overriddenAuditedClasses.contains( overrideClass ) ) {
+					} else {
+						if (!overriddenAuditedClasses.contains( overrideHierarchical )) {
 							// If the class has not been marked as audited by the subclass.
-							overriddenNotAuditedClasses.add( overrideClass );
+							overriddenNotAuditedClasses.add( overrideHierarchical );
 						}
 					}
 				}
 			}
 		}
-		final XClass superclass = clazz.getSuperclass();
-		if ( !clazz.isInterface() && !Object.class.getName().equals( superclass.getName() ) ) {
-			readAuditOverrides( superclass );
+		// TODO: how to distinguish interface: !clazz.isInterface() &&
+		// if (!clazz.isInterface() && !Object.class.getName().equals(superclass.getName())) {
+		if ( !Object.class.getName().equals( classInfo.superName().toString() ) ) {
+			readAuditOverrides( context.getClassInfo( classInfo.superName() ), hierarchical.getSuperType() );
 		}
 	}
 
+	private Hierarchical getSuperHierarchical(Hierarchical hierarchical, String superclassName) {
+		Hierarchical superHierarchical = hierarchical.getSuperType();
+		while ( superHierarchical != null ) {
+			if ( superclassName.equals( superHierarchical.getDescriptor().getName().toString() ) ) {
+				return superHierarchical;
+			}
+			superHierarchical = superHierarchical.getSuperType();
+		}
+		throw new IllegalStateException(
+				String.format( "Hierarchical [%s] does not have a superclass with name [%s] ",
+						hierarchical.getRoleBaseName(),
+						superclassName
+				)
+		);
+	}
+
 	/**
-	 * @param clazz Source class.
+	 * @param classInfo Source {@link ClassInfo}.
 	 *
 	 * @return List of @AuditOverride annotations applied at class level.
 	 */
-	private List<AuditOverride> computeAuditOverrides(XClass clazz) {
-		final AuditOverrides auditOverrides = clazz.getAnnotation( AuditOverrides.class );
-		final AuditOverride auditOverride = clazz.getAnnotation( AuditOverride.class );
+	private List<AnnotationInstance> computeAuditOverrides(ClassInfo classInfo) {
+		AnnotationInstance auditOverrides = JandexHelper.getSingleAnnotation( classInfo, EnversDotNames.AUDIT_OVERRIDES );
+		AnnotationInstance auditOverride = JandexHelper.getSingleAnnotation( classInfo, EnversDotNames.AUDIT_OVERRIDE );
 		if ( auditOverrides == null && auditOverride != null ) {
 			return Arrays.asList( auditOverride );
 		}
 		else if ( auditOverrides != null && auditOverride == null ) {
-			return Arrays.asList( auditOverrides.value() );
+			return Arrays.asList(
+					JandexHelper.getValue( auditOverrides, "value", AnnotationInstance[].class, context.getClassLoaderService() )
+			);
 		}
 		else if ( auditOverrides != null && auditOverride != null ) {
 			throw new MappingException(
 					"@AuditOverrides annotation should encapsulate all @AuditOverride declarations. " +
-							"Please revise Envers annotations applied to class " + clazz.getName() + "."
+							"Please revise Envers annotations applied to class " + classInfo.name() + "."
 			);
 		}
 		return Collections.emptyList();
@@ -223,15 +246,14 @@ public class AuditedPropertiesReader {
 
 	/**
 	 * Checks whether one class is assignable from another. If not {@link MappingException} is thrown.
-	 *
 	 * @param child Subclass.
 	 * @param parent Superclass.
 	 */
-	private void checkSuperclass(XClass child, XClass parent) {
-		if ( !parent.isAssignableFrom( child ) ) {
+	private void checkSuperclass(ClassInfo child, ClassInfo parent) {
+		if ( !context.getJandexIndex().getAllKnownSubclasses( parent.name() ).contains( child ) ) {
 			throw new MappingException(
-					"Class " + parent.getName() + " is not assignable from " + child.getName() + ". " +
-							"Please revise Envers annotations applied to " + child.getName() + " type."
+					"Class " + parent.name() + " is not assignable from " + child.name() + ". " +
+							"Please revise Envers annotations applied to " + child.name() + " type."
 			);
 		}
 	}
@@ -239,85 +261,88 @@ public class AuditedPropertiesReader {
 	/**
 	 * Checks whether class contains property with a given name. If not {@link MappingException} is thrown.
 	 *
-	 * @param clazz Class.
+	 * @param hierarchical The Hierarchical domain object..
 	 * @param propertyName Property name.
-	 *
-	 * @return Property object.
+	 * @return the attribute binding.
 	 */
-	private XProperty getProperty(XClass clazz, String propertyName) {
-		final XProperty property = ReflectionTools.getProperty( clazz, propertyName );
-		if ( property == null ) {
+	private Attribute getAttribute(Hierarchical hierarchical, String propertyName) {
+		final Attribute attribute = hierarchical.locateAttribute( propertyName );
+		if ( attribute == null ) {
 			throw new MappingException(
-					"Property '" + propertyName + "' not found in class " + clazz.getName() + ". " +
-							"Please revise Envers annotations applied to class " + persistentPropertiesSource.getXClass() + "."
+					"Property '" + propertyName + "' not found in class " + hierarchical.getDescriptor().getName().toString() + ". " +
+							"Please revise Envers annotations applied to class " + processedClassInfo.name() + "."
 			);
 		}
-		return property;
+		return attribute;
 	}
 
 	private void readPersistentPropertiesAccess() {
-		final Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
-		while ( propertyIter.hasNext() ) {
-			final Property property = propertyIter.next();
-			addPersistentProperty( property );
-			if ( "embedded".equals( property.getPropertyAccessorName() ) && property.getName()
-					.equals( property.getNodeName() ) ) {
-				// If property name equals node name and embedded accessor type is used, processing component
-				// has been defined with <properties> tag. See HHH-6636 JIRA issue.
-				createPropertiesGroupMapping( property );
-			}
+		for ( AttributeBinding attributeBinding : processedPersistentPropertiesSource.getNonIdAttributeBindings() ) {
+			addPersistentAttribute( attributeBinding );
+//			TODO: if ("embedded".equals(property.getPropertyAccessorName()) && property.getName().equals(property.getNodeName())) {
+//				// If property name equals node name and embedded accessor type is used, processing component
+//				// has been defined with <properties> tag. See HHH-6636 JIRA issue.
+//				createPropertiesGroupMapping(property);
+//			}
 		}
 	}
 
-	private void addPersistentProperty(Property property) {
-		if ( "field".equals( property.getPropertyAccessorName() ) ) {
-			fieldAccessedPersistentProperties.add( property.getName() );
+	private void addPersistentAttribute(AttributeBinding attributeBinding) {
+		if ( "field".equals( attributeBinding.getPropertyAccessorName() ) ) {
+			fieldAccessedPersistentProperties.add( attributeBinding.getAttribute().getName() );
 		}
 		else {
-			propertyAccessedPersistentProperties.add( property.getName() );
+			propertyAccessedPersistentProperties.add( attributeBinding.getAttribute().getName() );
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private void createPropertiesGroupMapping(Property property) {
-		final Component component = (Component) property.getValue();
-		final Iterator<Property> componentProperties = component.getPropertyIterator();
-		while ( componentProperties.hasNext() ) {
-			final Property componentProperty = componentProperties.next();
-			propertiesGroupMapping.put( componentProperty.getName(), component.getNodeName() );
-		}
-	}
+	// TODO: add support for <properties/>
+	//@SuppressWarnings("unchecked")
+	//private void createPropertiesGroupMapping(Property property) {
+	//	final Component component = (Component) property.getValue();
+	//	final Iterator<Property> componentProperties = component.getPropertyIterator();
+	//	while ( componentProperties.hasNext() ) {
+	//		final Property componentProperty = componentProperties.next();
+	//		propertiesGroupMapping.put( componentProperty.getName(), component.getNodeName() );
+	//	}
+	//}
 
 	/**
-	 * @param clazz Class which properties are currently being added.
-	 *
+	 * @param attributeBindingContainer Class which properties are currently being added.
 	 * @return {@link Audited} annotation of specified class. If processed type hasn't been explicitly marked, method
 	 *         checks whether given class exists in {@link AuditedPropertiesReader#overriddenAuditedClasses} collection.
 	 *         In case of success, {@link Audited} configuration of currently mapped entity is returned, otherwise
 	 *         {@code null}. If processed type exists in {@link AuditedPropertiesReader#overriddenNotAuditedClasses}
 	 *         collection, the result is also {@code null}.
 	 */
-	private Audited computeAuditConfiguration(XClass clazz) {
-		Audited allClassAudited = clazz.getAnnotation( Audited.class );
+	private Audited computeAuditConfiguration(AttributeBindingContainer attributeBindingContainer) {
+		final ClassInfo classInfo = context.getClassInfo( attributeBindingContainer.getAttributeContainer() );
+		// TODO: Check this method if I have migrated everything correctly.
+		final AnnotationInstance allClassAudited = JandexHelper.getSingleAnnotation(
+				classInfo.annotations(),
+				EnversDotNames.AUDITED,
+				classInfo
+		);
 		// If processed class is not explicitly marked with @Audited annotation, check whether auditing is
 		// forced by any of its child entities configuration (@AuditedOverride.forClass).
-		if ( allClassAudited == null && overriddenAuditedClasses.contains( clazz ) ) {
+		final Hierarchical hierarchical = (Hierarchical) attributeBindingContainer.getAttributeContainer();
+		if ( allClassAudited == null && overriddenAuditedClasses.contains( hierarchical  ) ) {
 			// Declared audited parent copies @Audited.modStore and @Audited.targetAuditMode configuration from
 			// currently mapped entity.
-			allClassAudited = persistentPropertiesSource.getXClass().getAnnotation( Audited.class );
-			if ( allClassAudited == null ) {
+			if ( JandexHelper.getSingleAnnotation( processedClassInfo, EnversDotNames.AUDITED ) == null ) {
 				// If parent class declares @Audited on the field/property level.
-				allClassAudited = DEFAULT_AUDITED;
+				return DEFAULT_AUDITED;
 			}
 		}
-		else if ( allClassAudited != null && overriddenNotAuditedClasses.contains( clazz ) ) {
+		else if ( allClassAudited != null && overriddenNotAuditedClasses.contains( hierarchical ) ) {
 			return null;
 		}
-		return allClassAudited;
+
+		return allClassAudited == null ? null : context.getAnnotationProxy( allClassAudited, Audited.class );
 	}
 
 	private void addPropertiesFromDynamicComponent(DynamicComponentSource dynamicComponentSource) {
-		Audited audited = computeAuditConfiguration( dynamicComponentSource.getXClass() );
+		Audited audited = computeAuditConfiguration( dynamicComponentSource.getAttributeBindingContainer() );
 		if ( !fieldAccessedPersistentProperties.isEmpty() ) {
 			throw new MappingException(
 					"Audited dynamic component cannot have properties with access=\"field\" for properties: " + fieldAccessedPersistentProperties + ". \n Change properties access=\"property\", to make it work)"
@@ -326,18 +351,17 @@ public class AuditedPropertiesReader {
 		for ( String property : propertyAccessedPersistentProperties ) {
 			String accessType = AccessType.PROPERTY.getType();
 			if ( !auditedPropertiesHolder.contains( property ) ) {
-				final Value propertyValue = persistentPropertiesSource.getProperty( property ).getValue();
-				if ( propertyValue instanceof Component ) {
+				final AttributeBinding attributeBinding = processedPersistentPropertiesSource.getAttributeBinding( property );
+				if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
 					this.addFromComponentProperty(
-							new DynamicProperty( dynamicComponentSource, property ),
+							(CompositeAttributeBinding) attributeBinding,
 							accessType,
-							(Component) propertyValue,
 							audited
 					);
 				}
 				else {
 					this.addFromNotComponentProperty(
-							new DynamicProperty( dynamicComponentSource, property ),
+							attributeBinding,
 							accessType,
 							audited
 					);
@@ -346,218 +370,218 @@ public class AuditedPropertiesReader {
 		}
 	}
 
+	private Collection<AttributeBinding> getAttributeBindings(
+			AttributeBindingContainer attributeBindingContainer,
+			String propertyAccessorName) {
+		// TODO: why a LinkedList?
+		final List<AttributeBinding> attributes = new LinkedList<AttributeBinding>();
+		for ( AttributeBinding attributeBinding : attributeBindingContainer.attributeBindings() ) {
+			if ( propertyAccessorName.equals( attributeBinding.getPropertyAccessorName() ) ) {
+				attributes.add( attributeBinding );
+			}
+		}
+		return attributes;
+	}
+
 	/**
 	 * Recursively adds all audited properties of entity class and its superclasses.
 	 *
-	 * @param clazz Currently processed class.
+	 * @param attributeBindingContainer Currently processed attribute binding container..
 	 */
-	private void addPropertiesFromClass(XClass clazz) {
-		final Audited allClassAudited = computeAuditConfiguration( clazz );
+	private void addPropertiesFromClass(AttributeBindingContainer attributeBindingContainer)  {
+		final ClassInfo classInfo = context.getClassInfo( attributeBindingContainer.getAttributeContainer() );
+
+		final Audited allClassAudited = computeAuditConfiguration( attributeBindingContainer );
 
 		//look in the class
-		addFromProperties(
-				clazz.getDeclaredProperties( "field" ),
-				"field",
-				fieldAccessedPersistentProperties,
-				allClassAudited
-		);
-		addFromProperties(
-				clazz.getDeclaredProperties( "property" ),
-				"property",
-				propertyAccessedPersistentProperties,
-				allClassAudited
-		);
+		addFromProperties( getAttributeBindings( attributeBindingContainer, "field" ), "field", fieldAccessedPersistentProperties, allClassAudited );
+		addFromProperties( getAttributeBindings( attributeBindingContainer, "property" ), "property", propertyAccessedPersistentProperties, allClassAudited );
 
 		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
-			final XClass superclazz = clazz.getSuperclass();
-			if ( !clazz.isInterface() && !"java.lang.Object".equals( superclazz.getName() ) ) {
-				addPropertiesFromClass( superclazz );
+			if ( EntityBinding.class.isInstance( attributeBindingContainer ) ) {
+				final EntityBinding entityBinding = (EntityBinding) attributeBindingContainer;
+				if ( entityBinding.getSuperEntityBinding() != null ) {
+					addPropertiesFromClass( entityBinding.getSuperEntityBinding() );
+				}
 			}
 		}
 	}
 
 	private void addFromProperties(
-			Iterable<XProperty> properties,
+			Iterable<AttributeBinding> attributes,
 			String accessType,
 			Set<String> persistentProperties,
 			Audited allClassAudited) {
-		for ( XProperty property : properties ) {
-			// If this is not a persistent property, with the same access type as currently checked,
-			// it's not audited as well.
-			// If the property was already defined by the subclass, is ignored by superclasses
-			if ( persistentProperties.contains( property.getName() )
-					&& !auditedPropertiesHolder.contains( property.getName() ) ) {
-				final Value propertyValue = persistentPropertiesSource.getProperty( property.getName() ).getValue();
-				if ( propertyValue instanceof Component ) {
-					this.addFromComponentProperty( property, accessType, (Component) propertyValue, allClassAudited );
+		for ( AttributeBinding attributeBinding : attributes ) {
+				// If this is not a persistent property, with the same access type as currently checked,
+				// it's not audited as well.
+				// If the property was already defined by the subclass, is ignored by superclasses
+				final String attributeName = attributeBinding.getAttribute().getName();
+				if ( persistentProperties.contains( attributeName ) && !auditedPropertiesHolder.contains( attributeName ) ) {
+					if ( attributeBinding instanceof CompositeAttributeBinding ) {
+						this.addFromComponentProperty(
+								(CompositeAttributeBinding) attributeBinding, accessType, allClassAudited
+						);
+					}
+					else {
+						// TODO: is "this." needed?
+						this.addFromNotComponentProperty( attributeBinding, accessType, allClassAudited );
+					}
 				}
-				else {
-					this.addFromNotComponentProperty( property, accessType, allClassAudited );
-				}
-			}
-			else if ( propertiesGroupMapping.containsKey( property.getName() ) ) {
-				// Retrieve embedded component name based on class field.
-				final String embeddedName = propertiesGroupMapping.get( property.getName() );
-				if ( !auditedPropertiesHolder.contains( embeddedName ) ) {
-					// Manage properties mapped within <properties> tag.
-					final Value propertyValue = persistentPropertiesSource.getProperty( embeddedName ).getValue();
-					this.addFromPropertiesGroup(
-							embeddedName,
-							property,
-							accessType,
-							(Component) propertyValue,
-							allClassAudited
-					);
-				}
-			}
+//			TODO: else if ( propertiesGroupMapping.containsKey( attributeName ) ) {
+//				// Retrieve embedded component name based on class field.
+//				final String embeddedName = propertiesGroupMapping.get(attributeName);
+//				if (!auditedPropertiesHolder.contains(embeddedName)) {
+//					// Manage properties mapped within <properties> tag.
+//					Value propertyValue = persistentPropertiesSource.getProperty(embeddedName).getValue();
+//					this.addFromPropertiesGroup( embeddedName, property, accessType, (Component) propertyValue, allClassAudited );
+//				}
+//			}
 		}
 	}
 
-	private void addFromPropertiesGroup(
-			String embeddedName,
-			XProperty property,
-			String accessType,
-			Component propertyValue,
-			Audited allClassAudited) {
-		final ComponentAuditingData componentData = new ComponentAuditingData();
-		final boolean isAudited = fillPropertyData( property, componentData, accessType, allClassAudited );
-		if ( isAudited ) {
-			// EntityPersister.getPropertyNames() returns name of embedded component instead of class field.
-			componentData.setName( embeddedName );
-			// Marking component properties as placed directly in class (not inside another component).
-			componentData.setBeanName( null );
-
-			final PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-					reflectionManager,
-					propertyValue
-			);
-			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
-					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
-			);
-			audPropReader.read();
-
-			auditedPropertiesHolder.addPropertyAuditingData( embeddedName, componentData );
-		}
-	}
+// TODO:	private void addFromPropertiesGroup(
+//			String embeddedName,
+//			XProperty property,
+//			String accessType,
+//			Component propertyValue,
+//			Audited allClassAudited) {
+//		final ComponentAuditingData componentData = new ComponentAuditingData();
+//		final boolean isAudited = fillPropertyData( property, componentData, accessType, allClassAudited );
+//		if ( isAudited ) {
+//			// EntityPersister.getPropertyNames() returns name of embedded component instead of class field.
+//			componentData.setName( embeddedName );
+//			// Marking component properties as placed directly in class (not inside another component).
+//			componentData.setBeanName( null );
+//
+//			final PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
+//					reflectionManager,
+//					propertyValue
+//			);
+//			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
+//					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+//					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
+//			);
+//			audPropReader.read();
+//
+//			auditedPropertiesHolder.addPropertyAuditingData( embeddedName, componentData );
+//		}
+//	}
 
 	private void addFromComponentProperty(
-			XProperty property,
+			CompositeAttributeBinding attributeBinding,
 			String accessType,
-			Component propertyValue,
 			Audited allClassAudited) {
 		final ComponentAuditingData componentData = new ComponentAuditingData();
-		final boolean isAudited = fillPropertyData( property, componentData, accessType, allClassAudited );
+		final boolean isAudited = fillPropertyData( attributeBinding.getAttribute(), componentData, accessType, allClassAudited );
 
 		final PersistentPropertiesSource componentPropertiesSource;
-		if ( propertyValue.isDynamic() ) {
-			componentPropertiesSource = new DynamicComponentSource( reflectionManager, propertyValue, property );
-		}
-		else {
-			componentPropertiesSource = new ComponentPropertiesSource( reflectionManager, propertyValue );
-		}
+		// TODO:
+		//if ( attributeBinding.isDynamic() ) {
+		//	componentPropertiesSource = new DynamicComponentSource( attributeBinding );
+		//}
+		//else {
+			componentPropertiesSource = new ComponentPropertiesSource(
+					context.getClassInfo( attributeBinding.getAttributeContainer() ),
+					attributeBinding
+			);
+		//}
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
-				ModificationStore.FULL,
-				componentPropertiesSource,
+				context,
 				componentData,
-				globalCfg,
-				reflectionManager,
-				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
+				componentPropertiesSource,
+				propertyNamePrefix + MappingTools.createComponentPrefix( attributeBinding.getAttribute().getName() )
 		);
 		audPropReader.read();
 
 		if ( isAudited ) {
 			// Now we know that the property is audited
-			auditedPropertiesHolder.addPropertyAuditingData( property.getName(), componentData );
+			auditedPropertiesHolder.addPropertyAuditingData( attributeBinding.getAttribute().getName(), componentData );
 		}
 	}
 
-	private void addFromNotComponentProperty(XProperty property, String accessType, Audited allClassAudited) {
-		final PropertyAuditingData propertyData = new PropertyAuditingData();
-		final boolean isAudited = fillPropertyData( property, propertyData, accessType, allClassAudited );
+	private void addFromNotComponentProperty(AttributeBinding attributeBinding, String accessType, Audited allClassAudited) {
+		PropertyAuditingData propertyData = new PropertyAuditingData();
+		boolean isAudited = fillPropertyData( attributeBinding.getAttribute(), propertyData, accessType, allClassAudited );
 
 		if ( isAudited ) {
 			// Now we know that the property is audited
-			auditedPropertiesHolder.addPropertyAuditingData( property.getName(), propertyData );
+			auditedPropertiesHolder.addPropertyAuditingData( attributeBinding.getAttribute().getName(), propertyData );
 		}
 	}
 
-
 	/**
 	 * Checks if a property is audited and if yes, fills all of its data.
-	 *
-	 * @param property Property to check.
+	 * @param attribute Property to check.
 	 * @param propertyData Property data, on which to set this property's modification store.
 	 * @param accessType Access type for the property.
-	 *
 	 * @return False if this property is not audited.
 	 */
 	private boolean fillPropertyData(
-			XProperty property,
+			Attribute attribute,
 			PropertyAuditingData propertyData,
 			String accessType,
 			Audited allClassAudited) {
-
 		// check if a property is declared as not audited to exclude it
 		// useful if a class is audited but some properties should be excluded
-		final NotAudited unVer = property.getAnnotation( NotAudited.class );
-		if ( ( unVer != null
-				&& !overriddenAuditedProperties.contains( property ) )
-				|| overriddenNotAuditedProperties.contains( property ) ) {
+		Map<DotName, List<AnnotationInstance>> attributeAnnotations = context.locateAttributeAnnotations(
+				attribute
+		);
+		if ( ( attributeAnnotations.containsKey( EnversDotNames.NOT_AUDITED ) && !overriddenAuditedProperties.contains( attribute ) )
+				|| overriddenNotAuditedProperties.contains( attribute ) ) {
 			return false;
 		}
 		else {
 			// if the optimistic locking field has to be unversioned and the current property
 			// is the optimistic locking field, don't audit it
-			if ( globalCfg.isDoNotAuditOptimisticLockingField() ) {
-				final Version jpaVer = property.getAnnotation( Version.class );
-				if ( jpaVer != null ) {
+			if ( context.getGlobalConfiguration().isDoNotAuditOptimisticLockingField() ) {
+				if ( attributeAnnotations.containsKey( JPADotNames.VERSION ) ) {
 					return false;
 				}
 			}
 		}
 
-
-		if ( !this.checkAudited( property, propertyData, allClassAudited ) ) {
+		// TODO: is "this." needed?
+		if ( !this.checkAudited( attribute, propertyData, allClassAudited ) ) {
 			return false;
 		}
 
-		final String propertyName = propertyNamePrefix + property.getName();
+		String propertyName = propertyNamePrefix + attribute.getName();
 		propertyData.setName( propertyName );
 		propertyData.setModifiedFlagName(
 				MetadataTools.getModifiedFlagPropertyName(
 						propertyName,
-						globalCfg.getModifiedFlagSuffix()
+						context.getGlobalConfiguration().getModifiedFlagSuffix()
 				)
 		);
-		propertyData.setBeanName( property.getName() );
+		propertyData.setBeanName( attribute.getName() );
 		propertyData.setAccessType( accessType );
 
-		addPropertyJoinTables( property, propertyData );
-		addPropertyAuditingOverrides( property, propertyData );
-		if ( !processPropertyAuditingOverrides( property, propertyData ) ) {
-			// not audited due to AuditOverride annotation
-			return false;
+		addPropertyJoinTables( attributeAnnotations, propertyData );
+		addPropertyAuditingOverrides( attributeAnnotations, propertyData );
+		if ( !processPropertyAuditingOverrides( attribute, propertyData ) ) {
+			return false; // not audited due to AuditOverride annotation
 		}
-		addPropertyMapKey( property, propertyData );
-		setPropertyAuditMappedBy( property, propertyData );
-		setPropertyRelationMappedBy( property, propertyData );
+		addPropertyMapKey( attributeAnnotations, propertyData );
+		setPropertyAuditMappedBy( attributeAnnotations, propertyData );
+		setPropertyRelationMappedBy( attributeAnnotations, propertyData );
 
 		return true;
 	}
 
-
-	protected boolean checkAudited(
-			XProperty property,
-			PropertyAuditingData propertyData, Audited allClassAudited) {
+	protected boolean checkAudited(Attribute attribute, PropertyAuditingData propertyData, Audited allClassAudited) {
+		Map<DotName, List<AnnotationInstance>> attributeAnnotations = context.locateAttributeAnnotations( attribute );
 		// Checking if this property is explicitly audited or if all properties are.
-		Audited aud = ( property.isAnnotationPresent( Audited.class ) )
-				? property.getAnnotation( Audited.class )
+		Audited aud = attributeAnnotations.containsKey( EnversDotNames.AUDITED )
+				? context.getAnnotationProxy(
+				attributeAnnotations.get( EnversDotNames.AUDITED ).get( 0 ),
+				Audited.class
+		)
 				: allClassAudited;
-		if ( aud == null
-				&& overriddenAuditedProperties.contains( property )
-				&& !overriddenNotAuditedProperties.contains( property ) ) {
+		if ( aud == null &&
+				overriddenAuditedProperties.contains( attribute ) &&
+				!overriddenNotAuditedProperties.contains( attribute ) ) {
 			// Assigning @Audited defaults. If anyone needs to customize those values in the future,
 			// appropriate fields shall be added to @AuditOverride annotation.
 			aud = DEFAULT_AUDITED;
@@ -574,84 +598,117 @@ public class AuditedPropertiesReader {
 	}
 
 	protected boolean checkUsingModifiedFlag(Audited aud) {
-		return globalCfg.hasSettingForUsingModifiedFlag() ?
-				globalCfg.isGlobalWithModifiedFlag() : aud.withModifiedFlag();
+		return context.getGlobalConfiguration().hasSettingForUsingModifiedFlag() ?
+				context.getGlobalConfiguration().isGlobalWithModifiedFlag() : aud.withModifiedFlag();
 	}
 
-	private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {
-		final OneToMany oneToMany = property.getAnnotation( OneToMany.class );
-		if ( oneToMany != null && !"".equals( oneToMany.mappedBy() ) ) {
-			propertyData.setRelationMappedBy( oneToMany.mappedBy() );
-		}
-	}
-
-	private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
-		final AuditMappedBy auditMappedBy = property.getAnnotation( AuditMappedBy.class );
-		if ( auditMappedBy != null ) {
-			propertyData.setAuditMappedBy( auditMappedBy.mappedBy() );
-			if ( !"".equals( auditMappedBy.positionMappedBy() ) ) {
-				propertyData.setPositionMappedBy( auditMappedBy.positionMappedBy() );
+	private void setPropertyRelationMappedBy(Map<DotName, List<AnnotationInstance>> attributeAnnotations,
+											 PropertyAuditingData propertyData) {
+		final AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation(
+				attributeAnnotations,
+				JPADotNames.ONE_TO_MANY
+		);
+		if ( oneToMany != null ) {
+			final String mappedBy = JandexHelper.getValue(
+					oneToMany, "mappedBy", String.class, context.getClassLoaderService()
+			);
+			if ( StringHelper.isNotEmpty( mappedBy ) ) {
+				propertyData.setRelationMappedBy( mappedBy );
 			}
 		}
 	}
 
-	private void addPropertyMapKey(XProperty property, PropertyAuditingData propertyData) {
-		final MapKey mapKey = property.getAnnotation( MapKey.class );
-		if ( mapKey != null ) {
-			propertyData.setMapKey( mapKey.name() );
+	private void setPropertyAuditMappedBy(
+			Map<DotName, List<AnnotationInstance>> attributeAnnotations,
+			PropertyAuditingData propertyData) {
+		final AnnotationInstance auditMappedBy = JandexHelper.getSingleAnnotation(
+				attributeAnnotations,
+				EnversDotNames.AUDIT_MAPPED_BY
+		);
+		if ( auditMappedBy != null ) {
+			propertyData.setAuditMappedBy(
+					JandexHelper.getValue( auditMappedBy, "mappedBy", String.class, context.getClassLoaderService() )
+			);
+			final String positionMappedBy = JandexHelper.getValue(
+					auditMappedBy, "positionMappedBy", String.class, context.getClassLoaderService()
+			);
+			if ( StringHelper.isNotEmpty( positionMappedBy ) ) {
+				propertyData.setPositionMappedBy( positionMappedBy );
+			}
 		}
 	}
 
-	private void addPropertyJoinTables(XProperty property, PropertyAuditingData propertyData) {
-		// first set the join table based on the AuditJoinTable annotation
-		final AuditJoinTable joinTable = property.getAnnotation( AuditJoinTable.class );
-		if ( joinTable != null ) {
-			propertyData.setJoinTable( joinTable );
+	private void addPropertyMapKey(
+			Map<DotName, List<AnnotationInstance>> attributeAnnotations,
+			PropertyAuditingData propertyData) {
+		final AnnotationInstance mapKey = JandexHelper.getSingleAnnotation( attributeAnnotations, JPADotNames.MAP_KEY );
+		if ( mapKey != null ) {
+			propertyData.setMapKey(
+					JandexHelper.getValue(
+							mapKey,
+							"name",
+							String.class,
+							context.getClassLoaderService()
+					)
+			);
 		}
-		else {
+	}
+
+	private void addPropertyJoinTables(Map<DotName, List<AnnotationInstance>> attributeAnnotations,
+									   PropertyAuditingData propertyData) {
+		// first set the join table based on the AuditJoinTable annotation
+		final AnnotationInstance joinTable = JandexHelper.getSingleAnnotation(
+				attributeAnnotations,
+				EnversDotNames.AUDIT_JOIN_TABLE
+		);
+		if ( joinTable != null ) {
+			propertyData.setJoinTable( context.getAnnotationProxy( joinTable, AuditJoinTable.class ) );
+		} else {
 			propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
 		}
 	}
 
-	/**
-	 * Add the {@link AuditOverride} annotations.
+	/***
+	 * Add the {@link org.hibernate.envers.AuditOverride} annotations.
 	 *
-	 * @param property the property being processed
+	 * @param attributeAnnotations the property being processed
 	 * @param propertyData the Envers auditing data for this property
 	 */
-	private void addPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
-		final AuditOverride annotationOverride = property.getAnnotation( AuditOverride.class );
+	private void addPropertyAuditingOverrides(
+			Map<DotName, List<AnnotationInstance>> attributeAnnotations,
+			PropertyAuditingData propertyData) {
+		final AnnotationInstance annotationOverride = JandexHelper.getSingleAnnotation( attributeAnnotations, EnversDotNames.AUDIT_OVERRIDE );
 		if ( annotationOverride != null ) {
-			propertyData.addAuditingOverride( annotationOverride );
+			propertyData.addAuditingOverride( context.getAnnotationProxy( annotationOverride, AuditOverride.class ) );
 		}
-		final AuditOverrides annotationOverrides = property.getAnnotation( AuditOverrides.class );
+		final AnnotationInstance annotationOverrides = JandexHelper.getSingleAnnotation( attributeAnnotations, EnversDotNames.AUDIT_OVERRIDES );
 		if ( annotationOverrides != null ) {
-			propertyData.addAuditingOverrides( annotationOverrides );
+			propertyData.addAuditingOverrides( context.getAnnotationProxy( annotationOverrides, AuditOverrides.class ) );
 		}
 	}
 
 	/**
-	 * Process the {@link AuditOverride} annotations for this property.
+	 * Process the {@link org.hibernate.envers.AuditOverride} annotations for this property.
 	 *
-	 * @param property the property for which the {@link AuditOverride}
-	 * annotations are being processed
-	 * @param propertyData the Envers auditing data for this property
-	 *
+	 * @param attribute
+	 *            the property for which the {@link org.hibernate.envers.AuditOverride}
+	 *            annotations are being processed
+	 * @param propertyData
+	 *            the Envers auditing data for this property
 	 * @return {@code false} if isAudited() of the override annotation was set to
 	 */
-	private boolean processPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
+	private boolean processPropertyAuditingOverrides(Attribute attribute, PropertyAuditingData propertyData) {
 		// if this property is part of a component, process all override annotations
-		if ( this.auditedPropertiesHolder instanceof ComponentAuditingData ) {
-			final List<AuditOverride> overrides = ( (ComponentAuditingData) this.auditedPropertiesHolder ).getAuditingOverrides();
-			for ( AuditOverride override : overrides ) {
-				if ( property.getName().equals( override.name() ) ) {
+		if (this.auditedPropertiesHolder instanceof ComponentAuditingData) {
+			List<AuditOverride> overrides = ((ComponentAuditingData) this.auditedPropertiesHolder).getAuditingOverrides();
+			for (AuditOverride override : overrides) {
+				if (attribute.getName().equals(override.name())) {
 					// the override applies to this property
-					if ( !override.isAudited() ) {
+					if (!override.isAudited()) {
 						return false;
-					}
-					else {
-						if ( override.auditJoinTable() != null ) {
-							propertyData.setJoinTable( override.auditJoinTable() );
+					} else {
+						if (override.auditJoinTable() != null) {
+							propertyData.setJoinTable(override.auditJoinTable());
 						}
 					}
 				}
@@ -716,50 +773,46 @@ public class AuditedPropertiesReader {
 	};
 
 	public static class ComponentPropertiesSource implements PersistentPropertiesSource {
-		private final XClass xclass;
-		private final Component component;
+		private final ClassInfo classInfo;
+		private final AttributeBindingContainer attributeBindingContainer;
 
-		protected ComponentPropertiesSource(XClass xClazz, Component component) {
-			this.xclass = xClazz;
-			this.component = component;
-		}
-
-		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
-			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName(), this.getClass() );
-			}
-			catch ( ClassNotFoundException e ) {
-				throw new MappingException( e );
-			}
-
-			this.component = component;
+		public ComponentPropertiesSource(
+				ClassInfo classInfo,
+				AttributeBindingContainer attributeBindingContainer) {
+			this.classInfo = classInfo;
+			this.attributeBindingContainer = attributeBindingContainer;
 		}
 
 		@Override
 		@SuppressWarnings({ "unchecked" })
-		public Iterator<Property> getPropertyIterator() {
-			return component.getPropertyIterator();
+		public Iterable<AttributeBinding> getNonIdAttributeBindings() {
+			return attributeBindingContainer.attributeBindings();
 		}
 
 		@Override
-		public Property getProperty(String propertyName) {
-			return component.getProperty( propertyName );
+		public AttributeBinding getAttributeBinding(String attributeName) {
+			return attributeBindingContainer.locateAttributeBinding( attributeName );
 		}
 
 		@Override
-		public XClass getXClass() {
-			return xclass;
+		public AttributeBindingContainer getAttributeBindingContainer() {
+			return attributeBindingContainer;
+		}
+
+		@Override
+		public ClassInfo getClassInfo() {
+			return classInfo;
 		}
 	}
 
 	public static class DynamicComponentSource extends ComponentPropertiesSource {
 
-		private XProperty baseProperty;
-
-		public DynamicComponentSource(ReflectionManager reflectionManager, Component component, XProperty baseProperty) {
-			super( reflectionManager.toXClass( Map.class ), component );
-			this.baseProperty = baseProperty;
+		public DynamicComponentSource(
+				AttributeBindingContainer attributeBindingContainer) {
+			//TODO: need a ClassInfo for Map.
+			//super( reflectionManager.toXClass( Map.class ), attributeBindingContainer );
+			super( null, attributeBindingContainer );
+			throw new NotYetImplementedException( "dynamic components are not supported yet." );
 		}
 	}
-
 }

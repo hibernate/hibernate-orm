@@ -54,7 +54,7 @@ public class EmbeddableMap extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {EmbeddableMapEntity.class};
+		return new Class<?>[] {EmbeddableMapEntity.class, Component3.class, Component4.class};
 	}
 
 	@Test

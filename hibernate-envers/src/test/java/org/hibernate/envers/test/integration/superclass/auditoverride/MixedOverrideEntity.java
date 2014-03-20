@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -225,6 +225,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
+	/**
+	 * Gets the metadata.
+	 * @return the metadata.
+	 * @deprecated This should only be needed for testing and should ultimately be removed.
+	 */
+	public MetadataImplementor getMetadata() {
+		return metadata;
+	}
+
 	private SettingsImpl configure(StandardServiceRegistryBuilder ssrBuilder) {
 		final SettingsImpl settings = new SettingsImpl();
 

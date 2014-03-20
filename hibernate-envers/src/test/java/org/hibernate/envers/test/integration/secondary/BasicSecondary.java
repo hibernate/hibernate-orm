@@ -29,7 +29,8 @@ import java.util.Iterator;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Join;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
+import org.hibernate.metamodel.spi.relational.Identifier;
 
 import org.junit.Test;
 
@@ -89,12 +90,11 @@ public class BasicSecondary extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testTableNames() {
 		assert "secondary_AUD".equals(
-				((Iterator<Join>)
-						getCfg().getClassMapping(
+						getMetadata().getEntityBinding(
 								"org.hibernate.envers.test.integration.secondary.SecondaryTestEntity_AUD"
 						)
-								.getJoinIterator())
-						.next().getTable().getName()
+						.getSecondaryTables().values().iterator().next()
+								.getSecondaryTableReference().getLogicalName().getText()
 		);
 	}
 }

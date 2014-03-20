@@ -25,11 +25,14 @@ package org.hibernate.envers.test.integration.naming.ids;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -40,6 +43,8 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = " No support yet for referenced join columns unless they correspond with columns bound for an attribute binding." )
+
 public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 	private MulIdNaming ed_id1;
 	private MulIdNaming ed_id2;
@@ -141,21 +146,20 @@ public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnNames() {
-		Iterator<Column> columns =
-				getCfg().getClassMapping(
-						"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
-				)
-						.getProperty( "reference_id1" ).getColumnIterator();
-		assertTrue( columns.hasNext() );
-		assertEquals( "ID1_reference", columns.next().getName() );
-		assertFalse( columns.hasNext() );
-
-		columns = getCfg().getClassMapping(
+		SingularAttributeBinding attributeBinding = (SingularAttributeBinding) getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
-		)
-				.getProperty( "reference_id2" ).getColumnIterator();
-		assertTrue( columns.hasNext() );
-		assertEquals( "ID2_reference", columns.next().getName() );
-		assertFalse( columns.hasNext() );
+		).locateAttributeBinding( "reference_id1" );
+		List<Value> values = attributeBinding.getValues();
+		assertTrue( !values.isEmpty() );
+		assertEquals( "ID1_reference", ( (Column) values.get( 0 ) ).getColumnName().getText() );
+		assertEquals( 1, values.size() );
+
+		attributeBinding = (SingularAttributeBinding) getMetadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
+		).locateAttributeBinding( "reference_id2" );
+		values = attributeBinding.getValues();
+		assertTrue( !values.isEmpty() );
+		assertEquals( "ID2_reference", ( (Column) values.get( 0 ) ).getColumnName().getText() );
+		assertEquals( 1, values.size() );
 	}
 }

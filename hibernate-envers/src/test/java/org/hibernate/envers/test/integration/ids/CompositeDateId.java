@@ -42,7 +42,7 @@ public class CompositeDateId extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {CompositeDateIdTestEntity.class};
+		return new Class[] {CompositeDateIdTestEntity.class, DateEmbId.class};
 	}
 
 	@Test

@@ -23,17 +23,17 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -89,46 +89,64 @@ public class GlobalConfiguration {
 	*/
 	private final String correlatedSubqueryOperator;
 
-	public GlobalConfiguration(Properties properties, ClassLoaderService classLoaderService) {
-		generateRevisionsForCollections = ConfigurationHelper.getBoolean(
-				EnversSettings.REVISION_ON_COLLECTION_CHANGE, properties, true
+	public GlobalConfiguration(StandardServiceRegistry serviceRegistry) {
+
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+
+		generateRevisionsForCollections = configurationService.getSetting(
+				EnversSettings.REVISION_ON_COLLECTION_CHANGE, StandardConverters.BOOLEAN, true
 		);
 
-		doNotAuditOptimisticLockingField = ConfigurationHelper.getBoolean(
-				EnversSettings.DO_NOT_AUDIT_OPTIMISTIC_LOCKING_FIELD, properties, true
+		doNotAuditOptimisticLockingField = configurationService.getSetting(
+				EnversSettings.DO_NOT_AUDIT_OPTIMISTIC_LOCKING_FIELD, StandardConverters.BOOLEAN, true
 		);
 
-		storeDataAtDelete = ConfigurationHelper.getBoolean( EnversSettings.STORE_DATA_AT_DELETE, properties, false );
-
-		defaultSchemaName = properties.getProperty( EnversSettings.DEFAULT_SCHEMA, null );
-		defaultCatalogName = properties.getProperty( EnversSettings.DEFAULT_CATALOG, null );
-
-		correlatedSubqueryOperator = HSQLDialect.class.getName()
-				.equals( properties.get( Environment.DIALECT ) ) ? "in" : "=";
-
-		trackEntitiesChangedInRevision = ConfigurationHelper.getBoolean(
-				EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, properties, false
-		);
-		
-		cascadeDeleteRevision = ConfigurationHelper.getBoolean(
-				"org.hibernate.envers.cascade_delete_revision", properties, false );
-
-		useRevisionEntityWithNativeId = ConfigurationHelper.getBoolean(
-				EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, properties, true
+		storeDataAtDelete = configurationService.getSetting(
+				EnversSettings.STORE_DATA_AT_DELETE, StandardConverters.BOOLEAN, false
 		);
 
-		hasGlobalSettingForWithModifiedFlag = properties.get( EnversSettings.GLOBAL_WITH_MODIFIED_FLAG ) != null;
-		globalWithModifiedFlag = ConfigurationHelper.getBoolean(
-				EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, properties, false
+		defaultSchemaName = configurationService.getSetting(
+				EnversSettings.DEFAULT_SCHEMA, StandardConverters.STRING
 		);
-		modifiedFlagSuffix = ConfigurationHelper.getString(
-				EnversSettings.MODIFIED_FLAG_SUFFIX, properties, "_MOD"
+		defaultCatalogName = configurationService.getSetting(
+				EnversSettings.DEFAULT_CATALOG, StandardConverters.STRING
 		);
 
-		final String revisionListenerClassName = properties.getProperty( EnversSettings.REVISION_LISTENER, null );
+		// TODO: is this really needed??? Should be available in dialect...
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		correlatedSubqueryOperator = HSQLDialect.class.equals( jdbcEnvironment.getDialect().getClass() ) ? "in" : "=";
+
+		trackEntitiesChangedInRevision = configurationService.getSetting(
+				EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, StandardConverters.BOOLEAN, false
+		);
+
+		// TODO: shouldn't there be an Envers setting for "org.hibernate.envers.cascade_delete_revision"?
+		cascadeDeleteRevision = configurationService.getSetting(
+				"org.hibernate.envers.cascade_delete_revision", StandardConverters.BOOLEAN, false
+		);
+
+		useRevisionEntityWithNativeId = configurationService.getSetting(
+				EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, StandardConverters.BOOLEAN, true
+		);
+
+		hasGlobalSettingForWithModifiedFlag = null != configurationService.getSetting(
+				EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, StandardConverters.BOOLEAN
+		);
+		globalWithModifiedFlag = configurationService.getSetting(
+				EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, StandardConverters.BOOLEAN, false
+		);
+		modifiedFlagSuffix = configurationService.getSetting(
+				EnversSettings.MODIFIED_FLAG_SUFFIX, StandardConverters.STRING, "_MOD"
+		);
+
+		final String revisionListenerClassName = configurationService.getSetting(
+				EnversSettings.REVISION_LISTENER,
+				StandardConverters.STRING
+		);
 		if ( revisionListenerClassName != null ) {
 			try {
-				revisionListenerClass = ReflectionTools.loadClass( revisionListenerClassName, classLoaderService );
+				revisionListenerClass =
+						serviceRegistry.getService( ClassLoaderService.class ).classForName( revisionListenerClassName );
 			}
 			catch (ClassLoadingException e) {
 				throw new MappingException(
@@ -141,8 +159,8 @@ public class GlobalConfiguration {
 			revisionListenerClass = null;
 		}
 
-		allowIdentifierReuse = ConfigurationHelper.getBoolean(
-				EnversSettings.ALLOW_IDENTIFIER_REUSE, properties, false
+		allowIdentifierReuse = configurationService.getSetting(
+				EnversSettings.ALLOW_IDENTIFIER_REUSE, StandardConverters.BOOLEAN, false
 		);
 	}
 

@@ -57,7 +57,7 @@ public class DefaultValueComponents extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {DefaultValueComponentTestEntity.class};
+		return new Class[] {DefaultValueComponentTestEntity.class, DefaultValueComponent1.class, DefaultValueComponent2.class};
 	}
 
 	@Test

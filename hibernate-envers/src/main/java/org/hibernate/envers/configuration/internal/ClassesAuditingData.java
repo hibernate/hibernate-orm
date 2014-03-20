@@ -33,12 +33,12 @@ import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditing
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 import org.jboss.logging.Logger;
 
 /**
- * A helper class holding auditing meta-data for all persistent classes.
+ * A helper class holding auditing meta-data for all entity bindings.
  *
  * @author Adam Warski (adam at warski dot org)
  */
@@ -49,24 +49,25 @@ public class ClassesAuditingData {
 	);
 
 	private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<String, ClassAuditingData>();
-	private final Map<PersistentClass, ClassAuditingData> persistentClassToAuditingData = new LinkedHashMap<PersistentClass, ClassAuditingData>();
+	private final Map<EntityBinding, ClassAuditingData> entityBindingToAuditingData =
+			new LinkedHashMap<EntityBinding, ClassAuditingData>();
 
 	/**
 	 * Stores information about auditing meta-data for the given class.
 	 *
-	 * @param pc Persistent class.
+	 * @param entityBinding The entity binding.
 	 * @param cad Auditing meta-data for the given class.
 	 */
-	public void addClassAuditingData(PersistentClass pc, ClassAuditingData cad) {
-		entityNameToAuditingData.put( pc.getEntityName(), cad );
-		persistentClassToAuditingData.put( pc, cad );
+	public void addClassAuditingData(EntityBinding entityBinding, ClassAuditingData cad) {
+		entityNameToAuditingData.put( entityBinding.getEntityName(), cad );
+		entityBindingToAuditingData.put( entityBinding, cad );
 	}
 
 	/**
 	 * @return A collection of all auditing meta-data for persistent classes.
 	 */
-	public Collection<Map.Entry<PersistentClass, ClassAuditingData>> getAllClassAuditedData() {
-		return persistentClassToAuditingData.entrySet();
+	public Collection<Map.Entry<EntityBinding, ClassAuditingData>> getAllEntityBindingAuditedData() {
+		return entityBindingToAuditingData.entrySet();
 	}
 
 	/**
@@ -85,27 +86,27 @@ public class ClassesAuditingData {
 	 * </ul>
 	 */
 	public void updateCalculatedFields() {
-		for ( Map.Entry<PersistentClass, ClassAuditingData> classAuditingDataEntry : persistentClassToAuditingData.entrySet() ) {
-			final PersistentClass pc = classAuditingDataEntry.getKey();
+		for ( Map.Entry<EntityBinding, ClassAuditingData> classAuditingDataEntry : entityBindingToAuditingData.entrySet() ) {
+			final EntityBinding entityBinding = classAuditingDataEntry.getKey();
 			final ClassAuditingData classAuditingData = classAuditingDataEntry.getValue();
 			for ( String propertyName : classAuditingData.getPropertyNames() ) {
 				final PropertyAuditingData propertyAuditingData = classAuditingData.getPropertyAuditingData( propertyName );
 				// If a property had the @AuditMappedBy annotation, setting the referenced fields to be always insertable.
 				if ( propertyAuditingData.getAuditMappedBy() != null ) {
 					final String referencedEntityName = MappingTools.getReferencedEntityName(
-							pc.getProperty( propertyName ).getValue()
+							entityBinding.locateAttributeBinding( propertyName )
 					);
 
 					final ClassAuditingData referencedClassAuditingData = entityNameToAuditingData.get( referencedEntityName );
 
 					forcePropertyInsertable(
 							referencedClassAuditingData, propertyAuditingData.getAuditMappedBy(),
-							pc.getEntityName(), referencedEntityName
+							entityBinding.getEntityName(), referencedEntityName
 					);
 
 					forcePropertyInsertable(
 							referencedClassAuditingData, propertyAuditingData.getPositionMappedBy(),
-							pc.getEntityName(), referencedEntityName
+							entityBinding.getEntityName(), referencedEntityName
 					);
 				}
 			}

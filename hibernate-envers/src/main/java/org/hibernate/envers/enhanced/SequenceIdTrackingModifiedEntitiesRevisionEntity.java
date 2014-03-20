@@ -25,11 +25,11 @@ package org.hibernate.envers.enhanced;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.Fetch;
@@ -46,7 +46,7 @@ import org.hibernate.envers.ModifiedEntityNames;
 @MappedSuperclass
 public class SequenceIdTrackingModifiedEntitiesRevisionEntity extends SequenceIdRevisionEntity {
 	@ElementCollection(fetch = FetchType.EAGER)
-	@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
+	@CollectionTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 	@Column(name = "ENTITYNAME")
 	@Fetch(FetchMode.JOIN)
 	@ModifiedEntityNames

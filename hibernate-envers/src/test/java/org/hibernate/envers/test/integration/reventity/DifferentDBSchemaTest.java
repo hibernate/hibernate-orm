@@ -10,10 +10,10 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.mapping.Table;
 
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.testing.RequiresDialect;
 
 /**
@@ -65,9 +65,9 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevinfoSchemaName() {
-		Table revisionTable = getCfg().getClassMapping( "org.hibernate.envers.enhanced.SequenceIdRevisionEntity" )
-				.getTable();
-		assert SCHEMA_NAME.equals( revisionTable.getSchema() );
+		TableSpecification revisionTable = getMetadata().getEntityBinding( "org.hibernate.envers.enhanced.SequenceIdRevisionEntity" )
+				.getPrimaryTable();
+		assert SCHEMA_NAME.equals( revisionTable.getSchema().getName().getSchema().getText() );
 	}
 
 	@Test

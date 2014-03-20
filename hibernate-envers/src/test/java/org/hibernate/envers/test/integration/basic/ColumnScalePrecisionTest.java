@@ -5,12 +5,12 @@ import java.util.Arrays;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -18,8 +18,8 @@ import org.hibernate.testing.TestForIssue;
  */
 @TestForIssue(jiraKey = "HHH-7003")
 public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
-	private Table auditTable = null;
-	private Table originalTable = null;
+	private TableSpecification auditTable = null;
+	private TableSpecification originalTable = null;
 	private Long id = null;
 
 	@Override
@@ -39,21 +39,29 @@ public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 
 		id = entity.getId();
-		auditTable = getCfg().getClassMapping( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity_AUD" )
-				.getTable();
-		originalTable = getCfg().getClassMapping( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity" )
-				.getTable();
+		auditTable = getMetadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.basic.ScalePrecisionEntity_AUD"
+		)
+				.getPrimaryTable();
+		originalTable = getMetadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.basic.ScalePrecisionEntity"
+		)
+				.getPrimaryTable();
 	}
 
 	@Test
 	public void testColumnScalePrecision() {
-		Column testColumn = new Column( "wholeNumber" );
-		Column scalePrecisionAuditColumn = auditTable.getColumn( testColumn );
-		Column scalePrecisionColumn = originalTable.getColumn( testColumn );
+		String columnName = "wholeNumber";
+		Column scalePrecisionAuditColumn = auditTable.locateColumn( columnName );
+		Column scalePrecisionColumn = originalTable.locateColumn( columnName );
 
 		Assert.assertNotNull( scalePrecisionAuditColumn );
-		Assert.assertEquals( scalePrecisionColumn.getPrecision(), scalePrecisionAuditColumn.getPrecision() );
-		Assert.assertEquals( scalePrecisionColumn.getScale(), scalePrecisionAuditColumn.getScale() );
+		Assert.assertNotNull( scalePrecisionAuditColumn.getSize() );
+		Assert.assertEquals(
+				scalePrecisionColumn.getSize().getPrecision(),
+				scalePrecisionAuditColumn.getSize().getPrecision()
+		);
+		Assert.assertEquals( scalePrecisionColumn.getSize().getScale(), scalePrecisionAuditColumn.getSize().getScale() );
 	}
 
 	@Test

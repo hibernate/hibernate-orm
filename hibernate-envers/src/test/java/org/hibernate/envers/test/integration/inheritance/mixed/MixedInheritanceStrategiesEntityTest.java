@@ -30,7 +30,8 @@ public class MixedInheritanceStrategiesEntityTest extends BaseEnversJPAFunctiona
 				AbstractActivity.class,
 				AbstractCheckActivity.class,
 				CheckInActivity.class,
-				NormalActivity.class
+				NormalActivity.class,
+				ActivityId.class
 		};
 	}
 

@@ -30,6 +30,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponentTestEntity;
+import org.hibernate.envers.test.integration.naming.VersionsJoinTableRangeComponent;
 
 import org.junit.Test;
 
@@ -46,7 +47,12 @@ public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityT
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {OneToManyComponentTestEntity.class, StrTestEntity.class};
+		return new Class[] {
+				OneToManyComponentTestEntity.class,
+				StrTestEntity.class,
+				OneToManyComponent.class,
+				VersionsJoinTableRangeComponent.class
+		};
 	}
 
 	@Test

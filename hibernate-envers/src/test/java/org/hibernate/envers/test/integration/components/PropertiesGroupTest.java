@@ -5,21 +5,22 @@ import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.UniquePropsEntity;
 import org.hibernate.envers.test.entities.components.UniquePropsNotAuditedEntity;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6636")
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class PropertiesGroupTest extends BaseEnversFunctionalTestCase {
-	private PersistentClass uniquePropsAudit = null;
-	private PersistentClass uniquePropsNotAuditedAudit = null;
+	private EntityBinding uniquePropsAudit = null;
+	private EntityBinding uniquePropsNotAuditedAudit = null;
 	private UniquePropsEntity entityRev1 = null;
 	private UniquePropsNotAuditedEntity entityNotAuditedRev2 = null;
 
@@ -34,10 +35,10 @@ public class PropertiesGroupTest extends BaseEnversFunctionalTestCase {
 	@Test
 	@Priority(10)
 	public void initData() {
-		uniquePropsAudit = configuration().getClassMapping(
+		uniquePropsAudit = metadata().getEntityBinding(
 				"org.hibernate.envers.test.entities.components.UniquePropsEntity_AUD"
 		);
-		uniquePropsNotAuditedAudit = configuration().getClassMapping(
+		uniquePropsNotAuditedAudit = metadata().getEntityBinding(
 				"org.hibernate.envers.test.entities.components.UniquePropsNotAuditedEntity_AUD"
 		);
 
@@ -65,11 +66,11 @@ public class PropertiesGroupTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	public void testAuditTableColumns() {
-		Assert.assertNotNull( uniquePropsAudit.getTable().getColumn( new Column( "DATA1" ) ) );
-		Assert.assertNotNull( uniquePropsAudit.getTable().getColumn( new Column( "DATA2" ) ) );
+		Assert.assertNotNull( uniquePropsAudit.getPrimaryTable().locateColumn( "DATA1" ) );
+		Assert.assertNotNull( uniquePropsAudit.getPrimaryTable().locateColumn( "DATA2" ) );
 
-		Assert.assertNotNull( uniquePropsNotAuditedAudit.getTable().getColumn( new Column( "DATA1" ) ) );
-		Assert.assertNull( uniquePropsNotAuditedAudit.getTable().getColumn( new Column( "DATA2" ) ) );
+		Assert.assertNotNull( uniquePropsNotAuditedAudit.getPrimaryTable().locateColumn(  "DATA1" ) );
+		Assert.assertNull( uniquePropsNotAuditedAudit.getPrimaryTable().locateColumn( "DATA2" ) );
 	}
 
 	@Test

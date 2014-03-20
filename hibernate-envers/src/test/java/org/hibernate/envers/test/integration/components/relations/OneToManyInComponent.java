@@ -44,7 +44,7 @@ public class OneToManyInComponent extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {OneToManyComponentTestEntity.class, StrTestEntity.class};
+		return new Class[] {OneToManyComponentTestEntity.class, StrTestEntity.class, OneToManyComponent.class};
 	}
 
 	@Test

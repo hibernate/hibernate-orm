@@ -32,6 +32,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.MethodInfo;
+
+import org.hibernate.AssertionFailure;
 import org.hibernate.envers.tools.Pair;
 
 /**
@@ -100,4 +107,21 @@ public abstract class Tools {
 
 		return ret;
 	}
+
+	public static boolean isFieldOrPropertyOfClass(AnnotationTarget target, ClassInfo clazz, IndexView jandexIndex) {
+		final ClassInfo enclosingClass;
+		if ( target instanceof FieldInfo ) {
+			final FieldInfo field = (FieldInfo) target;
+			enclosingClass = field.declaringClass();
+		}
+		else if ( target instanceof MethodInfo ) {
+			final MethodInfo method = (MethodInfo) target;
+			enclosingClass = method.declaringClass();
+		}
+		else {
+			throw new AssertionFailure( "Unexpected annotation target " + target.toString() );
+		}
+		return enclosingClass.equals( clazz ) || jandexIndex.getAllKnownSubclasses( clazz.name() ).contains( enclosingClass );
+	}
+
 }

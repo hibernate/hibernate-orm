@@ -2,13 +2,14 @@ package org.hibernate.envers.test.integration.inheritance.single.discriminatorfo
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.relational.DerivedValue;
+import org.hibernate.metamodel.spi.relational.Value;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,7 +18,7 @@ import org.junit.Test;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
-	private PersistentClass parentAudit = null;
+	private EntityBinding parentAudit = null;
 	private ChildEntity childVer1 = null;
 	private ChildEntity childVer2 = null;
 	private ParentEntity parentVer1 = null;
@@ -31,7 +32,7 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	@Priority(10)
 	public void initData() {
-		parentAudit = getCfg().getClassMapping(
+		parentAudit = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.inheritance.single.discriminatorformula.ParentEntity_AUD"
 		);
 
@@ -87,16 +88,10 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testDiscriminatorFormulaInAuditTable() {
-		assert parentAudit.getDiscriminator().hasFormula();
-		Iterator iterator = parentAudit.getDiscriminator().getColumnIterator();
-		while ( iterator.hasNext() ) {
-			Object o = iterator.next();
-			if ( o instanceof Formula ) {
-				Formula formula = (Formula) o;
-				Assert.assertEquals( ParentEntity.DISCRIMINATOR_QUERY, formula.getText() );
-				return;
-			}
-		}
+		final EntityDiscriminator entityDiscriminator = parentAudit.getHierarchyDetails().getEntityDiscriminator();
+		assert entityDiscriminator.getRelationalValue().getValueType() == Value.ValueType.DERIVED_VALUE;
+		DerivedValue derivedValue = (DerivedValue) entityDiscriminator.getRelationalValue();
+		Assert.assertEquals( ParentEntity.DISCRIMINATOR_QUERY, derivedValue.getExpression() );
 		assert false;
 	}
 

@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
+import org.hibernate.metamodel.source.spi.IdentifiableTypeSource;
 import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
@@ -808,6 +810,35 @@ class HibernateTypeHelper {
 		return null;
 	}
 
+	public String determineJavaTypeName(final IdentifiableTypeSource identifiableTypeSource) {
+		if ( identifiableTypeSource.getTypeName() == null ) {
+			if ( identifiableTypeSource.getHierarchy().getEntityMode() == EntityMode.MAP ) {
+				return Map.class.getName();
+
+			}
+			else {
+				return null;
+			}
+		}
+		else {
+			return identifiableTypeSource.getTypeName();
+		}
+	}
+
+	public JavaTypeDescriptor determineJavaType(
+			final ComponentAttributeSource attributeSource,
+			final AttributeContainer attributeContainer,
+			final EntityMode entityMode) {
+		if ( attributeSource.getTypeDescriptor() != null ) {
+			 return attributeSource.getTypeDescriptor();
+		}
+		else if ( entityMode == EntityMode.MAP ) {
+			return bindingContext().typeDescriptor( Map.class.getName() );
+		}
+		else {
+			return determineJavaType( attributeSource, attributeContainer );
+		}
+	}
 
 	public JavaTypeDescriptor determineJavaType(
 			final AttributeSource attributeSource,

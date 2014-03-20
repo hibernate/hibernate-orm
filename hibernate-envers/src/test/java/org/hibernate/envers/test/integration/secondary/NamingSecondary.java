@@ -25,11 +25,9 @@ package org.hibernate.envers.test.integration.secondary;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Join;
 
 import org.junit.Test;
 
@@ -89,12 +87,10 @@ public class NamingSecondary extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testTableNames() {
 		assert "sec_versions".equals(
-				((Iterator<Join>)
-						getCfg().getClassMapping(
+						getMetadata().getEntityBinding(
 								"org.hibernate.envers.test.integration.secondary.SecondaryNamingTestEntity_AUD"
 						)
-								.getJoinIterator())
-						.next().getTable().getName()
+								.getSecondaryTables().keySet().iterator().next().getText()
 		);
 	}
 }

@@ -24,19 +24,18 @@
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.lang.annotation.Annotation;
-import java.util.Iterator;
 
-import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+
 import org.hibernate.envers.AuditTable;
-import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.SecondaryAuditTable;
-import org.hibernate.envers.SecondaryAuditTables;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.event.spi.EnversDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.
@@ -45,101 +44,8 @@ import org.hibernate.mapping.Property;
  * @author Sebastian Komander
  */
 public final class AnnotationsMetadataReader {
-	private final GlobalConfiguration globalCfg;
-	private final ReflectionManager reflectionManager;
-	private final PersistentClass pc;
 
-	/**
-	 * This object is filled with information read from annotations and returned by the <code>getVersioningData</code>
-	 * method.
-	 */
-	private final ClassAuditingData auditData;
-
-	public AnnotationsMetadataReader(
-			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
-			PersistentClass pc) {
-		this.globalCfg = globalCfg;
-		this.reflectionManager = reflectionManager;
-		this.pc = pc;
-
-		auditData = new ClassAuditingData();
-	}
-
-	private ModificationStore getDefaultAudited(XClass clazz) {
-		final Audited defaultAudited = clazz.getAnnotation( Audited.class );
-
-		if ( defaultAudited != null ) {
-			return defaultAudited.modStore();
-		}
-		else {
-			return null;
-		}
-	}
-
-	private void addAuditTable(XClass clazz) {
-		final AuditTable auditTable = clazz.getAnnotation( AuditTable.class );
-		if ( auditTable != null ) {
-			auditData.setAuditTable( auditTable );
-		}
-		else {
-			auditData.setAuditTable( getDefaultAuditTable() );
-		}
-	}
-
-	private void addAuditSecondaryTables(XClass clazz) {
-		// Getting information on secondary tables
-		final SecondaryAuditTable secondaryVersionsTable1 = clazz.getAnnotation( SecondaryAuditTable.class );
-		if ( secondaryVersionsTable1 != null ) {
-			auditData.getSecondaryTableDictionary().put(
-					secondaryVersionsTable1.secondaryTableName(),
-					secondaryVersionsTable1.secondaryAuditTableName()
-			);
-		}
-
-		final SecondaryAuditTables secondaryAuditTables = clazz.getAnnotation( SecondaryAuditTables.class );
-		if ( secondaryAuditTables != null ) {
-			for ( SecondaryAuditTable secondaryAuditTable2 : secondaryAuditTables.value() ) {
-				auditData.getSecondaryTableDictionary().put(
-						secondaryAuditTable2.secondaryTableName(),
-						secondaryAuditTable2.secondaryAuditTableName()
-				);
-			}
-		}
-	}
-
-	public ClassAuditingData getAuditData() {
-		if ( pc.getClassName() == null ) {
-			return auditData;
-		}
-
-		try {
-			final XClass xclass = reflectionManager.classForName( pc.getClassName(), this.getClass() );
-
-			final ModificationStore defaultStore = getDefaultAudited( xclass );
-			if ( defaultStore != null ) {
-				auditData.setDefaultAudited( true );
-			}
-
-			new AuditedPropertiesReader(
-					defaultStore,
-					new PersistentClassPropertiesSource( xclass ),
-					auditData,
-					globalCfg,
-					reflectionManager,
-					""
-			).read();
-
-			addAuditTable( xclass );
-			addAuditSecondaryTables( xclass );
-		}
-		catch (ClassNotFoundException e) {
-			throw new MappingException( e );
-		}
-
-		return auditData;
-	}
-
-	private AuditTable defaultAuditTable = new AuditTable() {
+	private static final AuditTable DEFAULT_AUDIT_TABLE = new AuditTable() {
 		public String value() {
 			return "";
 		}
@@ -157,28 +63,136 @@ public final class AnnotationsMetadataReader {
 		}
 	};
 
+	private final AuditConfiguration.AuditConfigurationContext context;
+
+	public AnnotationsMetadataReader(AuditConfiguration.AuditConfigurationContext context) {
+		this.context = context;
+	}
+
+	private ModificationStore getDefaultAudited(ClassInfo classInfo) {
+		final AnnotationInstance audited = JandexHelper.getSingleAnnotation(
+				classInfo.annotations(),
+				EnversDotNames.AUDITED,
+				classInfo
+		);
+		if ( audited != null ) {
+			return JandexHelper.getValue( audited, "modStore", ModificationStore.class, context.getClassLoaderService() );
+		}
+		return null;
+	}
+
+	private void addAuditTable(ClassInfo classInfo, ClassAuditingData auditData) {
+		final AnnotationInstance auditTable = JandexHelper.getSingleAnnotation( classInfo, EnversDotNames.AUDIT_TABLE );
+		if ( auditTable != null ) {
+			auditData.setAuditTable(
+					context.getAnnotationProxy(
+							auditTable,
+							AuditTable.class
+					)
+			);
+		}
+		else {
+			auditData.setAuditTable( getDefaultAuditTable() );
+		}
+	}
+
+	private void addAuditSecondaryTables(ClassInfo classInfo, ClassAuditingData auditData) {
+		// Getting information on secondary tables
+		final AnnotationInstance secondaryAuditTable1 = JandexHelper.getSingleAnnotation(
+				classInfo, EnversDotNames.SECONDARY_AUDIT_TABLE
+		);
+		if ( secondaryAuditTable1 != null ) {
+			auditData.getSecondaryTableDictionary().put(
+					JandexHelper.getValue(
+							secondaryAuditTable1, "secondaryTableName", String.class, context.getClassLoaderService()
+					),
+					JandexHelper.getValue(
+							secondaryAuditTable1, "secondaryAuditTableName", String.class, context.getClassLoaderService()
+					)
+			);
+		}
+
+		final AnnotationInstance secondaryAuditTables = JandexHelper.getSingleAnnotation( classInfo, EnversDotNames.SECONDARY_AUDIT_TABLES );
+		if ( secondaryAuditTables != null ) {
+			final AnnotationInstance[] secondaryAuditTableValues =
+					JandexHelper.getValue( secondaryAuditTables, "value", AnnotationInstance[].class, context.getClassLoaderService() );
+			for ( AnnotationInstance secondaryAuditTable : secondaryAuditTableValues ) {
+				auditData.getSecondaryTableDictionary().put(
+						JandexHelper.getValue(
+								secondaryAuditTable, "secondaryTableName", String.class, context.getClassLoaderService()
+						),
+						JandexHelper.getValue(
+								secondaryAuditTable, "secondaryAuditTableName", String.class, context.getClassLoaderService()
+						)
+				);
+			}
+		}
+	}
+
+	public ClassAuditingData getAuditData(EntityBinding entityBinding) {
+		/**
+		 * This object is filled with information read from annotations and returned by the <code>getVersioningData</code>
+		 * method.
+		 */
+		final ClassAuditingData auditData = new ClassAuditingData();
+
+		if ( entityBinding.getEntity().getDescriptor() == null ) {
+			// TODO: What is the case here? Test by throwing exception.
+			return auditData;
+		}
+
+		final PersistentClassPropertiesSource persistentClassPropertiesSource = new PersistentClassPropertiesSource(
+				entityBinding,
+				context.getClassInfo(
+						entityBinding.getEntity().getDescriptor().getName().toString()
+				)
+		);
+
+		ModificationStore defaultStore = getDefaultAudited( persistentClassPropertiesSource.getClassInfo() );
+		auditData.setDefaultAudited( defaultStore != null );
+
+		new AuditedPropertiesReader(
+				context,
+				auditData,
+				persistentClassPropertiesSource,
+				""
+		).read();
+
+		addAuditTable( persistentClassPropertiesSource.getClassInfo(), auditData );
+		addAuditSecondaryTables( persistentClassPropertiesSource.getClassInfo(), auditData );
+
+		return auditData;
+	}
+
 	private AuditTable getDefaultAuditTable() {
-		return defaultAuditTable;
+		return DEFAULT_AUDIT_TABLE;
 	}
 
 	private class PersistentClassPropertiesSource implements PersistentPropertiesSource {
-		private final XClass xclass;
+		private final EntityBinding entityBinding;
+		private final ClassInfo classInfo;
 
-		private PersistentClassPropertiesSource(XClass xclass) {
-			this.xclass = xclass;
+		private PersistentClassPropertiesSource(EntityBinding entityBinding, ClassInfo classInfo) {
+			this.entityBinding = entityBinding;
+			this.classInfo = classInfo;
 		}
 
 		@SuppressWarnings({"unchecked"})
-		public Iterator<Property> getPropertyIterator() {
-			return pc.getPropertyIterator();
+		public Iterable<AttributeBinding> getNonIdAttributeBindings() {
+			return entityBinding.getNonIdAttributeBindings();
 		}
 
-		public Property getProperty(String propertyName) {
-			return pc.getProperty( propertyName );
+		public AttributeBinding getAttributeBinding(String attributeName) {
+			return entityBinding.locateAttributeBinding( attributeName );
 		}
 
-		public XClass getXClass() {
-			return xclass;
+		@Override
+		public AttributeBindingContainer getAttributeBindingContainer() {
+			return entityBinding;
+		}
+
+		public ClassInfo getClassInfo() {
+			return classInfo;
 		}
 	}
 }

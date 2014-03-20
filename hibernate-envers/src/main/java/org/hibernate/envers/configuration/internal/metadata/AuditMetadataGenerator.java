@@ -23,18 +23,17 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -46,13 +45,16 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.OneToOne;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
+import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.OneToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
@@ -78,12 +80,8 @@ public final class AuditMetadataGenerator {
 			EnversMessageLogger.class,
 			AuditMetadataGenerator.class.getName()
 	);
-
-	private final Configuration cfg;
-	private final GlobalConfiguration globalCfg;
-	private final AuditEntitiesConfiguration verEntCfg;
+	private final AuditConfiguration.AuditConfigurationContext context;
 	private final AuditStrategy auditStrategy;
-	private final ClassLoaderService classLoaderService;
 	private final Element revisionInfoRelationMapping;
 
 	/*
@@ -102,32 +100,31 @@ public final class AuditMetadataGenerator {
 
 	private final AuditEntityNameRegister auditEntityNameRegister;
 
+	// TODO: add support for secondary tables.
 	// Map entity name -> (join descriptor -> element describing the "versioned" join)
-	private final Map<String, Map<Join, Element>> entitiesJoins;
+	//private final Map<String, Map<Join, Element>> entitiesJoins;
 
 	public AuditMetadataGenerator(
-			Configuration cfg, GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy, ClassLoaderService classLoaderService,
+			AuditConfiguration.AuditConfigurationContext context,
+			AuditStrategy auditStrategy,
 			Element revisionInfoRelationMapping,
 			AuditEntityNameRegister auditEntityNameRegister) {
-		this.cfg = cfg;
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
+		this.context = context;
 		this.auditStrategy = auditStrategy;
-		this.classLoaderService = classLoaderService;
 		this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
 		this.basicMetadataGenerator = new BasicMetadataGenerator();
-		this.componentMetadataGenerator = new ComponentMetadataGenerator( this );
-		this.idMetadataGenerator = new IdMetadataGenerator( this );
+		this.componentMetadataGenerator = new ComponentMetadataGenerator( context, this );
+		this.idMetadataGenerator = new IdMetadataGenerator( context, this );
 		this.toOneRelationMetadataGenerator = new ToOneRelationMetadataGenerator( this );
 
 		this.auditEntityNameRegister = auditEntityNameRegister;
 
 		entitiesConfigurations = new HashMap<String, EntityConfiguration>();
 		notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
-		entitiesJoins = new HashMap<String, Map<Join, Element>>();
+
+		// TODO: add support for secondary tables.
+		//entitiesJoins = new HashMap<String, Map<SecondaryTable, Element>>();
 	}
 
 	/**
@@ -138,12 +135,12 @@ public final class AuditMetadataGenerator {
 	 */
 	private Element cloneAndSetupRevisionInfoRelationMapping() {
 		final Element revMapping = (Element) revisionInfoRelationMapping.clone();
-		revMapping.addAttribute( "name", verEntCfg.getRevisionFieldName() );
-		if ( globalCfg.isCascadeDeleteRevision() ) {
+		revMapping.addAttribute( "name", context.getAuditEntitiesConfiguration().getRevisionFieldName() );
+		if ( context.getGlobalConfiguration().isCascadeDeleteRevision() ) {
 			revMapping.addAttribute( "on-delete", "cascade" );
 	    } 
 
-		MetadataTools.addOrModifyColumn( revMapping, verEntCfg.getRevisionFieldName() );
+		MetadataTools.addOrModifyColumn( revMapping, context.getAuditEntitiesConfiguration().getRevisionFieldName() );
 
 		return revMapping;
 	}
@@ -152,13 +149,13 @@ public final class AuditMetadataGenerator {
 		anyMapping.add( cloneAndSetupRevisionInfoRelationMapping() );
 	}
 
-	void addRevisionType(Element anyMapping, Element anyMappingEnd) {
+	void addRevisionType(Element anyMapping, Element anyMappingEnd, boolean key) {
 		final Element revTypeProperty = MetadataTools.addProperty(
 				anyMapping,
-				verEntCfg.getRevisionTypePropName(),
-				verEntCfg.getRevisionTypePropType(),
+				context.getAuditEntitiesConfiguration().getRevisionTypePropName(),
+				context.getAuditEntitiesConfiguration().getRevisionTypePropType(),
 				true,
-				false
+				key
 		);
 		revTypeProperty.addAttribute( "type", "org.hibernate.envers.internal.entities.RevisionTypeType" );
 
@@ -171,17 +168,17 @@ public final class AuditMetadataGenerator {
 		if ( auditStrategy instanceof ValidityAuditStrategy ) {
 			final Element endRevMapping = (Element) revisionInfoRelationMapping.clone();
 			endRevMapping.setName( "many-to-one" );
-			endRevMapping.addAttribute( "name", verEntCfg.getRevisionEndFieldName() );
-			MetadataTools.addOrModifyColumn( endRevMapping, verEntCfg.getRevisionEndFieldName() );
+			endRevMapping.addAttribute( "name", context.getAuditEntitiesConfiguration().getRevisionEndFieldName() );
+			MetadataTools.addOrModifyColumn( endRevMapping, context.getAuditEntitiesConfiguration().getRevisionEndFieldName() );
 
 			anyMapping.add( endRevMapping );
 
-			if ( verEntCfg.isRevisionEndTimestampEnabled() ) {
+			if ( context.getAuditEntitiesConfiguration().isRevisionEndTimestampEnabled() ) {
 				// add a column for the timestamp of the end revision
 				final String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
 				final Element timestampProperty = MetadataTools.addProperty(
 						anyMapping,
-						verEntCfg.getRevisionEndTimestampFieldName(),
+						context.getAuditEntitiesConfiguration().getRevisionEndTimestampFieldName(),
 						revisionInfoTimestampSqlType,
 						true,
 						true,
@@ -189,7 +186,7 @@ public final class AuditMetadataGenerator {
 				);
 				MetadataTools.addColumn(
 						timestampProperty,
-						verEntCfg.getRevisionEndTimestampFieldName(),
+						context.getAuditEntitiesConfiguration().getRevisionEndTimestampFieldName(),
 						null,
 						null,
 						null,
@@ -203,20 +200,33 @@ public final class AuditMetadataGenerator {
 
 	private void addValueInFirstPass(
 			Element parent,
-			Value value,
+			AttributeBinding attributeBinding,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityXmlMappingData xmlMappingData,
 			PropertyAuditingData propertyAuditingData,
-			boolean insertable,
 			boolean processModifiedFlag) {
-		final Type type = value.getType();
+		final Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+
+		final List<Value> values;
+		final boolean isInsertable;
+		if ( attributeBinding.getAttribute().isSingular() ) {
+			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+			values = singularAttributeBinding.getValues();
+			isInsertable = singularAttributeBinding.isIncludedInInsert();
+		}
+		else {
+			values = null;
+			isInsertable = false;
+		}
+
 		final boolean isBasic = basicMetadataGenerator.addBasic(
 				parent,
 				propertyAuditingData,
-				value,
+				attributeBinding.getHibernateTypeDescriptor(),
+				values,
+				isInsertable,
 				currentMapper,
-				insertable,
 				false
 		);
 
@@ -225,8 +235,13 @@ public final class AuditMetadataGenerator {
 		}
 		else if ( type instanceof ComponentType ) {
 			componentMetadataGenerator.addComponent(
-					parent, propertyAuditingData, value, currentMapper,
-					entityName, xmlMappingData, true
+					parent,
+					propertyAuditingData,
+					(CompositeAttributeBinding) attributeBinding,
+					currentMapper,
+					entityName,
+					xmlMappingData,
+					true
 			);
 		}
 		else {
@@ -247,20 +262,19 @@ public final class AuditMetadataGenerator {
 
 	private void addValueInSecondPass(
 			Element parent,
-			Value value,
+			AttributeBinding attributeBinding,
 			CompositeMapperBuilder currentMapper,
 			String entityName,
 			EntityXmlMappingData xmlMappingData,
 			PropertyAuditingData propertyAuditingData,
-			boolean insertable,
 			boolean processModifiedFlag) {
-		final Type type = value.getType();
+		final Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
 		if ( type instanceof ComponentType ) {
 			componentMetadataGenerator.addComponent(
 					parent,
 					propertyAuditingData,
-					value,
+					(CompositeAttributeBinding) attributeBinding,
 					currentMapper,
 					entityName,
 					xmlMappingData,
@@ -273,18 +287,17 @@ public final class AuditMetadataGenerator {
 			toOneRelationMetadataGenerator.addToOne(
 					parent,
 					propertyAuditingData,
-					value,
+					(ManyToOneAttributeBinding) attributeBinding,
 					currentMapper,
-					entityName,
-					insertable
+					entityName
 			);
 		}
 		else if ( type instanceof OneToOneType ) {
-			final OneToOne oneToOne = (OneToOne) value;
-			if ( oneToOne.getReferencedPropertyName() != null ) {
+			final OneToOneAttributeBinding oneToOneAttributeBinding = (OneToOneAttributeBinding) attributeBinding;
+			if ( oneToOneAttributeBinding.getReferencedAttributeBinding().getAttribute().getName() != null ) {
 				toOneRelationMetadataGenerator.addOneToOneNotOwning(
 						propertyAuditingData,
-						value,
+						oneToOneAttributeBinding,
 						currentMapper,
 						entityName
 				);
@@ -293,17 +306,17 @@ public final class AuditMetadataGenerator {
 				// @OneToOne relation marked with @PrimaryKeyJoinColumn
 				toOneRelationMetadataGenerator.addOneToOnePrimaryKeyJoinColumn(
 						propertyAuditingData,
-						value,
+						oneToOneAttributeBinding,
 						currentMapper,
-						entityName,
-						insertable
+						entityName
 				);
 			}
 		}
 		else if ( type instanceof CollectionType ) {
 			final CollectionMetadataGenerator collectionMetadataGenerator = new CollectionMetadataGenerator(
+					context,
 					this,
-					(Collection) value,
+					(PluralAttributeBinding) attributeBinding,
 					currentMapper,
 					entityName,
 					xmlMappingData,
@@ -325,50 +338,53 @@ public final class AuditMetadataGenerator {
 			MetadataTools.addModifiedFlagProperty(
 					parent,
 					propertyAuditingData.getName(),
-					globalCfg.getModifiedFlagSuffix()
+					context.getGlobalConfiguration().getModifiedFlagSuffix()
 			);
 		}
 	}
 
 	void addValue(
-			Element parent, Value value, CompositeMapperBuilder currentMapper, String entityName,
-			EntityXmlMappingData xmlMappingData, PropertyAuditingData propertyAuditingData,
-			boolean insertable, boolean firstPass, boolean processModifiedFlag) {
+			Element parent,
+			AttributeBinding attributeBinding,
+			CompositeMapperBuilder currentMapper,
+			String entityName,
+			EntityXmlMappingData xmlMappingData,
+			PropertyAuditingData propertyAuditingData,
+			boolean firstPass,
+			boolean processModifiedFlag) {
 		if ( firstPass ) {
 			addValueInFirstPass(
-					parent, value, currentMapper, entityName,
-					xmlMappingData, propertyAuditingData, insertable, processModifiedFlag
+					parent, attributeBinding, currentMapper, entityName,
+					xmlMappingData, propertyAuditingData, processModifiedFlag
 			);
 		}
 		else {
 			addValueInSecondPass(
-					parent, value, currentMapper, entityName,
-					xmlMappingData, propertyAuditingData, insertable, processModifiedFlag
+					parent, attributeBinding, currentMapper, entityName,
+					xmlMappingData, propertyAuditingData, processModifiedFlag
 			);
 		}
 	}
 
 	private void addProperties(
 			Element parent,
-			Iterator<Property> properties,
+			AttributeBinding[] properties,
 			CompositeMapperBuilder currentMapper,
 			ClassAuditingData auditingData,
 			String entityName,
 			EntityXmlMappingData xmlMappingData,
 			boolean firstPass) {
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			final String propertyName = property.getName();
+		for ( AttributeBinding property : properties ) {
+			final String propertyName = property.getAttribute().getName();
 			final PropertyAuditingData propertyAuditingData = auditingData.getPropertyAuditingData( propertyName );
 			if ( propertyAuditingData != null ) {
 				addValue(
 						parent,
-						property.getValue(),
+						property,
 						currentMapper,
 						entityName,
 						xmlMappingData,
 						propertyAuditingData,
-						property.isInsertable(),
 						firstPass,
 						true
 				);
@@ -376,10 +392,10 @@ public final class AuditMetadataGenerator {
 		}
 	}
 
-	private boolean checkPropertiesAudited(Iterator<Property> properties, ClassAuditingData auditingData) {
+	private boolean checkPropertiesAudited(Iterator<AttributeBinding> properties, ClassAuditingData auditingData) {
 		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			final String propertyName = property.getName();
+			final AttributeBinding property = properties.next();
+			final String propertyName = property.getAttribute().getName();
 			final PropertyAuditingData propertyAuditingData = auditingData.getPropertyAuditingData( propertyName );
 			if ( propertyAuditingData == null ) {
 				return false;
@@ -389,151 +405,193 @@ public final class AuditMetadataGenerator {
 		return true;
 	}
 
-	protected String getSchema(String schemaFromAnnotation, Table table) {
+	protected String getSchema(String schemaFromAnnotation, TableSpecification table) {
 		// Get the schema from the annotation ...
 		String schema = schemaFromAnnotation;
 		// ... if empty, try using the default ...
 		if ( StringTools.isEmpty( schema ) ) {
-			schema = globalCfg.getDefaultSchemaName();
+			schema = context.getGlobalConfiguration().getDefaultSchemaName();
 
 			// ... if still empty, use the same as the normal table.
-			if ( StringTools.isEmpty( schema ) ) {
-				schema = table.getSchema();
+			if ( StringTools.isEmpty( schema ) &&  table.getSchema().getName().getSchema() != null) {
+				schema = table.getSchema().getName().getSchema().getText();
 			}
 		}
 
 		return schema;
 	}
 
-	protected String getCatalog(String catalogFromAnnotation, Table table) {
+	protected String getCatalog(String catalogFromAnnotation, TableSpecification table) {
 		// Get the catalog from the annotation ...
 		String catalog = catalogFromAnnotation;
 		// ... if empty, try using the default ...
 		if ( StringTools.isEmpty( catalog ) ) {
-			catalog = globalCfg.getDefaultCatalogName();
+			catalog = context.getGlobalConfiguration().getDefaultCatalogName();
 
 			// ... if still empty, use the same as the normal table.
-			if ( StringTools.isEmpty( catalog ) ) {
-				catalog = table.getCatalog();
+			if ( StringTools.isEmpty( catalog ) && table.getSchema().getName().getCatalog() != null ) {
+				catalog = table.getSchema().getName().getCatalog().getText();
 			}
 		}
 
 		return catalog;
 	}
 
-	@SuppressWarnings({"unchecked"})
-	private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
-		final Iterator<Join> joins = pc.getJoinIterator();
-		final Map<Join, Element> joinElements = new HashMap<Join, Element>();
-		entitiesJoins.put( pc.getEntityName(), joinElements );
+	// TODO: add support for secondary tables
+//	private void createJoins(EntityBinding entityBinding, Element parent, ClassAuditingData auditingData) {
+//		final Iterator<SecondaryTable> joins = entityBinding.getSecondaryTables();
+//		final Map<SecondaryTable, Element> joinElements = new HashMap<SecondaryTable, Element>();
+//		entitiesJoins.put( entityBinding.getEntityName(), joinElements );
 
-		while ( joins.hasNext() ) {
-			Join join = joins.next();
+//		while ( joins.hasNext() ) {
+//			SecondaryTable join = joins.next();
 
 			// Checking if all of the join properties are audited
-			if ( !checkPropertiesAudited( join.getPropertyIterator(), auditingData ) ) {
-				continue;
-			}
+//			if ( !checkPropertiesAudited( join.getPropertyIterator(), auditingData ) ) {
+//				continue;
+//			}
 
 			// Determining the table name. If there is no entry in the dictionary, just constructing the table name
 			// as if it was an entity (by appending/prepending configured strings).
-			final String originalTableName = join.getTable().getName();
-			String auditTableName = auditingData.getSecondaryTableDictionary().get( originalTableName );
-			if ( auditTableName == null ) {
-				auditTableName = verEntCfg.getAuditEntityName( originalTableName );
-			}
+//			final String originalTableName = join.getSecondaryTableReference().getLogicalName().getText();
+//			String auditTableName = auditingData.getSecondaryTableDictionary().get( originalTableName );
+//			if ( auditTableName == null ) {
+//				auditTableName = context.getAuditEntitiesConfiguration().getAuditEntityName( originalTableName );
+//			}
 
-			final String schema = getSchema( auditingData.getAuditTable().schema(), join.getTable() );
-			final String catalog = getCatalog( auditingData.getAuditTable().catalog(), join.getTable() );
+//			final String schema = getSchema( auditingData.getAuditTable().schema(), join.getSecondaryTableReference() );
+//			final String catalog = getCatalog( auditingData.getAuditTable().catalog(), join.getSecondaryTableReference() );
 
-			final Element joinElement = MetadataTools.createJoin( parent, auditTableName, schema, catalog );
-			joinElements.put( join, joinElement );
+//			final Element joinElement = MetadataTools.createJoin( parent, auditTableName, schema, catalog );
+//			joinElements.put( join, joinElement );
 
-			final Element joinKey = joinElement.addElement( "key" );
-			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
-			MetadataTools.addColumn( joinKey, verEntCfg.getRevisionFieldName(), null, null, null, null, null, null );
-		}
-	}
+//			final Element joinKey = joinElement.addElement( "key" );
+//			MetadataTools.addColumns( joinKey, join.getForeignKeyReference().getColumns() );
+//			MetadataTools.addColumn( joinKey, context.getAuditEntitiesConfiguration().getRevisionFieldName(), null, null, null, null, null, null );
+//		}
+//	}
 
-	@SuppressWarnings({"unchecked"})
-	private void addJoins(
-			PersistentClass pc,
-			CompositeMapperBuilder currentMapper,
-			ClassAuditingData auditingData,
-			String entityName,
-			EntityXmlMappingData xmlMappingData,
-			boolean firstPass) {
-		final Iterator<Join> joins = pc.getJoinIterator();
+//	@SuppressWarnings({"unchecked"})
+//	private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
+//		final Iterator<Join> joins = pc.getJoinIterator();
+//		final Map<Join, Element> joinElements = new HashMap<Join, Element>();
+//		entitiesJoins.put( pc.getEntityName(), joinElements );
+//
+//		while ( joins.hasNext() ) {
+//			Join join = joins.next();
 
-		while ( joins.hasNext() ) {
-			final Join join = joins.next();
-			final Element joinElement = entitiesJoins.get( entityName ).get( join );
+			// Checking if all of the join properties are audited
+//			if ( !checkPropertiesAudited( join.getPropertyIterator(), auditingData ) ) {
+//				continue;
+//			}
 
-			if ( joinElement != null ) {
-				addProperties(
-						joinElement,
-						join.getPropertyIterator(),
-						currentMapper,
-						auditingData,
-						entityName,
-						xmlMappingData,
-						firstPass
-				);
-			}
-		}
-	}
+			// Determining the table name. If there is no entry in the dictionary, just constructing the table name
+			// as if it was an entity (by appending/prepending configured strings).
+//			final String originalTableName = join.getTable().getName();
+//			String auditTableName = auditingData.getSecondaryTableDictionary().get( originalTableName );
+//			if ( auditTableName == null ) {
+//				auditTableName = verEntCfg.getAuditEntityName( originalTableName );
+//			}
+
+//			final String schema = getSchema( auditingData.getAuditTable().schema(), join.getTable() );
+//			final String catalog = getCatalog( auditingData.getAuditTable().catalog(), join.getTable() );
+
+//			final Element joinElement = MetadataTools.createJoin( parent, auditTableName, schema, catalog );
+//			joinElements.put( join, joinElement );
+
+//			final Element joinKey = joinElement.addElement( "key" );
+//			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
+//			MetadataTools.addColumn( joinKey, verEntCfg.getRevisionFieldName(), null, null, null, null, null, null );
+//		}
+//	}
+
+//	@SuppressWarnings({"unchecked"})
+//	private void addJoins(
+//			PersistentClass pc,
+//			CompositeMapperBuilder currentMapper,
+//			ClassAuditingData auditingData,
+//			String entityName,
+//			EntityXmlMappingData xmlMappingData,
+//			boolean firstPass) {
+//		final Iterator<Join> joins = pc.getJoinIterator();
+
+//		while ( joins.hasNext() ) {
+//			final Join join = joins.next();
+//			final Element joinElement = entitiesJoins.get( entityName ).get( join );
+
+//			if ( joinElement != null ) {
+//				addProperties(
+//						joinElement,
+//						join.getPropertyIterator(),
+//						currentMapper,
+//						auditingData,
+//						entityName,
+//						xmlMappingData,
+//						firstPass
+//				);
+//			}
+//		}
+//	}
 
 	@SuppressWarnings({"unchecked"})
 	private Triple<Element, ExtendedPropertyMapper, String> generateMappingData(
-			PersistentClass pc, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
+			EntityBinding entityBinding, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
 			IdMappingData idMapper) {
 		final Element classMapping = MetadataTools.createEntity(
 				xmlMappingData.getMainXmlMapping(),
 				auditTableData,
-				pc.getDiscriminatorValue(),
-				pc.isAbstract()
+				entityBinding.getDiscriminatorMatchValue(),
+				entityBinding.isAbstract()
 		);
 		final ExtendedPropertyMapper propertyMapper = new MultiPropertyMapper();
-
-		// Checking if there is a discriminator column
-		if ( pc.getDiscriminator() != null ) {
-			final Element discriminatorElement = classMapping.addElement( "discriminator" );
-			// Database column or SQL formula allowed to distinguish entity types
-			MetadataTools.addColumnsOrFormulas( discriminatorElement, pc.getDiscriminator().getColumnIterator() );
-			discriminatorElement.addAttribute( "type", pc.getDiscriminator().getType().getName() );
-		}
 
 		// Adding the id mapping
 		classMapping.add( (Element) idMapper.getXmlMapping().clone() );
 
+		// Checking if there is a discriminator column
+		if ( entityBinding.getHierarchyDetails().getEntityDiscriminator() != null ) {
+			final EntityDiscriminator discriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator();
+			final Element discriminatorElement = classMapping.addElement( "discriminator" );
+			// Database column or SQL formula allowed to distinguish entity types
+			MetadataTools.addColumnsOrFormulas(
+					discriminatorElement,
+					Collections.singletonList( discriminator.getRelationalValue() )
+			);
+			discriminatorElement.addAttribute(
+					"type",
+					discriminator.getExplicitHibernateTypeDescriptor().getExplicitTypeName()
+			);
+		}
+
 		// Adding the "revision type" property
-		addRevisionType( classMapping, classMapping );
+		addRevisionType( classMapping, classMapping, false );
 
 		return Triple.make( classMapping, propertyMapper, null );
 	}
 
 	private Triple<Element, ExtendedPropertyMapper, String> generateInheritanceMappingData(
-			PersistentClass pc, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
+			EntityBinding entityBinding,
+			EntityXmlMappingData xmlMappingData,
+			AuditTableData auditTableData,
 			String inheritanceMappingType) {
-		final String extendsEntityName = verEntCfg.getAuditEntityName( pc.getSuperclass().getEntityName() );
+		final String parentEntityName = entityBinding.getSuperEntityBinding().getEntityName();
+		final String extendsEntityName = context.getAuditEntitiesConfiguration().getAuditEntityName( parentEntityName );
 		final Element classMapping = MetadataTools.createSubclassEntity(
 				xmlMappingData.getMainXmlMapping(),
 				inheritanceMappingType,
 				auditTableData,
 				extendsEntityName,
-				pc.getDiscriminatorValue(),
-				pc.isAbstract()
+				entityBinding.getDiscriminatorMatchValue(),
+				entityBinding.isAbstract()
 		);
 
 		// The id and revision type is already mapped in the parent
 
 		// Getting the property mapper of the parent - when mapping properties, they need to be included
-		final String parentEntityName = pc.getSuperclass().getEntityName();
-
 		final EntityConfiguration parentConfiguration = entitiesConfigurations.get( parentEntityName );
 		if ( parentConfiguration == null ) {
 			throw new MappingException(
-					"Entity '" + pc.getEntityName() + "' is audited, but its superclass: '" +
+					"Entity '" + entityBinding.getEntityName() + "' is audited, but its superclass: '" +
 							parentEntityName + "' is not."
 			);
 		}
@@ -549,16 +607,16 @@ public final class AuditMetadataGenerator {
 
 	@SuppressWarnings({"unchecked"})
 	public void generateFirstPass(
-			PersistentClass pc,
+			EntityBinding entityBinding,
 			ClassAuditingData auditingData,
 			EntityXmlMappingData xmlMappingData,
 			boolean isAudited) {
-		final String schema = getSchema( auditingData.getAuditTable().schema(), pc.getTable() );
-		final String catalog = getCatalog( auditingData.getAuditTable().catalog(), pc.getTable() );
+		final String schema = getSchema( auditingData.getAuditTable().schema(), entityBinding.getPrimaryTable() );
+		final String catalog = getCatalog( auditingData.getAuditTable().catalog(), entityBinding.getPrimaryTable() );
 
 		if ( !isAudited ) {
-			final String entityName = pc.getEntityName();
-			final IdMappingData idMapper = idMetadataGenerator.addId( pc, false );
+			final String entityName = entityBinding.getEntityName();
+			final IdMappingData idMapper = idMetadataGenerator.addId( entityBinding, false );
 
 			if ( idMapper == null ) {
 				// Unsupported id mapping, e.g. key-many-to-one. If the entity is used in auditing, an exception
@@ -574,7 +632,7 @@ public final class AuditMetadataGenerator {
 			final String parentEntityName = null;
 			final EntityConfiguration entityCfg = new EntityConfiguration(
 					entityName,
-					pc.getClassName(),
+					entityBinding.getEntity().getDescriptor().getName().fullName(),
 					idMapper,
 					propertyMapper,
 					parentEntityName
@@ -583,11 +641,14 @@ public final class AuditMetadataGenerator {
 			return;
 		}
 
-		final String entityName = pc.getEntityName();
+		final String entityName = entityBinding.getEntityName();
 		LOG.debugf( "Generating first-pass auditing mapping for entity %s", entityName );
 
-		final String auditEntityName = verEntCfg.getAuditEntityName( entityName );
-		final String auditTableName = verEntCfg.getAuditTableName( entityName, pc.getTable().getName() );
+		final String auditEntityName = context.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+		final String auditTableName = context.getAuditEntitiesConfiguration().getAuditTableName(
+				entityName,
+				entityBinding.getPrimaryTableName()
+		);
 
 		// Registering the audit entity name, now that it is known
 		auditEntityNameRegister.register( auditEntityName );
@@ -595,9 +656,9 @@ public final class AuditMetadataGenerator {
 		final AuditTableData auditTableData = new AuditTableData( auditEntityName, auditTableName, schema, catalog );
 
 		// Generating a mapping for the id
-		final IdMappingData idMapper = idMetadataGenerator.addId( pc, true );
+		final IdMappingData idMapper = idMetadataGenerator.addId( entityBinding, true );
 
-		final InheritanceType inheritanceType = InheritanceType.get( pc );
+		final InheritanceType inheritanceType = InheritanceType.get( entityBinding );
 
 		// These properties will be read from the mapping data
 		final Element classMapping;
@@ -609,26 +670,26 @@ public final class AuditMetadataGenerator {
 		// Reading the mapping data depending on inheritance type (if any)
 		switch ( inheritanceType ) {
 			case NONE:
-				mappingData = generateMappingData( pc, xmlMappingData, auditTableData, idMapper );
+				mappingData = generateMappingData( entityBinding, xmlMappingData, auditTableData, idMapper );
 				break;
 
 			case SINGLE:
-				mappingData = generateInheritanceMappingData( pc, xmlMappingData, auditTableData, "subclass" );
+				mappingData = generateInheritanceMappingData( entityBinding, xmlMappingData, auditTableData, "subclass" );
 				break;
 
 			case JOINED:
-				mappingData = generateInheritanceMappingData( pc, xmlMappingData, auditTableData, "joined-subclass" );
+				mappingData = generateInheritanceMappingData( entityBinding, xmlMappingData, auditTableData, "joined-subclass" );
 
 				// Adding the "key" element with all id columns...
 				final Element keyMapping = mappingData.getFirst().addElement( "key" );
-				MetadataTools.addColumns( keyMapping, pc.getTable().getPrimaryKey().columnIterator() );
+				MetadataTools.addColumns( keyMapping, entityBinding.getPrimaryTable().getPrimaryKey().getColumns() );
 
 				// ... and the revision number column, read from the revision info relation mapping.
 				keyMapping.add( (Element) cloneAndSetupRevisionInfoRelationMapping().element( "column" ).clone() );
 				break;
 
 			case TABLE_PER_CLASS:
-				mappingData = generateInheritanceMappingData( pc, xmlMappingData, auditTableData, "union-subclass" );
+				mappingData = generateInheritanceMappingData( entityBinding, xmlMappingData, auditTableData, "union-subclass" );
 				break;
 
 			default:
@@ -643,32 +704,38 @@ public final class AuditMetadataGenerator {
 
 		// Mapping unjoined properties
 		addProperties(
-				classMapping, pc.getUnjoinedPropertyIterator(), propertyMapper,
-				auditingData, pc.getEntityName(), xmlMappingData,
+				classMapping,
+				entityBinding.getNonIdAttributeBindingClosure(), // TODO: this needs to be corrected to only get non-joined attribute bindings.
+				//entityBinding.getUnjoinedPropertyIterator(),
+				propertyMapper,
+				auditingData,
+				entityBinding.getEntityName(),
+				xmlMappingData,
 				true
 		);
 
+		// TODO: add support for joins
 		// Creating and mapping joins (first pass)
-		createJoins( pc, classMapping, auditingData );
-		addJoins( pc, propertyMapper, auditingData, pc.getEntityName(), xmlMappingData, true );
+		//createJoins( entityBinding, classMapping, auditingData );
+		//addJoins( entityBinding, propertyMapper, auditingData, entityBinding.getEntityName(), xmlMappingData, true );
 
 		// Storing the generated configuration
 		final EntityConfiguration entityCfg = new EntityConfiguration(
 				auditEntityName,
-				pc.getClassName(),
+				entityBinding.getEntity().getDescriptor().getName().fullName(),
 				idMapper,
 				propertyMapper,
 				parentEntityName
 		);
-		entitiesConfigurations.put( pc.getEntityName(), entityCfg );
+		entitiesConfigurations.put( entityBinding.getEntityName(), entityCfg );
 	}
 
 	@SuppressWarnings({"unchecked"})
 	public void generateSecondPass(
-			PersistentClass pc,
+			EntityBinding entityBinding,
 			ClassAuditingData auditingData,
 			EntityXmlMappingData xmlMappingData) {
-		final String entityName = pc.getEntityName();
+		final String entityName = entityBinding.getEntityName();
 		LOG.debugf( "Generating second-pass auditing mapping for entity %s", entityName );
 
 		final CompositeMapperBuilder propertyMapper = entitiesConfigurations.get( entityName ).getPropertyMapper();
@@ -678,7 +745,8 @@ public final class AuditMetadataGenerator {
 
 		addProperties(
 				parent,
-				pc.getUnjoinedPropertyIterator(),
+				entityBinding.getNonIdAttributeBindingClosure(), // TODO: this needs to be corrected to only get non-joined attribute bindings.
+				//entityBinding.getUnjoinedPropertyIterator(),
 				propertyMapper,
 				auditingData,
 				entityName,
@@ -686,8 +754,9 @@ public final class AuditMetadataGenerator {
 				false
 		);
 
+		// TODO: add suuport for joins
 		// Mapping joins (second pass)
-		addJoins( pc, propertyMapper, auditingData, entityName, xmlMappingData, false );
+		//addJoins( entityBinding, propertyMapper, auditingData, entityName, xmlMappingData, false );
 	}
 
 	public Map<String, EntityConfiguration> getEntitiesConfigurations() {
@@ -700,24 +769,8 @@ public final class AuditMetadataGenerator {
 		return basicMetadataGenerator;
 	}
 
-	Configuration getCfg() {
-		return cfg;
-	}
-
-	GlobalConfiguration getGlobalCfg() {
-		return globalCfg;
-	}
-
-	AuditEntitiesConfiguration getVerEntCfg() {
-		return verEntCfg;
-	}
-
 	AuditStrategy getAuditStrategy() {
 		return auditStrategy;
-	}
-
-	ClassLoaderService getClassLoaderService() {
-		return classLoaderService;
 	}
 
 	AuditEntityNameRegister getAuditEntityNameRegister() {

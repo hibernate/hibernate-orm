@@ -7,8 +7,8 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,6 +19,7 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet.")
 public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 	private long childImpTransId = 1L;
 	private long childExpTransId = 2L;
@@ -67,18 +68,18 @@ public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase 
 
 	@Test
 	public void testCreatedAuditTables() {
-		Table explicitTransChildTable = getCfg().getClassMapping(
+		TableSpecification explicitTransChildTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.ExplicitTransitiveChildEntity_AUD"
-		).getTable();
+		).getPrimaryTable();
 		checkTableColumns(
 				TestTools.makeSet( "child", "parent", "grandparent", "id" ),
 				TestTools.makeSet( "notAudited" ),
 				explicitTransChildTable
 		);
 
-		Table implicitTransChildTable = getCfg().getClassMapping(
+		TableSpecification implicitTransChildTable = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.ImplicitTransitiveChildEntity_AUD"
-		).getTable();
+		).getPrimaryTable();
 		checkTableColumns(
 				TestTools.makeSet( "child", "parent", "grandparent", "id" ),
 				TestTools.makeSet( "notAudited" ),
@@ -86,14 +87,14 @@ public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase 
 		);
 	}
 
-	private void checkTableColumns(Set<String> expectedColumns, Set<String> unexpectedColumns, Table table) {
+	private void checkTableColumns(Set<String> expectedColumns, Set<String> unexpectedColumns, TableSpecification table) {
 		for ( String columnName : expectedColumns ) {
 			// Check whether expected column exists.
-			Assert.assertNotNull( table.getColumn( new Column( columnName ) ) );
+			Assert.assertNotNull( table.locateColumn( columnName ) );
 		}
 		for ( String columnName : unexpectedColumns ) {
 			// Check whether unexpected column does not exist.
-			Assert.assertNull( table.getColumn( new Column( columnName ) ) );
+			Assert.assertNull( table.locateColumn( columnName ) );
 		}
 	}
 

@@ -37,6 +37,9 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
+import org.hibernate.metamodel.spi.binding.OneToOneAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 
 import org.dom4j.Element;
 
@@ -57,11 +60,10 @@ public final class ToOneRelationMetadataGenerator {
 	void addToOne(
 			Element parent,
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			SingularAssociationAttributeBinding attributeBinding,
 			CompositeMapperBuilder mapper,
-			String entityName,
-			boolean insertable) {
-		final String referencedEntityName = ((ToOne) value).getReferencedEntityName();
+			String entityName) {
+		final String referencedEntityName =  attributeBinding.getReferencedEntityName();
 
 		final IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(
 				entityName,
@@ -76,9 +78,10 @@ public final class ToOneRelationMetadataGenerator {
 		final IdMapper relMapper = idMapping.getIdMapper().prefixMappedProperties( lastPropertyPrefix );
 
 		// Storing information about this relation
+		boolean insertable = attributeBinding.isIncludedInInsert();
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
 				propertyAuditingData.getName(), referencedEntityName, relMapper,
-				insertable, MappingTools.ignoreNotFound( value )
+				insertable, MappingTools.ignoreNotFound( attributeBinding )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -104,7 +107,7 @@ public final class ToOneRelationMetadataGenerator {
 		MetadataTools.prefixNamesInPropertyElement(
 				properties,
 				lastPropertyPrefix,
-				MetadataTools.getColumnNameIterator( value.getColumnIterator() ),
+				MetadataTools.getColumnNameIterator( attributeBinding.getValues().iterator() ),
 				false,
 				insertable
 		);
@@ -127,11 +130,11 @@ public final class ToOneRelationMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	void addOneToOneNotOwning(
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			OneToOneAttributeBinding attributeBinding,
 			CompositeMapperBuilder mapper,
 			String entityName) {
-		final OneToOne propertyValue = (OneToOne) value;
-		final String owningReferencePropertyName = propertyValue.getReferencedPropertyName();
+		final String owningReferencePropertyName =
+				attributeBinding.getReferencedAttributeBinding().getAttribute().getName();
 
 		final EntityConfiguration configuration = mainGenerator.getEntitiesConfigurations().get( entityName );
 		if ( configuration == null ) {
@@ -145,7 +148,7 @@ public final class ToOneRelationMetadataGenerator {
 		}
 
 		final String lastPropertyPrefix = MappingTools.createToOneRelationPrefix( owningReferencePropertyName );
-		final String referencedEntityName = propertyValue.getReferencedEntityName();
+		final String referencedEntityName = attributeBinding.getReferencedEntityName();
 
 		// Generating the id mapper for the relation
 		final IdMapper ownedIdMapper = ownedIdMapping.getIdMapper().prefixMappedProperties( lastPropertyPrefix );
@@ -153,7 +156,7 @@ public final class ToOneRelationMetadataGenerator {
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneNotOwningRelation(
 				propertyAuditingData.getName(), owningReferencePropertyName, referencedEntityName,
-				ownedIdMapper, MappingTools.ignoreNotFound( value )
+				ownedIdMapper, MappingTools.ignoreNotFound( attributeBinding )
 		);
 
 		// Adding mapper for the id
@@ -167,11 +170,10 @@ public final class ToOneRelationMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	void addOneToOnePrimaryKeyJoinColumn(
 			PropertyAuditingData propertyAuditingData,
-			Value value,
+			OneToOneAttributeBinding attributeBinding,
 			CompositeMapperBuilder mapper,
-			String entityName,
-			boolean insertable) {
-		final String referencedEntityName = ((ToOne) value).getReferencedEntityName();
+			String entityName) {
+		final String referencedEntityName = attributeBinding.getReferencedEntityName();
 
 		final IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(
 				entityName,
@@ -187,8 +189,8 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
-				propertyAuditingData.getName(), referencedEntityName, relMapper, insertable,
-				MappingTools.ignoreNotFound( value )
+				propertyAuditingData.getName(), referencedEntityName, relMapper, attributeBinding.isIncludedInInsert(),
+				MappingTools.ignoreNotFound( attributeBinding )
 		);
 
 		// Adding mapper for the id

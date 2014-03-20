@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.FetchMode;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * Basic contract describing the commonality between the various types of collection element mappings.
@@ -51,6 +52,11 @@ public abstract class AbstractPluralAttributeElementBinding implements PluralAtt
 	}
 
 	protected abstract RelationalValueBindingContainer getRelationalValueContainer();
+
+	@Override
+	public List<Value> getValues() {
+		return getRelationalValueContainer().values();
+	}
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {

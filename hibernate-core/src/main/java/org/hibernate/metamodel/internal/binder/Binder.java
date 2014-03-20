@@ -552,7 +552,9 @@ public class Binder {
 			return null;
 		}
 
-		final DotName descriptorTypeName = javaTypeDescriptorRepository.buildName( source.getTypeName() );
+		final DotName descriptorTypeName = javaTypeDescriptorRepository.buildName(
+				typeHelper().determineJavaTypeName( source )
+		);
 		final JavaTypeDescriptor javaTypeDescriptor = javaTypeDescriptorRepository.getType( descriptorTypeName );
 
 		if ( EntitySource.class.isInstance( source ) ) {
@@ -1792,7 +1794,7 @@ public class Binder {
 			if ( attribute != null ) {
 				// validate its ok to use...
 				if ( !Aggregate.class.isInstance( attribute.getSingularAttributeType() ) ) {
-					localBindingContext().makeMappingException(
+					throw localBindingContext().makeMappingException(
 							"Found existing attribute on container for '" + attributeSource.getName()
 									+ "', but was expecting an Aggregate"
 					);
@@ -1805,9 +1807,12 @@ public class Binder {
 					compositeTypeDescriptor = attributeSource.getTypeDescriptor();
 				}
 				else {
+					final EntityMode entityMode =
+							attributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityMode();
 					compositeTypeDescriptor = typeHelper().determineJavaType(
 							attributeSource,
-							attributeBindingContainer.getAttributeContainer()
+							attributeBindingContainer.getAttributeContainer(),
+							entityMode
 					);
 				}
 				composite = new Aggregate( compositeTypeDescriptor, null );

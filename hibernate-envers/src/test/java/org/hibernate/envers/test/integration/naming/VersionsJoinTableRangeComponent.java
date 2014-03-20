@@ -21,9 +21,8 @@ import org.hibernate.annotations.FetchMode;
 @Embeddable
 public final class VersionsJoinTableRangeComponent<T extends VersionsJoinTableRangeTestEntitySuperClass> {
 
-	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 	@org.hibernate.annotations.Fetch(value = FetchMode.SUBSELECT)
-	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@JoinColumn(name = "VJTRCTE_ID", insertable = true, updatable = false, nullable = false)
 //	Note:	If this is processed without override annotation, then we should get a 
 //			org.hibernate.DuplicateMappingException: 

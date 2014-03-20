@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  *
@@ -42,6 +43,11 @@ public class BasicPluralAttributeIndexBinding extends AbstractPluralAttributeInd
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
 		return relationalValueBindingContainer.relationalValueBindings();
+	}
+
+	@Override
+	public List<Value> getValues() {
+		return relationalValueBindingContainer.values();
 	}
 
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {

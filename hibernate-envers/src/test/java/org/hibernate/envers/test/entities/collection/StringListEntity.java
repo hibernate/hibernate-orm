@@ -27,10 +27,10 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.Audited;
 
 /**
@@ -44,7 +44,7 @@ public class StringListEntity {
 
 	@Audited
 	@ElementCollection
-	@IndexColumn(name = "list_index")
+	@OrderColumn(name = "list_index")
 	private List<String> strings;
 
 	public StringListEntity() {

@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.internal.tools.graph.GraphDefiner;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 /**
  * Defines a graph, where the vertexes are all persistent classes, and there is an edge from
@@ -38,45 +38,45 @@ import org.hibernate.mapping.PersistentClass;
  *
  * @author Adam Warski (adam at warski dot org)
  */
-public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass, String> {
-	private Configuration cfg;
+public class EntityBindingGraphDefiner implements GraphDefiner<EntityBinding, String> {
+	private Metadata metadata;
 
-	public PersistentClassGraphDefiner(Configuration cfg) {
-		this.cfg = cfg;
+	public EntityBindingGraphDefiner(Metadata metadata) {
+		this.metadata = metadata;
 	}
 
 	@Override
-	public String getRepresentation(PersistentClass pc) {
+	public String getRepresentation(EntityBinding pc) {
 		return pc.getEntityName();
 	}
 
 	@Override
-	public PersistentClass getValue(String entityName) {
-		return cfg.getClassMapping( entityName );
+	public EntityBinding getValue(String entityName) {
+		return metadata.getEntityBinding( entityName );
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private void addNeighbours(List<PersistentClass> neighbours, Iterator<PersistentClass> subclassIterator) {
+	private void addNeighbours(List<EntityBinding> neighbours, Iterator<EntityBinding> subclassIterator) {
 		while ( subclassIterator.hasNext() ) {
-			final PersistentClass subclass = subclassIterator.next();
+			final EntityBinding subclass = subclassIterator.next();
 			neighbours.add( subclass );
-			addNeighbours( neighbours, (Iterator<PersistentClass>) subclass.getSubclassIterator() );
+			addNeighbours( neighbours, subclass.getDirectSubEntityBindings().iterator() );
 		}
 	}
 
 	@Override
 	@SuppressWarnings({"unchecked"})
-	public List<PersistentClass> getNeighbours(PersistentClass pc) {
-		final List<PersistentClass> neighbours = new ArrayList<PersistentClass>();
+	public List<EntityBinding> getNeighbours(EntityBinding entityBinding) {
+		final List<EntityBinding> neighbours = new ArrayList<EntityBinding>();
 
-		addNeighbours( neighbours, (Iterator<PersistentClass>) pc.getSubclassIterator() );
+		addNeighbours( neighbours, entityBinding.getDirectSubEntityBindings().iterator() );
 
 		return neighbours;
 	}
 
 	@Override
 	@SuppressWarnings({"unchecked"})
-	public List<PersistentClass> getValues() {
-		return Tools.iteratorToList( cfg.getClassMappings() );
+	public List<EntityBinding> getValues() {
+		return Tools.iteratorToList( metadata.getEntityBindings().iterator() );
 	}
 }

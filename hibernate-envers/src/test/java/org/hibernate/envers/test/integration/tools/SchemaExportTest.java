@@ -36,7 +36,7 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 	@FailureExpectedWithNewMetamodel
 	public void testSchemaCreation() {
 		// Generate complete schema.
-		new EnversSchemaGenerator( configuration() ).export().create( true, true );
+		new EnversSchemaGenerator( metadata() ).export().create( true, true );
 
 		// Populate database with test data.
 		Session session = getSession();
@@ -59,6 +59,6 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 	@Test
 	@Priority(8)
 	public void testSchemaDrop() {
-		new EnversSchemaGenerator( configuration() ).export().drop( true, true );
+		new EnversSchemaGenerator( metadata() ).export().drop( true, true );
 	}
 }

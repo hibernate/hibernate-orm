@@ -630,26 +630,31 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public AttributeBinding[] getNonIdAttributeBindingClosure(){
 		// TODO: update size to account for joins
 		if ( isRoot() ) {
-			return internalGetNonIdAttributeBindingClosure();
+			return internalGetNonIdAttributeBindings();
 		}
 		else {
 			return ArrayHelper.join(
 					superEntityBinding.getNonIdAttributeBindingClosure(),
-					internalGetNonIdAttributeBindingClosure()
+					internalGetNonIdAttributeBindings()
 			);
 		}
 	}
 
-	private AttributeBinding[] internalGetNonIdAttributeBindingClosure() {
-		List<AttributeBinding> list = new ArrayList<AttributeBinding>();
+	public List<AttributeBinding> getNonIdAttributeBindings() {
+		final List<AttributeBinding> list = new ArrayList<AttributeBinding>();
 		for ( final AttributeBinding ab : attributeBindings() ) {
 			boolean isId = getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( ab );
 			if ( !isId ) {
 				list.add( ab );
 			}
 		}
-		return list.toArray( new AttributeBinding[list.size()] );
+		return list;
 
+	}
+
+	private AttributeBinding[] internalGetNonIdAttributeBindings() {
+		final List<AttributeBinding> list = getNonIdAttributeBindings();
+		return list.toArray( new AttributeBinding[list.size()] );
 	}
 
 	public List<EntityBinding> getDirectSubEntityBindings() {
@@ -772,7 +777,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 
 			results = ArrayHelper.join(
 					results,
-					subEntityBinding.internalGetNonIdAttributeBindingClosure()
+					subEntityBinding.internalGetNonIdAttributeBindings()
 			);
 			// TODO: if EntityBinding.attributeBindings() excludes joined attributes, then they need to be added here
 		}

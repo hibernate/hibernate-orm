@@ -30,7 +30,7 @@ import java.util.Arrays;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Column;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -101,11 +101,15 @@ public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase
 	public void testChildIdColumnName() {
 		Assert.assertEquals(
 				"other_id",
-				((Column) getCfg()
-						.getClassMapping(
+				( (Column) getMetadata()
+						.getEntityBinding(
 								"org.hibernate.envers.test.integration.inheritance.joined.primarykeyjoin.ChildPrimaryKeyJoinEntity_AUD"
 						)
-						.getKey().getColumnIterator().next()).getName()
+						.getHierarchyDetails()
+						.getEntityIdentifier()
+						.getAttributeBinding()
+						.getValues()
+						.get( 0 ) ).getColumnName().getText()
 		);
 	}
 }

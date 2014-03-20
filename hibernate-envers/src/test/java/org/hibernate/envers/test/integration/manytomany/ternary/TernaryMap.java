@@ -31,6 +31,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestPrivSeqEntity;
 import org.hibernate.envers.test.entities.StrTestPrivSeqEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,6 +39,8 @@ import org.junit.Test;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = "@MapKeyJoinColumn is not supported yet" )
+
 public class TernaryMap extends BaseEnversJPAFunctionalTestCase {
 	private Integer str1_id;
 	private Integer str2_id;

@@ -28,23 +28,22 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
 import org.hibernate.envers.configuration.internal.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.configuration.internal.metadata.EntityXmlMappingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.AnnotationsMetadataReader;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.graph.GraphTopologicalSort;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -52,80 +51,84 @@ import org.dom4j.Element;
 import org.dom4j.io.DOMWriter;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class EntitiesConfigurator {
+	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			EnversMessageLogger.class,
+			EntitiesConfigurator.class.getName()
+	);
+
+
 	public EntitiesConfigurations configure(
-			Configuration cfg, ReflectionManager reflectionManager,
-			GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy, ClassLoaderService classLoaderService,
-			Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
+			AuditConfiguration.AuditConfigurationContext context,
+			AuditStrategy auditStrategy,
+			Document revisionInfoXmlMapping,
+			Element revisionInfoRelationMapping) {
 		// Creating a name register to capture all audit entity names created.
 		final AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
 		final DOMWriter writer = new DOMWriter();
 
-		// Sorting the persistent class topologically - superclass always before subclass
-		final Iterator<PersistentClass> classes = GraphTopologicalSort.sort( new PersistentClassGraphDefiner( cfg ) )
-				.iterator();
+		// Sorting the entity bindings topologically - superclass always before subclass
+		final List<EntityBinding> entityBindings =
+				GraphTopologicalSort.sort( new EntityBindingGraphDefiner( context.getMetadata() ) );
 
 		final ClassesAuditingData classesAuditingData = new ClassesAuditingData();
-		final Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<PersistentClass, EntityXmlMappingData>();
+		final Map<EntityBinding, EntityXmlMappingData> xmlMappings = new HashMap<EntityBinding, EntityXmlMappingData>();
 
 		// Reading metadata from annotations
-		while ( classes.hasNext() ) {
-			final PersistentClass pc = classes.next();
+		final AnnotationsMetadataReader annotationsMetadataReader = new AnnotationsMetadataReader( context );
+		for ( EntityBinding entityBinding : entityBindings  ) {
 
 			// Collecting information from annotations on the persistent class pc
-			final AnnotationsMetadataReader annotationsMetadataReader =
-					new AnnotationsMetadataReader( globalCfg, reflectionManager, pc );
-			final ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
+			final ClassAuditingData auditData = annotationsMetadataReader.getAuditData( entityBinding );
 
-			classesAuditingData.addClassAuditingData( pc, auditData );
+			classesAuditingData.addClassAuditingData( entityBinding, auditData );
 		}
 
 		// Now that all information is read we can update the calculated fields.
 		classesAuditingData.updateCalculatedFields();
 
 		final AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(
-				cfg, globalCfg, verEntCfg, auditStrategy,
-				classLoaderService, revisionInfoRelationMapping, auditEntityNameRegister
+				context, auditStrategy, revisionInfoRelationMapping, auditEntityNameRegister
 		);
 
 		// First pass
-		for ( Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData() ) {
-			final PersistentClass pc = pcDatasEntry.getKey();
+		for ( Map.Entry<EntityBinding, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllEntityBindingAuditedData() ) {
+			final EntityBinding entityBinding = pcDatasEntry.getKey();
 			final ClassAuditingData auditData = pcDatasEntry.getValue();
 
 			final EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
 			if ( auditData.isAudited() ) {
 				if ( !StringTools.isEmpty( auditData.getAuditTable().value() ) ) {
-					verEntCfg.addCustomAuditTableName( pc.getEntityName(), auditData.getAuditTable().value() );
+					context.getAuditEntitiesConfiguration().addCustomAuditTableName( entityBinding.getEntityName(), auditData.getAuditTable().value() );
 				}
 
-				auditMetaGen.generateFirstPass( pc, auditData, xmlMappingData, true );
+				auditMetaGen.generateFirstPass( entityBinding, auditData, xmlMappingData, true );
 			}
 			else {
-				auditMetaGen.generateFirstPass( pc, auditData, xmlMappingData, false );
+				auditMetaGen.generateFirstPass( entityBinding, auditData, xmlMappingData, false );
 			}
 
-			xmlMappings.put( pc, xmlMappingData );
+			xmlMappings.put( entityBinding, xmlMappingData );
 		}
 
 		// Second pass
-		for ( Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData() ) {
+		for ( Map.Entry<EntityBinding, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllEntityBindingAuditedData() ) {
 			final EntityXmlMappingData xmlMappingData = xmlMappings.get( pcDatasEntry.getKey() );
 
 			if ( pcDatasEntry.getValue().isAudited() ) {
 				auditMetaGen.generateSecondPass( pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData );
 				try {
-					cfg.addDocument( writer.write( xmlMappingData.getMainXmlMapping() ) );
-					//writeDocument(xmlMappingData.getMainXmlMapping());
+					logDocument( xmlMappingData.getMainXmlMapping() );
+					context.addDocument( writer.write( xmlMappingData.getMainXmlMapping() ) );
 
 					for ( Document additionalMapping : xmlMappingData.getAdditionalXmlMappings() ) {
-						cfg.addDocument( writer.write( additionalMapping ) );
-						//writeDocument(additionalMapping);
+						logDocument( additionalMapping );
+						context.addDocument( writer.write( additionalMapping ) );
 					}
 				}
 				catch (DocumentException e) {
@@ -138,8 +141,8 @@ public class EntitiesConfigurator {
 		if ( auditMetaGen.getEntitiesConfigurations().size() > 0 ) {
 			try {
 				if ( revisionInfoXmlMapping != null ) {
-					//writeDocument(revisionInfoXmlMapping);
-					cfg.addDocument( writer.write( revisionInfoXmlMapping ) );
+					logDocument( revisionInfoXmlMapping );
+					context.addDocument( writer.write( revisionInfoXmlMapping ) );
 				}
 			}
 			catch (DocumentException e) {
@@ -153,8 +156,10 @@ public class EntitiesConfigurator {
 		);
 	}
 
-	@SuppressWarnings({"UnusedDeclaration"})
-	private void writeDocument(Document e) {
+	private void logDocument(Document e) {
+		if ( !LOG.isDebugEnabled() ) {
+			return;
+		}
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		final Writer w = new PrintWriter( baos );
 
@@ -167,8 +172,8 @@ public class EntitiesConfigurator {
 			e1.printStackTrace();
 		}
 
-		System.out.println( "-----------" );
-		System.out.println( baos.toString() );
-		System.out.println( "-----------" );
+		LOG.debug( "-----------" );
+		LOG.debug( baos.toString() );
+		LOG.debug( "-----------" );
 	}
 }

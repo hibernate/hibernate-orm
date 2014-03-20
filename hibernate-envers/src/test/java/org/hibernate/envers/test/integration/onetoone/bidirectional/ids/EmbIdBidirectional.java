@@ -43,7 +43,7 @@ public class EmbIdBidirectional extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {BiEmbIdRefEdEntity.class, BiEmbIdRefIngEntity.class};
+		return new Class[] {BiEmbIdRefEdEntity.class, BiEmbIdRefIngEntity.class, EmbId.class};
 	}
 
 	@Test

@@ -11,11 +11,13 @@ import org.hibernate.envers.test.Priority;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTest {
 	private long carId = 0;
 	private long ownerId = 0;

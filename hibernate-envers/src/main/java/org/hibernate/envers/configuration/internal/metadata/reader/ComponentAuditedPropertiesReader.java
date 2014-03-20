@@ -23,11 +23,17 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XProperty;
+import java.util.List;
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.event.spi.EnversDotNames;
+import org.hibernate.metamodel.spi.domain.Attribute;
 
 /**
  * Reads the audited properties for components.
@@ -38,25 +44,29 @@ import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	public ComponentAuditedPropertiesReader(
-			ModificationStore defaultStore,
-			PersistentPropertiesSource persistentPropertiesSource,
+			AuditConfiguration.AuditConfigurationContext context,
 			AuditedPropertiesHolder auditedPropertiesHolder,
-			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
+			PersistentPropertiesSource persistentPropertiesSource,
 			String propertyNamePrefix) {
 		super(
-				defaultStore, persistentPropertiesSource, auditedPropertiesHolder,
-				globalCfg, reflectionManager, propertyNamePrefix
+				context, auditedPropertiesHolder, persistentPropertiesSource, propertyNamePrefix
 		);
 	}
 
 	@Override
 	protected boolean checkAudited(
-			XProperty property,
+			Attribute attribute,
 			PropertyAuditingData propertyData,
 			Audited allClassAudited) {
 		// Checking if this property is explicitly audited or if all properties are.
-		final Audited aud = property.getAnnotation( Audited.class );
-		if ( aud != null ) {
+		final Map<DotName, List<AnnotationInstance>> attributeAnnotations =
+				getContext().locateAttributeAnnotations( attribute );
+		// Checking if this property is explicitly audited or if all properties are.
+		if ( attributeAnnotations.containsKey( EnversDotNames.AUDITED ) ) {
+			final Audited aud =  getContext().getAnnotationProxy(
+					attributeAnnotations.get( EnversDotNames.AUDITED ).get( 0 ),
+					Audited.class
+			);
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );

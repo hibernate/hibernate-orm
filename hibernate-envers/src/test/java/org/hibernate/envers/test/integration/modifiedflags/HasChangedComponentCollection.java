@@ -30,7 +30,7 @@ public class HasChangedComponentCollection extends AbstractModifiedFlagsEntityTe
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {EmbeddableListEntity1.class};
+		return new Class[] {EmbeddableListEntity1.class, Component3.class, Component4.class};
 	}
 
 	@Test

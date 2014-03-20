@@ -31,6 +31,7 @@ import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
 import org.hibernate.envers.test.integration.collection.mapkey.ComponentMapKeyEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -42,6 +43,7 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
+@FailureExpectedWithNewMetamodel( message = "Plural attribute index that is an attribute of the referenced entity is not supported yet." )
 public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {
 	private Integer cmke_id;
 
@@ -50,7 +52,7 @@ public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ComponentMapKeyEntity.class, ComponentTestEntity.class};
+		return new Class[] {ComponentMapKeyEntity.class, ComponentTestEntity.class, Component1.class, Component2.class};
 	}
 
 	@Test

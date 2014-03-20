@@ -24,11 +24,27 @@
 package org.hibernate.envers.tools.hbm2ddl;
 
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+import org.w3c.dom.Document;
+
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationResult;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
@@ -38,33 +54,11 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 public class EnversSchemaGenerator {
 	private final SchemaExport export;
 
-	public EnversSchemaGenerator(ServiceRegistry serviceRegistry, Configuration configuration) {
-		configuration = configureAuditing( configuration );
-		export = new SchemaExport( serviceRegistry, configuration );
-	}
-
-	public EnversSchemaGenerator(Configuration configuration) {
-		configuration = configureAuditing( configuration );
-		export = new SchemaExport( configuration );
-	}
-
-	public EnversSchemaGenerator(Configuration configuration, Properties properties) throws HibernateException {
-		configuration = configureAuditing( configuration );
-		export = new SchemaExport( configuration, properties );
-	}
-
-	public EnversSchemaGenerator(Configuration configuration, Connection connection) throws HibernateException {
-		configuration = configureAuditing( configuration );
-		export = new SchemaExport( configuration, connection );
+	public EnversSchemaGenerator(MetadataImplementor metadata) {
+		export = new SchemaExport( metadata );
 	}
 
 	public SchemaExport export() {
 		return export;
-	}
-
-	private Configuration configureAuditing(Configuration configuration) {
-		configuration.buildMappings();
-		AuditConfiguration.getFor( configuration );
-		return configuration;
 	}
 }

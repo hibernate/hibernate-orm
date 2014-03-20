@@ -25,11 +25,11 @@ package org.hibernate.envers;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.Fetch;
@@ -45,7 +45,7 @@ import org.hibernate.annotations.FetchMode;
 @MappedSuperclass
 public class DefaultTrackingModifiedEntitiesRevisionEntity extends DefaultRevisionEntity {
 	@ElementCollection(fetch = FetchType.EAGER)
-	@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
+	@CollectionTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 	@Column(name = "ENTITYNAME")
 	@Fetch(FetchMode.JOIN)
 	@ModifiedEntityNames

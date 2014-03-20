@@ -30,12 +30,14 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = " Plural attribute index that is an attribute of the referenced entity is not supported yet." )
 public class IdMapKey extends BaseEnversJPAFunctionalTestCase {
 	private Integer imke_id;
 

@@ -7,12 +7,12 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 
@@ -35,7 +35,7 @@ public abstract class ParentIndexedListJoinColumnBidirectionalRefIngEntity {
 
 	@OneToMany
 	@JoinColumn(name = "indexed_join_column")
-	@IndexColumn(name = "indexed_index")
+	@OrderColumn(name = "indexed_index")
 	@AuditMappedBy(mappedBy = "owner", positionMappedBy = "position")
 	private List<ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity> references;
 

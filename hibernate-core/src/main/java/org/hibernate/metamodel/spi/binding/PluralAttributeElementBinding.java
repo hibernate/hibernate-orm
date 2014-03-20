@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.FetchMode;
+import org.hibernate.metamodel.spi.relational.Value;
 
 
 /**
@@ -40,6 +41,8 @@ public interface PluralAttributeElementBinding {
 	 * @return The plural attribute binding descriptor.
 	 */
 	PluralAttributeBinding getPluralAttributeBinding();
+
+	List<Value> getValues();
 
 	/**
 	 * Retrieve the relational aspect of the element binding. Essentially describes the column(s) to which the

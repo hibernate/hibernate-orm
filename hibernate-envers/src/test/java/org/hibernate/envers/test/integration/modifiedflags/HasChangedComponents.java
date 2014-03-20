@@ -51,7 +51,7 @@ public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ComponentTestEntity.class};
+		return new Class[] {ComponentTestEntity.class, Component1.class, Component2.class};
 	}
 
 	@Test
@@ -139,7 +139,7 @@ public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
 		assertEquals(
 				TestTools.makeSet( "comp1_MOD" ),
 				TestTools.extractModProperties(
-						getCfg().getClassMapping(
+						getMetadata().getEntityBinding(
 								"org.hibernate.envers.test.entities.components.ComponentTestEntity_AUD"
 						)
 				)

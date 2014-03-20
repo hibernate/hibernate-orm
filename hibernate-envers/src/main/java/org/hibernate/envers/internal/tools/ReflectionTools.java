@@ -126,7 +126,7 @@ public abstract class ReflectionTools {
 	 *
 	 * @param name Fully qualified class name.
 	 * @param classLoaderService Class loading service. Passing {@code null} reference
-	 * in case of {@link AuditConfiguration#getFor(Configuration)} usage.
+	 * in case of {@link AuditConfiguration#register(Configuration)} usage.
 	 *
 	 * @return The cass reference.
 	 *

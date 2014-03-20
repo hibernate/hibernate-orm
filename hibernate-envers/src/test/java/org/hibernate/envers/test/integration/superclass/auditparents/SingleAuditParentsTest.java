@@ -9,8 +9,8 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,6 +21,7 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet.")
 public class SingleAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 	private long childSingleId = 1L;
 	private Integer siteSingleId = null;
@@ -63,17 +64,17 @@ public class SingleAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 		Set<String> expectedColumns = TestTools.makeSet( "child", "grandparent", "id" );
 		Set<String> unexpectedColumns = TestTools.makeSet( "parent", "relation_id", "notAudited" );
 
-		Table table = getCfg().getClassMapping(
+		TableSpecification table = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.ChildSingleParentEntity_AUD"
-		).getTable();
+		).getPrimaryTable();
 
 		for ( String columnName : expectedColumns ) {
 			// Check whether expected column exists.
-			Assert.assertNotNull( table.getColumn( new Column( columnName ) ) );
+			Assert.assertNotNull( table.locateColumn( columnName ) );
 		}
 		for ( String columnName : unexpectedColumns ) {
 			// Check whether unexpected column does not exist.
-			Assert.assertNull( table.getColumn( new Column( columnName ) ) );
+			Assert.assertNull( table.locateColumn( columnName ) );
 		}
 	}
 

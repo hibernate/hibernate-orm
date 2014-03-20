@@ -58,7 +58,9 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 		return new Class[] {
 				PartialModifiedFlagsEntity.class,
 				WithModifiedFlagReferencingEntity.class,
-				StrTestEntity.class
+				StrTestEntity.class,
+				Component1.class,
+				Component2.class
 		};
 	}
 

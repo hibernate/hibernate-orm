@@ -32,12 +32,14 @@ import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = " Plural attribute index that is an attribute of the referenced entity is not supported yet." )
 public class ComponentMapKey extends BaseEnversJPAFunctionalTestCase {
 	private Integer cmke_id;
 
@@ -46,7 +48,7 @@ public class ComponentMapKey extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ComponentMapKeyEntity.class, ComponentTestEntity.class};
+		return new Class[] {ComponentMapKeyEntity.class, ComponentTestEntity.class, Component1.class, Component2.class};
 	}
 
 	@Test

@@ -11,12 +11,14 @@ import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {

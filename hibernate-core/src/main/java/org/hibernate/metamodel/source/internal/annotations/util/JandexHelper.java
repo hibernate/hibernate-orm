@@ -689,6 +689,9 @@ public class JandexHelper {
 			}
 			returnValue = arr;
 		}
+		else if ( type.isEnum() && String.class.isInstance( returnValue ) ) {
+			returnValue = Enum.valueOf( (Class<Enum>) type, (String) returnValue );
+		}
 		return type.cast( nullIfUndefined( returnValue, type ) );
 	}
 

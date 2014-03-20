@@ -22,7 +22,12 @@ public class ManyToOneIdNotAudited extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ManyToOneIdNotAuditedTestEntity.class, UnversionedStrTestEntity.class, StrTestEntity.class};
+		return new Class[] {
+				ManyToOneIdNotAuditedTestEntity.class,
+				UnversionedStrTestEntity.class,
+				StrTestEntity.class,
+				ManyToOneNotAuditedEmbId.class
+		};
 	}
 
 	@Test

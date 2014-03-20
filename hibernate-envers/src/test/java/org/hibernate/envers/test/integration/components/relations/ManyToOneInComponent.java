@@ -44,7 +44,7 @@ public class ManyToOneInComponent extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ManyToOneComponentTestEntity.class, StrTestEntity.class};
+		return new Class[] {ManyToOneComponentTestEntity.class, StrTestEntity.class, ManyToOneComponent.class};
 
 	}
 

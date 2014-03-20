@@ -51,7 +51,7 @@ public class EmbIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {SetRefEdEmbIdEntity.class, SetRefIngEmbIdEntity.class};
+		return new Class[] {SetRefEdEmbIdEntity.class, SetRefIngEmbIdEntity.class, EmbId.class};
 	}
 
 	@Test

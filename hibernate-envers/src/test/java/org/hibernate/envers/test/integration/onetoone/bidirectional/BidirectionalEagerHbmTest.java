@@ -32,6 +32,7 @@ import org.hibernate.envers.test.entities.onetoone.BidirectionalEagerHbmRefIngPK
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertNotNull;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Erik-Berndt Scheper, Amar Singh
  */
 @TestForIssue(jiraKey = "HHH-3854")
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class BidirectionalEagerHbmTest extends BaseEnversJPAFunctionalTestCase {
 	private Long refIngId1 = null;
 

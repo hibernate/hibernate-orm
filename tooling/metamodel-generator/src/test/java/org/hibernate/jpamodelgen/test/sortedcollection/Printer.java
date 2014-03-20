@@ -30,7 +30,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.annotations.Sort;
 
 /**
  * @author Hardy Ferentschik

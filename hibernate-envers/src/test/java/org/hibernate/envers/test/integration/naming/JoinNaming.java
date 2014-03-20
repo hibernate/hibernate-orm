@@ -25,16 +25,16 @@ package org.hibernate.envers.test.integration.naming;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.Column;
 
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -128,11 +128,17 @@ public class JoinNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnName() {
-		Iterator<Column> columns =
-				getCfg().getClassMapping( "org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD" )
-						.getProperty( "reference_id" ).getColumnIterator();
-		assertTrue( columns.hasNext() );
-		assertEquals( "jnree_column_reference", columns.next().getName() );
-		assertFalse( columns.hasNext() );
+		final AttributeBinding attributeBinding = getMetadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD"
+		).locateAttributeBinding( "reference_id" );
+		assertTrue( attributeBinding.getAttribute().isSingular() );
+		final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+		assertTrue( !singularAttributeBinding.getValues().isEmpty() );
+
+		assertEquals(
+				"jnree_column_reference",
+				( (Column) singularAttributeBinding.getValues().get( 0 ) ).getColumnName().getText()
+		);
+		assertEquals( singularAttributeBinding.getValues().size(), 1 );
 	}
 }

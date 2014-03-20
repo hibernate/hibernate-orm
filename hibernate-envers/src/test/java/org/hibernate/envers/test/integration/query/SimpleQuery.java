@@ -59,7 +59,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { StrIntTestEntity.class, MulIdTestEntity.class, EmbIdTestEntity.class };
+		return new Class[] { StrIntTestEntity.class, MulIdTestEntity.class, EmbIdTestEntity.class, EmbId.class };
 	}
 
 	@Test

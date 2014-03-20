@@ -12,7 +12,9 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 
 	@Override

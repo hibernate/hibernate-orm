@@ -11,6 +11,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -22,6 +23,7 @@ import static org.hibernate.envers.test.tools.TestTools.makeList;
  * @author Hern&aacute;n Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSessionTest {
 
 	private long id_car1;

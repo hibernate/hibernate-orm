@@ -1,12 +1,12 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.Table;
 import java.util.Set;
 
@@ -44,7 +44,7 @@ public class AnnotatedTrackingRevisionEntity {
 	private long customTimestamp;
 
 	@ElementCollection
-	@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
+	@CollectionTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 	@Column(name = "ENTITYNAME")
 	@ModifiedEntityNames
 	private Set<String> entityNames;

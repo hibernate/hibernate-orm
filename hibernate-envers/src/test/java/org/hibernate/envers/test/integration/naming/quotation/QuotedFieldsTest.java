@@ -2,12 +2,11 @@ package org.hibernate.envers.test.integration.naming.quotation;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 import org.junit.Test;
 
@@ -80,28 +79,17 @@ public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testEscapeEntityField() {
-		Table table = getCfg().getClassMapping(
+		TableSpecification table = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.quotation.QuotedFieldsEntity_AUD"
-		).getTable();
-		Column column1 = getColumnByName( table, "id" );
-		Column column2 = getColumnByName( table, "data1" );
-		Column column3 = getColumnByName( table, "data2" );
+		).getPrimaryTable();
+		Column column1 = table.locateColumn( "id" );
+		Column column2 = table.locateColumn( "data1" );
+		Column column3 = table.locateColumn( "data2" );
 		assert column1 != null;
 		assert column2 != null;
 		assert column3 != null;
-		assert column1.isQuoted();
-		assert column2.isQuoted();
-		assert column3.isQuoted();
-	}
-
-	private Column getColumnByName(Table table, String columnName) {
-		Iterator<Column> columnIterator = table.getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			Column column = columnIterator.next();
-			if ( columnName.equals( column.getName() ) ) {
-				return column;
-			}
-		}
-		return null;
+		assert column1.getColumnName().isQuoted();
+		assert column2.getColumnName().isQuoted();
+		assert column3.getColumnName().isQuoted();
 	}
 }

@@ -1,7 +1,6 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import javax.persistence.EntityManager;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,8 +13,8 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 import org.junit.Test;
 
@@ -73,14 +72,14 @@ public class DefaultTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase
 
 	@Test
 	public void testRevEntityTableCreation() {
-		Iterator<Table> tableIterator = getCfg().getTableMappings();
-		while ( tableIterator.hasNext() ) {
-			Table table = tableIterator.next();
-			if ( "REVCHANGES".equals( table.getName() ) ) {
-				assert table.getColumnSpan() == 2;
-				assert table.getColumn( new Column( "REV" ) ) != null;
-				assert table.getColumn( new Column( "ENTITYNAME" ) ) != null;
-				return;
+		for ( Schema schema : getMetadata().getDatabase().getSchemas() ) {
+			for ( TableSpecification table : schema.getTables() ) {
+				if ( "REVCHANGES".equals( table.getLogicalName().getText() ) ) {
+					assert table.values().size() == 2;
+					assert table.locateColumn( "REV" ) != null;
+					assert table.locateColumn( "ENTITYNAME" ) != null;
+					return;
+				}
 			}
 		}
 		assert false;

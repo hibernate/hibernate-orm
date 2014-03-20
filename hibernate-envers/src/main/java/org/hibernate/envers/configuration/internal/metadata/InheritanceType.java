@@ -24,11 +24,7 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import org.hibernate.MappingException;
-import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.SingleTableSubclass;
-import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -40,30 +36,30 @@ public enum InheritanceType {
 	TABLE_PER_CLASS;
 
 	/**
-	 * @param pc The class for which to get the inheritance type.
+	 * @param entityBinding The class for which to get the inheritance type.
 	 *
 	 * @return The inheritance type of this class. NONE, if this class does not inherit from
 	 *         another persistent class.
 	 */
-	public static InheritanceType get(PersistentClass pc) {
-		final PersistentClass superclass = pc.getSuperclass();
-		if ( superclass == null ) {
+	public static InheritanceType get(EntityBinding entityBinding) {
+		final EntityBinding superEntityBinding = entityBinding.getSuperEntityBinding();
+		if ( superEntityBinding == null ) {
 			return InheritanceType.NONE;
 		}
 
 		// We assume that every subclass is of the same type.
-		final Subclass subclass = (Subclass) superclass.getSubclassIterator().next();
+		final EntityBinding subEntityBinding = superEntityBinding.getDirectSubEntityBindings().get( 0 );
 
-		if ( subclass instanceof SingleTableSubclass ) {
+		if ( subEntityBinding.getHierarchyDetails().getInheritanceType() == org.hibernate.metamodel.spi.binding.InheritanceType.SINGLE_TABLE ) {
 			return InheritanceType.SINGLE;
 		}
-		else if ( subclass instanceof JoinedSubclass ) {
+		else if ( subEntityBinding.getHierarchyDetails().getInheritanceType() ==  org.hibernate.metamodel.spi.binding.InheritanceType.JOINED ) {
 			return InheritanceType.JOINED;
 		}
-		else if ( subclass instanceof UnionSubclass ) {
+		else if ( subEntityBinding.getHierarchyDetails().getInheritanceType() ==  org.hibernate.metamodel.spi.binding.InheritanceType.TABLE_PER_CLASS ) {
 			return InheritanceType.TABLE_PER_CLASS;
 		}
 
-		throw new MappingException( "Unknown subclass class: " + subclass.getClass() );
+		throw new MappingException( "Unknown subclass class: " + subEntityBinding.getClass() );
 	}
 }

@@ -31,8 +31,9 @@ import java.util.List;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Value;
 
 import org.junit.Test;
 
@@ -54,7 +55,9 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 				VersionsJoinTableRangeComponentTestEntity.class,
 				VersionsJoinTableRangeTestEntitySuperClass.class,
 				VersionsJoinTableRangeTestEntity.class,
-				VersionsJoinTableRangeTestAlternateEntity.class
+				VersionsJoinTableRangeTestAlternateEntity.class,
+				VersionsJoinTableRangeComponent.class,
+				Component1.class
 		};
 	}
 
@@ -198,31 +201,29 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testExpectedTableNameComponent1() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				COMPONENT_1_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
 		assert COMPONENT_1_AUDIT_JOIN_TABLE_NAME.equals(
-				auditClass.getTable()
-						.getName()
+				auditClass.getPrimaryTableName()
 		);
 	}
 
 	@Test
 	public void testExpectedTableNameComponent2() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				COMPONENT_2_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
 		assert COMPONENT_2_AUDIT_JOIN_TABLE_NAME.equals(
-				auditClass.getTable()
-						.getName()
+				auditClass.getPrimaryTableName()
 		);
 	}
 
 	@Test
 	public void testWrongTableNameComponent1() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				UNMODIFIED_COMPONENT_1_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass == null;
@@ -230,7 +231,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testWrongTableNameComponent2() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				UNMODIFIED_COMPONENT_2_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass == null;
@@ -238,24 +239,22 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testJoinColumnNamesComponent1() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				COMPONENT_1_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
 
-		@SuppressWarnings({"unchecked"})
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
-
 		boolean id1Found = false;
 		boolean id2Found = false;
 
-		while ( columns.hasNext() ) {
-			Column column = columns.next();
-			if ( "VJTRCTE1_ID".equals( column.getName() ) ) {
+		List<Value> values = auditClass.getPrimaryTable().values();
+		for ( Value value : values ) {
+			Column column = (Column) value;
+			if ( "VJTRCTE1_ID".equals( column.getColumnName().getText() ) ) {
 				id1Found = true;
 			}
 
-			if ( "VJTRTE_ID".equals( column.getName() ) ) {
+			if ( "VJTRTE_ID".equals( column.getColumnName().getText() ) ) {
 				id2Found = true;
 			}
 		}
@@ -265,24 +264,22 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testJoinColumnNamesComponent2() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				COMPONENT_2_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
 
-		@SuppressWarnings({"unchecked"})
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
-
 		boolean id1Found = false;
 		boolean id2Found = false;
 
-		while ( columns.hasNext() ) {
-			Column column = columns.next();
-			if ( "VJTRCTE2_ID".equals( column.getName() ) ) {
+		List<Value> values = auditClass.getPrimaryTable().values();
+		for ( Value value : values ) {
+			Column column = (Column) value;
+			if ( "VJTRCTE2_ID".equals( column.getColumnName().getText() ) ) {
 				id1Found = true;
 			}
 
-			if ( "VJTRTAE_ID".equals( column.getName() ) ) {
+			if ( "VJTRTAE_ID".equals( column.getColumnName().getText() ) ) {
 				id2Found = true;
 			}
 		}
@@ -297,25 +294,23 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 	 */
 	@Test
 	public void testOverrideNotAudited() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		EntityBinding auditClass = getMetadata().getEntityBinding(
 				VersionsJoinTableRangeComponentTestEntity.class.getName()
 						+ "_AUD"
 		);
 		assert auditClass != null;
 
-		@SuppressWarnings({"unchecked"})
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
-
 		boolean auditColumn1Found = false;
 		boolean auditColumn2Found = false;
 
-		while ( columns.hasNext() ) {
-			Column column = columns.next();
-			if ( "STR1".equals( column.getName() ) ) {
+		List<Value> values = auditClass.getPrimaryTable().values();
+		for ( Value value : values ) {
+			Column column = (Column) value;
+			if ( "STR1".equals( column.getColumnName().getText() ) ) {
 				auditColumn1Found = true;
 			}
 
-			if ( "STR2".equals( column.getName() ) ) {
+			if ( "STR2".equals( column.getColumnName().getText() ) ) {
 				auditColumn2Found = true;
 			}
 		}

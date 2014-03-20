@@ -17,6 +17,7 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -24,6 +25,7 @@ import org.hibernate.testing.TestForIssue;
  *         More advanced tests for dynamic component.
  */
 @TestForIssue(jiraKey = "HHH-8049")
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctionalTestCase {
 
 	public static final String PROP_BOOLEAN = "propBoolean";

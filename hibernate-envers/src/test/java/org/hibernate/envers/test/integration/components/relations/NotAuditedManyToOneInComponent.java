@@ -42,7 +42,11 @@ public class NotAuditedManyToOneInComponent extends BaseEnversJPAFunctionalTestC
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {NotAuditedManyToOneComponentTestEntity.class, UnversionedStrTestEntity.class};
+		return new Class[] {
+				NotAuditedManyToOneComponentTestEntity.class,
+				UnversionedStrTestEntity.class,
+				NotAuditedManyToOneComponent.class
+		};
 	}
 
 	@Test

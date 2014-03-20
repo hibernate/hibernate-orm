@@ -25,6 +25,8 @@ package org.hibernate.metamodel.spi;
 
 import java.util.List;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.spi.BindResult;
 
 import org.jboss.jandex.IndexView;
@@ -41,9 +43,30 @@ public interface AdditionalJaxbRootProducer {
 	 * Produce and return the list of additional mappings to be processed.
 	 *
 	 * @param metadataCollector The metadata (for access to binding information).
-	 * @param jandexIndex The Jandex annotation index
+	 * @param context The context.
 	 *
 	 * @return List of additional mappings
+	 *
+	 * @see AdditionalJaxbRootProducerContext
 	 */
-	public List<BindResult> produceRoots(InFlightMetadataCollector metadataCollector, IndexView jandexIndex);
+	public List<BindResult> produceRoots(
+			InFlightMetadataCollector metadataCollector,
+			AdditionalJaxbRootProducerContext context);
+
+	public interface AdditionalJaxbRootProducerContext {
+
+		/**
+		 * Gets the Jandex annotation index.
+		 *
+		 * @return the Jandex annotation index
+		 */
+		public IndexView getJandexIndex();
+
+		/**
+		 * Gets the service registry.
+		 *
+		 * @return The service registry.
+		 */
+		public StandardServiceRegistry getServiceRegistry();
+	}
 }

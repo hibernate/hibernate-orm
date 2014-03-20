@@ -39,7 +39,7 @@ public class InterfacesComponents extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ComponentTestEntity.class};
+		return new Class[] {ComponentTestEntity.class, Component1.class};
 	}
 
 	@Test

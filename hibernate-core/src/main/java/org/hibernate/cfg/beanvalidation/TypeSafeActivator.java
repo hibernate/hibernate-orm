@@ -166,7 +166,7 @@ class TypeSafeActivator {
 		for ( EntityBinding entityBinding : activationContext.getMetadata().getEntityBindings() ) {
 			final String className = entityBinding.getEntity().getDescriptor().getName().toString();
 
-			if ( className == null || className.length() == 0 ) {
+			if ( entityBinding.getEntity().getDescriptor() == null ) {
 				continue;
 			}
 

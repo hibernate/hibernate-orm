@@ -5,12 +5,14 @@ import java.util.ArrayList;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Hern�n Chanfreau
  */
+@FailureExpectedWithNewMetamodel( message = "hbm.xml source not supported because it is not indexed." )
 public class ManyToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTestCase {
 	private long m1_id;
 

@@ -2629,16 +2629,24 @@ public class Configuration implements Serializable {
 	 * by its "entity attribute" parameterized type?
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		final AttributeConverter attributeConverter;
+		addAttributeConverter(
+				instantiateAttributeConverter( attributeConverterClass ),
+				autoApply
+		);
+	}
+
+	private AttributeConverter instantiateAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
+		AttributeConverter attributeConverter;
 		try {
 			attributeConverter = attributeConverterClass.newInstance();
 		}
 		catch (Exception e) {
 			throw new AnnotationException(
-					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]"
+					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]",
+					e
 			);
 		}
-		addAttributeConverter( attributeConverter, autoApply );
+		return attributeConverter;
 	}
 
 	/**
@@ -2647,17 +2655,7 @@ public class Configuration implements Serializable {
 	 * @param attributeConverterClass The AttributeConverter class.
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		final AttributeConverter attributeConverter;
-		try {
-			attributeConverter = attributeConverterClass.newInstance();
-		}
-		catch (Exception e) {
-			throw new AnnotationException(
-					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]"
-			);
-		}
-
-		addAttributeConverter( attributeConverter );
+		addAttributeConverter( instantiateAttributeConverter( attributeConverterClass ) );
 	}
 
 	/**

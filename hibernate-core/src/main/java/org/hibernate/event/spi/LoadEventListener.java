@@ -43,7 +43,7 @@ public interface LoadEventListener extends Serializable {
 	 */
 	public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
 
-	public static final LoadType RELOAD = new LoadType( "GET" )
+	public static final LoadType RELOAD = new LoadType( "RELOAD" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( true )

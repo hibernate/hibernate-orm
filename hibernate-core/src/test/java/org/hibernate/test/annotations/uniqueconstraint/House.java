@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
@@ -14,7 +15,7 @@ import javax.persistence.UniqueConstraint;
 public class House extends Building {
 	@Column(nullable = false)
     public Long id;
-	@Column(nullable = false)
+	@NotNull
     public Integer cost;
 
     @Id

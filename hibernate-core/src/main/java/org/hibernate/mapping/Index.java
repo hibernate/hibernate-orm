@@ -91,13 +91,10 @@ public class Index implements RelationalModel, Serializable {
 				.append( " index " )
 				.append( dialect.qualifyIndexName() ?
 						name :
-						StringHelper.unqualify( name ) ) ;
-
-		Iterator iter = columns;
-		buf.append(" on ");
-		buf.append(table.getQualifiedName(dialect, defaultCatalog, defaultSchema));
-		buf.append(" (");
-
+						StringHelper.unqualify( name ) )
+				.append( " on " )
+				.append( table.getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+				.append( " (" );
 		while ( columns.hasNext() ) {
 			Column column = columns.next();
 			buf.append( column.getQuotedName( dialect ) );

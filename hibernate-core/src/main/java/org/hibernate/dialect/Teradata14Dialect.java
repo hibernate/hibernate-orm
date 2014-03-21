@@ -43,7 +43,7 @@ import org.hibernate.sql.ForUpdateFragment;
  * A dialect for the Teradata database
  *
  */
-public class Teradata13Dialect extends TeradataDialect {
+public class Teradata14Dialect extends TeradataDialect {
 	/**
 	 * Constructor
 	 */

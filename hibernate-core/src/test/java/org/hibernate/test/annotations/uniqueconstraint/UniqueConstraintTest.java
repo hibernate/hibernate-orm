@@ -36,10 +36,6 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			comment = "Requires House.room_id to be non null"
-	)
 	public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();

@@ -624,42 +624,39 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			throws HibernateException {
 
 		final Class concreteProxyClass = persister.getConcreteProxyClass();
-		final boolean alreadyNarrow = concreteProxyClass.isAssignableFrom( proxy.getClass() );
+		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
 			LOG.narrowingProxy( concreteProxyClass );
 
+			// If an impl is passed, there is really no point in creating a proxy.
+			// It would just be extra processing.  Just return the impl
 			if ( object != null ) {
 				proxiesByKey.remove( key );
-				//return the proxied object
 				return object;
 			}
-			else {
-				proxy = persister.createProxy( key.getIdentifier(), session );
-				//overwrite old proxy
-				final Object proxyOrig = proxiesByKey.put( key, proxy );
-				if ( proxyOrig != null ) {
-					if ( ! ( proxyOrig instanceof HibernateProxy ) ) {
-						throw new AssertionFailure(
-								"proxy not of type HibernateProxy; it is " + proxyOrig.getClass()
-						);
-					}
 
-					HibernateProxy originalHibernateProxy = (HibernateProxy) proxyOrig;
-					HibernateProxy newHibernateProxy = (HibernateProxy) proxy;
-
-					// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
-					final boolean readOnlyOrig = originalHibernateProxy.getHibernateLazyInitializer().isReadOnly();
-					newHibernateProxy.getHibernateLazyInitializer().setReadOnly( readOnlyOrig );
-
-					// if the original proxy is already initialized, initialize the new proxy
-					if ( !originalHibernateProxy.getHibernateLazyInitializer().isUninitialized() ) {
-						newHibernateProxy.getHibernateLazyInitializer().setImplementation(
-								originalHibernateProxy.getHibernateLazyInitializer().getImplementation() );
-					}
+			// Similarly, if the original HibernateProxy is initialized, there
+			// is again no point in creating a proxy.  Just return the impl
+			final HibernateProxy originalHibernateProxy = (HibernateProxy) proxy;
+			if ( !originalHibernateProxy.getHibernateLazyInitializer().isUninitialized() ) {
+				final Object impl = originalHibernateProxy.getHibernateLazyInitializer().getImplementation();
+				// can we return it?
+				if ( concreteProxyClass.isInstance( impl ) ) {
+					proxiesByKey.remove( key );
+					return impl;
 				}
-				return proxy;
 			}
+
+
+			// Otherwise, create the narrowed proxy
+			final HibernateProxy narrowedProxy = (HibernateProxy) persister.createProxy( key.getIdentifier(), session );
+
+			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
+			final boolean readOnlyOrig = originalHibernateProxy.getHibernateLazyInitializer().isReadOnly();
+			narrowedProxy.getHibernateLazyInitializer().setReadOnly( readOnlyOrig );
+
+			return narrowedProxy;
 		}
 		else {
 

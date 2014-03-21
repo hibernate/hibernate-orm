@@ -26,6 +26,7 @@ package org.hibernate.proxy;
 import java.io.Serializable;
 import javax.naming.NamingException;
 
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
@@ -59,7 +60,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private Boolean readOnlyBeforeAttachedToSession;
 
 	private String sessionFactoryUuid;
-	private boolean specjLazyLoad;
+	private boolean allowLoadOutsideTransaction;
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -148,7 +149,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final void unsetSession() {
-		prepareForPossibleSpecialSpecjInitialization();
+		prepareForPossibleLoadingOutsideTransaction();
 		session = null;
 		readOnly = false;
 		readOnlyBeforeAttachedToSession = null;
@@ -157,8 +158,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final void initialize() throws HibernateException {
 		if ( !initialized ) {
-			if ( specjLazyLoad ) {
-				specialSpecjInitialization();
+			if ( allowLoadOutsideTransaction ) {
+				permissiveInitialization();
 			}
 			else if ( session == null ) {
 				throw new LazyInitializationException( "could not initialize proxy - no Session" );
@@ -180,7 +181,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	protected void specialSpecjInitialization() {
+	protected void permissiveInitialization() {
 		if ( session == null ) {
 			//we have a detached collection thats set to null, reattach
 			if ( sessionFactoryUuid == null ) {
@@ -190,9 +191,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				SessionFactoryImplementor sf = (SessionFactoryImplementor)
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
 				SessionImplementor session = (SessionImplementor) sf.openSession();
-				
-				// TODO: On the next major release, add an
-				// 'isJTA' or 'getTransactionFactory' method to Session.
+				session.getPersistenceContext().setDefaultReadOnly( true );
+				session.setFlushMode( FlushMode.MANUAL );
+
 				boolean isJTA = session.getTransactionCoordinator()
 						.getTransactionContext().getTransactionEnvironment()
 						.getTransactionFactory()
@@ -240,11 +241,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	protected void prepareForPossibleSpecialSpecjInitialization() {
+	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
-			specjLazyLoad = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
+			allowLoadOutsideTransaction = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
 
-			if ( specjLazyLoad && sessionFactoryUuid == null ) {
+			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
 				try {
 					sessionFactoryUuid = (String) session.getFactory().getReference().get( "uuid" ).getContent();
 				}

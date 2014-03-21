@@ -30,8 +30,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -42,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Oleksander Dukhno
  */
-public class LazyLoadingTest
+public class JtaLazyLoadingTest
 		extends BaseCoreFunctionalTestCase {
 
 	private static final int CHILDREN_SIZE = 3;
@@ -52,9 +54,10 @@ public class LazyLoadingTest
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
-	}
 
+		TestingJtaBootstrap.prepare( cfg.getProperties() );
+		cfg.setProperty( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
+	}
 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

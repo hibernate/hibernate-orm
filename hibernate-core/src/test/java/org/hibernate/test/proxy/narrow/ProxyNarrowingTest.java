@@ -80,7 +80,8 @@ public class ProxyNarrowingTest extends BaseCoreFunctionalTestCase {
 			ConcreteEntity concreteEntityProxy = (ConcreteEntity) session.load( ConcreteEntity.class, abstractEntityProxy.getId() );
 
 			// the new proxy created should be initialized
-			assertTrue( ( concreteEntityProxy instanceof HibernateProxy ) && Hibernate.isInitialized( concreteEntityProxy ) );
+			assertTrue( Hibernate.isInitialized( concreteEntityProxy ) );
+			assertTrue( session.contains( concreteEntityProxy ) );
 		}
 		finally {
 			session.close();

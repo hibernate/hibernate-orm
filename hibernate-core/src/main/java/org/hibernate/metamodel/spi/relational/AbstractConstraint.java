@@ -44,11 +44,11 @@ import org.hibernate.internal.util.StringHelper;
  */
 public abstract class AbstractConstraint implements Constraint {
 	private TableSpecification table;
-	private String name;
+	private Identifier name;
 	private final Map<Identifier, Column> columnMap = new LinkedHashMap<Identifier, Column>();
 	private final Map<Column, String> columnOrderMap = new HashMap<Column, String>();
 
-	protected AbstractConstraint(TableSpecification table, String name) {
+	protected AbstractConstraint(TableSpecification table, Identifier name) {
 		this.table = table;
 		this.name = name;
 	}
@@ -67,7 +67,7 @@ public abstract class AbstractConstraint implements Constraint {
 	 *
 	 * @return the constraint name, or null if the name has not been set
 	 */
-	public String getName() {
+	public Identifier getName() {
 		return name;
 	}
 
@@ -80,7 +80,7 @@ public abstract class AbstractConstraint implements Constraint {
 	 * @throws IllegalArgumentException if name is null.
 	 * @throws IllegalStateException if this constraint already has a non-null name.
 	 */
-	public void setName(String name) {
+	public void setName(Identifier name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "name must be non-null." );
 		}

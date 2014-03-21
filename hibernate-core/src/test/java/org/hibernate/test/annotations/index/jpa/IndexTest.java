@@ -57,7 +57,7 @@ public class IndexTest extends AbstractJPAIndexTest {
 		assertTrue( indexes.hasNext() );
 		org.hibernate.metamodel.spi.relational.Index index = indexes.next();
 		assertFalse( indexes.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName().toString() ) );
 		assertEquals( 1, index.getColumnSpan() );
 		org.hibernate.metamodel.spi.relational.Column column = index.getColumns().get( 0 );
 		assertEquals( "GEN_VALUE", column.getColumnName().getText() );

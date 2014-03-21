@@ -82,16 +82,16 @@ public class DenormalizedTable extends Table {
 		final String fkNamePostfix = Integer.toHexString( getTableName().hashCode() );
 		for ( ForeignKey fk : fksInSuperTable ) {
 
-			String name = fk.getName();
-			if ( name == null ) {
+			Identifier name = fk.getName();
+			if (name == null || name.getText() == null) {
 				if(!alreadyCopiedNonNameParentFK.contains( fk )){
 					copyFK( fk, name );
 					alreadyCopiedNonNameParentFK.add( fk );
 				}
 			}
 			else {
-				String fkName = name + fkNamePostfix;
-				ForeignKey copiedFK = super.locateForeignKey( fkName );
+				Identifier fkName = name.applyPostfix( fkNamePostfix );
+				ForeignKey copiedFK = super.locateForeignKey( fkName.toString() );
 				if ( copiedFK == null ) {
 					copyFK( fk, fkName );
 				}
@@ -99,7 +99,7 @@ public class DenormalizedTable extends Table {
 		}
 	}
 
-	private void copyFK(ForeignKey fk, String fkName) {
+	private void copyFK(ForeignKey fk, Identifier fkName) {
 		ForeignKey copiedFK = createForeignKey( fk.getTargetTable(), fkName, fk.createConstraint() );
 		copiedFK.setDeleteRule( fk.getDeleteRule() );
 		copiedFK.setUpdateRule( fk.getUpdateRule() );

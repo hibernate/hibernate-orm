@@ -55,7 +55,7 @@ public class ForeignKey extends AbstractConstraint {
 	
 	private boolean createConstraint;
 
-	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name,
+	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, Identifier name,
 			boolean createConstraint) {
 		super( sourceTable, name );
 		if ( targetTable == null ) {
@@ -218,7 +218,7 @@ public class ForeignKey extends AbstractConstraint {
 	
 	@Override
 	public String getExportIdentifier() {
-		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
+		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName().getText();
 	}
 	
 	public boolean createConstraint() {

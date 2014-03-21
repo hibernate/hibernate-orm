@@ -31,9 +31,10 @@ import org.hibernate.internal.util.StringHelper;
  * Models an identifier (name).
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class Identifier implements Comparable<Identifier> {
-	private final String text;
+	private String text;
 	private final boolean isQuoted;
 
 	/**
@@ -71,7 +72,7 @@ public class Identifier implements Comparable<Identifier> {
 		final String trimmed = text.trim();
 		if ( isQuoted( trimmed ) ) {
 			final String bareName = trimmed.substring( 1, trimmed.length() - 1 );
-			return new Identifier( bareName, true );
+			return new Identifier( bareName, quote );
 		}
 		else {
 			return new Identifier( trimmed, quote );
@@ -158,6 +159,22 @@ public class Identifier implements Comparable<Identifier> {
 		return isQuoted ?
 				String.valueOf( openQuote ) + text + closeQuote :
 				text;
+	}
+	
+	public String getQualifiedText(String prefix, Dialect dialect) {
+		String qualified = prefix + "." + text;
+		return isQuoted ? dialect.openQuote() + qualified + dialect.closeQuote() : qualified;
+	}
+	
+	public String getUnqualifiedText(Dialect dialect) {
+		int loc = text.lastIndexOf(".");
+		String unqualified = ( loc < 0 ) ? text : text.substring( loc + 1 );
+		return isQuoted ? dialect.openQuote() + unqualified + dialect.closeQuote() : unqualified;
+	}
+	
+	public Identifier applyPostfix(String postfix) {
+		String newText = text + postfix;
+		return Identifier.toIdentifier( newText, isQuoted );
 	}
 
 	@Override

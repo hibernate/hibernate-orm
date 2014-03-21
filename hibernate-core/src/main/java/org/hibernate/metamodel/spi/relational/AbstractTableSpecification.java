@@ -167,6 +167,12 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 
 	@Override
 	public ForeignKey createForeignKey(TableSpecification targetTable, String name, boolean createConstraint) {
+		Identifier identifier = Identifier.toIdentifier( name );
+		return createForeignKey( targetTable, identifier, createConstraint );
+	}
+
+	@Override
+	public ForeignKey createForeignKey(TableSpecification targetTable, Identifier name, boolean createConstraint) {
 		ForeignKey fk = new ForeignKey( this, targetTable, name, createConstraint );
 		foreignKeys.add( fk );
 		return fk;
@@ -181,8 +187,9 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "name must be non-null." );
 		}
+		Identifier identifier = Identifier.toIdentifier( name );
 		for ( T constraint : constraints ) {
-			if ( name.equals( constraint.getName() ) ) {
+			if ( identifier.equals( constraint.getName() ) ) {
 				return constraint;
 			}
 		}

@@ -80,7 +80,7 @@ public class UniqueConstraintBindingTest extends BaseAnnotationBindingTestCase {
 		int i = 0;
 		for ( UniqueKey key : uniqueKeyIterable ) {
 			i++;
-			assertEquals( ukName, key.getName() );
+			assertEquals( ukName, key.getName().getText() );
 			assertTrue( table == key.getTable() );
 			assertNotNull( key.getColumns() );
 			assertEquals( "There should be " + ukNumColumns + " columns in the unique constraint", ukNumColumns, key.getColumns().size() );

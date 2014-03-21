@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
 
@@ -60,7 +61,7 @@ public class NaturalIdUniqueKeyHelper {
 			String keyName = "UK_" + HashedNameUtil.hashedName( table.getLogicalName().getText() + "_NaturalID" );
 			uniqueKey = new UniqueKey();
 			uniqueKey.setTable( table );
-			uniqueKey.setName( keyName );
+			uniqueKey.setName( Identifier.toIdentifier( keyName ) );
 			table.addUniqueKey( uniqueKey );
 			naturalIdUniqueKeys.put( table, uniqueKey );
 		}

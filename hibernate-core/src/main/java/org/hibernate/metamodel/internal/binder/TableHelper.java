@@ -222,7 +222,7 @@ public class TableHelper {
 		
 		final String normalizedName = normalizeDatabaseIdentifier( name, new UniqueKeyNamingStrategyHelper( table, columns ) );
 		
-		uk.setName( normalizedName );
+		uk.setName( Identifier.toIdentifier( normalizedName ) );
 		table.addUniqueKey( uk );
 	}
 	
@@ -239,7 +239,7 @@ public class TableHelper {
 		
 		final String normalizedName = normalizeDatabaseIdentifier( name, new IndexNamingStrategyHelper( table, columns ) );
 		
-		idx.setName( normalizedName );
+		idx.setName( Identifier.toIdentifier( normalizedName ) );
 		table.addIndex( idx );
 	}
 

@@ -134,6 +134,8 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 * @return The foreign key reference.
 	 */
 	public ForeignKey createForeignKey(TableSpecification targetTable, String name, boolean createConstraint);
+	
+	public ForeignKey createForeignKey(TableSpecification targetTable, Identifier name, boolean createConstraint);
 
 	public Iterable<Index> getIndexes();
 

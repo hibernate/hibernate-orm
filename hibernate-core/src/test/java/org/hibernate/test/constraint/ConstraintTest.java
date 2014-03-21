@@ -132,10 +132,10 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	private void testConstraintLength(TableSpecification table) {
 		for (UniqueKey uk : table.getUniqueKeys()) {
-			assertTrue(uk.getName().length() <= MAX_NAME_LENGTH);
+			assertTrue(uk.getName().toString().length() <= MAX_NAME_LENGTH);
 		}
 		for (ForeignKey fk : table.getForeignKeys()) {
-			assertTrue(fk.getName().length() <= MAX_NAME_LENGTH);
+			assertTrue(fk.getName().toString().length() <= MAX_NAME_LENGTH);
 		}
 	}
 

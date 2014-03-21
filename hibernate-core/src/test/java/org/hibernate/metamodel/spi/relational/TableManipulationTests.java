@@ -59,8 +59,8 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		idColumn.setJdbcDataType( INTEGER );
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );
-		table.getPrimaryKey().setName( "my_table_pk" );
-		assertEquals( "my_table_pk", table.getPrimaryKey().getName() );
+		table.getPrimaryKey().setName( Identifier.toIdentifier( "my_table_pk" ) );
+		assertEquals( "my_table_pk", table.getPrimaryKey().getName().toString() );
 		assertEquals( "my_table.PK", table.getPrimaryKey().getExportIdentifier() );
 
 		Column col_1 = table.locateOrCreateColumn( "col_1" );
@@ -97,7 +97,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		bookId.setJdbcDataType( INTEGER );
 		bookId.setSize( Size.precision( 18, 0 ) );
 		book.getPrimaryKey().addColumn( bookId );
-		book.getPrimaryKey().setName( "BOOK_PK" );
+		book.getPrimaryKey().setName( Identifier.toIdentifier( "BOOK_PK" ) );
 
 		Table page = schema.createTable( Identifier.toIdentifier( "PAGE" ), Identifier.toIdentifier( "PAGE" ) );
 
@@ -105,7 +105,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		pageId.setJdbcDataType( INTEGER );
 		pageId.setSize( Size.precision( 18, 0 ) );
 		page.getPrimaryKey().addColumn( pageId );
-		page.getPrimaryKey().setName( "PAGE_PK" );
+		page.getPrimaryKey().setName( Identifier.toIdentifier( "PAGE_PK" ) );
 
 		Column pageBookId = page.locateOrCreateColumn( "BOOK_ID" );
 		pageId.setJdbcDataType( INTEGER );

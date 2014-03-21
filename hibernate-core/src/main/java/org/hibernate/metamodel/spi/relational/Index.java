@@ -38,7 +38,7 @@ public class Index extends AbstractConstraint {
 		this( null, null, unique );
 	}
 
-	protected Index(Table table, String name, boolean unique) {
+	protected Index(Table table, Identifier name, boolean unique) {
 		super( table, name );
 		this.unique = unique;
 	}
@@ -47,7 +47,7 @@ public class Index extends AbstractConstraint {
 	public String getExportIdentifier() {
 		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
 		sb.append( ".IDX" );
-		sb.append( '_' ).append( getName() );
+		sb.append( '_' ).append( getName().getText() );
 		for ( Column column : getColumns() ) {
 			sb.append( '_' ).append( column.getColumnName().getText() );
 		}

@@ -58,7 +58,7 @@ public class StandardUniqueKeyExporter implements Exporter<Constraint> {
 				.append( "alter table " )
 				.append( tableName )
 				.append( " add constraint " )
-				.append( constraint.getName() )
+				.append( constraint.getName().getText( dialect ) )
 				.append( " unique ( " );
 
 		final Iterator columnIterator = constraint.getColumns().iterator();
@@ -88,7 +88,7 @@ public class StandardUniqueKeyExporter implements Exporter<Constraint> {
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			sb.append( "if exists " );
 		}
-		sb.append( dialect.quote( constraint.getName() ) );
+		sb.append( constraint.getName().getText( dialect ) );
 		if ( dialect.supportsIfExistsAfterConstraintName() ) {
 			sb.append( " if exists" );
 		}

@@ -67,7 +67,7 @@ public class InformixUniqueKeyExporter extends StandardUniqueKeyExporter {
 		
 		sb.append( ")" )
 			.append( " constraint " )
-			.append( constraint.getName() );
+			.append( constraint.getName().getText( dialect ) );
 		return new String[] { sb.toString() };
 	}
 }

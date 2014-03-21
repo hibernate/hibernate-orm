@@ -82,7 +82,7 @@ public class ABCTest extends LegacyTestCase {
 		for ( Schema schema : metadata().getDatabase().getSchemas() ) {
 			for ( Table table : schema.getTables() ) {
 				for ( Index index : table.getIndexes() ) {
-					if ( index.getName().equals( "indx_a_name" ) ) {
+					if ( index.getName().toString().equals( "indx_a_name" ) ) {
 						found = true;
 						break;
 					}

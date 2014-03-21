@@ -37,7 +37,7 @@ public class UniqueKey extends AbstractConstraint {
 		this( null, null );
 	}
 
-	protected UniqueKey(Table table, String name) {
+	protected UniqueKey(Table table, Identifier name) {
 		super( table, name );
 	}
 

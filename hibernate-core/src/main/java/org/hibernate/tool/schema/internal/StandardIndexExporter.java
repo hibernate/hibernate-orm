@@ -25,7 +25,6 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Table;
@@ -48,7 +47,8 @@ public class StandardIndexExporter implements Exporter<Index> {
 		);
 		StringBuilder buf = new StringBuilder()
 				.append( "create index " )
-				.append( dialect.qualifyIndexName() ? index.getName() : StringHelper.unqualify( index.getName() ) )
+				.append( dialect.qualifyIndexName()
+						? index.getName().getText( dialect ) : index.getName().getUnqualifiedText( dialect ) )
 				.append( " on " )
 				.append( tableName )
 				.append( " (" );
@@ -77,8 +77,7 @@ public class StandardIndexExporter implements Exporter<Index> {
 				( (Table) index.getTable() ).getTableName()
 		);
 		return new String[] {
-				"drop index " + ( dialect.qualifyIndexName()
-						? StringHelper.qualify( tableName, index.getName() ) : index.getName() )
+				"drop index " + index.getName().getQualifiedText( tableName, dialect )
 		};
 	}
 }

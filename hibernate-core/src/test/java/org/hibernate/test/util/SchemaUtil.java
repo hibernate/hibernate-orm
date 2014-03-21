@@ -123,8 +123,9 @@ public class SchemaUtil {
 	}
 
 	public static boolean hasUniqueKey(TableSpecification table, String keyName) {
+		Identifier identifier = Identifier.toIdentifier( keyName );
 		for ( UniqueKey uk : table.getUniqueKeys() ) {
-			if ( uk.getName().equals( keyName ) ) {
+			if ( uk.getName().equals( identifier ) ) {
 				return true;
 			}
 		}
@@ -140,8 +141,9 @@ public class SchemaUtil {
 	 * @return
 	 */
 	public static boolean hasUniqueKey(TableSpecification table, String keyName, String... columnNames) {
+		Identifier identifier = Identifier.toIdentifier( keyName );
 		for ( UniqueKey uk : table.getUniqueKeys() ) {
-			if ( uk.getName().equals( keyName ) ) {
+			if ( uk.getName().equals( identifier ) ) {
 				for (String columnName : columnNames) {
 					if (!uk.hasColumn( columnName )) {
 						return false;
@@ -171,8 +173,9 @@ public class SchemaUtil {
 	}
 
 	public static boolean hasIndex(TableSpecification table, String indexName) {
+		Identifier identifier = Identifier.toIdentifier( indexName );
 		for ( Index index : table.getIndexes() ) {
-			if ( index.getName().equals( indexName ) ) {
+			if ( index.getName().equals( identifier ) ) {
 				return true;
 			}
 		}
@@ -188,8 +191,9 @@ public class SchemaUtil {
 	 * @return
 	 */
 	public static boolean hasIndex(TableSpecification table, String name, String... columnNames) {
+		Identifier identifier = Identifier.toIdentifier( name );
 		for ( Index index : table.getIndexes() ) {
-			if ( index.getName().equals( name ) ) {
+			if ( index.getName().equals( identifier ) ) {
 				if (columnNames.length != index.getColumnSpan()) {
 					return false;
 				}

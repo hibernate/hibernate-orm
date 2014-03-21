@@ -47,7 +47,7 @@ public interface Constraint extends Exportable {
 	 *
 	 * @return the name.
 	 */
-	public String getName();
+	public Identifier getName();
 
 	/**
 	 * Obtain a read-only view of the columns that are part of this constraint.

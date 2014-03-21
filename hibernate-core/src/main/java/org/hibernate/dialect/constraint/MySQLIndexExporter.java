@@ -59,7 +59,7 @@ public class MySQLIndexExporter extends StandardIndexExporter {
 		StringBuilder sb = new StringBuilder();
 		sb.append( "drop index " );
 		sb.append( ( dialect.qualifyIndexName()
-						? StringHelper.qualify( tableName, index.getName() ) : index.getName() ) );
+				? index.getName().getQualifiedText( tableName, dialect ) : index.getName() ) );
 		sb.append( " on " + tableName );
 		
 		return new String[] { sb.toString() };

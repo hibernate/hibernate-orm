@@ -52,7 +52,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 			org.hibernate.metamodel.spi.relational.Index index = indexes.next();
 			if (index.isUnique()) {
 				found++;
-				assertTrue( StringHelper.isNotEmpty( index.getName() ) );
+				assertTrue( StringHelper.isNotEmpty( index.getName().toString() ) );
 				assertEquals( 2, index.getColumnSpan() );
 				Column column =  index.getColumns().get( 0 );
 				assertEquals( "brand", column.getColumnName().getText() );
@@ -61,7 +61,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 			}
 			else {
 				found++;
-				assertEquals( "Car_idx", index.getName() );
+				assertEquals( "Car_idx", index.getName().toString() );
 				assertEquals( 1, index.getColumnSpan() );
 				Column column = index.getColumns().get( 0 );
 				assertEquals( "since", column.getColumnName().getText() );
@@ -80,7 +80,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 		assertTrue( indexes.hasNext() );
 		org.hibernate.metamodel.spi.relational.Index index = indexes.next();
 		assertFalse( indexes.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName().toString() ) );
 		assertEquals( 2, index.getColumnSpan() );
 		org.hibernate.metamodel.spi.relational.Column column = index.getColumns().get( 0 );
 		assertEquals( "dealer_name", column.getColumnName().getText() );
@@ -97,7 +97,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 		assertTrue( indexes.hasNext() );
 		org.hibernate.metamodel.spi.relational.Index index = indexes.next();
 		assertFalse( indexes.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName().toString() ) );
 		assertEquals( 1, index.getColumnSpan() );
 		org.hibernate.metamodel.spi.relational.Column column = index.getColumns().get( 0 );
 		assertEquals( "name", column.getColumnName().getText() );
@@ -112,7 +112,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 		assertTrue( indexes.hasNext() );
 		org.hibernate.metamodel.spi.relational.Index index = indexes.next();
 		assertFalse( indexes.hasNext() );
-		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
+		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName().toString() ) );
 		assertEquals( 1, index.getColumnSpan() );
 		org.hibernate.metamodel.spi.relational.Column column = index.getColumns().get( 0 );
 		assertEquals( "importers_id", column.getColumnName().getText() );

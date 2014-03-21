@@ -50,7 +50,7 @@ public class DB2UniqueKeyExporter extends StandardUniqueKeyExporter {
 					( (Table) constraint.getTable() ).getTableName() );
 			StringBuilder sb = new StringBuilder()
 					.append( "create unique index " )
-					.append( constraint.getName() )
+					.append( constraint.getName().getText( dialect ) )
 					.append( " on " )
 					.append( tableName )
 					.append( " (" );
@@ -73,7 +73,7 @@ public class DB2UniqueKeyExporter extends StandardUniqueKeyExporter {
 	@Override
 	public String[] getSqlDropStrings(Constraint constraint, JdbcEnvironment jdbcEnvironment) {
 		if ( hasNullable( constraint ) ) {
-			return new String[] { "drop index " + constraint.getName() };
+			return new String[] { "drop index " + constraint.getName().getText( dialect ) };
 		}
 		else {
 			return super.getSqlDropStrings( constraint, jdbcEnvironment );

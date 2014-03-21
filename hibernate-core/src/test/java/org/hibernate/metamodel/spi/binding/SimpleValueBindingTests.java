@@ -70,7 +70,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		idColumn.setJdbcDataType( BIGINT );
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );
-		table.getPrimaryKey().setName( "my_table_pk" );
+		table.getPrimaryKey().setName( Identifier.toIdentifier( "my_table_pk" ) );
 
 		Entity entity = new Entity( makeJavaType( "NoSuchClass" ), null );
 		HierarchyDetails hierarchyDetails = new HierarchyDetails.Builder().createHierarchyDetails();

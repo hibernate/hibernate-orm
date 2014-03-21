@@ -35,6 +35,7 @@ import java.util.ListIterator;
 import javax.naming.NamingException;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
@@ -81,7 +82,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private Serializable storedSnapshot;
 
 	private String sessionFactoryUuid;
-	private boolean specjLazyLoad = false;
+	private boolean allowLoadOutsideTransaction;
 
 	public final String getRole() {
 		return role;
@@ -179,7 +180,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		boolean isJTA = false;
 
 		if ( session == null ) {
-			if ( specjLazyLoad ) {
+			if ( allowLoadOutsideTransaction ) {
 				session = openTemporarySessionForLoading();
 				isTempSession = true;
 			}
@@ -188,7 +189,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 		}
 		else if ( !session.isOpen() ) {
-			if ( specjLazyLoad ) {
+			if ( allowLoadOutsideTransaction ) {
 				originalSession = session;
 				session = openTemporarySessionForLoading();
 				isTempSession = true;
@@ -198,7 +199,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 		}
 		else if ( !session.isConnected() ) {
-			if ( specjLazyLoad ) {
+			if ( allowLoadOutsideTransaction ) {
 				originalSession = session;
 				session = openTemporarySessionForLoading();
 				isTempSession = true;
@@ -209,8 +210,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		if ( isTempSession ) {
-			// TODO: On the next major release, add an
-			// 'isJTA' or 'getTransactionFactory' method to Session.
 			isJTA = session.getTransactionCoordinator()
 					.getTransactionContext().getTransactionEnvironment()
 					.getTransactionFactory()
@@ -224,7 +223,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				// multiple transactions.
 				( ( Session) session ).beginTransaction();
 			}
-			
+
 			session.getPersistenceContext().addUninitializedDetachedCollection(
 					session.getFactory().getCollectionPersister( getRole() ),
 					this
@@ -258,7 +257,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 		SessionFactoryImplementor sf = (SessionFactoryImplementor)
 				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-		return (SessionImplementor) sf.openSession();
+		final SessionImplementor session = (SessionImplementor) sf.openSession();
+		session.getPersistenceContext().setDefaultReadOnly( true );
+		session.setFlushMode( FlushMode.MANUAL );
+		return session;
 	}
 
 	protected Boolean readIndexExistence(final Object index) {
@@ -594,7 +596,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * @return true if this was currently associated with the given session
 	 */
 	public final boolean unsetSession(SessionImplementor currentSession) {
-		prepareForPossibleSpecialSpecjInitialization();
+		prepareForPossibleLoadingOutsideTransaction();
 		if ( currentSession == this.session ) {
 			this.session = null;
 			return true;
@@ -604,11 +606,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 	}
 
-	protected void prepareForPossibleSpecialSpecjInitialization() {
+	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
-			specjLazyLoad = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
+			allowLoadOutsideTransaction = session.getFactory().getSettings().isInitializeLazyStateOutsideTransactionsEnabled();
 
-			if ( specjLazyLoad && sessionFactoryUuid == null ) {
+			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
 				try {
 					sessionFactoryUuid = (String) session.getFactory().getReference().get( "uuid" ).getContent();
 				}

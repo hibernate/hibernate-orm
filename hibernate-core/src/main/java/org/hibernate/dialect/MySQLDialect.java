@@ -31,6 +31,8 @@ import java.sql.Types;
 import org.hibernate.JDBCException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.constraint.MySQLIndexExporter;
+import org.hibernate.dialect.constraint.MySQLUniqueKeyExporter;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -42,6 +44,9 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.spi.relational.Constraint;
+import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -50,6 +55,9 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Gavin King
  */
 public class MySQLDialect extends Dialect {
+
+	private final MySQLUniqueKeyExporter uniqueKeyExporter = new MySQLUniqueKeyExporter( this );
+	private final MySQLIndexExporter indexExporter = new MySQLIndexExporter( this );
 
 	/**
 	 * Constructs a MySQLDialect
@@ -468,5 +476,15 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getNotExpression(String expression) {
 		return "not (" + expression + ")";
+	}
+	
+	@Override
+	public Exporter<Constraint> getUniqueKeyExporter() {
+		return uniqueKeyExporter;
+	}
+	
+	@Override
+	public Exporter<Index> getIndexExporter() {
+		return indexExporter;
 	}
 }

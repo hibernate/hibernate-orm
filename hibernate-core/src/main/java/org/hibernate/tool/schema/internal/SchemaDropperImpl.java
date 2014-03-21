@@ -77,17 +77,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		for ( Schema schema : database.getSchemas() ) {
-			// we need to drop constraints prior to dropping table
-			applySqlStrings( targets, dialect.dropConstraints( schema.getTables(), jdbcEnvironment ) );
+			// we need to drop all constraints/indexes prior to dropping the tables
 			
+			applySqlStrings( targets, dialect.dropConstraints( schema.getTables(), jdbcEnvironment ) );
 			for ( Table table : schema.getTables() ) {
 				if( !table.isPhysicalTable() ){
 					continue;
 				}
-				
 				if ( dialect.dropConstraints() ) {
-					// we need to drop constraints prior to dropping table
-
 					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 						// only add the foreign key if its source and target are both physical tables
 						// and if the target table does not have any denormalized tables.
@@ -107,7 +104,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 						}
 					}
 				}
-
+			}
+			
+			// now it's safe to drop the tables
+			for ( Table table : schema.getTables() ) {
+				if( !table.isPhysicalTable() ){
+					continue;
+				}
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings( targets, dialect.getTableExporter().getSqlDropStrings( table, jdbcEnvironment ) );
 			}

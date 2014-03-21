@@ -21,50 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tool.schema.internal;
+package org.hibernate.dialect.constraint;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.tool.schema.internal.StandardIndexExporter;
 
 /**
- * @author Steve Ebersole
+ * MySQL requires "ON table" at the end of a "DROP INDEX".
+ * 
+ * TODO: If other Dialects need that as well, consider adding a "requiresOnTable" type of method on Dialect and
+ * work it into StandardIndexExporter itself.
+ * 
+ * @author Brett Meyer
  */
-public class StandardIndexExporter implements Exporter<Index> {
+public class MySQLIndexExporter extends StandardIndexExporter {
 	private final Dialect dialect;
 
-	public StandardIndexExporter(Dialect dialect) {
+	public MySQLIndexExporter(Dialect dialect) {
+		super(dialect);
 		this.dialect = dialect;
-	}
-
-	@Override
-	public String[] getSqlCreateStrings(Index index, JdbcEnvironment jdbcEnvironment) {
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameSupport().formatName(
-				( (Table) index.getTable() ).getTableName()
-		);
-		StringBuilder buf = new StringBuilder()
-				.append( "create index " )
-				.append( dialect.qualifyIndexName() ? index.getName() : StringHelper.unqualify( index.getName() ) )
-				.append( " on " )
-				.append( tableName )
-				.append( " (" );
-
-		boolean first = true;
-		for ( Column column : index.getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append( ", " );
-			}
-			buf.append( ( column.getColumnName().getText( dialect ) ) );
-		}
-		buf.append( ")" );
-		return new String[] { buf.toString() };
 	}
 
 	@Override
@@ -76,9 +55,13 @@ public class StandardIndexExporter implements Exporter<Index> {
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameSupport().formatName(
 				( (Table) index.getTable() ).getTableName()
 		);
-		return new String[] {
-				"drop index " + ( dialect.qualifyIndexName()
-						? StringHelper.qualify( tableName, index.getName() ) : index.getName() )
-		};
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append( "drop index " );
+		sb.append( ( dialect.qualifyIndexName()
+						? StringHelper.qualify( tableName, index.getName() ) : index.getName() ) );
+		sb.append( " on " + tableName );
+		
+		return new String[] { sb.toString() };
 	}
 }

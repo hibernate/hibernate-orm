@@ -436,4 +436,9 @@ public class H2Dialect extends Dialect {
 	public String getCurrentSchemaCommand() {
 		return "call schema()";
 	}
+
+	@Override
+	public boolean qualifyIndexName() {
+		return false;
+	}
 }

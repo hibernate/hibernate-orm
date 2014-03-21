@@ -27,16 +27,12 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.relational.AbstractConstraint;
-import org.hibernate.metamodel.spi.relational.Constraint;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
-import org.hibernate.tool.schema.spi.Exporter;
 import org.jboss.logging.Logger;
 
 /**
@@ -64,13 +60,9 @@ public class ConstraintDelegate {
 	private static final Logger LOG = Logger.getLogger( ConstraintDelegate.class );
 	
 	final protected Dialect dialect;
-	final protected Exporter<Index> indexExporter;
-	final protected Exporter<Constraint> uniqueExporter;
 	
 	public ConstraintDelegate(Dialect dialect) {
 		this.dialect = dialect;
-		this.indexExporter = dialect.getIndexExporter();
-		this.uniqueExporter = dialect.getUniqueKeyExporter();
 	}
 	
 	/**
@@ -128,7 +120,7 @@ public class ConstraintDelegate {
 						+ " sequence of columns: %s", index.getColumnNames());
 			}
 			else {
-				sqlStrings.addAll(Arrays.asList( indexExporter.getSqlCreateStrings( index, jdbcEnvironment ) ) );
+				sqlStrings.addAll(Arrays.asList( dialect.getIndexExporter().getSqlCreateStrings( index, jdbcEnvironment ) ) );
 			}
 			indexColumnListIds.add( index.columnListId() );
 		}
@@ -152,7 +144,7 @@ public class ConstraintDelegate {
 					+ " for a unique index.  %s", constraint.getColumnNames());
 		}
 		else {
-			sqlStrings.addAll(Arrays.asList( uniqueExporter.getSqlCreateStrings(
+			sqlStrings.addAll(Arrays.asList( dialect.getUniqueKeyExporter().getSqlCreateStrings(
 					constraint, jdbcEnvironment ) ) );
 		}
 		uniqueColumnListIds.add( constraint.columnListAlphabeticalId() );
@@ -209,7 +201,7 @@ public class ConstraintDelegate {
 		}
 		else {
 			if (! indexColumnListIds.contains( index.columnListId() )) {
-				sqlStrings.addAll(Arrays.asList( indexExporter.getSqlDropStrings( index, jdbcEnvironment ) ) );
+				sqlStrings.addAll(Arrays.asList( dialect.getIndexExporter().getSqlDropStrings( index, jdbcEnvironment ) ) );
 			}
 			indexColumnListIds.add( index.columnListId() );
 		}
@@ -229,7 +221,7 @@ public class ConstraintDelegate {
 			List<Integer> uniqueColumnListIds, JdbcEnvironment jdbcEnvironment) {
 		// A unique Index may have already exported the constraint.
 		if (! uniqueColumnListIds.contains( constraint.columnListAlphabeticalId() )) {
-			sqlStrings.addAll(Arrays.asList( uniqueExporter.getSqlDropStrings(
+			sqlStrings.addAll(Arrays.asList( dialect.getUniqueKeyExporter().getSqlDropStrings(
 					constraint, jdbcEnvironment ) ) );
 		}
 		uniqueColumnListIds.add( constraint.columnListAlphabeticalId() );

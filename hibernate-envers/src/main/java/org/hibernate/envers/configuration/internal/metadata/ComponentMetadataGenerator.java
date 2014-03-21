@@ -65,7 +65,7 @@ public final class ComponentMetadataGenerator {
         } else {
 			// TODO: get rid of classloading.
             componentClass = context.getClassLoaderService().classForName(
-					compositeAttributeBinding.getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
+					compositeAttributeBinding.getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
             );
         }
         final CompositeMapperBuilder componentMapper = mapper.addComponent(

@@ -25,10 +25,7 @@ package org.hibernate.envers.configuration.internal;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javassist.util.proxy.MethodHandler;
@@ -38,7 +35,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

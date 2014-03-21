@@ -42,7 +42,6 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.binding.SingularNonAssociationAttributeBinding;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -160,7 +159,7 @@ public final class IdMetadataGenerator {
 			// Embeddable id
 			// TODO: get rid of classloading.
 			final Class embeddableClass = context.getClassLoaderService().classForName(
-					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().fullName()
+					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
 			);
 			mapper = new EmbeddedIdMapper( getIdPropertyData( entityIdentifier.getAttributeBinding() ), embeddableClass );
 			if ( !addIdProperties(
@@ -219,7 +218,7 @@ public final class IdMetadataGenerator {
 		return new IdMappingData( mapper, origIdMapping, relIdMapping );
 	}
 
-	private PropertyData getIdPropertyData(SingularNonAssociationAttributeBinding idAttributeBinding) {
+	private PropertyData getIdPropertyData(SingularAttributeBinding idAttributeBinding) {
 		return new PropertyData(
 				idAttributeBinding.getAttribute().getName(),
 				idAttributeBinding.getAttribute().getName(),

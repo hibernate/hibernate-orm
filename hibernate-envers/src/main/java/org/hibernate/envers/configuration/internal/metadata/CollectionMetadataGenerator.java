@@ -640,7 +640,7 @@ public final class CollectionMetadataGenerator {
 			}
 			// Collection of embeddable elements.
 			final Class componentClass = ReflectionTools.loadClass(
-					hibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName(),
+					hibernateTypeDescriptor.getJavaTypeDescriptor().getName().toString(),
 					context.getClassLoaderService()
 			);
 			final MiddleEmbeddableComponentMapper componentMapper = new MiddleEmbeddableComponentMapper(

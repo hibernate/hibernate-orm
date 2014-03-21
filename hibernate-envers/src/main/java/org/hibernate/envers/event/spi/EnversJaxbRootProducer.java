@@ -32,7 +32,7 @@ import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationResu
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -122,7 +122,7 @@ public class EnversJaxbRootProducer implements AdditionalJaxbRootProducer {
 		@Override
 		public ClassInfo getClassInfo(AttributeContainer attributeContainer) {
 			return getClassInfo(
-					attributeContainer.getDescriptor().getName().fullName()
+					attributeContainer.getDescriptor().getName().toString()
 			);
 		}
 

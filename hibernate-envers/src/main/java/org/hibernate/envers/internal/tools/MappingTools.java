@@ -82,7 +82,7 @@ public abstract class MappingTools {
 	 */
 	public static boolean ignoreNotFound(AttributeBinding attributeBinding) {
 		if ( ManyToOneAttributeBinding.class.isInstance( attributeBinding )) {
-			return ! ( (ManyToOneAttributeBinding) attributeBinding ).isNotFoundAnException();
+			return ( (ManyToOneAttributeBinding) attributeBinding ).isIgnoreNotFound();
 		}
 		else if ( attributeBinding instanceof PluralAttributeBinding ) {
 			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;

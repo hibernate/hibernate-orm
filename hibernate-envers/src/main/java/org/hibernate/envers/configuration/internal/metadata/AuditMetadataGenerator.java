@@ -632,7 +632,7 @@ public final class AuditMetadataGenerator {
 			final String parentEntityName = null;
 			final EntityConfiguration entityCfg = new EntityConfiguration(
 					entityName,
-					entityBinding.getEntity().getDescriptor().getName().fullName(),
+					entityBinding.getEntity().getDescriptor().getName().toString(),
 					idMapper,
 					propertyMapper,
 					parentEntityName
@@ -722,7 +722,7 @@ public final class AuditMetadataGenerator {
 		// Storing the generated configuration
 		final EntityConfiguration entityCfg = new EntityConfiguration(
 				auditEntityName,
-				entityBinding.getEntity().getDescriptor().getName().fullName(),
+				entityBinding.getEntity().getDescriptor().getName().toString(),
 				idMapper,
 				propertyMapper,
 				parentEntityName

@@ -60,7 +60,7 @@ public final class BasicMetadataGenerator {
 				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals(
 				hibernateTypeDescriptor.getJavaTypeDescriptor()
 						.getName()
-						.fullName()
+						.toString()
 		) ) {
 			if ( parent != null ) {
 				final boolean addNestedType = !hibernateTypeDescriptor.getTypeParameters().isEmpty();
@@ -118,7 +118,7 @@ public final class BasicMetadataGenerator {
 			typeName = type.getName();
 		}
 		if ( typeName == null ) {
-			typeName = hibernateTypeDescriptor.getJavaTypeDescriptor().getName().fullName();
+			typeName = hibernateTypeDescriptor.getJavaTypeDescriptor().getName().toString();
 		}
 		return typeName;
 	}

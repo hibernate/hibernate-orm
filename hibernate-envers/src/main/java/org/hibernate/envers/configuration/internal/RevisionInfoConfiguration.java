@@ -47,8 +47,8 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.internal.util.xml.XMLHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -291,7 +291,7 @@ public class RevisionInfoConfiguration {
 						revisionTimestampProperty
 				);
 				HibernateTypeDescriptor revisionTimestampType = revisionTimestampAttribute.getHibernateTypeDescriptor();
-				final String revisionTimestampClassName = revisionTimestampType.getJavaTypeDescriptor().getName().fullName();
+				final String revisionTimestampClassName = revisionTimestampType.getJavaTypeDescriptor().getName().toString();
 				if ( Long.TYPE.getName().equals( revisionTimestampClassName ) ||
 						java.util.Date.class.getName().equals( revisionTimestampClassName ) ||
 						Date.class.getName().equals( revisionTimestampClassName) ) {
@@ -339,7 +339,7 @@ public class RevisionInfoConfiguration {
 							collectionBinding
 									.getPluralAttributeElementBinding()
 									.getHibernateTypeDescriptor()
-									.getJavaTypeDescriptor().getName().fullName();
+									.getJavaTypeDescriptor().getName().toString();
 					if ( String.class.getName().equals( elementType ) ) {
 						modifiedEntityNamesData = new PropertyData(
 								modifiedEntityNamesProperty,

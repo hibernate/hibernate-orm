@@ -50,6 +50,16 @@ public interface JavaTypeDescriptorRepository {
 	public JavaTypeDescriptor getType(DotName typeName);
 
 	/**
+	 * Makes a dynamic (map model) type descriptor
+	 *
+	 * @param typeName The type name
+	 * @param superType The type's super-type; can be {@code null}
+	 *
+	 * @return The generated dynamic type (or the existing one)
+	 */
+	public DynamicTypeDescriptor makeDynamicType(DotName typeName, DynamicTypeDescriptor superType);
+
+	/**
 	 * Create a reflite JavaTypeDescriptor representing an array of the
 	 * given type
 	 *

@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
+import org.hibernate.metamodel.reflite.spi.DynamicTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.InterfaceDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
@@ -106,6 +108,49 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 	@Override
 	public DotName buildName(String name) {
 		return DotName.createSimple( name );
+	}
+
+	@Override
+	public DynamicTypeDescriptor makeDynamicType(DotName typeName, DynamicTypeDescriptor superType) {
+		final JavaTypeDescriptor existingRegistration = typeDescriptorMap.get( typeName );
+		if ( existingRegistration != null ) {
+			if ( !DynamicTypeDescriptor.class.isInstance( existingRegistration ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ENGLISH,
+								"Found existing type descriptor for given type name [%s], " +
+										"but it was not a dynamic type : %s",
+								typeName,
+								existingRegistration
+						)
+				);
+			}
+
+			final DynamicTypeDescriptor existingDynamicTypeDescriptor = (DynamicTypeDescriptor) existingRegistration;
+			if ( existingDynamicTypeDescriptor.getSuperType() != null ) {
+				if ( !existingDynamicTypeDescriptor.getSuperType().equals( superType ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									Locale.ENGLISH,
+									"Found existing type descriptor for given type name [%s], " +
+											"but it had mismatched super-type; expecting : %s, found : %s",
+									typeName,
+									superType,
+									existingDynamicTypeDescriptor.getSuperType()
+							)
+					);
+				}
+			}
+			else {
+				( (DynamicTypeDescriptorImpl) existingDynamicTypeDescriptor ).setSuperType( (DynamicTypeDescriptorImpl) superType );
+			}
+
+			return existingDynamicTypeDescriptor;
+		}
+
+		DynamicTypeDescriptor type = new DynamicTypeDescriptorImpl( typeName, (DynamicTypeDescriptorImpl) superType );
+		typeDescriptorMap.put( typeName, type );
+		return type;
 	}
 
 	@Override
@@ -216,7 +261,9 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 			return makeTypeDescriptor( typeName, classLoaderAccess.classForName( classNameToLoad ) );
 		}
 		catch (ClassLoadingException e) {
-			return new NoSuchClassTypeDescriptor( typeName );
+			// assume a dynamic type
+			log.debugf( "Creating an implicit DynamicTypeDescriptor : %s", typeName );
+			return new DynamicTypeDescriptorImpl( typeName, null );
 		}
 	}
 
@@ -656,69 +703,6 @@ public class JavaTypeDescriptorRepositoryImpl implements JavaTypeDescriptorRepos
 		}
 		catch (NoSuchMethodException ignore) {
 			return false;
-		}
-	}
-
-	private static class NoSuchClassTypeDescriptor implements JavaTypeDescriptor {
-		private final DotName name;
-
-		private NoSuchClassTypeDescriptor(DotName name) {
-			this.name = name;
-		}
-
-		@Override
-		public DotName getName() {
-			return name;
-		}
-
-		@Override
-		public int getModifiers() {
-			return 0;
-		}
-
-		@Override
-		public Collection<FieldDescriptor> getDeclaredFields() {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public Collection<MethodDescriptor> getDeclaredMethods() {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public AnnotationInstance findTypeAnnotation(DotName annotationType) {
-			return null;
-		}
-
-		@Override
-		public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
-			return null;
-		}
-
-		@Override
-		public Collection<AnnotationInstance> findAnnotations(DotName annotationType) {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public Collection<AnnotationInstance> findLocalAnnotations(DotName annotationType) {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public boolean isAssignableFrom(JavaTypeDescriptor check) {
-			return false;
-		}
-
-		@Override
-		public List<JavaTypeDescriptor> getResolvedParameterTypes() {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public ClassInfo getJandexClassInfo() {
-			return null;
 		}
 	}
 

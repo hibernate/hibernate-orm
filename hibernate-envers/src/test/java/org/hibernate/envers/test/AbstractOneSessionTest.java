@@ -69,7 +69,9 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 	@AfterClassOnce
 	public void closeSessionFactory() {
 		try {
-			sessionFactory.close();
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+			}
 		}
 		finally {
 			if ( serviceRegistry != null ) {

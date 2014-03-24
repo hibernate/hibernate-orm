@@ -21,7 +21,6 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet.")
 public class MultipleAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 	private long childMultipleId = 1L;
 	private Integer siteMultipleId = null;

@@ -41,6 +41,7 @@ import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 
+import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -166,7 +167,7 @@ class TypeSafeActivator {
 		for ( EntityBinding entityBinding : activationContext.getMetadata().getEntityBindings() ) {
 			final String className = entityBinding.getEntity().getDescriptor().getName().toString();
 
-			if ( entityBinding.getEntity().getDescriptor() == null ) {
+			if ( entityBinding.getHierarchyDetails().getEntityMode() != EntityMode.POJO ) {
 				continue;
 			}
 

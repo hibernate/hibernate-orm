@@ -25,7 +25,6 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@Priority(10)
-	@FailureExpectedWithNewMetamodel
 	public void initData() {
 		// Revision 1
 		Session session = openSession();
@@ -54,7 +53,6 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testRevisionsCountOfGivenIdStrEntity() {
 		// Revision 2 has not changed entity's state.
 		Assert.assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( GivenIdStrEntity.class, 1 ) );
@@ -63,7 +61,6 @@ public class AddDelTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testHistoryOfGivenIdStrEntity() {
 		Assert.assertEquals( new GivenIdStrEntity( 1, "data" ), getAuditReader().find( GivenIdStrEntity.class, 1, 1 ) );
 		Assert.assertEquals(

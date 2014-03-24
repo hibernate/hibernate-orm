@@ -26,7 +26,6 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@Priority(10)
-	@FailureExpectedWithNewMetamodel
 	public void initData() {
 		// Revision 1
 		getSession().getTransaction().begin();
@@ -39,7 +38,6 @@ public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-4760")
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings("unchecked")
 	public void testQueryingWithProxyObject() {
 		StrTestEntity originalSte = new StrTestEntity( "data", id );

@@ -44,7 +44,6 @@ import org.hibernate.testing.TestForIssue;
 /**
  * @author Eugene Goroschenya
  */
-@FailureExpectedWithNewMetamodel( message = "@NotFound(action = NotFoundAction.IGNORE) not supported yet." )
 public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 	private TargetNotAuditedEntity tnae1 = null;
 	private ManyToOneNotAuditedNullEntity mtonane1 = null;

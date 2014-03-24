@@ -16,7 +16,6 @@ import org.hibernate.testing.TestForIssue;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4439")
-@FailureExpectedWithNewMetamodel( message = "Audit overrides on MappedSuperclasses not supported yet." )
 public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer classAuditedEntityId = null;
 	private Integer classNotAuditedEntityId = null;

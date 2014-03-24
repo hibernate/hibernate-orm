@@ -1703,11 +1703,13 @@ public abstract class AbstractCollectionPersister
 	public void processQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
 			throws HibernateException {
 		if ( collection.hasQueuedOperations() ) {
-			doProcessQueuedOps( collection, key, session );
+			int nextIndex = getSize( key, session );
+			doProcessQueuedOps( collection, key, nextIndex, session );
 		}
 	}
 
-	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key,
+			int nextIndex, SessionImplementor session)
 			throws HibernateException;
 
 	@Override

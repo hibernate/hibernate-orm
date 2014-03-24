@@ -404,8 +404,22 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		forum = (Forum) s.get( Forum.class, forum.getId() );
 
-		assertEquals( 1, forum.getPosts().size() );
+		final Post post2 = new Post();
+		post2.setName( "post2" );
+		post2.setForum( forum );
+		forum.getPosts().add( post2 );
+
+		forum = (Forum) s.merge( forum );
+
+		s.flush();
+		s.clear();
+		sessionFactory().getCache().evictEntityRegions();
+
+		forum = (Forum) s.get( Forum.class, forum.getId() );
+
+		assertEquals( 2, forum.getPosts().size() );
 		assertEquals( "post1", forum.getPosts().get( 0 ).getName() );
+		assertEquals( "post2", forum.getPosts().get( 1 ).getName() );
 		assertEquals( 1, forum.getUsers().size() );
 		assertEquals( "john", forum.getUsers().get( 0 ).getName() );
 	}

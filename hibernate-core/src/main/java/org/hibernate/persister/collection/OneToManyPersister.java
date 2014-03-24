@@ -182,34 +182,33 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		super.recreate( collection, id, session );
-		writeIndex( collection, collection.entries( this ), id, session );
+		writeIndex( collection, collection.entries( this ), id, 0, session );
 	}
 	
 	@Override
 	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		super.insertRows( collection, id, session );
-		writeIndex( collection, collection.entries( this ), id, session );
+		writeIndex( collection, collection.entries( this ), id, 0, session );
 	}
 	
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
-			throws HibernateException {
-		writeIndex( collection, collection.queuedAdditionIterator(), id, session );
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id,
+			int nextIndex, SessionImplementor session) throws HibernateException {
+		writeIndex( collection, collection.queuedAdditionIterator(), id, nextIndex, session );
 	}
 	
-	private void writeIndex(PersistentCollection collection, Iterator entries, Serializable id, SessionImplementor session) {
+	private void writeIndex(PersistentCollection collection, Iterator entries, Serializable id,
+			int nextIndex, SessionImplementor session) {
 		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
 		if ( isInverse && hasIndex && !indexContainsFormula ) {
 			try {
 				if ( entries.hasNext() ) {
 					Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
-					int i = 0;
-					int count = 0;
 					while ( entries.hasNext() ) {
 
 						final Object entry = entries.next();
-						if ( entry != null && collection.entryExists( entry, i ) ) {
+						if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
 							int offset = 1;
 							PreparedStatement st = null;
 							boolean callable = isUpdateCallable();
@@ -238,9 +237,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							try {
 								offset += expectation.prepare( st );
 								if ( hasIdentifier ) {
-									offset = writeIdentifier( st, collection.getIdentifier( entry, i ), offset, session );
+									offset = writeIdentifier( st, collection.getIdentifier( entry, nextIndex ), offset, session );
 								}
-								offset = writeIndex( st, collection.getIndex( entry, i, this ), offset, session );
+								offset = writeIndex( st, collection.getIndex( entry, nextIndex, this ), offset, session );
 								offset = writeElement( st, collection.getElement( entry ), offset, session );
 
 								if ( useBatch ) {
@@ -252,7 +251,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								else {
 									expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 								}
-								count++;
 							}
 							catch ( SQLException sqle ) {
 								if ( useBatch ) {
@@ -267,7 +265,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							}
 
 						}
-						i++;
+						nextIndex++;
 					}
 				}
 			}

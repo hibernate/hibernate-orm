@@ -42,6 +42,7 @@ import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
+import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
@@ -522,12 +523,19 @@ class HibernateTypeHelper {
 					return typeFactory().list( role, propertyRef );
 				}
 				case ARRAY: {
+					// TODO: Move into a util?
+					final JavaTypeDescriptor descriptor = pluralAttributeSource.getElementTypeDescriptor();
+					final Class clazz;
+					if (PrimitiveTypeDescriptor.class.isInstance( descriptor )) {
+						clazz = ( (PrimitiveTypeDescriptor) descriptor ).getClassType();
+					}
+					else {
+						clazz = classLoaderService.classForName( descriptor.getName().toString() );
+					}
 					return typeFactory().array(
 							role,
 							propertyRef,
-							classLoaderService.classForName(
-									pluralAttributeSource.getElementTypeDescriptor().getName().toString()
-							)
+							clazz
 					);
 				}
 				case MAP: {

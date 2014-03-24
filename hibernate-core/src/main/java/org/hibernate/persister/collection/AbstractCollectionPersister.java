@@ -72,6 +72,8 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
@@ -560,10 +562,15 @@ public abstract class AbstractCollectionPersister
 
 		isInverse = keyBinding.isInverse();
 		if ( isArray ) {
-			final ClassLoaderService cls = factory.getServiceRegistry().getService( ClassLoaderService.class );
-			elementClass = cls.classForName(
-					collection.getAttribute().getElementType().getDescriptor().getName().toString()
-			);
+			// TODO: Move into a util?
+			final JavaTypeDescriptor descriptor = collection.getAttribute().getElementType().getDescriptor();
+			if (PrimitiveTypeDescriptor.class.isInstance( descriptor )) {
+				elementClass = ( (PrimitiveTypeDescriptor) descriptor ).getClassType();
+			}
+			else {
+				final ClassLoaderService cls = factory.getServiceRegistry().getService( ClassLoaderService.class );
+				elementClass = cls.classForName( descriptor.getName().toString() );
+			}
 		}
 		else {
 			// for non-arrays, we don't need to know the element class

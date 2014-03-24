@@ -219,14 +219,21 @@ public class Primitives {
 	}
 
 	private static class PrimitiveDescriptorImpl implements PrimitiveTypeDescriptor {
+		private final Class clazz;
 		private final DotName name;
 		private final int modifiers;
 		private final PrimitiveGroup group;
 
 		protected PrimitiveDescriptorImpl(Class clazz, PrimitiveGroup group) {
+			this.clazz = clazz;
 			this.name = DotName.createSimple( clazz.getName() );
 			this.modifiers = clazz.getModifiers();
 			this.group = group;
+		}
+		
+		@Override
+		public Class getClassType() {
+			return clazz;
 		}
 
 		@Override

@@ -35,4 +35,12 @@ public interface PrimitiveTypeDescriptor extends JavaTypeDescriptor {
 	 * @return The descriptor for the wrapper "equivalent".
 	 */
 	public PrimitiveWrapperTypeDescriptor getWrapperTypeDescriptor();
+	
+	/**
+	 * Since primitives are ClassLoader safe, allow the Class itself to be available.  Needed for ArrayType
+	 * handling, etc.
+	 * 
+	 * @return The primitive's Class
+	 */
+	public Class getClassType();
 }

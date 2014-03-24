@@ -303,9 +303,10 @@ public class PluralAttribute
 				null
 		);
 
-		final AnnotationInstance type = AnnotationInstance.class.cast( collectionId.value( "type" ) );
+		final AnnotationInstance type = JandexHelper.getValue( collectionId, "type", AnnotationInstance.class,
+				classLoaderService );
 		final AnnotationValue typeType = type.value( "type" );
-		final String typeName = typeType == null ? null : type.value( "type" ).asString();
+		final String typeName = typeType == null ? null : typeType.asString();
 		if ( StringHelper.isEmpty( typeName ) ) {
 			throw getContext().makeMappingException(
 					"Plural attribute [" + backingMember.toString() + "] specified @CollectionId.type incorrectly, " +

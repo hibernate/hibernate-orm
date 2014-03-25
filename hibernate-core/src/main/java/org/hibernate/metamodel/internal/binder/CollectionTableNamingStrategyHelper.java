@@ -31,25 +31,18 @@ import org.hibernate.metamodel.spi.relational.Table;
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class CollectionTableNamingStrategyHelper extends TableNamingStrategyHelper {
-	private final String ownerTableLogicalName;
 	private final String propertyName;
 
 	public CollectionTableNamingStrategyHelper(final AbstractPluralAttributeBinding pluralAttributeBinding) {
 		super( pluralAttributeBinding.getContainer().seekEntityBinding() );
-		this.ownerTableLogicalName =
-				Table.class.isInstance( entityBinding.getPrimaryTable() )
-						? ( (Table) entityBinding.getPrimaryTable() ).getPhysicalName().getText()
-						: null;
 		this.propertyName = Binder.createAttributePath( pluralAttributeBinding );
 	}
 
 	@Override
 	public String determineImplicitName(NamingStrategy strategy) {
-
-
 		return strategy.collectionTableName(
 				entityBinding.getEntityName(),
-				ownerTableLogicalName,
+				strategy.classToTableName( entityBinding.getEntityName() ),
 				null,
 				null,
 				propertyName
@@ -61,7 +54,7 @@ public class CollectionTableNamingStrategyHelper extends TableNamingStrategyHelp
 	public String getLogicalName(NamingStrategy strategy) {
 		return strategy.logicalCollectionTableName(
 				logicalName,
-				ownerTableLogicalName,
+				strategy.classToTableName( entityBinding.getEntityName() ),
 				null,
 				propertyName
 		);

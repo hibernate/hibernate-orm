@@ -1,6 +1,9 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -9,19 +12,13 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.util.SchemaUtil;
+import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  * Test harness for ANN-716.
@@ -60,7 +57,6 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 	}
 
     @Test
-	@FailureExpectedWithNewMetamodel
 	public void testWithEJB3NamingStrategy() throws Exception {
 		MetadataSources metadataSources = new MetadataSources()
 				.addAnnotatedClass( A.class )
@@ -68,9 +64,6 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.getMetadataBuilder()
 				.with( EJB3NamingStrategy.INSTANCE )
 				.build();
-
-		// todo : naming strategy is not applied
-
 		assertNotNull( SchemaUtil.getTable( "A_ADDRESS", metadata ) );
 	}
 

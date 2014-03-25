@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 @FetchProfile(name = "package-configured-profile", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Foo.class, association = "bar", mode = FetchMode.JOIN)
+		@FetchProfile.FetchOverride(entity = Foo.class, association = "bars", mode = FetchMode.JOIN)
 })
 package org.hibernate.metamodel.internal.source;
 

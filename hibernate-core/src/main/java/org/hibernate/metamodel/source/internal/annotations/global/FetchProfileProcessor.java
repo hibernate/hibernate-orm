@@ -34,9 +34,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.FetchProfile.Fetch;
-
+import org.hibernate.metamodel.spi.domain.Attribute;
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -54,7 +55,6 @@ public class FetchProfileProcessor {
 	 *
 	 * @param bindingContext the context for annotation binding
 	 */
-	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
 	public static void bind(AnnotationBindingContext bindingContext) {
 
 		Collection<AnnotationInstance> annotations = bindingContext.getJandexAccess()
@@ -93,8 +93,19 @@ public class FetchProfileProcessor {
 			if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
 				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
 			}
+			
 			final String entityName = JandexHelper.getValue( override, "entity", String.class, classLoaderService );
 			final String associationName = JandexHelper.getValue( override, "association", String.class, classLoaderService );
+			
+			EntityBinding entityBinding = bindingContext.getMetadataCollector().getEntityBinding( entityName );
+			if ( entityBinding == null ) {
+				throw new MappingException( "FetchProfile " + name + " references an unknown entity: " + entityName );
+			}
+			Attribute attributeBinding = entityBinding.getAttributeContainer().locateAttribute( associationName );
+			if ( attributeBinding == null ) {
+				throw new MappingException( "FetchProfile " + name + " references an unknown association: " + associationName );
+			}
+			
 			fetches.add( new Fetch( entityName, associationName, fetchMode.toString().toLowerCase() ) );
 		}
 		bindingContext.getMetadataCollector().addFetchProfile( new FetchProfile( name, fetches ) );

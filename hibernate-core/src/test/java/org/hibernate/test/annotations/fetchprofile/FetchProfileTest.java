@@ -23,27 +23,27 @@
  */
 package org.hibernate.test.annotations.fetchprofile;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Test case for HHH-4812
@@ -54,28 +54,31 @@ import static org.junit.Assert.fail;
 public class FetchProfileTest extends BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( FetchProfileTest.class );
 
-	private ServiceRegistry serviceRegistry;
-
+	private BootstrapServiceRegistry bootstrapServiceRegistry;
+	private StandardServiceRegistry serviceRegistry;
+	
 	@Before
-    public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+	public void setUp() {
+		bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder().build();
+		serviceRegistry = new StandardServiceRegistryBuilder( bootstrapServiceRegistry ).build();
 	}
-
+	
 	@After
-    public void tearDown() {
-        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
+	public void tearDown() {
+		( (ServiceRegistryImplementor) serviceRegistry ).destroy();
+		( (ServiceRegistryImplementor) bootstrapServiceRegistry ).destroy();
 	}
+	
 
 	@Test
 	public void testFetchProfileConfigured() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( SupportTickets.class );
-		config.addAnnotatedClass( Country.class );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		);
+		MetadataSources metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( SupportTickets.class );
+		metadataSources.addAnnotatedClass( Country.class );
+		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) metadataSources
+				.getMetadataBuilder( serviceRegistry ).build().buildSessionFactory();
 
 		assertTrue(
 				"fetch profile not parsed properly",
@@ -89,15 +92,14 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testWrongAssociationName() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer2.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		MetadataSources metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer2.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -106,15 +108,14 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testWrongClass() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer3.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		MetadataSources metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer3.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -123,15 +124,14 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testUnsupportedFetchMode() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer4.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		MetadataSources metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer4.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -142,17 +142,16 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testXmlOverride() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer5.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		MetadataSources metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer5.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( Country.class );
 		InputStream is = Thread.currentThread()
 				.getContextClassLoader()
 				.getResourceAsStream( "org/hibernate/test/annotations/fetchprofile/mappings.hbm.xml" );
-		config.addInputStream( is );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		);
+		metadataSources.addInputStream( is );
+		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) metadataSources
+				.getMetadataBuilder( serviceRegistry ).build().buildSessionFactory();
 
 		assertTrue(
 				"fetch profile not parsed properly",
@@ -161,12 +160,12 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		sessionImpl.close();
 
 		// now the same with no xml
-		config = new Configuration();
-		config.addAnnotatedClass( Customer5.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer5.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( Country.class );
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -176,15 +175,14 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testPackageConfiguredFetchProfile() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( SupportTickets.class );
-		config.addAnnotatedClass( Country.class );
-		config.addPackage( Customer.class.getPackage().getName() );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		);
+		MetadataSources metadataSources = new MetadataSources( bootstrapServiceRegistry );
+		metadataSources.addAnnotatedClass( Customer.class );
+		metadataSources.addAnnotatedClass( Order.class );
+		metadataSources.addAnnotatedClass( SupportTickets.class );
+		metadataSources.addAnnotatedClass( Country.class );
+		metadataSources.addPackage( Customer.class.getPackage().getName() );
+		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) metadataSources
+				.getMetadataBuilder( serviceRegistry ).build().buildSessionFactory();
 
 		assertTrue(
 				"fetch profile not parsed properly",

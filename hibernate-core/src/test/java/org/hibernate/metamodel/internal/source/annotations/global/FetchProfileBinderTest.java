@@ -24,6 +24,12 @@
 package org.hibernate.metamodel.internal.source.annotations.global;
 
 import java.util.Iterator;
+import java.util.List;
+
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
@@ -33,7 +39,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -62,9 +67,16 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	@Test
 	public void testSingleFetchProfile() {
 		@FetchProfile(name = "foo", fetchOverrides = {
-				@FetchProfile.FetchOverride(entity = Foo.class, association = "bar", mode = FetchMode.JOIN)
+				@FetchProfile.FetchOverride(entity = Foo.class, association = "bars", mode = FetchMode.JOIN)
 		})
+		@Entity
 		class Foo {
+			@Id
+			@GeneratedValue
+			public long id;
+			
+			@ElementCollection
+			public List<String> bars;
 		}
 
 		Metadata meta = new MetadataSources( serviceRegistry ).addAnnotatedClass( Foo.class ).buildMetadata();
@@ -74,7 +86,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		org.hibernate.metamodel.spi.binding.FetchProfile profile = mappedFetchProfiles.next();
 		assertEquals( "Wrong fetch profile name", "foo", profile.getName() );
 		org.hibernate.metamodel.spi.binding.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
-		assertEquals( "Wrong association name", "bar", fetch.getAssociation() );
+		assertEquals( "Wrong association name", "bars", fetch.getAssociation() );
 		assertEquals( "Wrong association type", Foo.class.getName(), fetch.getEntity() );
 	}
 
@@ -95,12 +107,12 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	private void assertProfiles(org.hibernate.metamodel.spi.binding.FetchProfile profile) {
 		if ( profile.getName().equals( "foobar" ) ) {
 			org.hibernate.metamodel.spi.binding.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
-			assertEquals( "Wrong association name", "foobar", fetch.getAssociation() );
+			assertEquals( "Wrong association name", "fubars", fetch.getAssociation() );
 			assertEquals( "Wrong association type", FooBar.class.getName(), fetch.getEntity() );
 		}
 		else if ( profile.getName().equals( "fubar" ) ) {
 			org.hibernate.metamodel.spi.binding.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
-			assertEquals( "Wrong association name", "fubar", fetch.getAssociation() );
+			assertEquals( "Wrong association name", "fubars", fetch.getAssociation() );
 			assertEquals( "Wrong association type", FooBar.class.getName(), fetch.getEntity() );
 		}
 		else {
@@ -111,9 +123,16 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	@Test(expected = MappingException.class)
 	public void testNonJoinFetchThrowsException() {
 		@FetchProfile(name = "foo", fetchOverrides = {
-				@FetchProfile.FetchOverride(entity = Foo.class, association = "bar", mode = FetchMode.SELECT)
+				@FetchProfile.FetchOverride(entity = Foo.class, association = "bars", mode = FetchMode.SELECT)
 		})
+		@Entity
 		class Foo {
+			@Id
+			@GeneratedValue
+			public long id;
+			
+			@ElementCollection
+			public List<String> bars;
 		}
 
 		new MetadataSources( serviceRegistry ).addAnnotatedClass( Foo.class ).buildMetadata();
@@ -121,13 +140,20 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 
 	@FetchProfiles( {
 			@FetchProfile(name = "foobar", fetchOverrides = {
-					@FetchProfile.FetchOverride(entity = FooBar.class, association = "foobar", mode = FetchMode.JOIN)
+					@FetchProfile.FetchOverride(entity = FooBar.class, association = "fubars", mode = FetchMode.JOIN)
 			}),
 			@FetchProfile(name = "fubar", fetchOverrides = {
-					@FetchProfile.FetchOverride(entity = FooBar.class, association = "fubar", mode = FetchMode.JOIN)
+					@FetchProfile.FetchOverride(entity = FooBar.class, association = "fubars", mode = FetchMode.JOIN)
 			})
 	})
+	@Entity
 	class FooBar {
+		@Id
+		@GeneratedValue
+		public long id;
+		
+		@ElementCollection
+		public List<String> fubars;
 	}
 }
 

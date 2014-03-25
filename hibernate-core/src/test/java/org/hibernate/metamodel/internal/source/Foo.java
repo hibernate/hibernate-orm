@@ -23,10 +23,24 @@
  */
 package org.hibernate.metamodel.internal.source;
 
+import java.util.List;
+
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 /**
  * @author Hardy Ferentschik
  */
+@Entity
 public class Foo {
+	@Id
+	@GeneratedValue
+	public long id;
+	
+	@ElementCollection
+	public List<String> bars;
 }
 
 

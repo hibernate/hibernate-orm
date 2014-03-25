@@ -136,7 +136,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 
 	@Override
 	protected Attribute<T,?> resolveAttribute(String attributeName) {
-		final Attribute<T,?> attribute = entityType.getDeclaredAttribute( attributeName );
+        final Attribute attribute = entityType.getAttribute( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(

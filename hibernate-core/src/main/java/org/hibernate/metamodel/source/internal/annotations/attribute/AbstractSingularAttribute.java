@@ -25,15 +25,16 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import javax.persistence.AccessType;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.reflite.spi.MemberDescriptor;
 import org.hibernate.metamodel.source.internal.AttributeConversionInfo;
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.util.ConverterAndOverridesHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.spi.AttributePath;
 import org.hibernate.metamodel.source.spi.AttributeRole;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -55,6 +56,11 @@ public abstract class AbstractSingularAttribute
 			String accessorStrategy) {
 		super( container, attributeName, attributePath, attributeRole, backingMember, nature, accessType, accessorStrategy );
 
+		if ( backingMember.getAnnotations().containsKey( HibernateDotNames.IMMUTABLE ) ) {
+			throw new AnnotationException( "@Immutable can be used on entities or collections, not "
+					+ attributeRole.getFullPath() );
+		}
+		
 		ConverterAndOverridesHelper.INSTANCE.processConverters(
 				getPath(),
 				getNature(),

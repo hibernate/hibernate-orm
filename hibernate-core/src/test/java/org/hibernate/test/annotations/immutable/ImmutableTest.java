@@ -23,26 +23,22 @@
  */
 package org.hibernate.test.annotations.immutable;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jboss.logging.Logger;
-import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.jboss.logging.Logger;
+import org.junit.Test;
 
 /**
  * Tests for <code>Immutable</code> annotation.
@@ -154,13 +150,11 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMisplacedImmutableAnnotation() {
-		// todo : metamodel is not applying many "out of place" validations
 		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass(Foobar.class);
-			config.buildMappings(  );
+			MetadataSources sources = new MetadataSources( serviceRegistry().getParentServiceRegistry() );
+			sources.addAnnotatedClass(Foobar.class);
+			sources.buildMetadata();
 			fail();
 		}
 		catch (AnnotationException ae) {
@@ -170,6 +164,6 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 
 	@Override
     protected Class[] getAnnotatedClasses() {
-		return new Class[] { Country.class, State.class};
+		return new Class[] { Country.class, State.class };
 	}
 }

@@ -182,6 +182,10 @@ public class AuditedPropertiesReader {
 	private void addFromComponentProperty(XProperty property,
 			String accessType, Component propertyValue, Audited allClassAudited) {
 
+		if (propertyValue.isDynamic()) {
+			return;
+		}
+
 		ComponentAuditingData componentData = new ComponentAuditingData();
 		boolean isAudited = fillPropertyData(property, componentData, accessType,
 				allClassAudited);

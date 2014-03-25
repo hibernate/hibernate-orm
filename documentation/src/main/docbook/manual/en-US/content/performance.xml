@@ -1483,8 +1483,8 @@ hibernate.cache.use_structured_entries true</programlisting>
           <programlisting role="XML">&lt;dependencies&gt;
    &lt;dependency&gt;
       &lt;groupId&gt;org.hibernate.javax.persistence&lt;/groupId&gt;
-      &lt;artifactId&gt;hibernate-jpa-2.0-api&lt;/artifactId&gt;
-      &lt;version&gt;1.0.1.Final&lt;/version&gt;
+      &lt;artifactId&gt;hibernate-jpa-[SPEC-VERSION]-api&lt;/artifactId&gt;
+      &lt;version&gt;[IMPL-VERSION]&lt;/version&gt;
       &lt;scope&gt;compile&lt;/scope&gt;
    &lt;/dependency&gt;
 &lt;/dependencies&gt;
@@ -1519,7 +1519,7 @@ buildscript {
     }
 }
 dependencies {
-   compile group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.0-api', version: '1.0.1.Final'
+   compile group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-[SPEC-VERSION]-api', version: '[IMPL-VERSION]'
    compile group: 'org.hibernate', name: 'hibernate-gradle-plugin', version: 'VERSION'
 }
           </programlisting>

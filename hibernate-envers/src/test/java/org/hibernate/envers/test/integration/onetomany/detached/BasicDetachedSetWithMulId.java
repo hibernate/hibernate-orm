@@ -33,12 +33,14 @@ import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.ids.SetRefCollEntityMulId;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9055 : Association with an entity with @IdClass is broken." )
 public class BasicDetachedSetWithMulId extends BaseEnversJPAFunctionalTestCase {
 	private MulId str1_id;
 	private MulId str2_id;

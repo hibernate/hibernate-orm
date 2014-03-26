@@ -35,6 +35,7 @@ import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertEquals;
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"unchecked"})
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9055 : Association with an entity with @IdClass is broken." )
 public class MulIdOneToManyQuery extends BaseEnversJPAFunctionalTestCase {
 	private MulId id1;
 	private MulId id2;

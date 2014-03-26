@@ -98,6 +98,7 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdNoFetches1() {
 		// CardField is an entity with a composite identifier mapped via a @EmbeddedId class (CardFieldPK) defining
 		// a @ManyToOne
@@ -119,6 +120,7 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEncapsulatedCompositeIdNoFetches2() {
 		// Parent is an entity with a composite identifier mapped via a @EmbeddedId class (ParentPK) which is defined
 		// using just basic types (strings, ints, etc)

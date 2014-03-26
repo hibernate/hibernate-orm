@@ -96,8 +96,6 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 		collectConversionInfo();
 		collectAttributeOverrides();
 		collectAssociationOverrides();
-
-		collectAttributesIfNeeded();
 	}
 
 	protected void collectConversionInfo() {
@@ -144,8 +142,6 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 		collectConversionInfo();
 		collectAttributeOverrides();
 		collectAssociationOverrides();
-
-		collectAttributesIfNeeded();
 	}
 
 	@Override

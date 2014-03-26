@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.AccessType;
 
 import org.hibernate.HibernateException;
@@ -69,7 +70,6 @@ import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -375,11 +375,11 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 		}
 	}
 
-	private boolean isMappedSuperclass(JavaTypeDescriptor javaTypeDescriptor) {
+	protected boolean isMappedSuperclass(JavaTypeDescriptor javaTypeDescriptor) {
 		return javaTypeDescriptor.findLocalTypeAnnotation( JPADotNames.MAPPED_SUPERCLASS ) != null;
 	}
 
-	private boolean isEntity(ClassDescriptor javaTypeDescriptor) {
+	private boolean isEntity(JavaTypeDescriptor javaTypeDescriptor) {
 		return javaTypeDescriptor.findLocalTypeAnnotation( JPADotNames.ENTITY ) != null;
 	}
 
@@ -424,7 +424,18 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 	protected void collectAttributesIfNeeded() {
 		if ( persistentAttributeMap == null ) {
 			persistentAttributeMap = new HashMap<String, PersistentAttribute>();
-			collectPersistentAttributes();
+			// TODO: This probably isn't the best place for this.  Walking and creating the ManagedTypeMetadatas,
+			// for the entire subclass tree, including subclasses that are not an @Entity/@MappedSuperclass/@Embeddable,
+			// is entirely necessary.  But, we need to skip processing the attributes in this case.  Cleaner way to do
+			// it in the new architecture?
+			if (isEntity( javaTypeDescriptor )
+					|| isMappedSuperclass( javaTypeDescriptor )
+					||  isEmbeddableType( javaTypeDescriptor )) {
+				collectPersistentAttributes();
+			}
+			else {
+				System.out.println();
+			}
 		}
 	}
 

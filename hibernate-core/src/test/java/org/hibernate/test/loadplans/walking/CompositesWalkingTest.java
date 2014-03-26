@@ -27,12 +27,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
-
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.annotations.collectionelement.TestCourse;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -42,10 +39,7 @@ public class CompositesWalkingTest extends BaseUnitTestCase {
 	 * Test one-level composites defined as part of an entity.
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testEntityComposite() {
-		// metamodel : another indication of @Embedded/@Embeddable problem
-
 		final SessionFactory sf = new Configuration()
 				.addAnnotatedClass( TestCourse.class )
 				.buildSessionFactory();

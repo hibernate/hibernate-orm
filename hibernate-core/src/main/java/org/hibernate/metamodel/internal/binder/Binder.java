@@ -61,6 +61,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.binder.HibernateTypeHelper.ReflectedCollectionJavaTypes;
 import org.hibernate.metamodel.internal.resolver.AssociationRelationalBindingResolver;
 import org.hibernate.metamodel.internal.resolver.MappedByAssociationRelationalBindingResolverImpl;
@@ -1569,10 +1570,7 @@ public class Binder {
 			}
 		}
 		else {
-			joinRelationalValueBindings = new ArrayList<RelationalValueBinding>(
-					joinedPrimaryKeyColumnSources
-							.size()
-			);
+			joinRelationalValueBindings = CollectionHelper.arrayList( joinedPrimaryKeyColumnSources.size() );
 			if ( primaryKeyColumns.size() != joinedPrimaryKeyColumnSources.size() ) {
 				throw localBindingContext().makeMappingException(
 						String.format(

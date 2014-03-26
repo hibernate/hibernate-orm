@@ -1,5 +1,5 @@
-//$Id$
 package org.hibernate.test.annotations.inheritance;
+
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 
@@ -9,6 +9,23 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class VegetablePk implements Serializable {
 	private String farmer;
+	private String harvestDate;
+
+	public String getFarmer() {
+		return farmer;
+	}
+
+	public void setFarmer(String farmer) {
+		this.farmer = farmer;
+	}
+
+	public String getHarvestDate() {
+		return harvestDate;
+	}
+
+	public void setHarvestDate(String harvestDate) {
+		this.harvestDate = harvestDate;
+	}
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
@@ -29,21 +46,4 @@ public class VegetablePk implements Serializable {
 		return result;
 	}
 
-	public String getFarmer() {
-		return farmer;
-	}
-
-	public void setFarmer(String farmer) {
-		this.farmer = farmer;
-	}
-
-	public String getHarvestDate() {
-		return harvestDate;
-	}
-
-	public void setHarvestDate(String harvestDate) {
-		this.harvestDate = harvestDate;
-	}
-
-	private String harvestDate;
 }

@@ -44,6 +44,7 @@ import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.logging.Logger;
 
 /**
  * Base class for the different types of persistent attributes
@@ -52,6 +53,8 @@ import org.jboss.jandex.AnnotationValue;
  * @author Hardy Ferentschik
  */
 public abstract class AbstractPersistentAttribute implements PersistentAttribute {
+	private static final Logger log = Logger.getLogger( AbstractPersistentAttribute.class );
+
 	private final ManagedTypeMetadata container;
 	private final String attributeName;
 	private final AttributePath attributePath;
@@ -163,6 +166,12 @@ public abstract class AbstractPersistentAttribute implements PersistentAttribute
 		final AnnotationInstance idAnnotation = backingMember.getAnnotations().get( JPADotNames.ID );
 		if ( idAnnotation != null ) {
 			validatePresenceOfIdAnnotation();
+			if ( backingMember.getType().getErasedType().findTypeAnnotation( JPADotNames.EMBEDDABLE ) != null ) {
+				log.warn(
+						"Attribute was annotated with @Id, but attribute type was annotated as @Embeddable; " +
+								"did you mean to use @EmbeddedId on the attribute rather than @Id?"
+				);
+			}
 			return true;
 		}
 

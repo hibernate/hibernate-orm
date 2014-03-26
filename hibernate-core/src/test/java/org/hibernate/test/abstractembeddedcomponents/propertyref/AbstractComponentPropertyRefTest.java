@@ -23,25 +23,25 @@
  */
 package org.hibernate.test.abstractembeddedcomponents.propertyref;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class AbstractComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "abstractembeddedcomponents/propertyref/Mappings.hbm.xml" };
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7242", message = "property-ref" )
 	public void testPropertiesRefCascades() {
 		Session session = openSession();
 		Transaction trans = session.beginTransaction();

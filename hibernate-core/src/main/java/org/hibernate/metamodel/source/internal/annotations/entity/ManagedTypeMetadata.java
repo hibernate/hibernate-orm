@@ -42,7 +42,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.reflite.internal.ModifierUtils;
-import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
@@ -973,10 +972,10 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 			if ( isEmbeddableType( attributeType ) ) {
 				LOG.warnf(
 						"Class %s was annotated as @Embeddable. However a persistent attribute [%s] " +
-								"of this type was found that did not contain the @Embedded annotation.  " +
+								"of this type was found that did not contain the @Embedded (or @EmbeddedId) annotation.  " +
 								"This may cause compatibility issues",
 						attributeType.getName(),
-						member.toString()
+						member.toLoggableForm()
 				);
 				categories.add( AttributeCategorization.EMBEDDED );
 			}
@@ -1040,13 +1039,6 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 			}
 		}
 
-	}
-
-	@SuppressWarnings("RedundantIfStatement")
-	private boolean isCollectionOrArray(JavaTypeDescriptor attributeType) {
-		return ArrayDescriptor.class.isInstance( attributeType )
-				|| getLocalBindingContext().getJavaTypeDescriptorRepository().jdkMapDescriptor().isAssignableFrom( attributeType )
-				|| getLocalBindingContext().getJavaTypeDescriptorRepository().jdkCollectionDescriptor().isAssignableFrom( attributeType );
 	}
 
 	protected boolean isEmbeddableType(JavaTypeDescriptor descriptor) {

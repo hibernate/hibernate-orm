@@ -31,6 +31,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -39,6 +40,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
+ * HHH-9081
+ * HBM2DD schema update and default schema with non-standard characters.
+ * 
  * @author Torben Riis
  */
 public class MigrationForSchemaWithStrangeCharactersTest extends BaseUnitTestCase {
@@ -63,6 +67,7 @@ public class MigrationForSchemaWithStrangeCharactersTest extends BaseUnitTestCas
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9081" )
 	public void testSchemaUpdateForSchemaWithStrangeCharacters() {
 		String resource = "org/hibernate/test/schemaupdate/2_Version.hbm.xml";
 
@@ -72,12 +77,12 @@ public class MigrationForSchemaWithStrangeCharactersTest extends BaseUnitTestCas
         cfg.setProperty(Environment.DEFAULT_SCHEMA, STRANGE_SCHEMA_NAME);
         cfg.addResource(resource);
         
-        // Do export - create tables
+        // Create tables
         SchemaExport schemaExport = new SchemaExport( cfg );
         schemaExport.execute( false, true, false, true);
         assertEquals( 0, schemaExport.getExceptions().size() );
 
-        // Do update - Ensure that no tables needs an update, since no changes has happened
+        // Run update - Ensure that no tables needs an update, since no changes has happened
 		SchemaUpdate v2schemaUpdate = new SchemaUpdate( serviceRegistry, cfg );
 		v2schemaUpdate.execute( true, true );
 		assertEquals("Schema update should not register any errors since nothing has changed",  

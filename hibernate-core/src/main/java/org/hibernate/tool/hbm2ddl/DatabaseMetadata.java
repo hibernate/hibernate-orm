@@ -109,6 +109,7 @@ public class DatabaseMetadata {
 
 			try {
 				ResultSet rs = null;
+				// HHH-9081 Initial fix
 				schema = decodeSchema(schema);
 				try {
 					if ( (isQuoted && meta.storesMixedCaseQuotedIdentifiers())) {

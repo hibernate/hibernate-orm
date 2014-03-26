@@ -185,6 +185,11 @@ public class EntityHierarchyBuilder {
 	private AccessType determineDefaultAccessTypeForHierarchy(JavaTypeDescriptor root) {
 		JavaTypeDescriptor current = root;
 		while ( current != null ) {
+			final AnnotationInstance access = current.findLocalTypeAnnotation( JPADotNames.ACCESS );
+			if ( access != null ) {
+				return AccessType.valueOf( access.value().asEnum() );
+			}
+
 			final Collection<AnnotationInstance> embeddedIdAnnotations = current.findLocalAnnotations(
 					JPADotNames.EMBEDDED_ID
 			);

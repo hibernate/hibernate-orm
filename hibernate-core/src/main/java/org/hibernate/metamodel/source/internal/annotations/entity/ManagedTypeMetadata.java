@@ -444,6 +444,8 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
 
+	private final Set<String> processedAttributeNames = new HashSet<String>();
+
 	/**
 	 * Collect all persistent attributes for this managed type
 	 */
@@ -463,7 +465,7 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 					continue;
 				}
 
-				if ( persistentAttributeMap.containsKey( attributeName ) ) {
+				if ( processedAttributeNames.contains( attributeName ) ) {
 					continue;
 				}
 
@@ -482,7 +484,7 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 
 				final String attributeName = ReflectHelper.getPropertyNameFromGetterMethod( method.getName() );
 
-				if ( persistentAttributeMap.containsKey( attributeName ) ) {
+				if ( processedAttributeNames.contains( attributeName ) ) {
 					continue;
 				}
 
@@ -562,6 +564,11 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 									+ "] that did not following JavaBeans naming convention for getter"
 					);
 				}
+
+				if ( processedAttributeNames.contains( attributeName ) ) {
+					return;
+				}
+
 				final MethodDescriptor methodDescriptor = findMethodDescriptor(
 						getJavaTypeDescriptor(),
 						methodInfo.name()
@@ -569,11 +576,18 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 				createPersistentAttribute( attributeName, methodDescriptor, attributeAccessType );
 			}
 			else {
+				final FieldInfo fieldInfo = (FieldInfo) annotationTarget;
+				final String attributeName = fieldInfo.name();
+
+				if ( processedAttributeNames.contains( attributeName ) ) {
+					return;
+				}
+
 				FieldDescriptor fieldDescriptor = findFieldDescriptor(
 						getJavaTypeDescriptor(),
-						( (FieldInfo) annotationTarget ).name()
+						attributeName
 				);
-				createPersistentAttribute( fieldDescriptor.getName(), fieldDescriptor, attributeAccessType );
+				createPersistentAttribute( attributeName, fieldDescriptor, attributeAccessType );
 			}
 		}
 
@@ -745,6 +759,8 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 				member,
 				member.getType().getErasedType()
 		);
+
+		processedAttributeNames.add( attributeName );
 
 		switch ( attributeCategory ) {
 			case BASIC: {

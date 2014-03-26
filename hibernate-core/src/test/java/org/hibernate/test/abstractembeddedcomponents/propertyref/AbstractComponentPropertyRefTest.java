@@ -35,13 +35,13 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7242", message = "property-ref" )
 public class AbstractComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "abstractembeddedcomponents/propertyref/Mappings.hbm.xml" };
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-7242", message = "property-ref" )
 	public void testPropertiesRefCascades() {
 		Session session = openSession();
 		Transaction trans = session.beginTransaction();

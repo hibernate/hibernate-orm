@@ -137,34 +137,39 @@ public class AccessMappingTest extends BaseUnitTestCase {
     }
 
     @Test
-	@FailureExpectedWithNewMetamodel
     public void testExplicitPropertyAccessAnnotationsOnField() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course4.class );
         cfg.addAnnotatedClass( Student.class );
 		SessionFactory sf= null;
         try {
-           sf = cfg.buildSessionFactory( serviceRegistry );
-            fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
+			sf = cfg.buildSessionFactory( serviceRegistry );
+			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
         }
         catch ( MappingException e ) {
             // success
-        }  finally {
-			if(sf!=null){
+        }
+		finally {
+			if ( sf != null ) {
 				sf.close();
 			}
 		}
     }
 
     @Test
-	@FailureExpectedWithNewMetamodel
+	@FailureExpectedWithNewMetamodel(
+			message = "No idea on 2 levels.  First, how is this a 'Hibernate-style override'?  " +
+					"Second, tbh, not even sure this should pass; doesn't the AccessType#FIELD override" +
+					" belong on the field?  The test passes if @Access(AccessType.FIELD) and other" +
+					"annotations are moved from Course3#getId() to Course3#id.  Message sent to hibernate-dev " +
+					"mailing list to get additional points of view."
+	)
     public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
-        Class<?> classUnderTest = Course3.class;
-        cfg.addAnnotatedClass( classUnderTest );
+        cfg.addAnnotatedClass( Course3.class );
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+        EntityTuplizer tuplizer = factory.getEntityPersister( Course3.class.getName() )
                 .getEntityMetamodel()
                 .getTuplizer();
         assertTrue(
@@ -220,7 +225,6 @@ public class AccessMappingTest extends BaseUnitTestCase {
     }
 
     @Test
-	@FailureExpectedWithNewMetamodel
     public void testDefaultPropertyAccessIsInherited() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Horse.class );
@@ -245,9 +249,8 @@ public class AccessMappingTest extends BaseUnitTestCase {
 		factory.close();
     }
 
-    @TestForIssue(jiraKey = "HHH-5004")
     @Test
-	@FailureExpectedWithNewMetamodel
+	@TestForIssue(jiraKey = "HHH-5004")
     public void testAccessOnClassAndId() throws Exception {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course8.class );

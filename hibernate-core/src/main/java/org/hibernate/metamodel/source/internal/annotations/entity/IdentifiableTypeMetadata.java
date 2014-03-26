@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.annotations.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -435,7 +436,7 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 				return getSuperType().getIdType();
 			}
 		}
-		return idType;
+		return idType == null ? IdType.NONE : idType;
 	}
 
 	public List<SingularAttribute> getIdentifierAttributes() {
@@ -446,7 +447,7 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 				return getSuperType().getIdentifierAttributes();
 			}
 		}
-		return identifierAttributes;
+		return identifierAttributes == null ? Collections.<SingularAttribute>emptyList() : identifierAttributes;
 	}
 
 	public BasicAttribute getVersionAttribute() {

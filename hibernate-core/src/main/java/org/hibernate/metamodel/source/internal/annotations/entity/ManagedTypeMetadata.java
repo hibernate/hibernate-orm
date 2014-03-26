@@ -375,7 +375,7 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 		}
 	}
 
-	protected boolean isMappedSuperclass(JavaTypeDescriptor javaTypeDescriptor) {
+	private boolean isMappedSuperclass(JavaTypeDescriptor javaTypeDescriptor) {
 		return javaTypeDescriptor.findLocalTypeAnnotation( JPADotNames.MAPPED_SUPERCLASS ) != null;
 	}
 
@@ -432,9 +432,6 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 					|| isMappedSuperclass( javaTypeDescriptor )
 					||  isEmbeddableType( javaTypeDescriptor )) {
 				collectPersistentAttributes();
-			}
-			else {
-				System.out.println();
 			}
 		}
 	}

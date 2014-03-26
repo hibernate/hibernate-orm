@@ -31,6 +31,7 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponentTestEntity;
 import org.hibernate.envers.test.integration.naming.VersionsJoinTableRangeComponent;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -57,6 +58,7 @@ public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityT
 
 	@Test
 	@Priority(10)
+	@FailureExpectedWithNewMetamodel( message = "Collction role is incorrect when contained in an @Embeddable" )
 	public void initData() {
 		// Revision 1
 		EntityManager em = getEntityManager();
@@ -97,6 +99,7 @@ public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityT
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "Fails because initData fails." )
 	public void testHasChangedId1() throws Exception {
 		List list =
 				queryForPropertyHasChanged(

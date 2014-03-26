@@ -31,12 +31,14 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponentTestEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = "Collection role is incorrect when contained in an @Embeddable" )
 public class OneToManyInComponent extends BaseEnversJPAFunctionalTestCase {
 	private Integer otmcte_id1;
 	private Integer ste_id1;

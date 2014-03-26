@@ -38,10 +38,9 @@ import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.Service;
 import org.hibernate.service.internal.ProvidedService;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -55,6 +54,7 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 		DriverConnectionCreator connectionCreator = new DriverConnectionCreator(
 				(Driver) Class.forName( "org.h2.Driver" ).newInstance(),
 				new StandardServiceRegistryImpl(
+						true,
 						new BootstrapServiceRegistryImpl(),
 						Collections.<StandardServiceInitiator>emptyList(),
 						Collections.<ProvidedService>emptyList(),

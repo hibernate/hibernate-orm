@@ -51,10 +51,13 @@ import org.hibernate.integrator.spi.Integrator;
  */
 public class BootstrapServiceRegistryBuilder {
 	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
+
 	private List<ClassLoader> providedClassLoaders;
 	private ClassLoaderService providedClassLoaderService;
 	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
-	
+
+	private boolean autoCloseRegistry = true;
+
 	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.
 	 *
@@ -191,6 +194,35 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
+	 * By default, when a ServiceRegistry is no longer referenced by any other
+	 * registries as a parent it will be closed.
+	 * <p/>
+	 * Some applications that explicitly build "shared registries" may want to
+	 * circumvent that behavior.
+	 * <p/>
+	 * This method indicates that the registry being built should not be
+	 * automatically closed.  The caller agrees to take responsibility to
+	 * close it themselves.
+	 *
+	 * @return this, for method chaining
+	 */
+	public BootstrapServiceRegistryBuilder disableAutoClose() {
+		this.autoCloseRegistry = false;
+		return this;
+	}
+
+	/**
+	 * See the discussion on {@link #disableAutoClose}.  This method enables
+	 * the auto-closing.
+	 *
+	 * @return this, for method chaining
+	 */
+	public BootstrapServiceRegistryBuilder enableAutoClose() {
+		this.autoCloseRegistry = true;
+		return this;
+	}
+
+	/**
 	 * Build the bootstrap registry.
 	 *
 	 * @return The built bootstrap registry
@@ -219,6 +251,7 @@ public class BootstrapServiceRegistryBuilder {
 
 
 		return new BootstrapServiceRegistryImpl(
+				autoCloseRegistry,
 				classLoaderService,
 				strategySelectorBuilder.buildSelector( classLoaderService ),
 				integratorService

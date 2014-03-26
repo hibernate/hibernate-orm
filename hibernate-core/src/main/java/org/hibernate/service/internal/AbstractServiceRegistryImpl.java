@@ -72,6 +72,7 @@ public abstract class AbstractServiceRegistryImpl
 	// assume 20 services for initial sizing
 	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
+	private boolean autoCloseRegistry;
 	private Set<ServiceRegistryImplementor> childRegistries;
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -79,20 +80,39 @@ public abstract class AbstractServiceRegistryImpl
 		this( (ServiceRegistryImplementor) null );
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
+	protected AbstractServiceRegistryImpl(boolean autoCloseRegistry) {
+		this( (ServiceRegistryImplementor) null, autoCloseRegistry );
+	}
+
 	protected AbstractServiceRegistryImpl(ServiceRegistryImplementor parent) {
+		this( parent, true );
+	}
+
+	protected AbstractServiceRegistryImpl(
+			ServiceRegistryImplementor parent,
+			boolean autoCloseRegistry) {
 		this.parent = parent;
 		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 
+		this.autoCloseRegistry = autoCloseRegistry;
 		this.parent.registerChild( this );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		this( bootstrapServiceRegistry, true );
+	}
+
+	public AbstractServiceRegistryImpl(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			boolean autoCloseRegistry) {
 		if ( ! ServiceRegistryImplementor.class.isInstance( bootstrapServiceRegistry ) ) {
 			throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
 		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 
+		this.autoCloseRegistry = autoCloseRegistry;
 		this.parent.registerChild( this );
 	}
 
@@ -382,11 +402,19 @@ public abstract class AbstractServiceRegistryImpl
 		}
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
-			log.debug(
-					"Implicitly destroying ServiceRegistry on de-registration " +
-							"of all child ServiceRegistries"
-			);
-			destroy();
+			if ( autoCloseRegistry ) {
+				log.debug(
+						"Implicitly destroying ServiceRegistry on de-registration " +
+								"of all child ServiceRegistries"
+				);
+				destroy();
+			}
+			else {
+				log.debug(
+						"Skipping implicitly destroying ServiceRegistry on de-registration " +
+								"of all child ServiceRegistries"
+				);
+			}
 		}
 	}
 }

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -41,7 +42,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -57,6 +58,7 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseUnitTestCase {
 	 * Test outcome of annotations exclusively.
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@Embeddables not automatically indexed by Jandex" )
 	public void testSimpleConvertOverrides() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override

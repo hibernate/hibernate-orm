@@ -1,7 +1,7 @@
 = AccessType
 :toc:
 
-Hibernate, has always had a notion of "property access strategies" to allow users to control the runtime
+Hibernate has always had a notion of "property access strategies" to allow users to control the runtime
 access part.  But JPA initially had no such concept.  JPA 1 was quite inflexible in terms of where you
 could place mapping annotations and in terms of telling the persistence provider how to access the values
 (get/set them) of persistent attributes at runtime.
@@ -14,7 +14,7 @@ runtime.  JPA defines this at a number of "levels", so lets start there.
 ====
 It is important to understand that generally speaking the phrase "access type" refers to both:
 
-* Determining which fields/methods constitute a persistent attribute
+* Determining which fields/methods constitute a persistent attribute, including indicating where to look for annotations
 * How the attribute is accessed at runtime
 
 There are some caveats to that, which we will cover as we go along.
@@ -102,7 +102,7 @@ public class PublishedDocument extends Document {
 ====
 
 In this case, we have defaulted hierarchy-level property access because of the placement of @Id on the getter.
-Again, Here we use the phrase "access type" in both senses:
+Again, here we use the phrase "access type" in both senses:
 
 * In terms of determining which members constitute persistent attributes, we look at the declared methods for
 each class looking for getter.  For the `Document` class, we have 3 getters that would indicate persistent
@@ -131,9 +131,10 @@ enum defining 2 values:
 
 JPA allows declaring the "access type" to use via the `javax.persistence.Access` annotation which can be applied to
 either a class or a field/method.  We will look at applying `javax.persistence.Access` to a field/method in the next
-section.  For now let's focus on the implications of applying it to a class.  Let's go back to the
-<<hierarchy-level-field,first example>> we saw where we had implicit hierarchy-level field access.  But lets instead
-use `javax.persistence.Access` and see what affect that has:
+section.  For now let's focus on the implications of applying it to a class.
+
+Let's go back to the <<hierarchy-level-field,first example>> we saw where we had implicit hierarchy-level field
+access.  But lets instead use `javax.persistence.Access` and see what affect that has:
 
 
 [[class-level-property]]

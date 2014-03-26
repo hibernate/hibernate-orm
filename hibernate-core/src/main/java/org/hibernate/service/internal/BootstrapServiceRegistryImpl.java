@@ -61,6 +61,7 @@ public class BootstrapServiceRegistryImpl
 	
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
 	
+	private final boolean autoCloseRegistry;
 	private boolean active = true;
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
@@ -71,10 +72,19 @@ public class BootstrapServiceRegistryImpl
 	public BootstrapServiceRegistryImpl() {
 		this( new ClassLoaderServiceImpl(), NO_INTEGRATORS );
 	}
-
+	
 	public BootstrapServiceRegistryImpl(
 			ClassLoaderService classLoaderService,
 			IntegratorService integratorService) {
+		this( true, classLoaderService, integratorService );
+	}
+
+	public BootstrapServiceRegistryImpl(
+			boolean autoCloseRegistry,
+			ClassLoaderService classLoaderService,
+			IntegratorService integratorService) {
+		this.autoCloseRegistry = autoCloseRegistry;
+		
 		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
 				this,
 				ClassLoaderService.class,
@@ -92,7 +102,7 @@ public class BootstrapServiceRegistryImpl
 	public BootstrapServiceRegistryImpl(
 			ClassLoaderService classLoaderService,
 			LinkedHashSet<Integrator> providedIntegrators) {
-		this( classLoaderService, new IntegratorServiceImpl( providedIntegrators, classLoaderService ) );
+		this( true, classLoaderService, new IntegratorServiceImpl( providedIntegrators, classLoaderService ) );
 	}
 
 
@@ -189,8 +199,13 @@ public class BootstrapServiceRegistryImpl
 		}
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
-			LOG.debug( "Implicitly destroying Boot-strap registry on de-registration " + "of all child ServiceRegistries" );
-			destroy();
+			if ( autoCloseRegistry ) {
+				LOG.debug( "Implicitly destroying Boot-strap registry on de-registration " + "of all child ServiceRegistries" );
+				destroy();
+			}
+			else {
+				LOG.debug( "Skipping implicitly destroying Boot-strap registry on de-registration " + "of all child ServiceRegistries" );
+			}
 		}
 	}
 

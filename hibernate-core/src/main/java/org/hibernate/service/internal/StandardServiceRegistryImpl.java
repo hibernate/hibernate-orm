@@ -48,7 +48,17 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 			List<BasicServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,
 			Map<?, ?> configurationValues) {
-		super( bootstrapServiceRegistry );
+		this( true, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
+	}
+	
+	@SuppressWarnings( {"unchecked"})
+	public StandardServiceRegistryImpl(
+			boolean autoCloseRegistry,
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			List<BasicServiceInitiator> serviceInitiators,
+			List<ProvidedService> providedServices,
+			Map<?, ?> configurationValues) {
+		super( bootstrapServiceRegistry, autoCloseRegistry );
 
 		this.configurationValues = configurationValues;
 

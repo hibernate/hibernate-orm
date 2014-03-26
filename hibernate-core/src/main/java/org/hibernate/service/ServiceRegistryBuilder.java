@@ -66,6 +66,8 @@ public class ServiceRegistryBuilder {
 	private final Map settings;
 	private final List<BasicServiceInitiator> initiators = standardInitiatorList();
 	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
+	
+	private boolean autoCloseRegistry = true;
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
@@ -232,6 +234,34 @@ public class ServiceRegistryBuilder {
 		providedServices.add( new ProvidedService( serviceRole, service ) );
 		return this;
 	}
+	/**
+	* By default, when a ServiceRegistry is no longer referenced by any other
+	* registries as a parent it will be closed.
+	* <p/>
+	* Some applications that explicitly build "shared registries" may want to
+	* circumvent that behavior.
+	* <p/>
+	* This method indicates that the registry being built should not be
+	* automatically closed. The caller agrees to take responsibility to
+	* close it themselves.
+	*
+	* @return this, for method chaining
+	*/
+	public ServiceRegistryBuilder disableAutoClose() {
+		this.autoCloseRegistry = false;
+		return this;
+	}
+
+	/**
+	* See the discussion on {@link #disableAutoClose}. This method enables
+	* the auto-closing.
+	*
+	* @return this, for method chaining
+	*/
+	public ServiceRegistryBuilder enableAutoClose() {
+		this.autoCloseRegistry = true;
+		return this;
+	}
 
 	/**
 	 * Build the service registry accounting for all settings and service initiators and services.
@@ -250,7 +280,7 @@ public class ServiceRegistryBuilder {
 			}
 		}
 
-		return new StandardServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
+		return new StandardServiceRegistryImpl( autoCloseRegistry, bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
 	}
 
 	/**

@@ -1,0 +1,176 @@
+= AccessType
+:toc:
+
+Hibernate, has always had a notion of "property access strategies" to allow users to control the runtime
+access part.  But JPA initially had no such concept.  JPA 1 was quite inflexible in terms of where you
+could place mapping annotations and in terms of telling the persistence provider how to access the values
+(get/set them) of persistent attributes at runtime.
+
+JPA 2.0 introduced the concept of `javax.persistence.AccessType` to allow better control over defining
+where the persistence provider look for mapping annotations and how it access the attribute values at
+runtime.  JPA defines this at a number of "levels", so lets start there.
+
+[NOTE]
+====
+It is important to understand that generally speaking the phrase "access type" refers to both:
+
+* Determining which fields/methods constitute a persistent attribute
+* How the attribute is accessed at runtime
+
+There are some caveats to that, which we will cover as we go along.
+====
+
+
+== Default (hierarchy) level
+
+Hibernate looks for the annotation marking the identifier of the entity hierarchy (either @Id or @EmbeddedId)
+and uses its placement to determine the default "access type" for the hierarchy.  Let's start with an example:
+
+
+[[hierarchy-level-field]]
+.Hierarchy-level FIELD access
+====
+[source, JAVA]
+----
+@Entity
+public class Document {
+    @Id
+    private Integer id;
+    private String title;
+    @Lob
+    private Clob content;
+}
+
+@Entity
+public class PublishedDocument extends Document {
+    private String isbn;
+    @Temporal(DATE)
+    private Date publishDate;
+}
+----
+====
+
+Here we have defaulted hierarchy-level field access because of the placement of @Id on a field.  Here we use the phrase
+"access type" in both senses:
+
+* In terms of determining which members constitute persistent attributes, we look at the declared fields for
+each class.  For the `Document` class, we have 3 fields that would be considered persistent attributes: `id`, `title`,
+and `content`; for `PublishedDocument` we have 2: `isbn` and `publishDate`.  To indicate that a field is not
+persistent, the field would be annotated with the `javax.persistence.Transient` annotation.
+* In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute
+values using `java.lang.reflection.Field`.
+
+
+Implicit property access works similarly:
+
+[[hierarchy-level-property]]
+.Hierarchy-level PROPERTY access
+====
+[source, JAVA]
+----
+@Entity
+public class Document {
+    private Integer id;
+    private String title;
+    private Clob content;
+
+    @Id
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    @Lob
+    public Clob getContent() { return content; }
+    public void setContent(Clob content) { this.content = content; }
+}
+
+@Entity
+public class PublishedDocument extends Document {
+    private String isbn;
+    private Date publishDate;
+
+    public String getIsbn() { return isbn; }
+    public void setIsbn(String isbn) { this.isbn = isbn; }
+
+    @Temporal(DATE)
+    public Date getPublishDate() { return publishDate; }
+    public void setPublishDate(Date publishDate) { this.publishDate = publishDate; }
+}
+----
+====
+
+In this case, we have defaulted hierarchy-level property access because of the placement of @Id on the getter.
+Again, Here we use the phrase "access type" in both senses:
+
+* In terms of determining which members constitute persistent attributes, we look at the declared methods for
+each class looking for getter.  For the `Document` class, we have 3 getters that would indicate persistent
+attributes: `getId()`, `getTitle()` and `getContent()`; for `PublishedDocument` we have 2: `getIsbn()` and
+`getPublishDate()`.  The "attribute name" is taken following JavaBean-conventions.  To indicate that a getter
+does is not indicate a persistent attribute, the getter would be annotated with the
+`javax.persistence.Transient` annotation.
+* In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute
+values using `java.lang.reflection.Method`.
+
+
+WARNING: Placing annotations on setters is NEVER appropriate.
+
+
+It is important to note that this is an implicit definition of "access type".  This actually describes the
+full support for defining "access type" in JPA 1.0.  Which brings us to...
+
+
+== Class level
+
+JPA 2.0 introduced a more explicit form of declaring "access type", represented by the `javax.persistence.AccessType`
+enum defining 2 values:
+
+* FIELD
+* PROPERTY
+
+JPA allows declaring the "access type" to use via the `javax.persistence.Access` annotation which can be applied to
+either a class or a field/method.  We will look at applying `javax.persistence.Access` to a field/method in the next
+section.  For now let's focus on the implications of applying it to a class.  Let's go back to the
+<<hierarchy-level-field,first example>> we saw where we had implicit hierarchy-level field access.  But lets instead
+use `javax.persistence.Access` and see what affect that has:
+
+
+[[class-level-property]]
+.Hierarchy-level FIELD access
+====
+[source, JAVA]
+----
+@Entity
+public class Document {
+    @Id
+    private Integer id;
+    private String title;
+    @Lob
+    private Clob content;
+}
+
+@Entity
+@Access(PROPERTY)
+public class PublishedDocument extends Document {
+    private String isbn;
+    private Date publishDate;
+
+    public String getIsbn() { return isbn; }
+    public void setIsbn(String isbn) { this.isbn = isbn; }
+
+    @Temporal(DATE)
+    public Date getPublishDate() { return publishDate; }
+    public void setPublishDate(Date publishDate) { this.publishDate = publishDate; }
+}
+----
+====
+
+The hierarchy still has an implicit field access type.  The `Document` class implicitly uses field access as the
+hierarchy default.  The `PublishedDocument` class however overrides that to say that it uses property access.  This
+class-level `javax.persistence.Access` override is only in effect for that class; if another entity extended from
+`PublishedClass` and did not specify a `javax.persistence.Access`, that entity subclass would use field access
+as the hierarchy default.  But in terms of the `PublishedDocument` class, it has the same effect we saw in the
+<<hierarchy-level-property,second example>> in that we now look to the getters within the `PublishedDocument` as
+defining persistent attributes and we use the getter and setter at runtime when access `PublishedDocument` attributes
+(but not the attributes it inherits).

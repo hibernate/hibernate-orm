@@ -36,8 +36,8 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.service.ConfigLoader;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -62,6 +62,8 @@ public class StandardServiceRegistryBuilder {
 	private final Map settings;
 	private final List<StandardServiceInitiator> initiators = standardInitiatorList();
 	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
+
+	private boolean autoCloseRegistry = true;
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final ConfigLoader configLoader;
@@ -256,6 +258,35 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
+	 * By default, when a ServiceRegistry is no longer referenced by any other
+	 * registries as a parent it will be closed.
+	 * <p/>
+	 * Some applications that explicitly build "shared registries" may want to
+	 * circumvent that behavior.
+	 * <p/>
+	 * This method indicates that the registry being built should not be
+	 * automatically closed.  The caller agrees to take responsibility to
+	 * close it themselves.
+	 *
+	 * @return this, for method chaining
+	 */
+	public StandardServiceRegistryBuilder disableAutoClose() {
+		this.autoCloseRegistry = false;
+		return this;
+	}
+
+	/**
+	 * See the discussion on {@link #disableAutoClose}.  This method enables
+	 * the auto-closing.
+	 *
+	 * @return this, for method chaining
+	 */
+	public StandardServiceRegistryBuilder enableAutoClose() {
+		this.autoCloseRegistry = true;
+		return this;
+	}
+
+	/**
 	 * Build the StandardServiceRegistry.
 	 *
 	 * @return The StandardServiceRegistry.
@@ -270,7 +301,13 @@ public class StandardServiceRegistryBuilder {
 		applyServiceContributingIntegrators();
 		applyServiceContributors();
 
-		return new StandardServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
+		return new StandardServiceRegistryImpl(
+				autoCloseRegistry,
+				bootstrapServiceRegistry,
+				initiators,
+				providedServices,
+				settingsCopy
+		);
 	}
 
 	@SuppressWarnings("deprecation")

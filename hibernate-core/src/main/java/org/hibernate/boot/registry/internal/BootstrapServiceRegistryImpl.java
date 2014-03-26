@@ -45,8 +45,6 @@ import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
-import org.jboss.logging.Logger;
-
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
  *     <li>{@link ClassLoaderService}</li>
@@ -66,6 +64,7 @@ public class BootstrapServiceRegistryImpl
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
 
+	private final boolean autoCloseRegistry;
 	private boolean active = true;
 
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
@@ -87,7 +86,6 @@ public class BootstrapServiceRegistryImpl
 	public BootstrapServiceRegistryImpl() {
 		this( new ClassLoaderServiceImpl(), NO_INTEGRATORS );
 	}
-
 	/**
 	 * Constructs a BootstrapServiceRegistryImpl.
 	 *
@@ -102,6 +100,28 @@ public class BootstrapServiceRegistryImpl
 	public BootstrapServiceRegistryImpl(
 			ClassLoaderService classLoaderService,
 			LinkedHashSet<Integrator> providedIntegrators) {
+		this( true, classLoaderService, providedIntegrators );
+	}
+
+	/**
+	 * Constructs a BootstrapServiceRegistryImpl.
+	 *
+	 * Do not use directly generally speaking.  Use {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder}
+	 * instead.
+	 *
+	 * @param autoCloseRegistry See discussion on
+	 * {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder#disableAutoClose}
+	 * @param classLoaderService The ClassLoaderService to use
+	 * @param providedIntegrators The group of explicitly provided integrators
+	 *
+	 * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+	 */
+	public BootstrapServiceRegistryImpl(
+			boolean autoCloseRegistry,
+			ClassLoaderService classLoaderService,
+			LinkedHashSet<Integrator> providedIntegrators) {
+		this.autoCloseRegistry = autoCloseRegistry;
+
 		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
 				this,
 				ClassLoaderService.class,
@@ -139,6 +159,31 @@ public class BootstrapServiceRegistryImpl
 			ClassLoaderService classLoaderService,
 			StrategySelector strategySelector,
 			IntegratorService integratorService) {
+		this( true, classLoaderService, strategySelector, integratorService );
+	}
+
+
+	/**
+	 * Constructs a BootstrapServiceRegistryImpl.
+	 *
+	 * Do not use directly generally speaking.  Use {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder}
+	 * instead.
+	 *
+	 * @param autoCloseRegistry See discussion on
+	 * {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder#disableAutoClose}
+	 * @param classLoaderService The ClassLoaderService to use
+	 * @param strategySelector The StrategySelector to use
+	 * @param integratorService The IntegratorService to use
+	 *
+	 * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+	 */
+	public BootstrapServiceRegistryImpl(
+			boolean autoCloseRegistry,
+			ClassLoaderService classLoaderService,
+			StrategySelector strategySelector,
+			IntegratorService integratorService) {
+		this.autoCloseRegistry = autoCloseRegistry;
+
 		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
 				this,
 				ClassLoaderService.class,
@@ -259,11 +304,19 @@ public class BootstrapServiceRegistryImpl
 		}
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
-			LOG.debug(
-					"Implicitly destroying Boot-strap registry on de-registration " +
-							"of all child ServiceRegistries"
-			);
-			destroy();
+			if ( autoCloseRegistry ) {
+				LOG.debug(
+						"Implicitly destroying Boot-strap registry on de-registration " +
+								"of all child ServiceRegistries"
+				);
+				destroy();
+			}
+			else {
+				LOG.debug(
+						"Skipping implicitly destroying Boot-strap registry on de-registration " +
+								"of all child ServiceRegistries"
+				);
+			}
 		}
 	}
 }

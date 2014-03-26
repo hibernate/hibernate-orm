@@ -61,7 +61,30 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 			List<StandardServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,
 			Map<?, ?> configurationValues) {
-		super( bootstrapServiceRegistry );
+		this( true, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
+	}
+
+	/**
+	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
+	 * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder} instead
+	 *
+	 * @param autoCloseRegistry See discussion on
+	 * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#disableAutoClose}
+	 * @param bootstrapServiceRegistry The bootstrap service registry.
+	 * @param serviceInitiators Any StandardServiceInitiators provided by the user to the builder
+	 * @param providedServices Any standard services provided directly to the builder
+	 * @param configurationValues Configuration values
+	 *
+	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
+	 */
+	@SuppressWarnings( {"unchecked"})
+	public StandardServiceRegistryImpl(
+			boolean autoCloseRegistry,
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			List<StandardServiceInitiator> serviceInitiators,
+			List<ProvidedService> providedServices,
+			Map<?, ?> configurationValues) {
+		super( bootstrapServiceRegistry, autoCloseRegistry );
 
 		this.configurationValues = configurationValues;
 

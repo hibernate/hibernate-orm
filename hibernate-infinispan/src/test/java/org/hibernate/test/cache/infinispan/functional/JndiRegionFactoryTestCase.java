@@ -119,12 +119,11 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	@Test
 	public void testRedeployment() throws Exception {
 		addEntityCheckCache( sessionFactory() );
-		sessionFactory().close();
 		bindToJndi = false;
+		rebuildSessionFactory();
 
-		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) configuration().buildSessionFactory( serviceRegistry() );
-		addEntityCheckCache( sessionFactory );
-		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory.getSettings().getRegionFactory();
+		addEntityCheckCache( sessionFactory() );
+		JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) sessionFactory().getSettings().getRegionFactory();
 		Cache cache = regionFactory.getCacheManager().getCache( "org.hibernate.test.cache.infinispan.functional.Item" );
 		assertEquals( ComponentStatus.RUNNING, cache.getStatus() );
 	}

@@ -126,5 +126,15 @@ public class CollectionAttributeJoin<O,E>
 		public String render(RenderingContext renderingContext) {
 			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
+
+		@Override
+		public String getPathIdentifier() {
+			return "treat(" + getAlias() + " as " + treatAsType.getName() + ")";
+		}
+
+		@Override
+		protected PathSource getPathSourceForSubPaths() {
+			return this;
+		}
 	}
 }

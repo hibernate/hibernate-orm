@@ -30,6 +30,7 @@ import javax.persistence.metamodel.EntityType;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.CriteriaSubqueryImpl;
 import org.hibernate.jpa.criteria.FromImplementor;
+import org.hibernate.jpa.criteria.PathSource;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
 
 /**
@@ -137,7 +138,21 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 		@Override
 		public String render(RenderingContext renderingContext) {
+			return getTreatFragment();
+		}
+
+		protected String getTreatFragment() {
 			return "treat(" + original.getAlias() + " as " + treatAsType.getName() + ")";
+		}
+
+		@Override
+		public String getPathIdentifier() {
+			return getTreatFragment();
+		}
+
+		@Override
+		protected PathSource getPathSourceForSubPaths() {
+			return this;
 		}
 	}
 

@@ -23,21 +23,20 @@
  */
 package org.hibernate.jpa.test.criteria;
 
-import javax.persistence.*;
+import java.util.List;
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity_;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -105,6 +104,26 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 
 		criteria.where(builder.like(builder.treat(root, Human.class).get(org.hibernate.jpa.test.criteria.Human_.name), "2%"));
 		List<String> animalList = em.createQuery( criteria ).getResultList();
+		Assert.assertEquals("treat(Animal as Human) was ignored",1, animalList.size());
+
+		em.close();
+	}
+
+	@Test
+	public void treatPathClassTestHqlControl() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Animal animal = new Animal();
+		animal.setId(100L);
+		animal.setName("2");
+		em.persist(animal);
+		Human human = new Human();
+		human.setId(200L);
+		human.setName("2");
+		em.persist(human);
+		em.getTransaction().commit();
+
+		List<String> animalList = em.createQuery( "select a.name from Animal a where treat (a as Human).name like '2%'" ).getResultList();
 		Assert.assertEquals("treat(Animal as Human) was ignored",1, animalList.size());
 
 		em.close();

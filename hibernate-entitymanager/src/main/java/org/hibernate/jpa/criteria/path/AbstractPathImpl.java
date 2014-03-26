@@ -139,10 +139,19 @@ public abstract class AbstractPathImpl<X>
 
 		SingularAttributePath<Y> path = (SingularAttributePath<Y>) resolveCachedAttributePath( attribute.getName() );
 		if ( path == null ) {
-			path = new SingularAttributePath<Y>( criteriaBuilder(), attribute.getJavaType(), this, attribute );
+			path = new SingularAttributePath<Y>(
+					criteriaBuilder(),
+					attribute.getJavaType(),
+					getPathSourceForSubPaths(),
+					attribute
+			);
 			registerAttributePath( attribute.getName(), path );
 		}
 		return path;
+	}
+
+	protected PathSource getPathSourceForSubPaths() {
+		return this;
 	}
 
 	@Override

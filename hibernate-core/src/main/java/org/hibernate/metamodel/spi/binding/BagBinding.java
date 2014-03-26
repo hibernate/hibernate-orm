@@ -24,6 +24,9 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 
 /**
@@ -35,11 +38,13 @@ public class BagBinding extends AbstractPluralAttributeBinding {
 	protected BagBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
+			PluralAttributeElementNature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
 		super(
 				container,
 				attribute,
@@ -47,7 +52,9 @@ public class BagBinding extends AbstractPluralAttributeBinding {
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 	}
 }

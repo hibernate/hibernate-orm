@@ -62,16 +62,12 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
-import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.Schema;
 
 /**
- * A helper for dealing with
  * @author Steve Ebersole
  * @author Gail Badner
  */
 public class Helper {
-	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 	public static final HibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new HibernateTypeSource() {
 		@Override
 		public String getName() {
@@ -168,16 +164,22 @@ public class Helper {
 				: qualifyIfNeeded( entityElement.getName(), unqualifiedClassPackage );
 	}
 
-	public static Caching createCaching(final JaxbCacheElement cacheElement, final String defaultRegionName) {
+	public static Caching createCaching(JaxbCacheElement cacheElement) {
 		if ( cacheElement == null ) {
 			// I'd really rather this be UNKNOWN, but the annotation version resolves this to TRUE/FALSE
 			return new Caching( TruthValue.FALSE );
 		}
-		final String region = cacheElement.getRegion() != null ? cacheElement.getRegion() : defaultRegionName;
+
 		final AccessType accessType = AccessType.fromExternalName( cacheElement.getUsage().value() );
 		final boolean cacheLazyProps = cacheElement.getInclude() == null
 				|| !"non-lazy".equals( cacheElement.getInclude().value() );
-		return new Caching( region, accessType, cacheLazyProps, TruthValue.TRUE );
+
+		return new Caching(
+				cacheElement.getRegion(),
+				accessType,
+				cacheLazyProps,
+				TruthValue.TRUE
+		);
 	}
 
 	public static Caching createNaturalIdCaching(JaxbNaturalIdCacheElement cacheElement) {
@@ -272,36 +274,11 @@ public class Helper {
 		return null;
 	}
 
-	public static Schema.Name determineDatabaseSchemaName(
-			String explicitSchemaName,
-			String explicitCatalogName,
-			LocalBindingContext bindingContext) {
-		return new Schema.Name(
-				resolveIdentifier(
-						explicitCatalogName,
-						bindingContext.getMappingDefaults().getCatalogName(),
-						bindingContext.quoteIdentifiersInContext()
-				), resolveIdentifier(
-						explicitSchemaName,
-						bindingContext.getMappingDefaults().getSchemaName(),
-						bindingContext.quoteIdentifiersInContext()
-				)
-		);
-	}
-
-	public static Identifier resolveIdentifier(String explicitName, String defaultName, boolean globalQuoting) {
-		String name = StringHelper.isNotEmpty( explicitName ) ? explicitName : defaultName;
-		if ( globalQuoting ) {
-			name = StringHelper.quote( name );
-		}
-		return Identifier.toIdentifier( name );
-	}
-
 	/**
 	 * Operates like SQL coalesce expression, except empty strings are treated as null.  Return the first non-empty value
 	 *
 	 * @param values The list of values.
-	 * @param <T>
+	 * @param <T> Generic type of values to coalesce
 	 *
 	 * @return The first non-empty value, or null if all values were empty
 	 */

@@ -38,6 +38,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.spi.JpaCallbackSource;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
@@ -108,6 +111,9 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	//for joined sub entitybinding only
 	private boolean isCascadeDeleteEnabled = false;
 
+	private AttributePath pathBase;
+	private AttributeRole roleBase;
+
 	public EntityBinding(HierarchyDetails hierarchyDetails) {
 		this.hierarchyDetails = hierarchyDetails;
 		this.superEntityBinding = null;
@@ -172,6 +178,9 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 
 	public void setEntity(Entity entity) {
 		this.entity = entity;
+
+		this.pathBase = new AttributePath();
+		this.roleBase = new AttributeRole( entity.getName() );
 	}
 
 	@Override
@@ -241,13 +250,19 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		String[] tokens = path.split( pathDelimiter );
 		AttributeBinding attributeBinding = locateAttributeBinding( tokens[ 0 ], searchParent );
 		for ( int i = 1 ; i < tokens.length && attributeBinding != null ; i++ )  {
-			if ( ! attributeBinding.getAttribute().isSingular() ||
-					! ( (SingularAttribute) attributeBinding.getAttribute() ).getSingularAttributeType().isAggregate() ) {
+			final AttributeBindingContainer attributeBindingContainer;
+			if ( AttributeBindingContainer.class.isInstance( attributeBinding ) ) {
+				attributeBindingContainer = (AttributeBindingContainer) attributeBinding;
+			}
+			else if ( EmbeddedAttributeBinding.class.isInstance( attributeBinding ) ) {
+				attributeBindingContainer = ( (EmbeddedAttributeBinding) attributeBinding ).getEmbeddableBinding();
+			}
+			else {
 				// TODO: improve this message!!!
 				throw new MappingException( "improve this!!!" );
 			}
-			AttributeBindingContainer attributeBindingContainer = (AttributeBindingContainer) attributeBinding;
-			attributeBinding = attributeBindingContainer.locateAttributeBinding( tokens[ i ] );
+
+			attributeBinding = attributeBindingContainer.locateAttributeBinding( tokens[i] );
 		}
 		return attributeBinding;
 	}
@@ -304,8 +319,13 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	@Override
-	public String getPathBase() {
-		return "";
+	public AttributeRole getRoleBase() {
+		return roleBase;
+	}
+
+	@Override
+	public AttributePath getPathBase() {
+		return pathBase;
 	}
 
 	@Override
@@ -499,7 +519,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		);
 	}
 
-	public CompositeAttributeBinding makeVirtualCompositeAttributeBinding(
+	public EmbeddedAttributeBinding makeVirtualCompositeAttributeBinding(
 			SingularAttribute syntheticAttribute,
 			MetaAttributeContext metaAttributeContext,
 			List<SingularAttributeBinding> idAttributeBindings) {
@@ -509,14 +529,15 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 			);
 		}
 		// TODO: make sure all attributes are singular
-		final CompositeAttributeBinding binding =
-				CompositeAttributeBinding.createNonAggregatedCompositeAttributeBinding(
-						this,
-						syntheticAttribute,
-						SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
-						metaAttributeContext,
-						idAttributeBindings
-				);
+		final EmbeddedAttributeBinding binding = EmbeddedAttributeBinding.createVirtualEmbeddedAttributeBinding(
+				this,
+				syntheticAttribute,
+				NaturalIdMutability.NOT_NATURAL_ID,
+				metaAttributeContext,
+				getRoleBase(),
+				getPathBase(),
+				idAttributeBindings
+		);
 		registerAttributeBinding( binding );
 		return binding;
 	}

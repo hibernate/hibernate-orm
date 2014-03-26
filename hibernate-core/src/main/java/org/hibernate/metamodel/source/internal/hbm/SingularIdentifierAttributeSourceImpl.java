@@ -31,12 +31,16 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIdElement;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 
 /**
  * Implementation for {@code <id/>} mappings
@@ -46,12 +50,17 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 class SingularIdentifierAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements SingularAttributeSource {
+
 	private final JaxbIdElement idElement;
 	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
+	private final AttributeRole attributeRole;
+	private final AttributePath attributePath;
+
 	public SingularIdentifierAttributeSourceImpl(
 			MappingDocument mappingDocument,
+			AttributeSourceContainer container,
 			final JaxbIdElement idElement) {
 		super( mappingDocument );
 		this.idElement = idElement;
@@ -113,6 +122,9 @@ class SingularIdentifierAttributeSourceImpl
                     }
                 }
 		);
+
+		this.attributeRole = container.getAttributeRoleBase().append( getName() );
+		this.attributePath = container.getAttributePathBase().append( getName() );
 	}
 
 	@Override
@@ -120,6 +132,16 @@ class SingularIdentifierAttributeSourceImpl
 		return idElement.getName() == null
 				? "id"
 				: idElement.getName();
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override
@@ -143,8 +165,8 @@ class SingularIdentifierAttributeSourceImpl
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
-		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+	public NaturalIdMutability getNaturalIdMutability() {
+		return NaturalIdMutability.NOT_NATURAL_ID;
 	}
 
 	@Override
@@ -153,8 +175,8 @@ class SingularIdentifierAttributeSourceImpl
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.BASIC;
 	}
 
 	@Override

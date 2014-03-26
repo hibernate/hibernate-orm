@@ -31,7 +31,7 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
@@ -55,11 +55,11 @@ public class ComponentMetamodel implements Serializable {
 
 	public ComponentMetamodel(
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer component,
+			EmbeddableBinding component,
 			boolean isIdentifierAttributeBinding,
 			boolean isIdentifierMapper) {
 		this.isKey = isIdentifierAttributeBinding;
-		this.role = component.getPathBase();
+		this.role = component.getPathBase().getFullPath();
 		propertySpan = component.attributeBindingSpan();
 		properties = new StandardProperty[propertySpan];
 		int i = 0;

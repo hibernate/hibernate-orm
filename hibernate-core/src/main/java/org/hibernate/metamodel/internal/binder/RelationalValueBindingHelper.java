@@ -35,9 +35,9 @@ import org.hibernate.metamodel.source.spi.DerivedValueSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSourceContainer;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
@@ -92,15 +92,15 @@ public class RelationalValueBindingHelper {
 			final List<Binder.DefaultNamingStrategy> defaultNameStrategies,
 			final boolean forceNonNullable) {
 		final List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
-		final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+		final NaturalIdMutability naturalIdMutability;
 		if ( SingularAttributeSource.class.isInstance( valueSourceContainer ) ) {
 			naturalIdMutability = SingularAttributeSource.class.cast( valueSourceContainer ).getNaturalIdMutability();
 		}
 		else {
-			naturalIdMutability = SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+			naturalIdMutability = NaturalIdMutability.NOT_NATURAL_ID;
 		}
-		final boolean isNaturalId = naturalIdMutability != SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
-		final boolean isImmutableNaturalId = isNaturalId && ( naturalIdMutability == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE );
+		final boolean isNaturalId = naturalIdMutability != NaturalIdMutability.NOT_NATURAL_ID;
+		final boolean isImmutableNaturalId = isNaturalId && ( naturalIdMutability == NaturalIdMutability.IMMUTABLE );
 		final boolean reallyForceNonNullable = forceNonNullable ; //|| isNaturalId; todo is a natural id column should be not nullable?
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {

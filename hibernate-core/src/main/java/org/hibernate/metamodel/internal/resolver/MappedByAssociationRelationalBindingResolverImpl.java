@@ -32,17 +32,17 @@ import org.hibernate.metamodel.internal.binder.BinderRootContext;
 import org.hibernate.metamodel.internal.binder.ForeignKeyHelper;
 import org.hibernate.metamodel.internal.binder.RelationalValueBindingHelper;
 import org.hibernate.metamodel.source.spi.AssociationSource;
-import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.source.spi.MappedByAssociationSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeElementSourceManyToMany;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingManyToMany;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
@@ -166,7 +166,7 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 	@Override
 	public List<RelationalValueBinding> resolveManyToManyElementRelationalValueBindings(
 			final EntityBinding entityBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
+			final PluralAttributeElementSourceManyToMany elementSource,
 			final TableSpecification collectionTable,
 			final EntityBinding referencedEntityBinding) {
 		{
@@ -198,7 +198,7 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 	@Override
 	public ForeignKey resolveManyToManyElementForeignKey(
 		final EntityBinding entityBinding,
-		final ManyToManyPluralAttributeElementSource elementSource,
+		final PluralAttributeElementSourceManyToMany elementSource,
 		final TableSpecification collectionTable,
 		final List<RelationalValueBinding> relationalValueBindings,
 		final EntityBinding referencedEntityBinding) {
@@ -246,9 +246,9 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 		}
 		else {
 			final PluralAttributeBinding pluralOwnerAttributeBinding = (PluralAttributeBinding) ownerAttributeBinding;
-			final ManyToManyPluralAttributeElementBinding ownerElementBinding =
-					(ManyToManyPluralAttributeElementBinding) pluralOwnerAttributeBinding.getPluralAttributeElementBinding();
-			return ownerElementBinding.getRelationalValueBindings();
+			final PluralAttributeElementBindingManyToMany ownerElementBinding =
+					(PluralAttributeElementBindingManyToMany) pluralOwnerAttributeBinding.getPluralAttributeElementBinding();
+			return ownerElementBinding.getRelationalValueContainer().relationalValueBindings();
 		}
 	}
 
@@ -268,8 +268,8 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 		}
 		else {
 			final PluralAttributeBinding pluralOwnerAttributeBinding = (PluralAttributeBinding) ownerAttributeBinding;
-			final ManyToManyPluralAttributeElementBinding ownerElementBinding =
-					(ManyToManyPluralAttributeElementBinding) pluralOwnerAttributeBinding.getPluralAttributeElementBinding();
+			final PluralAttributeElementBindingManyToMany ownerElementBinding =
+					(PluralAttributeElementBindingManyToMany) pluralOwnerAttributeBinding.getPluralAttributeElementBinding();
 			foreignKey = ownerElementBinding.getForeignKey();
 		}
 		if ( attributeSource.getKeySource().isCascadeDeleteEnabled() ) {
@@ -293,8 +293,8 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 		}
 		else {
 			final PluralAttributeBinding ownerPluralAttributeBinding = (PluralAttributeBinding) ownerAttributeBinding;
-			final ManyToManyPluralAttributeElementBinding ownerElementBinding =
-					(ManyToManyPluralAttributeElementBinding) ownerPluralAttributeBinding
+			final PluralAttributeElementBindingManyToMany ownerElementBinding =
+					(PluralAttributeElementBindingManyToMany) ownerPluralAttributeBinding
 							.getPluralAttributeElementBinding();
 			referencedAttributeBinding = attributeBindingContainer.seekEntityBinding().locateAttributeBinding(
 					ownerElementBinding.getForeignKey().getTargetTable(),

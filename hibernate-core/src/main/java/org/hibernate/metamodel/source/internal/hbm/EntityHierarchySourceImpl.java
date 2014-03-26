@@ -32,7 +32,6 @@ import org.hibernate.TruthValue;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbClassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeIdElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbDiscriminatorElement;
@@ -41,9 +40,8 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbMultiTenancyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbPolymorphismAttribute;
 import org.hibernate.metamodel.source.spi.AggregatedCompositeIdentifierSource;
-import org.hibernate.metamodel.source.spi.AttributeSource;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
 import org.hibernate.metamodel.source.spi.DiscriminatorSource;
+import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.EntityHierarchySource;
 import org.hibernate.metamodel.source.spi.EntitySource;
 import org.hibernate.metamodel.source.spi.IdentifierSource;
@@ -56,10 +54,12 @@ import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.source.spi.VersionAttributeSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 /**
  * @author Steve Ebersole
@@ -74,7 +74,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		this.rootEntitySource = rootEntitySource;
 		this.rootEntitySource.injectHierarchy( this );
 
-		this.caching = Helper.createCaching( entityElement().getCache(), getEntityName() );
+		this.caching = Helper.createCaching( entityElement().getCache() );
 		this.naturalIdCaching = Helper.createNaturalIdCaching(
 				rootEntitySource.entityElement().getNaturalIdCache()
 		);
@@ -147,12 +147,14 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		if ( entityElement().getVersion() != null ) {
 			return new VersionAttributeSourceImpl(
 					rootEntitySource.sourceMappingDocument(),
+					rootEntitySource,
 					entityElement().getVersion()
 			);
 		}
 		else if ( entityElement().getTimestamp() != null ) {
 			return new TimestampAttributeSourceImpl(
 					rootEntitySource.sourceMappingDocument(),
+					rootEntitySource,
 					entityElement().getTimestamp()
 			);
 		}
@@ -339,7 +341,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	private class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 		@Override
 		public SingularAttributeSource getIdentifierAttributeSource() {
-			return new SingularIdentifierAttributeSourceImpl( sourceMappingDocument(), entityElement().getId() );
+			return new SingularIdentifierAttributeSourceImpl( sourceMappingDocument(), rootEntitySource, entityElement().getId() );
 		}
 
 		@Override
@@ -388,11 +390,11 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	}
 
 	private class AggregatedCompositeIdentifierSourceImpl implements AggregatedCompositeIdentifierSource {
-		private final CompositeIdentifierComponentAttributeSourceImpl componentAttributeSource
-				= new CompositeIdentifierComponentAttributeSourceImpl();
+		private final CompositeIdentifierEmbeddedAttributeSourceImpl componentAttributeSource
+				= new CompositeIdentifierEmbeddedAttributeSourceImpl();
 
 		@Override
-		public ComponentAttributeSource getIdentifierAttributeSource() {
+		public EmbeddedAttributeSource getIdentifierAttributeSource() {
 			return componentAttributeSource;
 		}
 
@@ -447,56 +449,34 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		}
 	}
 
-	private class CompositeIdentifierComponentAttributeSourceImpl extends AbstractComponentAttributeSourceImpl {
-		protected CompositeIdentifierComponentAttributeSourceImpl() {
+	private class CompositeIdentifierEmbeddedAttributeSourceImpl extends AbstractEmbeddedAttributeSourceImpl {
+		private final List<JaxbKeyPropertyElement> keyPropertyElementList;
+		private final List<JaxbKeyManyToOneElement> keyManyToOneElementList;
+
+		protected CompositeIdentifierEmbeddedAttributeSourceImpl() {
 			super(
 					EntityHierarchySourceImpl.this.sourceMappingDocument(),
-					entityElement().getCompositeId(),
 					rootEntitySource,
-					null,
-					SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID
+					rootEntitySource.getAttributeRoleBase().append( "id" ),
+					rootEntitySource.getAttributePathBase().append( "id" ),
+					entityElement().getCompositeId(),
+					new EmbeddableJaxbSourceImpl( entityElement().getCompositeId() ),
+					NaturalIdMutability.NOT_NATURAL_ID,
+					null
 			);
-		}
 
-		protected JaxbCompositeIdElement compositeIdElement() {
-			return (JaxbCompositeIdElement) componentSourceElement();
-		}
+			this.keyPropertyElementList = new ArrayList<JaxbKeyPropertyElement>();
+			this.keyManyToOneElementList = new ArrayList<JaxbKeyManyToOneElement>();
 
-		@Override
-		protected List<AttributeSource> buildAttributeSources() {
-			List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
-			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
-			final List list = compositeId.getKeyPropertyOrKeyManyToOne();
-			for ( final Object obj : list ) {
+			final JaxbCompositeIdElement compositeIdElement = entityElement().getCompositeId();
+			for ( final Object obj : compositeIdElement.getKeyPropertyOrKeyManyToOne() ) {
 				if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
-					JaxbKeyPropertyElement key = JaxbKeyPropertyElement.class.cast( obj );
-					attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), key ) );
+					keyPropertyElementList.add( JaxbKeyPropertyElement.class.cast( obj ) );
 				}
-				if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
-					JaxbKeyManyToOneElement key = JaxbKeyManyToOneElement.class.cast( obj );
-					attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), key ) );
+				else if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
+					keyManyToOneElementList.add( JaxbKeyManyToOneElement.class.cast( obj ) );
 				}
 			}
-			return attributeSources;
-		}
-
-
-		@Override
-		public String getParentReferenceAttributeName() {
-			// composite-id cannot name parent
-			return null;
-		}
-
-		@Override
-		public String getExplicitTuplizerClassName() {
-			// composite-id cannot name tuplizer
-			return null;
-		}
-
-		@Override
-		public PropertyGeneration getGeneration() {
-			// identifiers have implicit generation
-			return null;
 		}
 
 		@Override
@@ -505,13 +485,18 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		}
 
 		@Override
-		public boolean isIncludedInOptimisticLocking() {
-			return false;
+		public AttributePath getAttributePath() {
+			return getEmbeddableSource().getAttributePathBase();
 		}
 
 		@Override
-		public List<RelationalValueSource> relationalValueSources() {
-			return null;
+		public AttributeRole getAttributeRole() {
+			return getEmbeddableSource().getAttributeRoleBase();
+		}
+
+		@Override
+		public boolean isIncludedInOptimisticLocking() {
+			return false;
 		}
 
 		@Override
@@ -529,6 +514,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			return false;
 		}
 	}
+
 
 	private class NonAggregatedCompositeIdentifierSourceImpl implements NonAggregatedCompositeIdentifierSource {
 		@Override
@@ -549,11 +535,23 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			for ( final Object obj : list ) {
 				if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
 					JaxbKeyPropertyElement key = JaxbKeyPropertyElement.class.cast( obj );
-					attributeSources.add( new IdentifierKeyAttributeSourceImpl( sourceMappingDocument(), key ) );
+					attributeSources.add(
+							new IdentifierKeyAttributeSourceImpl(
+									sourceMappingDocument(),
+									rootEntitySource,
+									key
+							)
+					);
 				}
 				if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
 					JaxbKeyManyToOneElement key = JaxbKeyManyToOneElement.class.cast( obj );
-					attributeSources.add( new IdentifierKeyManyToOneSourceImpl( sourceMappingDocument(), key ) );
+					attributeSources.add(
+							new IdentifierKeyManyToOneSourceImpl(
+									sourceMappingDocument(),
+									rootEntitySource,
+									key
+							)
+					);
 				}
 			}
 
@@ -599,6 +597,55 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		public Collection<? extends ToolingHintSource> getToolingHintSources() {
 			return entityElement().getCompositeId().getMeta();
 		}
+	}
+
+	public static class EmbeddableJaxbSourceImpl extends AbstractEmbeddableJaxbSource {
+		private final JaxbCompositeIdElement compositeIdElement;
+
+		private final List<JaxbKeyPropertyElement> keyPropertyElementList;
+		private final List<JaxbKeyManyToOneElement> keyManyToOneElementList;
+
+		public EmbeddableJaxbSourceImpl(JaxbCompositeIdElement compositeIdElement) {
+			this.compositeIdElement = compositeIdElement;
+
+			this.keyPropertyElementList = new ArrayList<JaxbKeyPropertyElement>();
+			this.keyManyToOneElementList = new ArrayList<JaxbKeyManyToOneElement>();
+
+			for ( final Object obj : compositeIdElement.getKeyPropertyOrKeyManyToOne() ) {
+				if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
+					keyPropertyElementList.add( JaxbKeyPropertyElement.class.cast( obj ) );
+				}
+				else if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
+					keyManyToOneElementList.add( JaxbKeyManyToOneElement.class.cast( obj ) );
+				}
+			}
+		}
+
+		@Override
+		public String getClazz() {
+			return compositeIdElement.getClazz();
+		}
+
+		@Override
+		public String findParent() {
+			return null;
+		}
+
+		@Override
+		public String findTuplizer() {
+			return null;
+		}
+
+		@Override
+		public List<JaxbKeyPropertyElement> getKeyPropertyElementList() {
+			return keyPropertyElementList;
+		}
+
+		@Override
+		public List<JaxbKeyManyToOneElement> getKeyManyToOneElementList() {
+			return keyManyToOneElementList;
+		}
+
 	}
 
 	private Class determineJpaIdClass() {

@@ -28,6 +28,7 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -37,6 +38,7 @@ import org.jboss.jandex.AnnotationValue;
  */
 public class PluralAttributeElementDetailsEntity implements PluralAttributeElementDetails {
 	private final ClassDescriptor javaType;
+	private final PluralAttributeElementNature elementNature;
 	private final AttributeTypeResolver typeResolver;
 
 	public PluralAttributeElementDetailsEntity(
@@ -51,6 +53,7 @@ public class PluralAttributeElementDetailsEntity implements PluralAttributeEleme
 			);
 		}
 
+		this.elementNature = decodeElementNature( pluralAttribute );
 		this.typeResolver = buildTypeResolver( pluralAttribute, javaType );
 	}
 
@@ -99,6 +102,25 @@ public class PluralAttributeElementDetailsEntity implements PluralAttributeEleme
 		return (ClassDescriptor) inferredElementType;
 	}
 
+	private PluralAttributeElementNature decodeElementNature(PluralAttribute pluralAttribute) {
+		switch ( pluralAttribute.getNature() ) {
+			case MANY_TO_ANY: {
+				return PluralAttributeElementNature.MANY_TO_ANY;
+			}
+			case MANY_TO_MANY: {
+				return PluralAttributeElementNature.MANY_TO_MANY;
+			}
+			case ONE_TO_MANY: {
+				return PluralAttributeElementNature.ONE_TO_MANY;
+			}
+			default: {
+				throw pluralAttribute.getContext().makeMappingException(
+						"Unexpected plural attribute nature : " + pluralAttribute.getNature()
+				);
+			}
+		}
+	}
+
 	private AttributeTypeResolver buildTypeResolver(PluralAttribute pluralAttribute, ClassDescriptor javaType) {
 		// todo : No idea what this should be for entities : return the entity name as type name?  return no type name?
 		return null;
@@ -107,6 +129,11 @@ public class PluralAttributeElementDetailsEntity implements PluralAttributeEleme
 	@Override
 	public JavaTypeDescriptor getJavaType() {
 		return javaType;
+	}
+
+	@Override
+	public PluralAttributeElementNature getElementNature() {
+		return elementNature;
 	}
 
 	@Override

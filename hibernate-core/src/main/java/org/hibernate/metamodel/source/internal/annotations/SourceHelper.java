@@ -43,7 +43,7 @@ import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMet
 import org.hibernate.metamodel.source.internal.annotations.entity.MappedSuperclassTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.entity.RootEntityTypeMetadata;
 import org.hibernate.metamodel.source.spi.AttributeSource;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
+import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
@@ -57,7 +57,7 @@ import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
 public class SourceHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SourceHelper.class );
 
-	// todo : the walking supers bits here is do to the total lack of understanding of MappedSuperclasses in Binder...
+	// todo : the walking supers bits here is due to the total lack of understanding of MappedSuperclasses in Binder...
 
 	public static List<AttributeSource> buildAttributeSources(
 			ManagedTypeMetadata managedTypeMetadata,
@@ -241,7 +241,7 @@ public class SourceHelper {
 				BasicAttribute attribute,
 				OverrideAndConverterCollector overrideAndConverterCollector);
 
-		public ComponentAttributeSource buildEmbeddedAttribute(
+		public EmbeddedAttributeSource buildEmbeddedAttribute(
 				EmbeddedAttribute attribute,
 				OverrideAndConverterCollector overrideAndConverterCollector);
 
@@ -277,7 +277,7 @@ public class SourceHelper {
 		}
 
 		@Override
-		public ComponentAttributeSource buildEmbeddedAttribute(
+		public EmbeddedAttributeSource buildEmbeddedAttribute(
 				EmbeddedAttribute attribute,
 				OverrideAndConverterCollector overrideAndConverterCollector) {
 			return new EmbeddedAttributeSourceImpl( attribute, false, false );
@@ -304,10 +304,15 @@ public class SourceHelper {
 				case SET: {
 					return new PluralAttributeSourceImpl( attribute, overrideAndConverterCollector );
 				}
+				case ID_BAG: {
+					return new PluralAttributeIdBagSourceImpl( attribute, overrideAndConverterCollector );
+				}
+				case MAP: {
+					return new PluralAttributeMapSourceImpl( attribute, overrideAndConverterCollector );
+				}
 				case ARRAY:
-				case MAP:
 				case LIST: {
-					return new IndexedPluralAttributeSourceImpl( attribute, overrideAndConverterCollector );
+					return new PluralAttributeIndexedSourceImpl( attribute, overrideAndConverterCollector );
 				}
 				default: {
 					throw new AssertionFailure(
@@ -343,7 +348,7 @@ public class SourceHelper {
 		public static final PluralAttributesDisallowedAttributeBuilder INSTANCE = new PluralAttributesDisallowedAttributeBuilder();
 
 		@Override
-		public ComponentAttributeSource buildEmbeddedAttribute(
+		public EmbeddedAttributeSource buildEmbeddedAttribute(
 				EmbeddedAttribute attribute,
 				OverrideAndConverterCollector overrideAndConverterCollector) {
 			return new EmbeddedAttributeSourceImpl( attribute, false, true );
@@ -402,7 +407,7 @@ public class SourceHelper {
 		}
 
 		@Override
-		public ComponentAttributeSource buildEmbeddedAttribute(
+		public EmbeddedAttributeSource buildEmbeddedAttribute(
 				EmbeddedAttribute attribute,
 				OverrideAndConverterCollector overrideAndConverterCollector) {
 			return new EmbeddedAttributeSourceImpl( attribute, true, false );

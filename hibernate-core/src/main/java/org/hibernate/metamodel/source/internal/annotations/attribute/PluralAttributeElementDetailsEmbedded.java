@@ -32,8 +32,11 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.type.Attrib
 import org.hibernate.metamodel.source.internal.annotations.entity.EmbeddableTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -99,12 +102,20 @@ public class PluralAttributeElementDetailsEmbedded implements PluralAttributeEle
 	}
 
 	private EmbeddableTypeMetadata buildEmbeddedMetadata(PluralAttribute pluralAttribute, ClassDescriptor javaType) {
+		final boolean isMap = pluralAttribute.getPluralAttributeNature() == PluralAttributeNature.MAP;
+		final AttributeRole role = isMap
+				? pluralAttribute.getRole().append( "value" )
+				: pluralAttribute.getRole().append( "element" );
+		final AttributePath path = isMap
+				? pluralAttribute.getPath().append( "value" )
+				: pluralAttribute.getPath();
+
 		// we pass `this` (as EmbeddedContainer) in order to route calls back properly.
 		return new EmbeddableTypeMetadata(
 				javaType,
 				this,
-				pluralAttribute.getRole().append( "element" ),
-				pluralAttribute.getPath(),
+				role,
+				path,
 				pluralAttribute.getAccessType(),
 				pluralAttribute.getAccessorStrategy(),
 				pluralAttribute.getContext()
@@ -114,6 +125,11 @@ public class PluralAttributeElementDetailsEmbedded implements PluralAttributeEle
 	@Override
 	public JavaTypeDescriptor getJavaType() {
 		return javaType;
+	}
+
+	@Override
+	public PluralAttributeElementNature getElementNature() {
+		return PluralAttributeElementNature.AGGREGATE;
 	}
 
 	@Override
@@ -149,7 +165,7 @@ public class PluralAttributeElementDetailsEmbedded implements PluralAttributeEle
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getContainerNaturalIdMutability() {
+	public NaturalIdMutability getContainerNaturalIdMutability() {
 		return null;
 	}
 

@@ -23,14 +23,11 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.List;
-
-import org.hibernate.FetchMode;
-import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 
 
 /**
- * Common information pertaining to the binding of the various plural attribute natures (one-to-many, basic, etc).
+ * Common "descriptor" for describing the elements of a persistent collection.
  *
  * @author Steve Ebersole
  */
@@ -42,30 +39,12 @@ public interface PluralAttributeElementBinding {
 	 */
 	PluralAttributeBinding getPluralAttributeBinding();
 
-	List<Value> getValues();
-
-	/**
-	 * Retrieve the relational aspect of the element binding. Essentially describes the column(s) to which the
-	 * binding maps the elements
-	 *
-	 * @return The relation information.
-	 */
-	List<RelationalValueBinding> getRelationalValueBindings();
-
-	boolean isNullable();
-
-	boolean hasDerivedValue();
-
-	boolean hasNonNullableValue();
-
-	FetchMode getFetchMode();
-
 	/**
 	 * Retrieves an enumeration describing the mapping nature of the collection's elements.
-	 * 
+	 *
 	 * @return The nature enum.
 	 */
-	Nature getNature();
+	PluralAttributeElementNature getNature();
 
 	/**
 	 * Retrieve the Hibernate type descriptor describing the mapping-typing of the elements.
@@ -74,52 +53,7 @@ public interface PluralAttributeElementBinding {
 	 */
 	HibernateTypeDescriptor getHibernateTypeDescriptor();
 
-	/**
-	 * Describes the nature of plural attribute elements in terms of relational implications.
-	 *
-	 * @author Steve Ebersole
-	 * @author Gail Badner
-	 */
-	public static enum Nature {
-		/**
-		 * The collection elements are basic, simple values.
-		 */
-		BASIC( false, false ),
-		/**
-		 * The collection elements are compositions.
-		 */
-		AGGREGATE( false, true ),
-		/**
-		 * The collection elements represent entity's in a one-to-many association.
-		 */
-		ONE_TO_MANY,
-		/**
-		 * The collection elements represent entity's in a many-to-many association.
-		 */
-		MANY_TO_MANY,
-		/**
-		 * The collection elements represent entity's in a multi-valued ANY mapping.
-		 */
-		MANY_TO_ANY;
+	// not a fan of this, but for now...
 
-		private final boolean isAssociation;
-		private final boolean isCascadeable;
-
-		private Nature() {
-			this( true, true );
-		}
-
-		private Nature(boolean association, boolean cascadeable) {
-			this.isAssociation = association;
-			this.isCascadeable = cascadeable;
-		}
-
-		public boolean isAssociation() {
-			return isAssociation;
-		}
-
-		public boolean isCascadeable() {
-			return isCascadeable;
-		}
-	}
+	RelationalValueBindingContainer getRelationalValueContainer();
 }

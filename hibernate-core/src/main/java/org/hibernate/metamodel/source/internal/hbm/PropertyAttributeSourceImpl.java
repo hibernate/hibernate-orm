@@ -31,12 +31,16 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbPropertyElement;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 
 /**
  * Implementation for {@code <property/>} mappings
@@ -47,14 +51,18 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	private final JaxbPropertyElement propertyElement;
 	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private final NaturalIdMutability naturalIdMutability;
 	private final String containingTableName;
+
+	private final AttributeRole attributeRole;
+	private final AttributePath attributePath;
 
 	PropertyAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
+			AttributeSourceContainer container,
 			final JaxbPropertyElement propertyElement,
 			final String logicalTableName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+			NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument );
 		this.propertyElement = propertyElement;
 		this.typeSource = new HibernateTypeSource() {
@@ -133,11 +141,24 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 				}
 		);
 		this.naturalIdMutability = naturalIdMutability;
+
+		this.attributeRole = container.getAttributeRoleBase().append( getName() );
+		this.attributePath = container.getAttributePathBase().append( getName() );
 	}
 
 	@Override
 	public String getName() {
 		return propertyElement.getName();
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override
@@ -161,7 +182,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+	public NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 
@@ -171,8 +192,8 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.BASIC;
 	}
 
 	@Override

@@ -26,6 +26,10 @@ package org.hibernate.metamodel.spi.binding;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 
 /**
@@ -38,12 +42,14 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 	public MapBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
-			PluralAttributeIndexBinding.Nature pluralAttributeIndexNature,
+			PluralAttributeElementNature pluralAttributeElementNature,
+			PluralAttributeIndexNature pluralAttributeIndexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
 		super(
 				container,
 				attribute,
@@ -51,7 +57,9 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 		pluralAttributeIndexBinding = createPluralAttributeIndexBinding( pluralAttributeIndexNature );
 	}
@@ -66,7 +74,7 @@ public class MapBinding extends AbstractPluralAttributeBinding implements Indexe
 		return pluralAttributeIndexBinding;
 	}
 
-	private PluralAttributeIndexBinding createPluralAttributeIndexBinding(PluralAttributeIndexBinding.Nature nature) {
+	private PluralAttributeIndexBinding createPluralAttributeIndexBinding(PluralAttributeIndexNature nature) {
 		switch ( nature ) {
 			case BASIC: {
 				return new BasicPluralAttributeIndexBinding( this );

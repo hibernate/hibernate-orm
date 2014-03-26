@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.internal.tools;
 
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
@@ -87,9 +88,9 @@ public abstract class MappingTools {
 		else if ( attributeBinding instanceof PluralAttributeBinding ) {
 			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
 			final PluralAttributeElementBinding elementBinding = pluralAttributeBinding.getPluralAttributeElementBinding();
-			if ( elementBinding.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+			if ( elementBinding.getNature() == PluralAttributeElementNature.ONE_TO_MANY ) {
 				// TODO: FIX THIS!!!
-				//return !( (OneToManyPluralAttributeElementBinding) elementBinding ).isNotFoundAnException();
+				//return !( (PluralAttributeElementBindingOneToMany) elementBinding ).isNotFoundAnException();
 			}
 		}
 		return false;

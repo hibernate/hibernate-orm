@@ -30,9 +30,13 @@ import java.util.Set;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbManyToOneElement;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -45,11 +49,15 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	private final String containingTableName;
 	private final List<RelationalValueSource> valueSources;
 
+	private final AttributeRole attributeRole;
+	private final AttributePath attributePath;
+
 	ManyToOneAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
+			AttributeSourceContainer container,
 			final JaxbManyToOneElement manyToOneElement,
 			final String logicalTableName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+			NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument, naturalIdMutability, manyToOneElement.getPropertyRef() );
 		this.manyToOneElement = manyToOneElement;
 		this.containingTableName = logicalTableName;
@@ -92,11 +100,24 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 					}
 				}
 		);
+
+		this.attributeRole = container.getAttributeRoleBase().append( manyToOneElement.getName() );
+		this.attributePath = container.getAttributePathBase().append( manyToOneElement.getName() );
 	}
 
 	@Override
 	public String getName() {
 			return manyToOneElement.getName();
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override
@@ -146,8 +167,8 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.MANY_TO_ONE;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.MANY_TO_ONE;
 	}
 
 	@Override

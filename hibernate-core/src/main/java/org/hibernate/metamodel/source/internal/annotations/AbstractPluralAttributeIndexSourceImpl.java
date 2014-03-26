@@ -60,11 +60,6 @@ public abstract class AbstractPluralAttributeIndexSourceImpl implements PluralAt
 	}
 
 	@Override
-	public boolean isReferencedEntityAttribute() {
-		return false;
-	}
-
-	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
 		return false;
 	}
@@ -79,7 +74,7 @@ public abstract class AbstractPluralAttributeIndexSourceImpl implements PluralAt
 		return false;
 	}
 
-	protected PluralAttribute pluralAssociationAttribute() {
+	protected PluralAttribute pluralAttribute() {
 		return attribute;
 	}
 }

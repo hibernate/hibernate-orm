@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 
@@ -52,6 +53,8 @@ public class BackRefAttributeBinding extends BasicAttributeBinding {
 				false,
 				NaturalIdMutability.NOT_NATURAL_ID,
 				null,
+				pluralAttributeBinding.getAttributeRole().append( "backRef" ),
+				pluralAttributeBinding.getAttributePath().append( "backRef" ),
 				PropertyGeneration.NEVER
 		);
 		this.pluralAttributeBinding = pluralAttributeBinding;

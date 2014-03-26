@@ -43,7 +43,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -360,9 +359,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
 			final String entityName = attributeBinding.getContainer().seekEntityBinding().getEntityName();
-			String path = StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ?
-					entityName + '.' + attributeBinding.getAttribute().getName() :
-					entityName + '.' + attributeBinding.getContainer().getPathBase() + '.' +  attributeBinding.getAttribute().getName();
+			final String path = entityName + '.' + attributeBinding.getAttributePath().getFullPath();
 			if ( attributeBinding.getAttribute().isSingular() ) {
 				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 				int join = entityBinding.getSecondaryTableNumber( singularAttributeBinding );

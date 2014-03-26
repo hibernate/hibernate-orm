@@ -33,10 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.JoinColumn;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AccessType;
@@ -57,10 +53,14 @@ import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Hierarchical;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -352,9 +352,9 @@ public class AuditedPropertiesReader {
 			String accessType = AccessType.PROPERTY.getType();
 			if ( !auditedPropertiesHolder.contains( property ) ) {
 				final AttributeBinding attributeBinding = processedPersistentPropertiesSource.getAttributeBinding( property );
-				if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
+				if ( EmbeddedAttributeBinding.class.isInstance( attributeBinding ) ) {
 					this.addFromComponentProperty(
-							(CompositeAttributeBinding) attributeBinding,
+							(EmbeddedAttributeBinding) attributeBinding,
 							accessType,
 							audited
 					);
@@ -418,9 +418,9 @@ public class AuditedPropertiesReader {
 				// If the property was already defined by the subclass, is ignored by superclasses
 				final String attributeName = attributeBinding.getAttribute().getName();
 				if ( persistentProperties.contains( attributeName ) && !auditedPropertiesHolder.contains( attributeName ) ) {
-					if ( attributeBinding instanceof CompositeAttributeBinding ) {
+					if ( attributeBinding instanceof EmbeddedAttributeBinding ) {
 						this.addFromComponentProperty(
-								(CompositeAttributeBinding) attributeBinding, accessType, allClassAudited
+								(EmbeddedAttributeBinding) attributeBinding, accessType, allClassAudited
 						);
 					}
 					else {
@@ -469,7 +469,7 @@ public class AuditedPropertiesReader {
 //	}
 
 	private void addFromComponentProperty(
-			CompositeAttributeBinding attributeBinding,
+			EmbeddedAttributeBinding attributeBinding,
 			String accessType,
 			Audited allClassAudited) {
 		final ComponentAuditingData componentData = new ComponentAuditingData();
@@ -482,8 +482,8 @@ public class AuditedPropertiesReader {
 		//}
 		//else {
 			componentPropertiesSource = new ComponentPropertiesSource(
-					context.getClassInfo( attributeBinding.getAttributeContainer() ),
-					attributeBinding
+					context.getClassInfo( attributeBinding.getEmbeddableBinding().getAttributeContainer() ),
+					attributeBinding.getEmbeddableBinding()
 			);
 		//}
 

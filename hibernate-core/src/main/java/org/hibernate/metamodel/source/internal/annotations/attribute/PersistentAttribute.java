@@ -32,8 +32,8 @@ import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingC
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 
 import org.jboss.jandex.DotName;
 

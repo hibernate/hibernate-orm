@@ -46,10 +46,14 @@ import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.source.spi.ForeignKeyContributingSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
+
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -83,30 +87,30 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 
 		// Need to initialize logicalJoinTableName before determining nature.
 		this.containingTableName = resolveContainingTableName( associationAttribute, relationalValueSources );
-		setNature( determineNatureIfPossible( associationAttribute ) );
+		setSingularAttributeNature( determineNatureIfPossible( associationAttribute ) );
 		this.foreignKeyDelegate = new ForeignKeyDelegate(
 				associationAttribute().getBackingMember().getAnnotations(), cls);
 	}
 
-	private Nature determineNatureIfPossible(
+	private SingularAttributeNature determineNatureIfPossible(
 			SingularAssociationAttribute associationAttribute) {
 		if ( AbstractPersistentAttribute.Nature.MANY_TO_ONE.equals( associationAttribute.getNature() ) ) {
-			return Nature.MANY_TO_ONE;
+			return SingularAttributeNature.MANY_TO_ONE;
 		}
 		else if ( AbstractPersistentAttribute.Nature.ONE_TO_ONE.equals( associationAttribute.getNature() ) ) {
 			if ( getContainingTableName() != null ) {
-				return Nature.MANY_TO_ONE;
+				return SingularAttributeNature.MANY_TO_ONE;
 			}
 			else if ( associationAttribute.hasPrimaryKeyJoinColumn() ) {
-				return Nature.ONE_TO_ONE;
+				return SingularAttributeNature.ONE_TO_ONE;
 			}
 			else if ( associationAttribute.isId() ) {
 				// if this association is part of the ID then this can't be a one-to-one
-				return Nature.MANY_TO_ONE;
+				return SingularAttributeNature.MANY_TO_ONE;
 			}
 			else if ( associationAttribute.getJoinColumnValues() == null  ||
 					associationAttribute.getJoinColumnValues().isEmpty() ) {
-				return Nature.MANY_TO_ONE;
+				return SingularAttributeNature.MANY_TO_ONE;
 			}
 			else {
 				return null;
@@ -120,7 +124,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 	
 	@Override
 	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
-		if ( getNature() != null ) {
+		if ( getSingularAttributeNature() != null ) {
 			return;
 		}
 		// It would be nice to have the following block in determineNatureIfPossible(),
@@ -128,7 +132,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		if ( AbstractPersistentAttribute.Nature.ONE_TO_ONE.equals( associationAttribute().getNature() ) ) {
 			final List<org.hibernate.metamodel.spi.relational.Column> idColumns = context.resolveIdentifierColumns();
 			if ( associationAttribute().getJoinColumnValues().size() != idColumns.size() ) {
-				setNature( Nature.MANY_TO_ONE );
+				setSingularAttributeNature( SingularAttributeNature.MANY_TO_ONE );
 			}
 			else {
 				Set<String> joinColumnNames = new HashSet<String>( associationAttribute().getJoinColumnValues().size() );
@@ -143,23 +147,29 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 						break;
 					}
 				}
-				setNature( areJoinColumnsSameAsIdColumns ? Nature.ONE_TO_ONE : Nature.MANY_TO_ONE );
+				setSingularAttributeNature(
+						areJoinColumnsSameAsIdColumns ?
+								SingularAttributeNature.ONE_TO_ONE :
+								SingularAttributeNature.MANY_TO_ONE
+				);
 			}
 		}
-		if ( getNature() == null ) {
+		if ( getSingularAttributeNature() == null ) {
 			throw new NotYetImplementedException( "unknown type of to-one attribute." );
 		}
 	}
 
 	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(
-			final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding) {
-		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
-			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+			final String entityName,
+			final String tableName,
+			final AttributeBinding referencedAttributeBinding) {
+		if ( EmbeddedAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+			EmbeddedAttributeBinding embeddedAttributeBinding = EmbeddedAttributeBinding.class.cast(
 					referencedAttributeBinding
 			);
 			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>(  );
-			for ( final AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+			for ( final AttributeBinding attributeBinding : embeddedAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
 				result.addAll( getDefaultNamingStrategies( entityName, tableName, attributeBinding ) );
 			}
 			return result;
@@ -279,6 +289,16 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return false;
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return getAnnotatedAttribute().getPath();
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return getAnnotatedAttribute().getRole();
 	}
 
 	public class AnnotationJoinColumnResolutionDelegate

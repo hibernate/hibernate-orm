@@ -33,7 +33,7 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.source.internal.annotations.util.ConverterAndOverridesHelper;
-import org.hibernate.metamodel.source.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributePath;
 
 import org.jboss.jandex.AnnotationInstance;
 

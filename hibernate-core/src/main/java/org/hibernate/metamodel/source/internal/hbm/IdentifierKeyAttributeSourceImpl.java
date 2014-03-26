@@ -24,17 +24,18 @@
 package org.hibernate.metamodel.source.internal.hbm;
 
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * @author Gail Badner
  */
 public class IdentifierKeyAttributeSourceImpl extends KeyAttributeSourceImpl {
-
 	public IdentifierKeyAttributeSourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbKeyPropertyElement keyPropertyElement) {
-		super( mappingDocument, keyPropertyElement, SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID );
+			AttributeSourceContainer container,
+			JaxbKeyPropertyElement keyPropertyElement) {
+		super( mappingDocument, keyPropertyElement, container, NaturalIdMutability.NOT_NATURAL_ID );
 	}
 
 	@Override

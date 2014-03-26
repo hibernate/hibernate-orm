@@ -27,6 +27,9 @@ import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
 /**
@@ -48,6 +51,8 @@ public class BasicAttributeBinding
 			boolean lazy,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			PropertyGeneration generation) {
 		super(
 				container,
@@ -56,7 +61,9 @@ public class BasicAttributeBinding
 				includedInOptimisticLocking,
 				lazy,
 				naturalIdMutability,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
 		this.generation = generation;

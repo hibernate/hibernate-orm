@@ -873,7 +873,7 @@ public final class SessionFactoryImpl
 					&& model.getCaching().getRequested() == TruthValue.TRUE ) {
 				String baseRegionName = model.getCaching().getRegion();
 				if ( baseRegionName == null ) {
-					baseRegionName = model.getAttributePath();
+					baseRegionName = model.getAttributePath().getFullPath();
 				}
 				final String cacheRegionName = StringHelper.makePath(
 						settings.getCacheRegionPrefix(),

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
@@ -37,14 +38,20 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.reflite.spi.ArrayDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.source.internal.annotations.attribute.CollectionIdInformation;
+import org.hibernate.metamodel.source.internal.annotations.attribute.Column;
 import org.hibernate.metamodel.source.internal.annotations.attribute.OverrideAndConverterCollector;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PersistentAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PluralAttribute;
+import org.hibernate.metamodel.source.internal.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.spi.AssociationSource;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
+import org.hibernate.metamodel.source.spi.CollectionIdSource;
+import org.hibernate.metamodel.source.spi.ColumnSource;
 import org.hibernate.metamodel.source.spi.FilterSource;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.MappedByAssociationSource;
@@ -56,6 +63,10 @@ import org.hibernate.metamodel.source.spi.Sortable;
 import org.hibernate.metamodel.source.spi.TableSpecificationSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
@@ -67,13 +78,15 @@ import org.jboss.jandex.AnnotationInstance;
 public class PluralAttributeSourceImpl
 		implements AnnotationAttributeSource, PluralAttributeSource, Orderable, Sortable {
 	private final PluralAttribute pluralAttribute;
-	private final Nature nature;
+	private final PluralAttributeNature nature;
 
 	private final Set<CascadeStyle> unifiedCascadeStyles;
 
 	private final HibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final FilterSource[] filterSources;
+
+	private final CollectionIdSource collectionIdSource;
 
 	// If it is not the owner side (i.e., mappedBy != null), then the AttributeSource
 	// for the owner is required to determine elementSource.
@@ -97,6 +110,16 @@ public class PluralAttributeSourceImpl
 			this.elementSource = determineElementSource( this, this );
 		}
 		this.filterSources = determineFilterSources( pluralAttribute );
+
+		if ( pluralAttribute.getCollectionIdInformation() == null ) {
+			this.collectionIdSource = null;
+		}
+		else {
+			collectionIdSource = new CollectionIdSourceImpl(
+					pluralAttribute.getCollectionIdInformation(),
+					pluralAttribute.getContext()
+			);
+		}
 	}
 
 	private static Set<CascadeStyle> determineCascadeStyles(PluralAttribute pluralAttribute) {
@@ -141,6 +164,21 @@ public class PluralAttributeSourceImpl
 	}
 
 	@Override
+	public AttributePath getAttributePath() {
+		return pluralAttribute.getPath();
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return pluralAttribute.getRole();
+	}
+
+	@Override
+	public CollectionIdSource getCollectionIdSource() {
+		return collectionIdSource;
+	}
+
+	@Override
 	public PersistentAttribute getAnnotatedAttribute() {
 		return getPluralAttribute();
 	}
@@ -154,7 +192,7 @@ public class PluralAttributeSourceImpl
 	}
 
 	@Override
-	public Nature getNature() {
+	public PluralAttributeNature getNature() {
 		return nature;
 	}
 
@@ -210,17 +248,17 @@ public class PluralAttributeSourceImpl
 		final PluralAttribute associationAttribute = pluralAttributeSource.pluralAssociationAttribute();
 		switch ( pluralAttributeSource.pluralAssociationAttribute().getNature() ) {
 			case ELEMENT_COLLECTION_BASIC: {
-				return new BasicPluralAttributeElementSourceImpl( pluralAttributeSource );
+				return new PluralAttributeElementSourceBasicImpl( pluralAttributeSource );
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
-				return new CompositePluralAttributeElementSourceImpl( pluralAttributeSource );
+				return new PluralAttributeElementSourceEmbeddedImpl( pluralAttributeSource );
 			}
 			case MANY_TO_MANY: {
 				if ( associationAttribute.getMappedByAttributeName() == null ) {
-					return new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource );
+					return new PluralAttributeElementSourceAssociationManyToManyImpl( pluralAttributeSource );
 				}
 				else {
-					return new ManyToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource );
+					return new MappedByPluralAttributeElementSourceAssociationManyToManyImpl( pluralAttributeSource );
 				}
 			}
 			case ONE_TO_MANY: {
@@ -230,23 +268,23 @@ public class PluralAttributeSourceImpl
 
 				if ( usesJoinTable ) {
 					if ( associationAttribute.getMappedByAttributeName() == null ) {
-						return new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource );
+						return new PluralAttributeElementSourceAssociationManyToManyImpl( pluralAttributeSource );
 					}
 					else {
-						return new ManyToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource );
+						return new MappedByPluralAttributeElementSourceAssociationManyToManyImpl( pluralAttributeSource );
 					}
 				}
 				else {
 					if ( associationAttribute.getMappedByAttributeName() == null ) {
-						return new OneToManyPluralAttributeElementSourceImpl( pluralAttributeSource );
+						return new PluralAttributeElementSourceAssociationOneToManyImpl( pluralAttributeSource );
 					}
 					else {
-						return new OneToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource );
+						return new MappedByPluralAttributeElementSourceAssociationOneToManyImpl( pluralAttributeSource );
 					}
 				}
 			}
 			case MANY_TO_ANY: {
-				return new ManyToAnyPluralAttributeElementSourceImpl( pluralAttributeSource );
+				return new PluralAttributeElementSourceAssociationManyToAnyImpl( pluralAttributeSource );
 			}
 			default: {
 				throw new AssertionError( "Unexpected plural attribute nature :" + associationAttribute.getNature() );
@@ -375,7 +413,7 @@ public class PluralAttributeSourceImpl
 
 	@Override
 	public String getOrder() {
-		return elementSource.getNature() == PluralAttributeElementSource.Nature.MANY_TO_MANY ?
+		return elementSource.getNature() == PluralAttributeElementNature.MANY_TO_MANY ?
 				null :
 				pluralAttribute.getOrderBy();
 	}
@@ -456,6 +494,96 @@ public class PluralAttributeSourceImpl
 
 	protected PluralAttribute pluralAssociationAttribute() {
 		return pluralAttribute;
+	}
+
+
+	private static class CollectionIdSourceImpl implements CollectionIdSource {
+		private final ColumnSourceImpl columnSource;
+		private final HibernateTypeSource typeSource;
+		private final String generatorName;
+
+		public CollectionIdSourceImpl(CollectionIdInformation collectionIdInformation, EntityBindingContext context) {
+			this.columnSource = interpretColumns( collectionIdInformation.getColumns(), context );
+			this.typeSource = createTypeSource( collectionIdInformation.getTypeResolver() );
+			this.generatorName = collectionIdInformation.getGeneratorDefinition().getName();
+		}
+
+		private static ColumnSourceImpl interpretColumns(List<Column> columns, EntityBindingContext context) {
+			if ( columns == null || columns.isEmpty() ) {
+				return null;
+			}
+
+			if ( columns.size() > 1 ) {
+				throw context.makeMappingException( "Expecting just one column for collection id" );
+			}
+
+			return new ColumnSourceImpl( columns.get( 0 ) );
+		}
+
+		private HibernateTypeSource createTypeSource(AttributeTypeResolver typeResolver) {
+			if ( typeResolver == null ) {
+				return EmptyHibernateTypeSource.INSTANCE;
+			}
+
+			final String resolvedTypeName = typeResolver.getExplicitHibernateTypeName();
+			if ( StringHelper.isEmpty( resolvedTypeName ) ) {
+				return EmptyHibernateTypeSource.INSTANCE;
+			}
+
+			return new HibernateTypeSource() {
+				@Override
+				public String getName() {
+					return resolvedTypeName;
+				}
+
+				@Override
+				public Map<String, String> getParameters() {
+					return Collections.emptyMap();
+				}
+
+				@Override
+				public JavaTypeDescriptor getJavaType() {
+					return null;
+				}
+			};
+		}
+
+		@Override
+		public ColumnSource getColumnSource() {
+			return null;
+		}
+
+		@Override
+		public HibernateTypeSource getTypeInformation() {
+			return null;
+		}
+
+		@Override
+		public String getGeneratorName() {
+			return null;
+		}
+	}
+
+	private static class EmptyHibernateTypeSource implements HibernateTypeSource {
+		/**
+		 * Singleton access
+		 */
+		public static final EmptyHibernateTypeSource INSTANCE = new EmptyHibernateTypeSource();
+
+		@Override
+		public String getName() {
+			return null;
+		}
+
+		@Override
+		public Map<String, String> getParameters() {
+			return null;
+		}
+
+		@Override
+		public JavaTypeDescriptor getJavaType() {
+			return null;
+		}
 	}
 }
 

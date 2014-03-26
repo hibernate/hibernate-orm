@@ -174,11 +174,12 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final Mapping factory)
 	throws MappingException {
 
-		if ( columns.length!=type.getColumnSpan(factory) ) {
+		if ( columns.length != type.getColumnSpan(factory) ) {
 			throw new MappingException(
-					"broken column mapping for: " + path +
-					" of: " + getEntityName()
-				);
+					"broken column mapping [" + getEntityName() + '#' + path
+							+ "]; expecting " + columns.length + " columns, but type defined " +
+							type.getColumnSpan(factory)
+			);
 		}
 
 		if ( type.isAssociationType() ) {

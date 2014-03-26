@@ -25,21 +25,22 @@ package org.hibernate.metamodel.source.spi;
 
 import java.util.List;
 
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 
 /**
  * Contract for a container of {@link AttributeSource} references.  Entities,
  * MappedSuperclasses and composites (Embeddables) all contain attributes.
+ * <p/>
+ * Think of this as the corollary to what JPA calls a ManagedType on the
+ * source side of things.
  *
  * @author Steve Ebersole
  */
 public interface AttributeSourceContainer {
-	/**
-	 * Obtain the path used to uniquely identify this container.
-	 *
-	 * @return The unique identifier path
-	 */
-	public String getPath();
+	public AttributePath getAttributePathBase();
+	public AttributeRole getAttributeRoleBase();
 
 	/**
 	 * Obtain this container's attribute sources.

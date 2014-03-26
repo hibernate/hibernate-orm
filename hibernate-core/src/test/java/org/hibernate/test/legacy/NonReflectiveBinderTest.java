@@ -26,7 +26,7 @@ package org.hibernate.test.legacy;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -80,7 +80,7 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 			assertNull( attributeBinding.getMetaAttributeContext().getMetaAttribute( "globalnoinherit" ) );
 		}
 
-		CompositeAttributeBinding componentAttributeBinding = (CompositeAttributeBinding) eb.locateAttributeBinding( "component" );
+		EmbeddedAttributeBinding componentAttributeBinding = (EmbeddedAttributeBinding) eb.locateAttributeBinding( "component" );
 		assertNotNull( componentAttributeBinding.getMetaAttributeContext() );
 		assertNotNull( componentAttributeBinding.getMetaAttributeContext().getMetaAttribute( "global" ) );
 		assertNotNull( componentAttributeBinding.getMetaAttributeContext().getMetaAttribute( "componentonly" ) );
@@ -91,7 +91,7 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 		assertNotNull( componentImplementsMeta );
 		assertEquals( componentImplementsMeta.getValue(), "AnotherInterface" );
 
-		AttributeBinding xAttributeBinding = componentAttributeBinding.locateAttributeBinding( "x" );
+		AttributeBinding xAttributeBinding = componentAttributeBinding.getEmbeddableBinding().locateAttributeBinding( "x" );
 		MetaAttribute xImplementsMeta = xAttributeBinding.getMetaAttributeContext().getMetaAttribute( "implements" );
 		assertNotNull( xImplementsMeta );
 		assertEquals( xImplementsMeta.getValue(), "AnotherInterface" );
@@ -107,12 +107,12 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 		assertNotNull(metaAttribute);
 		assertEquals( "wicked level", metaAttribute.getValue() );
 
-		CompositeAttributeBinding componentAttributeBinding = (CompositeAttributeBinding) eb.locateAttributeBinding( "component" );
+		EmbeddedAttributeBinding componentAttributeBinding = (EmbeddedAttributeBinding) eb.locateAttributeBinding( "component" );
 		MetaAttribute propertyAttribute = componentAttributeBinding.getMetaAttributeContext().getMetaAttribute( "globalmutated" );
 		assertNotNull( propertyAttribute );
 		assertEquals( "monetaryamount level", propertyAttribute.getValue() );
 
-		AttributeBinding xAttributeBinding = componentAttributeBinding.locateAttributeBinding( "x" );
+		AttributeBinding xAttributeBinding = componentAttributeBinding.getEmbeddableBinding().locateAttributeBinding( "x" );
 		propertyAttribute = xAttributeBinding.getMetaAttributeContext().getMetaAttribute( "globalmutated" );
 		assertNotNull( propertyAttribute );
 		assertEquals( "monetaryamount x level", propertyAttribute.getValue() );

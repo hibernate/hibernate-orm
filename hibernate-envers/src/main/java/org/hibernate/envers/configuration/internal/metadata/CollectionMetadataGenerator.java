@@ -78,19 +78,19 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
-import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositePluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeAssociationElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingEmbedded;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.type.BagType;
@@ -173,18 +173,18 @@ public final class CollectionMetadataGenerator {
 
 	void addCollection() {
 		final Type type = pluralAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		final PluralAttributeElementBinding.Nature elementNature =
+		final PluralAttributeElementNature elementNature =
 				pluralAttributeBinding.getPluralAttributeElementBinding().getNature();
 
 		final boolean oneToManyAttachedType = type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType;
 		final boolean inverseOneToMany =
-				(elementNature == PluralAttributeElementBinding.Nature.ONE_TO_MANY) &&
+				(elementNature == PluralAttributeElementNature.ONE_TO_MANY) &&
 						( pluralAttributeBinding.getPluralAttributeKeyBinding().isInverse() );
 		final boolean owningManyToOneWithJoinTableBidirectional =
-				(elementNature == PluralAttributeAssociationElementBinding.Nature.MANY_TO_MANY) &&
+				(elementNature == PluralAttributeElementNature.MANY_TO_MANY) &&
 						(propertyAuditingData.getRelationMappedBy() != null);
 		final boolean fakeOneToManyBidirectional =
-				(elementNature == PluralAttributeElementBinding.Nature.ONE_TO_MANY)
+				(elementNature == PluralAttributeElementNature.ONE_TO_MANY)
 				&& (propertyAuditingData.getAuditMappedBy() != null);
 
 		if ( oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional) ) {
@@ -350,7 +350,7 @@ public final class CollectionMetadataGenerator {
 	private String getMiddleTableName(PluralAttributeBinding attributeBinding, String entityName) {
 		// We check how Hibernate maps the collection.
 		if ( attributeBinding.getPluralAttributeElementBinding().getNature() ==
-				PluralAttributeElementBinding.Nature.ONE_TO_MANY &&
+				PluralAttributeElementNature.ONE_TO_MANY &&
 				!attributeBinding.getPluralAttributeKeyBinding().isInverse() ) {
 			// This must be a @JoinColumn+@OneToMany mapping. Generating the table name, as Hibernate doesn't use a
 			// middle table for mapping this relation.
@@ -508,7 +508,7 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private MiddleComponentData addIndex(Element middleEntityXml, QueryGeneratorBuilder queryGeneratorBuilder) {
-		if ( pluralAttributeBinding.getAttribute().getNature().isIndexable() ) {
+		if ( pluralAttributeBinding.getAttribute().getPluralAttributeNature().isIndexed() ) {
 			final PluralAttributeIndexBinding indexBinding =
 					( (IndexedPluralAttributeBinding) pluralAttributeBinding ).getPluralAttributeIndexBinding();
 			final String mapKey = propertyAuditingData.getMapKey();
@@ -555,7 +555,7 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private PluralAttributeIndexBinding getPluralAttributeIndexBinding() {
-		if ( !pluralAttributeBinding.getAttribute().getNature().isIndexable() ) {
+		if ( !pluralAttributeBinding.getAttribute().getPluralAttributeNature().isIndexed() ) {
 			throw new AssertionFailure( "This method is only valid for an indexed plural attribute binding." );
 		}
 		return ( (IndexedPluralAttributeBinding) pluralAttributeBinding ).getPluralAttributeIndexBinding();
@@ -587,9 +587,9 @@ public final class CollectionMetadataGenerator {
 		}
 		else {
 			hibernateTypeDescriptor = pluralAttributeBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor();
-			values = pluralAttributeBinding.getPluralAttributeElementBinding().getValues();
+			values = pluralAttributeBinding.getPluralAttributeElementBinding().getRelationalValueContainer().values();
 
-		}				;
+		}
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() instanceof ManyToOneType ) {
 			final String prefixRelated = prefix + "_";
 
@@ -629,14 +629,14 @@ public final class CollectionMetadataGenerator {
 			);
 		}
 		else if ( hibernateTypeDescriptor.getResolvedTypeMapping() instanceof ComponentType ) {
-			final CompositeAttributeBindingContainer compositeAttributeBindingContainer;
+			final EmbeddableBinding embeddableBinding;
 			if ( isIndex ) {
-				compositeAttributeBindingContainer =
+				embeddableBinding =
 						( ( CompositePluralAttributeIndexBinding ) getPluralAttributeIndexBinding() ).getCompositeAttributeBindingContainer();
 			}
 			else {
-				compositeAttributeBindingContainer =
-						( (CompositePluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getCompositeAttributeBindingContainer();
+				embeddableBinding =
+						( (PluralAttributeElementBindingEmbedded) pluralAttributeBinding.getPluralAttributeElementBinding() ).getEmbeddableBinding();
 			}
 			// Collection of embeddable elements.
 			final Class componentClass = ReflectionTools.loadClass(
@@ -655,8 +655,8 @@ public final class CollectionMetadataGenerator {
 					context,
 					auditData,
 					new AuditedPropertiesReader.ComponentPropertiesSource(
-							context.getClassInfo( compositeAttributeBindingContainer.getAttributeContainer() ),
-							compositeAttributeBindingContainer
+							context.getClassInfo( embeddableBinding.getAttributeContainer() ),
+							embeddableBinding
 					),
 					""
 			).read();
@@ -666,7 +666,7 @@ public final class CollectionMetadataGenerator {
 				final PropertyAuditingData nestedAuditingData = auditData.getPropertyAuditingData( auditedPropertyName );
 				mainGenerator.addValue(
 						parentXmlMapping,
-						compositeAttributeBindingContainer.locateAttributeBinding( auditedPropertyName ),
+						embeddableBinding.locateAttributeBinding( auditedPropertyName ),
 						componentMapper,
 						prefix, xmlMappingData,
 						nestedAuditingData,
@@ -680,7 +680,7 @@ public final class CollectionMetadataGenerator {
 				final PropertyAuditingData nestedAuditingData = auditData.getPropertyAuditingData( auditedPropertyName );
 				mainGenerator.addValue(
 						parentXmlMapping,
-						compositeAttributeBindingContainer.locateAttributeBinding( auditedPropertyName ),
+						embeddableBinding.locateAttributeBinding( auditedPropertyName ),
 						componentMapper,
 						referencingEntityName,
 						xmlMappingData,
@@ -692,7 +692,7 @@ public final class CollectionMetadataGenerator {
 
 			// Add an additional column holding a number to make each entry unique within the set.
 			// Embeddable properties may contain null values, so cannot be stored within composite primary key.
-			if ( ( pluralAttributeBinding.getAttribute() ).getNature() == PluralAttribute.Nature.SET ) {
+			if ( ( pluralAttributeBinding.getAttribute() ).getPluralAttributeNature() == PluralAttributeNature.SET ) {
 				final String setOrdinalPropertyName = context.getAuditEntitiesConfiguration()
 						.getEmbeddableSetOrdinalPropertyName();
 				final Element ordinalProperty = MetadataTools.addProperty(
@@ -950,7 +950,7 @@ public final class CollectionMetadataGenerator {
 				attributeValues = ( (SingularAttributeBinding) attributeBinding ).getValues();
 			}
 			else {
-				attributeValues = ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding().getValues();
+				attributeValues = ( (PluralAttributeBinding) attributeBinding ).getPluralAttributeElementBinding().getRelationalValueContainer().values();
 			}
 
 			if ( Tools.iteratorsContentEqual(

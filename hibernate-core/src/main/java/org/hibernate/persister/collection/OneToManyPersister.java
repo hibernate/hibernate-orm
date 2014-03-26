@@ -34,7 +34,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -49,10 +48,9 @@ import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectOneToManyLoader;
 import org.hibernate.loader.entity.CollectionElementLoader;
-import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -79,10 +77,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			SessionFactoryImplementor factory) throws MappingException, CacheException {
 		super( collection, cacheAccessStrategy, metadataImplementor, factory );
 		if ( collection.getPluralAttributeElementBinding().getNature() !=
-				PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+				PluralAttributeElementNature.ONE_TO_MANY ) {
 			throw new AssertionError(
 					String.format( "Unexpected plural attribute nature; expected=(%s), actual=(%s)",
-								   PluralAttributeElementBinding.Nature.ONE_TO_MANY,
+								   PluralAttributeElementNature.ONE_TO_MANY,
 								   collection.getPluralAttributeElementBinding().getNature()
 					)
 			);

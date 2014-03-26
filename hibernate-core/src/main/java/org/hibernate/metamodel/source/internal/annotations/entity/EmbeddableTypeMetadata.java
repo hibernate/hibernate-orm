@@ -35,9 +35,9 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.EmbeddedCon
 import org.hibernate.metamodel.source.internal.annotations.util.ConverterAndOverridesHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -54,7 +54,7 @@ import static org.hibernate.metamodel.source.internal.annotations.util.Hibernate
  */
 public class EmbeddableTypeMetadata extends ManagedTypeMetadata {
 	private final EmbeddedContainer container;
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private final NaturalIdMutability naturalIdMutability;
 	private final String parentReferencingAttributeName;
 	private final String customTuplizerClassName;
 
@@ -132,7 +132,7 @@ public class EmbeddableTypeMetadata extends ManagedTypeMetadata {
 		return parentReferencingAttributeName;
 	}
 
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+	public NaturalIdMutability getNaturalIdMutability() {
 		 return naturalIdMutability;
 	}
 
@@ -179,14 +179,14 @@ public class EmbeddableTypeMetadata extends ManagedTypeMetadata {
 	@Override
 	@SuppressWarnings("SimplifiableIfStatement")
 	public boolean canAttributesBeUpdatable() {
-		if ( naturalIdMutability == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE ) {
+		if ( naturalIdMutability == NaturalIdMutability.IMMUTABLE ) {
 			return false;
 		}
 		return container.getContainerUpdatability();
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getContainerNaturalIdMutability() {
+	public NaturalIdMutability getContainerNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 }

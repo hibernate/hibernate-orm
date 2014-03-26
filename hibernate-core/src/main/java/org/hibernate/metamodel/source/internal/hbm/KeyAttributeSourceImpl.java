@@ -31,12 +31,16 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 
 /**
  * Implementation for {@code <key-property/>} mappings
@@ -47,14 +51,17 @@ class KeyAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements SingularAttributeSource {
 	private final JaxbKeyPropertyElement keyPropertyElement;
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private final NaturalIdMutability naturalIdMutability;
 	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
+
+	private final AttributePath attributePath;
+	private final AttributeRole attributeRole;
 
 	public KeyAttributeSourceImpl(
 			MappingDocument mappingDocument,
 			final JaxbKeyPropertyElement keyPropertyElement,
-			final SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+			AttributeSourceContainer container, final NaturalIdMutability naturalIdMutability) {
 		super( mappingDocument );
 		this.keyPropertyElement = keyPropertyElement;
 		this.naturalIdMutability = naturalIdMutability;
@@ -116,11 +123,24 @@ class KeyAttributeSourceImpl
 					}
 				}
 		);
+
+		this.attributePath = container.getAttributePathBase().append( getName() );
+		this.attributeRole = container.getAttributeRoleBase().append( getName() );
 	}
 
 	@Override
 	public String getName() {
 		return keyPropertyElement.getName();
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override
@@ -144,7 +164,7 @@ class KeyAttributeSourceImpl
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+	public NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 
@@ -154,8 +174,8 @@ class KeyAttributeSourceImpl
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.BASIC;
 	}
 
 	@Override

@@ -23,27 +23,17 @@
  */
 package org.hibernate.metamodel.source.internal.hbm;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbListElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
-import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.source.spi.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeIndexSource;
-import org.hibernate.metamodel.source.spi.SequentialPluralAttributeIndexSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeSequentialIndexSource;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 
-/**
- *
- */
 public class ListSourceImpl extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
+	private final PluralAttributeSequentialIndexSource indexSource;
 
-	private final SequentialPluralAttributeIndexSource indexSource;
-
-	/**
-	 * @param sourceMappingDocument
-	 * @param listElement
-	 * @param container
-	 */
 	public ListSourceImpl(
 			MappingDocument sourceMappingDocument,
 			JaxbListElement listElement,
@@ -51,9 +41,10 @@ public class ListSourceImpl extends AbstractPluralAttributeSourceImpl implements
 		super( sourceMappingDocument, listElement, container );
 		JaxbListIndexElement listIndexElement = listElement.getListIndex();
 		if ( listIndexElement == null ) {
-			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), listElement.getIndex() );
-		} else {
-			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), listIndexElement );
+			this.indexSource = new PluralAttributeSequentialIndexSourceImpl( sourceMappingDocument(), listElement.getIndex() );
+		}
+		else {
+			this.indexSource = new PluralAttributeSequentialIndexSourceImpl( sourceMappingDocument(), listIndexElement );
 		}
 	}
 
@@ -67,21 +58,9 @@ public class ListSourceImpl extends AbstractPluralAttributeSourceImpl implements
 		return ( JaxbListElement ) super.getPluralAttributeElement();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.source.spi.PluralAttributeSource#getNature()
-	 */
 	@Override
-	public Nature getNature() {
-		return Nature.LIST;
+	public PluralAttributeNature getNature() {
+		return PluralAttributeNature.LIST;
 	}
 
-	@Override
-	public PluralAttributeIndexSource resolvePluralAttributeIndexSource(AttributeSourceResolutionContext context) {
-		if ( indexSource == null ) {
-			throw new AssertionFailure( "Array index source should have been resolved already." );
-		}
-		return indexSource;
-	}
 }

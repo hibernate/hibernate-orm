@@ -27,38 +27,37 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbMapElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
-import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.source.spi.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 
-/**
- *
- */
 public class MapSourceImpl extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
-
 	private final PluralAttributeIndexSource indexSource;
 
-	/**
-	 * @param sourceMappingDocument
-	 * @param mapElement
-	 * @param container
-	 */
 	public MapSourceImpl(
 			MappingDocument sourceMappingDocument,
 			JaxbMapElement mapElement,
 			AttributeSourceContainer container) {
 		super( sourceMappingDocument, mapElement, container );
 		if (  mapElement.getMapKey() != null ) {
-			this.indexSource = new MapKeySourceImpl( sourceMappingDocument,  mapElement.getMapKey() );
+			this.indexSource = new MapKeySourceBasicImpl( sourceMappingDocument,  mapElement.getMapKey() );
 		}
 		else if ( mapElement.getIndex() != null ) {
-			this.indexSource = new MapKeySourceImpl( sourceMappingDocument, mapElement.getIndex() );
+			this.indexSource = new MapKeySourceBasicImpl( sourceMappingDocument, mapElement.getIndex() );
 		}
 		else if ( mapElement.getCompositeMapKey() != null ) {
-			this.indexSource = new CompositePluralAttributeIndexSourceImpl( sourceMappingDocument, mapElement.getCompositeMapKey() );
+			this.indexSource = new PluralAttributeMapKeySourceEmbeddedImpl(
+					sourceMappingDocument,
+					this,
+					mapElement.getCompositeMapKey()
+			);
 		}
 		else if ( mapElement.getCompositeIndex() != null ) {
-			this.indexSource = new CompositePluralAttributeIndexSourceImpl( sourceMappingDocument, mapElement.getCompositeIndex() );
+			this.indexSource = new PluralAttributeMapKeySourceEmbeddedImpl(
+					sourceMappingDocument,
+					this,
+					mapElement.getCompositeIndex()
+			);
 		}
 		else if ( mapElement.getMapKeyManyToMany() != null ) {
 			throw new NotYetImplementedException( "<map-key-many-to-many> is not supported yet" );
@@ -75,15 +74,6 @@ public class MapSourceImpl extends AbstractPluralAttributeSourceImpl implements 
 	}
 
 	@Override
-	public PluralAttributeIndexSource resolvePluralAttributeIndexSource(AttributeSourceResolutionContext context) {
-		if ( indexSource == null ) {
-			throw new NotYetImplementedException( "Plural attribute index source resolution not implemented yet." );
-
-		}
-		return indexSource;
-	}
-
-	@Override
 	public PluralAttributeIndexSource getIndexSource() {
 		return indexSource;
 	}
@@ -93,13 +83,8 @@ public class MapSourceImpl extends AbstractPluralAttributeSourceImpl implements 
 		return ( JaxbMapElement ) super.getPluralAttributeElement();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.source.spi.PluralAttributeSource#getNature()
-	 */
 	@Override
-	public Nature getNature() {
-		return Nature.MAP;
+	public PluralAttributeNature getNature() {
+		return PluralAttributeNature.MAP;
 	}
 }

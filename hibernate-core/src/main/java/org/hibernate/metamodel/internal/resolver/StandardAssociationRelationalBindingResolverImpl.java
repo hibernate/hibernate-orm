@@ -38,14 +38,14 @@ import org.hibernate.metamodel.internal.binder.RelationalValueBindingHelper;
 import org.hibernate.metamodel.internal.binder.TableHelper;
 import org.hibernate.metamodel.source.spi.AssociationSource;
 import org.hibernate.metamodel.source.spi.ForeignKeyContributingSource;
-import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
-import org.hibernate.metamodel.source.spi.PluralAttributeElementSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeElementSourceManyToMany;
 import org.hibernate.metamodel.source.spi.PluralAttributeKeySource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSourceContainer;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.TableSpecificationSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -194,7 +194,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 	@Override
 	public List<RelationalValueBinding> resolveManyToManyElementRelationalValueBindings(
 			final EntityBinding entityBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
+			final PluralAttributeElementSourceManyToMany elementSource,
 			final TableSpecification collectionTable,
 			final EntityBinding referencedEntityBinding) {
 		final List<Column> targetColumns =
@@ -230,7 +230,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 	@Override
 	public ForeignKey resolveManyToManyElementForeignKey(
 			final EntityBinding entityBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
+			final PluralAttributeElementSourceManyToMany elementSource,
 			final TableSpecification collectionTable,
 			final List<RelationalValueBinding> relationalValueBindings,
 			final EntityBinding referencedEntityBinding) {
@@ -318,7 +318,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 				keySource,
 				entityBinding,
 				collectionTable,
-				attributeSource.getElementSource().getNature() != PluralAttributeElementSource.Nature.ONE_TO_MANY,
+				attributeSource.getElementSource().getNature() != PluralAttributeElementNature.ONE_TO_MANY,
 				namingStrategies
 		);
 	}

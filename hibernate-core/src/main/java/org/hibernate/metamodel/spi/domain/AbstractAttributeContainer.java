@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 
 /**
  * Convenient base class for {@link AttributeContainer}.  Because in our model all
@@ -153,35 +154,35 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public PluralAttribute createBag(String name) {
-		return createPluralAttribute( name, PluralAttribute.Nature.BAG );
+		return createPluralAttribute( name, PluralAttributeNature.BAG );
 	}
 
-	protected PluralAttribute createPluralAttribute(String name, PluralAttribute.Nature nature) {
-		PluralAttribute attribute = nature.isIndexable()
-				? new IndexedPluralAttributeImpl( this, name, nature )
-				: new PluralAttributeImpl( this, name, nature );
+	protected PluralAttribute createPluralAttribute(String name, PluralAttributeNature pluralAttributeNature) {
+		PluralAttribute attribute = pluralAttributeNature.isIndexed()
+				? new IndexedPluralAttributeImpl( this, name, pluralAttributeNature )
+				: new PluralAttributeImpl( this, name, pluralAttributeNature );
 		addAttribute( attribute );
 		return attribute;
 	}
 
 	@Override
 	public PluralAttribute createSet(String name) {
-		return createPluralAttribute( name, PluralAttribute.Nature.SET );
+		return createPluralAttribute( name, PluralAttributeNature.SET );
 	}
 
 	@Override
 	public IndexedPluralAttribute createList(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.LIST );
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.LIST );
 	}
 
 	@Override
 	public IndexedPluralAttribute createArray(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.ARRAY );
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.ARRAY );
 	}
 
 	@Override
 	public IndexedPluralAttribute createMap(String name) {
-		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttribute.Nature.MAP );
+		return (IndexedPluralAttribute) createPluralAttribute( name, PluralAttributeNature.MAP );
 	}
 
 	protected void addAttribute(Attribute attribute) {
@@ -244,15 +245,15 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	public static class PluralAttributeImpl implements PluralAttribute {
 		private final AttributeContainer attributeContainer;
-		private final Nature nature;
+		private final PluralAttributeNature pluralAttributeNature;
 		private final String name;
 
 		private Type elementType;
 
-		public PluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, Nature nature) {
+		public PluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, PluralAttributeNature pluralAttributeNature) {
 			this.attributeContainer = attributeContainer;
 			this.name = name;
-			this.nature = nature;
+			this.pluralAttributeNature = pluralAttributeNature;
 		}
 
 		@Override
@@ -272,8 +273,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		}
 
 		@Override
-		public Nature getNature() {
-			return nature;
+		public PluralAttributeNature getPluralAttributeNature() {
+			return pluralAttributeNature;
 		}
 
 		@Override
@@ -300,8 +301,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public static class IndexedPluralAttributeImpl extends PluralAttributeImpl implements IndexedPluralAttribute {
 		private Type indexType;
 
-		public IndexedPluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, Nature nature) {
-			super( attributeContainer, name, nature );
+		public IndexedPluralAttributeImpl(AbstractAttributeContainer attributeContainer, String name, PluralAttributeNature pluralAttributeNature) {
+			super( attributeContainer, name, pluralAttributeNature );
 		}
 
 		@Override

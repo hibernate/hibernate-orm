@@ -37,5 +37,5 @@ public interface AggregatedCompositeIdentifierSource extends CompositeIdentifier
      *
      * @return The identifier attribute source.
      */
-    public ComponentAttributeSource getIdentifierAttributeSource();
+    public EmbeddedAttributeSource getIdentifierAttributeSource();
 }

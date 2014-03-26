@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 
 /**
  * Presents metadata about the elements of a plural attribute.
@@ -41,6 +42,14 @@ public interface PluralAttributeIndexDetails {
 	 * @return The descriptor for the Java type of the collection index.
 	 */
 	public JavaTypeDescriptor getJavaType();
+
+	/**
+	 * Get the nature of the collection index.  To a large degree, this is
+	 * used to know what further, more specific type-casts can be performed.
+	 *
+	 * @return The nature of the collection index
+	 */
+	public PluralAttributeIndexNature getIndexNature();
 
 	/**
 	 * Get the type resolver for the collection index.

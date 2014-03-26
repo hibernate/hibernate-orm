@@ -35,7 +35,7 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.OverrideAnd
 import org.hibernate.metamodel.source.internal.annotations.attribute.PersistentAttribute;
 import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
-import org.hibernate.metamodel.source.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributePath;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;

@@ -39,9 +39,9 @@ import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.MappedByAssociationSource;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 
@@ -49,13 +49,13 @@ import org.hibernate.metamodel.spi.relational.Value;
  * @author Gail Badner
  */
 public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOneAttributeSource{
-	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
+	private final NaturalIdMutability naturalIdMutability;
 	private final String propertyRef;
 	private final Set<MappedByAssociationSource> ownedAssociationSources = new HashSet<MappedByAssociationSource>(  );
 
 	AbstractToOneAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			String propertyRef) {
 		super( sourceMappingDocument );
 		this.naturalIdMutability = naturalIdMutability;
@@ -68,7 +68,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+	public NaturalIdMutability getNaturalIdMutability() {
 		return naturalIdMutability;
 	}
 
@@ -182,12 +182,12 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 			final String entityName,
 			final String tableName,
 			final AttributeBinding referencedAttributeBinding) {
-		if ( CompositeAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
-			CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+		if ( EmbeddedAttributeBinding.class.isInstance( referencedAttributeBinding ) ) {
+			EmbeddedAttributeBinding embeddedAttributeBinding = EmbeddedAttributeBinding.class.cast(
 					referencedAttributeBinding
 			);
 			List<Binder.DefaultNamingStrategy> result = new ArrayList<Binder.DefaultNamingStrategy>();
-			for ( final AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+			for ( final AttributeBinding attributeBinding : embeddedAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
 				result.addAll( getDefaultNamingStrategies( entityName, tableName, attributeBinding ) );
 			}
 			return result;

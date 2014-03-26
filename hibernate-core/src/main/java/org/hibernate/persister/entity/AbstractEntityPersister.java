@@ -106,8 +106,8 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.Fetchable;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -2163,11 +2163,11 @@ public abstract class AbstractEntityPersister
 			}
 			SingularAttributeBinding singularProp = (SingularAttributeBinding) prop;
 			String propname = path == null ? prop.getAttribute().getName() : path + "." + prop.getAttribute().getName();
-			if ( prop instanceof CompositeAttributeBinding ) {
-				CompositeAttributeBinding component = (CompositeAttributeBinding) prop;
-				AttributeBinding[] abs = new AttributeBinding[component.attributeBindingSpan()];
+			if ( prop instanceof EmbeddedAttributeBinding ) {
+				EmbeddedAttributeBinding component = (EmbeddedAttributeBinding) prop;
+				AttributeBinding[] abs = new AttributeBinding[component.getEmbeddableBinding().attributeBindingSpan()];
 				int i=0;
-				for(AttributeBinding ab : component.attributeBindings()){
+				for(AttributeBinding ab : component.getEmbeddableBinding().attributeBindings()){
 					abs[i++] = ab;
 				}
 				internalInitSubclassPropertyAliasesMap( propname, abs );

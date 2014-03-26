@@ -34,9 +34,9 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.type.Hibern
 import org.hibernate.metamodel.source.internal.annotations.entity.EmbeddableTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -101,7 +101,7 @@ public class EmbeddedAttribute extends AbstractSingularAttribute implements Embe
 			updateability.disable();
 		}
 
-		if ( getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE ) {
+		if ( getNaturalIdMutability() == NaturalIdMutability.IMMUTABLE ) {
 			updateability.disable();
 		}
 	}
@@ -144,7 +144,7 @@ public class EmbeddedAttribute extends AbstractSingularAttribute implements Embe
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getContainerNaturalIdMutability() {
+	public NaturalIdMutability getContainerNaturalIdMutability() {
 		return super.getNaturalIdMutability();
 	}
 

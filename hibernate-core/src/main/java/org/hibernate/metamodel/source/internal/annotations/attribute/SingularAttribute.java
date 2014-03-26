@@ -26,7 +26,7 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 import java.util.List;
 
 import org.hibernate.metamodel.source.internal.AttributeConversionInfo;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * Represents a singular persistent attribute.
@@ -38,7 +38,7 @@ public interface SingularAttribute extends PersistentAttribute {
 
 	boolean isVersion();
 
-	SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability();
+	NaturalIdMutability getNaturalIdMutability();
 
 	AttributeConversionInfo getConversionInfo();
 

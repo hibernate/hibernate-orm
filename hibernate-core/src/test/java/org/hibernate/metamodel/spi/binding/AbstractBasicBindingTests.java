@@ -245,13 +245,14 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
-		CompositeAttributeBinding compositeAttributeBinding =
-				(CompositeAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
-		assertNotNull( compositeAttributeBinding );
-		assertSame( compositeAttributeBinding.getAttribute().getSingularAttributeType(), compositeAttributeBinding.getAttributeContainer() );
-		assertEquals( "simpleComponent", compositeAttributeBinding.getPathBase() );
-		assertSame( entityBinding, compositeAttributeBinding.seekEntityBinding() );
-		assertTrue( compositeAttributeBinding.getAttribute().getSingularAttributeType() instanceof Aggregate );
+		EmbeddedAttributeBinding embeddedAttributeBinding =
+				(EmbeddedAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
+		assertNotNull( embeddedAttributeBinding );
+		assertSame( embeddedAttributeBinding.getAttribute().getSingularAttributeType(), embeddedAttributeBinding.getEmbeddableBinding().getAttributeContainer() );
+		assertEquals( "simpleComponent", embeddedAttributeBinding.getAttributePath().getFullPath() );
+		assertEquals( "simpleComponent", embeddedAttributeBinding.getEmbeddableBinding().getPathBase().getFullPath() );
+		assertSame( entityBinding, embeddedAttributeBinding.getEmbeddableBinding().seekEntityBinding() );
+		assertTrue( embeddedAttributeBinding.getAttribute().getSingularAttributeType() instanceof Aggregate );
 	}
 
 	public abstract void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);

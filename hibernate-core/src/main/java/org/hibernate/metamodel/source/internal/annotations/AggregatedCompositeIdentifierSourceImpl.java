@@ -28,7 +28,7 @@ import java.util.Collections;
 
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.source.spi.AggregatedCompositeIdentifierSource;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
+import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
@@ -51,7 +51,7 @@ class AggregatedCompositeIdentifierSourceImpl
 	}
 
 	@Override
-	public ComponentAttributeSource getIdentifierAttributeSource() {
+	public EmbeddedAttributeSource getIdentifierAttributeSource() {
 		return componentAttributeSource;
 	}
 

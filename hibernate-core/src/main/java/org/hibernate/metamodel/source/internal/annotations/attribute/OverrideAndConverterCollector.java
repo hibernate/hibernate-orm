@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import org.hibernate.metamodel.source.internal.AttributeConversionInfo;
-import org.hibernate.metamodel.source.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributePath;
 
 /**
  * Contract used in normalizing AttributeConverters, AttributeOverrides and

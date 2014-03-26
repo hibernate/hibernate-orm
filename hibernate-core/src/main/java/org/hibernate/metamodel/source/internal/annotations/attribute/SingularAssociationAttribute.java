@@ -25,7 +25,6 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Set;
-
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 
@@ -39,8 +38,9 @@ import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMet
 import org.hibernate.metamodel.source.internal.annotations.util.AssociationHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+
 import org.jboss.jandex.AnnotationInstance;
 
 /**

@@ -44,25 +44,26 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
 import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.source.spi.AttributeSource;
-import org.hibernate.metamodel.source.spi.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
+import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.IdentifiableTypeSource;
-import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeElementSourceBasic;
+import org.hibernate.metamodel.source.spi.PluralAttributeElementSourceManyToMany;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.BasicPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingBasic;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingManyToMany;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -381,11 +382,11 @@ class HibernateTypeHelper {
 			final boolean isAttributeIdentifier,
 			final Aggregate composite,
 			final JavaTypeDescriptor defaultTypeDescriptor,
-			final CompositeAttributeBinding attributeBinding) {
+			final EmbeddedAttributeBinding attributeBinding) {
 		Type resolvedType = typeFactory().component(
 				new ComponentMetamodel(
 						serviceRegistry,
-						attributeBinding,
+						attributeBinding.getEmbeddableBinding(),
 						isAttributeIdentifier,
 						false
 				)
@@ -400,8 +401,8 @@ class HibernateTypeHelper {
 	}
 
 	void bindBasicCollectionElementType(
-			final BasicPluralAttributeElementBinding elementBinding,
-			final BasicPluralAttributeElementSource elementSource,
+			final PluralAttributeElementBindingBasic elementBinding,
+			final PluralAttributeElementSourceBasic elementSource,
 			final JavaTypeDescriptor defaultElementTypeDescriptor) {
 		bindHibernateTypeDescriptor(
 				elementBinding.getHibernateTypeDescriptor(),
@@ -415,10 +416,10 @@ class HibernateTypeHelper {
 	}
 	void bindNonAggregatedCompositeIdentifierType(
 			final ServiceRegistry serviceRegistry,
-			final CompositeAttributeBinding syntheticAttributeBinding,
+			final EmbeddedAttributeBinding syntheticAttributeBinding,
 			final SingularAttribute syntheticAttribute) {
 		final Type resolvedType = typeFactory().embeddedComponent(
-				new ComponentMetamodel( serviceRegistry, syntheticAttributeBinding, true, false )
+				new ComponentMetamodel( serviceRegistry, syntheticAttributeBinding.getEmbeddableBinding(), true, false )
 		);
 		final HibernateTypeDescriptor typeDescriptor = syntheticAttributeBinding.getHibernateTypeDescriptor();
 		final String className = syntheticAttribute.getSingularAttributeType().getDescriptor() == null ?
@@ -433,8 +434,8 @@ class HibernateTypeHelper {
 		);
 	}
 	void bindManyToManyAttributeType(
-			final ManyToManyPluralAttributeElementBinding elementBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
+			final PluralAttributeElementBindingManyToMany elementBinding,
+			final PluralAttributeElementSourceManyToMany elementSource,
 			final EntityBinding referencedEntityBinding,
 			final JavaTypeDescriptor defaultElementTypeDescriptor) {
 		final Type resolvedElementType = typeFactory().manyToOne(
@@ -455,7 +456,7 @@ class HibernateTypeHelper {
 		);
 		bindJdbcDataType(
 				resolvedElementType,
-				elementBinding.getRelationalValueBindings()
+				elementBinding.getRelationalValueContainer().relationalValueBindings()
 		);
 	}
 
@@ -508,7 +509,7 @@ class HibernateTypeHelper {
 			ClassLoaderService classLoaderService,
 			final PluralAttributeBinding pluralAttributeBinding,
 			final PluralAttributeSource pluralAttributeSource,
-			final PluralAttributeSource.Nature nature) {
+			final PluralAttributeNature nature) {
 		if ( pluralAttributeBinding.getHibernateTypeDescriptor().getExplicitTypeName() != null ) {
 			return resolveCustomCollectionType( pluralAttributeBinding );
 		}
@@ -562,8 +563,8 @@ class HibernateTypeHelper {
 					else if ( pluralAttributeBinding.getOrderBy() != null ) {
 						return typeFactory().orderedSet( role, propertyRef );
 					}
-					else if ( pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY &&
-							  ( (ManyToManyPluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding() ).getManyToManyOrderBy() != null ) {
+					else if ( pluralAttributeBinding.getPluralAttributeElementBinding().getNature() == PluralAttributeElementNature.MANY_TO_MANY &&
+							  ( (PluralAttributeElementBindingManyToMany) pluralAttributeBinding.getPluralAttributeElementBinding() ).getManyToManyOrderBy() != null ) {
 						return typeFactory().orderedSet( role, propertyRef );
 					}
 					else {
@@ -736,10 +737,10 @@ class HibernateTypeHelper {
 					resolvedHibernateType
 			);
 		}
-		else if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
+		else if ( EmbeddedAttributeBinding.class.isInstance( attributeBinding ) ) {
 			pushHibernateTypeInformationDown(
-					(ComponentAttributeSource) attributeSource,
-					(CompositeAttributeBinding) attributeBinding,
+					(EmbeddedAttributeSource) attributeSource,
+					(EmbeddedAttributeBinding) attributeBinding,
 					resolvedHibernateType
 			);
 		}
@@ -763,8 +764,8 @@ class HibernateTypeHelper {
 
 	@SuppressWarnings({ "UnusedParameters" })
 	private void pushHibernateTypeInformationDown(
-			final ComponentAttributeSource attributeSource,
-			final CompositeAttributeBinding attributeBinding,
+			final EmbeddedAttributeSource attributeSource,
+			final EmbeddedAttributeBinding attributeBinding,
 			final Type resolvedHibernateType) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 
@@ -773,8 +774,8 @@ class HibernateTypeHelper {
 			singularAttribute.resolveType( makeDomainType( hibernateTypeDescriptor.getJavaTypeDescriptor().getName() ) );
 		}
 
-		Iterator<AttributeSource> subAttributeSourceIterator = attributeSource.attributeSources().iterator();
-		for ( AttributeBinding subAttributeBinding : attributeBinding.attributeBindings() ) {
+		Iterator<AttributeSource> subAttributeSourceIterator = attributeSource.getEmbeddableSource().attributeSources().iterator();
+		for ( AttributeBinding subAttributeBinding : attributeBinding.getEmbeddableBinding().attributeBindings() ) {
 			AttributeSource subAttributeSource = subAttributeSourceIterator.next();
 			if ( SingularAttributeBinding.class.isInstance( subAttributeBinding ) ) {
 				processSingularAttributeTypeInformation(
@@ -834,11 +835,11 @@ class HibernateTypeHelper {
 	}
 
 	public JavaTypeDescriptor determineJavaType(
-			final ComponentAttributeSource attributeSource,
+			final EmbeddedAttributeSource attributeSource,
 			final AttributeContainer attributeContainer,
 			final EntityMode entityMode) {
-		if ( attributeSource.getTypeDescriptor() != null ) {
-			 return attributeSource.getTypeDescriptor();
+		if ( attributeSource.getEmbeddableSource().getTypeDescriptor() != null ) {
+			 return attributeSource.getEmbeddableSource().getTypeDescriptor();
 		}
 		else if ( entityMode == EntityMode.MAP ) {
 			return bindingContext().typeDescriptor( Map.class.getName() );

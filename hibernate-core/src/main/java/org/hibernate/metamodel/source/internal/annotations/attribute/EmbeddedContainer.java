@@ -25,8 +25,8 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import org.hibernate.metamodel.reflite.spi.MemberDescriptor;
 import org.hibernate.metamodel.source.internal.AttributeConversionInfo;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * Defines the container of an embedded value.  Acts as the container for
@@ -43,7 +43,7 @@ public interface EmbeddedContainer extends OverrideAndConverterCollector {
 
 	public AssociationOverride locateAssociationOverride(AttributePath attributePath);
 
-	public SingularAttributeBinding.NaturalIdMutability getContainerNaturalIdMutability();
+	public NaturalIdMutability getContainerNaturalIdMutability();
 
 	boolean getContainerOptionality();
 	boolean getContainerUpdatability();

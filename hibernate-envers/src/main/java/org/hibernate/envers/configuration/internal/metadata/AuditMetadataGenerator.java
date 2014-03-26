@@ -46,7 +46,7 @@ import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
@@ -237,7 +237,7 @@ public final class AuditMetadataGenerator {
 			componentMetadataGenerator.addComponent(
 					parent,
 					propertyAuditingData,
-					(CompositeAttributeBinding) attributeBinding,
+					(EmbeddedAttributeBinding) attributeBinding,
 					currentMapper,
 					entityName,
 					xmlMappingData,
@@ -274,7 +274,7 @@ public final class AuditMetadataGenerator {
 			componentMetadataGenerator.addComponent(
 					parent,
 					propertyAuditingData,
-					(CompositeAttributeBinding) attributeBinding,
+					(EmbeddedAttributeBinding) attributeBinding,
 					currentMapper,
 					entityName,
 					xmlMappingData,

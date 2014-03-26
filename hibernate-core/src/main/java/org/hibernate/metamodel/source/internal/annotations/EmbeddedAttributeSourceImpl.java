@@ -30,42 +30,57 @@ import java.util.Locale;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.attribute.EmbeddedAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PersistentAttribute;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
+import org.hibernate.metamodel.source.spi.EmbeddableSource;
+import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
-import org.hibernate.metamodel.spi.LocalBindingContext;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 
 /**
- * Annotation backed implementation of {@code ComponentAttributeSource}.
+ * Annotation backed implementation of {@code EmbeddedAttributeSource}.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
-public class EmbeddedAttributeSourceImpl
-		extends AbstractEmbeddableAdapter
-		implements ComponentAttributeSource, AnnotationAttributeSource {
+public class EmbeddedAttributeSourceImpl implements EmbeddedAttributeSource, AnnotationAttributeSource {
 	private final EmbeddedAttribute attribute;
-	private final JavaTypeDescriptor embeddableJavaTypeDescriptor;
 
-	private final boolean partOfIdentifier;
-	private final boolean partOfPersistentCollection;
+	private final EmbeddableSource embeddableSource;
 
 	public EmbeddedAttributeSourceImpl(
 			EmbeddedAttribute attribute,
 			boolean partOfIdentifier,
 			boolean partOfPersistentCollection) {
-		super( attribute.getEmbeddableTypeMetadata() );
+
+		final SourceHelper.AttributeBuilder attributeBuilder;
+		if ( partOfIdentifier ) {
+			attributeBuilder = SourceHelper.IdentifierPathAttributeBuilder.INSTANCE;
+		}
+		else if ( partOfPersistentCollection ) {
+			attributeBuilder = SourceHelper.PluralAttributesDisallowedAttributeBuilder.INSTANCE;
+		}
+		else {
+			attributeBuilder = SourceHelper.StandardAttributeBuilder.INSTANCE;
+		}
+
+		this.embeddableSource = new EmbeddableSourceImpl(
+				attribute.getEmbeddableTypeMetadata(),
+				attributeBuilder
+		);
 
 		this.attribute = attribute;
-		this.embeddableJavaTypeDescriptor = attribute.getBackingMember().getType().getErasedType();
-		this.partOfIdentifier = partOfIdentifier;
-		this.partOfPersistentCollection = partOfPersistentCollection;
+	}
+
+	@Override
+	public EmbeddableSource getEmbeddableSource() {
+		return embeddableSource;
 	}
 
 	@Override
@@ -79,8 +94,8 @@ public class EmbeddedAttributeSourceImpl
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.COMPOSITE;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.COMPOSITE;
 	}
 
 	@Override
@@ -89,19 +104,20 @@ public class EmbeddedAttributeSourceImpl
 	}
 
 	@Override
-	public JavaTypeDescriptor getTypeDescriptor() {
-		return embeddableJavaTypeDescriptor;
-	}
-
-	@Override
 	public String getName() {
 		return attribute.getName();
 	}
 
 	@Override
-	public String getExplicitTuplizerClassName() {
-		return attribute.getEmbeddableTypeMetadata().getCustomTuplizerClassName();
+	public AttributePath getAttributePath() {
+		return attribute.getPath();
 	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attribute.getRole();
+	}
+
 
 	@Override
 	public String getPropertyAccessorName() {
@@ -109,21 +125,6 @@ public class EmbeddedAttributeSourceImpl
 		return StringHelper.isEmpty( attribute.getAccessorStrategy() )
 				? attribute.getAccessType().name().toLowerCase( Locale.ENGLISH )
 				: attribute.getAccessorStrategy();
-	}
-
-	@Override
-	public LocalBindingContext getLocalBindingContext() {
-		return attribute.getEmbeddableTypeMetadata().getLocalBindingContext();
-	}
-
-	@Override
-	public String getPath() {
-		return attribute.getPath().getFullPath();
-	}
-
-	@Override
-	public String getParentReferenceAttributeName() {
-		return getEmbeddableTypeMetadata().getParentReferencingAttributeName();
 	}
 
 	@Override
@@ -161,7 +162,7 @@ public class EmbeddedAttributeSourceImpl
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+	public NaturalIdMutability getNaturalIdMutability() {
 		return attribute.getNaturalIdMutability();
 	}
 
@@ -188,19 +189,6 @@ public class EmbeddedAttributeSourceImpl
 	@Override
 	public String toString() {
 		return "EmbeddedAttributeSourceImpl{role=" + attribute.getRole().getFullPath()
-				+ ", embeddable=" + getTypeDescriptor().getName().toString() + "}";
-	}
-
-	@Override
-	protected SourceHelper.AttributeBuilder getAttributeBuilder() {
-		if ( partOfIdentifier ) {
-			return SourceHelper.IdentifierPathAttributeBuilder.INSTANCE;
-		}
-
-		if ( partOfPersistentCollection ) {
-			return SourceHelper.PluralAttributesDisallowedAttributeBuilder.INSTANCE;
-		}
-
-		return SourceHelper.StandardAttributeBuilder.INSTANCE;
+				+ ", embeddable=" + embeddableSource.getTypeDescriptor().getName().toString() + "}";
 	}
 }

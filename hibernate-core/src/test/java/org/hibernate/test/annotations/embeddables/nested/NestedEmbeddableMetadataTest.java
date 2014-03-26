@@ -27,10 +27,10 @@ import java.sql.Types;
 
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingEmbedded;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.type.CustomType;
 
@@ -52,9 +52,13 @@ public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
 		Metadata metadata = new MetadataSources().addAnnotatedClass( Customer.class ).buildMetadata();
 		EntityBinding eb = metadata.getEntityBinding( Customer.class.getName() );
 		PluralAttributeBinding investmentsBinding = (PluralAttributeBinding) eb.locateAttributeBinding( "investments" );
-		CompositePluralAttributeElementBinding investmentsElementBinding = (CompositePluralAttributeElementBinding) investmentsBinding.getPluralAttributeElementBinding();
-		CompositeAttributeBinding amountBinding = (CompositeAttributeBinding) investmentsElementBinding.getCompositeAttributeBindingContainer().locateAttributeBinding( "amount" );
-		SingularAttributeBinding currencyBinding = (SingularAttributeBinding) amountBinding.locateAttributeBinding( "currency" );
+		PluralAttributeElementBindingEmbedded investmentsElementBinding = (PluralAttributeElementBindingEmbedded) investmentsBinding.getPluralAttributeElementBinding();
+		EmbeddedAttributeBinding amountBinding = (EmbeddedAttributeBinding) investmentsElementBinding.getEmbeddableBinding().locateAttributeBinding(
+				"amount"
+		);
+		SingularAttributeBinding currencyBinding = (SingularAttributeBinding) amountBinding.getEmbeddableBinding().locateAttributeBinding(
+				"currency"
+		);
 
 		CustomType currencyType = (CustomType) currencyBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 		assertNotNull( currencyType );

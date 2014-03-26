@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.domain.Attribute;
 
 /**
@@ -47,21 +49,27 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	private boolean isAlternateUniqueKey;
 
+	private final AttributeRole attributeRole;
+	private final AttributePath attributePath;
+
 	private final MetaAttributeContext metaAttributeContext;
-	private final String attributePath;
 
 	protected AbstractAttributeBinding(
 			AttributeBindingContainer container,
 			Attribute attribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
 		this.container = container;
 		this.attribute = attribute;
 		this.propertyAccessorName = propertyAccessorName;
 		this.includedInOptimisticLocking = includedInOptimisticLocking;
 		this.metaAttributeContext = metaAttributeContext;
-		this.attributePath = getContainer().getPathBase() + '.' + getAttribute().getName();
+
+		this.attributeRole = attributeRole;
+		this.attributePath = attributePath;
 	}
 
 	@Override
@@ -75,8 +83,13 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
-	public String getAttributePath() {
+	public AttributePath getAttributePath() {
 		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override

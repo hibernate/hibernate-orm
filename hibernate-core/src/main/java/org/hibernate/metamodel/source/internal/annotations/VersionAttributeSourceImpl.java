@@ -26,8 +26,7 @@ package org.hibernate.metamodel.source.internal.annotations;
 import org.hibernate.metamodel.source.internal.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.OverrideAndConverterCollector;
 import org.hibernate.metamodel.source.spi.VersionAttributeSource;
-
-import static org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * @author Steve Ebersole

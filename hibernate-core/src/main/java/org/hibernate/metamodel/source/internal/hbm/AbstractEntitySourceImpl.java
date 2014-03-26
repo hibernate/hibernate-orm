@@ -34,7 +34,6 @@ import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.TruthValue;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.EntityElement;
@@ -66,9 +65,11 @@ import org.hibernate.metamodel.source.spi.JpaCallbackSource;
 import org.hibernate.metamodel.source.spi.SecondaryTableSource;
 import org.hibernate.metamodel.source.spi.SubclassEntitySource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.LocalBindingContext;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.xml.spi.Origin;
 
 /**
@@ -84,6 +85,9 @@ public abstract class AbstractEntitySourceImpl
 	private final String className;
 	private final String entityName;
 	private final String jpaEntityName;
+
+	private final AttributeRole attributeRoleBase;
+	private final AttributePath attributePathBase;
 
 	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<IdentifiableTypeSource>();
 
@@ -109,12 +113,26 @@ public abstract class AbstractEntitySourceImpl
 			this.entityName = className;
 			this.jpaEntityName = StringHelper.unqualify( className );
 		}
+
+		this.attributePathBase = new AttributePath();
+		this.attributeRoleBase = new AttributeRole( entityName );
+
 		this.filterSources = buildFilterSources();
 	}
 
 	@Override
 	public String getTypeName() {
 		return StringHelper.isNotEmpty( className ) ? className : entityName;
+	}
+
+	@Override
+	public AttributePath getAttributePathBase() {
+		return attributePathBase;
+	}
+
+	@Override
+	public AttributeRole getAttributeRoleBase() {
+		return attributeRoleBase;
 	}
 
 	@Override
@@ -166,14 +184,14 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
-		return buildAttributeSources( entityElement, attributeSources, null, SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID );
+		return buildAttributeSources( entityElement, attributeSources, null, NaturalIdMutability.NOT_NATURAL_ID );
 	}
 
 	protected List<AttributeSource> buildAttributeSources(
 			EntityElement element,
 			List<AttributeSource> attributeSources,
 			String logicTalbeName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability){
+			NaturalIdMutability naturalIdMutability){
 		processPropertyAttributes( attributeSources, element.getProperty(), logicTalbeName, naturalIdMutability );
 		processComponentAttributes(
 				attributeSources,
@@ -218,11 +236,12 @@ public abstract class AbstractEntitySourceImpl
 			List<AttributeSource> results,
 			List<JaxbPropertyElement> propertyElements,
 			String logicalTableName,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+			NaturalIdMutability naturalIdMutability) {
 		for ( JaxbPropertyElement element : propertyElements ) {
 			results.add(
 					new PropertyAttributeSourceImpl(
 							sourceMappingDocument(),
+							this,
 							element,
 							logicalTableName,
 							naturalIdMutability
@@ -253,15 +272,15 @@ public abstract class AbstractEntitySourceImpl
 	protected void processComponentAttributes(List<AttributeSource> results,
 											 List<JaxbComponentElement> elements,
 											 String logicalTableName,
-											 SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+											 NaturalIdMutability naturalIdMutability) {
 		for ( JaxbComponentElement element : elements ) {
 			results.add(
-					new ComponentAttributeSourceImpl(
+					new EmbeddedAttributeSourceImpl(
 							sourceMappingDocument(),
-							element,
 							this,
-							logicalTableName,
-							naturalIdMutability
+							element,
+							naturalIdMutability,
+							logicalTableName
 					)
 			);
 		}
@@ -270,18 +289,19 @@ public abstract class AbstractEntitySourceImpl
 	protected void processDynamicComponentAttributes(List<AttributeSource> results,
 											  List<JaxbDynamicComponentElement> elements,
 											  String logicalTableName,
-											  SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+											  NaturalIdMutability naturalIdMutability) {
 		// todo : implement
 	}
 
 	protected void processManyToOneAttributes(List<AttributeSource> results,
 											  List<JaxbManyToOneElement> elements,
 											  String logicalTableName,
-											  SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+											  NaturalIdMutability naturalIdMutability) {
 		for ( JaxbManyToOneElement element : elements ) {
 			results.add(
 					new ManyToOneAttributeSourceImpl(
 							sourceMappingDocument(),
+							this,
 							element,
 							logicalTableName,
 							naturalIdMutability
@@ -292,11 +312,12 @@ public abstract class AbstractEntitySourceImpl
 	protected void processOneToOneAttributes(List<AttributeSource> results,
 											   List<JaxbOneToOneElement> elements,
 											   String logicalTableName,
-											   SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+											   NaturalIdMutability naturalIdMutability) {
 		for ( JaxbOneToOneElement element : elements ) {
 			results.add(
 					new OneToOneAttributeSourceImpl(
 							sourceMappingDocument(),
+							this,
 							element,
 							logicalTableName,
 							naturalIdMutability
@@ -308,7 +329,7 @@ public abstract class AbstractEntitySourceImpl
 	protected void processAnyAttributes(List<AttributeSource> results,
 											  List<JaxbAnyElement> elements,
 											  String logicalTableName,
-											  SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+											  NaturalIdMutability naturalIdMutability) {
 		// todo : implement
 	}
 
@@ -357,15 +378,24 @@ public abstract class AbstractEntitySourceImpl
 			);
 		}
 	}
-	protected void processIdBagAttributes(List<AttributeSource> results,
-											 List<JaxbIdbagElement> propertyElements){
 
-		if ( !propertyElements.isEmpty() ) {
-			throw new NotYetImplementedException( "<idbag> is not supported yet" );
+	protected void processIdBagAttributes(
+			List<AttributeSource> results,
+			List<JaxbIdbagElement> elements){
+		for ( JaxbIdbagElement element : elements ) {
+			results.add(
+					new IdBagSourceImpl(
+							sourceMappingDocument(),
+							element,
+							this
+					)
+			);
 		}
 	}
-	protected void processBagAttributes(List<AttributeSource> results,
-											 List<JaxbBagElement> propertyElements) {
+
+	protected void processBagAttributes(
+			List<AttributeSource> results,
+			List<JaxbBagElement> propertyElements) {
 		for ( JaxbBagElement element : propertyElements ) {
 			results.add(
 					new BagSourceImpl(
@@ -393,7 +423,7 @@ public abstract class AbstractEntitySourceImpl
 			secondaryTableSources.add( secondaryTableSource );
 
 			final String logicalTableName = secondaryTableSource.getLogicalTableNameForContainedColumns();
-			final SingularAttributeBinding.NaturalIdMutability  naturalIdMutability = SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+			final NaturalIdMutability naturalIdMutability = NaturalIdMutability.NOT_NATURAL_ID;
 			processAnyAttributes(
 					attributeSources,
 					joinElement.getAny(),
@@ -556,11 +586,6 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public java.util.Collection<? extends ToolingHintSource> getToolingHintSources() {
 		return entityElement.getMeta();
-	}
-
-	@Override
-	public String getPath() {
-		return "";
 	}
 
 	@Override

@@ -31,6 +31,7 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.type.Hibern
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.TemporalTypeResolver;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -91,6 +92,11 @@ public class PluralAttributeElementDetailsBasic implements PluralAttributeElemen
 	@Override
 	public JavaTypeDescriptor getJavaType() {
 		return javaType;
+	}
+
+	@Override
+	public PluralAttributeElementNature getElementNature() {
+		return PluralAttributeElementNature.BASIC;
 	}
 
 	@Override

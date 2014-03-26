@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.source.spi;
 
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+
 /**
  * Contract for sources of persistent attribute descriptions.
  *
@@ -36,10 +39,17 @@ public interface AttributeSource extends ToolingHintSourceContainer {
 	 */
 	public String getName();
 
+	public AttributePath getAttributePath();
+	public AttributeRole getAttributeRole();
+
 	/**
-	 * Is this a singular attribute?  Specifically, can it be cast to {@link SingularAttributeSource}?
-	 *
-	 * @return {@code true} indicates this is castable to {@link SingularAttributeSource}; {@code false} otherwise.
+	 * Attributes are coarsely speaking either singular or plural.  This method
+	 * reports whether this attribute is singular (false indicates it is plural
+	 * instead).  Singular attributes are castable to
+	 * {@link org.hibernate.metamodel.source.spi.SingularAttributeSource} for
+	 * further processing, whereas plural attributes are castable to
+	 * {@link org.hibernate.metamodel.source.spi.PluralAttributeSource} for
+	 * further processing.
 	 */
 	public boolean isSingular();
 
@@ -60,9 +70,10 @@ public interface AttributeSource extends ToolingHintSourceContainer {
 	public String getPropertyAccessorName();
 
 	/**
-	 * If the containing entity is using {@link org.hibernate.engine.OptimisticLockStyle#ALL} or
-	 * {@link org.hibernate.engine.OptimisticLockStyle#DIRTY} style optimistic locking, should this attribute
-	 * be used?
+	 * If the containing entity is using optimistic locking, should this
+	 * attribute participate in that locking?  Meaning, should changes in the
+	 * value of this attribute at runtime indicate that the entity is now dirty
+	 * in terms of optimistic locking?
 	 *
 	 * @return {@code true} indicates it should be included; {@code false}, it should not.
 	 */

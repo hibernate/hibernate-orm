@@ -31,12 +31,12 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbFilterElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
+import org.hibernate.metamodel.source.spi.CollectionIdSource;
 import org.hibernate.metamodel.source.spi.FilterSource;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.MappingException;
@@ -45,6 +45,8 @@ import org.hibernate.metamodel.source.spi.PluralAttributeKeySource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.TableSpecificationSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
@@ -57,6 +59,9 @@ public abstract class AbstractPluralAttributeSourceImpl
 		implements PluralAttributeSource, Helper.InLineViewNameInferrer {
 	private final PluralAttributeElement pluralAttributeElement;
 	private final AttributeSourceContainer container;
+
+	private final AttributeRole attributeRole;
+	private final AttributePath attributePath;
 
 	private final HibernateTypeSource typeInformation;
 
@@ -75,6 +80,9 @@ public abstract class AbstractPluralAttributeSourceImpl
 		this.pluralAttributeElement = pluralAttributeElement;
 		this.container = container;
 
+		this.attributeRole = container.getAttributeRoleBase().append( pluralAttributeElement.getName() );
+		this.attributePath = container.getAttributePathBase().append( pluralAttributeElement.getName() );
+
 		this.keySource = new PluralAttributeKeySourceImpl(
 				sourceMappingDocument(),
 				pluralAttributeElement.getKey(),
@@ -82,10 +90,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 		);
 		this.elementSource = interpretElementType();
 
-		this.caching = Helper.createCaching(
-				pluralAttributeElement.getCache(),
-				StringHelper.qualify( container().getPath(), getName() )
-		);
+		this.caching = Helper.createCaching( pluralAttributeElement.getCache() );
 
 		this.typeInformation = new HibernateTypeSource() {
 			@Override
@@ -126,7 +131,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			// If so, getType is currently null.
 //			elementClassReference = makeClassReference(pluralAttributeElement
 //					.getElement().getType().getName());
-			return new BasicPluralAttributeElementSourceImpl(
+			return new PluralAttributeElementSourceBasicImpl(
 					sourceMappingDocument(),
 					pluralAttributeElement.getElement()
 			);
@@ -136,8 +141,9 @@ public abstract class AbstractPluralAttributeSourceImpl
 					pluralAttributeElement
 							.getCompositeElement().getClazz()
 			);
-			return new CompositePluralAttributeElementSourceImpl(
+			return new PluralAttributeElementSourceEmbeddedImpl(
 					sourceMappingDocument(),
+					this,
 					pluralAttributeElement.getCompositeElement(),
 					pluralAttributeElement.getCascade()
 			);
@@ -147,7 +153,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 					pluralAttributeElement
 							.getOneToMany().getClazz()
 			);
-			return new OneToManyPluralAttributeElementSourceImpl(
+			return new PluralAttributeElementSourceOneToManyImpl(
 					sourceMappingDocument(),
 					this,
 					pluralAttributeElement.getOneToMany(),
@@ -159,7 +165,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 					pluralAttributeElement
 							.getManyToMany().getClazz()
 			);
-			return new ManyToManyPluralAttributeElementSourceImpl(
+			return new PluralAttributeElementSourceManyToManyImpl(
 					sourceMappingDocument(),
 					this,
 					pluralAttributeElement.getManyToMany(),
@@ -176,6 +182,16 @@ public abstract class AbstractPluralAttributeSourceImpl
 					bindingContext().getOrigin()
 			);
 		}
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override
@@ -252,7 +268,12 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	@Override
 	public String inferInLineViewName() {
-		return container().getPath() + "." + pluralAttributeElement.getName();
+		return getAttributeRole().getFullPath();
+	}
+
+	@Override
+	public CollectionIdSource getCollectionIdSource() {
+		return null;
 	}
 
 	@Override

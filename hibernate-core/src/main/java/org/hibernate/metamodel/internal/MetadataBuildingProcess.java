@@ -84,6 +84,7 @@ import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.MetadataContributor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -94,7 +95,6 @@ import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -385,7 +385,7 @@ public class MetadataBuildingProcess {
 			PluralAttributeKeyBinding keyBinding = pluralAttributeBinding.getPluralAttributeKeyBinding();
 			if ( keyBinding.isInverse() || keyBinding.isNullable() ||
 					pluralAttributeBinding.getPluralAttributeElementBinding().getNature() !=
-							PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+							PluralAttributeElementNature.ONE_TO_MANY ) {
 				continue;
 			}
 			// Ensure this isn't a bidirectional association by ensuring FK columns don't match relational columns of any
@@ -498,8 +498,15 @@ public class MetadataBuildingProcess {
 
 			}
 			else if ( override.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
+				String collectionRole = role;
+				if ( !role.contains( "#" ) ) {
+					final int pivotPosition = role.lastIndexOf( '.' );
+					if ( pivotPosition > 0 ) {
+						collectionRole = role.substring( 0, pivotPosition ) + '#' + role.substring( pivotPosition + 1 );
+					}
+				}
 				final PluralAttributeBinding pluralAttributeBinding = bindingContext.getMetadataCollector().getCollection(
-						role
+						collectionRole
 				);
 				if ( pluralAttributeBinding != null ) {
 					pluralAttributeBinding.getCaching().overlay( override );
@@ -1119,20 +1126,11 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void addCollection(PluralAttributeBinding pluralAttributeBinding) {
-			final String owningEntityName = pluralAttributeBinding.getContainer().seekEntityBinding().getEntityName();
-			final String containerPathBase = pluralAttributeBinding.getContainer().getPathBase();
-			final String attributeName = pluralAttributeBinding.getAttribute().getName();
-			final String collectionRole;
-			if ( StringHelper.isEmpty( containerPathBase ) ) {
-				collectionRole = owningEntityName + '.' + attributeName;
-			}
-			else {
-				collectionRole = owningEntityName + '.' + containerPathBase + '.' + attributeName;
-			}
+			final String collectionRole = pluralAttributeBinding.getAttributeRole().getFullPath();
 			if ( collectionBindingMap.containsKey( collectionRole ) ) {
 				throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, collectionRole );
 			}
-			collectionBindingMap.put( collectionRole, pluralAttributeBinding );
+			collectionBindingMap.put( pluralAttributeBinding.getAttributeRole().getFullPath(), pluralAttributeBinding );
 		}
 
 

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Value;
 
@@ -82,16 +83,11 @@ public interface SingularAttributeBinding extends AttributeBinding {
 	/**
 	 * Convenience method to determine if this attribute is an natural id and if it is, then returns its mutability.
 	 *
-	 * @return The {@link NaturalIdMutability} linked with this attribute,
+	 * @return The {@link org.hibernate.metamodel.spi.NaturalIdMutability} linked with this attribute,
 	 * {@code NaturalIdMutability#NOT_NATURAL_ID} indicates this is <b>NOT</b> a natural id attribute.
 	 */
 	public NaturalIdMutability getNaturalIdMutability();
 
 	public void setAlternateUniqueKey(boolean alternateUniqueKey);
 
-	public enum NaturalIdMutability {
-		MUTABLE,
-		IMMUTABLE,
-		NOT_NATURAL_ID
-	}
 }

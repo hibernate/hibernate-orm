@@ -25,10 +25,8 @@
 package org.hibernate.tuple.component;
 import java.util.Map;
 
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -46,7 +44,7 @@ import org.hibernate.tuple.Instantiator;
 public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 	public DynamicMapComponentTuplizer(
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer component,
+			EmbeddableBinding component,
 			boolean isIdentifierMapper) {
 		super( serviceRegistry, component, isIdentifierMapper );
 	}
@@ -62,14 +60,14 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 
 	@Override
 	protected Instantiator buildInstantiator(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper) {
 		return new DynamicMapInstantiator();
 	}
 
 	@Override
 	protected Getter buildGetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding) {
 		return buildPropertyAccessor().getGetter( null, attributeBinding.getAttribute().getName() );
@@ -77,7 +75,7 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 
 	@Override
 	protected Setter buildSetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding) {
 		return buildPropertyAccessor().getSetter( null, attributeBinding.getAttribute().getName() );

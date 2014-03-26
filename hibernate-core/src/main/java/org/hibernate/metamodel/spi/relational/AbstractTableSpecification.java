@@ -37,7 +37,10 @@ import java.util.List;
  */
 public abstract class AbstractTableSpecification implements TableSpecification {
 
-	// A column an derived value can have the same text, so use the Value.ValueType to disambiguate.
+	/**
+	 * A column and derived value can have the same text; this value class helps
+	 * to disambiguate.
+	 */
 	private class ValueKey {
 		private final Value.ValueType valueType;
 		private final Identifier identifier;
@@ -70,6 +73,13 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 			int result = valueType != null ? valueType.hashCode() : 0;
 			result = 31 * result + ( identifier != null ? identifier.hashCode() : 0 );
 			return result;
+		}
+
+		@Override
+		public String toString() {
+			return "ValueKey{valueType=" + valueType.name() +
+					", identifier=" + identifier +
+					'}';
 		}
 	}
 	private int tableNumber;

@@ -30,8 +30,6 @@ import java.lang.reflect.ParameterizedType;
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
@@ -42,18 +40,20 @@ import org.hibernate.jpa.internal.metamodel.AbstractManagedType;
 import org.hibernate.jpa.internal.metamodel.BasicTypeImpl;
 import org.hibernate.jpa.internal.metamodel.EmbeddableTypeImpl;
 import org.hibernate.jpa.internal.metamodel.MappedSuperclassTypeImpl;
-import org.hibernate.jpa.internal.metamodel.SingularAttributeImpl;
 import org.hibernate.jpa.internal.metamodel.PluralAttributeImpl;
+import org.hibernate.jpa.internal.metamodel.SingularAttributeImpl;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
-import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.CompositePluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.MapBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingEmbedded;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -250,18 +250,18 @@ public class AttributeBuilder {
 				return getEntityAttributeMetaModelType( attributeTypeDescriptor );
 			}
 			case EMBEDDABLE: {
-				if ( ! ( attributeBinding instanceof CompositeAttributeBinding ) ) {
+				if ( ! ( attributeBinding instanceof EmbeddedAttributeBinding ) ) {
 					throw new IllegalArgumentException(
 							String.format(
 									"Unexpected type of attribute binding. Expected: %s; Actual: %s",
-									CompositeAttributeBinding.class.getName(),
+									EmbeddedAttributeBinding.class.getName(),
 									attributeBinding.getClass().getName()
 							)
 					);
 				}
 				return getEmbeddableAttributeMetaModelType(
 						attributeTypeDescriptor,
-						(CompositeAttributeBinding) attributeBinding
+						( (EmbeddedAttributeBinding) attributeBinding ).getEmbeddableBinding()
 				);
 			}
 			default: {
@@ -293,11 +293,11 @@ public class AttributeBuilder {
 			}
 			case EMBEDDABLE: {
 				final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
-				final CompositePluralAttributeElementBinding compositePluralAttributeElementBinding =
-						(CompositePluralAttributeElementBinding) pluralAttributeBinding.getPluralAttributeElementBinding();
+				final PluralAttributeElementBindingEmbedded pluralAttributeElementBindingEmbedded =
+						(PluralAttributeElementBindingEmbedded) pluralAttributeBinding.getPluralAttributeElementBinding();
 				return getEmbeddableAttributeMetaModelType(
 						attributeTypeDescriptor,
-						compositePluralAttributeElementBinding.getCompositeAttributeBindingContainer()
+						pluralAttributeElementBindingEmbedded.getEmbeddableBinding()
 				);
 			}
 			default: {
@@ -369,9 +369,9 @@ public class AttributeBuilder {
 	@SuppressWarnings( "unchecked" )
 	private <Y> Type<Y> getEmbeddableAttributeMetaModelType(
 			AttributeTypeDescriptor attributeTypeDescriptor,
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer) {
+			EmbeddableBinding embeddableBinding) {
 		checkCorrectValueClassification( attributeTypeDescriptor, AttributeTypeDescriptor.ValueClassification.EMBEDDABLE );
-		if ( ! compositeAttributeBindingContainer.isAggregated() ) {
+		if ( ! embeddableBinding.isAggregated() ) {
 			throw new IllegalArgumentException(
 					"Composite attribute binding is not aggregated."
 			);
@@ -382,7 +382,7 @@ public class AttributeBuilder {
 				(ComponentType) attributeTypeDescriptor.getHibernateType()
 		);
 		context.registerEmbeddedableType( embeddableType );
-		for ( AttributeBinding subAttributeBinding : compositeAttributeBindingContainer.attributeBindings() ) {
+		for ( AttributeBinding subAttributeBinding : embeddableBinding.attributeBindings() ) {
 			final Attribute<Y, Object> attribute = buildAttribute( embeddableType, subAttributeBinding );
 			if ( attribute != null ) {
 				embeddableType.getBuilder().addAttribute( attribute );
@@ -470,7 +470,7 @@ public class AttributeBuilder {
 		else {
 			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
 
-			if ( pluralAttributeBinding.getAttribute().getNature() == org.hibernate.metamodel.spi.domain.PluralAttribute.Nature.ARRAY ) {
+			if ( pluralAttributeBinding.getAttribute().getPluralAttributeNature() == PluralAttributeNature.ARRAY ) {
 				context.handleUnsupportedFeature( UnsupportedFeature.ARRAY );
 				return null;
 			}
@@ -478,46 +478,46 @@ public class AttributeBuilder {
 			// First, determine the type of the elements and use that to help determine the
 			// collection type)
 			final PluralAttributeElementBinding elementBinding = pluralAttributeBinding.getPluralAttributeElementBinding();
-			final PluralAttributeElementBinding.Nature elementNature = elementBinding.getNature();
+			final PluralAttributeElementNature elementNature = elementBinding.getNature();
 			final PersistentAttributeType persistentAttributeType;
 			final PersistentAttributeType elementPersistentAttributeType;
 			PersistentAttributeType keyPersistentAttributeType = null;
 
-			if ( elementNature == PluralAttributeElementBinding.Nature.MANY_TO_ANY ) {
+			if ( elementNature == PluralAttributeElementNature.MANY_TO_ANY ) {
 				// ANY mappings are currently not supported in the JPA metamodel; see HHH-6589
 				context.handleUnsupportedFeature( UnsupportedFeature.ANY );
 				return null;
 			}
-			else if ( elementNature == PluralAttributeElementBinding.Nature.BASIC ) {
+			else if ( elementNature == PluralAttributeElementNature.BASIC ) {
 				elementPersistentAttributeType = PersistentAttributeType.BASIC;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
-			else if ( elementNature == PluralAttributeElementBinding.Nature.AGGREGATE ) {
+			else if ( elementNature == PluralAttributeElementNature.AGGREGATE ) {
 				elementPersistentAttributeType = PersistentAttributeType.EMBEDDED;
 				persistentAttributeType = PersistentAttributeType.ELEMENT_COLLECTION;
 			}
 			else {
-				elementPersistentAttributeType = elementNature == PluralAttributeElementBinding.Nature.MANY_TO_MANY
+				elementPersistentAttributeType = elementNature == PluralAttributeElementNature.MANY_TO_MANY
 						? PersistentAttributeType.MANY_TO_MANY
 						: PersistentAttributeType.ONE_TO_MANY;
 				persistentAttributeType = elementPersistentAttributeType;
 			}
 
 			// For maps, also check the key binding
-			if ( pluralAttributeBinding.getAttribute().getNature() == org.hibernate.metamodel.spi.domain.PluralAttribute.Nature.MAP ) {
+			if ( pluralAttributeBinding.getAttribute().getPluralAttributeNature() == PluralAttributeNature.MAP ) {
 				final IndexedPluralAttributeBinding indexedPluralAttributeBinding
 						= (IndexedPluralAttributeBinding) pluralAttributeBinding;
-				final PluralAttributeIndexBinding.Nature indexNature
+				final PluralAttributeIndexNature indexNature
 						= indexedPluralAttributeBinding.getPluralAttributeIndexBinding().getNature();
 
-				if ( indexNature == PluralAttributeIndexBinding.Nature.MANY_TO_ANY ) {
+				if ( indexNature == PluralAttributeIndexNature.MANY_TO_ANY ) {
 					context.handleUnsupportedFeature( UnsupportedFeature.ANY );
 					return null;
 				}
-				else if ( indexNature == PluralAttributeIndexBinding.Nature.MANY_TO_MANY ) {
+				else if ( indexNature == PluralAttributeIndexNature.MANY_TO_MANY ) {
 					keyPersistentAttributeType = PersistentAttributeType.MANY_TO_ONE;
 				}
-				else if ( indexNature == PluralAttributeIndexBinding.Nature.AGGREGATE ) {
+				else if ( indexNature == PluralAttributeIndexNature.AGGREGATE ) {
 					keyPersistentAttributeType = PersistentAttributeType.EMBEDDED;
 				}
 				else {

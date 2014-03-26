@@ -30,7 +30,7 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbNaturalIdElement;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.IdentifiableTypeSource;
 import org.hibernate.metamodel.source.spi.TableSpecificationSource;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * @author Steve Ebersole
@@ -51,9 +51,9 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl {
 	protected List<AttributeSource> buildAttributeSources(List<AttributeSource> attributeSources) {
 		final JaxbNaturalIdElement naturalId = entityElement().getNaturalId();
 		if ( naturalId != null ) {
-			final SingularAttributeBinding.NaturalIdMutability naturalIdMutability = naturalId.isMutable()
-					? SingularAttributeBinding.NaturalIdMutability.MUTABLE
-					: SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
+			final NaturalIdMutability naturalIdMutability = naturalId.isMutable()
+					? NaturalIdMutability.MUTABLE
+					: NaturalIdMutability.IMMUTABLE;
 			processPropertyAttributes( attributeSources, naturalId.getProperty(), null, naturalIdMutability );
 			processManyToOneAttributes( attributeSources, naturalId.getManyToOne(), null, naturalIdMutability );
 			processComponentAttributes( attributeSources, naturalId.getComponent(), null, naturalIdMutability );

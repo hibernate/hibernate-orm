@@ -28,6 +28,7 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSetElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.Orderable;
 import org.hibernate.metamodel.source.spi.Sortable;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 
 /**
  * @author Steve Ebersole
@@ -46,8 +47,8 @@ public class SetSourceImpl extends AbstractPluralAttributeSourceImpl implements 
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.SET;
+	public PluralAttributeNature getNature() {
+		return PluralAttributeNature.SET;
 	}
 
 	@Override

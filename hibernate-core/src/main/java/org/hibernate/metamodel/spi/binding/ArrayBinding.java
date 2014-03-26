@@ -24,6 +24,9 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 
 /**
@@ -36,13 +39,25 @@ public class ArrayBinding extends AbstractPluralAttributeBinding implements Inde
 
 	public ArrayBinding(AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
+			PluralAttributeElementNature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
-			String propertyAccessorName, boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext, int base) {
-		super( container, attribute, pluralAttributeElementNature,
-				referencedAttributeBinding, propertyAccessorName,
-				includedInOptimisticLocking, metaAttributeContext );
+			String propertyAccessorName,
+			boolean includedInOptimisticLocking,
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
+			int base) {
+		super(
+				container,
+				attribute,
+				pluralAttributeElementNature,
+				referencedAttributeBinding,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				metaAttributeContext,
+				attributeRole,
+				attributePath
+		);
 		pluralAttributeIndexBinding = new BasicPluralAttributeIndexBinding(
 				this
 		);

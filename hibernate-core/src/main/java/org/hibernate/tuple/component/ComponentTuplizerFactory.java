@@ -29,7 +29,7 @@ import java.lang.reflect.Constructor;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -40,7 +40,7 @@ import org.hibernate.service.ServiceRegistry;
 public class ComponentTuplizerFactory implements Serializable {
 	private static final Class[] COMPONENT_TUP_CTOR_SIG_NEW = new Class[] {
 			ServiceRegistry.class,
-			CompositeAttributeBindingContainer.class,
+			EmbeddableBinding.class,
 			boolean.class
 	};
 
@@ -59,7 +59,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	public ComponentTuplizer constructTuplizer(
 			ServiceRegistry serviceRegistry,
 			String tuplizerClassName,
-			CompositeAttributeBindingContainer metadata,
+			EmbeddableBinding metadata,
 			boolean isIdentifierMapper) {
 		try {
 			final Class<? extends ComponentTuplizer> tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
@@ -93,7 +93,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	public ComponentTuplizer constructTuplizer(
 			Class<? extends ComponentTuplizer> tuplizerClass,
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer metadata,
+			EmbeddableBinding metadata,
 			boolean isIdentifierMapper) {
 		final Constructor<? extends ComponentTuplizer> constructor = getProperConstructor(
 				tuplizerClass,
@@ -123,7 +123,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	public ComponentTuplizer constructDefaultTuplizer(
 			EntityMode entityMode,
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer metadata,
+			EmbeddableBinding metadata,
 			boolean isIdentifierMapper) {
 		final Class<? extends ComponentTuplizer> tuplizerClass = determineTuplizerClass( entityMode );
 		return constructTuplizer( tuplizerClass, serviceRegistry, metadata, isIdentifierMapper );

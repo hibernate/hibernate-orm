@@ -46,8 +46,8 @@ import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPAListenerHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.jandex.PseudoJpaDotNames;
-import org.hibernate.metamodel.source.spi.AttributePath;
 import org.hibernate.metamodel.source.spi.JpaCallbackSource;
+import org.hibernate.metamodel.spi.AttributePath;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 
 import org.jboss.jandex.AnnotationInstance;

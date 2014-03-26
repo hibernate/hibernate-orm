@@ -34,6 +34,9 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -77,39 +80,43 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature pluralAttributeElementNature,
+			PluralAttributeElementNature pluralAttributeElementNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
 		super(
 				container,
 				attribute,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 		this.pluralAttributeKeyBinding = new PluralAttributeKeyBinding( this, referencedAttributeBinding );
 		this.pluralAttributeElementBinding = interpretNature( pluralAttributeElementNature );
 		this.referencedPropertyName = referencedAttributeBinding.getAttribute().getName();
 	}
 
-	private AbstractPluralAttributeElementBinding interpretNature(PluralAttributeElementBinding.Nature nature) {
+	private AbstractPluralAttributeElementBinding interpretNature(PluralAttributeElementNature nature) {
 		switch ( nature ) {
 			case BASIC: {
-				return new BasicPluralAttributeElementBinding( this );
+				return new PluralAttributeElementBindingBasic( this );
 			}
 			case AGGREGATE: {
-				return new CompositePluralAttributeElementBinding( this );
+				return new PluralAttributeElementBindingEmbedded( this );
 			}
 			case ONE_TO_MANY: {
-				return new OneToManyPluralAttributeElementBinding( this );
+				return new PluralAttributeElementBindingOneToMany( this );
 			}
 			case MANY_TO_MANY: {
-				return new ManyToManyPluralAttributeElementBinding( this );
+				return new PluralAttributeElementBindingManyToMany( this );
 			}
 			case MANY_TO_ANY: {
-				return new ManyToAnyPluralAttributeElementBinding( this );
+				return new PluralAttributeElementBindingManyToAny( this );
 			}
 			default: {
 				throw new AssertionFailure( "Unknown collection element nature : " + nature );

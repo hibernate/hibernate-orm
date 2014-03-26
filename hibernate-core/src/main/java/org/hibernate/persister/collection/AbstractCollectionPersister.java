@@ -75,17 +75,17 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.PrimitiveTypeDescriptor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ListBinding;
-import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBindingManyToMany;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
@@ -268,8 +268,8 @@ public abstract class AbstractCollectionPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
-			cacheEntryStructure = collection.getAttribute().getNature() == PluralAttribute.Nature.MAP ?
-					StructuredMapCacheEntry.INSTANCE
+			cacheEntryStructure = collection.getAttribute().getPluralAttributeNature() == PluralAttributeNature.MAP
+					? StructuredMapCacheEntry.INSTANCE
 					: StructuredCollectionCacheEntry.INSTANCE;
 		}
 		else {
@@ -299,7 +299,7 @@ public abstract class AbstractCollectionPersister
 		isMutable = collection.isMutable();
 
 		TableSpecification table = collection.getPluralAttributeKeyBinding().getCollectionTable();
-		fetchMode = collection.getPluralAttributeElementBinding().getFetchMode();
+		fetchMode = collection.getFetchMode();
 		elementType = collection.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
 		// isSet = collection.isSet();
 		// isSorted = collection.isSorted();
@@ -377,9 +377,9 @@ public abstract class AbstractCollectionPersister
 			elementPersister = null;
 		}
 		elementNodeName = null;
-		int elementSpan = collection.getPluralAttributeElementBinding().getRelationalValueBindings() == null ?
-				0 :
-				collection.getPluralAttributeElementBinding().getRelationalValueBindings().size();
+		int elementSpan = collection.getPluralAttributeElementBinding().getRelationalValueContainer().relationalValueBindings() == null
+				? 0
+				: collection.getPluralAttributeElementBinding().getRelationalValueContainer().relationalValueBindings().size();
 		elementColumnAliases = new String[elementSpan];
 		elementColumnNames = new String[elementSpan];
 		elementColumnWriters = new String[elementSpan];
@@ -393,7 +393,7 @@ public abstract class AbstractCollectionPersister
 		boolean hasNotNullableColumns = false;
 		int j = 0;
 		if ( elementSpan > 0 ) {
-			for ( RelationalValueBinding relationalValueBinding : collection.getPluralAttributeElementBinding().getRelationalValueBindings() ) {
+			for ( RelationalValueBinding relationalValueBinding : collection.getPluralAttributeElementBinding().getRelationalValueContainer().relationalValueBindings() ) {
 				final Value value = relationalValueBinding.getValue();
 				elementColumnAliases[j] = value.getAlias( dialect, table );
 				if ( DerivedValue.class.isInstance( value ) ) {
@@ -478,7 +478,7 @@ public abstract class AbstractCollectionPersister
 			indexContainsFormula = false;
 		}
 
-		hasIdentifier = collection.getAttribute().getNature() == PluralAttribute.Nature.IDBAG;
+		hasIdentifier = collection.getAttribute().getPluralAttributeNature() == PluralAttributeNature.ID_BAG;
 		// TODO: fix this when IdBags are supported.
 		//if ( hasIdentifier ) {
 		//}
@@ -549,7 +549,7 @@ public abstract class AbstractCollectionPersister
 
 		sqlSelectSizeString = generateSelectSizeString(
 				collection.hasIndex() &&
-						collection.getAttribute().getNature() != PluralAttribute.Nature.MAP
+						collection.getAttribute().getPluralAttributeNature() != PluralAttributeNature.MAP
 		);
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();
 		sqlDetectRowByElementString = generateDetectRowByElementString();
@@ -623,9 +623,9 @@ public abstract class AbstractCollectionPersister
 		filterHelper = new FilterHelper( collection.getFilterConfigurations(), factory );
 
 		if ( collection.getPluralAttributeElementBinding()
-				.getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
-			final ManyToManyPluralAttributeElementBinding manyToManyElementBinding =
-					(ManyToManyPluralAttributeElementBinding) collection.getPluralAttributeElementBinding();
+				.getNature() == PluralAttributeElementNature.MANY_TO_MANY ) {
+			final PluralAttributeElementBindingManyToMany manyToManyElementBinding =
+					(PluralAttributeElementBindingManyToMany) collection.getPluralAttributeElementBinding();
 			manyToManyFilterHelper = new FilterHelper( manyToManyElementBinding.getFilterConfigurations(), factory );
 			manyToManyWhereString = StringHelper.isNotEmpty( manyToManyElementBinding.getManyToManyWhere() ) ?
 					"( " +manyToManyElementBinding.getManyToManyWhere() + ")" :

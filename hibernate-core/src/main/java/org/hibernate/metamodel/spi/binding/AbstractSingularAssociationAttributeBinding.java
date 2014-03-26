@@ -31,6 +31,9 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -59,6 +62,8 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 			boolean isIgnoreNotFound,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding) {
 		super(
@@ -68,7 +73,9 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 				includedInOptimisticLocking,
 				isLazy,
 				naturalIdMutability,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 		if ( referencedEntityBinding == null ) {
 			throw new IllegalArgumentException( "referencedEntityBinding must be non-null." );

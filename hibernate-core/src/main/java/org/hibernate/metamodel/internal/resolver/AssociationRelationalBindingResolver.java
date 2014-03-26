@@ -25,7 +25,7 @@ package org.hibernate.metamodel.internal.resolver;
 
 import java.util.List;
 
-import org.hibernate.metamodel.source.spi.ManyToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeElementSourceManyToMany;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
@@ -77,13 +77,13 @@ public interface AssociationRelationalBindingResolver {
 
 	List<RelationalValueBinding> resolveManyToManyElementRelationalValueBindings(
 			final EntityBinding entityBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
+			final PluralAttributeElementSourceManyToMany elementSource,
 			final TableSpecification collectionTable,
 			final EntityBinding referencedEntityBinding);
 
 	ForeignKey resolveManyToManyElementForeignKey(
 			final EntityBinding entityBinding,
-			final ManyToManyPluralAttributeElementSource elementSource,
+			final PluralAttributeElementSourceManyToMany elementSource,
 			final TableSpecification collectionTable,
 			final List<RelationalValueBinding> relationalValueBindings,
 			final EntityBinding referencedEntityBinding);

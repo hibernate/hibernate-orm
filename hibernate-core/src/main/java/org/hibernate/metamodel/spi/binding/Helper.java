@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 
 /**
@@ -32,13 +33,13 @@ import org.hibernate.metamodel.spi.domain.PluralAttribute;
  * @author Steve Ebersole
  */
 public class Helper {
-	public static void checkPluralAttributeNature(PluralAttribute attribute, PluralAttribute.Nature expected) {
-		if ( attribute.getNature() != expected ) {
+	public static void checkPluralAttributeNature(PluralAttribute attribute, PluralAttributeNature expected) {
+		if ( attribute.getPluralAttributeNature() != expected ) {
 			throw new AssertionFailure(
 					String.format(
 							"Mismatched collection natures; expecting %s, but found %s",
-							expected.getName(),
-							attribute.getNature().getName()
+							expected.name(),
+							attribute.getPluralAttributeNature().name()
 					)
 			);
 		}

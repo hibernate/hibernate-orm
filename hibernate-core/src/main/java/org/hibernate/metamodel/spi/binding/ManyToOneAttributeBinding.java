@@ -24,6 +24,9 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 
 /**
@@ -44,6 +47,8 @@ public class ManyToOneAttributeBinding
 			boolean isIgnoreNotFound,
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding) {
 		super(
@@ -55,6 +60,8 @@ public class ManyToOneAttributeBinding
 				isIgnoreNotFound,
 				naturalIdMutability,
 				metaAttributeContext,
+				attributeRole,
+				attributePath,
 				referencedEntityBinding,
 				referencedAttributeBinding
 		);

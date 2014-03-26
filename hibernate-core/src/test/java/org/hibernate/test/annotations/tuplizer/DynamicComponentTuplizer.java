@@ -1,6 +1,6 @@
 package org.hibernate.test.annotations.tuplizer;
 
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.component.PojoComponentTuplizer;
@@ -12,17 +12,17 @@ public class DynamicComponentTuplizer extends PojoComponentTuplizer {
 
 	public DynamicComponentTuplizer(
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper) {
-		super( serviceRegistry, compositeAttributeBindingContainer, isIdentifierMapper);
+		super( serviceRegistry, embeddableBinding, isIdentifierMapper);
 	}
 
 	@Override
 	protected Instantiator buildInstantiator(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper) {
 		return new DynamicInstantiator(
-				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
+				embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 		);
 	}
 }

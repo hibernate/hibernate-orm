@@ -30,7 +30,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.service.ServiceRegistry;
@@ -53,32 +53,32 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 
 	protected AbstractComponentTuplizer(
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper) {
 		// TODO: Get rid of the need for isIdentifierMapper arg.
-		// Instead the CompositeAttributeBinding should be wrapped (e.g., by a proxy)
+		// Instead the EmbeddedAttributeBinding should be wrapped (e.g., by a proxy)
 		// so it can provide the information needed to create getters and setters
 		// for an identifier mapper.
 
 		this.serviceRegistry = serviceRegistry;
 
-		propertySpan = compositeAttributeBindingContainer.attributeBindingSpan();
+		propertySpan = embeddableBinding.attributeBindingSpan();
 		getters = new Getter[propertySpan];
 		setters = new Setter[propertySpan];
 
 		boolean foundCustomAccessor = false;
 
 		int i = 0;
-		for ( AttributeBinding attributeBinding : compositeAttributeBindingContainer.attributeBindings() ) {
-			getters[i] = buildGetter( compositeAttributeBindingContainer, isIdentifierMapper, attributeBinding );
-			setters[i] = buildSetter( compositeAttributeBindingContainer, isIdentifierMapper, attributeBinding );
+		for ( AttributeBinding attributeBinding : embeddableBinding.attributeBindings() ) {
+			getters[i] = buildGetter( embeddableBinding, isIdentifierMapper, attributeBinding );
+			setters[i] = buildSetter( embeddableBinding, isIdentifierMapper, attributeBinding );
 			if ( !attributeBinding.isBasicPropertyAccessor() ) {
 				foundCustomAccessor = true;
 			}
 			i++;
 		}
 		hasCustomAccessors = foundCustomAccessor;
-		instantiator = buildInstantiator( compositeAttributeBindingContainer, isIdentifierMapper );
+		instantiator = buildInstantiator( embeddableBinding, isIdentifierMapper );
 	}
 
 	protected ServiceRegistry serviceRegistry() {
@@ -116,18 +116,18 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	}
 
 	protected abstract Instantiator buildInstantiator(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper
 	);
 
 	protected abstract Getter buildGetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding
 	);
 
 	protected abstract Setter buildSetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding
 	);

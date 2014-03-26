@@ -38,7 +38,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.property.Getter;
@@ -63,7 +63,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	public PojoComponentTuplizer(
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer component,
+			EmbeddableBinding component,
 			boolean isIdentifierMapper) {
 		super( serviceRegistry, component, isIdentifierMapper );
 
@@ -162,20 +162,20 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	@Override
 	protected Instantiator buildInstantiator(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper) {
 		final Class clazz = classForName(
-				compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
+				embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 		);
 
-		if ( !compositeAttributeBindingContainer.isAggregated() && ReflectHelper.isAbstractClass( clazz ) ) {
+		if ( !embeddableBinding.isAggregated() && ReflectHelper.isAbstractClass( clazz ) ) {
 			return new ProxiedInstantiator( clazz );
 		}
 
 		if ( optimizer == null ) {
 			return new PojoInstantiator(
 					serviceRegistry(),
-					compositeAttributeBindingContainer,
+					embeddableBinding,
 					isIdentifierMapper,
 					null
 			);
@@ -183,7 +183,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		else {
 			return new PojoInstantiator(
 					serviceRegistry(),
-					compositeAttributeBindingContainer,
+					embeddableBinding,
 					isIdentifierMapper,
 					optimizer.getInstantiationOptimizer()
 			);
@@ -192,7 +192,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	@Override
 	protected Getter buildGetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding) {
 		// TODO: when compositeAttributeBinding is wrapped for an identifier mapper
@@ -202,7 +202,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
 			//             must be completely bound when this method is called.
 			final EntityIdentifier entityIdentifier =
-					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+					embeddableBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 			return getGetter(
 					entityIdentifier.getLookupClassBinding().getIdClassType(),
 					attributeBinding.getAttribute().getName(),
@@ -212,7 +212,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		else {
 			final ClassLoaderService cls = serviceRegistry().getService( ClassLoaderService.class );
 			final Class clazz = cls.classForName(
-					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
+					embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 			);
 			return getGetter(
 					clazz,
@@ -224,14 +224,14 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	@Override
 	protected Setter buildSetter(
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding) {
 		if ( isIdentifierMapper ) {
 			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
 			//             must be completely bound when this method is called.
 			final EntityIdentifier entityIdentifier =
-					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+					embeddableBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 			return getSetter(
 					entityIdentifier.getLookupClassBinding().getIdClassType(),
 					attributeBinding.getAttribute().getName(),
@@ -241,7 +241,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		else {
 			final Class clazz = classForName(
-					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
+					embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 			);
 			return getSetter(
 					clazz,

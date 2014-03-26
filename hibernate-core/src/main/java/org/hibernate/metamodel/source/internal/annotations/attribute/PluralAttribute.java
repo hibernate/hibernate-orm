@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -31,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
-
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 
@@ -59,16 +59,31 @@ import org.hibernate.metamodel.source.internal.annotations.util.ConverterAndOver
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
 import org.hibernate.metamodel.source.spi.MappingException;
-import org.hibernate.metamodel.source.spi.PluralAttributeSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
+
+import static org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames.LOADER;
+import static org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames.ON_DELETE;
+import static org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames.PERSISTER;
+import static org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames.WHERE;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.EMBEDDABLE;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.ENTITY;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.MAP_KEY;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.MAP_KEY_CLASS;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.MAP_KEY_COLUMN;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.MAP_KEY_ENUMERATED;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.MAP_KEY_TEMPORAL;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.ORDER_BY;
+import static org.hibernate.metamodel.source.internal.annotations.util.JPADotNames.ORDER_COLUMN;
 
 /**
  * Represents a plural persistent attribute.
@@ -80,11 +95,11 @@ import org.jboss.jandex.DotName;
 public class PluralAttribute
 		extends AbstractPersistentAttribute
 		implements FetchableAttribute, AssociationAttribute {
-	private static final EnumSet<PluralAttributeSource.Nature> CANNOT_HAVE_COLLECTION_ID = EnumSet.of(
-			PluralAttributeSource.Nature.SET,
-			PluralAttributeSource.Nature.MAP,
-			PluralAttributeSource.Nature.LIST,
-			PluralAttributeSource.Nature.ARRAY
+	private static final EnumSet<PluralAttributeNature> CANNOT_HAVE_COLLECTION_ID = EnumSet.of(
+			PluralAttributeNature.SET,
+			PluralAttributeNature.MAP,
+			PluralAttributeNature.LIST,
+			PluralAttributeNature.ARRAY
 	);
 
 	private final String mappedByAttributeName;
@@ -100,7 +115,7 @@ public class PluralAttribute
 
 	// information about the collection
 	private final CollectionIdInformation collectionIdInformation;
-	private final PluralAttributeSource.Nature pluralAttributeNature;
+	private final PluralAttributeNature pluralAttributeNature;
 	private final String customPersister;
 	private final Caching caching;
 	private final String comparatorName;
@@ -357,7 +372,7 @@ public class PluralAttribute
 	}
 
 
-	private PluralAttributeSource.Nature resolvePluralAttributeNature(
+	private PluralAttributeNature resolvePluralAttributeNature(
 			MemberDescriptor backingMember,
 			CollectionIdInformation collectionIdInformation) {
 		//TODO org.hibernate.cfg.annotations.CollectionBinder#hasToBeSorted
@@ -365,21 +380,21 @@ public class PluralAttribute
 		final JavaTypeDescriptor pluralType = backingMember.getType().getErasedType();
 
 		if ( ArrayDescriptor.class.isInstance( pluralType ) ) {
-			return PluralAttributeSource.Nature.ARRAY;
+			return PluralAttributeNature.ARRAY;
 		}
 
 		if ( getContext().getJavaTypeDescriptorRepository().jdkMapDescriptor().isAssignableFrom( pluralType ) ) {
-			return PluralAttributeSource.Nature.MAP;
+			return PluralAttributeNature.MAP;
 		}
 
 		if ( getContext().getJavaTypeDescriptorRepository().jdkSetDescriptor().isAssignableFrom( pluralType ) ) {
-			return PluralAttributeSource.Nature.SET;
+			return PluralAttributeNature.SET;
 		}
 
 		if ( getContext().getJavaTypeDescriptorRepository().jdkListDescriptor().isAssignableFrom( pluralType ) ) {
 			// we have a LIST nature as long as there is an @OrderColumn annotation
-			if ( backingMember.getAnnotations().containsKey( JPADotNames.ORDER_COLUMN ) ) {
-				return PluralAttributeSource.Nature.LIST;
+			if ( backingMember.getAnnotations().containsKey( ORDER_COLUMN ) ) {
+				return PluralAttributeNature.LIST;
 			}
 		}
 
@@ -395,8 +410,8 @@ public class PluralAttribute
 
 		// todo : does ID_BAG really need a separate nature?
 		return collectionIdInformation != null
-				? PluralAttributeSource.Nature.ID_BAG
-				: PluralAttributeSource.Nature.BAG;
+				? PluralAttributeNature.ID_BAG
+				: PluralAttributeNature.BAG;
 	}
 
 	private PluralAttributeElementDetails resolveElementDetails(
@@ -427,28 +442,129 @@ public class PluralAttribute
 
 	private PluralAttributeIndexDetails resolveIndexDetails(
 			MemberDescriptor backingMember,
-			PluralAttributeSource.Nature pluralAttributeNature,
+			PluralAttributeNature pluralAttributeNature,
 			JavaTypeDescriptor indexType) {
 		// could be an array/list
-		if ( pluralAttributeNature == PluralAttributeSource.Nature.ARRAY
-				|| pluralAttributeNature == PluralAttributeSource.Nature.LIST ) {
-			return new PluralAttributeSequentialIndexDetails( this, backingMember );
+		if ( pluralAttributeNature == PluralAttributeNature.ARRAY
+				|| pluralAttributeNature == PluralAttributeNature.LIST ) {
+			return new PluralAttributeIndexDetailsSequential( this, backingMember );
 		}
 
 		// or a map
-		if ( pluralAttributeNature != PluralAttributeSource.Nature.MAP ) {
+		if ( pluralAttributeNature != PluralAttributeNature.MAP ) {
 			return null;
 		}
 
-		return new PluralAttributeMapKeyDetails( this, backingMember, indexType );
+		final AnnotationInstance mapKeyAnnotation = backingMember.getAnnotations().get( MAP_KEY );
+		final AnnotationInstance mapKeyClassAnnotation = backingMember.getAnnotations().get( MAP_KEY_CLASS );
+		final AnnotationInstance mapKeyColumnAnnotation = backingMember.getAnnotations().get( MAP_KEY_COLUMN );
+		final AnnotationInstance mapKeyEnumeratedAnnotation = backingMember.getAnnotations().get( MAP_KEY_ENUMERATED );
+		final AnnotationInstance mapKeyTemporalAnnotation = backingMember.getAnnotations().get( MAP_KEY_TEMPORAL );
+
+		final List<AnnotationInstance> mapKeyJoinColumnAnnotations = collectMapKeyJoinColumnAnnotations( backingMember );
+
+		if ( mapKeyAnnotation != null && mapKeyClassAnnotation != null ) {
+			// this is an error according to the spec...
+			throw getContext().makeMappingException(
+					"Map attribute defined both @MapKey and @MapKeyClass; only one should be used : " +
+							backingMember.toLoggableForm()
+			);
+		}
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Level 1 : @MapKey
+
+		if ( mapKeyAnnotation != null ) {
+			final AnnotationValue value = mapKeyAnnotation.value( "name" );
+			String mapKeyAttributeName = null;
+			if ( value != null ) {
+				mapKeyAttributeName = StringHelper.nullIfEmpty( value.asString() );
+			}
+			return new PluralAttributeIndexDetailsMapKeyEntityAttribute( this, backingMember, indexType, mapKeyAttributeName );
+		}
+
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Level 2 : @MapKeyEnumerated / @MapKeyTemporal imply basic key
+
+		if ( mapKeyEnumeratedAnnotation != null || mapKeyTemporalAnnotation != null ) {
+			return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, indexType, mapKeyColumnAnnotation );
+		}
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Level 3 : if we could not decode a specific key type, we assume basic
+
+		JavaTypeDescriptor mapKeyType = indexType;
+		if ( mapKeyClassAnnotation != null ) {
+			final DotName name = mapKeyClassAnnotation.value().asClass().name();
+			mapKeyType = getContext().getJavaTypeDescriptorRepository().getType( name );
+		}
+		if ( mapKeyType == null ) {
+			if ( !mapKeyJoinColumnAnnotations.isEmpty() ) {
+				throw getContext().makeMappingException(
+						"Map key type could not be resolved (to determine entity name to use as key), " +
+								"but @MapKeyJoinColumn(s) was present.  Map should either use generics or " +
+								"use @MapKeyClass to specify entity class"
+				);
+			}
+			return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, indexType, mapKeyColumnAnnotation );
+		}
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Level 4 : if @MapKeyJoinColumn(s) were specified, we have an entity
+
+		if ( !mapKeyJoinColumnAnnotations.isEmpty() ) {
+			throw new NotYetImplementedException( "Entities as map keys not yet implemented" );
+		}
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Level 5 : if decode the nature of the map key type
+
+		if ( mapKeyType.findTypeAnnotation( EMBEDDABLE ) != null ) {
+			return new PluralAttributeIndexDetailsMapKeyEmbedded( this, backingMember, indexType );
+		}
+
+		if ( mapKeyType.findTypeAnnotation( ENTITY ) != null ) {
+			throw new NotYetImplementedException( "Entities as map keys not yet implemented" );
+		}
+
+		return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, indexType, mapKeyColumnAnnotation );
 	}
 
-	private JavaTypeDescriptor resolveIndicatedMapKeyClass(AnnotationInstance mapKeyClass) {
-		final AnnotationValue value = mapKeyClass.value();
-		if ( value == null ) {
-			throw new IllegalStateException( "Unexpected null value for @MapKeyClass#value" );
+	private List<AnnotationInstance> collectMapKeyJoinColumnAnnotations(MemberDescriptor backingMember) {
+		final AnnotationInstance singular = backingMember.getAnnotations().get( JPADotNames.MAP_KEY_JOIN_COLUMN );
+		final AnnotationInstance plural = backingMember.getAnnotations().get( JPADotNames.MAP_KEY_JOIN_COLUMNS );
+
+		if ( singular != null && plural != null ) {
+			throw getContext().makeMappingException(
+					"Attribute [" + backingMember.toLoggableForm() +
+							"] declared both @MapKeyJoinColumn and " +
+							"@MapKeyJoinColumns; should only use one or the other"
+			);
 		}
-		return getContext().getJavaTypeDescriptorRepository().getType( value.asClass().name() );
+
+		if ( singular == null && plural == null ) {
+			return Collections.emptyList();
+		}
+
+		if ( singular != null ) {
+			return Collections.singletonList( singular );
+		}
+
+		final AnnotationInstance[] annotations = JandexHelper.extractAnnotationsValue(
+				plural,
+				"value"
+		);
+		if ( annotations == null || annotations.length == 0 ) {
+			return null;
+		}
+
+		return Arrays.asList( annotations );
 	}
 
 	private Caching determineCachingSettings(MemberDescriptor backingMember) {
@@ -487,14 +603,14 @@ public class PluralAttribute
 	}
 
 	private String determineCustomLoaderName(MemberDescriptor backingMember) {
-		final AnnotationInstance loaderAnnotation = backingMember.getAnnotations().get( HibernateDotNames.LOADER );
+		final AnnotationInstance loaderAnnotation = backingMember.getAnnotations().get( LOADER );
 		return loaderAnnotation == null
 				? null
 				: StringHelper.nullIfEmpty( loaderAnnotation.value( "namedQuery" ).asString() );
 	}
 
 	private String determineCustomPersister(MemberDescriptor backingMember) {
-		final AnnotationInstance persisterAnnotation = backingMember.getAnnotations().get( HibernateDotNames.PERSISTER );
+		final AnnotationInstance persisterAnnotation = backingMember.getAnnotations().get( PERSISTER );
 		return persisterAnnotation == null
 				? null
 				: StringHelper.nullIfEmpty( persisterAnnotation.value( "impl" ).asString() );
@@ -502,7 +618,7 @@ public class PluralAttribute
 
 	private OnDeleteAction determineOnDeleteAction(MemberDescriptor backingMember) {
 		final AnnotationInstance onDeleteAnnotation = backingMember.getAnnotations().get(
-				HibernateDotNames.ON_DELETE
+				ON_DELETE
 		);
 		return onDeleteAnnotation == null
 				? null
@@ -510,7 +626,7 @@ public class PluralAttribute
 	}
 
 	private String determineWereClause(MemberDescriptor backingMember) {
-		final AnnotationInstance whereAnnotation = backingMember.getAnnotations().get( HibernateDotNames.WHERE );
+		final AnnotationInstance whereAnnotation = backingMember.getAnnotations().get( WHERE );
 		return whereAnnotation == null
 				? null
 				: StringHelper.nullIfEmpty( whereAnnotation.value( "clause" ).asString() );
@@ -518,7 +634,7 @@ public class PluralAttribute
 
 	private String determineOrderBy(MemberDescriptor backingMember) {
 		final AnnotationInstance hbmOrderBy = backingMember.getAnnotations().get( HibernateDotNames.ORDER_BY );
-		final AnnotationInstance jpaOrderBy = backingMember.getAnnotations().get( JPADotNames.ORDER_BY );
+		final AnnotationInstance jpaOrderBy = backingMember.getAnnotations().get( ORDER_BY );
 
 		if ( hbmOrderBy != null && jpaOrderBy != null ) {
 			throw getContext().makeMappingException(
@@ -569,8 +685,8 @@ public class PluralAttribute
 	}
 
 	private void checkSortedTypeIsSortable() {
-		if ( pluralAttributeNature != PluralAttributeSource.Nature.MAP
-				&& pluralAttributeNature != PluralAttributeSource.Nature.SET ) {
+		if ( pluralAttributeNature != PluralAttributeNature.MAP
+				&& pluralAttributeNature != PluralAttributeNature.SET ) {
 			return;
 		}
 
@@ -677,7 +793,7 @@ public class PluralAttribute
 		return indexDetails;
 	}
 
-	public PluralAttributeSource.Nature getPluralAttributeNature() {
+	public PluralAttributeNature getPluralAttributeNature() {
 		return pluralAttributeNature;
 	}
 

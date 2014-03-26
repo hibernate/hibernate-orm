@@ -28,10 +28,17 @@ import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
  * @author Gail Badner
@@ -101,8 +108,10 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			PropertyGeneration generation) {
 		final BasicAttributeBinding binding = new BasicAttributeBinding(
 				this,
@@ -113,6 +122,8 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				lazy,
 				naturalIdMutability,
 				metaAttributeContext,
+				attributeRole,
+				attributePath,
 				generation
 		);
 		registerAttributeBinding( binding );
@@ -125,25 +136,30 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	}
 
 	@Override
-	public CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
+	public EmbeddedAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
+			Class<? extends ComponentTuplizer> tuplizerClass,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext) {
-		final CompositeAttributeBinding binding =
-				CompositeAttributeBinding.createAggregatedCompositeAttributeBinding(
-						this,
-						attribute,
-						propertyAccessorName,
-						includedInOptimisticLocking,
-						lazy,
-						naturalIdMutability,
-						metaAttributeContext,
-						parentReferenceAttribute
-				);
+			NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
+		final EmbeddedAttributeBinding binding = EmbeddedAttributeBinding.createEmbeddedAttributeBinding(
+				this,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				lazy,
+				naturalIdMutability,
+				metaAttributeContext,
+				attributeRole,
+				attributePath,
+				parentReferenceAttribute,
+				tuplizerClass
+		);
 		registerAttributeBinding( binding );
 		return binding;
 	}
@@ -154,8 +170,10 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
 			boolean isConstrained) {
@@ -167,6 +185,8 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				lazy,
 				naturalIdMutability,
 				metaAttributeContext,
+				attributeRole,
+				attributePath,
 				referencedEntityBinding,
 				referencedAttributeBinding,
 				isConstrained
@@ -182,8 +202,10 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			boolean isIgnoreNotFound,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
@@ -195,6 +217,8 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				isIgnoreNotFound,
 				naturalIdMutability,
 				metaAttributeContext,
+				attributeRole,
+				attributePath,
 				referencedEntityBinding,
 				referencedAttributeBinding
 		);
@@ -205,12 +229,14 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	@Override
 	public BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.BAG );
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
 		final BagBinding binding = new BagBinding(
 				this,
 				attribute,
@@ -218,7 +244,9 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 		registerAttributeBinding( binding );
 		return binding;
@@ -227,13 +255,15 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	@Override
 	public ListBinding makeListAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			int base) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.LIST );
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.LIST );
 		final ListBinding binding = new ListBinding(
 				this,
 				attribute,
@@ -242,7 +272,10 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				metaAttributeContext,
-				base );
+				attributeRole,
+				attributePath,
+				base
+		);
 		registerAttributeBinding( binding );
 		return binding;
 	}
@@ -250,13 +283,15 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	@Override
 	public ArrayBinding makeArrayAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			int base) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.ARRAY );
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.ARRAY );
 		final ArrayBinding binding = new ArrayBinding(
 				this,
 				attribute,
@@ -265,7 +300,10 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				propertyAccessorName,
 				includedInOptimisticLocking,
 				metaAttributeContext,
-				base );
+				attributeRole,
+				attributePath,
+				base
+		);
 		registerAttributeBinding( binding );
 		return binding;
 	}
@@ -273,13 +311,15 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	@Override
 	public MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature elementNature,
-			PluralAttributeIndexBinding.Nature indexNature,
+			PluralAttributeElementNature elementNature,
+			PluralAttributeIndexNature indexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.MAP );
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.MAP );
 		final MapBinding binding = new MapBinding(
 				this,
 				attribute,
@@ -288,7 +328,10 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext );
+				metaAttributeContext,
+				attributeRole,
+				attributePath
+		);
 		registerAttributeBinding( binding );
 		return binding;
 	}
@@ -296,12 +339,14 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	@Override
 	public SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext) {
-		Helper.checkPluralAttributeNature( attribute, PluralAttribute.Nature.SET );
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
 		final SetBinding binding = new SetBinding(
 				this,
 				attribute,
@@ -309,7 +354,9 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				referencedAttributeBinding,
 				propertyAccessorName,
 				includedInOptimisticLocking,
-				metaAttributeContext
+				metaAttributeContext,
+				attributeRole,
+				attributePath
 		);
 		registerAttributeBinding( binding );
 		return binding;

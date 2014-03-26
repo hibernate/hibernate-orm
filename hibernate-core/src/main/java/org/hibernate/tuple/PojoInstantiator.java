@@ -34,7 +34,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBindingContainer;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.service.ServiceRegistry;
@@ -58,18 +58,18 @@ public class PojoInstantiator implements Instantiator, Serializable {
 
 	public PojoInstantiator(
 			ServiceRegistry serviceRegistry,
-			CompositeAttributeBindingContainer compositeAttributeBindingContainer,
+			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		if ( isIdentifierMapper ) {
 			final EntityIdentifier entityIdentifier =
-					compositeAttributeBindingContainer.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+					embeddableBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
 			this.mappedClass = entityIdentifier.getLookupClassBinding().getIdClassType();
 		}
 		else {
 			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 			this.mappedClass = cls.classForName(
-					compositeAttributeBindingContainer.getAttributeContainer().getDescriptor().getName().toString()
+					embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 			);
 		}
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );

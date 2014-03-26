@@ -108,4 +108,11 @@ public class RelationalValueBinding {
 	public boolean isIncludeInUpdate() {
 		return includeInUpdate;
 	}
+
+	@Override
+	public String toString() {
+		return "RelationalValueBinding{table=" + table.toLoggableString() +
+				", value=" + value.toLoggableString() +
+				'}';
+	}
 }

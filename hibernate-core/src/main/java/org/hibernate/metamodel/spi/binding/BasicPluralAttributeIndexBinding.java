@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.relational.Value;
 
 /**
@@ -62,7 +63,7 @@ public class BasicPluralAttributeIndexBinding extends AbstractPluralAttributeInd
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public PluralAttributeIndexNature getNature() {
+		return PluralAttributeIndexNature.BASIC;
 	}
 }

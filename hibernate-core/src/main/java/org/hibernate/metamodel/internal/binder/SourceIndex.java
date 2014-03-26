@@ -26,28 +26,30 @@ package org.hibernate.metamodel.internal.binder;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.spi.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
-import org.hibernate.metamodel.source.spi.ComponentAttributeSource;
+import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.EntityHierarchySource;
 import org.hibernate.metamodel.source.spi.EntitySource;
 import org.hibernate.metamodel.source.spi.IdentifiableTypeSource;
 import org.hibernate.metamodel.source.spi.IdentifierSource;
 import org.hibernate.metamodel.source.spi.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.source.spi.NonAggregatedCompositeIdentifierSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeIndexSourceResolver;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.SimpleIdentifierSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -64,12 +66,11 @@ import org.jboss.logging.Logger;
 public class SourceIndex {
 	private static final Logger log = CoreLogging.logger( SourceIndex.class );
 
-	private static final String EMPTY_STRING = "";
-
 	private final Map<String, EntitySourceIndex> entitySourceIndexByEntityName = new HashMap<String, EntitySourceIndex>();
-	private final Map<AttributeSourceKey, AttributeSource> attributeSourcesByKey = new HashMap<AttributeSourceKey, AttributeSource>();
-	private final Map<AttributeSourceKey, AttributeSourceKey> mappedByAttributeKeysByOwnerAttributeKeys =
-			new HashMap<AttributeSourceKey, AttributeSourceKey>();
+	private final Map<AttributeRole, AttributeSource> attributeSourcesByKey = new HashMap<AttributeRole, AttributeSource>();
+
+	private final Map<AttributeRole, AttributeRole> mappedByAttributeKeysByOwnerAttributeKeys =
+			new HashMap<AttributeRole, AttributeRole>();
 
 
 	public void indexHierarchy(EntityHierarchySource hierarchy) {
@@ -105,21 +106,21 @@ public class SourceIndex {
 			case SIMPLE: {
 				final AttributeSource identifierAttributeSource =
 						( (SimpleIdentifierSource) identifierSource ).getIdentifierAttributeSource();
-				indexAttributeSources( hierarchyInfo, EMPTY_STRING, identifierAttributeSource, true );
+				indexAttributeSources( hierarchyInfo, identifierAttributeSource, true );
 				break;
 			}
 			case NON_AGGREGATED_COMPOSITE: {
 				final List<SingularAttributeSource> nonAggregatedAttributeSources =
 						( (NonAggregatedCompositeIdentifierSource) identifierSource ).getAttributeSourcesMakingUpIdentifier();
 				for ( SingularAttributeSource nonAggregatedAttributeSource : nonAggregatedAttributeSources ) {
-					indexAttributeSources( hierarchyInfo, EMPTY_STRING, nonAggregatedAttributeSource, true );
+					indexAttributeSources( hierarchyInfo, nonAggregatedAttributeSource, true );
 				}
 				break;
 			}
 			case AGGREGATED_COMPOSITE: {
-				final ComponentAttributeSource aggregatedAttributeSource =
+				final EmbeddedAttributeSource aggregatedAttributeSource =
 						( (AggregatedCompositeIdentifierSource) identifierSource ).getIdentifierAttributeSource();
-				indexAttributeSources( hierarchyInfo, EMPTY_STRING, aggregatedAttributeSource, true );
+				indexAttributeSources( hierarchyInfo, aggregatedAttributeSource, true );
 				break;
 			}
 			default: {
@@ -132,29 +133,22 @@ public class SourceIndex {
 
 	private void indexAttributeSources(
 			AttributeIndexingTarget attributeIndexingTarget,
-			String pathBase,
 			AttributeSource attributeSource,
 			boolean isInIdentifier) {
-		final AttributeSourceKey key = new AttributeSourceKey(
-				attributeIndexingTarget.getAttributeSourceKeyBase(),
-				pathBase,
-				attributeSource.getName()
-		);
-		attributeSourcesByKey.put( key, attributeSource );
-		log.debugf( "Indexing attribute source [%s]", key );
+		log.debugf( "Indexing attribute source [%s]", attributeSource.getAttributeRole() );
+		attributeSourcesByKey.put( attributeSource.getAttributeRole(), attributeSource );
 
 		if ( attributeSource.isSingular() ) {
-			attributeIndexingTarget.indexSingularAttributeSource( pathBase, (SingularAttributeSource) attributeSource, isInIdentifier );
+			attributeIndexingTarget.indexSingularAttributeSource( (SingularAttributeSource) attributeSource, isInIdentifier );
 		}
 		else {
-			attributeIndexingTarget.indexPluralAttributeSource( pathBase, (PluralAttributeSource) attributeSource );
+			attributeIndexingTarget.indexPluralAttributeSource( (PluralAttributeSource) attributeSource );
 		}
 
-		if ( attributeSource instanceof ComponentAttributeSource ) {
-			for ( AttributeSource subAttributeSource : ( (ComponentAttributeSource) attributeSource ).attributeSources() ) {
+		if ( attributeSource instanceof EmbeddedAttributeSource ) {
+			for ( AttributeSource subAttributeSource : ( (EmbeddedAttributeSource) attributeSource ).getEmbeddableSource().attributeSources() ) {
 				indexAttributeSources(
 						attributeIndexingTarget,
-						key.attributePath(),
 						subAttributeSource,
 						isInIdentifier
 				);
@@ -163,9 +157,8 @@ public class SourceIndex {
 	}
 
 	private void indexAttributes(EntitySourceIndex entitySourceIndex) {
-		final String emptyString = "";
 		for ( final AttributeSource attributeSource : entitySourceIndex.entitySource.attributeSources() ) {
-			indexAttributeSources(entitySourceIndex, emptyString, attributeSource, false );
+			indexAttributeSources( entitySourceIndex, attributeSource, false );
 		}
 	}
 
@@ -183,181 +176,77 @@ public class SourceIndex {
 		entitySourceIndexByEntityName.get( binding.getEntityName() ).resolveAttributeSources( context );
 	}
 
-	public Map<AttributeSourceKey, SingularAttributeSource> getSingularAttributeSources(
+	public Map<AttributeRole, SingularAttributeSource> getSingularAttributeSources(
 			String entityName,
 			boolean isMappedBy,
-			SingularAttributeSource.Nature nature) {
+			SingularAttributeNature singularAttributeNature) {
 		final EntitySourceIndex entitySourceIndex = entitySourceIndexByEntityName.get( entityName );
-		return entitySourceIndex.getSingularAttributeSources( isMappedBy, nature );
+		return entitySourceIndex.getSingularAttributeSources( isMappedBy, singularAttributeNature );
 	}
 
-	public Map<AttributeSourceKey, PluralAttributeSource> getPluralAttributeSources(
+	public Map<AttributeRole, PluralAttributeSource> getPluralAttributeSources(
 			String entityName,
 			boolean isInverse) {
 		final EntitySourceIndex entitySourceIndex = entitySourceIndexByEntityName.get( entityName );
 		return entitySourceIndex.getPluralAttributeSources( isInverse );
 	}
 
-	public AttributeSource attributeSource(final String entityName, final String attributePath) {
-		return attributeSourcesByKey.get( new AttributeSourceKey( entityName, attributePath ) );
+	public AttributeSource attributeSource(final AttributeRole attributeRole) {
+		return attributeSourcesByKey.get( attributeRole );
+	}
+
+	public AttributeSource attributeSource(String entityName, String attributePath) {
+		final AttributeRole base = new AttributeRole( entityName );
+
+		AttributeRole role;
+		if ( attributePath.contains( "." ) ) {
+			role = base;
+			for ( String part : attributePath.split( "\\." ) ) {
+				role = role.append( part );
+			}
+		}
+		else {
+			role = base.append( attributePath );
+		}
+		return attributeSourcesByKey.get( role );
 	}
 
 	public AttributeSource attributeSource(EntityBinding entityBinding, AttributeBinding attributeBinding) {
-		return attributeSourcesByKey.get(
-				new AttributeSourceKey(
-						entityBinding.getEntityName(),
-						attributeBinding.getAttributePath()
-				)
-		);
-	}
-
-	public AttributeSource locateAttributeSourceOwnedBy(final String entityName, final String attributePath) {
-		AttributeSourceKey ownerKey = new AttributeSourceKey( entityName, attributePath );
-		AttributeSourceKey mappedByKey = mappedByAttributeKeysByOwnerAttributeKeys.get( ownerKey );
-		return mappedByKey == null ? null : attributeSourcesByKey.get( mappedByKey );
-	}
-
-	public EntitySource entitySource(final String entityName) {
-		return entitySourceIndexByEntityName.get( entityName ).entitySource;
-	}
-
-	private EntitySourceIndex entitySourceIndex(String entityName) {
-		return entitySourceIndexByEntityName.get( entityName );
-	}
-
-	void addMappedByAssociationByOwnerAssociation(AttributeSourceKey ownerKey, AttributeSourceKey ownedKey) {
-		mappedByAttributeKeysByOwnerAttributeKeys.put(
-				ownerKey,
-				ownedKey
-		);
-
-	}
-
-
-	/**
-	 * Helper class for indexing attribute look ups.
-	 */
-	public static class AttributeSourceKey {
-		private final String entityName;
-		private final String containerPath;
-		private final String attributeName;
-
-		private AttributeSourceKey(final String entityName, final String containerPath, final String attributeName) {
-			this.entityName = entityName;
-			this.containerPath = containerPath;
-			this.attributeName = attributeName;
-		}
-
-		private AttributeSourceKey(final String entityName, final String attributePath) {
-			this.entityName = entityName;
-			int indexLastDot = attributePath.lastIndexOf( '.' );
-			if ( indexLastDot == -1 ) {
-				this.containerPath = EMPTY_STRING;
-				this.attributeName = attributePath;
-			}
-			else {
-				this.containerPath = attributePath.substring( 0, indexLastDot );
-				this.attributeName = attributePath.substring( indexLastDot + 1 );
-			}
-		}
-
-		public String entityName() {
-			return entityName;
-		}
-
-		public String containerPath() {
-			return containerPath;
-		}
-
-		public String attributeName() {
-			return attributeName;
-		}
-
-		public String attributePath() {
-			return StringHelper.isEmpty( containerPath )
-					? attributeName
-					: containerPath + '.' + attributeName;
-		}
-
-		public String getAttributePathQualifiedByEntityName() {
-			return entityName + '.' + attributePath();
-		}
-
-		@Override
-		public String toString() {
-			return getAttributePathQualifiedByEntityName();
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
-				return true;
-			}
-			if ( o == null || getClass() != o.getClass() ) {
-				return false;
-			}
-
-			final AttributeSourceKey that = (AttributeSourceKey) o;
-			return attributeName.equals( that.attributeName )
-					&& containerPath.equals( that.containerPath )
-					&& entityName.equals( that.entityName );
-		}
-
-		@Override
-		public int hashCode() {
-			int result = entityName.hashCode();
-			result = 31 * result + containerPath.hashCode();
-			result = 31 * result + attributeName.hashCode();
-			return result;
-		}
+		return attributeSourcesByKey.get( attributeBinding.getAttributeRole() );
 	}
 
 	private static interface AttributeIndexingTarget {
-		public String getAttributeSourceKeyBase();
-
-		public void indexSingularAttributeSource(
-				String pathBase,
-				SingularAttributeSource attributeSource,
-				boolean isInIdentifier);
-
-		public void indexPluralAttributeSource(String pathBase, PluralAttributeSource attributeSource);
+		public void indexSingularAttributeSource(SingularAttributeSource attributeSource, boolean isInIdentifier);
+		public void indexPluralAttributeSource(PluralAttributeSource attributeSource);
 	}
 
 	private static abstract class AbstractAttributeIndexingTarget implements AttributeIndexingTarget {
-		private final Map<AttributeSourceKey, SingularAttributeSource> unresolvedSingularAttributeSourcesByKey
-				= new HashMap<AttributeSourceKey, SingularAttributeSource>();
+		private final Map<AttributeRole, SingularAttributeSource> unresolvedSingularAttributeSourcesByKey
+				= new HashMap<AttributeRole, SingularAttributeSource>();
 
-		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> identifierAttributeSourcesByNature
-				= new EnumMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>( SingularAttributeSource.Nature.class );
-		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> nonMappedBySingularAttributeSourcesByNature
-				= new EnumMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>( SingularAttributeSource.Nature.class );
-		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> mappedBySingularAttributeSourcesByNature
-				= new EnumMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>( SingularAttributeSource.Nature.class );
+		private final Map<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>> identifierAttributeSourcesByNature
+				= new EnumMap<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>>( SingularAttributeNature.class );
+		private final Map<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>> nonMappedBySingularAttributeSourcesByNature
+				= new EnumMap<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>>( SingularAttributeNature.class );
+		private final Map<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>> mappedBySingularAttributeSourcesByNature
+				= new EnumMap<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>>( SingularAttributeNature.class );
 
 		// TODO: the following should not need to be LinkedHashMap, but it appears that some unit tests
 		//       depend on the ordering
 		// TODO: rework nonInversePluralAttributeSourcesByKey and inversePluralAttributeSourcesByKey
-		private final Map<AttributeSourceKey, PluralAttributeSource> nonInversePluralAttributeSourcesByKey =
-				new LinkedHashMap<AttributeSourceKey, PluralAttributeSource>();
-		private final Map<AttributeSourceKey, PluralAttributeSource> inversePluralAttributeSourcesByKey =
-				new LinkedHashMap<AttributeSourceKey, PluralAttributeSource>();
-
-		protected AttributeSourceKey makeKey(String pathBase, AttributeSource attributeSource) {
-			return new AttributeSourceKey( getAttributeSourceKeyBase(), pathBase, attributeSource.getName() );
-		}
+		private final Map<AttributeRole, PluralAttributeSource> nonInversePluralAttributeSourcesByKey =
+				new LinkedHashMap<AttributeRole, PluralAttributeSource>();
+		private final Map<AttributeRole, PluralAttributeSource> inversePluralAttributeSourcesByKey =
+				new LinkedHashMap<AttributeRole, PluralAttributeSource>();
 
 		@Override
-		public void indexSingularAttributeSource(
-				String pathBase,
-				SingularAttributeSource attributeSource,
-				boolean isInIdentifier) {
-			final AttributeSourceKey attributeSourceKey = makeKey( pathBase, attributeSource );
-			if ( attributeSource.getNature() == null ) {
-				unresolvedSingularAttributeSourcesByKey.put( attributeSourceKey, attributeSource );
+		public void indexSingularAttributeSource(SingularAttributeSource attributeSource, boolean isInIdentifier) {
+			if ( attributeSource.getSingularAttributeNature() == null ) {
+				unresolvedSingularAttributeSourcesByKey.put( attributeSource.getAttributeRole(), attributeSource );
 				return;
 			}
 
-			final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> map;
+			final Map<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>> map;
 			if ( isInIdentifier ) {
 				map = identifierAttributeSourcesByNature;
 			}
@@ -369,54 +258,65 @@ public class SourceIndex {
 				map = nonMappedBySingularAttributeSourcesByNature;
 			}
 
-			indexSingularAttributeSource( attributeSourceKey, attributeSource, map );
+			indexSingularAttributeSource( attributeSource, map );
 		}
 
 		private static void indexSingularAttributeSource(
-				AttributeSourceKey attributeSourceKey,
 				SingularAttributeSource attributeSource,
-				Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> map) {
-			final Map<AttributeSourceKey, SingularAttributeSource> singularAttributeSources;
-			if ( map.containsKey( attributeSource.getNature() ) ) {
-				singularAttributeSources = map.get( attributeSource.getNature() );
+				Map<SingularAttributeNature, Map<AttributeRole, SingularAttributeSource>> map) {
+			final Map<AttributeRole, SingularAttributeSource> singularAttributeSources;
+			if ( map.containsKey( attributeSource.getSingularAttributeNature() ) ) {
+				singularAttributeSources = map.get( attributeSource.getSingularAttributeNature() );
 			}
 			else {
-				singularAttributeSources = new LinkedHashMap<AttributeSourceKey,SingularAttributeSource>();
-				map.put( attributeSource.getNature(), singularAttributeSources );
+				singularAttributeSources = new LinkedHashMap<AttributeRole,SingularAttributeSource>();
+				map.put( attributeSource.getSingularAttributeNature(), singularAttributeSources );
 			}
-			if ( singularAttributeSources.put( attributeSourceKey, attributeSource ) != null ) {
+			if ( singularAttributeSources.put( attributeSource.getAttributeRole(), attributeSource ) != null ) {
 				throw new AssertionFailure(
-						String.format( "Attempt to reindex attribute source for: [%s]",  attributeSourceKey )
+						String.format(
+								Locale.ENGLISH,
+								"Attempt to reindex attribute source for: [%s]",
+								attributeSource.getAttributeRole()
+						)
 				);
 			}
 		}
 
 
 		@Override
-		public void indexPluralAttributeSource(
-				String pathBase,
-				PluralAttributeSource attributeSource) {
-			final AttributeSourceKey key = makeKey( pathBase, attributeSource );
-			final Map<AttributeSourceKey,PluralAttributeSource> map = attributeSource.isInverse()
+		public void indexPluralAttributeSource(PluralAttributeSource attributeSource) {
+			final Map<AttributeRole,PluralAttributeSource> map = attributeSource.isInverse()
 					? inversePluralAttributeSourcesByKey
 					: nonInversePluralAttributeSourcesByKey;
-			if ( map.put( key, attributeSource ) != null ) {
+			if ( map.put( attributeSource.getAttributeRole(), attributeSource ) != null ) {
 				throw new AssertionFailure(
-						String.format( "Attempt to reindex attribute source for: [%s]", key )
+						String.format(
+								Locale.ENGLISH,
+								"Attempt to reindex attribute source for: [%s]",
+								attributeSource.getAttributeRole() )
 				);
 			}
 		}
 
 
-		public Map<AttributeSourceKey, SingularAttributeSource> getSingularAttributeSources(
+		public Map<AttributeRole, SingularAttributeSource> getSingularAttributeSources(
 				boolean isMappedBy,
-				SingularAttributeSource.Nature nature) {
-			final Map<AttributeSourceKey, SingularAttributeSource> entries;
-			if ( isMappedBy && mappedBySingularAttributeSourcesByNature.containsKey( nature ) ) {
-				entries = Collections.unmodifiableMap( mappedBySingularAttributeSourcesByNature.get( nature ) );
+				SingularAttributeNature singularAttributeNature) {
+			final Map<AttributeRole, SingularAttributeSource> entries;
+			if ( isMappedBy && mappedBySingularAttributeSourcesByNature.containsKey( singularAttributeNature ) ) {
+				entries = Collections.unmodifiableMap(
+						mappedBySingularAttributeSourcesByNature.get(
+								singularAttributeNature
+						)
+				);
 			}
-			else if ( !isMappedBy && nonMappedBySingularAttributeSourcesByNature.containsKey( nature ) ) {
-				entries = Collections.unmodifiableMap( nonMappedBySingularAttributeSourcesByNature.get( nature ) );
+			else if ( !isMappedBy && nonMappedBySingularAttributeSourcesByNature.containsKey( singularAttributeNature ) ) {
+				entries = Collections.unmodifiableMap(
+						nonMappedBySingularAttributeSourcesByNature.get(
+								singularAttributeNature
+						)
+				);
 			}
 			else {
 				entries = Collections.emptyMap();
@@ -424,8 +324,8 @@ public class SourceIndex {
 			return entries;
 		}
 
-		public Map<AttributeSourceKey, PluralAttributeSource> getPluralAttributeSources(boolean isInverse) {
-			final Map<AttributeSourceKey,PluralAttributeSource> map = isInverse
+		public Map<AttributeRole, PluralAttributeSource> getPluralAttributeSources(boolean isInverse) {
+			final Map<AttributeRole,PluralAttributeSource> map = isInverse
 					? inversePluralAttributeSourcesByKey
 					: nonInversePluralAttributeSourcesByKey;
 			return Collections.unmodifiableMap( map );
@@ -442,41 +342,52 @@ public class SourceIndex {
 					// so it needs to be resolved.
 					pluralAttributeSource.resolvePluralAttributeElementSource( sourceResolutionContext );
 				}
+
 				if ( IndexedPluralAttributeSource.class.isInstance( pluralAttributeSource ) ) {
-					IndexedPluralAttributeSource indexedPluralAttributeSource =
-							(IndexedPluralAttributeSource) pluralAttributeSource;
-					indexedPluralAttributeSource.resolvePluralAttributeIndexSource(  sourceResolutionContext );
+					final IndexedPluralAttributeSource indexedPluralAttributeSource = (IndexedPluralAttributeSource) pluralAttributeSource;
+					if ( PluralAttributeIndexSourceResolver.class.isInstance( indexedPluralAttributeSource.getIndexSource() ) ) {
+						( (PluralAttributeIndexSourceResolver) indexedPluralAttributeSource.getIndexSource() ).resolvePluralAttributeIndexSource(
+								sourceResolutionContext
+						);
+					}
 				}
 			}
 
 			for ( PluralAttributeSource pluralAttributeSource : nonInversePluralAttributeSourcesByKey.values() ) {
 				if ( IndexedPluralAttributeSource.class.isInstance( pluralAttributeSource ) ) {
-					IndexedPluralAttributeSource indexedPluralAttributeSource =
-							(IndexedPluralAttributeSource) pluralAttributeSource;
-					indexedPluralAttributeSource.resolvePluralAttributeIndexSource( sourceResolutionContext );
+					final IndexedPluralAttributeSource indexedPluralAttributeSource = (IndexedPluralAttributeSource) pluralAttributeSource;
+					if ( PluralAttributeIndexSourceResolver.class.isInstance( indexedPluralAttributeSource.getIndexSource() ) ) {
+						( (PluralAttributeIndexSourceResolver) indexedPluralAttributeSource.getIndexSource() ).resolvePluralAttributeIndexSource(
+								sourceResolutionContext
+						);
+					}
 				}
 			}
 
 			// cycle through unresolved SingularAttributeSource.
 			// TODO: rework so approach is similar to one-to-many/many-to-many resolution.
-			for ( Iterator<Map.Entry<AttributeSourceKey,SingularAttributeSource>> it = unresolvedSingularAttributeSourcesByKey.entrySet().iterator(); it.hasNext(); ) {
-				final Map.Entry<AttributeSourceKey,SingularAttributeSource> entry = it.next();
-				final AttributeSourceKey attributeSourceKey = entry.getKey();
-				final SingularAttributeSource attributeSource = entry.getValue();
+			for ( final SingularAttributeSource attributeSource : unresolvedSingularAttributeSourcesByKey.values() ) {
 				if ( !ToOneAttributeSource.class.isInstance( attributeSource ) ) {
 					throw new AssertionFailure(
-							String.format( "Only a ToOneAttributeSource is expected to have a null nature; attribute: %s ", attributeSourceKey )
+							String.format(
+									Locale.ENGLISH,
+									"Only a ToOneAttributeSource is expected to have a null nature; attribute: %s ",
+									attributeSource.getAttributeRole()
+							)
 					);
 				}
 				ToOneAttributeSource toOneAttributeSource = (ToOneAttributeSource) attributeSource;
 				toOneAttributeSource.resolveToOneAttributeSource( sourceResolutionContext );
-				if ( toOneAttributeSource.getNature() == null ) {
+				if ( toOneAttributeSource.getSingularAttributeNature() == null ) {
 					throw new AssertionFailure(
-							String.format( "Null nature should have been resolved: %s ", attributeSourceKey )
+							String.format(
+									Locale.ENGLISH,
+									"Null nature should have been resolved: %s ",
+									attributeSource.getAttributeRole()
+							)
 					);
 				}
 				indexSingularAttributeSource(
-						attributeSourceKey,
 						attributeSource,
 						toOneAttributeSource.isMappedBy()
 								? mappedBySingularAttributeSourcesByNature
@@ -498,22 +409,17 @@ public class SourceIndex {
 		}
 
 		@Override
-		public String getAttributeSourceKeyBase() {
-			return hierarchyKey;
-		}
-
-		@Override
-		public void indexPluralAttributeSource(String pathBase, PluralAttributeSource attributeSource) {
+		public void indexPluralAttributeSource(PluralAttributeSource attributeSource) {
 			throw new AssertionFailure(
 					String.format(
 							"Identifiers should not contain plural attributes: [%s]",
-							makeKey( pathBase, attributeSource )
+							attributeSource.getAttributeRole().getFullPath()
 					)
 			);
 		}
 
 		@Override
-		public Map<AttributeSourceKey, PluralAttributeSource> getPluralAttributeSources(boolean isInverse) {
+		public Map<AttributeRole, PluralAttributeSource> getPluralAttributeSources(boolean isInverse) {
 			return Collections.emptyMap();
 		}
 
@@ -553,17 +459,15 @@ public class SourceIndex {
 		}
 
 		@Override
-		public String getAttributeSourceKeyBase() {
-			return entitySource.getEntityName();
-		}
-
-		@Override
-		public Map<AttributeSourceKey, SingularAttributeSource> getSingularAttributeSources(
+		public Map<AttributeRole, SingularAttributeSource> getSingularAttributeSources(
 				boolean isMappedBy,
-				SingularAttributeSource.Nature nature) {
-			Map<AttributeSourceKey, SingularAttributeSource> values = hierarchyInfo.getSingularAttributeSources( isMappedBy, nature );
+				SingularAttributeNature singularAttributeNature) {
+			Map<AttributeRole, SingularAttributeSource> values = hierarchyInfo.getSingularAttributeSources(
+					isMappedBy,
+					singularAttributeNature
+			);
 			if ( values == null || values.isEmpty() ) {
-				values = super.getSingularAttributeSources( isMappedBy, nature );
+				values = super.getSingularAttributeSources( isMappedBy, singularAttributeNature );
 			}
 
 			return values;
@@ -591,9 +495,4 @@ public class SourceIndex {
 		}
 	}
 
-
-	private static class DependencyTreeNode {
-		private String dependedOnHierarchyKey;
-		private List<String> dependantHierarchyKeys;
-	}
 }

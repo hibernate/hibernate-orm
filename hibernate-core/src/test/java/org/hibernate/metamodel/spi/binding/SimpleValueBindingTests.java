@@ -36,6 +36,7 @@ import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.source.internal.annotations.JandexAccessImpl;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.Entity;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
@@ -94,8 +95,10 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 				"property",
 				true,
 				false,
-				SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID,
+				NaturalIdMutability.NOT_NATURAL_ID,
 				null,
+				entityBinding.getRoleBase().append( "id" ),
+				entityBinding.getPathBase().append( "id" ),
 				PropertyGeneration.NEVER
 		);
 		attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( "long" );

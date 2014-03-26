@@ -31,6 +31,9 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.BasicAttrib
 import org.hibernate.metamodel.source.internal.annotations.attribute.Column;
 import org.hibernate.metamodel.source.internal.annotations.attribute.OverrideAndConverterCollector;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 
 /**
  * @author Steve Ebersole
@@ -61,8 +64,8 @@ public class BasicAttributeSourceImpl extends SingularAttributeSourceImpl {
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.BASIC;
 	}
 
 	@Override
@@ -127,5 +130,15 @@ public class BasicAttributeSourceImpl extends SingularAttributeSourceImpl {
 		}
 
 		return relationalValueSources;
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return getAnnotatedAttribute().getPath();
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return getAnnotatedAttribute().getRole();
 	}
 }

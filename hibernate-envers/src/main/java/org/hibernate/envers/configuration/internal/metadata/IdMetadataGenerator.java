@@ -37,7 +37,7 @@ import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
@@ -65,14 +65,14 @@ public final class IdMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	private boolean addIdProperties(
 			Element parent,
-			CompositeAttributeBinding compositeAttributeBinding,
+			EmbeddedAttributeBinding embeddedAttributeBinding,
 			SimpleMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
-		//if ( compositeAttributeBinding.getAttribute().isSynthetic() ) {
+		//if ( embeddedAttributeBinding.getAttribute().isSynthetic() ) {
 		//	return true;
 		//}
-		for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+		for ( AttributeBinding attributeBinding : embeddedAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
 			final Type propertyType = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 			final boolean added;
 			if ( propertyType instanceof ManyToOneType ) {
@@ -136,7 +136,7 @@ public final class IdMetadataGenerator {
 			mapper = new MultipleIdMapper( componentClass );
 			if ( !addIdProperties(
 					relIdMapping,
-					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
+					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
 					mapper,
 					false,
 					audited
@@ -147,7 +147,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
+					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
 					null,
 					true,
 					audited
@@ -164,7 +164,7 @@ public final class IdMetadataGenerator {
 			mapper = new EmbeddedIdMapper( getIdPropertyData( entityIdentifier.getAttributeBinding() ), embeddableClass );
 			if ( !addIdProperties(
 					relIdMapping,
-					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
+					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
 					mapper,
 					false,
 					audited
@@ -175,7 +175,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(CompositeAttributeBinding) entityIdentifier.getAttributeBinding(),
+					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
 					null,
 					true,
 					audited

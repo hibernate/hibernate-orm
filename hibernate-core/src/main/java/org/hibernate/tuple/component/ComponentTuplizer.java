@@ -35,7 +35,7 @@ import org.hibernate.tuple.Tuplizer;
  * </p>
  * ComponentTuplizer implementations should have the following constructor with the following arguments:<ol>
  *     <li>{@link org.hibernate.service.ServiceRegistry}</li>
- *     <li>{@link org.hibernate.metamodel.spi.binding.CompositeAttributeBinding}</li>
+ *     <li>{@link org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding}</li>
  *     <li>boolean (whether the composite is a mapped identifier)</li>
  * </ol>
  *

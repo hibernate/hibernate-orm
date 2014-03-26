@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 
 /**
  * Presents metadata about the elements of a plural attribute
@@ -38,6 +39,13 @@ public interface PluralAttributeElementDetails {
 	 * @return The descriptor for the Java type of the collection elements.
 	 */
 	public JavaTypeDescriptor getJavaType();
+
+	/**
+	 * Get the nature of the element values.
+	 *
+	 * @return The element nature
+	 */
+	public PluralAttributeElementNature getElementNature();
 
 	/**
 	 * Get the type resolver for the collection elements.

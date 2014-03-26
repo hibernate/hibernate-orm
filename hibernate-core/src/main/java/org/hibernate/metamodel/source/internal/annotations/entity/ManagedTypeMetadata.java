@@ -64,10 +64,10 @@ import org.hibernate.metamodel.source.internal.annotations.util.AnnotationParser
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
 import org.hibernate.metamodel.source.spi.MappingException;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
 
@@ -386,6 +386,10 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 
 	public AttributeRole getAttributeRoleBase() {
 		return attributeRoleBase;
+	}
+
+	public AttributePath getAttributePathBase() {
+		return attributePathBase;
 	}
 
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
@@ -1071,7 +1075,7 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 		return true;
 	}
 
-	public SingularAttributeBinding.NaturalIdMutability getContainerNaturalIdMutability() {
-		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+	public NaturalIdMutability getContainerNaturalIdMutability() {
+		return NaturalIdMutability.NOT_NATURAL_ID;
 	}
 }

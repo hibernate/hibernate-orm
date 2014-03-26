@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.spi.binding;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.domain.Attribute;
 
 /**
@@ -79,5 +81,6 @@ public interface AttributeBinding {
 
 	public boolean isLazy();
 
-	public String getAttributePath();
+	public AttributePath getAttributePath();
+	public AttributeRole getAttributeRole();
 }

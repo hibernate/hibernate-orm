@@ -62,6 +62,18 @@ public class Primitives {
 					this.primitiveType
 			);
 		}
+
+		public PrimitiveTypeDescriptor getPrimitiveType() {
+			return primitiveType;
+		}
+
+		public PrimitiveWrapperTypeDescriptor getPrimitiveWrapperType() {
+			return primitiveWrapperType;
+		}
+
+		public ArrayDescriptor getPrimitiveArrayType() {
+			return primitiveArrayType;
+		}
 	}
 
 	public static final PrimitiveGroup CHAR = new PrimitiveGroup( char.class, char[].class, Character.class );

@@ -46,7 +46,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
@@ -255,11 +255,11 @@ public class SqlResultSetProcessor {
 				String reducedName = name.substring( 0, dotIndex );
 				AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( reducedName );
 				Iterable<? extends AttributeBinding> attributeBindings = null;
-				if ( CompositeAttributeBinding.class.isInstance( attributeBinding ) ) {
-					CompositeAttributeBinding compositeAttributeBinding = CompositeAttributeBinding.class.cast(
+				if ( EmbeddedAttributeBinding.class.isInstance( attributeBinding ) ) {
+					EmbeddedAttributeBinding embeddedAttributeBinding = EmbeddedAttributeBinding.class.cast(
 							attributeBinding
 					);
-					attributeBindings = compositeAttributeBinding.attributeBindings();
+					attributeBindings = embeddedAttributeBinding.getEmbeddableBinding().attributeBindings();
 
 				}
 				else if ( ManyToOneAttributeBinding.class.isInstance( attributeBinding ) ) {
@@ -287,8 +287,9 @@ public class SqlResultSetProcessor {
 						SingularAttributeBinding identifierAttributeBinding = referencedEntityBinding.getHierarchyDetails()
 								.getEntityIdentifier()
 								.getAttributeBinding();
-						if ( CompositeAttributeBinding.class.isInstance( identifierAttributeBinding ) ) {
-							attributeBindings = CompositeAttributeBinding.class.cast( identifierAttributeBinding )
+						if ( EmbeddedAttributeBinding.class.isInstance( identifierAttributeBinding ) ) {
+							attributeBindings = EmbeddedAttributeBinding.class.cast( identifierAttributeBinding )
+									.getEmbeddableBinding()
 									.attributeBindings();
 						}
 						else {

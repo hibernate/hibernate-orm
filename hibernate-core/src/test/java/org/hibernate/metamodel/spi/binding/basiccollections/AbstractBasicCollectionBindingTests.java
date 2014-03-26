@@ -32,15 +32,15 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -95,7 +95,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 
 		assertBasicCollectionBinding(
 				entityBinding,
-				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theBag" ),
+				metadata.getCollection( EntityWithBasicCollections.class.getName() + "#theBag" ),
 				BagType.class,
 				Collection.class,
 				String.class,
@@ -108,7 +108,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 
 		assertBasicCollectionBinding(
 				entityBinding,
-				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".theSet" ),
+				metadata.getCollection( EntityWithBasicCollections.class.getName() + "#theSet" ),
 				SetType.class,
 				Set.class,
 				String.class,
@@ -121,7 +121,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 
 		assertBasicCollectionBinding(
 				entityBinding,
-				metadata.getCollection( EntityWithBasicCollections.class.getName() + ".thePropertyRefSet" ),
+				metadata.getCollection( EntityWithBasicCollections.class.getName() + "#thePropertyRefSet" ),
 				SetType.class,
 				Set.class,
 				Integer.class,
@@ -197,7 +197,7 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 		);
 		assertFalse( keyBinding.isInverse() );
 		Assert.assertEquals(
-				PluralAttributeElementBinding.Nature.BASIC,
+				PluralAttributeElementNature.BASIC,
 				collectionBinding.getPluralAttributeElementBinding().getNature()
 		);
 		assertEquals(
@@ -209,13 +209,18 @@ public abstract class AbstractBasicCollectionBindingTests extends BaseUnitTestCa
 				collectionBinding.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping().getReturnedClass()
 
 		);
-		assertEquals( 1, collectionBinding.getPluralAttributeElementBinding().getRelationalValueBindings().size() );
-		RelationalValueBinding elementRelationalValueBinding = collectionBinding.getPluralAttributeElementBinding().getRelationalValueBindings().get( 0 );
+		assertEquals( 1,
+					  collectionBinding.getPluralAttributeElementBinding()
+							  .getRelationalValueContainer()
+							  .relationalValueBindings()
+							  .size()
+		);
+		RelationalValueBinding elementRelationalValueBinding = collectionBinding.getPluralAttributeElementBinding().getRelationalValueContainer().relationalValueBindings().get( 0 );
 		assertEquals( expectedElementNullable, elementRelationalValueBinding.isNullable() );
-		if ( collectionBinding.getAttribute().getNature() == PluralAttribute.Nature.BAG ) {
+		if ( collectionBinding.getAttribute().getPluralAttributeNature() == PluralAttributeNature.BAG ) {
 			assertEquals( 0, collectionTable.getPrimaryKey().getColumnSpan() );
 		}
-		else if ( collectionBinding.getAttribute().getNature() == PluralAttribute.Nature.SET ) {
+		else if ( collectionBinding.getAttribute().getPluralAttributeNature() == PluralAttributeNature.SET ) {
 			if ( expectedElementNullable ) {
 				assertEquals( 0, collectionTable.getPrimaryKey().getColumnSpan() );
 			}

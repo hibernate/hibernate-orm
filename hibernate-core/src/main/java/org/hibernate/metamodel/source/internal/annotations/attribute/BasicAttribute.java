@@ -48,10 +48,10 @@ import org.hibernate.metamodel.source.internal.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -164,7 +164,7 @@ public class BasicAttribute extends AbstractSingularAttribute {
 			this.propertyGeneration = propertyGeneration;
 		}
 
-		if ( getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE ) {
+		if ( getNaturalIdMutability() == NaturalIdMutability.IMMUTABLE ) {
 			this.updateability.disable();
 		}
 

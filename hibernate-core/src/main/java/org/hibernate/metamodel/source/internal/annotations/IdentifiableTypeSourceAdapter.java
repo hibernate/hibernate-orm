@@ -37,6 +37,8 @@ import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.EntityHierarchySource;
 import org.hibernate.metamodel.source.spi.IdentifiableTypeSource;
 import org.hibernate.metamodel.source.spi.JpaCallbackSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.xml.spi.Origin;
@@ -204,8 +206,13 @@ public abstract class IdentifiableTypeSourceAdapter implements IdentifiableTypeS
 	}
 
 	@Override
-	public String getPath() {
-		return "";
+	public AttributePath getAttributePathBase() {
+		return identifiableTypeMetadata.getAttributePathBase();
+	}
+
+	@Override
+	public AttributeRole getAttributeRoleBase() {
+		return identifiableTypeMetadata.getAttributeRoleBase();
 	}
 
 	@Override

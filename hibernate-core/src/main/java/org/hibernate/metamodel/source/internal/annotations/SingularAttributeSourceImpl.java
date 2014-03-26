@@ -32,8 +32,7 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAtt
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
-
-import static org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * @author Hardy Ferentschik

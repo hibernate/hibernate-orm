@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import org.hibernate.TruthValue;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -50,7 +51,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 				"name"
 		);
 		assertEquals(
-				SingularAttributeBinding.NaturalIdMutability.IMMUTABLE,
+				NaturalIdMutability.IMMUTABLE,
 				attributeBinding.getNaturalIdMutability()
 		);
 
@@ -73,7 +74,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 				"age"
 		);
 		assertEquals(
-				SingularAttributeBinding.NaturalIdMutability.MUTABLE,
+				NaturalIdMutability.MUTABLE,
 				attributeBinding.getNaturalIdMutability()
 		);
 
@@ -122,7 +123,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 				"component"
 		);
 		assertEquals(
-				SingularAttributeBinding.NaturalIdMutability.IMMUTABLE,
+				NaturalIdMutability.IMMUTABLE,
 				attributeBinding.getNaturalIdMutability()
 		);
 
@@ -172,7 +173,7 @@ public class NaturalIdBindingTests extends BaseAnnotationBindingTestCase {
 		assertNull( entityBinding.getHierarchyDetails().getNaturalIdCaching().getRegion() );
 
 		SingularAttributeBinding attributeBinding = (SingularAttributeBinding)entityBinding.locateAttributeBinding( "simpleEntity" );
-		assertEquals( SingularAttributeBinding.NaturalIdMutability.IMMUTABLE, attributeBinding.getNaturalIdMutability() );
+		assertEquals( NaturalIdMutability.IMMUTABLE, attributeBinding.getNaturalIdMutability() );
 
 		List<RelationalValueBinding> relationalValueBindings = attributeBinding.getRelationalValueBindings();
 		assertEquals( 1, relationalValueBindings.size() );

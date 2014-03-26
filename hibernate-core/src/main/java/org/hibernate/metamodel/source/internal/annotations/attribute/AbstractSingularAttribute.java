@@ -32,9 +32,10 @@ import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMet
 import org.hibernate.metamodel.source.internal.annotations.util.ConverterAndOverridesHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.spi.AttributePath;
-import org.hibernate.metamodel.source.spi.AttributeRole;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -176,7 +177,7 @@ public abstract class AbstractSingularAttribute
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
+	public NaturalIdMutability getNaturalIdMutability() {
 		return super.getNaturalIdMutability();
 	}
 }

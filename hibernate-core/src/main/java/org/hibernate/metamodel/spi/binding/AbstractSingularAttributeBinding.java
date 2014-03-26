@@ -26,6 +26,9 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
@@ -47,8 +50,18 @@ public abstract class AbstractSingularAttributeBinding
 			boolean includedInOptimisticLocking,
 			boolean isLazy,
 			NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext) {
-		super( container, attribute, propertyAccessorName, includedInOptimisticLocking, metaAttributeContext );
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath) {
+		super(
+				container,
+				attribute,
+				propertyAccessorName,
+				includedInOptimisticLocking,
+				metaAttributeContext ,
+				attributeRole,
+				attributePath
+		);
 		this.isLazy = isLazy;
 		this.naturalIdMutability = naturalIdMutability;
 	}

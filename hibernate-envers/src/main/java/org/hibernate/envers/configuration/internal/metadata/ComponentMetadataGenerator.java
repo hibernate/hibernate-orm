@@ -31,8 +31,7 @@ import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAudit
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 
 import org.dom4j.Element;
 
@@ -55,17 +54,17 @@ public final class ComponentMetadataGenerator {
     @SuppressWarnings({"unchecked"})
     public void addComponent(
             Element parent, PropertyAuditingData propertyAuditingData,
-            CompositeAttributeBinding compositeAttributeBinding, CompositeMapperBuilder mapper, String entityName,
+            EmbeddedAttributeBinding embeddedAttributeBinding, CompositeMapperBuilder mapper, String entityName,
             EntityXmlMappingData xmlMappingData, boolean firstPass) {
 
         final Class componentClass;
-		final EntityMode entityMode = compositeAttributeBinding.seekEntityBinding().getHierarchyDetails().getEntityMode();
+		final EntityMode entityMode = embeddedAttributeBinding.getEmbeddableBinding().seekEntityBinding().getHierarchyDetails().getEntityMode();
         if ( entityMode == EntityMode.MAP ) {
             componentClass = context.getClassLoaderService().classForName( Map.class.getCanonicalName() );
         } else {
 			// TODO: get rid of classloading.
             componentClass = context.getClassLoaderService().classForName(
-					compositeAttributeBinding.getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
+					embeddedAttributeBinding.getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
             );
         }
         final CompositeMapperBuilder componentMapper = mapper.addComponent(
@@ -77,7 +76,7 @@ public final class ComponentMetadataGenerator {
         final ComponentAuditingData componentAuditingData = (ComponentAuditingData) propertyAuditingData;
 
         // Adding all properties of the component
-        for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
+        for ( AttributeBinding attributeBinding : embeddedAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
 
             final PropertyAuditingData componentPropertyAuditingData =
                     componentAuditingData.getPropertyAuditingData( attributeBinding.getAttribute().getName() );

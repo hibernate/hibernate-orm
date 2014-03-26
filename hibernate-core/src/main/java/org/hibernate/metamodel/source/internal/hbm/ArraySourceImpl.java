@@ -23,21 +23,20 @@
  */
 package org.hibernate.metamodel.source.internal.hbm;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbArrayElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
-import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.source.spi.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeIndexSource;
-import org.hibernate.metamodel.source.spi.SequentialPluralAttributeIndexSource;
+import org.hibernate.metamodel.source.spi.PluralAttributeSequentialIndexSource;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 
 /**
  * @author Brett Meyer
  */
 public class ArraySourceImpl extends AbstractPluralAttributeSourceImpl implements IndexedPluralAttributeSource {
 
-	private final SequentialPluralAttributeIndexSource indexSource;
+	private final PluralAttributeSequentialIndexSource indexSource;
 
 	public ArraySourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -46,18 +45,10 @@ public class ArraySourceImpl extends AbstractPluralAttributeSourceImpl implement
 		super( sourceMappingDocument, arrayElement, container );
 		JaxbListIndexElement listIndexElement = arrayElement.getListIndex();
 		if ( listIndexElement == null ) {
-			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), arrayElement.getIndex() );
+			this.indexSource = new PluralAttributeSequentialIndexSourceImpl( sourceMappingDocument(), arrayElement.getIndex() );
 		} else {
-			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), listIndexElement );
+			this.indexSource = new PluralAttributeSequentialIndexSourceImpl( sourceMappingDocument(), listIndexElement );
 		}
-	}
-
-	@Override
-	public PluralAttributeIndexSource resolvePluralAttributeIndexSource(AttributeSourceResolutionContext context) {
-		if ( indexSource == null ) {
-			throw new AssertionFailure( "Array index source should have been resolved already." );
-		}
-		return indexSource;
 	}
 
 	@Override
@@ -76,7 +67,7 @@ public class ArraySourceImpl extends AbstractPluralAttributeSourceImpl implement
 	 * @see org.hibernate.metamodel.source.spi.PluralAttributeSource#getNature()
 	 */
 	@Override
-	public Nature getNature() {
-		return Nature.ARRAY;
+	public PluralAttributeNature getNature() {
+		return PluralAttributeNature.ARRAY;
 	}
 }

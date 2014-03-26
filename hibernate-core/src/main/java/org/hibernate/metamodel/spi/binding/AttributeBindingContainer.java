@@ -27,26 +27,28 @@ import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.tuple.Tuplizer;
+import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
- * Common contract for {@link EntityBinding} and {@link CompositeAttributeBinding} in so far as they are both
+ * Common contract for {@link EntityBinding} and {@link EmbeddedAttributeBinding} in so far as they are both
  * containers for {@link AttributeBinding} descriptors
  *
  * @author Steve Ebersole
  */
 public interface AttributeBindingContainer {
-	/**
-	 * Obtain the path base of this container.  Intended to help uniquely identify each attribute binding.
-	 *
-	 * @return The path base for this container.
-	 */
-	String getPathBase();
+	public AttributePath getPathBase();
+	public AttributeRole getRoleBase();
 
 	/**
 	 * Obtain the underlying domain attribute container.
@@ -138,8 +140,10 @@ public interface AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			PropertyGeneration generation);
 
 	/**
@@ -147,6 +151,7 @@ public interface AttributeBindingContainer {
 	 *
 	 * @param attribute The attribute for which to make a binding.
 	 * @param parentReferenceAttribute
+	 * @param tuplizerClass
 	 * @param propertyAccessorName
 	 * @param includedInOptimisticLocking
 	 * @param lazy
@@ -154,14 +159,17 @@ public interface AttributeBindingContainer {
 	 *
 	 * @return The attribute binding instance.
 	 */
-	CompositeAttributeBinding makeAggregatedCompositeAttributeBinding(
+	EmbeddedAttributeBinding makeAggregatedCompositeAttributeBinding(
 			SingularAttribute attribute,
 			SingularAttribute parentReferenceAttribute,
+			Class<? extends ComponentTuplizer> tuplizerClass,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext);
+			NaturalIdMutability naturalIdMutability,
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath);
 
 	/**
 	 * Factory method for one-to-one attribute bindings.
@@ -181,8 +189,10 @@ public interface AttributeBindingContainer {
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
 			boolean isConstrained);
@@ -208,8 +218,10 @@ public interface AttributeBindingContainer {
 			boolean includedInOptimisticLocking,
 			boolean lazy,
 			boolean isIgnoreNotFound,
-			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
+			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding);
 
@@ -228,11 +240,13 @@ public interface AttributeBindingContainer {
 	 */
 	BagBinding makeBagAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext);
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath);
 
 	/**
 	 * Factory method for list attribute bindings.
@@ -250,11 +264,13 @@ public interface AttributeBindingContainer {
 	 */
 	ListBinding makeListAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			int base);
 
 	/**
@@ -273,11 +289,13 @@ public interface AttributeBindingContainer {
 	 */
 	ArrayBinding makeArrayAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath,
 			int base);
 
 	/**
@@ -296,12 +314,14 @@ public interface AttributeBindingContainer {
 	 */
 	MapBinding makeMapAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature elementNature,
-			PluralAttributeIndexBinding.Nature indexNature,
+			PluralAttributeElementNature elementNature,
+			PluralAttributeIndexNature indexNature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext);
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath);
 
 	/**
 	 * Factory method for set attribute bindings.
@@ -318,9 +338,11 @@ public interface AttributeBindingContainer {
 	 */
 	SetBinding makeSetAttributeBinding(
 			PluralAttribute attribute,
-			PluralAttributeElementBinding.Nature nature,
+			PluralAttributeElementNature nature,
 			SingularAttributeBinding referencedAttributeBinding,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
-			MetaAttributeContext metaAttributeContext);
+			MetaAttributeContext metaAttributeContext,
+			AttributeRole attributeRole,
+			AttributePath attributePath);
 }

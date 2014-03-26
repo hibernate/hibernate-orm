@@ -50,6 +50,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -622,11 +623,11 @@ public class EntityMetamodel implements Serializable {
 				SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast(
 						attributeBinding
 				);
-				if ( singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.MUTABLE ) {
+				if ( singularAttributeBinding.getNaturalIdMutability() == NaturalIdMutability.MUTABLE ) {
 					naturalIdNumbers.add( i );
 					foundUpdateableNaturalIdProperty = true;
 				}
-				else if ( singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE ) {
+				else if ( singularAttributeBinding.getNaturalIdMutability() == NaturalIdMutability.IMMUTABLE ) {
 					naturalIdNumbers.add( i );
 				}
 			}

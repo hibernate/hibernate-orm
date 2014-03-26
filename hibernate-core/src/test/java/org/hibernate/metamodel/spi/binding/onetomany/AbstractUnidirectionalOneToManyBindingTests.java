@@ -33,10 +33,10 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -100,7 +100,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theBag" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + "#theBag" ),
 				BagType.class,
 				Collection.class,
 				simpleEntityBinding,
@@ -112,7 +112,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theSet" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + "#theSet" ),
 				SetType.class,
 				Set.class,
 				simpleEntityBinding,
@@ -124,7 +124,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theList" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + "#theList" ),
 				ListType.class,
 				List.class,
 				simpleEntityBinding,
@@ -136,7 +136,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".theMap" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + "#theMap" ),
 				MapType.class,
 				Map.class,
 				simpleEntityBinding,
@@ -148,7 +148,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 
 		checkResult(
 				entityBinding,
-				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + ".thePropertyRefSet" ),
+				metadata.getCollection( EntityWithUnidirectionalOneToMany.class.getName() + "#thePropertyRefSet" ),
 				BagType.class,
 				Collection.class,
 				simpleEntityBinding,
@@ -170,7 +170,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 			FetchTiming expectedFetchTiming,
 			boolean expectedNullableCollectionKey) {
 		Assert.assertEquals(
-				PluralAttributeElementBinding.Nature.ONE_TO_MANY,
+				PluralAttributeElementNature.ONE_TO_MANY,
 				collectionBinding.getPluralAttributeElementBinding().getNature()
 		);
 		assertSame(

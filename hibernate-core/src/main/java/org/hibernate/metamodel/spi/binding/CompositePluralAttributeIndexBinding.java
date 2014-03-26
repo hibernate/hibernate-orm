@@ -28,62 +28,66 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
- * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#AGGREGATE} elements
+ * Describes plural attributes of {@link org.hibernate.metamodel.spi.PluralAttributeElementNature#AGGREGATE} elements
  *
  * @author Gail Badner
  */
 public class CompositePluralAttributeIndexBinding extends AbstractPluralAttributeIndexBinding {
 
 	// TODO: Come up with a more descriptive name for compositeAttributeBindingContainer.
-	private AbstractCompositeAttributeBindingContainer compositeAttributeBindingContainer;
+	private AbstractEmbeddableBinding compositeAttributeBindingContainer;
 
 	public CompositePluralAttributeIndexBinding(IndexedPluralAttributeBinding binding) {
 		super( binding );
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.AGGREGATE;
+	public PluralAttributeIndexNature getNature() {
+		return PluralAttributeIndexNature.AGGREGATE;
 	}
 
-	public CompositeAttributeBindingContainer createCompositeAttributeBindingContainer(
+	public EmbeddableBinding createCompositeAttributeBindingContainer(
 			Aggregate aggregate,
 			MetaAttributeContext metaAttributeContext,
-			SingularAttribute parentReference) {
-		compositeAttributeBindingContainer =
-				new AbstractCompositeAttributeBindingContainer(
-						getIndexedPluralAttributeBinding().getContainer().seekEntityBinding(),
-						aggregate,
-						getIndexedPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
-						getIndexedPluralAttributeBinding().getAttribute().getRole() + ".key",
-						metaAttributeContext,
-						parentReference) {
-					final Map<String,AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
+			SingularAttribute parentReference,
+			Class<? extends ComponentTuplizer> tuplizerClass) {
+		compositeAttributeBindingContainer = new AbstractEmbeddableBinding(
+				getIndexedPluralAttributeBinding().getContainer().seekEntityBinding(),
+				aggregate,
+				getIndexedPluralAttributeBinding().getPluralAttributeKeyBinding().getCollectionTable(),
+				getIndexedPluralAttributeBinding().getAttributeRole().append( "key" ),
+				getIndexedPluralAttributeBinding().getAttributePath().append( "key" ),
+				metaAttributeContext,
+				parentReference,
+				tuplizerClass) {
+			final Map<String,AttributeBinding> attributeBindingMap = new LinkedHashMap<String, AttributeBinding>();
 
-					@Override
-					protected boolean isModifiable() {
-						return true;
-					}
+			@Override
+			protected boolean isModifiable() {
+				return true;
+			}
 
-					@Override
-					protected Map<String, AttributeBinding> attributeBindingMapInternal() {
-						return attributeBindingMap;
-					}
+			@Override
+			protected Map<String, AttributeBinding> attributeBindingMapInternal() {
+				return attributeBindingMap;
+			}
 
-					@Override
-					public boolean isAggregated() {
-						return true;
-					}
-				};
+			@Override
+			public boolean isAggregated() {
+				return true;
+			}
+		};
 		return compositeAttributeBindingContainer;
 	}
 
-	public CompositeAttributeBindingContainer getCompositeAttributeBindingContainer() {
+	public EmbeddableBinding getCompositeAttributeBindingContainer() {
 		return compositeAttributeBindingContainer;
 	}
 

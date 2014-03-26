@@ -34,6 +34,7 @@ import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.source.spi.MappedByAssociationSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 
 /**
@@ -62,7 +63,7 @@ public class ToOneMappedByAttributeSourceImpl
 
 	@Override
 	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
-		if ( getNature() != null && owner != null) {
+		if ( getSingularAttributeNature() != null && owner != null) {
 			return;
 		}
 		if ( owner == null ) {
@@ -72,17 +73,17 @@ public class ToOneMappedByAttributeSourceImpl
 			);
 			owner.addMappedByAssociationSource( this );
 		}
-		if ( getNature() == null ) {
-			final Nature nature;
+		if ( getSingularAttributeNature() == null ) {
+			final SingularAttributeNature singularAttributeNature;
 			if ( AbstractPersistentAttribute.Nature.MANY_TO_ONE.equals( associationAttribute().getNature() ) ) {
-				nature = Nature.MANY_TO_ONE;
+				singularAttributeNature = SingularAttributeNature.MANY_TO_ONE;
 			}
 			else if ( AbstractPersistentAttribute.Nature.ONE_TO_ONE.equals( associationAttribute().getNature() ) ) {
 				if ( owner.getContainingTableName() != null ) {
-					nature = Nature.MANY_TO_ONE;
+					singularAttributeNature = SingularAttributeNature.MANY_TO_ONE;
 				}
 				else  {
-					nature = Nature.ONE_TO_ONE;
+					singularAttributeNature = SingularAttributeNature.ONE_TO_ONE;
 				}
 			}
 			else {
@@ -91,7 +92,7 @@ public class ToOneMappedByAttributeSourceImpl
 						associationAttribute().getNature(), associationAttribute().getRole()
 				));
 			}
-			setNature( nature );
+			setSingularAttributeNature( singularAttributeNature );
 		}
 	}
 

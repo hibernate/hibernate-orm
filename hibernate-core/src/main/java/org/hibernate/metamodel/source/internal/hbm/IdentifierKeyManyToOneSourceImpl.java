@@ -24,7 +24,8 @@
 package org.hibernate.metamodel.source.internal.hbm;
 
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyManyToOneElement;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 
 /**
  * @author Gail Badner
@@ -33,8 +34,9 @@ public class IdentifierKeyManyToOneSourceImpl extends KeyManyToOneSourceImpl {
 
 	public IdentifierKeyManyToOneSourceImpl(
 			MappingDocument mappingDocument,
-			final JaxbKeyManyToOneElement keyManyToOneElement) {
-		super( mappingDocument, keyManyToOneElement, SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID );
+			AttributeSourceContainer container,
+			JaxbKeyManyToOneElement keyManyToOneElement) {
+		super( mappingDocument, container, keyManyToOneElement, NaturalIdMutability.NOT_NATURAL_ID );
 	}
 
 	@Override

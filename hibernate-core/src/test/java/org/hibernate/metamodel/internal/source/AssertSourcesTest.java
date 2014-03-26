@@ -46,6 +46,7 @@ import org.hibernate.metamodel.source.spi.TableSource;
 import org.hibernate.metamodel.source.spi.TableSpecificationSource;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 
@@ -150,7 +151,7 @@ public class AssertSourcesTest extends BaseUnitTestCase {
 		assertTrue( identifierAttributeSource.isSingular() );
 		assertFalse( identifierAttributeSource.isVirtualAttribute() );
 		assertFalse( identifierAttributeSource.isLazy() );
-		assertEquals( SingularAttributeSource.Nature.BASIC, identifierAttributeSource.getNature() );
+		assertEquals( SingularAttributeNature.BASIC, identifierAttributeSource.getSingularAttributeNature() );
 		assertEquals( PropertyGeneration.INSERT, identifierAttributeSource.getGeneration() );
 //		assertNull( identifierAttributeSource.getPropertyAccessorName() );
 

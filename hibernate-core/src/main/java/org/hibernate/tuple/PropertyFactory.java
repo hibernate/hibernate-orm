@@ -44,7 +44,7 @@ import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.Fetchable;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -143,7 +143,7 @@ public final class PropertyFactory {
 			type = sessionFactory.getTypeResolver().getTypeFactory().component(
 					new ComponentMetamodel(
 							sessionFactory.getServiceRegistry(),
-							( (CompositeAttributeBinding) attributeBinding ),
+							( (EmbeddedAttributeBinding) attributeBinding ).getEmbeddableBinding(),
 							true,
 							true
 					)
@@ -395,6 +395,9 @@ public final class PropertyFactory {
 			AttributeBinding property,
 			boolean lazyAvailable) {
 		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		if ( type == null ) {
+			throw new HibernateException( "Could not resolve Type for attribute : " + property.getAttributeRole().getFullPath() );
+		}
 		final NonIdentifierAttributeNature nature = decode( type );
 		final boolean alwaysDirtyCheck = type.isAssociationType() &&
 				( (AssociationType) type ).isAlwaysDirtyChecked();

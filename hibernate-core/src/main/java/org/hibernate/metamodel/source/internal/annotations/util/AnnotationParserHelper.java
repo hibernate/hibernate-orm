@@ -33,8 +33,8 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MemberDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
@@ -180,7 +180,7 @@ public class AnnotationParserHelper {
 		return mapKeyType;
 	}
 
-	public static SingularAttributeBinding.NaturalIdMutability determineNaturalIdMutability(
+	public static NaturalIdMutability determineNaturalIdMutability(
 			ManagedTypeMetadata container,
 			MemberDescriptor member) {
 		final AnnotationInstance naturalIdAnnotation = member.getAnnotations().get( HibernateDotNames.NATURAL_ID );
@@ -191,8 +191,8 @@ public class AnnotationParserHelper {
 		final boolean mutable = naturalIdAnnotation.value( "mutable" ) != null
 				&& naturalIdAnnotation.value( "mutable" ).asBoolean();
 		return mutable
-				? SingularAttributeBinding.NaturalIdMutability.MUTABLE
-				: SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
+				? NaturalIdMutability.MUTABLE
+				: NaturalIdMutability.IMMUTABLE;
 	}
 }
 

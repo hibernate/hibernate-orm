@@ -51,7 +51,7 @@ import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HierarchyDetails;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -337,8 +337,8 @@ public class MetamodelBuilder {
 				break;
 			}
 			case AGGREGATED_COMPOSITE: {
-				CompositeAttributeBinding idAttributeBinding =
-						(CompositeAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+				EmbeddedAttributeBinding idAttributeBinding =
+						(EmbeddedAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
 				if ( idAttributeBinding != null ) {
 					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
 						//noinspection unchecked
@@ -351,12 +351,12 @@ public class MetamodelBuilder {
 			}
 			default: {
 				// nature == (non-aggregated) COMPOSITE
-				CompositeAttributeBinding idAttributeBinding =
-						(CompositeAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+				EmbeddedAttributeBinding idAttributeBinding =
+						(EmbeddedAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
 				if ( idAttributeBinding != null ) {
 					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
 						Set<SingularAttribute> idClassAttributes = new HashSet<SingularAttribute>();
-						for ( AttributeBinding idClassAttributeBinding : idAttributeBinding.attributeBindings() ) {
+						for ( AttributeBinding idClassAttributeBinding : idAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
 							idClassAttributes.add( attributeBuilder.buildIdAttribute( jpaDescriptor, idClassAttributeBinding ) );
 						}
 						//noinspection unchecked

@@ -23,12 +23,8 @@
  */
 package org.hibernate.metamodel.source.spi;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 
@@ -37,7 +33,9 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
  */
 public interface PluralAttributeSource
 		extends AttributeSource, FetchableAttributeSource, PluralAttributeElementSourceResolver {
-	public Nature getNature();
+	public PluralAttributeNature getNature();
+
+	public CollectionIdSource getCollectionIdSource();
 
 	public PluralAttributeKeySource getKeySource();
 
@@ -79,27 +77,4 @@ public interface PluralAttributeSource
 
 	public boolean usesJoinTable();
 
-	/**
-	 * Describes the nature of the collection itself as declared by the metadata.
-	 *
-	 * @author Steve Ebersole
-	 */
-	enum Nature {
-		BAG( Collection.class ),
-		ID_BAG( Collection.class ),
-		SET( Set.class ),
-		LIST( List.class ),
-		MAP( Map.class ),
-		ARRAY( Object[].class );
-
-		private final Class<?> reportedJavaType;
-
-		Nature(Class<?> reportedJavaType) {
-			this.reportedJavaType = reportedJavaType;
-		}
-
-		public Class<?> reportedJavaType() {
-			return reportedJavaType;
-		}
-	}
 }

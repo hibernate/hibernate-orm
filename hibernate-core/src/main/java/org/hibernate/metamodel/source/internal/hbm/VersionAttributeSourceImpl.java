@@ -36,7 +36,10 @@ import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.source.spi.VersionAttributeSource;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 
 
 /**
@@ -50,8 +53,12 @@ class VersionAttributeSourceImpl
 	private final JaxbVersionElement versionElement;
 	private final List<RelationalValueSource> valueSources;
 
+	private final AttributePath attributePath;
+	private final AttributeRole attributeRole;
+
 	VersionAttributeSourceImpl(
 			MappingDocument mappingDocument,
+			RootEntitySourceImpl rootEntitySource,
 			final JaxbVersionElement versionElement) {
 		super( mappingDocument );
 		this.versionElement = versionElement;
@@ -78,6 +85,9 @@ class VersionAttributeSourceImpl
 					}
 				}
 		);
+
+		this.attributePath = rootEntitySource.getAttributePathBase().append( getName() );
+		this.attributeRole = rootEntitySource.getAttributeRoleBase().append( getName() );
 	}
 
 	private final HibernateTypeSource typeSource = new HibernateTypeSource() {
@@ -104,6 +114,16 @@ class VersionAttributeSourceImpl
 	@Override
 	public String getName() {
 		return versionElement.getName();
+	}
+
+	@Override
+	public AttributePath getAttributePath() {
+		return attributePath;
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return attributeRole;
 	}
 
 	@Override
@@ -141,8 +161,8 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
-	public SingularAttributeBinding.NaturalIdMutability getNaturalIdMutability() {
-		return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+	public NaturalIdMutability getNaturalIdMutability() {
+		return NaturalIdMutability.NOT_NATURAL_ID;
 	}
 
 	@Override
@@ -151,8 +171,8 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
-	public Nature getNature() {
-		return Nature.BASIC;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return SingularAttributeNature.BASIC;
 	}
 
 	@Override

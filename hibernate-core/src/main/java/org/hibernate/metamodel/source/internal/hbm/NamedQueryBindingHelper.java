@@ -38,7 +38,7 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSqlQueryElement;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -124,14 +124,12 @@ public class NamedQueryBindingHelper {
 				String reducedName = name.substring( 0, dotIndex );
 				AttributeBinding value = null;// getRecursiveAttributeBinding(entityBinding, reducedName );
 				Iterable<AttributeBinding> parentPropIter;
-				if ( CompositeAttributeBinding.class.isInstance( value ) ) {
-					CompositeAttributeBinding comp
-							= (CompositeAttributeBinding) value;
-					parentPropIter = comp.attributeBindings();
+				if ( EmbeddedAttributeBinding.class.isInstance( value ) ) {
+					EmbeddedAttributeBinding comp
+							= (EmbeddedAttributeBinding) value;
+					parentPropIter = comp.getEmbeddableBinding().attributeBindings();
 				}
-				else if ( SingularAssociationAttributeBinding.class.isInstance(
-						value
-				) ) {
+				else if ( SingularAssociationAttributeBinding.class.isInstance( value ) ) {
 					SingularAssociationAttributeBinding toOne
 							= SingularAssociationAttributeBinding.class.cast(
 							value
@@ -141,9 +139,9 @@ public class NamedQueryBindingHelper {
 					SingularAttributeBinding referencedAttributeBinding
 							= toOne.getReferencedAttributeBinding();
 					try {
-						parentPropIter = CompositeAttributeBinding.class.cast(
+						parentPropIter = EmbeddedAttributeBinding.class.cast(
 								referencedAttributeBinding
-						).attributeBindings();
+						).getEmbeddableBinding().attributeBindings();
 					}
 					catch ( ClassCastException e ) {
 						throw new org.hibernate.MappingException(

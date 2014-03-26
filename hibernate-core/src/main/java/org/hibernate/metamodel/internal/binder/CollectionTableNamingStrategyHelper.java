@@ -35,7 +35,7 @@ public class CollectionTableNamingStrategyHelper extends TableNamingStrategyHelp
 
 	public CollectionTableNamingStrategyHelper(final AbstractPluralAttributeBinding pluralAttributeBinding) {
 		super( pluralAttributeBinding.getContainer().seekEntityBinding() );
-		this.propertyName = Binder.createAttributePath( pluralAttributeBinding );
+		this.propertyName = pluralAttributeBinding.getAttribute().getName();
 	}
 
 	@Override

@@ -93,7 +93,7 @@ public class EntityIdentifier {
 	}
 
 	public void prepareAsAggregatedCompositeIdentifier(
-			CompositeAttributeBinding attributeBinding,
+			EmbeddedAttributeBinding attributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue,
 			Class lookupIdClass,
@@ -108,14 +108,14 @@ public class EntityIdentifier {
 	}
 
 	public void prepareAsNonAggregatedCompositeIdentifier(
-			CompositeAttributeBinding compositeAttributeBinding,
+			EmbeddedAttributeBinding embeddedAttributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue,
 			Class lookupIdClass,
 			String lookupIdClassAccessType) {
 		ensureNotBound();
 		this.entityIdentifierBinding = new NonAggregatedCompositeIdentifierBindingImpl(
-				compositeAttributeBinding,
+				embeddedAttributeBinding,
 				identifierGeneratorDefinition,
 				unsavedValue,
 				lookupIdClass,
@@ -421,14 +421,14 @@ public class EntityIdentifier {
 
 	private class AggregatedComponentIdentifierBindingImpl extends EntityIdentifierBinding {
 		AggregatedComponentIdentifierBindingImpl(
-				CompositeAttributeBinding identifierAttributeBinding,
+				EmbeddedAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
 			super( AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
-			if ( ! identifierAttributeBinding.isAggregated() ) {
+			if ( ! identifierAttributeBinding.getEmbeddableBinding().isAggregated() ) {
 				throw new IllegalArgumentException(
 						String.format(
-								"identifierAttributeBinding must be an aggregated CompositeAttributeBinding: %s",
+								"identifierAttributeBinding must be an aggregated EmbeddedAttributeBinding: %s",
 								identifierAttributeBinding.getAttribute().getName()
 						)
 				);
@@ -498,28 +498,28 @@ public class EntityIdentifier {
 		private final String externalAggregatingPropertyAccessorName;
 
 		NonAggregatedCompositeIdentifierBindingImpl(
-				CompositeAttributeBinding identifierAttributeBinding,
+				EmbeddedAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue,
 				Class externalAggregatingClass,
 				String externalAggregatingPropertyAccessorName) {
 			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
-			if ( identifierAttributeBinding.isAggregated() ) {
+			if ( identifierAttributeBinding.getEmbeddableBinding().isAggregated() ) {
 				throw new IllegalArgumentException(
 						String.format(
-								"identifierAttributeBinding must be a non-aggregated CompositeAttributeBinding: %s",
+								"identifierAttributeBinding must be a non-aggregated EmbeddedAttributeBinding: %s",
 								identifierAttributeBinding.getAttribute().getName()
 						)
 				);
 			}
 			this.externalAggregatingClass = externalAggregatingClass;
 			this.externalAggregatingPropertyAccessorName = externalAggregatingPropertyAccessorName;
-			if ( identifierAttributeBinding.attributeBindingSpan() == 0 ) {
+			if ( identifierAttributeBinding.getEmbeddableBinding().attributeBindingSpan() == 0 ) {
 				throw new MappingException(
 						"A composite ID has 0 attributes for " + entityBinding.getEntityName()
 				);
 			}
-			for ( AttributeBinding attributeBinding : identifierAttributeBinding.attributeBindings() ) {
+			for ( AttributeBinding attributeBinding : identifierAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
 				if ( ! attributeBinding.getAttribute().isSingular() ) {
 					throw new MappingException(
 							String.format(
@@ -532,15 +532,15 @@ public class EntityIdentifier {
 			}
 		}
 
-		private CompositeAttributeBinding getNonAggregatedCompositeAttributeBinding() {
-			return (CompositeAttributeBinding) getAttributeBinding();
+		private EmbeddedAttributeBinding getNonAggregatedCompositeAttributeBinding() {
+			return (EmbeddedAttributeBinding) getAttributeBinding();
 		}
 		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
 			if ( !isIdentifierMapper() && getNonAggregatedCompositeAttributeBinding().equals( attributeBinding ) ) {
 				return true;
 
 			}
-			for ( AttributeBinding idAttributeBindings : getNonAggregatedCompositeAttributeBinding().attributeBindings() ) {
+			for ( AttributeBinding idAttributeBindings : getNonAggregatedCompositeAttributeBinding().getEmbeddableBinding().attributeBindings() ) {
 				if ( idAttributeBindings.equals( attributeBinding ) ) {
 					return true;
 				}

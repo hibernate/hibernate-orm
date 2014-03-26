@@ -12,15 +12,17 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAss
 import org.hibernate.metamodel.source.internal.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.MappedByAssociationSource;
-import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.type.ForeignKeyDirection;
 
 public abstract class AbstractToOneAttributeSourceImpl extends SingularAttributeSourceImpl implements ToOneAttributeSource{
 	private final SingularAssociationAttribute associationAttribute;
 	private final Set<CascadeStyle> unifiedCascadeStyles;
 
-	private SingularAttributeSource.Nature nature;
+	private SingularAttributeNature singularAttributeNature;
 	private final Set<MappedByAssociationSource> ownedAssociationSources = new HashSet<MappedByAssociationSource>();
 
 	public AbstractToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute) {
@@ -42,19 +44,19 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	}
 
 	@Override
-	public SingularAttributeSource.Nature getNature() {
-		return nature;
+	public SingularAttributeNature getSingularAttributeNature() {
+		return singularAttributeNature;
 	}
 
 	protected SingularAssociationAttribute associationAttribute() {
 		return associationAttribute;
 	}
 
-	protected void setNature(SingularAttributeSource.Nature nature) {
-		if ( this.nature != null ) {
+	protected void setSingularAttributeNature(SingularAttributeNature singularAttributeNature) {
+		if ( this.singularAttributeNature != null ) {
 			throw new IllegalStateException( "nature is already initialized." );
 		}
-		this.nature = nature;
+		this.singularAttributeNature = singularAttributeNature;
 	}
 
 	@Override
@@ -122,7 +124,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return nature == Nature.ONE_TO_ONE && !associationAttribute.isOptional()
+		return singularAttributeNature == SingularAttributeNature.ONE_TO_ONE && !associationAttribute.isOptional()
 				? ForeignKeyDirection.FROM_PARENT
 				: ForeignKeyDirection.TO_PARENT;
 	}
@@ -130,5 +132,16 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	@Override
 	public String toString() {
 		return "ToOneAttributeSourceImpl{role=" + associationAttribute.getRole().getFullPath() + '}';
+	}
+
+
+	@Override
+	public AttributePath getAttributePath() {
+		return associationAttribute.getPath();
+	}
+
+	@Override
+	public AttributeRole getAttributeRole() {
+		return associationAttribute.getRole();
 	}
 }

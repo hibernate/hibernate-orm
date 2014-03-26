@@ -55,7 +55,7 @@ import org.hibernate.metamodel.spi.binding.AbstractSingularAssociationAttributeB
 import org.hibernate.metamodel.spi.binding.AbstractSingularAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
-import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -424,8 +424,8 @@ class TypeSafeActivator {
 				if ( !isComposite( attributeBinding ) ) {
 					return null;
 				}
-				CompositeAttributeBinding compositeAttributeBinding = (CompositeAttributeBinding) attributeBinding;
-				attributeBinding = compositeAttributeBinding.locateAttributeBinding( element );
+				EmbeddedAttributeBinding embeddedAttributeBinding = (EmbeddedAttributeBinding) attributeBinding;
+				attributeBinding = embeddedAttributeBinding.getEmbeddableBinding().locateAttributeBinding( element );
 			}
 		}
 		return attributeBinding;

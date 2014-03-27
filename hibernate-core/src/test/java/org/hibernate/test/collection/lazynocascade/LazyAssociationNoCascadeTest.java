@@ -23,18 +23,17 @@
  */
 package org.hibernate.test.collection.lazynocascade;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vasily Kochnev
  */
-@FailureExpectedWithNewMetamodel
 public class LazyAssociationNoCascadeTest extends BaseCoreFunctionalTestCase {
 	
 	public String[] getMappings() {

@@ -1,10 +1,12 @@
 package org.hibernate.test.cache;
 
 import net.sf.ehcache.CacheManager;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import org.hibernate.cache.ehcache.management.impl.EhcacheStatsImpl;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -13,13 +15,19 @@ import static org.junit.Assert.assertThat;
  * @author Alex Snaps
  */
 public class EhcacheStatsImplTest {
-
+	private static CacheManager manager;
 	private static EhcacheStatsImpl stats;
 
 	@BeforeClass
 	public static void createCache() throws Exception {
-		CacheManager manager = CacheManager.getInstance();
+		manager = CacheManager.getInstance();
 		stats = new EhcacheStatsImpl( manager );
+
+	}
+
+	@AfterClass
+	public static void stopCache() {
+		manager.shutdown();
 	}
 
 	@Test

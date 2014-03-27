@@ -23,20 +23,19 @@
  */
 package org.hibernate.test.annotations.access.xml;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.persistence.AccessType;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
+import org.hibernate.tuple.entity.EntityTuplizer;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,6 +58,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 		// without any xml configuration we have field access
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
 		factory.close();
+
 		// now with an additional xml configuration file changing the default access type for Tourist using basic
 		configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Tourist.xml" );
@@ -184,15 +184,15 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	private SessionFactoryImplementor buildSessionFactory(List<Class<?>> classesUnderTest, List<String> configFiles) {
 		assert classesUnderTest != null;
 		assert configFiles != null;
-		Configuration cfg = new Configuration();
+
+		MetadataSources metadataSources = new MetadataSources();
 		for ( Class<?> clazz : classesUnderTest ) {
-			cfg.addAnnotatedClass( clazz );
+			metadataSources.addAnnotatedClass( clazz );
 		}
 		for ( String configFile : configFiles ) {
-			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile );
-			cfg.addInputStream( is );
+			metadataSources.addResource( configFile );
 		}
-		return ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		return ( SessionFactoryImplementor ) metadataSources.buildMetadata().buildSessionFactory();
 	}
 
 	// uses the first getter of the tupelizer for the assertions

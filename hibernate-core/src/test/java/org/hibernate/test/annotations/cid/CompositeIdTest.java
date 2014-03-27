@@ -27,16 +27,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,7 +46,10 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel(
+		message = "Problem processing one of the composite ids, but as there are sooooooooooo many its " +
+				"hard to tell which specifically causes the problem"
+)
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneInCompositePk() throws Exception {

@@ -61,10 +61,14 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class EntityHierarchySourceImpl implements EntityHierarchySource {
+	private static final Logger log = Logger.getLogger( EntityHierarchySourceImpl.class );
+
 	private final RootEntitySourceImpl rootEntitySource;
 	private InheritanceType hierarchyInheritanceType = InheritanceType.NO_INHERITANCE;
 	private final Caching caching;
@@ -256,7 +260,17 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 					);
 				}
 				else {
-					throw makeMappingException( "could not determine source of discriminator mapping" );
+					log.debug( "No source for discriminator column/formula found" );
+					return new ColumnAttributeSourceImpl(
+							rootEntitySource.sourceMappingDocument(),
+							null, // root table
+							"class", // the default discriminator column name per-legacy hbm binding
+							sizeSource,
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
+							discriminatorElement.isInsert() ? TruthValue.TRUE : TruthValue.FALSE,
+							discriminatorElement.isNotNull() ? TruthValue.FALSE : TruthValue.TRUE
+					);
+//					throw makeMappingException( "could not determine source of discriminator mapping" );
 				}
 			}
 

@@ -1,51 +1,71 @@
 package org.hibernate.test.cache;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.OnExpectedFailure;
+import org.hibernate.testing.OnFailure;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.domain.Event;
 import org.hibernate.test.domain.EventManager;
 import org.hibernate.test.domain.Item;
 import org.hibernate.test.domain.Person;
 import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Chris Dennis
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
-public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
+public class HibernateCacheTest extends BaseUnitTestCase {
+	private SessionFactory sessionFactory;
+
+	@BeforeClassOnce
+	public void before() {
+		System.setProperty( "derby.system.home", "target/derby" );
+		sessionFactory = new Configuration()
+				.configure( "hibernate-config/hibernate.cfg.xml" )
+				.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" )
+				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+				.buildSessionFactory();
+	}
+
+	@AfterClassOnce
+	public void after() {
+		if ( sessionFactory != null ) {
+			sessionFactory.close();
+		}
+	}
+
+	@OnFailure
+	@OnExpectedFailure
+	public void handleFailure() {
+		after();
+		before();
+	}
 
 	private static final String REGION_PREFIX = "hibernate.test.";
-
-	@Override
-	protected void configure(Configuration config) {
-		System.setProperty( "derby.system.home", "target/derby" );
-		config.configure( "hibernate-config/hibernate.cfg.xml" );
-	}
-	
-	@Override
-	protected void afterSessionFactoryBuilt() {
-		sessionFactory().getStatistics().setStatisticsEnabled( true );
-	}
 
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
@@ -97,6 +117,10 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 		s.delete( i );
 		t.commit();
 		s.close();
+	}
+
+	private SessionFactory sessionFactory() {
+		return sessionFactory;
 	}
 
 	@Test
@@ -181,6 +205,10 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel(
+			message="Attempts to bind too many jdbc parameters during insert of PhoneNumber; the issue " +
+					"is the mishandling of virtual attributes such as _identifierMapper and backrefs"
+	)
 	public void testGeneralUsage() {
 		EventManager mgr = new EventManager( sessionFactory() );
 		Statistics stats = sessionFactory().getStatistics();

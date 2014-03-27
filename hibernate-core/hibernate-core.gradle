@@ -53,6 +53,15 @@ def osgiDescription() {
 	return pomDescription()
 }
 
+test {
+	testLogging {
+		// make test events logged as LIFECYCLE so they show up in console
+		// this, e.g., allows us to see the name of each test as Gradle starts
+		// it, so we can see where (if) the build hangs in tests
+		events "started", "skipped", "failed"
+	}
+}
+
 jar {
     manifest {
         mainAttributes( 'Main-Class': 'org.hibernate.Version' )

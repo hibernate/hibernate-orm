@@ -57,7 +57,9 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
@@ -73,6 +75,8 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -249,8 +253,7 @@ public class Configuration {
 	 * @see #configure(String)
 	 */
 	public Configuration configure() throws HibernateException {
-		standardServiceRegistryBuilder.configure();
-		return this;
+		return configure( StandardServiceRegistryBuilder.DEFAULT_CFG_RESOURCE_NAME );
 	}
 
 	/**
@@ -264,8 +267,32 @@ public class Configuration {
 	 * @throws HibernateException Generally indicates we cannot find the named resource
 	 */
 	public Configuration configure(String resource) throws HibernateException {
-		standardServiceRegistryBuilder.configure( resource );
+		final JaxbHibernateConfiguration jaxbHibernateConfiguration = standardServiceRegistryBuilder.getConfigLoader()
+				.loadConfigXmlResource( resource );
+		doConfigure( jaxbHibernateConfiguration );
 		return this;
+	}
+
+	private void doConfigure(JaxbHibernateConfiguration jaxbHibernateConfiguration) {
+		standardServiceRegistryBuilder.configure( jaxbHibernateConfiguration );
+
+		for ( JaxbMapping jaxbMapping : jaxbHibernateConfiguration.getSessionFactory().getMapping() ) {
+			if ( StringHelper.isNotEmpty( jaxbMapping.getClazz() ) ) {
+				addResource( jaxbMapping.getClazz().replace( '.', '/' ) + ".hbm.xml" );
+			}
+			else if ( StringHelper.isNotEmpty( jaxbMapping.getFile() ) ) {
+				addFile( jaxbMapping.getFile() );
+			}
+			else if ( StringHelper.isNotEmpty( jaxbMapping.getJar() ) ) {
+				addJar( new File( jaxbMapping.getJar() ) );
+			}
+			else if ( StringHelper.isNotEmpty( jaxbMapping.getPackage() ) ) {
+				addPackage( jaxbMapping.getPackage() );
+			}
+			else if ( StringHelper.isNotEmpty( jaxbMapping.getResource() ) ) {
+				addResource( jaxbMapping.getResource() );
+			}
+		}
 	}
 
 	/**
@@ -279,7 +306,9 @@ public class Configuration {
 	 * @throws HibernateException Generally indicates a problem access the url
 	 */
 	public Configuration configure(URL url) throws HibernateException {
-		standardServiceRegistryBuilder.configure( url );
+		final JaxbHibernateConfiguration jaxbHibernateConfiguration = standardServiceRegistryBuilder.getConfigLoader()
+				.loadConfig( url );
+		doConfigure( jaxbHibernateConfiguration );
 		return this;
 	}
 
@@ -294,7 +323,9 @@ public class Configuration {
 	 * @throws HibernateException Generally indicates a problem access the file
 	 */
 	public Configuration configure(File configFile) throws HibernateException {
-		standardServiceRegistryBuilder.configure( configFile );
+		final JaxbHibernateConfiguration jaxbHibernateConfiguration = standardServiceRegistryBuilder.getConfigLoader()
+				.loadConfigFile( configFile );
+		doConfigure( jaxbHibernateConfiguration );
 		return this;
 	}
 

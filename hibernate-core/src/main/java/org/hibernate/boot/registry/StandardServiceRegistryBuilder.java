@@ -45,6 +45,8 @@ import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.ServiceContributor;
 
+import static org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty;
+
 /**
  * Builder for standard {@link org.hibernate.service.ServiceRegistry} instances.
  *
@@ -99,6 +101,10 @@ public class StandardServiceRegistryBuilder {
 
 	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
 		return bootstrapServiceRegistry;
+	}
+
+	public ConfigLoader getConfigLoader() {
+		return configLoader;
 	}
 
 	/**
@@ -157,12 +163,7 @@ public class StandardServiceRegistryBuilder {
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryBuilder configure(String resourceName) {
-		final JaxbHibernateConfiguration configurationElement = configLoader.loadConfigXmlResource( resourceName );
-		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
-			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
-		}
-
-		return this;
+		return configure( configLoader.loadConfigXmlResource( resourceName ) );
 	}
 
 	/**
@@ -176,12 +177,7 @@ public class StandardServiceRegistryBuilder {
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryBuilder configure(File file) {
-		final JaxbHibernateConfiguration configurationElement = configLoader.loadConfigFile( file );
-		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
-			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
-		}
-
-		return this;
+		return configure( configLoader.loadConfigFile( file ) );
 	}
 
 	/**
@@ -196,8 +192,30 @@ public class StandardServiceRegistryBuilder {
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryBuilder configure(URL configFileUrl) {
 		final JaxbHibernateConfiguration configurationElement = configLoader.loadConfig( configFileUrl );
-		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
+		for ( JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
 			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
+		}
+
+		return this;
+	}
+
+	/**
+	 * Reads configuration values from the JAXB representation of the legacy {@code cfg.xml} XML format.
+	 *
+	 * @param jaxbHibernateConfiguration The JAXB model
+	 *
+	 * @return this, for method chaining
+	 *
+	 * @see #loadProperties(String)
+	 */
+	@SuppressWarnings( {"unchecked"})
+	public StandardServiceRegistryBuilder configure(JaxbHibernateConfiguration jaxbHibernateConfiguration) {
+		for ( JaxbProperty xmlProperty : jaxbHibernateConfiguration.getSessionFactory().getProperty() ) {
+			String settingName = xmlProperty.getName();
+			if ( !settingName.startsWith( "hibernate." ) ) {
+				settingName = "hibernate." + settingName;
+			}
+			settings.put( settingName, xmlProperty.getValue() );
 		}
 
 		return this;

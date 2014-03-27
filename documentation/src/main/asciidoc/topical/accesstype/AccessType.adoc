@@ -12,12 +12,14 @@ runtime.  JPA defines this at a number of "levels", so lets start there.
 
 [NOTE]
 ====
-It is important to understand that generally speaking the phrase "access type" refers to both:
+It is important to understand that generally speaking the phrase "access type" refers to a number of concepts:
 
-* Determining which fields/methods constitute a persistent attribute, including indicating where to look for annotations
-* How the attribute is accessed at runtime
+* Determining which fields/methods constitute a persistent attribute.
+* Indicating where to look for mapping annotations for each persistent attribute.
+* How the attribute (its value) is accessed at runtime
 
-There are some caveats to that, which we will cover as we go along.
+For the most part, Hibernate treats all 3 as being the same.  There are some caveats here, which we will cover
+as we go along.
 ====
 
 
@@ -50,15 +52,17 @@ public class PublishedDocument extends Document {
 ----
 ====
 
-Here we have defaulted hierarchy-level field access because of the placement of @Id on a field.  Here we use the phrase
-"access type" in both senses:
+Here we have defaulted hierarchy-level field access because of the placement of @Id on a field, which means:
 
-* In terms of determining which members constitute persistent attributes, we look at the declared fields for
-each class.  For the `Document` class, we have 3 fields that would be considered persistent attributes: `id`, `title`,
-and `content`; for `PublishedDocument` we have 2: `isbn` and `publishDate`.  To indicate that a field is not
-persistent, the field would be annotated with the `javax.persistence.Transient` annotation.
-* In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute
-values using `java.lang.reflection.Field`.
+* We look at the declared fields for each class to determine its persistent attributes.  For the `Document` class,
+	we have 3 fields that would be considered persistent attributes: `id`, `title`, and `content`; for
+	`PublishedDocument` we have 2: `isbn` and `publishDate`.  Given field "access type", to indicate that a particular
+	field is not persistent, the field would be annotated with the `javax.persistence.Transient` annotation.
+* We use the annotations attached to those fields as the mapping annotations for the persistent attribute it indicates.
+	Annotations on the getter associated with that field (if one/any) are ignored (although we do try to log warnings
+	in such cases).
+* In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute values
+	using `java.lang.reflection.Field`.
 
 
 Implicit property access works similarly:
@@ -101,17 +105,19 @@ public class PublishedDocument extends Document {
 ----
 ====
 
-In this case, we have defaulted hierarchy-level property access because of the placement of @Id on the getter.
-Again, here we use the phrase "access type" in both senses:
+In this case, we have defaulted hierarchy-level property access because of the placement of @Id on the getter,
+which here means:
 
-* In terms of determining which members constitute persistent attributes, we look at the declared methods for
-each class looking for getter.  For the `Document` class, we have 3 getters that would indicate persistent
-attributes: `getId()`, `getTitle()` and `getContent()`; for `PublishedDocument` we have 2: `getIsbn()` and
-`getPublishDate()`.  The "attribute name" is taken following JavaBean-conventions.  To indicate that a getter
-does is not indicate a persistent attribute, the getter would be annotated with the
-`javax.persistence.Transient` annotation.
-* In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute
-values using `java.lang.reflection.Method`.
+* We look at the declared methods for each class looking for JavaBean-style getters to determine the persistent
+	attributes for that class.  For the `Document` class, we have 3 getters that would indicate persistent attributes:
+	`getId()`, `getTitle()` and `getContent()`; for `PublishedDocument` we have 2: `getIsbn()` and `getPublishDate()`.
+	The "attribute name" is taken following JavaBean-conventions.  To indicate that a getter does is not indicate a
+	persistent attribute, the getter would be annotated with the `javax.persistence.Transient` annotation.
+* We use the annotations attached to those getter methods as the mapping annotations for the persistent attribute
+	it indicates.  Annotations on the field associated with that getter (if one/any) are ignored (although, again, we do
+	try to log warnings in such cases).
+* In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute values
+	using `java.lang.reflection.Method`.
 
 
 WARNING: Placing annotations on setters is NEVER appropriate.

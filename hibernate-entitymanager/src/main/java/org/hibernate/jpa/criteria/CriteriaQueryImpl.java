@@ -276,7 +276,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		// if there is not an explicit selection, there is an *implicit* selection of the root entity provided only
 		// a single query root was defined.
 		if ( getSelection() == null && !hasImplicitSelection() ) {
-			throw new IllegalStateException( "No explicit selection and an implicit one cold not be determined" );
+			throw new IllegalStateException( "No explicit selection and an implicit one could not be determined" );
 		}
 	}
 

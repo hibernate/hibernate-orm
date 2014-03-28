@@ -297,7 +297,7 @@ public class QueryStructure<T> implements Serializable {
 		}
 
 		if ( implicitSelection == null ) {
-			throw new IllegalStateException( "No explicit selection and an implicit one cold not be determined" );
+			throw new IllegalStateException( "No explicit selection and an implicit one could not be determined" );
 		}
 
 		return implicitSelection;

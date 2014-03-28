@@ -23,8 +23,12 @@
  */
 package org.hibernate.test.cache.infinispan.tm;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.util.Iterator;
 import java.util.Properties;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
@@ -34,6 +38,23 @@ import javax.naming.StringRefAddr;
 import javax.transaction.Status;
 import javax.transaction.UserTransaction;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.TruthValue;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.Statistics;
+import org.hibernate.test.cache.infinispan.functional.Item;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.infinispan.util.logging.Log;
@@ -45,23 +66,6 @@ import org.jnp.server.NamingServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.stat.Statistics;
-import org.hibernate.test.cache.infinispan.functional.Item;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * This is an example test based on http://community.jboss.org/docs/DOC-14617 that shows how to interact with
@@ -241,39 +245,46 @@ public class JBossStandaloneJtaExampleTest {
    }
 
    private SessionFactory buildSessionFactory() {
-      // Extra options located in src/test/resources/hibernate.properties
-      Configuration cfg = new Configuration();
-      cfg.setProperty( Environment.DIALECT, "HSQL" );
-      cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-      cfg.setProperty( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
-      cfg.setProperty(Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory");
-      cfg.setProperty(Environment.TRANSACTION_STRATEGY, "jta");
-      cfg.setProperty(Environment.CURRENT_SESSION_CONTEXT_CLASS, "jta");
-      cfg.setProperty(Environment.RELEASE_CONNECTIONS, "auto");
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-      cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-
-      Properties envProps = Environment.getProperties();
+	  // Extra options located in src/test/resources/hibernate.properties
+	  Properties envProps = Environment.getProperties();
+	  envProps.setProperty( Environment.DIALECT, "HSQL" );
+      envProps.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+      envProps.setProperty( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
+      envProps.setProperty(Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory");
+      envProps.setProperty(Environment.TRANSACTION_STRATEGY, "jta");
+      envProps.setProperty(Environment.CURRENT_SESSION_CONTEXT_CLASS, "jta");
+      envProps.setProperty(Environment.RELEASE_CONNECTIONS, "auto");
+      envProps.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
+      envProps.setProperty(Environment.USE_QUERY_CACHE, "true");
       envProps.put(AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform());
       envProps.setProperty(Environment.CACHE_REGION_FACTORY,
               "org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase$TestInfinispanRegionFactory");
       serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
+	  
+      MetadataSources sources = new MetadataSources( serviceRegistry );
 
       String[] mappings = new String[]{"org/hibernate/test/cache/infinispan/functional/Item.hbm.xml"};
       for (String mapping : mappings) {
-         cfg.addResource(mapping, Thread.currentThread().getContextClassLoader());
+    	  sources.addResource(mapping);
       }
-      cfg.buildMappings();
-      Iterator iter = cfg.getClassMappings();
-      while (iter.hasNext()) {
-         PersistentClass clazz = (PersistentClass) iter.next();
-         cfg.setCacheConcurrencyStrategy(clazz.getEntityName(), "transactional");
+      Metadata metadata = sources.buildMetadata();
+      Iterator<EntityBinding> entityIter = metadata.getEntityBindings().iterator();
+      while (entityIter.hasNext()) {
+         EntityBinding binding = entityIter.next();
+         binding.getHierarchyDetails().getCaching().setAccessType( AccessType.TRANSACTIONAL );
+         binding.getHierarchyDetails().getCaching().setRequested( TruthValue.TRUE );
+         binding.getHierarchyDetails().getCaching().setRegion( binding.getEntityName() );
+         binding.getHierarchyDetails().getCaching().setCacheLazyProperties( true );
       }
-      iter = cfg.getCollectionMappings();
-      while (iter.hasNext()) {
-         Collection coll = (Collection) iter.next();
-         cfg.setCollectionCacheConcurrencyStrategy(coll.getRole(), "transactional");
+      Iterator<PluralAttributeBinding> collectionIter = metadata.getCollectionBindings().iterator();
+      while (collectionIter.hasNext()) {
+    	 PluralAttributeBinding binding = collectionIter.next();
+         binding.getCaching().setAccessType( AccessType.TRANSACTIONAL );
+         binding.getCaching().setRequested( TruthValue.TRUE );
+         binding.getCaching().setRegion( StringHelper.qualify(
+        		 binding.getContainer().seekEntityBinding().getEntityName(), binding.getAttribute().getName() ) );
+         binding.getCaching().setCacheLazyProperties( true );
       }
-      return cfg.buildSessionFactory( serviceRegistry );
+      return metadata.buildSessionFactory();
    }
 }

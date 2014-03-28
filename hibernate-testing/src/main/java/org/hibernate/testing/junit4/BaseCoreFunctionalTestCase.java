@@ -23,6 +23,8 @@
  */
 package org.hibernate.testing.junit4;
 
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -64,19 +66,15 @@ import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.type.Type;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.type.Type;
 import org.junit.After;
 import org.junit.Before;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 
 /**
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}
@@ -275,11 +273,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
 	}
 
-	// TODO: is this still needed?
-	protected Configuration buildConfiguration() {
-		return constructAndConfigureConfiguration();
-	}
-
 	protected Configuration constructAndConfigureConfiguration() {
 		Configuration cfg = constructConfiguration();
 		configure( cfg );
@@ -305,37 +298,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void configure(Configuration configuration) {
-	}
-
-	protected void addMappings(Configuration configuration) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				configuration.addResource(
-						getBaseForMappings() + mapping,
-						getClass().getClassLoader()
-				);
-			}
-		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				configuration.addAnnotatedClass( annotatedClass );
-			}
-		}
-		String[] annotatedPackages = getAnnotatedPackages();
-		if ( annotatedPackages != null ) {
-			for ( String annotatedPackage : annotatedPackages ) {
-				configuration.addPackage( annotatedPackage );
-			}
-		}
-		String[] xmlFiles = getXmlFiles();
-		if ( xmlFiles != null ) {
-			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				configuration.addInputStream( is );
-			}
-		}
 	}
 
 	protected void addMappings(MetadataSources sources) {

@@ -23,15 +23,44 @@
 
 package org.hibernate.test.cache.infinispan.stress;
 
+import static org.infinispan.test.TestingUtil.withTx;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+import javax.transaction.TransactionManager;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.TruthValue;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.cache.infinispan.stress.entities.Address;
 import org.hibernate.test.cache.infinispan.stress.entities.Family;
 import org.hibernate.test.cache.infinispan.stress.entities.Person;
@@ -41,21 +70,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import javax.transaction.TransactionManager;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Random;
-import java.util.concurrent.*;
-
-import static org.infinispan.test.TestingUtil.withTx;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Stress test for second level cache.
@@ -94,42 +108,63 @@ public class SecondLevelCacheStressTestCase {
       updatedIds = new ConcurrentHashSet<Integer>();
       removeIds = new ConcurrentLinkedQueue<Integer>();
 
-      Configuration cfg = new Configuration();
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-      cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-      configureCache(cfg);
-
-      // Mappings
-      configureMappings(cfg);
+      Properties envProps = Environment.getProperties();
+      envProps.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
+      envProps.setProperty(Environment.USE_QUERY_CACHE, "true");
+      envProps.setProperty(Environment.CACHE_REGION_FACTORY,
+              "org.hibernate.cache.infinispan.InfinispanRegionFactory");
+      envProps.setProperty(Environment.JTA_PLATFORM,
+              "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform");
+      envProps.setProperty(InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP,
+              "stress-local-infinispan.xml");
 
       // Database settings
-      cfg.setProperty(Environment.DRIVER, "com.mysql.jdbc.Driver");
-      cfg.setProperty(Environment.URL, "jdbc:mysql://localhost:3306/hibernate");
-      cfg.setProperty(Environment.DIALECT, "org.hibernate.dialect.MySQL5InnoDBDialect");
-      cfg.setProperty(Environment.USER, "root");
-      cfg.setProperty(Environment.PASS, "password");
+      envProps.setProperty(Environment.DRIVER, "com.mysql.jdbc.Driver");
+      envProps.setProperty(Environment.URL, "jdbc:mysql://localhost:3306/hibernate");
+      envProps.setProperty(Environment.DIALECT, "org.hibernate.dialect.MySQL5InnoDBDialect");
+      envProps.setProperty(Environment.USER, "root");
+      envProps.setProperty(Environment.PASS, "password");
 
       // Create database schema in each run
-      cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
+      envProps.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
 
-      StandardServiceRegistryImpl registry =
-            ServiceRegistryBuilder.buildServiceRegistry(cfg.getProperties());
-      sessionFactory =  cfg.buildSessionFactory(registry);
+      StandardServiceRegistryImpl registry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
+      MetadataSources sources = new MetadataSources( registry );
+
+      Class<?>[] annotatedClasses = getAnnotatedClasses();
+      if ( annotatedClasses != null ) {
+         for ( Class<?> annotatedClass : annotatedClasses ) {
+        	 sources.addAnnotatedClass( annotatedClass );
+         }
+      }
+
+      Metadata metadata = sources.buildMetadata();
+      
+      Iterator<EntityBinding> entityIter = metadata.getEntityBindings().iterator();
+      while (entityIter.hasNext()) {
+         EntityBinding binding = entityIter.next();
+         binding.getHierarchyDetails().getCaching().setAccessType( AccessType.TRANSACTIONAL );
+         binding.getHierarchyDetails().getCaching().setRequested( TruthValue.TRUE );
+         binding.getHierarchyDetails().getCaching().setRegion( binding.getEntityName() );
+         binding.getHierarchyDetails().getCaching().setCacheLazyProperties( true );
+      }
+      Iterator<PluralAttributeBinding> collectionIter = metadata.getCollectionBindings().iterator();
+      while (collectionIter.hasNext()) {
+    	 PluralAttributeBinding binding = collectionIter.next();
+         binding.getCaching().setAccessType( AccessType.TRANSACTIONAL );
+         binding.getCaching().setRequested( TruthValue.TRUE );
+         binding.getCaching().setRegion( StringHelper.qualify(
+        		 binding.getContainer().seekEntityBinding().getEntityName(), binding.getAttribute().getName() ) );
+         binding.getCaching().setCacheLazyProperties( true );
+      }
+      
+      sessionFactory =  metadata.buildSessionFactory();
 
       tm = com.arjuna.ats.jta.TransactionManager.transactionManager();
    }
 
    protected String getProvider() {
       return "infinispan";
-   }
-
-   protected void configureCache(Configuration cfg) {
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY,
-            "org.hibernate.cache.infinispan.InfinispanRegionFactory");
-      cfg.setProperty(Environment.JTA_PLATFORM,
-            "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform");
-      cfg.setProperty(InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP,
-            "stress-local-infinispan.xml");
    }
 
    @After
@@ -459,30 +494,6 @@ public class SecondLevelCacheStressTestCase {
 
    public static Class<Object>[] getAnnotatedClasses() {
       return new Class[] {Family.class, Person.class, Address.class};
-   }
-
-   private static void configureMappings(Configuration cfg) {
-      Class<?>[] annotatedClasses = getAnnotatedClasses();
-      if ( annotatedClasses != null ) {
-         for ( Class<?> annotatedClass : annotatedClasses ) {
-            cfg.addAnnotatedClass( annotatedClass );
-         }
-      }
-
-      cfg.buildMappings();
-      Iterator it = cfg.getClassMappings();
-      String cacheStrategy = "transactional";
-      while (it.hasNext()) {
-         PersistentClass clazz = (PersistentClass) it.next();
-         if (!clazz.isInherited()) {
-            cfg.setCacheConcurrencyStrategy(clazz.getEntityName(), cacheStrategy);
-         }
-      }
-      it = cfg.getCollectionMappings();
-      while (it.hasNext()) {
-         Collection coll = (Collection) it.next();
-         cfg.setCollectionCacheConcurrencyStrategy(coll.getRole(), cacheStrategy);
-      }
    }
 
 

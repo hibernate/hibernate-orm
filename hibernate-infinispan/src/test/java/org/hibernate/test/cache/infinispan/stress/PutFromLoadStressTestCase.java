@@ -1,26 +1,12 @@
 package org.hibernate.test.cache.infinispan.stress;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.cache.infinispan.functional.Age;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.infinispan.test.TestingUtil.withTx;
+import static org.junit.Assert.assertFalse;
 
-import javax.transaction.TransactionManager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -29,8 +15,28 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.infinispan.test.TestingUtil.withTx;
-import static org.junit.Assert.*;
+import javax.transaction.TransactionManager;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.TruthValue;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.test.cache.infinispan.functional.Age;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * A stress test for putFromLoad operations
@@ -55,70 +61,68 @@ public class PutFromLoadStressTestCase {
 
    final AtomicBoolean run = new AtomicBoolean(true);
 
-   @BeforeClass
-   public static void beforeClass() {
-      Configuration cfg = new Configuration();
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-      cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-      // TODO: Tweak to have a fully local region factory (no transport, cache mode = local, no marshalling, ...etc)
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY,
-            "org.hibernate.cache.infinispan.InfinispanRegionFactory");
-      cfg.setProperty(Environment.JTA_PLATFORM,
-            "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform");
-
-      // Force minimal puts off to simplify stressing putFromLoad logic
-      cfg.setProperty(Environment.USE_MINIMAL_PUTS, "false");
-
-      // Mappings
-      configureMappings(cfg);
-
-//      // Database settings
-//      cfg.setProperty(Environment.DRIVER, "org.postgresql.Driver");
-//      cfg.setProperty(Environment.URL, "jdbc:postgresql://localhost/hibernate");
-//      cfg.setProperty(Environment.DIALECT, "org.hibernate.dialect.PostgreSQL82Dialect");
-//      cfg.setProperty(Environment.USER, "hbadmin");
-//      cfg.setProperty(Environment.PASS, "hbadmin");
-
-      // Create database schema in each run
-      cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
-
-      StandardServiceRegistryImpl registry =
-            ServiceRegistryBuilder.buildServiceRegistry(cfg.getProperties());
-      sessionFactory =  cfg.buildSessionFactory(registry);
-
-      tm = com.arjuna.ats.jta.TransactionManager.transactionManager();
-   }
-
-   private static void configureMappings(Configuration cfg) {
-      String[] mappings = {
-            "cache/infinispan/functional/Item.hbm.xml",
-            "cache/infinispan/functional/Customer.hbm.xml",
-            "cache/infinispan/functional/Contact.hbm.xml"};
-      for (String mapping : mappings)
-         cfg.addResource("org/hibernate/test/" + mapping);
-
-      Class<?>[] annotatedClasses = getAnnotatedClasses();
-      if ( annotatedClasses != null ) {
-         for ( Class<?> annotatedClass : annotatedClasses ) {
-            cfg.addAnnotatedClass( annotatedClass );
-         }
-      }
-
-      cfg.buildMappings();
-      Iterator it = cfg.getClassMappings();
-      String cacheStrategy = "transactional";
-      while (it.hasNext()) {
-         PersistentClass clazz = (PersistentClass) it.next();
-         if (!clazz.isInherited()) {
-            cfg.setCacheConcurrencyStrategy(clazz.getEntityName(), cacheStrategy);
-         }
-      }
-      it = cfg.getCollectionMappings();
-      while (it.hasNext()) {
-         Collection coll = (Collection) it.next();
-         cfg.setCollectionCacheConcurrencyStrategy( coll.getRole(), cacheStrategy);
-      }
-   }
+	@BeforeClass
+	public static void beforeClass() {
+		Properties envProps = Environment.getProperties();
+		envProps.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		envProps.setProperty( Environment.USE_QUERY_CACHE, "true" );
+		// TODO: Tweak to have a fully local region factory (no transport, cache mode = local, no marshalling, ...etc)
+		envProps.setProperty( Environment.CACHE_REGION_FACTORY, "org.hibernate.cache.infinispan.InfinispanRegionFactory" );
+		envProps.setProperty( Environment.JTA_PLATFORM, "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform" );
+	
+		// Force minimal puts off to simplify stressing putFromLoad logic
+		envProps.setProperty( Environment.USE_MINIMAL_PUTS, "false" );
+	
+		// Create database schema in each run
+		envProps.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+	
+		// // Database settings
+		// envProps.setProperty(Environment.DRIVER, "org.postgresql.Driver");
+		// envProps.setProperty(Environment.URL, "jdbc:postgresql://localhost/hibernate");
+		// envProps.setProperty(Environment.DIALECT, "org.hibernate.dialect.PostgreSQL82Dialect");
+		// envProps.setProperty(Environment.USER, "hbadmin");
+		// envProps.setProperty(Environment.PASS, "hbadmin");
+		
+		StandardServiceRegistryImpl registry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
+	    MetadataSources sources = new MetadataSources( registry );
+	
+		// Mappings
+		String[] mappings = { "cache/infinispan/functional/Item.hbm.xml", "cache/infinispan/functional/Customer.hbm.xml",
+				"cache/infinispan/functional/Contact.hbm.xml" };
+		for ( String mapping : mappings )
+			sources.addResource( "org/hibernate/test/" + mapping );
+	
+		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		if ( annotatedClasses != null ) {
+			for ( Class<?> annotatedClass : annotatedClasses ) {
+				sources.addAnnotatedClass( annotatedClass );
+			}
+		}
+	
+		Metadata metadata = sources.buildMetadata();
+	      
+		Iterator<EntityBinding> entityIter = metadata.getEntityBindings().iterator();
+		while ( entityIter.hasNext() ) {
+			EntityBinding binding = entityIter.next();
+			binding.getHierarchyDetails().getCaching().setAccessType( AccessType.TRANSACTIONAL );
+			binding.getHierarchyDetails().getCaching().setRequested( TruthValue.TRUE );
+			binding.getHierarchyDetails().getCaching().setRegion( binding.getEntityName() );
+			binding.getHierarchyDetails().getCaching().setCacheLazyProperties( true );
+		}
+		Iterator<PluralAttributeBinding> collectionIter = metadata.getCollectionBindings().iterator();
+		while ( collectionIter.hasNext() ) {
+			PluralAttributeBinding binding = collectionIter.next();
+			binding.getCaching().setAccessType( AccessType.TRANSACTIONAL );
+			binding.getCaching().setRequested( TruthValue.TRUE );
+			binding.getCaching()
+					.setRegion( StringHelper.qualify( binding.getContainer().seekEntityBinding().getEntityName(), binding.getAttribute().getName() ) );
+			binding.getCaching().setCacheLazyProperties( true );
+		}
+	
+		sessionFactory =  metadata.buildSessionFactory();
+	
+		tm = com.arjuna.ats.jta.TransactionManager.transactionManager();
+	}
 
    @AfterClass
    public static void afterClass() {

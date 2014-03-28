@@ -30,6 +30,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 
@@ -64,8 +65,8 @@ public class CacheTestUtil {
    public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
          Configuration cfg){
       try {
-         Settings settings = cfg.buildSettings(reg);
          Properties properties = cfg.getProperties();
+         Settings settings = new SettingsFactory().buildSettings( properties, reg );
 
          String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
          Class clazz = Thread.currentThread()

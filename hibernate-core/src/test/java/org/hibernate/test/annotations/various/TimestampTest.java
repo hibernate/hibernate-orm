@@ -53,7 +53,7 @@ public class TimestampTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void assertTimestampSource(Class<?> clazz, Class<?> expectedTypeClass) throws Exception {
-		buildConfiguration();
+		constructAndConfigureConfiguration();
 		ClassMetadata meta = sessionFactory().getClassMetadata( clazz );
 		assertTrue( "Entity is annotated with @Timestamp and should hence be versioned", meta.isVersioned() );
 

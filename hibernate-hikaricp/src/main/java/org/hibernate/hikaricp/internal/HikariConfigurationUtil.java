@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 
 import com.zaxxer.hikari.HikariConfig;
 
@@ -52,18 +51,10 @@ public class HikariConfigurationUtil {
 		copyProperty( AvailableSettings.ISOLATION, props, "transactionIsolation", hikariProps );
 		copyProperty( AvailableSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
 
-		if (props.containsKey( AvailableSettings.DIALECT )
-				&& props.get( AvailableSettings.DIALECT ).equals( H2Dialect.class.getName() )) {
-			// Terrible workaround for an issue with H2.  The version of H2 we currently use does not include the
-			// standard DataSource#setUrl, but instead uses setURL.  HikariCP's PropertyBeanSetter uses reflection and
-			// fails without this.
-			copyProperty( AvailableSettings.URL, props, "dataSource.URL", hikariProps );
-		}
-		else {
-			copyProperty( AvailableSettings.URL, props, "dataSource.url", hikariProps );
-		}
-		copyProperty( AvailableSettings.USER, props, "dataSource.user", hikariProps );
-		copyProperty( AvailableSettings.PASS, props, "dataSource.password", hikariProps );
+		copyProperty(AvailableSettings.DRIVER, props, "driverClassName", hikariProps);
+		copyProperty(AvailableSettings.URL, props, "jdbcUrl", hikariProps);
+		copyProperty( AvailableSettings.USER, props, "username", hikariProps );
+		copyProperty( AvailableSettings.PASS, props, "password", hikariProps );
 
 		for ( Object keyo : props.keySet() ) {
 			String key = (String) keyo;

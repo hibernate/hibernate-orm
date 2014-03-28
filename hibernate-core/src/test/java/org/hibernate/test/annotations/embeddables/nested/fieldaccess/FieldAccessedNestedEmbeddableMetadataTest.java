@@ -21,13 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.embeddables.nested;
+package org.hibernate.test.annotations.embeddables.nested.fieldaccess;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.sql.Types;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Test;
 
@@ -38,8 +34,11 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.test.annotations.derivedidentities.e4.a.Simple;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.CustomType;
 
@@ -49,8 +48,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
+public class FieldAccessedNestedEmbeddableMetadataTest extends BaseUnitTestCase {
 	@Test
+	@FailureExpected( jiraKey = "HHH-9089" )
 	public void testEnumTypeInterpretation() {
 		Configuration cfg = new Configuration().addAnnotatedClass( Customer.class );
 		cfg.buildMappings();

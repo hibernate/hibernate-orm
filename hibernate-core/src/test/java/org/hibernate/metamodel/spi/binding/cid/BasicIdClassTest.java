@@ -24,16 +24,17 @@
 package org.hibernate.metamodel.spi.binding.cid;
 
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
 
 import org.hibernate.id.EntityIdentifierNature;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
-import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
@@ -43,66 +44,55 @@ import static org.hibernate.metamodel.spi.binding.BindingHelper.locateAttributeB
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Assertions about the metamodel interpretations of basic {@link javax.persistence.EmbeddedId} usage.
+ * Assertions about the metamodel interpretations of basic {@link javax.persistence.IdClass} usage.
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.metamodel.spi.binding.cid.BasicIdClassTest
+ * @see org.hibernate.metamodel.spi.binding.cid.BasicEmbeddedIdTest
  */
-public class BasicEmbeddedIdTest extends BaseAnnotationBindingTestCase {
-	@Embeddable
+public class BasicIdClassTest extends BaseAnnotationBindingTestCase {
 	public static class CoursePK {
-		@Column( name = "dept" )
 		public String department;
 		public String code;
 	}
 
 	@Entity
+	@IdClass( CoursePK.class )
 	public static class Course {
-		@EmbeddedId
-		private CoursePK key;
+		@Id
+		@Column( name = "dept" )
+		public String department;
+		@Id
+		public String code;
 		private String title;
 	}
 
 	@Test
-	@Resources( annotatedClasses = {CoursePK.class, Course.class} )
+	@Resources( annotatedClasses = Course.class )
 	public void testBasicUsage() {
 		// get the Course entity binding
 		EntityBinding courseBinding = getEntityBinding( Course.class );
 		assertNotNull( courseBinding );
 		assertEquals(
-				EntityIdentifierNature.AGGREGATED_COMPOSITE,
+				EntityIdentifierNature.NON_AGGREGATED_COMPOSITE,
 				courseBinding.getHierarchyDetails().getEntityIdentifier().getNature()
 		);
-		assertNull(
-				courseBinding.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().getIdClassType()
-		);
+		Class idClassClass = courseBinding.getHierarchyDetails().getEntityIdentifier()
+				.getLookupClassBinding()
+				.getIdClassType();
+		assertNotNull( idClassClass );
 
-		// Course should be interpreted as defining 2 attributes: `key` and `title`
-		assertEquals( 2, courseBinding.getAttributeBindingClosureSpan() );
+		// Course should be interpreted as defining 3 attributes: `department`, `code` and `title`
+		assertEquals( 3, courseBinding.getAttributeBindingClosureSpan() );
 
 		// just make sure `title` is one of them
 		locateAttributeBinding( courseBinding, "title", BasicAttributeBinding.class );
 
-		// locate the attribute binding for `key` which is the EmbeddedId attribute
-		EmbeddedAttributeBinding keyBinding = locateAttributeBinding(
-				courseBinding,
-				"key",
-				EmbeddedAttributeBinding.class
-		);
-		SingularAttributeBinding identifierAttribute =  courseBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
-		// NOTE : assertSame() does '=='
-		assertSame( keyBinding, identifierAttribute );
-
-		// the Embeddable for `key` (CoursePK) should also define 2 attributes: `department` and `code`
-		assertEquals( 2, keyBinding.getEmbeddableBinding().attributeBindingSpan() );
-
 		BasicAttributeBinding deptAttribute = locateAttributeBinding(
-				keyBinding.getEmbeddableBinding(),
+				courseBinding,
 				"department",
 				BasicAttributeBinding.class
 		);
@@ -115,11 +105,10 @@ public class BasicEmbeddedIdTest extends BaseAnnotationBindingTestCase {
 		assertEquals( "dept", deptColumn.getColumnName().getText() );
 
 		BasicAttributeBinding codeAttribute = locateAttributeBinding(
-				keyBinding.getEmbeddableBinding(),
+				courseBinding,
 				"code",
 				BasicAttributeBinding.class
 		);
-		assertEquals( 1, codeAttribute.getRelationalValueBindings().size() );
 		RelationalValueBinding codeColumnBinding = codeAttribute.getRelationalValueBindings().get( 0 );
 		org.hibernate.metamodel.spi.relational.Column codeColumn = assertTyping(
 				org.hibernate.metamodel.spi.relational.Column.class,
@@ -127,6 +116,35 @@ public class BasicEmbeddedIdTest extends BaseAnnotationBindingTestCase {
 		);
 		assertEquals( "code", codeColumn.getColumnName().getText() );
 
-	}
 
+		assertTrue(
+				courseBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
+						deptAttribute
+				)
+		);
+
+		assertTrue(
+				courseBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
+						codeAttribute
+				)
+		);
+
+		// get the virtual (non-aggregated composite) id attribute
+		EmbeddedAttributeBinding identifierAttribute = (EmbeddedAttributeBinding) courseBinding.getHierarchyDetails()
+				.getEntityIdentifier()
+				.getAttributeBinding();
+		assertNotNull( identifierAttribute );
+		// NOTE : assertSame() does `==`
+
+		EmbeddableBinding virtualEmbeddable = identifierAttribute.getEmbeddableBinding();
+		assertEquals( 2, virtualEmbeddable.attributeBindingSpan() );
+
+		for ( AttributeBinding subAttributeBinding : virtualEmbeddable.attributeBindings() ) {
+			assertTrue(
+					subAttributeBinding == deptAttribute
+							|| subAttributeBinding == codeAttribute
+			);
+		}
+
+	}
 }

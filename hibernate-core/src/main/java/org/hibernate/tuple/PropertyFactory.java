@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.KeyValue;
@@ -58,6 +59,7 @@ import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -138,48 +140,56 @@ public final class PropertyFactory {
 		//		see org.hibernate.metamodel.spi.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
 
 		final String mappedUnsavedValue = mappedEntity.getHierarchyDetails().getEntityIdentifier().getUnsavedValue();
-		final Type type;
-		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper() ) {
-			type = sessionFactory.getTypeResolver().getTypeFactory().component(
+
+		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().getNature()
+				== EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
+			// the "attribute" will need to be virtual since there is no single
+			// attribute identifying the identifier
+			final ComponentType type = sessionFactory.getTypeResolver().getTypeFactory().component(
 					new ComponentMetamodel(
 							sessionFactory.getServiceRegistry(),
 							( (EmbeddedAttributeBinding) attributeBinding ).getEmbeddableBinding(),
 							true,
-							true
+							mappedEntity.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass()
 					)
 			);
-		}
-		else {
-			type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-		}
 
-		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
-				mappedUnsavedValue,
-				getGetter( attributeBinding, sessionFactory ),
-				type,
-				getConstructor(
-						mappedEntity,
-						sessionFactory.getServiceRegistry().getService( ClassLoaderService.class )
-				)
-		);
+			final IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
+					mappedUnsavedValue,
+					getGetter( attributeBinding, sessionFactory ),
+					type,
+					getConstructor(
+							mappedEntity,
+							sessionFactory.getServiceRegistry().getService( ClassLoaderService.class )
+					)
+			);
 
-		if ( attributeBinding.getAttribute().isSynthetic()  ) {
-			// this is a virtual id property...
 			return new IdentifierProperty(
 					type,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite() &&
-							mappedEntity.getHierarchyDetails().getEntityIdentifier().getIdClassClass() == null,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper(),
+					true,
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass(),
 					unsavedValue,
 					generator
 			);
 		}
 		else {
+			final Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+
+			final IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
+					mappedUnsavedValue,
+					getGetter( attributeBinding, sessionFactory ),
+					type,
+					getConstructor(
+							mappedEntity,
+							sessionFactory.getServiceRegistry().getService( ClassLoaderService.class )
+					)
+			);
+
 			return new IdentifierProperty(
 					attributeBinding.getAttribute().getName(),
 					null,
 					type,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite(),
+					false,
 					unsavedValue,
 					generator
 			);

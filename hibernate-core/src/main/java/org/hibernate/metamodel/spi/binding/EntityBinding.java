@@ -538,7 +538,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 				getPathBase(),
 				idAttributeBindings
 		);
-		registerAttributeBinding( binding );
+//		registerAttributeBinding( binding );
 		return binding;
 	}
 

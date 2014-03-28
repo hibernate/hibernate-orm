@@ -48,9 +48,15 @@ import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
 
 /**
- * Hold information about the entity identifier.  At a high-level, can be one of 2-types:<ul>
- *     <li>single-attribute identifier - this includes both simple identifiers and aggregated composite identifiers</li>
- *     <li>multiple-attribute identifier - non-aggregated composite identifiers</li>
+ * Hold information about the entity identifier.  At a high-level, can be one of
+ * 2 types:<ul>
+ *     <li>
+ *         single-attribute identifier - this includes both simple identifiers
+ *         and aggregated composite identifiers
+ *     </li>
+ *     <li>
+ *         multi-attribute identifier - non-aggregated composite identifiers
+ *     </li>
  * </ul>
  *
  * @author Steve Ebersole

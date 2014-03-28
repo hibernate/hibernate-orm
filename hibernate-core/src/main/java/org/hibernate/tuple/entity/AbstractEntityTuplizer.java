@@ -46,8 +46,6 @@ import org.hibernate.id.Assigned;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
@@ -238,7 +236,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public Serializable getIdentifier(Object entity, SessionImplementor session) {
 		final Object id;
-		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
+		if ( identifierMapperType != null ) {
+			id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), session );
+		}
+		else if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			id = entity;
 		}
 		else if ( HibernateProxy.class.isInstance( entity ) ) {
@@ -246,12 +247,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		else {
 			if ( idGetter == null ) {
-				if (identifierMapperType==null) {
-					throw new HibernateException( "The class has no identifier property: " + getEntityName() );
-				}
-				else {
-					id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), session );
-				}
+				throw new HibernateException( "The class has no identifier property: " + getEntityName() );
 			}
 			else {
                 id = idGetter.get( entity );
@@ -282,7 +278,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
+		if ( identifierMapperType != null && identifierMapperType.getReturnedClass().isInstance( id ) ) {
+			mappedIdentifierValueMarshaller.setIdentifier( entity, id, getEntityMode(), session );
+		}
+		else if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			if ( entity != id ) {
 				CompositeType copier = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
 				copier.setPropertyValues( entity, copier.getPropertyValues( id, getEntityMode() ), getEntityMode() );
@@ -291,8 +290,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else if ( idSetter != null ) {
 			idSetter.set( entity, id, getFactory() );
 		}
-		else if ( identifierMapperType != null ) {
-			mappedIdentifierValueMarshaller.setIdentifier( entity, id, getEntityMode(), session );
+		else {
+			throw new IllegalArgumentException(
+					"Could not determine how to set given value [" + id
+							+ "] as identifier value for entity [" + getEntityName() + "]"
+			);
 		}
 	}
 

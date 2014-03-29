@@ -30,6 +30,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
+import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Hardy Ferentschik
@@ -41,11 +42,11 @@ public class Printer {
 	private long id;
 
 	@OneToMany
-	@Sort
+	@SortNatural
 	private SortedSet<PrintJob> printQueue;
 
 	@OneToMany
-	@Sort
+	@SortNatural
 	private SortedMap<String, PrintJob> printedJobs;
 }
 

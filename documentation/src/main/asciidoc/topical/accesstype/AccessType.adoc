@@ -1,32 +1,50 @@
 = AccessType
 :toc:
 
-Hibernate has always had a notion of "property access strategies" to allow users to control the runtime
-access part.  But JPA initially had no such concept.  JPA 1 was quite inflexible in terms of where you
-could place mapping annotations and in terms of telling the persistence provider how to access the values
-(get/set them) of persistent attributes at runtime.
+`AccessType` refers to the JPA notion represented by the `javax.persistence.AccessType` enum.  Even though
+AccessType is a single value, it actually represents 3 related concepts:
 
-JPA 2.0 introduced the concept of `javax.persistence.AccessType` to allow better control over defining
-where the persistence provider look for mapping annotations and how it access the attribute values at
-runtime.  JPA defines this at a number of "levels", so lets start there.
+# Determining which fields/methods constitute a persistent attribute.
+# Indicating where to look for mapping annotations for each persistent attribute.
+# How the attribute (its value) is accessed at runtime
 
-[NOTE]
-====
-It is important to understand that generally speaking the phrase "access type" refers to a number of concepts:
+Unfortunately the JPA specification is not overly clear about how the AccessType value defines the
+answers to these 3 questions in all cases.  Often that is left up to each provider to decide.  So here we will
+discuss how Hibernate answers the 3 AccessType-related questions in different situations.  By default, Hibernate
+tries to keep the explanation for how it answers these questions simple.  AccessType defines 2 possible values: FIELD
+and PROPERTY.
 
-* Determining which fields/methods constitute a persistent attribute.
-* Indicating where to look for mapping annotations for each persistent attribute.
-* How the attribute (its value) is accessed at runtime
+For Hibernate, FIELD access means that:
 
-For the most part, Hibernate treats all 3 as being the same.  There are some caveats here, which we will cover
-as we go along.
-====
+# A persistent attribute is identified by its Class field
+# The mapping annotations for the persistent attribute are located on the Class field
+# At runtime we access the persistent attribute's value directly via the field.
+
+PROPERTY access means that:
+
+# A persistent attribute is identified by its JavaBeans-style getter and setter on a Class
+# The mapping annotations for the persistent attribute are located on the Class getter method
+# At runtime we access the persistent attribute's value via the getter/setter methods.
+
+WARNING: Placing annotations on setters is NEVER appropriate.
 
 
-== Default (hierarchy) level
+== Background
 
-Hibernate looks for the annotation marking the identifier of the entity hierarchy (either @Id or @EmbeddedId)
-and uses its placement to determine the default "access type" for the hierarchy.  Let's start with an example:
+Hibernate has always had a notion of "property access strategies" to allow users to control the runtime access part.
+But, as back in those days there were no annotations and just XML-based mappings, the other 2 were never a concern.
+Initially JPA had no such explicit concept, although it did implicitly define runtime access based on placement of
+mapping annotations.  JPA 2.0 introduced the concept of `javax.persistence.AccessType` to allow better control over
+defining where the persistence provider look for mapping annotations and how it access the attribute values at
+runtime.  JPA allows defining AccessType at a number of "levels".
+
+
+== Implicit (hierarchy) level
+
+The implicit access type for an entity hierarchy defines how access type is defined when there is no explicitly
+defined AccessType.  To determine implicit hierarchy access type, Hibernate looks for the annotation marking the
+identifier for the entity hierarchy (either @Id or @EmbeddedId).  The placement (field or getter) defines the implicit
+access type for the hierarchy.  Let's look at an example:
 
 
 [[hierarchy-level-field]]
@@ -41,6 +59,9 @@ public class Document {
     private String title;
     @Lob
     private Clob content;
+
+    @Transient
+    private int hashCode;
 }
 
 @Entity
@@ -52,12 +73,13 @@ public class PublishedDocument extends Document {
 ----
 ====
 
-Here we have defaulted hierarchy-level field access because of the placement of @Id on a field, which means:
+Here we have implicit hierarchy-level field access because of the placement of @Id on a field, which means:
 
 * We look at the declared fields for each class to determine its persistent attributes.  For the `Document` class,
-	we have 3 fields that would be considered persistent attributes: `id`, `title`, and `content`; for
+	that means we have 3 fields that would be considered persistent attributes: `id`, `title`, and `content`; for
 	`PublishedDocument` we have 2: `isbn` and `publishDate`.  Given field "access type", to indicate that a particular
-	field is not persistent, the field would be annotated with the `javax.persistence.Transient` annotation.
+	field is not persistent, the field would be annotated with the `javax.persistence.Transient` annotation; here we
+	see an example of that for the `hashCode` field.
 * We use the annotations attached to those fields as the mapping annotations for the persistent attribute it indicates.
 	Annotations on the getter associated with that field (if one/any) are ignored (although we do try to log warnings
 	in such cases).
@@ -105,7 +127,7 @@ public class PublishedDocument extends Document {
 ----
 ====
 
-In this case, we have defaulted hierarchy-level property access because of the placement of @Id on the getter,
+In this case, we have implicit hierarchy-level property access because of the placement of @Id on the getter,
 which here means:
 
 * We look at the declared methods for each class looking for JavaBean-style getters to determine the persistent
@@ -120,20 +142,7 @@ which here means:
 	using `java.lang.reflection.Method`.
 
 
-WARNING: Placing annotations on setters is NEVER appropriate.
-
-
-It is important to note that this is an implicit definition of "access type".  This actually describes the
-full support for defining "access type" in JPA 1.0.  Which brings us to...
-
-
 == Class level
-
-JPA 2.0 introduced a more explicit form of declaring "access type", represented by the `javax.persistence.AccessType`
-enum defining 2 values:
-
-* FIELD
-* PROPERTY
 
 JPA allows declaring the "access type" to use via the `javax.persistence.Access` annotation which can be applied to
 either a class or a field/method.  We will look at applying `javax.persistence.Access` to a field/method in the next
@@ -144,7 +153,7 @@ access.  But lets instead use `javax.persistence.Access` and see what affect tha
 
 
 [[class-level-property]]
-.Hierarchy-level FIELD access
+.Class-level PROPERTY access
 ====
 [source, JAVA]
 ----
@@ -181,3 +190,43 @@ as the hierarchy default.  But in terms of the `PublishedDocument` class, it has
 <<hierarchy-level-property,second example>> in that we now look to the getters within the `PublishedDocument` as
 defining persistent attributes and we use the getter and setter at runtime when access `PublishedDocument` attributes
 (but not the attributes it inherits).
+
+Similarly, the explicit class-level access type can be set to FIELD:
+
+[[class-level-field]]
+.Class-level FIELD access
+====
+[source, JAVA]
+----
+@Entity
+public class Document {
+    private Integer id;
+    private String title;
+    private Clob content;
+
+    @Id
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    @Lob
+    public Clob getContent() { return content; }
+    public void setContent(Clob content) { this.content = content; }
+}
+
+@Entity
+@Access(PROPERTY)
+public class PublishedDocument extends Document {
+    private String isbn;
+    @Temporal(DATE)
+    private Date publishDate;
+}
+----
+====
+
+
+== Attribute-level
+
+JPA also says that access type can be explicitly specified on an individual attribute...

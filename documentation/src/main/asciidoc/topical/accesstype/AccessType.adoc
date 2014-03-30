@@ -4,9 +4,9 @@
 `AccessType` refers to the JPA notion represented by the `javax.persistence.AccessType` enum.  Even though
 AccessType is a single value, it actually represents 3 related concepts:
 
-# Determining which fields/methods constitute a persistent attribute.
-# Indicating where to look for mapping annotations for each persistent attribute.
-# How the attribute (its value) is accessed at runtime
+. Determining which fields/methods constitute a persistent attribute.
+. Indicating where to look for mapping annotations for each persistent attribute.
+. How the attribute (its value) is accessed at runtime
 
 Unfortunately the JPA specification is not overly clear about how the AccessType value defines the
 answers to these 3 questions in all cases.  Often that is left up to each provider to decide.  So here we will
@@ -16,18 +16,18 @@ and PROPERTY.
 
 For Hibernate, PROPERTY access means that:
 
-# A persistent attribute is identified by its JavaBeans-style getter and setter on a Class
-# The mapping annotations for the persistent attribute are located on the Class getter method
-# At runtime we access the persistent attribute's value via the getter/setter methods.
+. A persistent attribute is identified by its JavaBeans-style getter and setter on a Class
+. The mapping annotations for the persistent attribute are located on the Class getter method
+. At runtime we access the persistent attribute's value via the getter/setter methods.
 
 IMPORTANT: Placing annotations on setters is NEVER appropriate.
 
 
 FIELD access means that:
 
-# A persistent attribute is identified by its Class field
-# The mapping annotations for the persistent attribute are located on the Class field
-# At runtime we access the persistent attribute's value directly via the field.
+. A persistent attribute is identified by its Class field
+. The mapping annotations for the persistent attribute are located on the Class field
+. At runtime we access the persistent attribute's value directly via the field.
 
 
 
@@ -80,15 +80,15 @@ public class PublishedDocument extends Document {
 
 Here we have implicit hierarchy-level field access because of the placement of @Id on a field, which means:
 
-# We look at the declared fields for each class to determine its persistent attributes.  For the `Document` class,
+. We look at the declared fields for each class to determine its persistent attributes.  For the `Document` class,
 	that means we have 3 fields that would be considered persistent attributes: `id`, `title`, and `content`; for
 	`PublishedDocument` we have 2: `isbn` and `publishDate`.  Given field "access type", to indicate that a particular
 	field is not persistent, the field would be annotated with the `javax.persistence.Transient` annotation; here we
 	see an example of that for the `hashCode` field.
-# We use the annotations attached to those fields as the mapping annotations for the persistent attribute it indicates.
+. We use the annotations attached to those fields as the mapping annotations for the persistent attribute it indicates.
 	Annotations on the getter associated with that field (if one/any) are ignored (although we do try to log warnings
 	in such cases).
-# In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute values
+. In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute values
 	using `java.lang.reflection.Field`.
 
 
@@ -135,15 +135,15 @@ public class PublishedDocument extends Document {
 In this case, we have implicit hierarchy-level property access because of the placement of @Id on the getter,
 which here means:
 
-# We look at the declared methods for each class looking for JavaBean-style getters to determine the persistent
+. We look at the declared methods for each class looking for JavaBean-style getters to determine the persistent
 	attributes for that class.  For the `Document` class, we have 3 getters that would indicate persistent attributes:
 	`getId()`, `getTitle()` and `getContent()`; for `PublishedDocument` we have 2: `getIsbn()` and `getPublishDate()`.
 	The "attribute name" is taken following JavaBean-conventions.  To indicate that a getter does is not indicate a
 	persistent attribute, the getter would be annotated with the `javax.persistence.Transient` annotation.
-# We use the annotations attached to those getter methods as the mapping annotations for the persistent attribute
+. We use the annotations attached to those getter methods as the mapping annotations for the persistent attribute
 	it indicates.  Annotations on the field associated with that getter (if one/any) are ignored (although, again, we do
 	try to log warnings in such cases).
-# In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute values
+. In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute values
 	using `java.lang.reflection.Method`.
 
 
@@ -197,10 +197,10 @@ class-level `javax.persistence.Access` override is only in effect for that class
 as the hierarchy default.  But in terms of the `PublishedDocument` class, it has the same effect we saw in the
 <<hierarchy-level-property,second example>>:
 
-# We look at the declared methods for `PublishedDocument` to determine the persistent attributes, here:
+. We look at the declared methods for `PublishedDocument` to determine the persistent attributes, here:
 	`getIsbn()` and `getPublishDate()`.
-# We use the annotations attached to those getter methods as the mapping annotations.
-# We will use getter/setter runtime access.
+. We use the annotations attached to those getter methods as the mapping annotations.
+. We will use getter/setter runtime access.
 
 
 Similarly, the explicit class-level access type can be set to FIELD:
@@ -251,10 +251,10 @@ JPA also says that access type can be explicitly specified on an individual attr
 
 == Extensions
 
-Whether defined implicitly or explicitly, the notion of access type controls:
-# identifying persistent attributes
-# locating each persistent attribute's mapping information
-# runtime access to each persistent attribute.
+As discussed above, whether defined implicitly or explicitly, the notion of access type controls:
+. identifying persistent attributes
+. locating each persistent attribute's mapping information
+. runtime access to each persistent attribute.
 
 Regardless of implicit/explicit the following are always true:
 * FIELD access always indicates runtime access via direct field access

@@ -237,15 +237,18 @@ JPA also says that access type can be explicitly specified on an individual attr
 == Extensions
 
 As discussed above, whether defined implicitly or explicitly, the notion of access type controls:
+
 . identifying persistent attributes
 . locating each persistent attribute's mapping information
 . runtime access to each persistent attribute.
 
 Regardless of implicit/explicit the following are always true:
+
 * FIELD access always indicates runtime access via direct field access
 * PROPERTY access always indicates runtime access via getter/setter
 
 In terms of default behavior:
+
 * Given FIELD access, all mapping annotations are expected to be placed on the corresponding class field
 * Given PROPERTY access, all mapping annotations are expected to be placed on the corresponding class getter method
 

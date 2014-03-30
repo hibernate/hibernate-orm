@@ -14,32 +14,37 @@ discuss how Hibernate answers the 3 AccessType-related questions in different si
 tries to keep the explanation for how it answers these questions simple.  AccessType defines 2 possible values: FIELD
 and PROPERTY.
 
-For Hibernate, FIELD access means that:
-
-# A persistent attribute is identified by its Class field
-# The mapping annotations for the persistent attribute are located on the Class field
-# At runtime we access the persistent attribute's value directly via the field.
-
-PROPERTY access means that:
+For Hibernate, PROPERTY access means that:
 
 # A persistent attribute is identified by its JavaBeans-style getter and setter on a Class
 # The mapping annotations for the persistent attribute are located on the Class getter method
 # At runtime we access the persistent attribute's value via the getter/setter methods.
 
-WARNING: Placing annotations on setters is NEVER appropriate.
+IMPORTANT: Placing annotations on setters is NEVER appropriate.
 
 
-== Background
+FIELD access means that:
 
+# A persistent attribute is identified by its Class field
+# The mapping annotations for the persistent attribute are located on the Class field
+# At runtime we access the persistent attribute's value directly via the field.
+
+
+
+[sidebar]
+.Background
+--
 Hibernate has always had a notion of "property access strategies" to allow users to control the runtime access part.
 But, as back in those days there were no annotations and just XML-based mappings, the other 2 were never a concern.
 Initially JPA had no such explicit concept, although it did implicitly define runtime access based on placement of
 mapping annotations.  JPA 2.0 introduced the concept of `javax.persistence.AccessType` to allow better control over
 defining where the persistence provider look for mapping annotations and how it access the attribute values at
 runtime.  JPA allows defining AccessType at a number of "levels".
+--
 
 
-== Implicit (hierarchy) level
+
+== Implicit (hierarchy) access type
 
 The implicit access type for an entity hierarchy defines how access type is defined when there is no explicitly
 defined AccessType.  To determine implicit hierarchy access type, Hibernate looks for the annotation marking the
@@ -75,15 +80,15 @@ public class PublishedDocument extends Document {
 
 Here we have implicit hierarchy-level field access because of the placement of @Id on a field, which means:
 
-* We look at the declared fields for each class to determine its persistent attributes.  For the `Document` class,
+# We look at the declared fields for each class to determine its persistent attributes.  For the `Document` class,
 	that means we have 3 fields that would be considered persistent attributes: `id`, `title`, and `content`; for
 	`PublishedDocument` we have 2: `isbn` and `publishDate`.  Given field "access type", to indicate that a particular
 	field is not persistent, the field would be annotated with the `javax.persistence.Transient` annotation; here we
 	see an example of that for the `hashCode` field.
-* We use the annotations attached to those fields as the mapping annotations for the persistent attribute it indicates.
+# We use the annotations attached to those fields as the mapping annotations for the persistent attribute it indicates.
 	Annotations on the getter associated with that field (if one/any) are ignored (although we do try to log warnings
 	in such cases).
-* In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute values
+# In terms of runtime access, Hibernate will use direct field access (via reflection) to get and set attribute values
 	using `java.lang.reflection.Field`.
 
 
@@ -130,26 +135,29 @@ public class PublishedDocument extends Document {
 In this case, we have implicit hierarchy-level property access because of the placement of @Id on the getter,
 which here means:
 
-* We look at the declared methods for each class looking for JavaBean-style getters to determine the persistent
+# We look at the declared methods for each class looking for JavaBean-style getters to determine the persistent
 	attributes for that class.  For the `Document` class, we have 3 getters that would indicate persistent attributes:
 	`getId()`, `getTitle()` and `getContent()`; for `PublishedDocument` we have 2: `getIsbn()` and `getPublishDate()`.
 	The "attribute name" is taken following JavaBean-conventions.  To indicate that a getter does is not indicate a
 	persistent attribute, the getter would be annotated with the `javax.persistence.Transient` annotation.
-* We use the annotations attached to those getter methods as the mapping annotations for the persistent attribute
+# We use the annotations attached to those getter methods as the mapping annotations for the persistent attribute
 	it indicates.  Annotations on the field associated with that getter (if one/any) are ignored (although, again, we do
 	try to log warnings in such cases).
-* In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute values
+# In terms of runtime access, Hibernate will use getter/setter access (via reflection) to get and set attribute values
 	using `java.lang.reflection.Method`.
 
 
-== Class level
+== Explicit access type
 
-JPA allows declaring the "access type" to use via the `javax.persistence.Access` annotation which can be applied to
-either a class or a field/method.  We will look at applying `javax.persistence.Access` to a field/method in the next
-section.  For now let's focus on the implications of applying it to a class.
+Access type may also be explicitly indicate via the `javax.persistence.Access` annotation, which can be applied to
+either a class or attribute.
 
-Let's go back to the <<hierarchy-level-field,first example>> we saw where we had implicit hierarchy-level field
-access.  But lets instead use `javax.persistence.Access` and see what affect that has:
+
+=== Class-level
+
+Annotating a class (`MappedSuperclass`, `Entity`, or `Embeddable`) applies the indicated access type to the class,
+although not its superclass nor subclasses.  Let's go back to the <<hierarchy-level-field,first example>> where we saw
+implicit hierarchy-level field access.  But lets instead use `javax.persistence.Access` and see what affect that has:
 
 
 [[class-level-property]]
@@ -187,9 +195,13 @@ hierarchy default.  The `PublishedDocument` class however overrides that to say 
 class-level `javax.persistence.Access` override is only in effect for that class; if another entity extended from
 `PublishedClass` and did not specify a `javax.persistence.Access`, that entity subclass would use field access
 as the hierarchy default.  But in terms of the `PublishedDocument` class, it has the same effect we saw in the
-<<hierarchy-level-property,second example>> in that we now look to the getters within the `PublishedDocument` as
-defining persistent attributes and we use the getter and setter at runtime when access `PublishedDocument` attributes
-(but not the attributes it inherits).
+<<hierarchy-level-property,second example>>:
+
+# We look at the declared methods for `PublishedDocument` to determine the persistent attributes, here:
+	`getIsbn()` and `getPublishDate()`.
+# We use the annotations attached to those getter methods as the mapping annotations.
+# We will use getter/setter runtime access.
+
 
 Similarly, the explicit class-level access type can be set to FIELD:
 
@@ -227,6 +239,69 @@ public class PublishedDocument extends Document {
 ====
 
 
-== Attribute-level
+=== Attribute-level
+
 
 JPA also says that access type can be explicitly specified on an individual attribute...
+
+
+
+
+
+
+== Extensions
+
+Whether defined implicitly or explicitly, the notion of access type controls:
+# identifying persistent attributes
+# locating each persistent attribute's mapping information
+# runtime access to each persistent attribute.
+
+Regardless of implicit/explicit the following are always true:
+* FIELD access always indicates runtime access via direct field access
+* PROPERTY access always indicates runtime access via getter/setter
+
+In terms of default behavior:
+* Given FIELD access, all mapping annotations are expected to be placed on the corresponding class field
+* Given PROPERTY access, all mapping annotations are expected to be placed on the corresponding class getter method
+
+
+That being said, Hibernate offers a number of extensions that affect these statements...
+
+
+=== PropertyAccessor
+
+Thus far we have focused on FIELD and PROPERTY runtime access because those are the strategies defined by JPA.
+Hibernate, however, has a more open-ended strategy for runtime access defined by the
+`org.hibernate.property.PropertyAccessor`.
+
+NOTE: Hibernate's use of the phrase "property" here pre-dates JPA.  Think of "property accessor" as "attribute accessor".
+
+`org.hibernate.property.PropertyAccessor` essentially defines contract for extracting (`org.hibernate.property.Getter`)
+and injecting (`org.hibernate.property.Setter`) attribute values at runtime.  To specify a custom runtime access
+strategy, simply use the `org.hibernate.annotations.AttributeAccessor` annotation:
+
+[[custom-accessor]]
+.Custom PropertyAccessor
+====
+[source, JAVA]
+----
+@Entity
+public class Document {
+    ...
+
+    @Id
+    @AttributeAccessor( "com.acme.CustomHibernateIdPropertyAccessor" )
+    public Integer getId() { return id; }
+    ...
+}
+----
+====
+
+`org.hibernate.annotations.AttributeAccessor` can also be specified at the class-level to apply to all attributes
+for the annotated class.
+
+
+=== Attribute resolver (???)
+
+This concept is in discussion as to whether to even allow it...  The idea would be to allow altering how
+attributes are determined and/or how we locating annotations for them.

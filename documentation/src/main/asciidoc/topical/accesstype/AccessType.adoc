@@ -1,8 +1,7 @@
 = AccessType
 :toc:
 
-`AccessType` refers to the JPA notion represented by the `javax.persistence.AccessType` enum.  Even though
-AccessType is a single value, it actually represents 3 related concepts:
+The JPA `javax.persistence.AccessType` enum actually represents 3 related concepts:
 
 . Determining which fields/methods constitute a persistent attribute.
 . Indicating where to look for mapping annotations for each persistent attribute.
@@ -28,20 +27,6 @@ FIELD access means that:
 . A persistent attribute is identified by its Class field
 . The mapping annotations for the persistent attribute are located on the Class field
 . At runtime we access the persistent attribute's value directly via the field.
-
-
-
-[sidebar]
-.Background
---
-Hibernate has always had a notion of "property access strategies" to allow users to control the runtime access part.
-But, as back in those days there were no annotations and just XML-based mappings, the other 2 were never a concern.
-Initially JPA had no such explicit concept, although it did implicitly define runtime access based on placement of
-mapping annotations.  JPA 2.0 introduced the concept of `javax.persistence.AccessType` to allow better control over
-defining where the persistence provider look for mapping annotations and how it access the attribute values at
-runtime.  JPA allows defining AccessType at a number of "levels".
---
-
 
 
 == Implicit (hierarchy) access type

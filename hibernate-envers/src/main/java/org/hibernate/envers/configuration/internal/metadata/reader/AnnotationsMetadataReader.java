@@ -121,6 +121,7 @@ public final class AnnotationsMetadataReader {
 			}
 
 			new AuditedPropertiesReader(
+					auditData.isAudited(),
 					defaultStore,
 					new PersistentClassPropertiesSource( xclass ),
 					auditData,

@@ -75,7 +75,7 @@ public class MappedSuperclassEmbeddableTest extends BaseEnversJPAFunctionalTestC
 		// Generic Code is read from AUD Table
 		Assert.assertEquals(personLoaded.getGenericCode(), personRev1.getGenericCode());
 
-		// Test Code is NOT read from AUD Table
+		// Test Code is read from AUD Table
 		Assert.assertEquals(personLoaded.getTestCode(), personRev1.getTestCode());
 	}
 }

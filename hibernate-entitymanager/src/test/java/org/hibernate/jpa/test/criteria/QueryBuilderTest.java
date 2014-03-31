@@ -34,6 +34,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.predicate.ComparisonPredicate;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
@@ -51,6 +52,7 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -215,7 +217,9 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8699" )
+	@TestForIssue(jiraKey = "HHH-8699")
+	// For now, restrict to H2.  Selecting w/ predicate functions cause issues for too many dialects.
+	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-9092")
 	public void testMultiselectWithPredicates() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

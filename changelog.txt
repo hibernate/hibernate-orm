@@ -13,6 +13,7 @@ Changes in version 4.3.5.Final (2014.04.02)
     * [HHH-7971] - Enabling ENABLE_LAZY_LOAD_NO_TRANS results in trying to remove elements in collections 
     * [HHH-8374] - Removing and persisting an entity still fails for proxies
     * [HHH-8815] - Example code for session scoped interceptor is incorrect (out of date)
+    * [HHH-9002] - LoadQueryJoinAndFetchProcessor - wrong alias for OrderBy
     * [HHH-9017] - HHH-8814 breaks pooled sequences
     * [HHH-9024] - NPE in org.hibernate.engine.spi.TypedValue.hashCode()
     * [HHH-9028] - ClassCastException with second level cache and entityManager.find(clazz, id)

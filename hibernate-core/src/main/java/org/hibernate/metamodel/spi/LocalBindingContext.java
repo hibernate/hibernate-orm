@@ -27,11 +27,34 @@ import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.xml.spi.Origin;
 
 /**
+ * Specialization of the BindingContext contract specific to a given origin.
+ *
  * @author Steve Ebersole
  */
 public interface LocalBindingContext extends BindingContext {
+	/**
+	 * Obtain the origin for this context
+	 *
+	 * @return The origin
+	 */
 	public Origin getOrigin();
-	public MappingException makeMappingException(String message);
-	public MappingException makeMappingException(String message, Exception cause);
 
+	/**
+	 * Make a MappingException using the local origin
+	 *
+	 * @param message The exception message
+	 *
+	 * @return The MappingException
+	 */
+	public MappingException makeMappingException(String message);
+
+	/**
+	 * Make a MappingException using the local origin
+	 *
+	 * @param message The exception message
+	 * @param cause The underlying cause
+	 *
+	 * @return The MappingException
+	 */
+	public MappingException makeMappingException(String message, Exception cause);
 }

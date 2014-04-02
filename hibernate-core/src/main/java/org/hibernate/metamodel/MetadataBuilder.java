@@ -28,6 +28,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.spi.PersistentAttributeMemberResolver;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
@@ -123,12 +124,36 @@ public interface MetadataBuilder {
 	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled);
 
 	/**
+	 * Should we process or ignore explicitly defined discriminators in the case
+	 * of joined-subclasses.  The legacy behavior of Hibernate was to ignore the
+	 * discriminator annotations because Hibernate (unlike some providers) does
+	 * not need discriminators to determine the concrete type when it comes to
+	 * joined inheritance.  However, for portability reasons we do now allow using
+	 * explicit discriminators along with joined inheritance.  It is configurable
+	 * though to support legacy apps.
 	 *
-	 * @param enabled
-	 * @return
+	 * @param enabled Should processing (not ignoring) explicit discriminators be
+	 * enabled?
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder withExplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled);
 
+	/**
+	 * Similarly to {@link #withExplicitDiscriminatorsForJoinedSubclassSupport},
+	 * but here how should we treat joined inheritance when there is no explicitly
+	 * defined discriminator annotations?  If enabled, we will handle joined
+	 * inheritance with no explicit discriminator annotations by implicitly
+	 * creating one (following the JPA implicit naming rules).
+	 * <p/>
+	 * Again the premise here is JPA portability, bearing in mind that some
+	 * JPA provider need these discriminators.
+	 *
+	 * @param enabled Should we implicitly create discriminator for joined
+	 * inheritance if one is not explicitly mentioned?
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public MetadataBuilder withImplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled);
 
 	/**
@@ -174,6 +199,8 @@ public interface MetadataBuilder {
 	 * Metadata object.
 	 *
 	 * @param cacheRegionDefinition The cache region definition to apply
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder with(CacheRegionDefinition cacheRegionDefinition);
 
@@ -189,8 +216,20 @@ public interface MetadataBuilder {
 	 * same function if desired.
 	 *
 	 * @param tempClassLoader ClassLoader for use during building the Metadata
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder with(ClassLoader tempClassLoader);
+
+	/**
+	 * Specify the resolve to be used in identifying the backing members of a
+	 * persistent attributes.
+	 *
+	 * @param resolver The resolver to use
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public MetadataBuilder with(PersistentAttributeMemberResolver resolver);
 
 	/**
 	 * Actually build the metamodel

@@ -289,7 +289,19 @@ public class Document {
 for the annotated class.
 
 
-=== Attribute resolver (???)
+=== PersistentAttributeMemberResolver
 
-This concept is in discussion as to whether to even allow it...  The idea would be to allow altering how
-attributes are determined and/or how we locating annotations for them.
+The `org.hibernate.metamodel.spi.PersistentAttributeMemberResolver` contract allows swapping the manner in
+which Hibernate decides which fields/methods constitute a persistent attribute.  The information described above is
+in accordance with the standard, default resolver :
+`org.hibernate.metamodel.spi.StandardPersistentAttributeMemberResolver`.  This standard implementation follows the
+JPA very closely in not allowing certain things, although it always warns or throws an exception when ignoring or
+not allowing things.
+
+Hibernate ships with another resolver implementation : `org.hibernate.metamodel.spi.LenientPersistentAttributeMemberResolver`
+As its name implies, it aims at being more lenient that what is mandated by JPA specification.
+
+TODO : discuss specific leniencies
+
+To specify alternate PersistentAttributeMemberResolver to use (whether a Hibernate-provided one or a custom one), use
+the `org.hibernate.metamodel.MetadataBuilder.with(PersistentAttributeMemberResolver)` method.

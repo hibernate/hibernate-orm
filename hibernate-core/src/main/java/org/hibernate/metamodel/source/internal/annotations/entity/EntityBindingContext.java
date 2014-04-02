@@ -25,16 +25,12 @@ package org.hibernate.metamodel.source.internal.annotations.entity;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.source.internal.annotations.TypedValueExtractor;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.spi.BaseDelegatingBindingContext;
 import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.IndexView;
 
 
 /**

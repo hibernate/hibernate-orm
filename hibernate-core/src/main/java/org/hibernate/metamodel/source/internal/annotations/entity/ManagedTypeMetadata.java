@@ -33,22 +33,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.AccessType;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.reflite.internal.ModifierUtils;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.MemberDescriptor;
 import org.hibernate.metamodel.reflite.spi.MethodDescriptor;
-import org.hibernate.metamodel.reflite.spi.VoidDescriptor;
 import org.hibernate.metamodel.source.internal.AttributeConversionInfo;
 import org.hibernate.metamodel.source.internal.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.attribute.AbstractPersistentAttribute;
@@ -63,19 +58,16 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAss
 import org.hibernate.metamodel.source.internal.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.spi.AttributePath;
 import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
+
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.MethodInfo;
 
 /**
  * Models metadata about what JPA calls a {@link javax.persistence.metamodel.ManagedType}.
@@ -449,310 +441,44 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute handling
 
-	private final Set<String> transientFieldNames = new HashSet<String>();
-	private final Set<String> transientMethodNames = new HashSet<String>();
-
-	private final Set<String> processedAttributeNames = new HashSet<String>();
-
 	/**
 	 * Collect all persistent attributes for this managed type
 	 */
 	private void collectPersistentAttributes() {
-		processTransientAttributes();
-		processAttributesWithExplicitAccessType();
+		// Call the strategy responsible for resolving the members that identify a persistent attribute
+		final List<MemberDescriptor> backingMembers = localBindingContext.getBuildingOptions()
+				.getPersistentAttributeMemberResolver()
+				.resolveAttributesMembers( getJavaTypeDescriptor(), classLevelAccessType, localBindingContext );
 
-		if ( AccessType.FIELD.equals( classLevelAccessType ) ) {
-			for ( FieldDescriptor field : getJavaTypeDescriptor().getDeclaredFields() ) {
-				if ( !isPersistable( field ) ) {
-					continue;
-				}
-
-				final String attributeName = field.getName();
-
-				if ( transientFieldNames.contains( attributeName ) ) {
-					continue;
-				}
-
-				if ( processedAttributeNames.contains( attributeName ) ) {
-					continue;
-				}
-
-				createPersistentAttribute( attributeName, field, AccessType.FIELD );
+		for ( MemberDescriptor backingMember : backingMembers ) {
+			final AccessType accessType = determineAttributeAccessType( backingMember );
+			final String attributeName;
+			if ( FieldDescriptor.class.isInstance( backingMember ) ) {
+				attributeName = backingMember.getName();
 			}
-		}
-		else {
-			for ( MethodDescriptor method : getJavaTypeDescriptor().getDeclaredMethods() ) {
-				if ( !isPersistable( method ) ) {
-					continue;
-				}
-
-				if ( transientMethodNames.contains( method.getName() ) ) {
-					continue;
-				}
-
-				final String attributeName = ReflectHelper.getPropertyNameFromGetterMethod( method.getName() );
-
-				if ( processedAttributeNames.contains( attributeName ) ) {
-					continue;
-				}
-
-				createPersistentAttribute( attributeName, method, AccessType.PROPERTY );
-			}
-		}
-	}
-
-	protected void processTransientAttributes() {
-		List<AnnotationInstance> transientMembers = getJavaTypeDescriptor().getJandexClassInfo()
-				.annotations()
-				.get( JPADotNames.TRANSIENT );
-		if ( transientMembers == null ) {
-			return;
-		}
-
-		for ( AnnotationInstance transientMember : transientMembers ) {
-			AnnotationTarget target = transientMember.target();
-
-			if ( target instanceof FieldInfo ) {
-				if ( classLevelAccessType == AccessType.PROPERTY ) {
-//					throw localBindingContext.makeMappingException(
-//							"@Transient placed on field of class using AccessType.PROPERTY"
-//					);
-				}
-				else {
-					transientFieldNames.add( ( (FieldInfo) target ).name() );
-				}
-			}
-			else if ( target instanceof MethodInfo ) {
-				if ( classLevelAccessType == AccessType.FIELD ) {
-//					throw localBindingContext.makeMappingException(
-//							"@Transient placed on method of class using AccessType.FIELD"
-//					);
-				}
-				else {
-					transientMethodNames.add( ( (MethodInfo) target ).name() );
-				}
+			else if ( MethodDescriptor.class.isInstance( backingMember ) ) {
+				final MethodDescriptor methodDescriptor = (MethodDescriptor) backingMember;
+				attributeName = ReflectHelper.getPropertyNameFromGetterMethod( methodDescriptor.getName() );
 			}
 			else {
-				throw localBindingContext.makeMappingException( "@Transient can be only defined on field or property" );
-			}
-		}
-	}
-
-	protected void processAttributesWithExplicitAccessType() {
-		final List<AnnotationInstance> accessAnnotations = getJavaTypeDescriptor().getJandexClassInfo()
-				.annotations()
-				.get( JPADotNames.ACCESS );
-		if ( accessAnnotations == null ) {
-			return;
-		}
-
-		// iterate over all @Access annotations defined on the current class
-		for ( AnnotationInstance accessAnnotation : accessAnnotations ) {
-			// we are only interested at annotations defined on fields and methods
-			AnnotationTarget annotationTarget = accessAnnotation.target();
-			if ( !annotationTarget.getClass().equals( MethodInfo.class )
-					&& !annotationTarget.getClass().equals( FieldInfo.class ) ) {
-				continue;
-			}
-
-			final AccessType attributeAccessType = JandexHelper.getEnumValue(
-					accessAnnotation,
-					"value",
-					AccessType.class,
-					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
-			);
-			checkExplicitJpaAttributeAccessAnnotationPlacedCorrectly( annotationTarget, attributeAccessType );
-
-			if ( annotationTarget instanceof MethodInfo ) {
-				final MethodInfo methodInfo = ( (MethodInfo) annotationTarget );
-				final String attributeName = ReflectHelper.getPropertyNameFromGetterMethod( methodInfo.name() );
-				if ( attributeName == null ) {
-					throw localBindingContext.makeMappingException(
-							"@Access annotation encountered on method [" + methodInfo.name()
-									+ "] that did not following JavaBeans naming convention for getter"
-					);
-				}
-
-				if ( processedAttributeNames.contains( attributeName ) ) {
-					return;
-				}
-
-				final MethodDescriptor methodDescriptor = findMethodDescriptor(
-						getJavaTypeDescriptor(),
-						methodInfo.name()
+				throw localBindingContext.makeMappingException(
+						"Backing member for a persistent attribute needs to be either a field or (getter) method : "
+								+ backingMember.toLoggableForm()
 				);
-				createPersistentAttribute( attributeName, methodDescriptor, attributeAccessType );
 			}
-			else {
-				final FieldInfo fieldInfo = (FieldInfo) annotationTarget;
-				final String attributeName = fieldInfo.name();
 
-				if ( processedAttributeNames.contains( attributeName ) ) {
-					return;
-				}
-
-				FieldDescriptor fieldDescriptor = findFieldDescriptor(
-						getJavaTypeDescriptor(),
-						attributeName
-				);
-				createPersistentAttribute( attributeName, fieldDescriptor, attributeAccessType );
-			}
-		}
-
-	}
-
-	private void checkExplicitJpaAttributeAccessAnnotationPlacedCorrectly(
-			AnnotationTarget annotationTarget,
-			AccessType attributeAccessType) {
-
-		if ( AccessType.FIELD.equals( classLevelAccessType ) ) {
-			// The class-level AccessType is FIELD....
-
-			if ( FieldInfo.class.isInstance( annotationTarget ) ) {
-				// we have an @Access annotation defined on a field..
-				//
-				// Technically this is ok as long as the attribute-level AccessType defines
-				// FIELD.  This falls under the 2.3.2 section footnote stating:
-				// 		"It is permitted (but redundant) to place Access(FIELD) on a
-				// 		persistent field whose class has field access type..."
-				if ( AccessType.PROPERTY.equals( attributeAccessType ) ) {
-					throw localBindingContext.makeMappingException(
-							String.format(
-									Locale.ENGLISH,
-									"Illegal attempt to specify Access(PROPERTY) on field [%s] in class [%s]",
-									( (FieldInfo) annotationTarget ).name(),
-									( (FieldInfo) annotationTarget ).declaringClass().name()
-							)
-					);
-				}
-			}
-			else {
-				// we have an @Access annotation defined on a method...
-				// 		(getter checks are done in the caller)
-				if ( AccessType.FIELD.equals( attributeAccessType ) ) {
-					throw localBindingContext.makeMappingException(
-							LOG.accessTypeOverrideShouldBeProperty( getJavaTypeDescriptor().getName().toString() )
-					);
-				}
-			}
-		}
-		else if ( AccessType.PROPERTY.equals( classLevelAccessType ) ) {
-			// The class-level AccessType is PROPERTY....
-
-			if ( MethodInfo.class.isInstance( annotationTarget ) ) {
-				// we have an @Access annotation defined on a method..
-				// 		(again, getter checks are done in the caller)
-				//
-				// Technically this is ok as long as the attribute-level AccessType defines
-				// PROPERTY.  This falls under the 2.3.2 section footnote stating:
-				// 		"It is permitted (but redundant) to place ... Access(PROPERTY)
-				// 		on a persistent property whose class has property access type"
-				if ( AccessType.FIELD.equals( attributeAccessType ) ) {
-					throw localBindingContext.makeMappingException(
-							String.format(
-									Locale.ENGLISH,
-									"Illegal attempt to specify Access(FIELD) on method [%s] in class [%s]",
-									( (FieldInfo) annotationTarget ).name(),
-									( (FieldInfo) annotationTarget ).declaringClass().name()
-							)
-					);
-				}
-			}
-			else {
-				// we have an @Access annotation defined on a field...
-				if ( AccessType.PROPERTY.equals( attributeAccessType ) ) {
-					throw localBindingContext.makeMappingException(
-							LOG.accessTypeOverrideShouldBeField( getJavaTypeDescriptor().getName().toString() )
-					);
-				}
-			}
+			createPersistentAttribute( attributeName, backingMember, accessType );
 		}
 	}
 
-	private FieldDescriptor findFieldDescriptor(JavaTypeDescriptor javaTypeDescriptor, String name) {
-		for ( FieldDescriptor fieldDescriptor : javaTypeDescriptor.getDeclaredFields() ) {
-			// perform a series of opt-out checks
-			if ( ! fieldDescriptor.getName().equals( name ) ) {
-				continue;
-			}
-
-			if ( ! isPersistable( fieldDescriptor ) ) {
-				continue;
-			}
-
-			// no opt-outs above, we found it...
-			return fieldDescriptor;
+	private AccessType determineAttributeAccessType(MemberDescriptor backingMember) {
+		final AnnotationInstance explicitAccessAnnotation = backingMember.getAnnotations().get( JPADotNames.ACCESS );
+		if ( explicitAccessAnnotation != null ) {
+			return localBindingContext.getJandexAccess().getTypedValueExtractor( AccessType.class )
+					.extract( explicitAccessAnnotation, "value" );
 		}
 
-		throw new HibernateException(
-				"Unable to locate persistent field [" + name + "] - class " +
-						javaTypeDescriptor.getName().toString()
-		);
-	}
-
-	@SuppressWarnings("RedundantIfStatement")
-	private boolean isPersistable(FieldDescriptor fieldDescriptor) {
-		if ( Modifier.isTransient( fieldDescriptor.getModifiers() ) ) {
-			return false;
-		}
-
-		if ( ModifierUtils.isSynthetic( fieldDescriptor ) ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private MethodDescriptor findMethodDescriptor(JavaTypeDescriptor javaTypeDescriptor, String name) {
-		for ( MethodDescriptor methodDescriptor : javaTypeDescriptor.getDeclaredMethods() ) {
-			// perform a series of opt-out checks
-			if ( !methodDescriptor.getName().equals( name ) ) {
-				continue;
-			}
-
-			if ( !isPersistable( methodDescriptor ) ) {
-				continue;
-			}
-
-			// no opt-outs above, we found it...
-			return methodDescriptor;
-		}
-
-		throw new HibernateException(
-				"Unable to locate persistent property method [" + name + "] - class " +
-						javaTypeDescriptor.getName().toString()
-		);
-	}
-
-	@SuppressWarnings("RedundantIfStatement")
-	private boolean isPersistable(MethodDescriptor methodDescriptor) {
-		if ( !methodDescriptor.getArgumentTypes().isEmpty() ) {
-			return false;
-		}
-
-		if ( methodDescriptor.getReturnType() == null
-				|| methodDescriptor.getReturnType().getErasedType() == VoidDescriptor.INSTANCE ) {
-			return false;
-		}
-
-		if ( !methodDescriptor.getName().startsWith( "get" )
-				&& !methodDescriptor.getName().startsWith( "is"  ) ) {
-			return false;
-		}
-
-		if ( Modifier.isStatic( methodDescriptor.getModifiers() ) ) {
-			return false;
-		}
-
-		if ( ModifierUtils.isBridge( methodDescriptor ) ) {
-			return false;
-		}
-
-		if ( ModifierUtils.isSynthetic( methodDescriptor ) ) {
-			return false;
-		}
-
-		return true;
+		return classLevelAccessType;
 	}
 
 	private void createPersistentAttribute(String attributeName, MemberDescriptor member, AccessType accessType) {
@@ -767,8 +493,6 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 				member,
 				member.getType().getErasedType()
 		);
-
-		processedAttributeNames.add( attributeName );
 
 		switch ( attributeCategory ) {
 			case BASIC: {

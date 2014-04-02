@@ -45,6 +45,8 @@ import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
+import org.hibernate.metamodel.spi.PersistentAttributeMemberResolver;
+import org.hibernate.metamodel.spi.StandardPersistentAttributeMemberResolver;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.relational.Database;
@@ -223,6 +225,12 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
+	public MetadataBuilder with(PersistentAttributeMemberResolver resolver) {
+		options.persistentAttributeMemberResolver = resolver;
+		return this;
+	}
+
+	@Override
 	public MetadataImpl build() {
 		return MetadataBuildingProcess.build( sources, options );
 	}
@@ -287,6 +295,9 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
+
+		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
+				StandardPersistentAttributeMemberResolver.INSTANCE;
 
 		// todo : go away
 		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
@@ -393,6 +404,11 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		@Override
 		public boolean createImplicitDiscriminatorsForJoinedInheritance() {
 			return implicitDiscriminatorsForJoinedInheritanceSupported;
+		}
+
+		@Override
+		public PersistentAttributeMemberResolver getPersistentAttributeMemberResolver() {
+			return persistentAttributeMemberResolver;
 		}
 
 		@Override

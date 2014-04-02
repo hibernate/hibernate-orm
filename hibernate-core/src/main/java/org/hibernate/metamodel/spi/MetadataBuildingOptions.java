@@ -156,6 +156,12 @@ public interface MetadataBuildingOptions {
 	 */
 	boolean createImplicitDiscriminatorsForJoinedInheritance();
 
+	/**
+	 * Obtain the selected strategy for resolving members identifying persistent attributes
+	 *
+	 * @return The select resolver strategy
+	 */
+	PersistentAttributeMemberResolver getPersistentAttributeMemberResolver();
 
 	// todo : these 2 will go away...
 

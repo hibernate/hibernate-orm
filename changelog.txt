@@ -5,6 +5,38 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.5.Final (2014.04.02)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-7072] - ElementCollection not updated correctly if the Embeddable component has a nullable property
+    * [HHH-7971] - Enabling ENABLE_LAZY_LOAD_NO_TRANS results in trying to remove elements in collections 
+    * [HHH-8374] - Removing and persisting an entity still fails for proxies
+    * [HHH-8815] - Example code for session scoped interceptor is incorrect (out of date)
+    * [HHH-9017] - HHH-8814 breaks pooled sequences
+    * [HHH-9024] - NPE in org.hibernate.engine.spi.TypedValue.hashCode()
+    * [HHH-9028] - ClassCastException with second level cache and entityManager.find(clazz, id)
+    * [HHH-9034] - org.hibernate.test.hql.ASTParserLoadingTest fails with postgresplus92
+    * [HHH-9039] - Correct minor typos in docs and /etc
+    * [HHH-9051] - OutputsImpl getOuput -> buildOutput prints to console unconditionally
+    * [HHH-9052] - Unsupported SQL generated when constructors are used with predicates as arguments
+    * [HHH-9054] - org.hibernate.test.annotations.quote.QuoteTest violates unique key constraint on some DBs
+    * [HHH-9056] - OneToOneTest.testPkOneToOneSelectStatementDoesNotGenerateExtraJoin fails on oracle and postresql databases
+    * [HHH-9057] - Correct ObjectNameNormalizer for mssql-style quoting
+    * [HHH-9071] - Proxy narrowing loses the initialized state of the original proxy
+    * [HHH-9072] - Name of LoadEventListener.RELOAD should be "RELOAD" and not "GET"
+    * [HHH-9073] - when evaluating TREAT downcast in where clause, path resolution should only allow downcastable value
+    * [HHH-9078] - OrderColumn doesn't actually work, index is always 0 across transactions
+    * [HHH-9092] - org.hibernate.ejb.criteria.QueryBuilderTest.testMultiselectWithPredicates failing on most databases
+
+** Improvement
+    * [HHH-1582] - PostInsertListener + "post-commit-insert"
+    * [HHH-8923] - Reconsider closing of ServiceRegistry instances
+    * [HHH-9037] - Improve the ClassCastException message in JavassistLazyInitializer
+    * [HHH-9040] - Check "haltOnError" in SchemaExport#importScript
+    * [HHH-9064] - Simplify/improve the hibernate-osgi tests
+    * [HHH-9067] - Make HibernatePersistenceProvider easier to extend
+
 Changes in version 4.3.4.Final (2014.03.03)
 ------------------------------------------------------------------------------------------------------------------------
 

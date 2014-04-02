@@ -54,15 +54,15 @@ public class SimpleCaseExpression<C,R>
 	private Expression<? extends R> otherwiseResult;
 
 	public class WhenClause {
-		private final C condition;
+		private final LiteralExpression<C> condition;
 		private final Expression<? extends R> result;
 
-		public WhenClause(C condition, Expression<? extends R> result) {
+		public WhenClause(LiteralExpression<C> condition, Expression<? extends R> result) {
 			this.condition = condition;
 			this.result = result;
 		}
 
-		public C getCondition() {
+		public LiteralExpression<C> getCondition() {
 			return condition;
 		}
 
@@ -99,7 +99,10 @@ public class SimpleCaseExpression<C,R>
 	}
 
 	public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
-		WhenClause whenClause = new WhenClause( condition, result );
+		WhenClause whenClause = new WhenClause(
+				new LiteralExpression<C>( criteriaBuilder(), condition ),
+				result
+		);
 		whenClauses.add( whenClause );
 		adjustJavaType( result );
 		return this;
@@ -141,10 +144,10 @@ public class SimpleCaseExpression<C,R>
 	public String render(RenderingContext renderingContext) {
 		StringBuilder caseExpr = new StringBuilder();
 		caseExpr.append( "case " )
-				.append(  ( (Renderable) getExpression() ).render( renderingContext ) )
-				.append( ' ' );
+				.append(  ( (Renderable) getExpression() ).render( renderingContext ) );
 		for ( WhenClause whenClause : getWhenClauses() ) {
-			caseExpr.append( ( (Renderable) whenClause.getCondition() ).render( renderingContext ) )
+			caseExpr.append( " when " )
+					.append( whenClause.getCondition().render( renderingContext ) )
 					.append( " then "  )
 					.append( ( (Renderable) whenClause.getResult() ).render( renderingContext ) );
 		}

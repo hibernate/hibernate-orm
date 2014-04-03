@@ -39,6 +39,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import javax.persistence.AttributeConverter;
+import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -466,9 +467,10 @@ public class MetadataSources {
 	 *
 	 * @return this (for method chaining purposes)
 	 */
+	@Deprecated
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
-		BindResult bindResult = new BindResult( jaxbProcessor.bind( document, origin ), origin );
+		BindResult bindResult = new BindResult( jaxbProcessor.bind( new DOMSource( document ), origin ), origin );
 		addJaxbRoot( bindResult );
 		return this;
 	}

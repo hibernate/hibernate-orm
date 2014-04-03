@@ -495,7 +495,10 @@ public class Configuration {
 	 * @return this (for method chaining purposes)
 	 * @throws MappingException Indicates problems reading the DOM or processing
 	 * the mapping document.
+	 * 
+	 * @deprecated Use addURL, addResource, addFile, etc. instead
 	 */
+	@Deprecated
 	public Configuration addDocument(org.w3c.dom.Document doc) throws MappingException {
 		metadataSources.addDocument( doc );
 		return this;

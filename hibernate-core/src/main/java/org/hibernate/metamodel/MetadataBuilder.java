@@ -38,7 +38,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import org.jboss.jandex.IndexView;
-import org.xml.sax.EntityResolver;
 
 /**
  * Contract for specifying various overrides to be used in metamodel building.
@@ -55,15 +54,6 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder with(NamingStrategy namingStrategy);
-
-	/**
-	 * Specify a specific XML EntityResolver to use in building the metamodel.
-	 *
-	 * @param entityResolver The entity resolver to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public MetadataBuilder with(EntityResolver entityResolver);
 
 	/**
 	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or

@@ -27,13 +27,10 @@ import java.io.InputStream;
 
 import javax.xml.transform.Source;
 
-import org.w3c.dom.Document;
-
 /**
  * @author Steve Ebersole
  */
 public interface UnifiedBinder<T> {
 	public T bind(InputStream stream, Origin origin);
 	public T bind(Source source, Origin origin);
-	public T bind(Document document, Origin origin);
 }

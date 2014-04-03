@@ -28,12 +28,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.LenientPersistentAttributeMemberResolver;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -157,18 +158,16 @@ public class AccessMappingTest extends BaseUnitTestCase {
     }
 
     @Test
-	@FailureExpectedWithNewMetamodel(
-			message = "No idea on 2 levels.  First, how is this a 'Hibernate-style override'?  " +
-					"Second, tbh, not even sure this should pass; doesn't the AccessType#FIELD override" +
-					" belong on the field?  The test passes if @Access(AccessType.FIELD) and other" +
-					"annotations are moved from Course3#getId() to Course3#id.  Message sent to hibernate-dev " +
-					"mailing list to get additional points of view."
-	)
     public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
-        cfg.addAnnotatedClass( Course3.class );
-        cfg.addAnnotatedClass( Student.class );
-        SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		MetadataSources sources = new MetadataSources( serviceRegistry );
+		sources.addAnnotatedClass( Course3.class )
+				.addAnnotatedClass( Student.class );
+
+		SessionFactoryImplementor factory = (SessionFactoryImplementor) sources.getMetadataBuilder()
+				.with( LenientPersistentAttributeMemberResolver.INSTANCE )
+				.build()
+				.buildSessionFactory();
+
         EntityTuplizer tuplizer = factory.getEntityPersister( Course3.class.getName() )
                 .getEntityMetamodel()
                 .getTuplizer();

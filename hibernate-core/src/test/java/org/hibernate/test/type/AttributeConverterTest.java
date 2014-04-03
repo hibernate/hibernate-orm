@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -32,10 +32,11 @@ import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
@@ -43,7 +44,36 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterTest extends BaseUnitTestCase {
+public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithBooleanField.class
+		};
+	}
+
+	protected void prepareTest() throws Exception {
+		super.prepareTest();
+		configuration().addAttributeConverter( YesNoBooleanConverter.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9074")
+	public void testHQLBooleanConversion() {
+		Session s = openSession();
+
+		s.beginTransaction();
+		EntityWithBooleanField entityWithBooleanField = new EntityWithBooleanField();
+		entityWithBooleanField.setBooleanValue( true );
+		s.persist( entityWithBooleanField );
+		s.getTransaction().commit();
+
+		s = openSession();
+		s.beginTransaction();
+		s.createQuery( "from EntityWithBooleanField ewbf where ewbf.booleanValue = true" );
+
+		s.getTransaction().commit();
+		s.close();
+	}
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testBasicOperation() {

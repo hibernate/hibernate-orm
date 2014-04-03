@@ -204,6 +204,8 @@ tokens
 
 	protected void processFunction(AST functionCall,boolean inSelect) throws SemanticException { }
 
+	protected void processCastFunction(AST functionCall,boolean inSelect) throws SemanticException { }
+
 	protected void processAggregation(AST node, boolean inSelect) throws SemanticException { }
 
 	protected void processConstructor(AST constructor) throws SemanticException { }
@@ -625,6 +627,10 @@ collectionFunction
 functionCall
 	: #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (exprOrSubquery)* ) )? ) {
         processFunction( #functionCall, inSelect );
+        inFunctionCall=false;
+    }
+    | #(CAST {inFunctionCall=true;} expr pathAsIdent) {
+    	processCastFunction( #functionCall, inSelect );
         inFunctionCall=false;
     }
 	| #(AGGREGATE aggregateExpr )

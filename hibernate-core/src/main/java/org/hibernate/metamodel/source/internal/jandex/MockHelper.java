@@ -29,16 +29,21 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import javax.persistence.CascadeType;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.CacheModeType;
+import org.hibernate.annotations.FlushModeType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheModeType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCascadeType;
 import org.hibernate.service.ServiceRegistry;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -457,4 +462,43 @@ public class MockHelper {
 		return kind;
 	}
 
+	public static FlushModeType convert(FlushMode flushMode) {
+		if (flushMode == null) {
+			return null;
+		}
+		
+		switch ( flushMode ) {
+			case ALWAYS:
+				return FlushModeType.ALWAYS;
+			case AUTO:
+				return FlushModeType.AUTO;
+			case COMMIT:
+				return FlushModeType.COMMIT;
+			case MANUAL:
+				return FlushModeType.MANUAL;
+			default:
+				throw new AssertionFailure( "Unknown flushMode: " + flushMode );
+		}
+	}
+
+	public static CacheModeType convert(JaxbCacheModeType jaxbCacheMode) {
+		if (jaxbCacheMode == null) {
+			return null;
+		}
+		
+		switch ( jaxbCacheMode ) {
+			case GET:
+				return CacheModeType.GET;
+			case IGNORE:
+				return CacheModeType.IGNORE;
+			case NORMAL:
+				return CacheModeType.NORMAL;
+			case PUT:
+				return CacheModeType.PUT;
+			case REFRESH:
+				return CacheModeType.REFRESH;
+			default:
+				throw new AssertionFailure( "Unknown jaxbCacheMode: " + jaxbCacheMode );
+		}
+	}
 }

@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
  * Transforms a JAXB binding of a hbm.xml file into a unified orm.xml representation
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class HbmXmlTransformer {
 	private static final Logger log = Logger.getLogger( HbmXmlTransformer.class );
@@ -226,33 +227,38 @@ public class HbmXmlTransformer {
 		}
 
 		for ( JaxbQueryElement hbmQuery : hbmXmlMapping.getQuery() ) {
-			final JaxbNamedQuery query = new JaxbNamedQuery();
-			ormRoot.getNamedQuery().add( query );
-			query.setName( hbmQuery.getName() );
-			query.setCacheable( hbmQuery.isCacheable() );
-			query.setCacheMode( convert( hbmQuery.getCacheMode() ) );
-			query.setCacheRegion( hbmQuery.getCacheRegion() );
-			query.setComment( hbmQuery.getComment() );
-			query.setFetchSize( hbmQuery.getFetchSize() );
-			query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
-			query.setFetchSize( hbmQuery.getFetchSize() );
-			query.setReadOnly( hbmQuery.isReadOnly() );
-			query.setTimeout( hbmQuery.getTimeout() );
+			ormRoot.getNamedQuery().add( convert( hbmQuery, hbmQuery.getName() ) );
+		}
+	}
+	
+	private JaxbNamedQuery convert(JaxbQueryElement hbmQuery, String name) {
+		final JaxbNamedQuery query = new JaxbNamedQuery();
+		query.setName( name );
+		query.setCacheable( hbmQuery.isCacheable() );
+		query.setCacheMode( convert( hbmQuery.getCacheMode() ) );
+		query.setCacheRegion( hbmQuery.getCacheRegion() );
+		query.setComment( hbmQuery.getComment() );
+		query.setFetchSize( hbmQuery.getFetchSize() );
+		query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
+		query.setFetchSize( hbmQuery.getFetchSize() );
+		query.setReadOnly( hbmQuery.isReadOnly() );
+		query.setTimeout( hbmQuery.getTimeout() );
 
-			// JaxbQueryElement#content elements can be either the query or parameters
-			for ( Object content : hbmQuery.getContent() ) {
-				if ( String.class.isInstance( content ) ) {
-					query.setQuery( (String) content );
-				}
-				else {
-					final JaxbQueryParamElement hbmQueryParam = (JaxbQueryParamElement) content;
-					final JaxbQueryParamType queryParam = new JaxbQueryParamType();
-					query.getQueryParam().add( queryParam );
-					queryParam.setName( hbmQueryParam.getName() );
-					queryParam.setType( hbmQueryParam.getType() );
-				}
+		// JaxbQueryElement#content elements can be either the query or parameters
+		for ( Object content : hbmQuery.getContent() ) {
+			if ( String.class.isInstance( content ) ) {
+				query.setQuery( (String) content );
+			}
+			else {
+				final JaxbQueryParamElement hbmQueryParam = (JaxbQueryParamElement) content;
+				final JaxbQueryParamType queryParam = new JaxbQueryParamType();
+				query.getQueryParam().add( queryParam );
+				queryParam.setName( hbmQueryParam.getName() );
+				queryParam.setType( hbmQueryParam.getType() );
 			}
 		}
+		
+		return query;
 	}
 
 	private JaxbCacheModeType convert(JaxbCacheModeAttribute cacheMode) {
@@ -279,33 +285,38 @@ public class HbmXmlTransformer {
 		}
 
 		for ( JaxbSqlQueryElement hbmQuery : hbmXmlMapping.getSqlQuery() ) {
-			final JaxbNamedNativeQuery query = new JaxbNamedNativeQuery();
-			ormRoot.getNamedNativeQuery().add( query );
-			query.setName( hbmQuery.getName() );
-			query.setCacheable( hbmQuery.isCacheable() );
-			query.setCacheMode( convert( hbmQuery.getCacheMode() ) );
-			query.setCacheRegion( hbmQuery.getCacheRegion() );
-			query.setComment( hbmQuery.getComment() );
-			query.setFetchSize( hbmQuery.getFetchSize() );
-			query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
-			query.setFetchSize( hbmQuery.getFetchSize() );
-			query.setReadOnly( hbmQuery.isReadOnly() );
-			query.setTimeout( hbmQuery.getTimeout() );
+			ormRoot.getNamedNativeQuery().add( convert( hbmQuery, hbmQuery.getName() ) );
+		}
+	}
+	
+	private JaxbNamedNativeQuery convert(JaxbSqlQueryElement hbmQuery, String name) {
+		final JaxbNamedNativeQuery query = new JaxbNamedNativeQuery();
+		query.setName( name );
+		query.setCacheable( hbmQuery.isCacheable() );
+		query.setCacheMode( convert( hbmQuery.getCacheMode() ) );
+		query.setCacheRegion( hbmQuery.getCacheRegion() );
+		query.setComment( hbmQuery.getComment() );
+		query.setFetchSize( hbmQuery.getFetchSize() );
+		query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
+		query.setFetchSize( hbmQuery.getFetchSize() );
+		query.setReadOnly( hbmQuery.isReadOnly() );
+		query.setTimeout( hbmQuery.getTimeout() );
 
-			// JaxbQueryElement#content elements can be either the query or parameters
-			for ( Object content : hbmQuery.getContent() ) {
-				if ( String.class.isInstance( content ) ) {
-					query.setQuery( (String) content );
-				}
-				else {
-					final JaxbQueryParamElement hbmQueryParam = (JaxbQueryParamElement) content;
-					final JaxbQueryParamType queryParam = new JaxbQueryParamType();
-					query.getQueryParam().add( queryParam );
-					queryParam.setName( hbmQueryParam.getName() );
-					queryParam.setType( hbmQueryParam.getType() );
-				}
+		// JaxbQueryElement#content elements can be either the query or parameters
+		for ( Object content : hbmQuery.getContent() ) {
+			if ( String.class.isInstance( content ) ) {
+				query.setQuery( (String) content );
+			}
+			else {
+				final JaxbQueryParamElement hbmQueryParam = (JaxbQueryParamElement) content;
+				final JaxbQueryParamType queryParam = new JaxbQueryParamType();
+				query.getQueryParam().add( queryParam );
+				queryParam.setName( hbmQueryParam.getName() );
+				queryParam.setType( hbmQueryParam.getType() );
 			}
 		}
+		
+		return query;
 	}
 
 	private void transferDatabaseObjects(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
@@ -460,8 +471,19 @@ public class HbmXmlTransformer {
 			entity.getCache().setUsage( hbmClass.getCache().getUsage().value() );
 			entity.getCache().setInclude( hbmClass.getCache().getInclude().value() );
 		}
+		
+		if (! hbmClass.getQuery().isEmpty() ) {
+			for ( JaxbQueryElement hbmQuery : hbmClass.getQuery() ) {
+				entity.getNamedQuery().add( convert( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
+			}
+		}
+		
+		if (! hbmClass.getSqlQuery().isEmpty() ) {
+			for ( JaxbSqlQueryElement hbmQuery : hbmClass.getSqlQuery() ) {
+				entity.getNamedNativeQuery().add( convert( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
+			}
+		}
 
-		// todo : transfer named queries
 		// todo : transfer filters
 		// todo : transfer fetch-profiles
 

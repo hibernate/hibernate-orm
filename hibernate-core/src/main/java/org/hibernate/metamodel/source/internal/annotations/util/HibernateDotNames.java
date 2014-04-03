@@ -29,6 +29,7 @@ import org.hibernate.annotations.AnyMetaDefs;
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
@@ -49,6 +50,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenericGenerator;
@@ -106,7 +108,6 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
-
 import org.jboss.jandex.DotName;
 
 /**
@@ -121,6 +122,7 @@ public interface HibernateDotNames {
 	DotName ATTRIBUTE_ACCESSOR = DotName.createSimple( AttributeAccessor.class.getName() );
 	DotName BATCH_SIZE = DotName.createSimple( BatchSize.class.getName() );
 	DotName CACHE = DotName.createSimple( Cache.class.getName() );
+	DotName CACHE_MODE_TYPE = DotName.createSimple( CacheModeType.class.getName() );
 	DotName CASCADE = DotName.createSimple( Cascade.class.getName() );
 	DotName CHECK = DotName.createSimple( Check.class.getName() );
 	DotName COLLECTION_ID = DotName.createSimple( CollectionId.class.getName() );
@@ -142,6 +144,7 @@ public interface HibernateDotNames {
 	DotName FILTER_DEFS = DotName.createSimple( FilterDefs.class.getName() );
 	DotName FILTER_JOIN_TABLE = DotName.createSimple( FilterJoinTable.class.getName() );
 	DotName FILTER_JOIN_TABLES = DotName.createSimple( FilterJoinTables.class.getName() );
+	DotName FLUSH_MODE_TYPE = DotName.createSimple( FlushModeType.class.getName() );
 	DotName FORMULA = DotName.createSimple( Formula.class.getName() );
 	DotName GENERATED = DotName.createSimple( Generated.class.getName() );
 	DotName GENERIC_GENERATOR = DotName.createSimple( GenericGenerator.class.getName() );

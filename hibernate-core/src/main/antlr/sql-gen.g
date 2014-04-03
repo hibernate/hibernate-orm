@@ -465,10 +465,15 @@ methodCall
 	: #(m:METHOD_CALL i:METHOD_NAME { beginFunctionTemplate(m,i); }
 	 ( #(EXPR_LIST (arguments)? ) )?
 	 { endFunctionTemplate(m); } )
+	| #( c:CAST { beginFunctionTemplate(c,c); } expr castTargetType { endFunctionTemplate(c); } )
 	;
 
 arguments
 	: expr ( { commaBetweenParameters(", "); } expr )*
+	;
+
+castTargetType
+	: i:IDENT { out(i); }
 	;
 
 parameter

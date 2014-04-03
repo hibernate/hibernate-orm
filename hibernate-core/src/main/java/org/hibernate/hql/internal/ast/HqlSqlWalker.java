@@ -47,6 +47,7 @@ import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.tree.AggregateNode;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
+import org.hibernate.hql.internal.ast.tree.CastFunctionNode;
 import org.hibernate.hql.internal.ast.tree.CollectionFunction;
 import org.hibernate.hql.internal.ast.tree.ConstructorNode;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
@@ -1074,6 +1075,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	protected void processFunction(AST functionCall, boolean inSelect) throws SemanticException {
 		MethodNode methodNode = (MethodNode) functionCall;
 		methodNode.resolve( inSelect );
+	}
+
+	@Override
+	protected void processCastFunction(AST castFunctionCall, boolean inSelect) throws SemanticException {
+		CastFunctionNode castFunctionNode = (CastFunctionNode) castFunctionCall;
+		castFunctionNode.resolve( inSelect );
 	}
 
 	@Override

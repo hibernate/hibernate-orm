@@ -36,6 +36,11 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class CastFunction implements SQLFunction {
+	/**
+	 * Singleton access
+	 */
+	public static final CastFunction INSTANCE = new CastFunction();
+
 	@Override
 	public boolean hasArguments() {
 		return true;

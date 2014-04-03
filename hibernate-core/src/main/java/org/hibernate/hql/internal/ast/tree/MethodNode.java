@@ -133,13 +133,9 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		if ( function != null ) {
 			AST firstChild = exprList != null ? exprList.getFirstChild() : null;
 			Type functionReturnType = getSessionFactoryHelper()
-					.findFunctionReturnType( methodName, firstChild );
+					.findFunctionReturnType( methodName, function, firstChild );
 			setDataType( functionReturnType );
 		}
-		//TODO:
-		/*else {
-			methodName = (String) getWalker().getTokenReplacements().get( methodName );
-		}*/
 	}
 
 	public boolean isCollectionPropertyMethod() {

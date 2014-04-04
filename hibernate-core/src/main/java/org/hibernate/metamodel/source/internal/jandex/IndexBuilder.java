@@ -232,13 +232,12 @@ public class IndexBuilder {
 
 		Class clazz = null;
 		try {
-			clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
+			clazz = classLoaderService.classForName( className );
 		}
 		catch ( ClassLoadingException e ) {
 			if ( StringHelper.isNotEmpty( optionalPerfix ) ) {
 				className = StringHelper.qualify( optionalPerfix, className );
-				clazz = serviceRegistry.getService( ClassLoaderService.class )
-						.classForName( className );
+				clazz = classLoaderService.classForName( className );
 			}
 		}
 		DotName classDotName = DotName.createSimple( className );

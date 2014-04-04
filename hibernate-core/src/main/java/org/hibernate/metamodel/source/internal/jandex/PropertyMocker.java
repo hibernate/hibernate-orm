@@ -64,11 +64,21 @@ public abstract class PropertyMocker extends AnnotationMocker {
 	}
 
 	protected void resolveTarget() {
-		//attribute in orm.xml has access sub-element
-		AccessType accessType = getPersistentAttribute().getAccess();
-		if ( accessType == null ) {
+		AccessType xmlDefinedAccessType = getPersistentAttribute().getAccess();
+		if ( xmlDefinedAccessType == null ) {
+			// could be PU default
+			xmlDefinedAccessType = getDefaults().getAccess();
+		}
+
+		if ( xmlDefinedAccessType == null ) {
+			// attribute in orm.xml did not define access
+
 			//attribute in the entity class has @Access
-			accessType = AccessHelper.getAccessFromAttributeAnnotation( getTargetName(), getPersistentAttribute().getName(), indexBuilder );
+			AccessType accessType = AccessHelper.getAccessFromAttributeAnnotation(
+					getTargetName(),
+					getPersistentAttribute().getName(),
+					indexBuilder
+			);
 			if ( accessType == null ) {
 				accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
 			}
@@ -85,7 +95,12 @@ public abstract class PropertyMocker extends AnnotationMocker {
 			}
 			getPersistentAttribute().setAccess( accessType );
 		}
-
+		else {
+			// attribute in orm.xml did define access
+			List<AnnotationValue> accessTypeValueList = new ArrayList<AnnotationValue>();
+			MockHelper.enumValue( "value", ACCESS_TYPE, xmlDefinedAccessType, accessTypeValueList );
+			create( ACCESS, accessTypeValueList );
+		}
 	}
 
 	@Override

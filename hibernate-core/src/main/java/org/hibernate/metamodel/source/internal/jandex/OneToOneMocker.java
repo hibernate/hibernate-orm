@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbOneToOne;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 
@@ -52,7 +53,10 @@ public class OneToOneMocker extends PropertyMocker {
 	protected void processExtra() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue(
-				"targetEntity", oneToOne.getTargetEntity(), annotationValueList, indexBuilder.getServiceRegistry()
+				"targetEntity",
+				StringHelper.qualifyIfNot( getDefaults().getPackageName(), oneToOne.getTargetEntity() ),
+				annotationValueList,
+				indexBuilder.getServiceRegistry()
 		);
 		MockHelper.enumValue( "fetch", FETCH_TYPE, oneToOne.getFetch(), annotationValueList );
 		MockHelper.booleanValue( "optional", oneToOne.isOptional(), annotationValueList );

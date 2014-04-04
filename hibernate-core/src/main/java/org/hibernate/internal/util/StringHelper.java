@@ -495,6 +495,14 @@ public final class StringHelper {
 		return qualified;
 	}
 
+	public static String qualifyIfNot(String qualifier, String name) {
+		if ( name.indexOf( '.' ) > 0 ) {
+			return name;
+		}
+
+		return qualify( qualifier, name );
+	}
+
 	public static int firstIndexOfChar(String sqlString, BitSet keys, int startindex) {
 		for ( int i = startindex, size = sqlString.length(); i < size; i++ ) {
 			if ( keys.get( sqlString.charAt( i ) ) ) {

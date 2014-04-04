@@ -47,7 +47,6 @@ import org.junit.Test;
  */
 public class XmlAccessTest extends BaseUnitTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAccessOnBasicXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -68,7 +67,12 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
+	@FailureExpectedWithNewMetamodel(
+			message = "The problem here is that XML is attempting to apply PU-wide default AccessType, " +
+					"but mocker only understands (and overrides) attributes that are explicitly listed in the " +
+					"XML.  Likely we need to link the XML defaults with the local-binding-context defaults as we" +
+					"start to process Jandex"
+	)
 	public void testAccessOnPersistenceUnitDefaultsXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -88,7 +92,6 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAccessOnEntityMappingsXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -108,7 +111,6 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAccessOnEntityXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -141,7 +143,6 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAccessOnAssociationXmlElement() throws Exception {
 		Class<?> classUnderTest = RentalCar.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -155,7 +156,6 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAccessOnEmbeddedXmlElement() throws Exception {
 		Class<?> classUnderTest = Cook.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -169,7 +169,6 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testAccessOnElementCollectionXmlElement() throws Exception {
 		Class<?> classUnderTest = Boy.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();

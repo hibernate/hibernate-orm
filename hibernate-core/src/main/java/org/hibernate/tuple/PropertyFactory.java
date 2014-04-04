@@ -568,6 +568,10 @@ public final class PropertyFactory {
 
 		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
+		if ( type == null ) {
+			throw new HibernateException( "Unable to determine attribute type : " + property.getAttributeRole().getFullPath() );
+		}
+
 		// we need to dirty check collections, since they can cause an owner
 		// version number increment
 

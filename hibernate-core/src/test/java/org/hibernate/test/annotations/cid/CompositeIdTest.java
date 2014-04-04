@@ -47,8 +47,10 @@ import static org.junit.Assert.assertNotNull;
  * @author Emmanuel Bernard
  */
 @FailureExpectedWithNewMetamodel(
-		message = "Problem processing one of the composite ids, but as there are sooooooooooo many its " +
-				"hard to tell which specifically causes the problem"
+		message = "Part of the problem is how some of the composite ids are defined.  For example, " +
+				"quite a few map a logical `@Id @ManyToOne` combo without the @ManyToOne.  Fixing those " +
+				"leads to an not being able to bind the org.hibernate.test.annotations.cid.A entity; it " +
+				"has composite id made up of 2 @OneToOnes (need to research that, why not @ManyToOne?)."
 )
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Test

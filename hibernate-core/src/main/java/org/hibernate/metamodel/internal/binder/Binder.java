@@ -1074,7 +1074,15 @@ public class Binder {
 		}
 		// If any entity hierarchies cannot be resolved, then throw exception.
 		if ( ! unresolvedEntityHierarchies.isEmpty() ) {
-			throw new IllegalStateException( "could not resolve all EntityHierarchies." );
+			StringBuilder buffer = new StringBuilder();
+			String sep = "";
+			for ( EntityHierarchySource unresolved : unresolvedEntityHierarchies ) {
+				buffer.append( sep ).append( unresolved.getRoot().getEntityName() );
+				sep = ", ";
+			}
+			throw new IllegalStateException(
+					"Could not resolve all EntityHierarchies; remaining = {" + buffer.toString() + "}"
+			);
 		}
 	}
 

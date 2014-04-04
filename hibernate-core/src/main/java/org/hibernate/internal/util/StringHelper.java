@@ -496,6 +496,10 @@ public final class StringHelper {
 	}
 
 	public static String qualifyIfNot(String qualifier, String name) {
+		if ( isEmpty( name ) ) {
+			return null;
+		}
+
 		if ( name.indexOf( '.' ) > 0 ) {
 			return name;
 		}

@@ -629,7 +629,7 @@ functionCall
         processFunction( #functionCall, inSelect );
         inFunctionCall=false;
     }
-    | #(CAST {inFunctionCall=true;} expr pathAsIdent) {
+    | #(CAST {inFunctionCall=true;} exprOrSubquery pathAsIdent) {
     	processCastFunction( #functionCall, inSelect );
         inFunctionCall=false;
     }

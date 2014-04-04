@@ -44,7 +44,7 @@ import org.hibernate.metamodel.source.internal.jaxb.ManagedType;
 public class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	private JaxbMappedSuperclass mappedSuperclass;
 
-	MappedSuperclassMocker(IndexBuilder indexBuilder, JaxbMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
+	MappedSuperclassMocker(IndexBuilder indexBuilder, JaxbMappedSuperclass mappedSuperclass, Default defaults) {
 		super( indexBuilder, defaults );
 		this.mappedSuperclass = mappedSuperclass;
 	}
@@ -55,7 +55,7 @@ public class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		create( MAPPED_SUPERCLASS );
 	}
 

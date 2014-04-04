@@ -158,7 +158,7 @@ public class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	void collectGlobalMappings(JaxbEntityMappings entityMappings, EntityMappingsMocker.Default defaults) {
+	void collectGlobalMappings(JaxbEntityMappings entityMappings, Default defaults) {
 		for ( JaxbSequenceGenerator generator : entityMappings.getSequenceGenerator() ) {
 			put( generator, defaults );
 			defaultNamedGenerators.add( generator.getName() );
@@ -181,7 +181,7 @@ public class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	void collectGlobalMappings(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
+	void collectGlobalMappings(JaxbEntity entity, Default defaults) {
 		for ( JaxbNamedQuery namedQuery : entity.getNamedQuery() ) {
 			if ( !defaultNamedQueryNames.contains( namedQuery.getName() ) ) {
 				put( namedQuery );
@@ -233,7 +233,7 @@ public class GlobalAnnotations implements JPADotNames {
 	/**
 	 * Override SequenceGenerator using info definded in EntityMappings/Persistence-Metadata-Unit
 	 */
-	private static void overrideGenerator(SchemaAware generator, EntityMappingsMocker.Default defaults) {
+	private static void overrideGenerator(SchemaAware generator, Default defaults) {
 		if ( StringHelper.isEmpty( generator.getSchema() ) && defaults != null ) {
 			generator.setSchema( defaults.getSchema() );
 		}
@@ -260,7 +260,7 @@ public class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	private void put(JaxbSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
+	private void put(JaxbSequenceGenerator generator, Default defaults) {
 		if ( generator != null ) {
 			overrideGenerator( generator, defaults );
 			Object old = sequenceGeneratorMap.put( generator.getName(), generator );
@@ -268,7 +268,7 @@ public class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	private void put(JaxbTableGenerator generator, EntityMappingsMocker.Default defaults) {
+	private void put(JaxbTableGenerator generator, Default defaults) {
 		if ( generator != null ) {
 			overrideGenerator( generator, defaults );
 			Object old = tableGeneratorMap.put( generator.getName(), generator );

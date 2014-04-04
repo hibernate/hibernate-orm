@@ -23,13 +23,14 @@
  */
 package org.hibernate.metamodel.source.internal.jandex;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.AccessType;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddable;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
@@ -40,7 +41,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 
@@ -132,7 +132,7 @@ public class EntityMappingsMocker {
 			globalDefaults.setCatalog( pud.getCatalog() );
 			//globalDefaults.setAccess( pud.getAccess() );
 			globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
-			new PersistenceMetadataMocker( indexBuilder, pud ).process();
+			new PersistenceMetadataMocker( indexBuilder, pud, globalDefaults ).process();
 		}
 	}
 
@@ -170,9 +170,7 @@ public class EntityMappingsMocker {
 	private void processGlobalAnnotations() {
 		if ( globalAnnotations.hasGlobalConfiguration() ) {
 			indexBuilder.collectGlobalConfigurationFromIndex( globalAnnotations );
-			new GlobalAnnotationMocker(
-					indexBuilder, globalAnnotations
-			).process();
+			new GlobalAnnotationMocker( indexBuilder, globalAnnotations, globalDefaults	).process();
 		}
 	}
 
@@ -181,92 +179,19 @@ public class EntityMappingsMocker {
 		entityMappingDefault.setPackageName( entityMappings.getPackage() );
 		entityMappingDefault.setSchema( entityMappings.getSchema() );
 		entityMappingDefault.setCatalog( entityMappings.getCatalog() );
-		entityMappingDefault.setAccess( entityMappings.getAccess() );
+		AccessType accessType = entityMappings.getAccess();
+		if (accessType == null) {
+			try {
+				accessType = AccessType.valueOf( StringHelper.toUpperCase( entityMappings.getAttributeAccessor() ) );
+			}
+			catch (Exception e) {
+				// ignore
+			}
+		}
+		entityMappingDefault.setAccess( accessType );
 		final Default defaults = new Default();
 		defaults.override( globalDefaults );
 		defaults.override( entityMappingDefault );
 		return defaults;
-	}
-
-
-	public static class Default implements Serializable {
-		private AccessType access;
-		private String packageName;
-		private String schema;
-		private String catalog;
-		private Boolean metadataComplete;
-		private Boolean cascadePersist;
-
-		public AccessType getAccess() {
-			return access;
-		}
-
-		public void setAccess(AccessType access) {
-			this.access = access;
-		}
-
-		public String getCatalog() {
-			return catalog;
-		}
-
-		public void setCatalog(String catalog) {
-			this.catalog = catalog;
-		}
-
-		public String getPackageName() {
-			return packageName;
-		}
-
-		public void setPackageName(String packageName) {
-			this.packageName = packageName;
-		}
-
-		public String getSchema() {
-			return schema;
-		}
-
-		public void setSchema(String schema) {
-			this.schema = schema;
-		}
-
-		public Boolean isMetadataComplete() {
-			return metadataComplete;
-		}
-
-		public void setMetadataComplete(Boolean metadataComplete) {
-			this.metadataComplete = metadataComplete;
-		}
-
-		public Boolean isCascadePersist() {
-			return cascadePersist;
-		}
-
-		public void setCascadePersist(Boolean cascadePersist) {
-			this.cascadePersist = cascadePersist;
-		}
-
-		void override(Default globalDefault) {
-			if ( globalDefault != null ) {
-				if ( globalDefault.getAccess() != null ) {
-					access = globalDefault.getAccess();
-				}
-				if ( globalDefault.getPackageName() != null ) {
-					packageName = globalDefault.getPackageName();
-				}
-				if ( globalDefault.getSchema() != null ) {
-					schema = globalDefault.getSchema();
-				}
-				if ( globalDefault.getCatalog() != null ) {
-					catalog = globalDefault.getCatalog();
-				}
-				if ( globalDefault.isCascadePersist() != null ) {
-					cascadePersist = globalDefault.isCascadePersist();
-				}
-				if ( globalDefault.isMetadataComplete() != null ) {
-					metadataComplete = globalDefault.isMetadataComplete();
-				}
-
-			}
-		}
 	}
 }

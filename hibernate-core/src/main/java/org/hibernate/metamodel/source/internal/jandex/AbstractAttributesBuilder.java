@@ -50,17 +50,17 @@ import org.jboss.jandex.ClassInfo;
  */
 public abstract class AbstractAttributesBuilder {
 
-	private ClassInfo classInfo;
-	private EntityMappingsMocker.Default defaults;
-	private IndexBuilder indexBuilder;
+	protected ClassInfo classInfo;
+	protected Default defaults;
+	protected IndexBuilder indexBuilder;
 
-	AbstractAttributesBuilder(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults) {
+	AbstractAttributesBuilder(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults) {
 		this.indexBuilder = indexBuilder;
 		this.classInfo = classInfo;
 		this.defaults = defaults;
 	}
 
-	final void parse() {
+	protected void parse() {
 		for ( JaxbId id : getId() ) {
 			new IdMocker( indexBuilder, classInfo, defaults, id ).process();
 		}

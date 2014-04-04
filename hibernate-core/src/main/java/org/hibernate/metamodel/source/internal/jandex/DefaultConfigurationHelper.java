@@ -77,7 +77,7 @@ public class DefaultConfigurationHelper {
 	private DefaultConfigurationHelper() {
 	}
 
-	public void applyDefaults(SchemaAware schemaAware, EntityMappingsMocker.Default defaults) {
+	public void applyDefaults(SchemaAware schemaAware, Default defaults) {
 		if ( hasSchemaOrCatalogDefined( defaults ) ) {
 			if ( StringHelper.isEmpty( schemaAware.getSchema() ) ) {
 				schemaAware.setSchema( defaults.getSchema() );
@@ -88,7 +88,7 @@ public class DefaultConfigurationHelper {
 		}
 	}
 
-	public void applyDefaults(Map<DotName, List<AnnotationInstance>> annotationsMap, EntityMappingsMocker.Default defaults) {
+	public void applyDefaults(Map<DotName, List<AnnotationInstance>> annotationsMap, Default defaults) {
 		if ( annotationsMap.isEmpty() || defaults == null ) {
 			return;
 		}
@@ -100,13 +100,13 @@ public class DefaultConfigurationHelper {
 		}
 	}
 
-	public void applyDefaults(ManagedType entityElement, EntityMappingsMocker.Default defaults) {
+	public void applyDefaults(ManagedType entityElement, Default defaults) {
 		if(JaxbEntity.class.isInstance( entityElement ))
 		mockTableIfNonExist( JaxbEntity.class.cast( entityElement ), defaults );
 		applyDefaultsToEntityObject(  entityElement , defaults );
 	}
 
-	private void mockTableIfNonExist(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
+	private void mockTableIfNonExist(JaxbEntity entity, Default defaults) {
 		if ( hasSchemaOrCatalogDefined( defaults ) ) {
 			JaxbTable table = entity.getTable();
 			if ( table == null ) {
@@ -116,7 +116,7 @@ public class DefaultConfigurationHelper {
 		}
 	}
 
-	private void applyDefaultsToEntityObject(ManagedType entityObject, EntityMappingsMocker.Default defaults) {
+	private void applyDefaultsToEntityObject(ManagedType entityObject, Default defaults) {
 		if ( defaults == null ) {
 			return;
 		}
@@ -128,7 +128,7 @@ public class DefaultConfigurationHelper {
 		LOG.debugf( "Adding XML overriding information for %s", className );
 	}
 
-	private boolean hasSchemaOrCatalogDefined(EntityMappingsMocker.Default defaults) {
+	private boolean hasSchemaOrCatalogDefined(Default defaults) {
 		return ( defaults != null ) && ( StringHelper.isNotEmpty( defaults.getSchema() ) || StringHelper.isNotEmpty(
 				defaults.getCatalog()
 		) );
@@ -142,7 +142,7 @@ public class DefaultConfigurationHelper {
 		}
 	}
 
-	private void applyDefaultSchemaAndCatalog(Map<DotName, List<AnnotationInstance>> annotationsMap, EntityMappingsMocker.Default defaults) {
+	private void applyDefaultSchemaAndCatalog(Map<DotName, List<AnnotationInstance>> annotationsMap, Default defaults) {
 		for ( DotName annName : SCHEMA_AWARE_ANNOTATIONS ) {
 			mockTableIfNonExist( annotationsMap, annName );
 			if ( annotationsMap.containsKey( annName ) ) {
@@ -216,7 +216,7 @@ public class DefaultConfigurationHelper {
 	}
 
 	//@Table, @CollectionTable, @JoinTable, @SecondaryTable
-	private void overrideSchemaCatalogByDefault(DotName annName, Map<DotName, List<AnnotationInstance>> indexedAnnotationMap, EntityMappingsMocker.Default defaults) {
+	private void overrideSchemaCatalogByDefault(DotName annName, Map<DotName, List<AnnotationInstance>> indexedAnnotationMap, Default defaults) {
 		List<AnnotationInstance> annotationInstanceList = indexedAnnotationMap.get( annName );
 		if ( annotationInstanceList == null || annotationInstanceList.isEmpty() ) {
 			return;
@@ -250,7 +250,7 @@ public class DefaultConfigurationHelper {
 		indexedAnnotationMap.put( annName, newAnnotationInstanceList );
 	}
 
-	private AnnotationInstance overrideSchemaCatalogByDefault(AnnotationInstance annotationInstance, EntityMappingsMocker.Default defaults) {
+	private AnnotationInstance overrideSchemaCatalogByDefault(AnnotationInstance annotationInstance, Default defaults) {
 		List<AnnotationValue> newAnnotationValueList = new ArrayList<AnnotationValue>();
 		newAnnotationValueList.addAll( annotationInstance.values() );
 		boolean schemaDefined = false;

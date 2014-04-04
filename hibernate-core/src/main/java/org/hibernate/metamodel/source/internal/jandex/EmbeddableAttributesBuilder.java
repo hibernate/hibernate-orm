@@ -45,7 +45,7 @@ public class EmbeddableAttributesBuilder extends AbstractAttributesBuilder {
 			IndexBuilder indexBuilder,
 			ClassInfo classInfo,
 			AccessType accessType,
-			EntityMappingsMocker.Default defaults,
+			Default defaults,
 			JaxbEmbeddableAttributes embeddableAttributes) {
 		super( indexBuilder, classInfo, defaults );
 		this.attributes = embeddableAttributes;

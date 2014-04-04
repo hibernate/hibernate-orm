@@ -126,20 +126,25 @@ public class MockHelper {
 		return AnnotationValue.createBooleanValue( name, value );
 	}
 
-	private static AnnotationValue classValue(String name, String className, ServiceRegistry serviceRegistry) {
+	private static AnnotationValue classValue(String name, String className, Default defaults,
+			ServiceRegistry serviceRegistry) {
 		if ( StringHelper.isNotEmpty( className ) ) {
+			className = buildSafeClassName( className, defaults.getPackageName() );
+			
 			return AnnotationValue.createClassValue( name, getType( className, serviceRegistry ) );
 		}
 		return null;
 	}
 
 
-	static void classValue(String name, String className, List<AnnotationValue> list, ServiceRegistry serviceRegistry) {
-		addToCollectionIfNotNull( list, classValue( name, className, serviceRegistry ) );
+	static void classValue(String name, String className, List<AnnotationValue> list, Default defaults,
+			ServiceRegistry serviceRegistry) {
+		addToCollectionIfNotNull( list, classValue( name, className, defaults, serviceRegistry ) );
 	}
 
-	static AnnotationValue[] classValueArray(String name, String className, ServiceRegistry serviceRegistry) {
-		return nullSafe( classValue( name, className, serviceRegistry ) );
+	static AnnotationValue[] classValueArray(String name, String className, Default defaults,
+			ServiceRegistry serviceRegistry) {
+		return nullSafe( classValue( name, className, defaults, serviceRegistry ) );
 	}
 
 	static AnnotationValue nestedAnnotationValue(String name, AnnotationInstance value) {
@@ -159,12 +164,13 @@ public class MockHelper {
 		return value == null ? EMPTY_ANNOTATION_VALUE_ARRAY : new AnnotationValue[] {value};
 	}
 
-	static void classArrayValue(String name, List<String> classNameList, List<AnnotationValue> list, ServiceRegistry serviceRegistry) {
+	static void classArrayValue(String name, List<String> classNameList, List<AnnotationValue> list, Default defaults,
+			ServiceRegistry serviceRegistry) {
 		if ( CollectionHelper.isNotEmpty( classNameList ) ) {
 
 			List<AnnotationValue> clazzValueList = new ArrayList<AnnotationValue>( classNameList.size() );
 			for ( String clazz : classNameList ) {
-				addToCollectionIfNotNull( clazzValueList, classValue( "", clazz, serviceRegistry ) );
+				addToCollectionIfNotNull( clazzValueList, classValue( "", clazz, defaults, serviceRegistry ) );
 			}
 
 			list.add(
@@ -277,7 +283,7 @@ public class MockHelper {
 	}
 
 	static String buildSafeClassName(String className, String defaultPackageName) {
-		if ( className!= null && className.indexOf( '.' ) < 0 && StringHelper.isNotEmpty( defaultPackageName ) ) {
+		if ( StringHelper.isNotEmpty( className ) && className.indexOf( '.' ) < 0 && StringHelper.isNotEmpty( defaultPackageName ) ) {
 			className = StringHelper.qualify( defaultPackageName, className );
 		}
 		return className;

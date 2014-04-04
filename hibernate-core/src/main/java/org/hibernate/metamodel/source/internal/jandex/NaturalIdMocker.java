@@ -23,29 +23,37 @@
  */
 package org.hibernate.metamodel.source.internal.jandex;
 
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddedId;
-import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
 /**
- * @author Strong Liu
+ * @author Brett Meyer
  */
-public class EmbeddedIdMocker extends PropertyMocker {
-	private final JaxbEmbeddedId embeddedId;
+public class NaturalIdMocker extends PropertyMocker {
+	private final PersistentAttribute attribute;
+	private final boolean mutable;
 
-	EmbeddedIdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, JaxbEmbeddedId embeddedId) {
+	NaturalIdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults,
+			PersistentAttribute attribute, boolean mutable) {
 		super( indexBuilder, classInfo, defaults );
-		this.embeddedId = embeddedId;
-	}
-
-	@Override
-	protected PersistentAttribute getPersistentAttribute() {
-		return embeddedId;
+		this.attribute = attribute;
+		this.mutable = mutable;
 	}
 
 	@Override
 	protected void doProcess() {
-		create( EMBEDDED_ID );
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.booleanValue( "mutable", mutable, annotationValueList );
+		create( HibernateDotNames.NATURAL_ID, annotationValueList );
+	}
+
+	@Override
+	protected PersistentAttribute getPersistentAttribute() {
+		return attribute;
 	}
 }

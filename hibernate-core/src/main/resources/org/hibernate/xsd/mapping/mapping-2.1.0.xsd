@@ -82,7 +82,7 @@
                     <!-- The JPA declaration is the discrete set (property|field) -->
                     <xsd:element name="access" type="orm:access-type" />
                     <!-- Hibernate allows pluggable contracts, so its declaration is open-ended -->
-                    <xsd:element name="custom-access" type="xsd:string" />
+                    <xsd:element name="attribute-accessor" type="xsd:string" />
                 </xsd:choice>
 
                 <xsd:element name="auto-import" type="xsd:boolean" minOccurs="0" />
@@ -272,7 +272,7 @@
         </xsd:sequence>
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
 
     <xsd:complexType name="any-discriminator-value-mapping">
@@ -402,7 +402,7 @@
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="natural-id" type="xsd:boolean" />
     </xsd:complexType>
 
@@ -680,7 +680,7 @@
         <xsd:attribute name="target-class" type="xsd:string"/>
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
 
 
@@ -741,7 +741,7 @@
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="natural-id" type="xsd:boolean" />
     </xsd:complexType>
 
@@ -758,7 +758,7 @@
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
 
 
@@ -914,7 +914,7 @@
         -->
         <xsd:attribute name="class" type="xsd:string" />
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="cacheable" type="xsd:boolean"/>
         <xsd:attribute name="metadata-complete" type="xsd:boolean"/>
     </xsd:complexType>
@@ -1103,7 +1103,7 @@
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
 
 
@@ -1284,7 +1284,7 @@
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
 
 
@@ -1333,7 +1333,7 @@
         <xsd:attribute name="target-entity" type="xsd:string"/>
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
     </xsd:complexType>
 
@@ -1365,7 +1365,7 @@
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="maps-id" type="xsd:string"/>
         <xsd:attribute name="id" type="xsd:boolean"/>
         <xsd:attribute name="natural-id" type="xsd:boolean" />
@@ -1475,7 +1475,7 @@
 
         <xsd:attribute name="class" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="metadata-complete" type="xsd:boolean"/>
     </xsd:complexType>
 
@@ -1713,7 +1713,7 @@
         <xsd:attribute name="target-entity" type="xsd:string"/>
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
     </xsd:complexType>
@@ -1748,7 +1748,7 @@
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="maps-id" type="xsd:string"/>
@@ -2211,7 +2211,7 @@
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
-        <xsd:attribute name="custom-access" type="xsd:string" />
+        <xsd:attribute name="attribute-accessor" type="xsd:string" />
     </xsd:complexType>
 
 

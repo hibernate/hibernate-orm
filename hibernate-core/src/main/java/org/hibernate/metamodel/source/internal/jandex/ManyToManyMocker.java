@@ -38,7 +38,7 @@ import org.jboss.jandex.ClassInfo;
 public class ManyToManyMocker extends PropertyMocker {
 	private final JaxbManyToMany manyToMany;
 
-	ManyToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbManyToMany manyToMany) {
+	ManyToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, JaxbManyToMany manyToMany) {
 		super( indexBuilder, classInfo, defaults );
 		this.manyToMany = manyToMany;
 	}
@@ -49,11 +49,10 @@ public class ManyToManyMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.classValue(
-				"targetEntity", manyToMany.getTargetEntity(), annotationValueList, indexBuilder.getServiceRegistry()
-		);
+		MockHelper.classValue( "targetEntity", manyToMany.getTargetEntity(), annotationValueList, getDefaults(),
+				indexBuilder.getServiceRegistry() );
 		MockHelper.enumValue( "fetch", FETCH_TYPE, manyToMany.getFetch(), annotationValueList );
 		MockHelper.stringValue( "mappedBy", manyToMany.getMappedBy(), annotationValueList );
 		MockHelper.cascadeValue( "cascade", manyToMany.getCascade(), isDefaultCascadePersist(), annotationValueList );

@@ -610,7 +610,7 @@ public final class StringHelper {
 	}
 	
 	public static String toUpperCase(String str) {
-		return str==null ? null : str.toUpperCase();
+		return str == null ? null : str.toUpperCase(Locale.ENGLISH);
 	}
 	
 	public static String toLowerCase(String str) {

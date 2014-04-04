@@ -37,6 +37,6 @@ public interface PersistentAttribute {
 	AccessType getAccess();
 	void setAccess(AccessType accessType);
 
-	String getCustomAccess();
-	void setCustomAccess(String customAccess);
+	String getAttributeAccessor();
+	void setAttributeAccessor(String customAccess);
 }

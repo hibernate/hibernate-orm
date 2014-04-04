@@ -23,27 +23,25 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
-import java.util.List;
-
-import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
-import org.hibernate.metamodel.source.internal.jandex.EntityMocker;
-import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
-
-import org.junit.Test;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+
+import java.util.List;
+
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.jandex.Default;
+import org.hibernate.metamodel.source.internal.jandex.EntityMocker;
+import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.junit.Test;
 
 /**
  * @author Strong Liu
@@ -63,12 +61,12 @@ public class OverrideTest extends AbstractMockerTest {
 		JaxbEntity author = new JaxbEntity();
 		author.setClazz( Author.class.getName() );
 		IndexBuilder indexBuilder = getIndexBuilder();
-		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
+		Default defaults = new Default();
 		defaults.setMetadataComplete( true );
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, author, defaults );
 		entityMocker.preProcess();
 		entityMocker.process();
-		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
+		Index index = indexBuilder.build( new Default() );
 		DotName className = DotName.createSimple( Author.class.getName() );
 		ClassInfo classInfo = index.getClassByName( className );
 		assertEquals( 1, classInfo.annotations().size() );
@@ -105,12 +103,12 @@ public class OverrideTest extends AbstractMockerTest {
 		JaxbEntity author = new JaxbEntity();
 		author.setClazz( Author.class.getName() );
 		IndexBuilder indexBuilder = getIndexBuilder();
-		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
+		Default defaults = new Default();
 		defaults.setCascadePersist( true );
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, author, defaults );
 		entityMocker.preProcess();
 		entityMocker.process();
-		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
+		Index index = indexBuilder.build( new Default() );
 		DotName className = DotName.createSimple( Author.class.getName() );
 		assertAnnotationValue(
 				index, className, JPADotNames.ONE_TO_MANY, new CascadeAnnotationValueChecker( "PERSIST", "MERGE" )

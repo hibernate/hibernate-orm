@@ -38,8 +38,9 @@ public class PersistenceMetadataMocker extends AbstractMocker {
 		);
 	}
 
-	PersistenceMetadataMocker(IndexBuilder indexBuilder, JaxbPersistenceUnitDefaults persistenceUnitDefaults) {
-		super( indexBuilder );
+	PersistenceMetadataMocker(IndexBuilder indexBuilder, JaxbPersistenceUnitDefaults persistenceUnitDefaults,
+			Default defaults) {
+		super( indexBuilder, defaults );
 		this.persistenceUnitDefaults = persistenceUnitDefaults;
 	}
 
@@ -54,7 +55,7 @@ public class PersistenceMetadataMocker extends AbstractMocker {
 		}
 		if ( persistenceUnitDefaults.getEntityListeners() != null ) {
 
-			new DefaultListenerMocker( indexBuilder, null ).parse( persistenceUnitDefaults.getEntityListeners() );
+			new DefaultListenerMocker( indexBuilder, null, getDefaults() ).parse( persistenceUnitDefaults.getEntityListeners() );
 		}
 		indexBuilder.finishGlobalConfigurationMocking( globalAnnotations );
 	}
@@ -78,8 +79,8 @@ public class PersistenceMetadataMocker extends AbstractMocker {
 	}
 
 	private class DefaultListenerMocker extends ListenerMocker {
-		DefaultListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
-			super( indexBuilder, classInfo );
+		DefaultListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults) {
+			super( indexBuilder, classInfo, defaults );
 		}
 
 		@Override
@@ -94,7 +95,7 @@ public class PersistenceMetadataMocker extends AbstractMocker {
 
 		@Override
 		protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
-			return new DefaultListenerMocker( indexBuilder, classInfo );
+			return new DefaultListenerMocker( indexBuilder, classInfo, getDefaults() );
 		}
 	}
 }

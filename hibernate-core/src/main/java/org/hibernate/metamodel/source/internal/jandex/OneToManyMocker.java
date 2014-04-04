@@ -38,7 +38,7 @@ import org.jboss.jandex.ClassInfo;
 public class OneToManyMocker extends PropertyMocker {
 	private final JaxbOneToMany oneToMany;
 
-	OneToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbOneToMany oneToMany) {
+	OneToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, JaxbOneToMany oneToMany) {
 		super( indexBuilder, classInfo, defaults );
 		this.oneToMany = oneToMany;
 	}
@@ -49,11 +49,10 @@ public class OneToManyMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.classValue(
-				"targetEntity", MockHelper.buildSafeClassName( oneToMany.getTargetEntity(), getDefaults().getPackageName() ), annotationValueList, indexBuilder.getServiceRegistry()
-		);
+		MockHelper.classValue( "targetEntity", oneToMany.getTargetEntity(), annotationValueList, getDefaults(),
+				indexBuilder.getServiceRegistry() );
 		MockHelper.enumValue( "fetch", FETCH_TYPE, oneToMany.getFetch(), annotationValueList );
 		MockHelper.stringValue( "mappedBy", oneToMany.getMappedBy(), annotationValueList );
 		MockHelper.booleanValue( "orphanRemoval", oneToMany.isOrphanRemoval(), annotationValueList );

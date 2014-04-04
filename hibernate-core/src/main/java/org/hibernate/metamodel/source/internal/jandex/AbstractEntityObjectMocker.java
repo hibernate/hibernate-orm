@@ -51,7 +51,7 @@ public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	protected AbstractAttributesBuilder attributesBuilder;
 	protected ClassInfo classInfo;
 
-	AbstractEntityObjectMocker(IndexBuilder indexBuilder, EntityMappingsMocker.Default defaults) {
+	AbstractEntityObjectMocker(IndexBuilder indexBuilder, Default defaults) {
 		super( indexBuilder, defaults );
 	}
 
@@ -82,7 +82,7 @@ public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 			}
 			parseAccessType( accessType, getTarget() );
 		}
-		processExtra();
+		doProcess();
 		if ( isExcludeDefaultListeners() ) {
 			create( EXCLUDE_DEFAULT_LISTENERS );
 		}
@@ -91,10 +91,8 @@ public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		}
 		parseIdClass( getIdClass() );
 
-		if ( getAttributes() != null ) {
-			getAttributesBuilder().parse();
-
-		}
+		getAttributesBuilder().parse();
+		
 		if ( getEntityListeners() != null ) {
 			getListenerparse().parse( getEntityListeners() );
 		}
@@ -110,7 +108,7 @@ public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	}
 
 	abstract protected ManagedType getEntityElement();
-	abstract protected void processExtra();
+	abstract protected void doProcess();
 	abstract protected boolean isExcludeDefaultListeners();
 
 	abstract protected boolean isExcludeSuperclassListeners();
@@ -132,11 +130,13 @@ public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 
 	abstract protected JaxbPostLoad getPostLoad();
 
+	// TODO: Re-think this.  EmbeddableAttributesBuilder#attributes is a JaxbEmbeddableAttributes, so it instead
+	// has to override #getAttributesBuilder().
 	abstract protected JaxbAttributes getAttributes();
 
 	protected ListenerMocker getListenerparse() {
 		if ( listenerparse == null ) {
-			listenerparse = new ListenerMocker( indexBuilder, classInfo );
+			listenerparse = new ListenerMocker( indexBuilder, classInfo, getDefaults() );
 		}
 		return listenerparse;
 	}
@@ -155,11 +155,8 @@ public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 			return null;
 		}
 		String className = MockHelper.buildSafeClassName( idClass.getClazz(), getDefaults().getPackageName() );
-		return create(
-				ID_CLASS, MockHelper.classValueArray(
-				"value", className, indexBuilder.getServiceRegistry()
-		)
-		);
+		return create( ID_CLASS, MockHelper.classValueArray( "value", className, getDefaults(),
+				indexBuilder.getServiceRegistry() ) );
 	}
 
 

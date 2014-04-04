@@ -55,21 +55,15 @@ import org.jboss.jandex.DotName;
  * @author Strong Liu
  */
 public abstract class AnnotationMocker extends AbstractMocker {
-	private EntityMappingsMocker.Default defaults;
 
-	AnnotationMocker(IndexBuilder indexBuilder, EntityMappingsMocker.Default defaults) {
-		super( indexBuilder );
-		this.defaults = defaults;
+	AnnotationMocker(IndexBuilder indexBuilder, Default defaults) {
+		super( indexBuilder, defaults );
 	}
 
 	abstract void process();
 
-	protected EntityMappingsMocker.Default getDefaults() {
-		return defaults;
-	}
-
 	protected boolean isDefaultCascadePersist() {
-		return defaults.isCascadePersist()!=null && defaults.isCascadePersist();
+		return getDefaults().isCascadePersist() != null && getDefaults().isCascadePersist();
 	}
 
 	//@JoinTable

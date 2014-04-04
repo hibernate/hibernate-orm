@@ -38,7 +38,7 @@ import org.jboss.jandex.ClassInfo;
 public class BasicMocker extends PropertyMocker {
 	private final JaxbBasic basic;
 
-	BasicMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbBasic basic) {
+	BasicMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, JaxbBasic basic) {
 		super( indexBuilder, classInfo, defaults );
 		this.basic = basic;
 	}
@@ -49,7 +49,7 @@ public class BasicMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.booleanValue( "optional", basic.isOptional(), annotationValueList );
 		MockHelper.enumValue( "fetch", FETCH_TYPE, basic.getFetch(), annotationValueList );

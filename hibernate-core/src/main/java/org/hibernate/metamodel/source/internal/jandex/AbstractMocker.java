@@ -44,11 +44,16 @@ import org.jboss.jandex.DotName;
  */
 public abstract class AbstractMocker implements JPADotNames {
 	final protected IndexBuilder indexBuilder;
+	final private Default defaults;
 
-	AbstractMocker(IndexBuilder indexBuilder) {
+	AbstractMocker(IndexBuilder indexBuilder, Default defaults) {
 		this.indexBuilder = indexBuilder;
+		this.defaults = defaults;
 	}
 
+	protected Default getDefaults() {
+		return defaults;
+	}
 
 	abstract protected AnnotationInstance push(AnnotationInstance annotationInstance);
 

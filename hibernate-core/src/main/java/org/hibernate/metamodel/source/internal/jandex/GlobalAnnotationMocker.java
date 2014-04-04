@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedNativeQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbQueryHint;
@@ -37,7 +38,6 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingColum
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingEntityResult;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingFieldResult;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbTableGenerator;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
@@ -47,8 +47,8 @@ import org.jboss.jandex.AnnotationValue;
 public class GlobalAnnotationMocker extends AbstractMocker {
 	private GlobalAnnotations globalAnnotations;
 
-	GlobalAnnotationMocker(IndexBuilder indexBuilder, GlobalAnnotations globalAnnotations) {
-		super( indexBuilder );
+	GlobalAnnotationMocker(IndexBuilder indexBuilder, GlobalAnnotations globalAnnotations, Default defaults) {
+		super( indexBuilder, defaults );
 		this.globalAnnotations = globalAnnotations;
 	}
 
@@ -65,22 +65,10 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 			}
 		}
 		if ( !globalAnnotations.getNamedQueryMap().isEmpty() ) {
-			Collection<JaxbNamedQuery> namedQueries = globalAnnotations.getNamedQueryMap().values();
-			if ( namedQueries.size() > 1 ) {
-				parseNamedQueries( namedQueries );
-			}
-			else {
-				parseNamedQuery( namedQueries.iterator().next() );
-			}
+			parseNamedQueries( globalAnnotations.getNamedQueryMap().values() );
 		}
 		if ( !globalAnnotations.getNamedNativeQueryMap().isEmpty() ) {
-			Collection<JaxbNamedNativeQuery> namedQueries = globalAnnotations.getNamedNativeQueryMap().values();
-			if ( namedQueries.size() > 1 ) {
-				parseNamedNativeQueries( namedQueries );
-			}
-			else {
-				parseNamedNativeQuery( namedQueries.iterator().next() );
-			}
+			parseNamedNativeQueries( globalAnnotations.getNamedNativeQueryMap().values() );
 		}
 		if ( !globalAnnotations.getSqlResultSetMappingMap().isEmpty() ) {
 			parseSqlResultSetMappings( globalAnnotations.getSqlResultSetMappingMap().values() );
@@ -123,9 +111,8 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 				"discriminatorColumn", result.getDiscriminatorColumn(), annotationValueList
 		);
 		nestedFieldResultList( "fields", result.getFieldResult(), annotationValueList );
-		MockHelper.classValue(
-				"entityClass", result.getEntityClass(), annotationValueList, indexBuilder.getServiceRegistry()
-		);
+		MockHelper.classValue( "entityClass", result.getEntityClass(), annotationValueList, getDefaults(),
+				indexBuilder.getServiceRegistry() );
 		return
 				create(
 						ENTITY_RESULT, null, annotationValueList
@@ -192,67 +179,73 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 		}
 	}
 
-	private AnnotationInstance parseNamedNativeQueries(Collection<JaxbNamedNativeQuery> namedQueries) {
-		AnnotationValue[] values = new AnnotationValue[namedQueries.size()];
-		int i = 0;
-		for ( JaxbNamedNativeQuery namedQuery : namedQueries ) {
-			AnnotationInstance annotationInstance = parseNamedNativeQuery( namedQuery );
-			values[i++] = MockHelper.nestedAnnotationValue(
-					"", annotationInstance
-			);
+	private void parseNamedQueries( Collection<JaxbNamedQuery> namedQueries ) {
+		if (! namedQueries.isEmpty() ) {
+			AnnotationValue[] namedQueryAnnotations = new AnnotationValue[namedQueries.size()];
+			int i = 0;
+			for ( JaxbNamedQuery namedQuery : namedQueries ) {
+				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+				MockHelper.stringValue( "name", namedQuery.getName(), annotationValueList );
+				MockHelper.stringValue( "query", namedQuery.getQuery(), annotationValueList );
+				MockHelper.stringValue( "cacheRegion", namedQuery.getCacheRegion(), annotationValueList );
+				MockHelper.stringValue( "comment", namedQuery.getComment(), annotationValueList );
+				MockHelper.booleanValue( "cacheable", namedQuery.isCacheable(), annotationValueList );
+				MockHelper.booleanValue( "readOnly", namedQuery.isReadOnly(), annotationValueList );
+				MockHelper.integerValue( "fetchSize", namedQuery.getFetchSize(), annotationValueList );
+				MockHelper.integerValue( "timeout", namedQuery.getTimeout(), annotationValueList );
+				MockHelper.enumValue( "cacheMode", HibernateDotNames.CACHE_MODE_TYPE,
+						MockHelper.convert( namedQuery.getCacheMode() ), annotationValueList );
+				MockHelper.enumValue( "flushMode", HibernateDotNames.FLUSH_MODE_TYPE,
+						MockHelper.convert( namedQuery.getFlushMode() ), annotationValueList );
+				
+				AnnotationInstance annotationInstance = create(
+						HibernateDotNames.NAMED_QUERY, null, annotationValueList );
+				namedQueryAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.addToCollectionIfNotNull( annotationValueList,
+					AnnotationValue.createArrayValue( "value", namedQueryAnnotations ) );
+			
+			create( HibernateDotNames.NAMED_QUERIES, null, annotationValueList );
 		}
-		return create(
-				NAMED_NATIVE_QUERIES, null,
-				new AnnotationValue[] { AnnotationValue.createArrayValue( "value", values ) }
-
-		);
 	}
-
-	//@NamedNativeQuery
-	private AnnotationInstance parseNamedNativeQuery(JaxbNamedNativeQuery namedNativeQuery) {
-		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.stringValue( "name", namedNativeQuery.getName(), annotationValueList );
-		MockHelper.stringValue( "query", namedNativeQuery.getQuery(), annotationValueList );
-		MockHelper.stringValue(
-				"resultSetMapping", namedNativeQuery.getResultSetMapping(), annotationValueList
-		);
-		MockHelper.classValue(
-				"resultClass", namedNativeQuery.getResultClass(), annotationValueList, indexBuilder.getServiceRegistry()
-		);
-		nestedQueryHintList( "hints", namedNativeQuery.getHint(), annotationValueList );
-		return
-				create(
-						NAMED_NATIVE_QUERY, null, annotationValueList
-
-				);
-	}
-
-
-	private AnnotationInstance parseNamedQueries(Collection<JaxbNamedQuery> namedQueries) {
-		AnnotationValue[] values = new AnnotationValue[namedQueries.size()];
-		int i = 0;
-		for ( JaxbNamedQuery namedQuery : namedQueries ) {
-			AnnotationInstance annotationInstance = parseNamedQuery( namedQuery );
-			values[i++] = MockHelper.nestedAnnotationValue(
-					"", annotationInstance
-			);
+	
+	private void parseNamedNativeQueries( Collection<JaxbNamedNativeQuery> namedQueries ) {
+		if (! namedQueries.isEmpty() ) {
+			AnnotationValue[] namedQueryAnnotations = new AnnotationValue[namedQueries.size()];
+			int i = 0;
+			for ( JaxbNamedNativeQuery namedQuery : namedQueries ) {
+				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+				MockHelper.stringValue( "name", namedQuery.getName(), annotationValueList );
+				MockHelper.stringValue( "query", namedQuery.getQuery(), annotationValueList );
+				MockHelper.stringValue( "cacheRegion", namedQuery.getCacheRegion(), annotationValueList );
+				MockHelper.stringValue( "comment", namedQuery.getComment(), annotationValueList );
+				MockHelper.stringValue( "resultSetMapping", namedQuery.getResultSetMapping(), annotationValueList );
+				MockHelper.booleanValue( "cacheable", namedQuery.isCacheable(), annotationValueList );
+				MockHelper.booleanValue( "readOnly", namedQuery.isReadOnly(), annotationValueList );
+				// TODO: add #callable to the schema?
+//				MockHelper.booleanValue( "callable", namedQuery.isCallable(), annotationValueList );
+				MockHelper.integerValue( "fetchSize", namedQuery.getFetchSize(), annotationValueList );
+				MockHelper.integerValue( "timeout", namedQuery.getTimeout(), annotationValueList );
+				MockHelper.enumValue( "cacheMode", HibernateDotNames.CACHE_MODE_TYPE,
+						MockHelper.convert( namedQuery.getCacheMode() ), annotationValueList );
+				MockHelper.enumValue( "flushMode", HibernateDotNames.FLUSH_MODE_TYPE,
+						MockHelper.convert( namedQuery.getFlushMode() ), annotationValueList );
+				MockHelper.classValue( "resultClass", namedQuery.getResultClass(), annotationValueList, getDefaults(),
+						indexBuilder.getServiceRegistry() );
+				
+				AnnotationInstance annotationInstance = create(
+						HibernateDotNames.NAMED_NATIVE_QUERY, null, annotationValueList );
+				namedQueryAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.addToCollectionIfNotNull( annotationValueList,
+					AnnotationValue.createArrayValue( "value", namedQueryAnnotations ) );
+			
+			create( HibernateDotNames.NAMED_NATIVE_QUERIES, null, annotationValueList );
 		}
-		return create(
-				NAMED_QUERIES, null,
-				new AnnotationValue[] { AnnotationValue.createArrayValue( "value", values ) }
-
-		);
-	}
-
-
-	//@NamedQuery
-	private AnnotationInstance parseNamedQuery(JaxbNamedQuery namedQuery) {
-		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.stringValue( "name", namedQuery.getName(), annotationValueList );
-		MockHelper.stringValue( "query", namedQuery.getQuery(), annotationValueList );
-		MockHelper.enumValue( "lockMode", LOCK_MODE_TYPE, namedQuery.getLockMode(), annotationValueList );
-		nestedQueryHintList( "hints", namedQuery.getHint(), annotationValueList );
-		return create( NAMED_QUERY, null, annotationValueList );
 	}
 
 	//@QueryHint

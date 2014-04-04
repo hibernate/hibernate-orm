@@ -34,7 +34,7 @@ import org.jboss.jandex.ClassInfo;
 public class VersionMocker extends PropertyMocker {
 	private final JaxbVersion version;
 
-	VersionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbVersion version) {
+	VersionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, JaxbVersion version) {
 		super( indexBuilder, classInfo, defaults );
 		this.version = version;
 	}
@@ -45,7 +45,7 @@ public class VersionMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		create( VERSION );
 		parseColumn( version.getColumn(), getTarget() );
 		parseTemporalType( version.getTemporal(), getTarget() );

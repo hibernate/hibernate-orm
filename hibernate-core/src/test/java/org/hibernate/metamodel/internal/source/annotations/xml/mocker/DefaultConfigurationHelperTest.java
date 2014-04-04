@@ -1,10 +1,17 @@
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -14,21 +21,13 @@ import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
 
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.internal.jandex.Default;
 import org.hibernate.metamodel.source.internal.jandex.DefaultConfigurationHelper;
-import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
-
-import org.junit.Test;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Strong Liu
@@ -45,7 +44,7 @@ public class DefaultConfigurationHelperTest extends AbstractMockerTest {
 
 	@Test
 	public void applyDefaultToEntity() {
-		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
+		Default defaults = new Default();
 		defaults.setPackageName( "org.test" );
 		defaults.setSchema( "schema" );
 		defaults.setMetadataComplete( true );
@@ -64,7 +63,7 @@ public class DefaultConfigurationHelperTest extends AbstractMockerTest {
 
 	@Test
 	public void testDefaultCascadePersist() {
-		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
+		Default defaults = new Default();
 		defaults.setCascadePersist( true );
 		Index index = getIndex();
 		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
@@ -110,7 +109,7 @@ public class DefaultConfigurationHelperTest extends AbstractMockerTest {
 
 	@Test
 	public void testDefaultSchemaToAnnotationInstance() {
-		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
+		Default defaults = new Default();
 		defaults.setSchema( "hib_schema" );
 		defaults.setCatalog( "hib_catalog" );
 		Index index = getIndex();

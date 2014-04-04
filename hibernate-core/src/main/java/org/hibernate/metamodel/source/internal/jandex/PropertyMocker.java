@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.jandex;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.AccessType;
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
@@ -36,7 +37,6 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyClass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyJoinColumn;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -50,13 +50,13 @@ public abstract class PropertyMocker extends AnnotationMocker {
 	protected ClassInfo classInfo;
 	private AnnotationTarget target;
 
-	PropertyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults) {
+	PropertyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults) {
 		super( indexBuilder, defaults );
 		this.classInfo = classInfo;
 	}
 
 	protected abstract PersistentAttribute getPersistentAttribute();
-	protected abstract void processExtra();
+	protected abstract void doProcess();
 
 	@Override
 	protected DotName getTargetName() {
@@ -97,6 +97,7 @@ public abstract class PropertyMocker extends AnnotationMocker {
 		}
 		else {
 			// attribute in orm.xml did define access
+			getPersistentAttribute().setAccess( xmlDefinedAccessType );
 			List<AnnotationValue> accessTypeValueList = new ArrayList<AnnotationValue>();
 			MockHelper.enumValue( "value", ACCESS_TYPE, xmlDefinedAccessType, accessTypeValueList );
 			create( ACCESS, accessTypeValueList );
@@ -139,7 +140,7 @@ public abstract class PropertyMocker extends AnnotationMocker {
 	@Override
 	final void process() {
 		resolveTarget();
-		processExtra();
+		doProcess();
 	}
 
 	protected AnnotationInstance parseMapKeyColumn(JaxbMapKeyColumn mapKeyColumn, AnnotationTarget target) {
@@ -164,11 +165,8 @@ public abstract class PropertyMocker extends AnnotationMocker {
 		if ( mapKeyClass == null ) {
 			return null;
 		}
-		return create(
-				MAP_KEY_CLASS, target, MockHelper.classValueArray(
-				"value", mapKeyClass.getClazz(), indexBuilder.getServiceRegistry()
-		)
-		);
+		return create( MAP_KEY_CLASS, target, MockHelper.classValueArray( "value", mapKeyClass.getClazz(),
+				getDefaults(), indexBuilder.getServiceRegistry() ) );
 	}
 
 	protected AnnotationInstance parseMapKeyTemporal(TemporalType temporalType, AnnotationTarget target) {

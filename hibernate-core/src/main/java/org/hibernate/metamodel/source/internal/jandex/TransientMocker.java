@@ -37,7 +37,7 @@ public class TransientMocker extends PropertyMocker {
 	private final JaxbTransient transientObj;
 	private final PersistentAttribute wrapper;
 
-	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, final JaxbTransient transientObj) {
+	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, final JaxbTransient transientObj) {
 		super( indexBuilder, classInfo, defaults );
 		this.transientObj = transientObj;
 		this.wrapper = new PersistentAttribute() {
@@ -56,19 +56,19 @@ public class TransientMocker extends PropertyMocker {
 			}
 
 			@Override
-			public String getCustomAccess() {
+			public String getAttributeAccessor() {
 				return null;
 			}
 
 			@Override
-			public void setCustomAccess(String customAccess) {
+			public void setAttributeAccessor(String customAccess) {
 
 			}
 		};
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		create( TRANSIENT );
 	}
 

@@ -81,7 +81,7 @@ public class IndexBuilder {
 	 *
 	 * @return Index.
 	 */
-	public Index build(EntityMappingsMocker.Default globalDefaults) {
+	public Index build(Default globalDefaults) {
 		//merge annotations that not overrided by xml into the new Index
 		for ( ClassInfo ci : index.getKnownClasses() ) {
 			DotName name = ci.name();
@@ -183,7 +183,7 @@ public class IndexBuilder {
 		annotations.putAll( globalAnnotations.getAnnotationInstanceMap() );
 	}
 
-	void finishEntityObject(final DotName name, final EntityMappingsMocker.Default defaults) {
+	void finishEntityObject(final DotName name, final Default defaults) {
 		Map<DotName, List<AnnotationInstance>> map = classInfoAnnotationsMap.get( name );
 		if ( map == null ) {
 			throw new AssertionFailure( "Calling finish entity object " + name + " before create it." );

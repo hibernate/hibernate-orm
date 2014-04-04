@@ -23,23 +23,21 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
+import static org.junit.Assert.assertEquals;
+
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
+import org.hibernate.metamodel.source.internal.jandex.Default;
 import org.hibernate.metamodel.source.internal.jandex.EntityMocker;
 import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbGeneratedValue;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbId;
-
-import org.junit.Test;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Strong Liu
@@ -49,11 +47,11 @@ public class BasicMockerTest extends AbstractMockerTest {
 	public void testEntity() {
 		JaxbEntity entity = createEntity();
 		IndexBuilder indexBuilder = getIndexBuilder();
-		EntityMocker entityMocker = new EntityMocker( indexBuilder, entity, new EntityMappingsMocker.Default() );
+		EntityMocker entityMocker = new EntityMocker( indexBuilder, entity, new Default() );
 		entityMocker.preProcess();
 		entityMocker.process();
 
-		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
+		Index index = indexBuilder.build( new Default() );
 		assertEquals( 1, index.getKnownClasses().size() );
 		DotName itemName = DotName.createSimple( Item.class.getName() );
 		assertHasAnnotation( index, itemName, JPADotNames.ENTITY );
@@ -67,7 +65,7 @@ public class BasicMockerTest extends AbstractMockerTest {
 		entity.setName( "Item" );
 		entity.setClazz( "Item" );
 		IndexBuilder indexBuilder = getIndexBuilder();
-		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
+		Default defaults = new Default();
 		defaults.setPackageName( getClass().getPackage().getName() );
 		defaults.setSchema( "HIBERNATE_SCHEMA" );
 		defaults.setCatalog( "HIBERNATE_CATALOG" );
@@ -75,7 +73,7 @@ public class BasicMockerTest extends AbstractMockerTest {
 		entityMocker.preProcess();
 		entityMocker.process();
 
-		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
+		Index index = indexBuilder.build( new Default() );
 		assertEquals( 1, index.getKnownClasses().size() );
 		DotName itemName = DotName.createSimple( Item.class.getName() );
 		assertHasAnnotation( index, itemName, JPADotNames.ENTITY );

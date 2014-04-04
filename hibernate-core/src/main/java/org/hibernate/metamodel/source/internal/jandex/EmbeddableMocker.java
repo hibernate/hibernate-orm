@@ -44,7 +44,7 @@ import org.hibernate.metamodel.source.internal.jaxb.ManagedType;
 public class EmbeddableMocker extends AbstractEntityObjectMocker {
 	private final JaxbEmbeddable embeddable;
 
-	EmbeddableMocker(IndexBuilder indexBuilder, JaxbEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
+	EmbeddableMocker(IndexBuilder indexBuilder, JaxbEmbeddable embeddable, Default defaults) {
 		super( indexBuilder, defaults );
 		this.embeddable = embeddable;
 	}
@@ -65,7 +65,7 @@ public class EmbeddableMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		create( EMBEDDABLE );
 	}
 

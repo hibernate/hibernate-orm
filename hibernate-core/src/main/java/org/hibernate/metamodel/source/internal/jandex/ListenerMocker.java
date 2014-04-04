@@ -31,7 +31,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityListener;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityListeners;
 import org.hibernate.metamodel.source.internal.jaxb.LifecycleCallback;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -46,8 +45,8 @@ import org.jboss.jandex.DotName;
 public class ListenerMocker extends AbstractMocker {
 	private final ClassInfo classInfo;
 
-	ListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
-		super( indexBuilder );
+	ListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults) {
+		super( indexBuilder, defaults );
 		this.classInfo = classInfo;
 	}
 
@@ -61,7 +60,8 @@ public class ListenerMocker extends AbstractMocker {
 			MockHelper.addToCollectionIfNotNull( clazzNameList, listener.getClazz() );
 			parseEntityListener( listener, clazzNameList );
 		}
-		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, indexBuilder.getServiceRegistry() );
+		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, getDefaults(),
+				indexBuilder.getServiceRegistry() );
 		return create( ENTITY_LISTENERS, classInfo, annotationValueList );
 	}
 
@@ -85,7 +85,7 @@ public class ListenerMocker extends AbstractMocker {
 	}
 
 	protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
-		return new ListenerMocker( indexBuilder, classInfo );
+		return new ListenerMocker( indexBuilder, classInfo, getDefaults() );
 	}
 	AnnotationInstance parse(LifecycleCallback callback, DotName target) {
 		if ( callback == null ) {

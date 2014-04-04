@@ -38,7 +38,7 @@ import org.jboss.jandex.ClassInfo;
 public class ElementCollectionMocker extends PropertyMocker {
 	private final JaxbElementCollection elementCollection;
 
-	ElementCollectionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbElementCollection elementCollection) {
+	ElementCollectionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, Default defaults, JaxbElementCollection elementCollection) {
 		super( indexBuilder, classInfo, defaults );
 		this.elementCollection = elementCollection;
 	}
@@ -49,12 +49,13 @@ public class ElementCollectionMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected void processExtra() {
+	protected void doProcess() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue(
 				"targetClass",
 				elementCollection.getTargetClass(),
 				annotationValueList,
+				getDefaults(),
 				indexBuilder.getServiceRegistry()
 		);
 		MockHelper.enumValue( "fetch", FETCH_TYPE, elementCollection.getFetch(), annotationValueList );

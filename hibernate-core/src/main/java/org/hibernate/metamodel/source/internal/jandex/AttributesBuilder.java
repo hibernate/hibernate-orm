@@ -24,18 +24,25 @@
 package org.hibernate.metamodel.source.internal.jandex;
 
 import java.util.List;
+
 import javax.persistence.AccessType;
 
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.metamodel.source.internal.jaxb.AttributesContainer;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbAny;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbBasic;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbedded;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddedId;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbId;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbManyToOne;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbNaturalId;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbVersion;
-
 import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class AttributesBuilder extends AbstractAttributesBuilder {
 	private final JaxbAttributes attributes;
@@ -44,10 +51,34 @@ public class AttributesBuilder extends AbstractAttributesBuilder {
 			IndexBuilder indexBuilder,
 			ClassInfo classInfo,
 			AccessType accessType,
-			EntityMappingsMocker.Default defaults,
+			Default defaults,
 			JaxbAttributes attributes) {
 		super( indexBuilder, classInfo, defaults );
 		this.attributes = attributes;
+	}
+	
+	@Override
+	protected void parse() {
+		super.parse();
+		
+		if ( attributes.getNaturalId() != null ) {
+			final JaxbNaturalId naturalId = attributes.getNaturalId();
+			// TODO: This is stupid.  Pieces of AbstractAttributesBuilder#parse should be pulled somewhere and
+			// reused.
+			for ( JaxbAny any : naturalId.getAny() ) {
+				// TODO
+			}
+			for ( JaxbBasic basic : naturalId.getBasic() ) {
+				new NaturalIdMocker( indexBuilder, classInfo, defaults, basic, naturalId.isMutable() ).process();
+			}
+			for ( JaxbEmbedded embedded : getAttributesContainer().getEmbedded() ) {
+				new NaturalIdMocker( indexBuilder, classInfo, defaults, embedded, naturalId.isMutable() ).process();
+			}
+			for ( JaxbManyToOne manyToOne : getAttributesContainer().getManyToOne() ) {
+				new NaturalIdMocker( indexBuilder, classInfo, defaults, manyToOne, naturalId.isMutable() ).process();
+			}
+			// TODO: @NaturalIdCache?
+		}
 	}
 
 	@Override

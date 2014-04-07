@@ -169,8 +169,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( "Oracle".equals( databaseName ) ) {
 			switch ( databaseMajorVersion ) {
+				case 12:
+					// fall through
 				case 11:
-					return new Oracle10gDialect();
+					// fall through
 				case 10:
 					return new Oracle10gDialect();
 				case 9:
@@ -178,8 +180,9 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 				case 8:
 					return new Oracle8iDialect();
 				default:
-                    LOG.unknownOracleVersion(databaseMajorVersion);
+					LOG.unknownOracleVersion( databaseMajorVersion );
 			}
+			return new Oracle8iDialect();
 		}
 
 		if ( databaseName.startsWith( "Firebird" ) ) {

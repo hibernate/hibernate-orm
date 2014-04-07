@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
+import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -493,7 +494,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		child = (NumberedNode) root.getChildren().iterator().next();
 		grandchild = (NumberedNode) child.getChildren().iterator().next();
-		grandchild.setDescription("the grand child");
+		grandchild.setDescription( "the grand child" );
 		NumberedNode grandchild2 = new NumberedNode("grandchild2");
 		child.addChild( grandchild2 );
 
@@ -503,7 +504,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		tx.commit();
 		s.close();
 
-		assertInsertCount(1);
+		assertInsertCount( 1 );
 		assertUpdateCount(1);
 		clearCounts();
 
@@ -512,7 +513,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		NumberedNode child2 = new NumberedNode("child2");
 		NumberedNode grandchild3 = new NumberedNode("grandchild3");
 		child2.addChild( grandchild3 );
-		root.addChild(child2);
+		root.addChild( child2 );
 
 		s = openSession();
 		tx = s.beginTransaction();
@@ -615,19 +616,19 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		tx = s.beginTransaction();
 		NumberedNode child = new NumberedNode("child");
-		root.addChild(child);
-		assertSame( root, s.merge(root) );
+		root.addChild( child );
+		assertSame( root, s.merge( root ) );
 		Object mergedChild = root.getChildren().iterator().next();
 		assertNotSame( mergedChild, child );
-		assertTrue( s.contains(mergedChild) );
+		assertTrue( s.contains( mergedChild ) );
 		assertFalse( s.contains(child) );
 		assertEquals( root.getChildren().size(), 1 );
 		assertTrue( root.getChildren().contains(mergedChild) );
 		//assertNotSame( mergedChild, s.merge(child) ); //yucky :(
 		tx.commit();
 
-		assertInsertCount(1);
-		assertUpdateCount(0);
+		assertInsertCount( 1 );
+		assertUpdateCount( 0 );
 
 		assertEquals( root.getChildren().size(), 1 );
 		assertTrue( root.getChildren().contains(mergedChild) );
@@ -651,7 +652,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		Transaction tx = s.beginTransaction();
 		NumberedNode root = new NumberedNode( "root" );
 		root.addChild( new NumberedNode( "child" ) );
-		s.persist(root);
+		s.persist( root );
 		tx.commit();
 		s.close();
 
@@ -671,14 +672,14 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertFalse( Hibernate.isInitialized( managedChildren ) );
 		tx.commit();
 
-		assertInsertCount(0);
-		assertUpdateCount(0);
-		assertDeleteCount(0);
+		assertInsertCount( 0 );
+		assertUpdateCount( 0 );
+		assertDeleteCount( 0 );
 
 		tx = s.beginTransaction();
 		assertEquals(
 				Long.valueOf( 2 ),
-				s.createCriteria(NumberedNode.class)
+				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
 						.uniqueResult()
 		);
@@ -823,6 +824,97 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.close();
 
 		cleanup();
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-9106")
+	public void testMergeTransientWithMultipleDetachedRepresentationOfSameEntity() {
+
+		Item item1 = new Item();
+		item1.setName( "item1" );
+		item1.setDescription( "item1 description" );
+
+		Session s = openSession();
+		Transaction tx = session.beginTransaction();
+		s.persist( item1 );
+		tx.commit();
+		s.close();
+
+		// Get 2 representations of the same Item from 3 different sessions.
+
+		s = openSession();
+		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
+
+		s = openSession();
+		Item item1_2 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
+
+		// item1_1 and item1_2 are unmodified representations of the same persistent entity.
+		assertFalse( item1_1 == item1_2 );
+		assertTrue( item1_1.equals( item1_2 ) );
+
+		// Create a transient entity that references both representations.
+		Hoarder hoarder = new Hoarder();
+		hoarder.setName( "joe" );
+		hoarder.getItems().add( item1_1 );
+		hoarder.setFavoriteItem( item1_2 );
+
+		s = openSession();
+		tx = s.beginTransaction();
+		hoarder = (Hoarder) s.merge( hoarder );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
+		assertEquals( item1.getDescription(), hoarder.getFavoriteItem().getDescription() );
+		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
+		tx.commit();
+		s.close();
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-9106")
+	public void testMergeDetachedWithDetachedRepresentationOfSameEntity() {
+		Item item1 = new Item();
+		item1.setName( "item1" );
+		item1.setDescription( "item1 description" );
+
+		Hoarder hoarder = new Hoarder();
+		hoarder.setName( "joe" );
+
+		Session s = openSession();
+		Transaction tx = session.beginTransaction();
+		s.persist( item1 );
+		s.persist( hoarder );
+		tx.commit();
+		s.close();
+
+		// Get 2 representations of the same Item from 3 different sessions.
+
+		s = openSession();
+		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
+
+		s = openSession();
+		Item item1_2 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
+
+		// item1_1 and item1_2 are unmodified representations of the same persistent entity.
+		assertFalse( item1_1 == item1_2 );
+		assertTrue( item1_1.equals( item1_2 ) );
+
+		// Update hoarder (detached) to references both representations.
+		hoarder.getItems().add( item1_1 );
+		hoarder.setFavoriteItem( item1_2 );
+
+		s = openSession();
+		tx = s.beginTransaction();
+		hoarder = (Hoarder) s.merge( hoarder );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
+		assertEquals( item1.getDescription(), hoarder.getFavoriteItem().getDescription() );
+		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
+		tx.commit();
+		s.close();
 	}
 
 	@SuppressWarnings( {"unchecked"})

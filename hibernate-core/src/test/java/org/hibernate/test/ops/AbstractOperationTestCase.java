@@ -39,7 +39,14 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	public String[] getMappings() {
-		return new String[] { "ops/Node.hbm.xml", "ops/Employer.hbm.xml", "ops/OptLockEntity.hbm.xml", "ops/OneToOne.hbm.xml", "ops/Competition.hbm.xml" };
+		return new String[] {
+				"ops/Node.hbm.xml",
+				"ops/Employer.hbm.xml",
+				"ops/OptLockEntity.hbm.xml",
+				"ops/OneToOne.hbm.xml",
+				"ops/Competition.hbm.xml",
+				"ops/Hoarder.hbm.xml"
+		};
 	}
 
 	public String getCacheConcurrencyStrategy() {

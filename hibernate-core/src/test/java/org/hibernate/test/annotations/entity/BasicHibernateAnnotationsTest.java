@@ -322,6 +322,11 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 		
+		s = openSession();
+		tx = s.beginTransaction();
+		s.createQuery( "delete from " + Narrative.class.getSimpleName() ).executeUpdate();
+		tx.commit();
+		s.close();
 	} 
 
 	@Test

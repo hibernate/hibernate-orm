@@ -1,11 +1,11 @@
 package org.hibernate.spatial.integration;
 
-import java.sql.Connection;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.spatial.HibernateSpatialConfiguration;
 import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 
@@ -32,8 +32,8 @@ public class SpatialDialectFactory extends DialectFactoryImpl {
 	}
 
 	@Override
-	public Dialect buildDialect(Map configValues, Connection connection) throws HibernateException {
-		final Dialect dialect = super.buildDialect( configValues, connection );
+	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
+		final Dialect dialect = super.buildDialect( configValues, resolutionInfoSource );
 		if (dialect instanceof OracleSpatial10gDialect) {
 			return new OracleSpatial10gDialect( configuration );
 		}

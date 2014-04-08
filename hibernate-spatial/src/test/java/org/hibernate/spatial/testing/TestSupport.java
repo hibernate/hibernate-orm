@@ -51,18 +51,18 @@ public abstract class TestSupport {
 	public abstract SQLExpressionTemplate getSQLExpressionTemplate();
 
 	protected String driver() {
-		return configurationService.getSetting( AvailableSettings.DRIVER );
+		return configurationService.getSetting( AvailableSettings.DRIVER, String.class, "" );
 	}
 
 	protected String url() {
-		return configurationService.getSetting( AvailableSettings.URL );
+		return configurationService.getSetting( AvailableSettings.URL, String.class, "" );
 	}
 
 	protected String user() {
-		return configurationService.getSetting( AvailableSettings.USER );
+		return configurationService.getSetting( AvailableSettings.USER, String.class, "" );
 	}
 
 	protected String passwd() {
-		return configurationService.getSetting( AvailableSettings.PASS );
+		return configurationService.getSetting( AvailableSettings.PASS, String.class, "" );
 	}
 }

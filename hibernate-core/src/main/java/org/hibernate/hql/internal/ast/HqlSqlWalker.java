@@ -36,12 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.ASTFactory;
-import antlr.RecognitionException;
-import antlr.SemanticException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
@@ -53,6 +47,7 @@ import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.tree.AggregateNode;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
+import org.hibernate.hql.internal.ast.tree.CastFunctionNode;
 import org.hibernate.hql.internal.ast.tree.CollectionFunction;
 import org.hibernate.hql.internal.ast.tree.ConstructorNode;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
@@ -104,6 +99,12 @@ import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.usertype.UserVersionType;
+import org.jboss.logging.Logger;
+
+import antlr.ASTFactory;
+import antlr.RecognitionException;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Implements methods used by the HQL->SQL tree transform grammar (a.k.a. the second phase).
@@ -1009,8 +1010,14 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
-    protected void processAggregation(AST node, boolean inSelect) throws SemanticException {
-		AggregateNode aggregateNode = ( AggregateNode ) node;
+	protected void processCastFunction(AST castFunctionCall, boolean inSelect) throws SemanticException {
+		CastFunctionNode castFunctionNode = (CastFunctionNode) castFunctionCall;
+		castFunctionNode.resolve( inSelect );
+	}
+
+	@Override
+	protected void processAggregation(AST node, boolean inSelect) throws SemanticException {
+		AggregateNode aggregateNode = (AggregateNode) node;
 		aggregateNode.resolve();
 	}
 

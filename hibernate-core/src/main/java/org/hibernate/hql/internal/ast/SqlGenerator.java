@@ -29,10 +29,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import antlr.RecognitionException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
@@ -49,6 +45,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
+
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 /**
  * Generates SQL by overriding callback methods in the base class, which does
@@ -201,7 +201,12 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		else {
 			// this function has a registered SQLFunction -> redirect output and catch the arguments
 			outputStack.addFirst( writer );
-			writer = new FunctionArguments();
+			if ( node.getType() == CAST ) {
+				writer = new CastFunctionArguments();
+			}
+			else {
+				writer = new StandardFunctionArguments();
+			}
 		}
 	}
 
@@ -215,7 +220,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		else {
 			final Type functionType = functionNode.getFirstArgumentType();
 			// this function has a registered SQLFunction -> redirect output and catch the arguments
-			FunctionArguments functionArguments = ( FunctionArguments ) writer;
+			FunctionArgumentsCollectingWriter functionArguments = (FunctionArgumentsCollectingWriter) writer;
 			writer = outputStack.removeFirst();
 			out( sqlFunction.render( functionType, functionArguments.getArgs(), sessionFactory ) );
 		}
@@ -239,11 +244,15 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		void commaBetweenParameters(String comma);
 	}
 
+	interface FunctionArgumentsCollectingWriter extends SqlWriter {
+		public List getArgs();
+	}
+
 	/**
 	 * SQL function processing code redirects generated SQL output to an instance of this class
 	 * which catches function arguments.
 	 */
-	class FunctionArguments implements SqlWriter {
+	class StandardFunctionArguments implements FunctionArgumentsCollectingWriter {
 		private int argInd;
 		private final List<String> args = new ArrayList<String>(3);
 
@@ -258,6 +267,28 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 		public void commaBetweenParameters(String comma) {
 			++argInd;
+		}
+
+		public List getArgs() {
+			return args;
+		}
+	}
+
+	/**
+	 * SQL function processing code redirects generated SQL output to an instance of this class
+	 * which catches function arguments.
+	 */
+	class CastFunctionArguments implements FunctionArgumentsCollectingWriter {
+		private final List<String> args = new ArrayList<String>( 3 );
+
+		@Override
+		public void clause(String clause) {
+			args.add( clause );
+		}
+
+		@Override
+		public void commaBetweenParameters(String comma) {
+			// todo : should this be an exception?  Its not likely to end well if this method is called here...
 		}
 
 		public List getArgs() {

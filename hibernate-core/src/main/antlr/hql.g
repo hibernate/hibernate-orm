@@ -84,7 +84,7 @@ tokens
 
 	// -- SQL tokens --
 	// These aren't part of HQL, but the SQL fragment parser uses the HQL lexer, so they need to be declared here.
-	CASE="case";
+	CASE="case";	// a "searched case statement", whereas CASE2 represents a "simple case statement"
 	END="end";
 	ELSE="else";
 	THEN="then";
@@ -92,7 +92,7 @@ tokens
 	ON="on";
 	WITH="with";
 
-	// -- EJBQL tokens --
+	// -- JPAQL tokens --
 	BOTH="both";
 	EMPTY="empty";
 	LEADING="leading";
@@ -108,7 +108,8 @@ tokens
 	AGGREGATE;		// One of the aggregate functions (e.g. min, max, avg)
 	ALIAS;
 	CONSTRUCTOR;
-	CASE2;
+	CASE2;			// a "simple case statement", whereas CASE represents a "searched case statement"
+	CAST;
 	EXPR_LIST;
 	FILTER_ENTITY;		// FROM element injected because of a filter expression (happens during compilation phase 2)
 	IN_LIST;
@@ -197,6 +198,20 @@ tokens
 	public void weakKeywords() throws TokenStreamException { }
 
 	public void processMemberOf(Token n,AST p,ASTPair currentAST) { }
+	
+	protected boolean validateSoftKeyword(String text) throws TokenStreamException {
+		return validateLookAheadText(1, text);
+	}
+	
+	protected boolean validateLookAheadText(int lookAheadPosition, String text) throws TokenStreamException {
+		String text2Validate = retrieveLookAheadText( lookAheadPosition );
+		return text2Validate == null ? false : text2Validate.equalsIgnoreCase( text );
+	}
+	
+	protected String retrieveLookAheadText(int lookAheadPosition) throws TokenStreamException {
+		Token token = LT(lookAheadPosition);
+		return token == null ? null : token.getText();
+	}
 
 }
 
@@ -618,13 +633,28 @@ quantifiedExpression
 // ident qualifier ('.' ident ), array index ( [ expr ] ),
 // method call ( '.' ident '(' exprList ') )
 atom
-	 : primaryExpression
+	: { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
+    | primaryExpression
 		(
 			DOT^ identifier
 				( options { greedy=true; } :
 					( op:OPEN^ {#op.setType(METHOD_CALL);} exprList CLOSE! ) )?
 		|	lb:OPEN_BRACKET^ {#lb.setType(INDEX_OP);} expression CLOSE_BRACKET!
 		)*
+	;
+
+castFunction!
+	: c:IDENT OPEN e:expression (AS)? t:castTargetType CLOSE {
+		#c.setType( CAST );
+		#castFunction = #( #c, #e, #t );
+	}
+	;
+
+castTargetType
+	// the cast target type is Hibernate type name which is either:
+	//		1) a simple identifier
+	//		2) a simple identifier-(dot-identifier)* sequence
+	: identifier { handleDotIdent(); } ( options { greedy=true; } : DOT^ identifier )*
 	;
 
 // level 0 - the basic element of an expression

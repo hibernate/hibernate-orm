@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import org.hibernate.Session;
 import org.hibernate.WrongClassException;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -39,6 +40,7 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 @TestForIssue(jiraKey = "HHH-9028")
+@FailureExpectedWithNewMetamodel(message = "AbstractEntityPersister#cacheAccessStrategy is null -- @Cache not getting handled correctly?")
 public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

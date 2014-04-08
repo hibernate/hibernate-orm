@@ -26,8 +26,10 @@ package org.hibernate.test.cache.polymorphism;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.hibernate.Session;
+import org.hibernate.WrongClassException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -58,11 +60,14 @@ public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		// As the first item is supposed to be a CachedItem1, it shouldn't be returned.
-		// Note that the Session API is not type safe but, when using the EntityManager.find API, you get a ClassCastException
-		// if calling find returns the object.
-		Object thisObjectShouldBeNull = s.get( CachedItem2.class, item1.getId() );
-		assertNull( thisObjectShouldBeNull );
+		// See HHH-9107
+		try {
+			s.get( CachedItem2.class, item1.getId() );
+			fail( "Expected a WrongClassException to be thrown." );
+		}
+		catch (WrongClassException e) {
+			//expected
+		}
 		s.getTransaction().commit();
 		s.close();
 		

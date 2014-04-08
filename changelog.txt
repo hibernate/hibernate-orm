@@ -5,6 +5,24 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.12 (2014.04.08)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-4700] - ClassCastException with parameter as CASE results
+    * [HHH-6747] - ClassCastException when rendering SimpleCaseExpression
+    * [HHH-7971] - Enabling ENABLE_LAZY_LOAD_NO_TRANS results in trying to remove elements in collections 
+    * [HHH-9071] - Proxy narrowing loses the initialized state of the original proxy
+    * [HHH-9078] - OrderColumn doesn't actually work, index is always 0 across transactions
+    * [HHH-9092] - org.hibernate.ejb.criteria.QueryBuilderTest.testMultiselectWithPredicates failing on most databases
+    * [HHH-9103] - Dialect resolver should use a newer Oracle dialect for Oracle 12
+    * [HHH-9104] - BasicHibernateAnnotationsTest.testFilterOnCollection fails on jdk8
+    * [HHH-9107] - Loading from 2LC broken by HHH-9028
+
+** Improvement
+    * [HHH-8923] - Reconsider closing of ServiceRegistry instances
+    * [HHH-9100] - Improve CAST function support
+
 Changes in version 4.2.11 (2014.03.17)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -43,6 +43,7 @@ import org.hibernate.hql.internal.ast.tree.ParameterNode;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -138,8 +139,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	}
 
 	@Override
-    protected void commaBetweenParameters(String comma) {
-		writer.commaBetweenParameters( comma );
+	protected void betweenFunctionArguments() {
+		writer.betweenFunctionArguments();
 	}
 
 	@Override
@@ -234,14 +235,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	interface SqlWriter {
 		void clause(String clause);
 
-		/**
-		 * todo remove this hack
-		 * The parameter is either ", " or " , ". This is needed to pass sql generating tests as the old
-		 * sql generator uses " , " in the WHERE and ", " in SELECT.
-		 *
-		 * @param comma either " , " or ", "
-		 */
-		void commaBetweenParameters(String comma);
+		void betweenFunctionArguments();
 	}
 
 	interface FunctionArgumentsCollectingWriter extends SqlWriter {
@@ -265,7 +259,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			}
 		}
 
-		public void commaBetweenParameters(String comma) {
+		@Override
+		public void betweenFunctionArguments() {
 			++argInd;
 		}
 
@@ -279,20 +274,44 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 * which catches function arguments.
 	 */
 	class CastFunctionArguments implements FunctionArgumentsCollectingWriter {
-		private final List<String> args = new ArrayList<String>( 3 );
+		private String castExpression;
+		private String castTargetType;
+
+		private boolean startedType;
 
 		@Override
 		public void clause(String clause) {
-			args.add( clause );
+			if ( startedType ) {
+				if ( castTargetType == null ) {
+					castTargetType = clause;
+				}
+				else {
+					castTargetType += clause;
+				}
+			}
+			else {
+				if ( castExpression == null ) {
+					castExpression = clause;
+				}
+				else {
+					castExpression += clause;
+				}
+			}
 		}
 
 		@Override
-		public void commaBetweenParameters(String comma) {
-			// todo : should this be an exception?  Its not likely to end well if this method is called here...
+		public void betweenFunctionArguments() {
+			if ( startedType ) {
+				throw new QueryException( "CAST function should only have 2 arguments" );
+			}
+			startedType = true;
 		}
 
 		public List getArgs() {
-			return args;
+			List<String> rtn = CollectionHelper.arrayList( 2 );
+			rtn.add( castExpression );
+			rtn.add( castTargetType );
+			return rtn;
 		}
 	}
 
@@ -304,8 +323,9 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			getStringBuilder().append( clause );
 		}
 
-		public void commaBetweenParameters(String comma) {
-			getStringBuilder().append( comma );
+		@Override
+		public void betweenFunctionArguments() {
+			getStringBuilder().append( ", " );
 		}
 	}
 

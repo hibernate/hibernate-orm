@@ -30,6 +30,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -591,7 +592,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final CacheKey ck = source.generateCacheKey(
 				event.getEntityId(),
 				persister.getIdentifierType(),
-				persister.getEntityName()
+				persister.getRootEntityName()
 		);
 
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
@@ -614,7 +615,17 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
-		return convertCacheEntryToEntity( entry, event.getEntityId(), persister, event );
+		Object entity = convertCacheEntryToEntity( entry, event.getEntityId(), persister, event );
+		
+		if ( !persister.isInstance( entity ) ) {
+			throw new WrongClassException(
+					"loaded object was of wrong class " + entity.getClass(),
+					event.getEntityId(),
+					persister.getEntityName()
+				);
+		}
+		
+		return entity;
 	}
 
 	private Object convertCacheEntryToEntity(

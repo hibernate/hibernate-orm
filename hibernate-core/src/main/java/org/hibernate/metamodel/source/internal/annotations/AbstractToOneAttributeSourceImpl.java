@@ -18,6 +18,9 @@ import org.hibernate.metamodel.spi.AttributeRole;
 import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.type.ForeignKeyDirection;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+
 public abstract class AbstractToOneAttributeSourceImpl extends SingularAttributeSourceImpl implements ToOneAttributeSource{
 	private final SingularAssociationAttribute associationAttribute;
 	private final Set<CascadeStyle> unifiedCascadeStyles;
@@ -25,10 +28,14 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	private SingularAttributeNature singularAttributeNature;
 	private final Set<MappedByAssociationSource> ownedAssociationSources = new HashSet<MappedByAssociationSource>();
 
+	private final MapsIdSourceImpl mapsIdSource;
+
 	public AbstractToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute) {
 		super( associationAttribute );
 		this.associationAttribute = associationAttribute;
 		this.unifiedCascadeStyles = determineCascadeStyles( associationAttribute );
+
+		this.mapsIdSource = MapsIdSourceImpl.interpret( associationAttribute.getMapsIdAnnotation() );
 	}
 
 	private static Set<CascadeStyle> determineCascadeStyles(SingularAssociationAttribute associationAttribute) {
@@ -145,5 +152,40 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	@Override
 	public AttributeRole getAttributeRole() {
 		return associationAttribute.getRole();
+	}
+
+	@Override
+	public MapsIdSource getMapsIdSource() {
+		return mapsIdSource;
+	}
+
+	private static class MapsIdSourceImpl implements MapsIdSource {
+		private final boolean present;
+		private final String name;
+
+		public static MapsIdSourceImpl interpret(AnnotationInstance mapsIdAnnotation) {
+			if ( mapsIdAnnotation == null ) {
+				return new MapsIdSourceImpl( false, null );
+			}
+
+			final AnnotationValue value = mapsIdAnnotation.value();
+			final String name = value == null ? null : value.asString();
+			return new MapsIdSourceImpl( true, name );
+		}
+
+		private MapsIdSourceImpl(boolean present, String name) {
+			this.present = present;
+			this.name = name;
+		}
+
+		@Override
+		public boolean isDefined() {
+			return present;
+		}
+
+		@Override
+		public String getLookupClassAttributeName() {
+			return name;
+		}
 	}
 }

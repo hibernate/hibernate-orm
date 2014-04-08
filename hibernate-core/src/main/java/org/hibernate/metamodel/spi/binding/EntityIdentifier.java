@@ -65,10 +65,11 @@ import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
  */
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
-	private EntityIdentifierBinding entityIdentifierBinding;
-	private IdentifierGenerator identifierGenerator;
 
+	private Binding binding;
 	private LookupClassBinding lookupClassBinding;
+
+	private IdentifierGenerator identifierGenerator;
 
 	/**
 	 * Create an identifier
@@ -140,7 +141,7 @@ public class EntityIdentifier {
 
 	public EntityIdentifierNature getNature() {
 		ensureBound();
-		return entityIdentifierBinding.getNature();
+		return binding.getNature();
 	}
 
 	public SingularAttributeBinding getAttributeBinding() {
@@ -163,7 +164,7 @@ public class EntityIdentifier {
 
 	public String getUnsavedValue() {
 		ensureBound();
-		return entityIdentifierBinding.getUnsavedValue();
+		return binding.getUnsavedValue();
 	}
 
 	public boolean isNonAggregatedComposite() {
@@ -588,6 +589,14 @@ public class EntityIdentifier {
 			// TODO: set up IdentifierGenerator for non-assigned sub-attributes
 			return new CompositeNestedGeneratedValueGenerator( locator );
 		}
+	}
+
+	public static interface Binding {
+		public EntityIdentifierNature getNature();
+
+		public String getUnsavedValue();
+
+		public IdentifierGeneratorDefinition getGeneratorDefinition();
 	}
 
 }

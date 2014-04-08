@@ -269,4 +269,25 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		return true;
 	}
 
+	@Override
+	public MapsIdSource getMapsIdSource() {
+		return MapsIdSourceImpl.INSTANCE;
+	}
+
+	private static class MapsIdSourceImpl implements MapsIdSource {
+		/**
+		 * Singleton access
+		 */
+		public static final MapsIdSourceImpl INSTANCE = new MapsIdSourceImpl();
+
+		@Override
+		public boolean isDefined() {
+			return false;
+		}
+
+		@Override
+		public String getLookupClassAttributeName() {
+			return null;
+		}
+	}
 }

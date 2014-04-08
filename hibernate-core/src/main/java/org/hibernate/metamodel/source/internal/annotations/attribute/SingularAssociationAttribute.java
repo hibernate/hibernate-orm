@@ -67,7 +67,7 @@ public class SingularAssociationAttribute
 	private ArrayList<Column> joinColumnValues = new ArrayList<Column>();
 	private ArrayList<Column> inverseJoinColumnValues = new ArrayList<Column>();
 
-	private final String mapsIdAttributeName;
+	private final AnnotationInstance mapsIdAnnotation;
 
 	private final boolean hasPrimaryKeyJoinColumn;
 
@@ -121,7 +121,7 @@ public class SingularAssociationAttribute
 		this.isOrphanRemoval = AssociationHelper.INSTANCE.determineOrphanRemoval( associationAnnotation );
 		this.ignoreNotFound = AssociationHelper.INSTANCE.determineWhetherToIgnoreNotFound( backingMember );
 
-		this.mapsIdAttributeName = AssociationHelper.INSTANCE.determineMapsId(
+		this.mapsIdAnnotation = AssociationHelper.INSTANCE.locateMapsId(
 				backingMember,
 				attributeNature,
 				container.getLocalBindingContext()
@@ -261,5 +261,9 @@ public class SingularAssociationAttribute
 
 	public ArrayList<Column> getInverseJoinColumnValues() {
 		return inverseJoinColumnValues;
+	}
+
+	public AnnotationInstance getMapsIdAnnotation() {
+		return mapsIdAnnotation;
 	}
 }

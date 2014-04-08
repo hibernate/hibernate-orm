@@ -258,7 +258,7 @@ public class AssociationHelper {
 		return false;
 	}
 
-	public String determineMapsId(
+	public AnnotationInstance locateMapsId(
 			MemberDescriptor member,
 			PersistentAttribute.Nature attributeNature,
 			EntityBindingContext localBindingContext) {
@@ -275,9 +275,7 @@ public class AssociationHelper {
 							"associations, property: " + member.toString()
 			);
 		}
-		return mapsIdAnnotation.value() == null
-				? null
-				: mapsIdAnnotation.value().asString();
+		return mapsIdAnnotation;
 	}
 
 	public boolean determineWhetherToIgnoreNotFound(MemberDescriptor backingMember) {

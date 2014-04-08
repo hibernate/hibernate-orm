@@ -173,9 +173,7 @@ public class PluralAttribute
 		
 		this.classLoaderService = getContext().getServiceRegistry().getService( ClassLoaderService.class );
 
-		// just to get the error the test expects
-		// todo : I'd really rather see this driven from the class-level, not the attribute-level
-		AssociationHelper.INSTANCE.determineMapsId(
+		AssociationHelper.INSTANCE.locateMapsId(
 				backingMember,
 				attributeNature,
 				container.getLocalBindingContext()

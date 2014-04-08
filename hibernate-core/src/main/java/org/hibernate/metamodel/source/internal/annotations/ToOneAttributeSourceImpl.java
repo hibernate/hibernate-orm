@@ -89,7 +89,9 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		this.containingTableName = resolveContainingTableName( associationAttribute, relationalValueSources );
 		setSingularAttributeNature( determineNatureIfPossible( associationAttribute ) );
 		this.foreignKeyDelegate = new ForeignKeyDelegate(
-				associationAttribute().getBackingMember().getAnnotations(), cls);
+				associationAttribute().getBackingMember().getAnnotations(),
+				cls
+		);
 	}
 
 	private SingularAttributeNature determineNatureIfPossible(

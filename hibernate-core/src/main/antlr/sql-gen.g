@@ -246,7 +246,7 @@ selectExpr
 	| aggregate
 	| c:constant { out(c); }
 	| arithmeticExpr
-	| param:PARAM { out(param); }
+	| parameter
 	| selectBooleanExpr[false]
 	| sn:SQL_NODE { out(sn); }
 	| { out("("); } selectStatement { out(")"); }

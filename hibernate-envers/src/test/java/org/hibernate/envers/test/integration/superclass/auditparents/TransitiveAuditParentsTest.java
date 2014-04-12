@@ -19,6 +19,7 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel( message = "@MappedSuperclass not supported with new metamodel by envers yet.")
 public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 	private long childImpTransId = 1L;
 	private long childExpTransId = 2L;

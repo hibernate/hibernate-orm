@@ -21,6 +21,7 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewMetamodel( message = "@MappedSuperclass not supported with new metamodel by envers yet.")
 public class TotalAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 	private long babyCompleteId = 1L;
 	private Integer siteCompleteId = null;

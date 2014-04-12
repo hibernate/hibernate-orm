@@ -31,6 +31,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning1Entity;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning2Entity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -153,6 +154,7 @@ public class BasicBiowned extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "Revision query is wrong for bidirectional many-to-many when both sides are owners." )
 	public void testHistoryOfO1_1() {
 		ListBiowning2Entity o2_1 = getEntityManager().find( ListBiowning2Entity.class, o2_1_id );
 		ListBiowning2Entity o2_2 = getEntityManager().find( ListBiowning2Entity.class, o2_2_id );
@@ -171,6 +173,7 @@ public class BasicBiowned extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "Revision query is wrong for bidirectional many-to-many when both sides are owners." )
 	public void testHistoryOfO1_2() {
 		ListBiowning2Entity o2_1 = getEntityManager().find( ListBiowning2Entity.class, o2_1_id );
 		ListBiowning2Entity o2_2 = getEntityManager().find( ListBiowning2Entity.class, o2_2_id );
@@ -189,6 +192,7 @@ public class BasicBiowned extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "Revision query is wrong for bidirectional many-to-many when both sides are owners." )
 	public void testHistoryOfO2_1() {
 		ListBiowning1Entity o1_1 = getEntityManager().find( ListBiowning1Entity.class, o1_1_id );
 		ListBiowning1Entity o1_2 = getEntityManager().find( ListBiowning1Entity.class, o1_2_id );
@@ -207,6 +211,7 @@ public class BasicBiowned extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "Revision query is wrong for bidirectional many-to-many when both sides are owners." )
 	public void testHistoryOfO2_2() {
 		ListBiowning1Entity o1_1 = getEntityManager().find( ListBiowning1Entity.class, o1_1_id );
 		ListBiowning1Entity o1_2 = getEntityManager().find( ListBiowning1Entity.class, o1_2_id );

@@ -41,6 +41,7 @@ import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -437,6 +438,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8567")
+	@FailureExpectedWithNewMetamodel( message = "Revision query with restriction on @IdClass attributes is broken." )
 	public void testMultipleIdPropertyRestriction() {
 		MulIdTestEntity ver2 = (MulIdTestEntity) getAuditReader().createQuery()
 				.forEntitiesAtRevision( MulIdTestEntity.class, 2 )

@@ -42,7 +42,8 @@ public class AuditedAbstractParentTest extends BaseEnversJPAFunctionalTestCase {
 		for ( Schema schema : getMetadata().getDatabase().getSchemas() ) {
 			for ( TableSpecification table : schema.getTables() ) {
 				if ( "AbstractEntity_AUD".equals( table.getLogicalName().getText() ) ) {
-					Assert.assertFalse( Table.class.isInstance( table ) );
+					Assert.assertTrue( Table.class.isInstance( table ) );
+					Assert.assertFalse( Table.class.cast( table ).isPhysicalTable() );
 					return;
 				}
 			}

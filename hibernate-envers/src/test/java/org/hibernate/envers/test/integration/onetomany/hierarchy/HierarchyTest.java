@@ -10,12 +10,14 @@ import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6661")
+@FailureExpectedWithNewMetamodel( message = "Secondary tables are not supported by envers yet.")
 public class HierarchyTest extends BaseEnversJPAFunctionalTestCase {
 	private Long parentId = null;
 	private Long child1Id = null;

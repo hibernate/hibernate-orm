@@ -104,12 +104,12 @@ public class PluralAttributeIndexDetailsMapKeyEmbedded
 
 	@Override
 	public boolean getContainerUpdatability() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean getContainerInsertability() {
-		return false;
+		return true;
 	}
 
 	@Override

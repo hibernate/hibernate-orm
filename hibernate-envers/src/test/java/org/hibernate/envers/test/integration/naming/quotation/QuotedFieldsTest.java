@@ -82,9 +82,9 @@ public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
 		TableSpecification table = getMetadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.quotation.QuotedFieldsEntity_AUD"
 		).getPrimaryTable();
-		Column column1 = table.locateColumn( "id" );
-		Column column2 = table.locateColumn( "data1" );
-		Column column3 = table.locateColumn( "data2" );
+		Column column1 = table.locateColumn( "`id`" );
+		Column column2 = table.locateColumn( "`data1`" );
+		Column column3 = table.locateColumn( "`data2`" );
 		assert column1 != null;
 		assert column2 != null;
 		assert column3 != null;

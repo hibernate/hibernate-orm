@@ -9,12 +9,14 @@ import org.hibernate.envers.test.Priority;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7157")
+@FailureExpectedWithNewMetamodel( message = "@MapsId is not supported yet." )
 public class MapsIdTest extends BaseEnversJPAFunctionalTestCase {
 	private PersonTuple tuple1Ver1 = null;
 	private PersonTuple tuple2Ver1 = null;

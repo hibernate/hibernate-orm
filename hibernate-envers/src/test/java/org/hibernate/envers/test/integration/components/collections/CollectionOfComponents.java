@@ -50,7 +50,7 @@ public class CollectionOfComponents extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ComponentSetTestEntity.class};
+		return new Class[] {ComponentSetTestEntity.class, Component1.class };
 	}
 
 	@Test

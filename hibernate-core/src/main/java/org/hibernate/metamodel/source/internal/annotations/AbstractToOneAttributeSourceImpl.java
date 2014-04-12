@@ -124,7 +124,9 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 
 	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return singularAttributeNature == SingularAttributeNature.ONE_TO_ONE && !associationAttribute.isOptional()
+		return singularAttributeNature == SingularAttributeNature.ONE_TO_ONE &&
+				!associationAttribute.isOptional() &&
+				associationAttribute.getMappedByAttributeName() == null
 				? ForeignKeyDirection.FROM_PARENT
 				: ForeignKeyDirection.TO_PARENT;
 	}

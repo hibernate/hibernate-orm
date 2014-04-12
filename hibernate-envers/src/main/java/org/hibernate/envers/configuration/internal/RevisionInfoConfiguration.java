@@ -293,6 +293,7 @@ public class RevisionInfoConfiguration {
 				HibernateTypeDescriptor revisionTimestampType = revisionTimestampAttribute.getHibernateTypeDescriptor();
 				final String revisionTimestampClassName = revisionTimestampType.getJavaTypeDescriptor().getName().toString();
 				if ( Long.TYPE.getName().equals( revisionTimestampClassName ) ||
+						Long.class.getName().equals( revisionTimestampClassName ) ||
 						java.util.Date.class.getName().equals( revisionTimestampClassName ) ||
 						Date.class.getName().equals( revisionTimestampClassName) ) {
 					revisionInfoTimestampData = new PropertyData(

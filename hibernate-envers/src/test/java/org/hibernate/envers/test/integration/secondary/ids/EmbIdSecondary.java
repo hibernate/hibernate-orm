@@ -29,12 +29,14 @@ import java.util.Arrays;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = "Secondary tables are not supported by envers yet.")
 public class EmbIdSecondary extends BaseEnversJPAFunctionalTestCase {
 	private EmbId id;
 

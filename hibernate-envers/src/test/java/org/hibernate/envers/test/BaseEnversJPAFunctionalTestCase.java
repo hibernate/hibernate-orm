@@ -34,7 +34,6 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;

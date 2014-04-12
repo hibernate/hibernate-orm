@@ -30,6 +30,7 @@ import java.util.List;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.source.spi.ColumnSource;
 import org.hibernate.metamodel.source.spi.DerivedValueSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
@@ -93,7 +94,8 @@ public class RelationalValueBindingHelper {
 			final boolean forceNonNullable) {
 		final List<RelationalValueBinding> valueBindings = new ArrayList<RelationalValueBinding>();
 		final NaturalIdMutability naturalIdMutability;
-		if ( SingularAttributeSource.class.isInstance( valueSourceContainer ) ) {
+		if ( SingularAttributeSource.class.isInstance( valueSourceContainer ) &&
+				SingularAttributeSource.class.cast( valueSourceContainer ).getNaturalIdMutability() != null ) {
 			naturalIdMutability = SingularAttributeSource.class.cast( valueSourceContainer ).getNaturalIdMutability();
 		}
 		else {

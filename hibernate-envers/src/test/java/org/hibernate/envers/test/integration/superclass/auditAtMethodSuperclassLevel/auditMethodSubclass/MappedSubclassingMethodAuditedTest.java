@@ -31,6 +31,7 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel.AuditedMethodMappedSuperclass;
 import org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel.NotAuditedSubclassEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -38,6 +39,7 @@ import org.junit.Test;
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacut;n Chanfreau
  */
+@FailureExpectedWithNewMetamodel( message = "@MappedSuperclass not supported with new metamodel by envers yet.")
 public class MappedSubclassingMethodAuditedTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer id2_1;
 	private Integer id1_1;

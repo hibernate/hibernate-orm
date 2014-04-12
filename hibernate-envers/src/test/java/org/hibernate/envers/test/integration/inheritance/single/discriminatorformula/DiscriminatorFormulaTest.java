@@ -92,7 +92,6 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 		assert entityDiscriminator.getRelationalValue().getValueType() == Value.ValueType.DERIVED_VALUE;
 		DerivedValue derivedValue = (DerivedValue) entityDiscriminator.getRelationalValue();
 		Assert.assertEquals( ParentEntity.DISCRIMINATOR_QUERY, derivedValue.getExpression() );
-		assert false;
 	}
 
 	@Test

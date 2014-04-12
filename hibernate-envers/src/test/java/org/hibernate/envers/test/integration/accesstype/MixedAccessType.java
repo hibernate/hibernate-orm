@@ -28,12 +28,14 @@ import java.util.Arrays;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = "Building SessionFactory for envers with LenientPersistentAttributeMemberResolver.INSTANCE is not supported yet.")
 public class MixedAccessType extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 

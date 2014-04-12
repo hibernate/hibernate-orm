@@ -37,6 +37,7 @@ import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -114,6 +115,7 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7780")
+	@FailureExpectedWithNewMetamodel( message = "Enum attributes represented by String not supported yet." )
 	public void testEnumRepresentation() {
 		EntityManager entityManager = getEntityManager();
 		List<Object> enums1 = entityManager.createNativeQuery(

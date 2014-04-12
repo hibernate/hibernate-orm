@@ -121,7 +121,7 @@ public abstract class Tools {
 		else {
 			throw new AssertionFailure( "Unexpected annotation target " + target.toString() );
 		}
-		return enclosingClass.equals( clazz ) || jandexIndex.getAllKnownSubclasses( clazz.name() ).contains( enclosingClass );
+		return enclosingClass.equals( clazz ) || jandexIndex.getAllKnownSubclasses( enclosingClass.name() ).contains( clazz );
 	}
 
 }

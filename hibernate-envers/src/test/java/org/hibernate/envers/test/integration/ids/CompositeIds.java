@@ -35,12 +35,14 @@ import org.hibernate.envers.test.entities.ids.EmbIdWithCustomType;
 import org.hibernate.envers.test.entities.ids.EmbIdWithCustomTypeTestEntity;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = "Custom types not supported by envers yet." )
 public class CompositeIds extends BaseEnversJPAFunctionalTestCase {
 	private EmbId id1;
 	private EmbId id2;

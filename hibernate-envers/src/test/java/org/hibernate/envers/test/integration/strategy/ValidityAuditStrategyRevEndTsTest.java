@@ -45,6 +45,7 @@ import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -274,6 +275,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfParent1() {
 
 		Child1Entity c1_1 = getEntityManager()
@@ -303,6 +305,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfParent2() {
 		Child1Entity c1_1 = getEntityManager()
 				.find( Child1Entity.class, c1_1_id );
@@ -331,6 +334,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfChild1_1() {
 		ParentEntity p1 = getEntityManager().find( ParentEntity.class, p1_id );
 		ParentEntity p2 = getEntityManager().find( ParentEntity.class, p2_id );
@@ -365,6 +369,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 
 	// TODO: this was disabled?
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfChild1_2() {
 		ParentEntity p1 = getEntityManager().find( ParentEntity.class, p1_id );
 
@@ -397,6 +402,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfChild2_1() {
 		ParentEntity p2 = getEntityManager().find( ParentEntity.class, p2_id );
 
@@ -429,6 +435,7 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfChild2_2() {
 		ParentEntity p1 = getEntityManager().find( ParentEntity.class, p1_id );
 		ParentEntity p2 = getEntityManager().find( ParentEntity.class, p2_id );

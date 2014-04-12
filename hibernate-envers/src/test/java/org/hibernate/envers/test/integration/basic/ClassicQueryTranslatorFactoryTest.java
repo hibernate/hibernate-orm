@@ -25,9 +25,12 @@ package org.hibernate.envers.test.integration.basic;
 
 import java.util.Map;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -39,5 +42,17 @@ public class ClassicQueryTranslatorFactoryTest extends Simple {
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put( Environment.QUERY_TRANSLATOR, ClassicQueryTranslatorFactory.class.getName() );
+	}
+
+	@Test
+	@FailureExpectedWithNewMetamodel( message = "ClassicQueryTranslatorFactoryTest confuses package name with an alias" )
+	public void testHistoryOfId1() {
+		super.testHistoryOfId1();
+	}
+
+	@Test
+	@FailureExpectedWithNewMetamodel( message = "ClassicQueryTranslatorFactoryTest confuses package name with an alias" )
+	public void testRevisionsCounts() {
+		super.testRevisionsCounts();
 	}
 }

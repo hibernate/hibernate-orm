@@ -57,6 +57,7 @@ import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.Hierarchical;
+import org.hibernate.metamodel.spi.domain.MappedSuperclass;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
@@ -398,10 +399,16 @@ public class AuditedPropertiesReader {
 		addFromProperties( getAttributeBindings( attributeBindingContainer, "property" ), "property", propertyAccessedPersistentProperties, allClassAudited );
 
 		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
-			if ( EntityBinding.class.isInstance( attributeBindingContainer ) ) {
-				final EntityBinding entityBinding = (EntityBinding) attributeBindingContainer;
-				if ( entityBinding.getSuperEntityBinding() != null ) {
-					addPropertiesFromClass( entityBinding.getSuperEntityBinding() );
+			if ( Hierarchical.class.isInstance( attributeBindingContainer.getAttributeContainer() ) ) {
+				final Hierarchical hierarchical = (Hierarchical) attributeBindingContainer.getAttributeContainer();
+				if ( MappedSuperclass.class.isInstance( hierarchical.getSuperType() ) ) {
+					throw new NotYetImplementedException( "@MappedSuperclass not supported with new metamodel by envers yet. " );
+				}
+				else if ( EntityBinding.class.isInstance( attributeBindingContainer ) ) {
+					final EntityBinding entityBinding = (EntityBinding) attributeBindingContainer;
+					if ( entityBinding.getSuperEntityBinding() != null ) {
+						addPropertiesFromClass( entityBinding.getSuperEntityBinding() );
+					}
 				}
 			}
 		}

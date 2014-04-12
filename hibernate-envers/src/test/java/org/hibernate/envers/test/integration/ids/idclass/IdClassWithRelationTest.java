@@ -9,12 +9,14 @@ import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 import junit.framework.Assert;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4751")
+@FailureExpectedWithNewMetamodel( message = "@IdClass with association not supported yet.")
 public class IdClassWithRelationTest extends BaseEnversJPAFunctionalTestCase {
 	private RelationalClassId entityId = null;
 	private String typeId = null;

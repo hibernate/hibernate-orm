@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
@@ -294,7 +295,9 @@ public final class AuditMetadataGenerator {
 		}
 		else if ( type instanceof OneToOneType ) {
 			final OneToOneAttributeBinding oneToOneAttributeBinding = (OneToOneAttributeBinding) attributeBinding;
-			if ( oneToOneAttributeBinding.getReferencedAttributeBinding().getAttribute().getName() != null ) {
+			if ( oneToOneAttributeBinding.getReferencedAttributeBinding().getAttribute().getName() != null &&
+					!oneToOneAttributeBinding.getReferencedEntityBinding().getHierarchyDetails().getEntityIdentifier()
+							.isIdentifierAttributeBinding(  oneToOneAttributeBinding.getReferencedAttributeBinding() ) ) {
 				toOneRelationMetadataGenerator.addOneToOneNotOwning(
 						propertyAuditingData,
 						oneToOneAttributeBinding,
@@ -715,6 +718,10 @@ public final class AuditMetadataGenerator {
 		);
 
 		// TODO: add support for joins
+		if ( !entityBinding.getSecondaryTables().isEmpty() ) {
+			throw new NotYetImplementedException( "Secondary tables are not supported by envers yet." );
+		}
+
 		// Creating and mapping joins (first pass)
 		//createJoins( entityBinding, classMapping, auditingData );
 		//addJoins( entityBinding, propertyMapper, auditingData, entityBinding.getEntityName(), xmlMappingData, true );

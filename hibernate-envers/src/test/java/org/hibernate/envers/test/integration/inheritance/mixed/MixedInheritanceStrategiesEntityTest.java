@@ -10,6 +10,7 @@ import org.hibernate.envers.test.integration.inheritance.mixed.entities.Activity
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.ActivityId;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.CheckInActivity;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.NormalActivity;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -18,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
+@FailureExpectedWithNewMetamodel( message = "Secondary tables are not supported by envers yet.")
 public class MixedInheritanceStrategiesEntityTest extends BaseEnversJPAFunctionalTestCase {
 
 	private ActivityId id2;

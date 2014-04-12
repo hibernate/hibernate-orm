@@ -31,6 +31,7 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -98,6 +99,7 @@ public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@PrimaryKeyJoinColumn does not work on sub-entity." )
 	public void testChildIdColumnName() {
 		Assert.assertEquals(
 				"other_id",

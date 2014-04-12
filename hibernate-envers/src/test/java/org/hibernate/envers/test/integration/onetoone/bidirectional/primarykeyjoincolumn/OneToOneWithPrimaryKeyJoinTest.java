@@ -12,6 +12,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -85,6 +86,7 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@OneToOne @PrimaryKeyJoinColumn querying is not working." )
 	public void testHistoryOfPerson() {
 		Person personVer1 = new Person( personId, "Robert" );
 		Account accountVer1 = new Account( accountId, "Saving" );
@@ -103,6 +105,7 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@OneToOne @PrimaryKeyJoinColumn querying is not working." )
 	public void testHistoryOfAccount() {
 		Person personVer1 = new Person( personId, "Robert" );
 		Account accountVer1 = new Account( accountId, "Saving" );
@@ -121,6 +124,7 @@ public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestC
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@OneToOne @PrimaryKeyJoinColumn querying is not working." )
 	public void testHistoryOfAccountNotAuditedOwners() {
 		NotAuditedNoProxyPerson noProxyPersonVer1 = new NotAuditedNoProxyPerson( noProxyPersonId, "Kinga" );
 		NotAuditedProxyPerson proxyPersonVer1 = new NotAuditedProxyPerson( proxyPersonId, "Lukasz" );

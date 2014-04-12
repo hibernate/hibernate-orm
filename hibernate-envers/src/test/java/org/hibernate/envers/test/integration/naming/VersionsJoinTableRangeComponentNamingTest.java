@@ -34,6 +34,7 @@ import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -43,6 +44,7 @@ import org.junit.Test;
  *
  * @author Erik-Berndt Scheper
  */
+@FailureExpectedWithNewMetamodel( message = "Assocation with generic type that extends @MappedSuperclass is not supported yet.")
 public class VersionsJoinTableRangeComponentNamingTest extends
 													   BaseEnversJPAFunctionalTestCase {
 	private Integer vjrcte_id;

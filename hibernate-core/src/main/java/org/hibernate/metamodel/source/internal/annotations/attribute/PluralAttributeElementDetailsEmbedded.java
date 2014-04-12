@@ -176,12 +176,12 @@ public class PluralAttributeElementDetailsEmbedded implements PluralAttributeEle
 
 	@Override
 	public boolean getContainerUpdatability() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean getContainerInsertability() {
-		return false;
+		return true;
 	}
 
 	@Override

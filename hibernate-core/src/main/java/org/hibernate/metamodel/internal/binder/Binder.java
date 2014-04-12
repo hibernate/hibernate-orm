@@ -175,6 +175,7 @@ import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 import static org.hibernate.MultiTenancyStrategy.DISCRIMINATOR;
 import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
@@ -189,6 +190,8 @@ import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOS
  * @author Strong Liu
  */
 public class Binder {
+	private static final Logger LOG = Logger.getLogger( Binder.class );
+
 	// Entity hierarchies and source index need be available throughout the binding process
 	private final Map<String, EntityHierarchySource> entityHierarchiesByRootEntityName =
 			new LinkedHashMap<String, EntityHierarchySource>();
@@ -1059,6 +1062,12 @@ public class Binder {
 		//       processing entity hierarchies.
 		int oldSize = Integer.MAX_VALUE;
 		while( !unresolvedEntityHierarchies.isEmpty() && unresolvedEntityHierarchies.size() < oldSize ) {
+			LOG.debug(
+					String.format(
+							"Retry resolving remaining unresolved EntityHieraries: %s",
+							getRootEntityNames( unresolvedEntityHierarchies )
+					)
+			);
 			oldSize = unresolvedEntityHierarchies.size();
 			for ( Iterator<EntityHierarchySource> it = unresolvedEntityHierarchies.iterator(); it.hasNext(); ) {
 				final EntityHierarchySource entityHierarchySource = it.next();
@@ -1066,24 +1075,42 @@ public class Binder {
 					processHelper.apply( entityHierarchySource, strategy );
 					// succeeded, so the entityHierarchySource is no longer unresolved.
 					it.remove();
+					LOG.debug(
+							String.format(
+									"EntityHierarchy [%s] has been resolved", entityHierarchySource.getRoot().getEntityName()
+							)
+					);
 				}
 				catch (Exception ex) {
-					// to nothing;
+					// just log the exception.
+					LOG.debug(
+							String.format(
+									"Could not resolve EntityHierarchy %s due to: [%s]",
+									entityHierarchySource.getRoot().getEntityName(),
+									ex
+							)
+					);
 				}
 			}
 		}
 		// If any entity hierarchies cannot be resolved, then throw exception.
 		if ( ! unresolvedEntityHierarchies.isEmpty() ) {
-			StringBuilder buffer = new StringBuilder();
-			String sep = "";
-			for ( EntityHierarchySource unresolved : unresolvedEntityHierarchies ) {
-				buffer.append( sep ).append( unresolved.getRoot().getEntityName() );
-				sep = ", ";
-			}
 			throw new IllegalStateException(
-					"Could not resolve all EntityHierarchies; remaining = {" + buffer.toString() + "}"
+					"Could not resolve all EntityHierarchies; remaining = {" +
+							getRootEntityNames( unresolvedEntityHierarchies ) +
+							"}"
 			);
 		}
+	}
+
+	private String getRootEntityNames(Set<EntityHierarchySource> entityHierarchySources) {
+		StringBuilder buffer = new StringBuilder();
+		String sep = "";
+		for ( EntityHierarchySource entityHierarchySource : entityHierarchySources ) {
+			buffer.append( sep ).append( entityHierarchySource.getRoot().getEntityName() );
+			sep = ", ";
+		}
+		return buffer.toString();
 	}
 
 	// TODO: this will not be necessary once we know the proper order for

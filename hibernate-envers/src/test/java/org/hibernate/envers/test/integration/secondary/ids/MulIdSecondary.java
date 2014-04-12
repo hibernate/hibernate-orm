@@ -25,18 +25,18 @@ package org.hibernate.envers.test.integration.secondary.ids;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
-import org.hibernate.mapping.Join;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@FailureExpectedWithNewMetamodel( message = "Secondary tables are not supported by envers yet.")
 public class MulIdSecondary extends BaseEnversJPAFunctionalTestCase {
 	private MulId id;
 

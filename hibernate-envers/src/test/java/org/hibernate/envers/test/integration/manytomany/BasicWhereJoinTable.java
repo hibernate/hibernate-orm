@@ -31,6 +31,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntNoAutoIdTestEntity;
 import org.hibernate.envers.test.entities.manytomany.WhereJoinTableEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -140,6 +141,7 @@ public class BasicWhereJoinTable extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfWjte1() {
 		IntNoAutoIdTestEntity ite1_1 = getEntityManager().find( IntNoAutoIdTestEntity.class, ite1_1_id );
 		IntNoAutoIdTestEntity ite2_1 = getEntityManager().find( IntNoAutoIdTestEntity.class, ite2_1_id );
@@ -163,6 +165,7 @@ public class BasicWhereJoinTable extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "@WhereJoinTable is not supported with new metamodel yet." )
 	public void testHistoryOfWjte2() {
 		IntNoAutoIdTestEntity ite1_1 = getEntityManager().find( IntNoAutoIdTestEntity.class, ite1_1_id );
 		IntNoAutoIdTestEntity ite1_2 = getEntityManager().find( IntNoAutoIdTestEntity.class, ite1_2_id );

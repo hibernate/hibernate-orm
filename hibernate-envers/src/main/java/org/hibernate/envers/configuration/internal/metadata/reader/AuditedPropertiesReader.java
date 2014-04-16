@@ -73,8 +73,6 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  */
 public class AuditedPropertiesReader {
 	private final boolean defaultAudited;
-	// TODO: can defaultStore be made private?
-	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
 	private final GlobalConfiguration globalCfg;
@@ -94,14 +92,12 @@ public class AuditedPropertiesReader {
 
 	public AuditedPropertiesReader(
 			boolean defaultAudited,
-			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			GlobalConfiguration globalCfg,
 			ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		this.defaultAudited = defaultAudited;
-		this.defaultStore = defaultStore;
 		this.persistentPropertiesSource = persistentPropertiesSource;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
 		this.globalCfg = globalCfg;
@@ -436,7 +432,7 @@ public class AuditedPropertiesReader {
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-					defaultAudited, ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg,
+					defaultAudited, componentPropertiesSource, componentData, globalCfg,
 					reflectionManager, propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
 			);
 			audPropReader.read();
@@ -463,7 +459,6 @@ public class AuditedPropertiesReader {
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				isAudited,
-				ModificationStore.FULL,
 				componentPropertiesSource,
 				componentData,
 				globalCfg,

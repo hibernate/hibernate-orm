@@ -65,7 +65,7 @@ public final class AnnotationsMetadataReader {
 		auditData = new ClassAuditingData();
 	}
 
-	private ModificationStore getDefaultAudited(XClass clazz) {
+	private ModificationStore getDefaultAuditedModStore(XClass clazz) {
 		final Audited defaultAudited = clazz.getAnnotation( Audited.class );
 
 		if ( defaultAudited != null ) {
@@ -115,14 +115,13 @@ public final class AnnotationsMetadataReader {
 		try {
 			final XClass xclass = reflectionManager.classForName( pc.getClassName(), this.getClass() );
 
-			final ModificationStore defaultStore = getDefaultAudited( xclass );
+			final ModificationStore defaultStore = getDefaultAuditedModStore( xclass );
 			if ( defaultStore != null ) {
 				auditData.setDefaultAudited( true );
 			}
 
 			new AuditedPropertiesReader(
 					auditData.isAudited(),
-					defaultStore,
 					new PersistentClassPropertiesSource( xclass ),
 					auditData,
 					globalCfg,

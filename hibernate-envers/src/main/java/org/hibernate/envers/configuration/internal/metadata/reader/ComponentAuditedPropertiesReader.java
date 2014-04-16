@@ -39,13 +39,12 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	public ComponentAuditedPropertiesReader(
 			boolean defaultAudited,
-			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		super(
-				defaultAudited, defaultStore, persistentPropertiesSource, auditedPropertiesHolder,
+				defaultAudited, persistentPropertiesSource, auditedPropertiesHolder,
 				globalCfg, reflectionManager, propertyNamePrefix
 		);
 	}

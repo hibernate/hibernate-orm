@@ -33,11 +33,15 @@ import org.junit.Test;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Jakob Braeuchi.
  */
+@TestForIssue(jiraKey = "HHH-8908")
 public class MappedSuperclassEmbeddableTest extends BaseEnversJPAFunctionalTestCase {
+	private long id;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -45,37 +49,44 @@ public class MappedSuperclassEmbeddableTest extends BaseEnversJPAFunctionalTestC
 	}
 
 	@Test
-	public void testEmbeddableThatExtendsMappedSuperclass() {
+	@Priority(10)
+	public void initData() {
 		EntityManager em = getEntityManager();
 
 		SimplePerson person = new SimplePerson();
-		person.setName("Person 1");
-		person.setTestCode(new TestCode(84));
-		person.setGenericCode(new Code(42, "TestCodeart"));
+		person.setName( "Person 1" );
+		person.setTestCode( new TestCode( 84 ) );
+		person.setGenericCode( new Code( 42, "TestCodeart" ) );
 
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
-		em.persist(person);
+		em.persist( person );
 		tx.commit();
 		em.close();
 
+		id = person.getId();
+	}
+
+	@Test
+	public void testEmbeddableThatExtendsMappedSuperclass() {
+
 		// Reload and Compare Revision
-		em = getEntityManager();
-		SimplePerson personLoaded = em.find(SimplePerson.class, person.getId());
+		EntityManager em = getEntityManager();
+		SimplePerson personLoaded = em.find( SimplePerson.class, id );
 
 		AuditReader reader = AuditReaderFactory.get( em );
 
-		List<Number> revs = reader.getRevisions(SimplePerson.class, person.getId());
+		List<Number> revs = reader.getRevisions( SimplePerson.class, id );
 		Assert.assertEquals( 1, revs.size() );
 
-		SimplePerson personRev1 = reader.find(SimplePerson.class, person.getId(), revs.get(0));
+		SimplePerson personRev1 = reader.find( SimplePerson.class, id, revs.get( 0 ) );
 
-		Assert.assertEquals(personLoaded.getName(), personRev1.getName());
+		Assert.assertEquals( personLoaded.getName(), personRev1.getName() );
 
 		// Generic Code is read from AUD Table
-		Assert.assertEquals(personLoaded.getGenericCode(), personRev1.getGenericCode());
+		Assert.assertEquals( personLoaded.getGenericCode(), personRev1.getGenericCode() );
 
 		// Test Code is read from AUD Table
-		Assert.assertEquals(personLoaded.getTestCode(), personRev1.getTestCode());
+		Assert.assertEquals( personLoaded.getTestCode(), personRev1.getTestCode() );
 	}
 }

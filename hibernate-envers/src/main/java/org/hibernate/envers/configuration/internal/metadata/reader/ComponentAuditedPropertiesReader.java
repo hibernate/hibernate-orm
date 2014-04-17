@@ -38,13 +38,13 @@ import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	public ComponentAuditedPropertiesReader(
-			ModificationStore defaultStore,
+			boolean defaultAudited,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		super(
-				defaultStore, persistentPropertiesSource, auditedPropertiesHolder,
+				defaultAudited, persistentPropertiesSource, auditedPropertiesHolder,
 				globalCfg, reflectionManager, propertyNamePrefix
 		);
 	}

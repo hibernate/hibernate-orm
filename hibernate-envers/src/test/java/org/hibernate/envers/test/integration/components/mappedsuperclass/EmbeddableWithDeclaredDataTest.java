@@ -38,14 +38,15 @@ import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Jakob Braeuchi.
+ * @author Gail Badner
  */
 @TestForIssue(jiraKey = "HHH-8908")
-public class MappedSuperclassEmbeddableTest extends BaseEnversJPAFunctionalTestCase {
+public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
 	private long id;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { SimplePerson.class, AbstractCode.class, Code.class, TestCode.class };
+		return new Class[] { EntityWithEmbeddableWithDeclaredData.class, AbstractEmbeddable.class, EmbeddableWithDeclaredData.class };
 	}
 
 	@Test
@@ -53,18 +54,17 @@ public class MappedSuperclassEmbeddableTest extends BaseEnversJPAFunctionalTestC
 	public void initData() {
 		EntityManager em = getEntityManager();
 
-		SimplePerson person = new SimplePerson();
-		person.setName( "Person 1" );
-		person.setTestCode( new TestCode( 84 ) );
-		person.setGenericCode( new Code( 42, "TestCodeart" ) );
+		EntityWithEmbeddableWithDeclaredData entity = new EntityWithEmbeddableWithDeclaredData();
+		entity.setName( "Entity 1" );
+		entity.setValue( new EmbeddableWithDeclaredData( 42, "TestCodeart" ) );
 
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
-		em.persist( person );
+		em.persist( entity );
 		tx.commit();
 		em.close();
 
-		id = person.getId();
+		id = entity.getId();
 	}
 
 	@Test
@@ -72,21 +72,18 @@ public class MappedSuperclassEmbeddableTest extends BaseEnversJPAFunctionalTestC
 
 		// Reload and Compare Revision
 		EntityManager em = getEntityManager();
-		SimplePerson personLoaded = em.find( SimplePerson.class, id );
+		EntityWithEmbeddableWithDeclaredData entityLoaded = em.find( EntityWithEmbeddableWithDeclaredData.class, id );
 
 		AuditReader reader = AuditReaderFactory.get( em );
 
-		List<Number> revs = reader.getRevisions( SimplePerson.class, id );
+		List<Number> revs = reader.getRevisions( EntityWithEmbeddableWithDeclaredData.class, id );
 		Assert.assertEquals( 1, revs.size() );
 
-		SimplePerson personRev1 = reader.find( SimplePerson.class, id, revs.get( 0 ) );
+		EntityWithEmbeddableWithDeclaredData entityRev1 = reader.find( EntityWithEmbeddableWithDeclaredData.class, id, revs.get( 0 ) );
 
-		Assert.assertEquals( personLoaded.getName(), personRev1.getName() );
+		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
 
-		// Generic Code is read from AUD Table
-		Assert.assertEquals( personLoaded.getGenericCode(), personRev1.getGenericCode() );
-
-		// Test Code is read from AUD Table
-		Assert.assertEquals( personLoaded.getTestCode(), personRev1.getTestCode() );
+		// value is read from AUD Table
+		Assert.assertEquals( entityLoaded.getValue(), entityRev1.getValue() );
 	}
 }

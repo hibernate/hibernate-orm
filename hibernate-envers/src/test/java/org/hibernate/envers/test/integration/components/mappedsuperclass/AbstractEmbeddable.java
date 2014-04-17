@@ -23,31 +23,64 @@
  */
 package org.hibernate.envers.test.integration.components.mappedsuperclass;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Transient;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.MappedSuperclass;
 
 /**
  * @author Jakob Braeuchi.
  */
-@Embeddable
-public class TestCode extends AbstractCode {
 
-	public static final int _TEST = 1;
+@MappedSuperclass
+@Access(AccessType.FIELD)
+public abstract class AbstractEmbeddable {
 
-	public static final TestCode TEST = new TestCode( _TEST );
+	/**
+	 * Initial Value
+	 */
+	protected static final int UNDEFINED = -1;
 
-	public TestCode(int code) {
-		super( code );
+	private int code = UNDEFINED;
+
+
+	protected AbstractEmbeddable() {
+		this( UNDEFINED );
 	}
 
-	// Needed for @Embeddable
-	protected TestCode() {
-		super( UNDEFINED );
+	/**
+	 * Constructor with code
+	 */
+	public AbstractEmbeddable(int code) {
+		this.code = code;
+	}
+
+	public int getCode() {
+		return code;
 	}
 
 	@Override
-	@Transient
-	public String getCodeart() {
-		return "TestCode";
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + code;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) {
+			return true;
+		}
+		if ( obj == null ) {
+			return false;
+		}
+		if ( getClass() != obj.getClass() ) {
+			return false;
+		}
+		AbstractEmbeddable other = (AbstractEmbeddable) obj;
+		if ( code != other.code ) {
+			return false;
+		}
+		return true;
 	}
 }

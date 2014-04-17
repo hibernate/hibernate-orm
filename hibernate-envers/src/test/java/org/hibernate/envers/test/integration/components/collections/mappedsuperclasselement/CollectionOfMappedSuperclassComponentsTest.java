@@ -97,6 +97,6 @@ public class CollectionOfMappedSuperclassComponentsTest extends BaseEnversJPAFun
 		Set<Code> comps1 = entity.getComps();
 		assertEquals( 1, comps1.size() );
 		assertTrue( comps1.contains( new Code( 1 ) ) );
-		assertEquals( 0, entity.getCompsNotAudited().size() );
+		// The contents of entity.getCompsNotAudited() is unspecified, so no need to test.
 	}
 }

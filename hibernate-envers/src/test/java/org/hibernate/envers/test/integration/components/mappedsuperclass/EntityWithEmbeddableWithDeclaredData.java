@@ -26,15 +26,11 @@ package org.hibernate.envers.test.integration.components.mappedsuperclass;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Version;
 
 import org.hibernate.envers.Audited;
 
@@ -42,31 +38,19 @@ import org.hibernate.envers.Audited;
  * @author Jakob Braeuchi.
  */
 @Entity
-@Table(name = "TEST_SIMPLE_PERSON")
 @Access(AccessType.FIELD)
 @Audited
-public class SimplePerson {
+public class EntityWithEmbeddableWithDeclaredData {
 
 	@Id
 	@GeneratedValue
 	private long id;
 
-	@Version
-	private long version;
-
 	@Column(name = "NAME", length = 100)
 	private String name;
 
 	@Embedded
-	@AttributeOverrides({ @AttributeOverride(name = "code", column = @Column(name = "THE_TEST")) })
-	private TestCode testCode = TestCode.TEST;
-
-	@Embedded
-	@AttributeOverrides({
-			@AttributeOverride(name = "code", column = @Column(name = "THE_CODE")),
-			@AttributeOverride(name = "codeArt", column = @Column(name = "THE_CODEART"))
-	})
-	private Code genericCode;
+	private EmbeddableWithDeclaredData value;
 
 	public long getId() {
 		return id;
@@ -74,10 +58,6 @@ public class SimplePerson {
 
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public long getVersion() {
-		return version;
 	}
 
 	public String getName() {
@@ -88,20 +68,12 @@ public class SimplePerson {
 		this.name = name;
 	}
 
-	public TestCode getTestCode() {
-		return testCode;
+	public EmbeddableWithDeclaredData getValue() {
+		return value;
 	}
 
-	public void setTestCode(TestCode testCode) {
-		this.testCode = testCode;
-	}
-
-	public Code getGenericCode() {
-		return genericCode;
-	}
-
-	public void setGenericCode(Code genericCode) {
-		this.genericCode = genericCode;
+	public void setValue(EmbeddableWithDeclaredData value) {
+		this.value = value;
 	}
 
 	@Override
@@ -123,7 +95,7 @@ public class SimplePerson {
 		if ( getClass() != obj.getClass() ) {
 			return false;
 		}
-		SimplePerson other = (SimplePerson) obj;
+		EntityWithEmbeddableWithDeclaredData other = (EntityWithEmbeddableWithDeclaredData) obj;
 		if ( id != other.id ) {
 			return false;
 		}

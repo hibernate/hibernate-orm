@@ -23,37 +23,64 @@
  */
 package org.hibernate.envers.test.integration.components.mappedsuperclass;
 
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+import org.hibernate.envers.Audited;
+
 /**
  * @author Jakob Braeuchi.
  */
+@Entity
+@Access(AccessType.FIELD)
+@Audited
+public class EntityWithEmbeddableWithNoDeclaredData {
 
-import javax.persistence.Embeddable;
+	@Id
+	@GeneratedValue
+	private long id;
 
-@Embeddable
-public class Code extends AbstractCode {
+	@Column(name = "NAME", length = 100)
+	private String name;
 
-	private String codeArt;
+	@Embedded
+	private EmbeddableWithNoDeclaredData value;
 
-	public Code(int code, String codeArt) {
-		super( code );
-		this.codeArt = codeArt;
+	public long getId() {
+		return id;
 	}
 
-	// Needed for @Embeddable
-	protected Code() {
-		this( UNDEFINED, null );
+	public void setId(long id) {
+		this.id = id;
 	}
 
-	@Override
-	public String getCodeart() {
-		return codeArt;
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public EmbeddableWithNoDeclaredData getValue() {
+		return value;
+	}
+
+	public void setValue(EmbeddableWithNoDeclaredData value) {
+		this.value = value;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ( ( codeArt == null ) ? 0 : codeArt.hashCode() );
+		int result = 1;
+		result = prime * result + (int) ( id ^ ( id >>> 32 ) );
 		return result;
 	}
 
@@ -62,22 +89,16 @@ public class Code extends AbstractCode {
 		if ( this == obj ) {
 			return true;
 		}
-		if ( !super.equals( obj ) ) {
+		if ( obj == null ) {
 			return false;
 		}
 		if ( getClass() != obj.getClass() ) {
 			return false;
 		}
-		Code other = (Code) obj;
-		if ( codeArt == null ) {
-			if ( other.codeArt != null ) {
-				return false;
-			}
-		}
-		else if ( !codeArt.equals( other.codeArt ) ) {
+		EntityWithEmbeddableWithNoDeclaredData other = (EntityWithEmbeddableWithNoDeclaredData) obj;
+		if ( id != other.id ) {
 			return false;
 		}
 		return true;
 	}
-
 }

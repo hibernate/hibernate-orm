@@ -23,66 +23,21 @@
  */
 package org.hibernate.envers.test.integration.components.mappedsuperclass;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.Embeddable;
+import javax.persistence.Transient;
 
 /**
  * @author Jakob Braeuchi.
+ * @author Gail Badner
  */
+@Embeddable
+public class EmbeddableWithNoDeclaredData extends AbstractEmbeddable {
 
-@MappedSuperclass
-@Access(AccessType.FIELD)
-public abstract class AbstractCode {
-
-	/**
-	 * Initial Value
-	 */
-	protected static final int UNDEFINED = -1;
-
-	private int code = UNDEFINED;
-
-
-	protected AbstractCode() {
-		this( UNDEFINED );
+	public EmbeddableWithNoDeclaredData(int code) {
+		super( code );
 	}
 
-	/**
-	 * Constructor with code
-	 */
-	public AbstractCode(int code) {
-		this.code = code;
-	}
-
-	public abstract String getCodeart();
-
-	public int getCode() {
-		return code;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + code;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if ( this == obj ) {
-			return true;
-		}
-		if ( obj == null ) {
-			return false;
-		}
-		if ( getClass() != obj.getClass() ) {
-			return false;
-		}
-		AbstractCode other = (AbstractCode) obj;
-		if ( code != other.code ) {
-			return false;
-		}
-		return true;
+	// Needed for @Embeddable
+	protected EmbeddableWithNoDeclaredData() {
 	}
 }

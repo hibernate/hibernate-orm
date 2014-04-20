@@ -54,7 +54,7 @@ import org.jboss.logging.Logger;
  */
 public class DatabaseMetadata {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DatabaseMetaData.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DatabaseMetaData.class.getName());
 
 	private final Map tables = new HashMap();
 	private final Set sequences = new HashSet();
@@ -149,7 +149,9 @@ public class DatabaseMetadata {
 
 				}
 				finally {
-					rs.close();
+					if ( rs != null ) {
+						rs.close();
+					}
 				}
 			}
 			catch (SQLException sqlException) {
@@ -180,10 +182,13 @@ public class DatabaseMetadata {
 					}
 				}
 				finally {
-					rs.close();
-					statement.close();
+					if ( rs != null ) {
+						rs.close();
+					}
+					if ( statement != null ) {
+						statement.close();
+					}
 				}
-
 			}
 		}
 	}
@@ -196,30 +201,30 @@ public class DatabaseMetadata {
 		return false;
 	}
 
- 	public boolean isTable(Object key) throws HibernateException {
- 		if(key instanceof String) {
+	public boolean isTable(Object key) throws HibernateException {
+		if(key instanceof String) {
 			Table tbl = new Table((String)key);
 			if ( getTableMetadata( tbl.getName(), tbl.getSchema(), tbl.getCatalog(), tbl.isQuoted() ) != null ) {
- 				return true;
- 			} else {
- 				String[] strings = StringHelper.split(".", (String) key);
- 				if(strings.length==3) {
+				return true;
+			} else {
+				String[] strings = StringHelper.split(".", (String) key);
+				if(strings.length==3) {
 					tbl = new Table(strings[2]);
 					tbl.setCatalog(strings[0]);
 					tbl.setSchema(strings[1]);
 					return getTableMetadata( tbl.getName(), tbl.getSchema(), tbl.getCatalog(), tbl.isQuoted() ) != null;
- 				} else if (strings.length==2) {
+				} else if (strings.length==2) {
 					tbl = new Table(strings[1]);
 					tbl.setSchema(strings[0]);
 					return getTableMetadata( tbl.getName(), tbl.getSchema(), tbl.getCatalog(), tbl.isQuoted() ) != null;
- 				}
- 			}
- 		}
- 		return false;
- 	}
+				}
+			}
+		}
+		return false;
+	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return "DatabaseMetadata" + tables.keySet().toString() + sequences.toString();
 	}
 }

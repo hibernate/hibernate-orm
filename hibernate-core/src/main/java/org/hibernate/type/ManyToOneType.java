@@ -227,9 +227,8 @@ public class ManyToOneType extends EntityType {
 			return true;
 		}
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-		return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, session );
+		return getIdentifierOrUniqueKeyType( session.getFactory() )
+				.isDirty( old, getIdentifier( current, session ), session );
 	}
 
 	public Serializable disassemble(

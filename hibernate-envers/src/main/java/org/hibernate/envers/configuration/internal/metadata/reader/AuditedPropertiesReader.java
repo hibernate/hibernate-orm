@@ -49,6 +49,7 @@ import org.hibernate.envers.event.spi.EnversDotNames;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -79,6 +80,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  */
 public class AuditedPropertiesReader {
 	private final AuditConfiguration.AuditConfigurationContext context;
+	private final boolean defaultAudited;
 	// TODO: is AttributeBindingContainer actually needed or is Hierarchical sufficient?
 	private final PersistentPropertiesSource processedPersistentPropertiesSource;
 	private final ClassInfo processedClassInfo;
@@ -98,10 +100,12 @@ public class AuditedPropertiesReader {
 
 	public AuditedPropertiesReader(
 			AuditConfiguration.AuditConfigurationContext context,
+			boolean defaultAudited,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			PersistentPropertiesSource processedPersistentPropertiesSource,
 			String propertyNamePrefix) {
 		this.context = context;
+		this.defaultAudited = defaultAudited;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
 		this.processedPersistentPropertiesSource = processedPersistentPropertiesSource;
 		this.processedClassInfo = context.getClassInfo(
@@ -398,9 +402,20 @@ public class AuditedPropertiesReader {
 		addFromProperties( getAttributeBindings( attributeBindingContainer, "field" ), "field", fieldAccessedPersistentProperties, allClassAudited );
 		addFromProperties( getAttributeBindings( attributeBindingContainer, "property" ), "property", propertyAccessedPersistentProperties, allClassAudited );
 
-		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
+		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() || defaultAudited ) {
 			if ( Hierarchical.class.isInstance( attributeBindingContainer.getAttributeContainer() ) ) {
+				// attributeBindingContainer *should* always be an Hierarchical
 				final Hierarchical hierarchical = (Hierarchical) attributeBindingContainer.getAttributeContainer();
+				final ClassDescriptor classDescriptor = (ClassDescriptor) hierarchical.getDescriptor();
+				if (  !Object.class.getName().equals( classDescriptor.getSuperType().getName().toString() ) && hierarchical.getSuperType() == null ) {
+					throw new NotYetImplementedException(
+							String.format(
+									"Inconsistency for [%s]; Hierarchical.getSuperType() is null but classDescriptor.getSuperType() is [%s]",
+									attributeBindingContainer.getRoleBase().getFullPath(),
+									classDescriptor.getSuperType().getName().toString()
+							)
+					);
+				}
 				if ( MappedSuperclass.class.isInstance( hierarchical.getSuperType() ) ) {
 					throw new NotYetImplementedException( "@MappedSuperclass not supported with new metamodel by envers yet. " );
 				}
@@ -466,7 +481,7 @@ public class AuditedPropertiesReader {
 //					propertyValue
 //			);
 //			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-//					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+//					defaultAudited, componentPropertiesSource, componentData, globalCfg, reflectionManager,
 //					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
 //			);
 //			audPropReader.read();
@@ -496,6 +511,7 @@ public class AuditedPropertiesReader {
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				context,
+				isAudited,
 				componentData,
 				componentPropertiesSource,
 				propertyNamePrefix + MappingTools.createComponentPrefix( attributeBinding.getAttribute().getName() )

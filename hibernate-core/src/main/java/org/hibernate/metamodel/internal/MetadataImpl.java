@@ -38,12 +38,14 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -300,9 +302,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );
 		}
-		return entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
-				.getHibernateTypeDescriptor()
-				.getResolvedTypeMapping();
+		return entityBinding.getHierarchyDetails()
+				.getEntityIdentifier()
+				.getEntityIdentifierBinding()
+				.getHibernateType();
 	}
 
 	@Override
@@ -311,8 +314,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );
 		}
-		AttributeBinding idBinding = entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
-		return idBinding == null ? null : idBinding.getAttribute().getName();
+
+		final EntityIdentifier idInfo = entityBinding.getHierarchyDetails().getEntityIdentifier();
+		if ( idInfo.getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
+			return null;
+		}
+
+		final EntityIdentifier.AttributeBasedIdentifierBinding identifierBinding =
+				(EntityIdentifier.AttributeBasedIdentifierBinding) idInfo.getEntityIdentifierBinding();
+		return identifierBinding.getAttributeBinding().getAttribute().getName();
 	}
 
 	@Override

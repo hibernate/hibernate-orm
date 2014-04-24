@@ -131,7 +131,8 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			case AGGREGATED: {
 				return new AggregatedCompositeIdentifierSourceImpl(
 						rootSource,
-						(EmbeddedAttributeSourceImpl) rootSource.getIdentifierAttributes().get( 0 )
+						(EmbeddedAttributeSourceImpl) rootSource.getIdentifierAttributes().get( 0 ),
+						rootSource.getMapsIdSources()
 				);
 			}
 			case NON_AGGREGATED: {

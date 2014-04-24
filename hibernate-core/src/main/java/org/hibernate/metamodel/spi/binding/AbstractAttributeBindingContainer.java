@@ -93,7 +93,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 		return attributeBindingMapInternal().values();
 	}
 
-	protected void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
+	public void collectRelationalValueBindings(RelationalValueBindingContainer relationalValueBindingContainer) {
 		for ( AttributeBinding subAttributeBinding : attributeBindings() ) {
 			if ( AbstractSingularAttributeBinding.class.isInstance( subAttributeBinding ) ) {
 				( (AbstractSingularAttributeBinding) subAttributeBinding ).collectRelationalValueBindings( relationalValueBindingContainer );

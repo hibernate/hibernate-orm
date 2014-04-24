@@ -42,7 +42,7 @@ public class BasicAttributeBinding
 	private final RelationalValueBindingContainer relationalValueBindingContainer;
 	private final PropertyGeneration generation;
 
-	BasicAttributeBinding(
+	public BasicAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			List<RelationalValueBinding> relationalValueBindings,

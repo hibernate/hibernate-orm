@@ -46,7 +46,7 @@ import org.hibernate.tuple.component.ComponentTuplizer;
  */
 public abstract class AbstractEmbeddableBinding
 		extends AbstractAttributeBindingContainer
-		implements EmbeddableBinding {
+		implements EmbeddableBindingImplementor {
 	private final EntityBinding entityBinding;
 	private final AttributeContainer attributeContainer;
 	private final TableSpecification primaryTable;
@@ -116,7 +116,8 @@ public abstract class AbstractEmbeddableBinding
 
 	protected abstract boolean isModifiable();
 
-	protected RelationalValueBindingContainer getRelationalValueBindingContainer() {
+	@Override
+	public RelationalValueBindingContainer getRelationalValueBindingContainer() {
 		final RelationalValueBindingContainer bindingContainer = new RelationalValueBindingContainer();
 		collectRelationalValueBindings( bindingContainer );
 		return bindingContainer;

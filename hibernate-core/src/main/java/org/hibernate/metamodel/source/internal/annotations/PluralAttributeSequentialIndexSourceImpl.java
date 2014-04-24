@@ -25,15 +25,12 @@ package org.hibernate.metamodel.source.internal.annotations;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.internal.binder.Binder;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.attribute.Column;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PluralAttribute;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSequentialIndexSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
@@ -51,21 +48,7 @@ public class PluralAttributeSequentialIndexSourceImpl
 	private final RelationalValueSource relationalValueSource;
 	private final Binder.DefaultNamingStrategy defaultNamingStrategy;
 
-	private final static HibernateTypeSource INTEGER_TYPE = new HibernateTypeSource() {
-		@Override
-		public String getName() {
-			return "integer";
-		}
-
-		@Override
-		public Map<String, String> getParameters() {
-			return Collections.emptyMap();
-		}
-		@Override
-		public JavaTypeDescriptor getJavaType() {
-			return null;
-		}
-	};
+	private static HibernateTypeSourceImpl INTEGER_TYPE;
 
 	public PluralAttributeSequentialIndexSourceImpl(final PluralAttribute attribute) {
 		super( attribute );
@@ -81,6 +64,14 @@ public class PluralAttributeSequentialIndexSourceImpl
 				return attribute.getName() + "_ORDER";
 			}
 		};
+
+		if ( INTEGER_TYPE == null ) {
+			INTEGER_TYPE = new HibernateTypeSourceImpl(
+					"integer",
+					null,
+					attribute.getContext().typeDescriptor( "int" )
+			);
+		}
 	}
 
 	@Override
@@ -99,7 +90,7 @@ public class PluralAttributeSequentialIndexSourceImpl
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return INTEGER_TYPE;
 	}
 

@@ -33,6 +33,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.Assigned;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
@@ -73,8 +74,7 @@ public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 		IdentifierGenerator generator =identifier.getIdentifierGenerator();
         assertNotNull( generator );
         assertEquals( "Wrong generator", Assigned.class, generator.getClass() );
-        assertFalse( identifier.isNonAggregatedComposite() );
-
+        assertEquals( EntityIdentifierNature.SIMPLE, identifier.getNature() );
 	}
 
 	@Entity

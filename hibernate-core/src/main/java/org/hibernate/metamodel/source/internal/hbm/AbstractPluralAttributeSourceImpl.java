@@ -92,21 +92,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 		this.caching = Helper.createCaching( pluralAttributeElement.getCache() );
 
-		this.typeInformation = new HibernateTypeSource() {
-			@Override
-			public String getName() {
-				return pluralAttributeElement.getCollectionType();
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return Collections.emptyMap();
-			}
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
+		this.typeInformation = new HibernateTypeSourceImpl( pluralAttributeElement.getCollectionType() );
 		this.filterSources = buildFilterSources();
 	}
 

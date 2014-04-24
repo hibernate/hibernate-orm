@@ -54,6 +54,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SyntheticAttributeHelper;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -90,6 +91,7 @@ import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
@@ -100,7 +102,11 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
+import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.BasicType;
+import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.Hierarchical;
+import org.hibernate.metamodel.spi.domain.MappedSuperclass;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
@@ -605,21 +611,97 @@ public class MetadataBuildingProcess {
 			return javaTypeDescriptorRepository.getType( javaTypeDescriptorRepository.buildName( qualifyClassName( name  ) ) );
 		}
 
+		private final Map<JavaTypeDescriptor, Type> domainModelTypes = new HashMap<JavaTypeDescriptor, Type>();
+
+		@Override
+		public BasicType buildBasicDomainType(JavaTypeDescriptor typeDescriptor) {
+			final BasicType type = new BasicType( typeDescriptor.getName().toString(), typeDescriptor );
+			final Type old = domainModelTypes.put( typeDescriptor, type );
+			if ( old != null ) {
+				log.debugf( "Building basic domain type overrode existing entry: %s", old );
+			}
+			return type;
+		}
+
+		@Override
+		public MappedSuperclass buildMappedSuperclassDomainType(JavaTypeDescriptor typeDescriptor) {
+			return buildMappedSuperclassDomainType( typeDescriptor, null );
+		}
+
+		@Override
+		public MappedSuperclass buildMappedSuperclassDomainType(
+				JavaTypeDescriptor typeDescriptor,
+				Hierarchical superType) {
+			final MappedSuperclass type = new MappedSuperclass( typeDescriptor, superType );
+			final Type old = domainModelTypes.put( typeDescriptor, type );
+			if ( old != null ) {
+				log.debugf( "Building MappedSuperclass domain type overrode existing entry: %s", old );
+			}
+			return type;
+		}
+
+		@Override
+		public Aggregate buildComponentDomainType(JavaTypeDescriptor typeDescriptor) {
+			return buildComponentDomainType( typeDescriptor, null );
+		}
+
+		@Override
+		public Aggregate buildComponentDomainType(
+				JavaTypeDescriptor typeDescriptor
+				, Hierarchical superType) {
+			final Aggregate type = new Aggregate( typeDescriptor, superType );
+			final Type old = domainModelTypes.put( typeDescriptor, type );
+			if ( old != null ) {
+				log.debugf( "Building Aggregate domain type overrode existing entry: %s", old );
+			}
+			return type;
+		}
+
+		@Override
+		public Entity buildEntityDomainType(JavaTypeDescriptor typeDescriptor) {
+			return buildEntityDomainType( typeDescriptor, null );
+		}
+
+		@Override
+		public Entity buildEntityDomainType(
+				JavaTypeDescriptor typeDescriptor,
+				Hierarchical superType) {
+			final Entity type = new Entity( typeDescriptor, superType );
+			final Type old = domainModelTypes.put( typeDescriptor, type );
+			if ( old != null ) {
+				log.debugf( "Building Entity domain type overrode existing entry: %s", old );
+			}
+			return type;
+		}
+
+		@Override
+		public Type locateDomainType(JavaTypeDescriptor typeDescriptor) {
+			return domainModelTypes.get( typeDescriptor );
+		}
+
+		@Override
+		public Type locateOrBuildDomainType(JavaTypeDescriptor typeDescriptor, boolean isAggregate) {
+			Type type = domainModelTypes.get( typeDescriptor );
+			if ( type == null ) {
+				type = isAggregate
+						? buildComponentDomainType( typeDescriptor )
+						: buildBasicDomainType( typeDescriptor );
+			}
+			return type;
+		}
+
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// BindingContext deprecated impls
 
 		@Override
 		public Type makeDomainType(String className) {
-			return new BasicType( className, typeDescriptor( className ) );
+			return buildBasicDomainType( typeDescriptor( className ) );
 		}
 
 		@Override
 		public Type makeDomainType(DotName typeName) {
-			return new BasicType(
-					typeName.toString(),
-					typeDescriptor( typeName.toString() )
-			);
+			return buildBasicDomainType( typeDescriptor( typeName.toString() ) );
 		}
 	}
 
@@ -1143,9 +1225,10 @@ public class MetadataBuildingProcess {
 			if ( entityBinding == null ) {
 				throw new MappingException( "Entity binding not known: " + entityName );
 			}
-			return entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
-					.getHibernateTypeDescriptor()
-					.getResolvedTypeMapping();
+			return entityBinding.getHierarchyDetails()
+					.getEntityIdentifier()
+					.getEntityIdentifierBinding()
+					.getHibernateType();
 		}
 
 		@Override
@@ -1154,8 +1237,15 @@ public class MetadataBuildingProcess {
 			if ( entityBinding == null ) {
 				throw new MappingException( "Entity binding not known: " + entityName );
 			}
-			AttributeBinding idBinding = entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
-			return idBinding == null ? null : idBinding.getAttribute().getName();
+
+			final EntityIdentifier idInfo = entityBinding.getHierarchyDetails().getEntityIdentifier();
+			if ( idInfo.getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
+				return null;
+			}
+
+			final EntityIdentifier.AttributeBasedIdentifierBinding identifierBinding =
+					(EntityIdentifier.AttributeBasedIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			return identifierBinding.getAttributeBinding().getAttribute().getName();
 		}
 
 		@Override

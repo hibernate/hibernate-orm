@@ -45,8 +45,8 @@ import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Cascadeable;
-import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.Fetchable;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.persister.entity.EntityPersister;
@@ -132,25 +132,24 @@ public final class PropertyFactory {
 			IdentifierGenerator generator,
 			SessionFactoryImplementor sessionFactory) {
 
-		final SingularAttributeBinding attributeBinding =
-				mappedEntity.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
-
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
 		//		see org.hibernate.metamodel.spi.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
 
-		final String mappedUnsavedValue = mappedEntity.getHierarchyDetails().getEntityIdentifier().getUnsavedValue();
+		final EntityIdentifier idInfo = mappedEntity.getHierarchyDetails().getEntityIdentifier();
+		final SingularAttributeBinding attributeBinding = idInfo.getEntityIdentifierBinding().getAttributeBinding();
+		final String mappedUnsavedValue = idInfo.getEntityIdentifierBinding().getUnsavedValue();
 
-		if ( mappedEntity.getHierarchyDetails().getEntityIdentifier().getNature()
-				== EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
-			// the "attribute" will need to be virtual since there is no single
-			// attribute identifying the identifier
+		if ( idInfo.getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding
+					= (EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+
 			final ComponentType type = sessionFactory.getTypeResolver().getTypeFactory().component(
 					new ComponentMetamodel(
 							sessionFactory.getServiceRegistry(),
-							( (EmbeddedAttributeBinding) attributeBinding ).getEmbeddableBinding(),
+							idBinding.getVirtualEmbeddableBinding(),
 							true,
-							mappedEntity.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass()
+							idInfo.definesIdClass()
 					)
 			);
 
@@ -167,17 +166,22 @@ public final class PropertyFactory {
 			return new IdentifierProperty(
 					type,
 					true,
-					mappedEntity.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass(),
+					idInfo.definesIdClass(),
 					unsavedValue,
 					generator
 			);
 		}
 		else {
-			final Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+			final EntityIdentifier.AttributeBasedIdentifierBinding idBinding
+					= (EntityIdentifier.AttributeBasedIdentifierBinding) idInfo.getEntityIdentifierBinding();
+
+			final SingularAttributeBinding idAttributeBinding = idBinding.getAttributeBinding();
+
+			final Type type = idAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
 			final IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 					mappedUnsavedValue,
-					getGetter( attributeBinding, sessionFactory ),
+					getGetter( idAttributeBinding, sessionFactory ),
 					type,
 					getConstructor(
 							mappedEntity,
@@ -186,7 +190,7 @@ public final class PropertyFactory {
 			);
 
 			return new IdentifierProperty(
-					attributeBinding.getAttribute().getName(),
+					idAttributeBinding.getAttribute().getName(),
 					null,
 					type,
 					false,

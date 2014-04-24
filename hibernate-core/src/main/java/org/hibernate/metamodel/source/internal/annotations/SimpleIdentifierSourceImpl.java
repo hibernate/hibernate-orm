@@ -62,11 +62,6 @@ public class SimpleIdentifierSourceImpl extends AbstractIdentifierSource impleme
 	public String getUnsavedValue() {
 		return null;
 	}
-
-	@Override
-	public String getIdClassPropertyAccessorName() {
-		return attributeSource.getPropertyAccessorName();
-	}
 }
 
 

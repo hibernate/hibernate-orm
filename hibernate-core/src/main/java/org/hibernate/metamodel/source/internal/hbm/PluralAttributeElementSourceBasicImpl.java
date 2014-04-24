@@ -26,10 +26,8 @@ package org.hibernate.metamodel.source.internal.hbm;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbElementElement;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeElementSourceBasic;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
@@ -41,13 +39,20 @@ import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 public class PluralAttributeElementSourceBasicImpl
 		extends AbstractHbmSourceNode
 		implements PluralAttributeElementSourceBasic {
+	private final HibernateTypeSourceImpl typeSource;
 	private final List<RelationalValueSource> valueSources;
-	private final HibernateTypeSource typeSource;
 
 	public PluralAttributeElementSourceBasicImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbElementElement elementElement) {
 		super( sourceMappingDocument );
+
+		final String typeName = extractTypeName( elementElement );
+		final Map<String, String> typeParams = elementElement.getType() != null
+				? Helper.extractParameters( elementElement.getType().getParam() )
+				: java.util.Collections.<String, String>emptyMap();
+		this.typeSource = new HibernateTypeSourceImpl( typeName, typeParams );
+
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -96,32 +101,18 @@ public class PluralAttributeElementSourceBasicImpl
 					}
 				}
 		);
+	}
 
-		this.typeSource = new HibernateTypeSource() {
-			@Override
-			public String getName() {
-				if ( elementElement.getTypeAttribute() != null ) {
-					return elementElement.getTypeAttribute();
-				}
-				else if ( elementElement.getType() != null ) {
-					return elementElement.getType().getName();
-				}
-				else {
-					return null;
-				}
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return elementElement.getType() != null
-						? Helper.extractParameters( elementElement.getType().getParam() )
-						: java.util.Collections.<String, String>emptyMap();
-			}
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
+	private String extractTypeName(JaxbElementElement elementElement) {
+		if ( elementElement.getTypeAttribute() != null ) {
+			return elementElement.getTypeAttribute();
+		}
+		else if ( elementElement.getType() != null ) {
+			return elementElement.getType().getName();
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -150,7 +141,7 @@ public class PluralAttributeElementSourceBasicImpl
 	}
 
 	@Override
-	public HibernateTypeSource getExplicitHibernateTypeSource() {
+	public HibernateTypeSourceImpl getExplicitHibernateTypeSource() {
 		return typeSource;
 	}
 }

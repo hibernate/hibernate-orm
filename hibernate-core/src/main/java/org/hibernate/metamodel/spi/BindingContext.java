@@ -29,7 +29,12 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.source.internal.annotations.JandexAccess;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.domain.Aggregate;
+import org.hibernate.metamodel.spi.domain.BasicType;
+import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.Hierarchical;
 import org.hibernate.metamodel.spi.domain.JavaClassReference;
+import org.hibernate.metamodel.spi.domain.MappedSuperclass;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
@@ -103,6 +108,27 @@ public interface BindingContext {
 	public boolean quoteIdentifiersInContext();
 
 	public JavaTypeDescriptor typeDescriptor(String name);
+
+	public BasicType buildBasicDomainType(JavaTypeDescriptor typeDescriptor);
+	public MappedSuperclass buildMappedSuperclassDomainType(JavaTypeDescriptor typeDescriptor);
+	public MappedSuperclass buildMappedSuperclassDomainType(JavaTypeDescriptor typeDescriptor, Hierarchical superType);
+	public Aggregate buildComponentDomainType(JavaTypeDescriptor typeDescriptor);
+	public Aggregate buildComponentDomainType(JavaTypeDescriptor typeDescriptor, Hierarchical superType);
+	public Entity buildEntityDomainType(JavaTypeDescriptor typeDescriptor);
+	public Entity buildEntityDomainType(JavaTypeDescriptor typeDescriptor, Hierarchical superType);
+
+	public Type locateDomainType(JavaTypeDescriptor typeDescriptor);
+
+	/**
+	 * It is expected that Entity types already exist and are known.  Therefore,
+	 * in the "build" case, the expectation is that the domain type is either
+	 * a basic type or a component.
+	 *
+	 * @param typeDescriptor The Java type descriptor
+	 *
+	 * @return The domain type.
+	 */
+	public Type locateOrBuildDomainType(JavaTypeDescriptor typeDescriptor, boolean isAggregate);
 
 	// todo : go away
 

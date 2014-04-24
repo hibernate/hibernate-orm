@@ -24,6 +24,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.SyntheticAttributeHelper;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.type.Type;
@@ -86,8 +87,8 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	        boolean embedded,
 			boolean hasIdentifierMapper,
 			IdentifierValue unsavedValue,
-	        IdentifierGenerator identifierGenerator) {
-		super( null, type );
+			IdentifierGenerator identifierGenerator) {
+		super( SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME, type );
 		this.virtual = true;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = hasIdentifierMapper;

@@ -67,8 +67,8 @@ public class AliasTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8371" )
 	@FailureExpectedWithNewMetamodel(
-			jiraKey = "HHH-9048",
-			message = "I think its the same underlying problem as HHH-9048; here the manifestation is in @IdClass with the basic form of the to-one pk"
+			jiraKey = "HHH-9055",
+			message = "Problems getting/setting id values at runtime"
 	)
 	public void testUnderscoreInColumnName() throws Throwable {
 		final Session s = openSession();

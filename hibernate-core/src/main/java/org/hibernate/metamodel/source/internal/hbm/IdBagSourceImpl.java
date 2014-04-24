@@ -23,18 +23,14 @@
  */
 package org.hibernate.metamodel.source.internal.hbm;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbBagElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIdbagElement;
 import org.hibernate.metamodel.source.spi.CollectionIdSource;
 import org.hibernate.metamodel.source.spi.ColumnSource;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.Orderable;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
@@ -100,25 +96,7 @@ public class IdBagSourceImpl extends AbstractPluralAttributeSourceImpl implement
 			collectionIdColumnSource = (ColumnSource) relationalValueSource;
 		}
 
-		final HibernateTypeSource typeSource = new HibernateTypeSource() {
-			private final String name = element.getCollectionId().getType();
-
-			@Override
-			public String getName() {
-				return name;
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return Collections.emptyMap();
-			}
-
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
-
+		final HibernateTypeSourceImpl typeSource = new HibernateTypeSourceImpl( element.getCollectionId().getType() );
 		this.collectionIdSource = new CollectionIdSourceImpl(
 				collectionIdColumnSource,
 				typeSource,
@@ -148,12 +126,12 @@ public class IdBagSourceImpl extends AbstractPluralAttributeSourceImpl implement
 
 	private static class CollectionIdSourceImpl implements CollectionIdSource {
 		private final ColumnSource columnSource;
-		private final HibernateTypeSource typeSource;
+		private final HibernateTypeSourceImpl typeSource;
 		private final String generator;
 
 		public CollectionIdSourceImpl(
 				ColumnSource columnSource,
-				HibernateTypeSource typeSource,
+				HibernateTypeSourceImpl typeSource,
 				String generator) {
 			this.columnSource = columnSource;
 			this.typeSource = typeSource;
@@ -166,7 +144,7 @@ public class IdBagSourceImpl extends AbstractPluralAttributeSourceImpl implement
 		}
 
 		@Override
-		public HibernateTypeSource getTypeInformation() {
+		public HibernateTypeSourceImpl getTypeInformation() {
 			return typeSource;
 		}
 

@@ -21,30 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.internal.annotations;
+package org.hibernate.metamodel.source.spi;
 
-import java.util.Collection;
-import java.util.Collections;
-
-import org.hibernate.metamodel.source.spi.IdentifierSource;
-import org.hibernate.metamodel.source.spi.ToolingHintSource;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractIdentifierSource implements IdentifierSource {
-	private final RootEntitySourceImpl rootEntitySource;
-
-	protected AbstractIdentifierSource(RootEntitySourceImpl rootEntitySource) {
-		this.rootEntitySource = rootEntitySource;
-	}
-
-	protected RootEntitySourceImpl rootEntitySource() {
-		return rootEntitySource;
-	}
-
-	@Override
-	public Collection<? extends ToolingHintSource> getToolingHintSources() {
-		return Collections.emptySet();
-	}
+public interface JavaTypeDescriptorResolvable {
+	public void resolveJavaTypeDescriptor(JavaTypeDescriptor descriptor);
 }

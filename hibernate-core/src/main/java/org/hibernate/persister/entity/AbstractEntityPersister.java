@@ -2147,8 +2147,12 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	protected static boolean isIdentifierAttributeBinding(final AttributeBinding prop){
-		return prop.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( prop );
+	protected static boolean isIdentifierAttributeBinding(final AttributeBinding prop) {
+		return prop.getContainer().seekEntityBinding()
+				.getHierarchyDetails()
+				.getEntityIdentifier()
+				.getEntityIdentifierBinding()
+				.isIdentifierAttributeBinding( prop );
 	}
 
 	private void internalInitSubclassPropertyAliasesMap(String path, AttributeBinding[] attributeBindings) {
@@ -2289,16 +2293,39 @@ public abstract class AbstractEntityPersister
 	private void initIdentifierPropertyPaths(Mapping mapping) throws MappingException {
 		String idProp = getIdentifierPropertyName();
 		if ( idProp != null ) {
-			propertyMapping.initPropertyPaths( idProp, getIdentifierType(), getIdentifierColumnNames(),
-					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping );
+			propertyMapping.initPropertyPaths(
+					idProp,
+					getIdentifierType(),
+					getIdentifierColumnNames(),
+					getIdentifierColumnReaders(),
+					getIdentifierColumnReaderTemplates(),
+					null,
+					mapping
+			);
 		}
+
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
-			propertyMapping.initPropertyPaths( null, getIdentifierType(), getIdentifierColumnNames(),
-					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping );
+			propertyMapping.initPropertyPaths(
+					null,
+					getIdentifierType(),
+					getIdentifierColumnNames(),
+					getIdentifierColumnReaders(),
+					getIdentifierColumnReaderTemplates(),
+					null,
+					mapping
+			);
 		}
+
 		if ( ! entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
-			propertyMapping.initPropertyPaths( ENTITY_ID, getIdentifierType(), getIdentifierColumnNames(),
-					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping );
+			propertyMapping.initPropertyPaths(
+					ENTITY_ID,
+					getIdentifierType(),
+					getIdentifierColumnNames(),
+					getIdentifierColumnReaders(),
+					getIdentifierColumnReaderTemplates(),
+					null,
+					mapping
+			);
 		}
 	}
 

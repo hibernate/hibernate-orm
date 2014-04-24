@@ -22,6 +22,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -695,6 +696,10 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-21" )
+	@FailureExpectedWithNewMetamodel(
+			jiraKey = "HHH-9055",
+			message = "The load/check does not work"
+	)
     public void testCompositeIdId() throws HibernateException, SQLException {
         Session s = openSession();
 		s.beginTransaction();

@@ -39,6 +39,10 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertTrue;
 
+@FailureExpectedWithNewMetamodel(
+		jiraKey = "HHH-9055",
+		message = "Caused by: org.hibernate.MappingException: broken column mapping [Commento#marelo.id]; expecting 1 columns, but type defined 2"
+)
 public class MapTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

@@ -50,7 +50,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEager() throws Exception {
@@ -219,6 +218,10 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel(
+			jiraKey = "HHH-9055",
+			message = "Problem with column ordering and JDBC parameter binding"
+	)
 	public void testCompositeFK() throws Exception {
 		Session s;
 		Transaction tx;

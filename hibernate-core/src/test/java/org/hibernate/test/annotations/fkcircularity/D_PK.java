@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
  * @author Hardy Ferentschik
  *
  */
+@Embeddable
 @SuppressWarnings("serial")
 public class D_PK implements Serializable{
 	private C c;

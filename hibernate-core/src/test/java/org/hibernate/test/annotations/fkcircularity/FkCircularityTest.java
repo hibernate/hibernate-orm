@@ -14,9 +14,11 @@ public class FkCircularityTest extends BaseUnitTestCase {
 	public void testJoinedSublcassesInPK() {
 		MetadataSources metadataSources = new MetadataSources()
 				.addAnnotatedClass( A.class )
+				.addAnnotatedClass( A_PK.class )
 				.addAnnotatedClass( B.class )
 				.addAnnotatedClass( C.class )
-				.addAnnotatedClass( D.class );
+				.addAnnotatedClass( D.class )
+				.addAnnotatedClass( D_PK.class );
 		metadataSources.buildMetadata();
 	}
 }

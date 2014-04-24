@@ -28,11 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
@@ -52,7 +50,7 @@ class KeyAttributeSourceImpl
 		implements SingularAttributeSource {
 	private final JaxbKeyPropertyElement keyPropertyElement;
 	private final NaturalIdMutability naturalIdMutability;
-	private final HibernateTypeSource typeSource;
+	private final HibernateTypeSourceImpl typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	private final AttributePath attributePath;
@@ -65,30 +63,17 @@ class KeyAttributeSourceImpl
 		super( mappingDocument );
 		this.keyPropertyElement = keyPropertyElement;
 		this.naturalIdMutability = naturalIdMutability;
-		this.typeSource = new HibernateTypeSource() {
-			private final String name = keyPropertyElement.getTypeAttribute() != null
-					? keyPropertyElement.getTypeAttribute()
-					: keyPropertyElement.getType() != null
-					? keyPropertyElement.getType().getName()
-					: null;
-			private final Map<String, String> parameters = ( keyPropertyElement.getType() != null )
-					? Helper.extractParameters( keyPropertyElement.getType().getParam() )
-					: null;
 
-			@Override
-			public String getName() {
-				return name;
-			}
+		final String name = keyPropertyElement.getTypeAttribute() != null
+				? keyPropertyElement.getTypeAttribute()
+				: keyPropertyElement.getType() != null
+				? keyPropertyElement.getType().getName()
+				: null;
+		final Map<String, String> parameters = ( keyPropertyElement.getType() != null )
+				? Helper.extractParameters( keyPropertyElement.getType().getParam() )
+				: null;
+		this.typeSource = new HibernateTypeSourceImpl( name, parameters );
 
-			@Override
-			public Map<String, String> getParameters() {
-				return parameters;
-			}
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -144,7 +129,7 @@ class KeyAttributeSourceImpl
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return typeSource;
 	}
 

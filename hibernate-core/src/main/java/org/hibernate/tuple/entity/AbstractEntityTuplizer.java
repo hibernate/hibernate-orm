@@ -43,6 +43,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.Assigned;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.PropertyPath;
@@ -60,6 +61,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 
 
 /**
@@ -95,9 +97,12 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		this.serviceRegistry = serviceRegistry;
 		this.entityMetamodel = entityMetamodel;
 
-		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-			idGetter = buildPropertyGetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
-			idSetter = buildPropertySetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
+		final EntityIdentifier idInfo = mappingInfo.getHierarchyDetails().getEntityIdentifier();
+		if ( idInfo.getNature() != EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
+			final EntityIdentifier.AttributeBasedIdentifierBinding identifierBinding =
+					(EntityIdentifier.AttributeBasedIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			idGetter = buildPropertyGetter( identifierBinding.getAttributeBinding() );
+			idSetter = buildPropertySetter( identifierBinding.getAttributeBinding() );
 		}
 		else {
 			idGetter = null;
@@ -134,23 +139,19 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			proxyFactory = null;
 		}
 
-		final EntityIdentifier entityIdentifier = mappingInfo.getHierarchyDetails().getEntityIdentifier();
-		if ( !entityIdentifier.isIdentifierMapper() ) {
+		if ( !idInfo.definesIdClass() ) {
 			identifierMapperType = null;
 			mappedIdentifierValueMarshaller = null;
 		}
 		else {
 			identifierMapperType = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
 
-			// TODO: this only deals with normal IdClass; still need to deal with MapsId
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding identifierBinding =
+					(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
 					(ComponentType) identifierMapperType,
-					(ComponentType) mappingInfo
-							.getHierarchyDetails()
-							.getEntityIdentifier()
-							.getAttributeBinding()
-							.getHibernateTypeDescriptor()
-							.getResolvedTypeMapping()
+					(ComponentType) identifierBinding.getHibernateType()
 			);
 		}
 	}

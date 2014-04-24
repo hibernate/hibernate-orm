@@ -32,6 +32,7 @@ import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
@@ -61,13 +62,17 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			EmbeddableBinding embeddableBinding,
 			boolean isIdentifierMapper,
 			ReflectionOptimizer.InstantiationOptimizer optimizer) {
+		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 		if ( isIdentifierMapper ) {
 			final EntityIdentifier entityIdentifier =
 					embeddableBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
-			this.mappedClass = entityIdentifier.getLookupClassBinding().getIdClassType();
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding =
+					(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) entityIdentifier.getEntityIdentifierBinding();
+			this.mappedClass = cls.classForName(
+					idBinding.getIdClassMetadata().getIdClassType().getName().toString()
+			);
 		}
 		else {
-			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 			this.mappedClass = cls.classForName(
 					embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 			);
@@ -102,7 +107,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 					entityBinding.getProxyInterfaceType().getName().toString()
 			);
 		}
-		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite();
+		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
 		this.optimizer = optimizer;
 
 		try {

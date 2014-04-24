@@ -28,6 +28,11 @@ import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
 import org.hibernate.metamodel.source.internal.annotations.JandexAccess;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.metamodel.spi.domain.Aggregate;
+import org.hibernate.metamodel.spi.domain.BasicType;
+import org.hibernate.metamodel.spi.domain.Entity;
+import org.hibernate.metamodel.spi.domain.Hierarchical;
+import org.hibernate.metamodel.spi.domain.MappedSuperclass;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
@@ -95,6 +100,53 @@ public abstract class BaseDelegatingBindingContext implements BindingContext {
 	@Override
 	public boolean quoteIdentifiersInContext() {
 		return parent.quoteIdentifiersInContext();
+	}
+
+	@Override
+	public BasicType buildBasicDomainType(JavaTypeDescriptor typeDescriptor) {
+		return parent().buildBasicDomainType( typeDescriptor );
+	}
+
+	@Override
+	public MappedSuperclass buildMappedSuperclassDomainType(JavaTypeDescriptor typeDescriptor) {
+		return parent().buildMappedSuperclassDomainType( typeDescriptor );
+	}
+
+	@Override
+	public MappedSuperclass buildMappedSuperclassDomainType(
+			JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		return parent().buildMappedSuperclassDomainType( typeDescriptor, superType );
+	}
+
+	@Override
+	public Aggregate buildComponentDomainType(JavaTypeDescriptor typeDescriptor) {
+		return parent().buildComponentDomainType( typeDescriptor );
+	}
+
+	@Override
+	public Aggregate buildComponentDomainType(
+			JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		return parent().buildComponentDomainType( typeDescriptor, superType );
+	}
+
+	@Override
+	public Entity buildEntityDomainType(JavaTypeDescriptor typeDescriptor) {
+		return parent().buildEntityDomainType( typeDescriptor );
+	}
+
+	@Override
+	public Entity buildEntityDomainType(JavaTypeDescriptor typeDescriptor, Hierarchical superType) {
+		return parent().buildEntityDomainType( typeDescriptor, superType );
+	}
+
+	@Override
+	public Type locateDomainType(JavaTypeDescriptor typeDescriptor) {
+		return parent().locateDomainType( typeDescriptor );
+	}
+
+	@Override
+	public Type locateOrBuildDomainType(JavaTypeDescriptor typeDescriptor, boolean isAggregate) {
+		return parent().locateOrBuildDomainType( typeDescriptor, isAggregate );
 	}
 
 	@Override

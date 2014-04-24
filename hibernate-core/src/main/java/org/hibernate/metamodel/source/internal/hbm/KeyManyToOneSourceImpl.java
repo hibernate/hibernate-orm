@@ -30,6 +30,8 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
@@ -51,6 +53,7 @@ class KeyManyToOneSourceImpl
 		extends AbstractToOneAttributeSourceImpl
 		implements SingularAttributeSource {
 	private final JaxbKeyManyToOneElement keyManyToOneElement;
+	private final HibernateTypeSourceImpl typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	private final AttributePath attributePath;
@@ -63,6 +66,18 @@ class KeyManyToOneSourceImpl
 			final NaturalIdMutability naturalIdMutability) {
 		super( mappingDocument, naturalIdMutability, null );
 		this.keyManyToOneElement = keyManyToOneElement;
+
+		final String referencedClassName = keyManyToOneElement.getClazz();
+		JavaTypeDescriptor referencedClass = null;
+		if ( StringHelper.isNotEmpty( referencedClassName ) ) {
+			referencedClass = bindingContext().getJavaTypeDescriptorRepository().getType(
+					bindingContext().getJavaTypeDescriptorRepository().buildName(
+							bindingContext().qualifyClassName( keyManyToOneElement.getClazz() )
+					)
+			);
+		}
+		this.typeSource = new HibernateTypeSourceImpl( referencedClass );
+
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -120,6 +135,11 @@ class KeyManyToOneSourceImpl
 	@Override
 	public AttributeRole getAttributeRole() {
 		return attributeRole;
+	}
+
+	@Override
+	public HibernateTypeSourceImpl getTypeInformation() {
+		return typeSource;
 	}
 
 	@Override

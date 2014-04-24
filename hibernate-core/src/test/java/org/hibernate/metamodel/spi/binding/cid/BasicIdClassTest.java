@@ -34,7 +34,9 @@ import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.type.StringType;
 
 import org.hibernate.testing.junit4.BaseAnnotationBindingTestCase;
 import org.hibernate.testing.junit4.Resources;
@@ -72,7 +74,7 @@ public class BasicIdClassTest extends BaseAnnotationBindingTestCase {
 
 	@Test
 	@Resources( annotatedClasses = Course.class )
-	public void testBasicUsage() {
+	public void testBasicUsage() throws Exception {
 		// get the Course entity binding
 		EntityBinding courseBinding = getEntityBinding( Course.class );
 		assertNotNull( courseBinding );
@@ -80,10 +82,14 @@ public class BasicIdClassTest extends BaseAnnotationBindingTestCase {
 				EntityIdentifierNature.NON_AGGREGATED_COMPOSITE,
 				courseBinding.getHierarchyDetails().getEntityIdentifier().getNature()
 		);
-		Class idClassClass = courseBinding.getHierarchyDetails().getEntityIdentifier()
-				.getLookupClassBinding()
-				.getIdClassType();
-		assertNotNull( idClassClass );
+
+		EntityIdentifier.NonAggregatedCompositeIdentifierBinding identifierBinding = assertTyping(
+				EntityIdentifier.NonAggregatedCompositeIdentifierBinding.class,
+				courseBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding()
+		);
+		assertNotNull( identifierBinding.getIdClassMetadata() );
+		assertNotNull( identifierBinding.getIdClassMetadata().getIdClassType() );
+		assertNotNull( identifierBinding.getIdClassMetadata().getEmbeddableBinding() );
 
 		// Course should be interpreted as defining 3 attributes: `department`, `code` and `title`
 		assertEquals( 3, courseBinding.getAttributeBindingClosureSpan() );
@@ -118,32 +124,31 @@ public class BasicIdClassTest extends BaseAnnotationBindingTestCase {
 
 
 		assertTrue(
-				courseBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
-						deptAttribute
-				)
+				courseBinding.getHierarchyDetails().getEntityIdentifier().
+						getEntityIdentifierBinding()
+						.isIdentifierAttributeBinding( deptAttribute )
 		);
 
 		assertTrue(
-				courseBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding(
-						codeAttribute
-				)
+				courseBinding.getHierarchyDetails().getEntityIdentifier()
+						.getEntityIdentifierBinding()
+						.isIdentifierAttributeBinding( codeAttribute )
 		);
 
-		// get the virtual (non-aggregated composite) id attribute
+		// get the non-aggregated composite id (virtual) attribute
 		EmbeddedAttributeBinding identifierAttribute = (EmbeddedAttributeBinding) courseBinding.getHierarchyDetails()
 				.getEntityIdentifier()
+				.getEntityIdentifierBinding()
 				.getAttributeBinding();
 		assertNotNull( identifierAttribute );
-		// NOTE : assertSame() does `==`
+		assertTrue( identifierAttribute.getAttribute().isSynthetic() );
 
 		EmbeddableBinding virtualEmbeddable = identifierAttribute.getEmbeddableBinding();
 		assertEquals( 2, virtualEmbeddable.attributeBindingSpan() );
 
 		for ( AttributeBinding subAttributeBinding : virtualEmbeddable.attributeBindings() ) {
-			assertTrue(
-					subAttributeBinding == deptAttribute
-							|| subAttributeBinding == codeAttribute
-			);
+			assertNotNull( subAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
+			assertEquals( StringType.INSTANCE, subAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 		}
 
 	}

@@ -26,6 +26,10 @@ package org.hibernate.metamodel.source.spi;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
 /**
+ * Common contract for composite identifiers.  Specific sub-types include aggregated
+ * (think {@link javax.persistence.EmbeddedId}) and non-aggregated (think
+ * {@link javax.persistence.IdClass}).
+ *
  * @author Steve Ebersole
  */
 public interface CompositeIdentifierSource extends IdentifierSource {

@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 import org.hibernate.metamodel.spi.domain.Aggregate;
@@ -54,7 +55,7 @@ public class CompositePluralAttributeIndexBinding extends AbstractPluralAttribut
 	}
 
 	public EmbeddableBinding createCompositeAttributeBindingContainer(
-			Aggregate aggregate,
+			final Aggregate aggregate,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttribute parentReference,
 			Class<? extends ComponentTuplizer> tuplizerClass) {
@@ -82,6 +83,11 @@ public class CompositePluralAttributeIndexBinding extends AbstractPluralAttribut
 			@Override
 			public boolean isAggregated() {
 				return true;
+			}
+
+			@Override
+			public JavaTypeDescriptor getTypeDescriptor() {
+				return aggregate.getDescriptor();
 			}
 		};
 		return compositeAttributeBindingContainer;

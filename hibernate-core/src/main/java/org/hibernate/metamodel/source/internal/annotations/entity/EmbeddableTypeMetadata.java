@@ -101,11 +101,14 @@ public class EmbeddableTypeMetadata extends ManagedTypeMetadata {
 	private String decodeTuplizerAnnotation(EmbeddedContainer container) {
 		// prefer tuplizer defined at the embedded level
 		{
-			final AnnotationInstance tuplizerAnnotation = container.getBackingMember().getAnnotations().get(
-					HibernateDotNames.TUPLIZER
-			);
-			if ( tuplizerAnnotation != null ) {
-				return tuplizerAnnotation.value( "impl" ).asString();
+			// might be null though in the case of an IdClass
+			if ( container.getBackingMember() != null ) {
+				final AnnotationInstance tuplizerAnnotation = container.getBackingMember().getAnnotations().get(
+						HibernateDotNames.TUPLIZER
+				);
+				if ( tuplizerAnnotation != null ) {
+					return tuplizerAnnotation.value( "impl" ).asString();
+				}
 			}
 		}
 

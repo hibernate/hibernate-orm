@@ -25,10 +25,12 @@ package org.hibernate.metamodel.source.internal.annotations;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.source.spi.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
+import org.hibernate.metamodel.source.spi.MapsIdSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
@@ -42,17 +44,25 @@ class AggregatedCompositeIdentifierSourceImpl
 		implements AggregatedCompositeIdentifierSource {
 
 	private final EmbeddedAttributeSourceImpl componentAttributeSource;
+	private final List<MapsIdSource> mapsIdSourceList;
 
 	public AggregatedCompositeIdentifierSourceImpl(
 			RootEntitySourceImpl rootEntitySource,
-			EmbeddedAttributeSourceImpl componentAttributeSource) {
+			EmbeddedAttributeSourceImpl componentAttributeSource,
+			List<MapsIdSource> mapsIdSourceList) {
 		super( rootEntitySource );
 		this.componentAttributeSource = componentAttributeSource;
+		this.mapsIdSourceList = mapsIdSourceList;
 	}
 
 	@Override
 	public EmbeddedAttributeSource getIdentifierAttributeSource() {
 		return componentAttributeSource;
+	}
+
+	@Override
+	public List<MapsIdSource> getMapsIdSources() {
+		return mapsIdSourceList;
 	}
 
 	@Override
@@ -75,11 +85,6 @@ class AggregatedCompositeIdentifierSourceImpl
 	@Override
 	public String getUnsavedValue() {
 		return null;
-	}
-
-	@Override
-	public String getIdClassPropertyAccessorName() {
-		return componentAttributeSource.getPropertyAccessorName();
 	}
 
 	@Override

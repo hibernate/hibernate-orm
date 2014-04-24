@@ -48,6 +48,7 @@ import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAssociationAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -283,14 +284,21 @@ public class SqlResultSetProcessor {
 //							case COMPOSITE:
 //								referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().isSingleAttribute();//.isIdentifierMapper();
 //						}
+
 						//todo check if this logic is correct
-						SingularAttributeBinding identifierAttributeBinding = referencedEntityBinding.getHierarchyDetails()
-								.getEntityIdentifier()
-								.getAttributeBinding();
-						if ( EmbeddedAttributeBinding.class.isInstance( identifierAttributeBinding ) ) {
-							attributeBindings = EmbeddedAttributeBinding.class.cast( identifierAttributeBinding )
-									.getEmbeddableBinding()
-									.attributeBindings();
+						final EntityIdentifier idInfo = referencedEntityBinding.getHierarchyDetails()
+								.getEntityIdentifier();
+
+						if ( EntityIdentifier.AggregatedCompositeIdentifierBinding.class.isInstance( idInfo.getEntityIdentifierBinding() ) ) {
+							final EntityIdentifier.AggregatedCompositeIdentifierBinding identifierBinding =
+									(EntityIdentifier.AggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+							attributeBindings = identifierBinding.getAttributeBinding()
+									.getEmbeddableBinding().attributeBindings();
+						}
+						else if ( EntityIdentifier.NonAggregatedCompositeIdentifierBinding.class.isInstance( idInfo.getEntityIdentifierBinding() ) ) {
+							final EntityIdentifier.NonAggregatedCompositeIdentifierBinding identifierBinding =
+									(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+							attributeBindings = identifierBinding.getVirtualEmbeddableBinding().attributeBindings();
 						}
 						else {
 							throw new MappingException(

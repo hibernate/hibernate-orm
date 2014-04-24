@@ -42,6 +42,7 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.Association
 import org.hibernate.metamodel.source.internal.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.internal.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PersistentAttribute;
+import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAttribute;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPAListenerHelper;
@@ -67,6 +68,7 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 
 	private IdType idType;
 	private List<SingularAttribute> identifierAttributes;
+	private List<SingularAssociationAttribute> mapsIdAssociationAttributes;
 	private BasicAttribute versionAttribute;
 
 	private final Map<AttributePath, AttributeConversionInfo> conversionInfoMap = new HashMap<AttributePath, AttributeConversionInfo>();
@@ -418,6 +420,17 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 				identifierAttributes.add( singularAttribute );
 				return;
 			}
+
+			if ( SingularAssociationAttribute.class.isInstance( singularAttribute ) ) {
+				final SingularAssociationAttribute toOneAttribute = (SingularAssociationAttribute) singularAttribute;
+				if ( toOneAttribute.getMapsIdAnnotation() != null ) {
+					if ( mapsIdAssociationAttributes == null ) {
+						mapsIdAssociationAttributes = new ArrayList<SingularAssociationAttribute>();
+					}
+					mapsIdAssociationAttributes.add( toOneAttribute );
+					return;
+				}
+			}
 		}
 
 		super.categorizeAttribute( persistentAttribute );
@@ -444,6 +457,19 @@ public class IdentifiableTypeMetadata extends ManagedTypeMetadata {
 			}
 		}
 		return identifierAttributes == null ? Collections.<SingularAttribute>emptyList() : identifierAttributes;
+	}
+
+	public List<SingularAssociationAttribute> getMapsIdAttributes() {
+		collectAttributesIfNeeded();
+
+		if ( mapsIdAssociationAttributes == null ) {
+			return getSuperType() != null
+					? getSuperType().getMapsIdAttributes()
+					: Collections.<SingularAssociationAttribute>emptyList();
+		}
+		else {
+			return mapsIdAssociationAttributes;
+		}
 	}
 
 	public BasicAttribute getVersionAttribute() {

@@ -355,14 +355,28 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 			final ClassDescriptor subclassTypeDescriptor = (ClassDescriptor) bindingContext.getJavaTypeDescriptorRepository().getType( classInfo.name() );
 
 			final IdentifiableTypeMetadata subclassMeta;
-			if ( isMappedSuperclass( javaTypeDescriptor ) ) {
-				subclassMeta = new MappedSuperclassTypeMetadata( subclassTypeDescriptor, superType, defaultAccessType, bindingContext );
+			if ( isEntity( subclassTypeDescriptor ) ) {
+				subclassMeta = new EntityTypeMetadata(
+						subclassTypeDescriptor,
+						superType,
+						defaultAccessType,
+						bindingContext
+				);
+				( (ManagedTypeMetadata) superType ).addSubclass( subclassMeta );
+			}
+			else if ( isMappedSuperclass( subclassTypeDescriptor ) ) {
+				subclassMeta = new MappedSuperclassTypeMetadata(
+						subclassTypeDescriptor,
+						superType,
+						defaultAccessType,
+						bindingContext
+				);
+				( (ManagedTypeMetadata) superType ).addSubclass( subclassMeta );
 			}
 			else {
-				subclassMeta = new EntityTypeMetadata( subclassTypeDescriptor, superType, defaultAccessType, bindingContext );
+				subclassMeta = superType;
 			}
 
-			( (ManagedTypeMetadata) superType ).addSubclass( subclassMeta );
 			walkSubclasses( subclassTypeDescriptor, subclassMeta, defaultAccessType, bindingContext );
 		}
 	}
@@ -416,16 +430,12 @@ public abstract class ManagedTypeMetadata implements OverrideAndConverterCollect
 	protected void collectAttributesIfNeeded() {
 		if ( persistentAttributeMap == null ) {
 			persistentAttributeMap = new HashMap<String, PersistentAttribute>();
-			// TODO: This probably isn't the best place for this.  Walking and creating the ManagedTypeMetadatas,
-			// for the entire subclass tree, including subclasses that are not an @Entity/@MappedSuperclass/@Embeddable,
-			// is entirely necessary.  But, we need to skip processing the attributes in this case.  Cleaner way to do
-			// it in the new architecture?
-			if (isEntity( javaTypeDescriptor )
-					|| isMappedSuperclass( javaTypeDescriptor )
-					||  isEmbeddableType( javaTypeDescriptor )) {
-				collectPersistentAttributes();
-			}
+			collectPersistentAttributes();
 		}
+	}
+
+	public AccessType getClassLevelAccessType() {
+		return classLevelAccessType;
 	}
 
 	public String getCustomTuplizerClassName() {

@@ -40,6 +40,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.internal.metamodel.AbstractIdentifiableType;
 import org.hibernate.jpa.internal.metamodel.AbstractManagedType;
@@ -51,8 +52,10 @@ import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.HierarchyDetails;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Entity;
@@ -135,13 +138,15 @@ public class MetamodelBuilder {
 		final Class javaType = cls.classForName( entityBinding.getEntity().getDescriptor().getName().toString() );
 		final AbstractIdentifiableType superType = locateOrBuildSuperType( entityBinding.getEntity().getSuperType(), entityBinding );
 
+		final EntityIdentifier idInfo = entityBinding.getHierarchyDetails().getEntityIdentifier();
+
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaType,
 				superType,
 				entityBinding.getEntityName(),
 				entityBinding.getJpaEntityName(),
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().definedIdClass(),
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
+				idInfo.definesIdClass(),
+				idInfo.getNature() != EntityIdentifierNature.NON_AGGREGATED_COMPOSITE,
 				entityBinding.getHierarchyDetails().isVersioned()
 		);
 
@@ -208,14 +213,18 @@ public class MetamodelBuilder {
 	@SuppressWarnings("unchecked")
 	private MappedSuperclassTypeImpl buildMappedSuperclassType(MappedSuperclass mappedSuperclass, EntityBinding entityBinding) {
 		final Class javaType = loadClass( mappedSuperclass.getDescriptor() );
-		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType( mappedSuperclass.getSuperType(), entityBinding );
+		final AbstractIdentifiableType superSuperType = locateOrBuildSuperType(
+				mappedSuperclass.getSuperType(),
+				entityBinding
+		);
+
+		final EntityIdentifier idInfo = entityBinding.getHierarchyDetails().getEntityIdentifier();
 
 		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
 				javaType,
 				superSuperType,
-				entityBinding.getHierarchyDetails().getEntityIdentifier().isNonAggregatedComposite()
-						&& entityBinding.getHierarchyDetails().getEntityIdentifier().getIdClassClass() != null,
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() != null,
+				idInfo.definesIdClass(),
+				idInfo.getNature() != EntityIdentifierNature.NON_AGGREGATED_COMPOSITE,
 				entityBinding.getHierarchyDetails().isVersioned()
 		);
 
@@ -292,7 +301,9 @@ public class MetamodelBuilder {
 		applyVersionAttribute( hierarchical, entityBinding.getHierarchyDetails(), jpaDescriptor );
 
 		for ( AttributeBinding attributeBinding : entityBinding.attributeBindings() ) {
-			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( attributeBinding ) ) {
+			if ( entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().isIdentifierAttributeBinding(
+					attributeBinding
+			) ) {
 				continue;
 			}
 			if ( entityBinding.getHierarchyDetails().isVersioned() ) {
@@ -323,9 +334,15 @@ public class MetamodelBuilder {
 			Hierarchical descriptor,
 			HierarchyDetails hierarchyDetails,
 			AbstractIdentifiableType jpaDescriptor) {
-		switch ( hierarchyDetails.getEntityIdentifier().getNature() ) {
+		final EntityIdentifier idInfo = hierarchyDetails.getEntityIdentifier();
+		final EntityIdentifier.Binding idBinding = idInfo.getEntityIdentifierBinding();
+
+		switch ( idBinding.getNature() ) {
 			case SIMPLE: {
-				SingularAttributeBinding idAttributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+				final EntityIdentifier.SimpleIdentifierBinding simpleIdBinding =
+						(EntityIdentifier.SimpleIdentifierBinding) idBinding;
+				final SingularAttributeBinding idAttributeBinding =
+						simpleIdBinding.getAttributeBinding();
 				if ( idAttributeBinding != null ) {
 					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
 						//noinspection unchecked
@@ -337,8 +354,11 @@ public class MetamodelBuilder {
 				break;
 			}
 			case AGGREGATED_COMPOSITE: {
-				EmbeddedAttributeBinding idAttributeBinding =
-						(EmbeddedAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+				final EntityIdentifier.AggregatedCompositeIdentifierBinding cIdBinding =
+						(EntityIdentifier.AggregatedCompositeIdentifierBinding) idBinding;
+				final EmbeddedAttributeBinding idAttributeBinding =
+						(EmbeddedAttributeBinding) cIdBinding.getAttributeBinding();
+
 				if ( idAttributeBinding != null ) {
 					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
 						//noinspection unchecked
@@ -350,19 +370,17 @@ public class MetamodelBuilder {
 				break;
 			}
 			default: {
-				// nature == (non-aggregated) COMPOSITE
-				EmbeddedAttributeBinding idAttributeBinding =
-						(EmbeddedAttributeBinding) hierarchyDetails.getEntityIdentifier().getAttributeBinding();
-				if ( idAttributeBinding != null ) {
-					if ( idAttributeBinding.getAttribute().getAttributeContainer().equals( descriptor ) ) {
-						Set<SingularAttribute> idClassAttributes = new HashSet<SingularAttribute>();
-						for ( AttributeBinding idClassAttributeBinding : idAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
-							idClassAttributes.add( attributeBuilder.buildIdAttribute( jpaDescriptor, idClassAttributeBinding ) );
-						}
-						//noinspection unchecked
-						jpaDescriptor.getBuilder().applyIdClassAttributes( idClassAttributes );
-					}
+				final EntityIdentifier.NonAggregatedCompositeIdentifierBinding cIdBinding =
+						(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idBinding;
+				final EmbeddableBinding virtualIdEmbeddableBinding =
+						cIdBinding.getVirtualEmbeddableBinding();
+
+				Set<SingularAttribute> idClassAttributes = new HashSet<SingularAttribute>();
+				for ( AttributeBinding attributeBinding : virtualIdEmbeddableBinding.attributeBindings() ) {
+					idClassAttributes.add( attributeBuilder.buildIdAttribute( jpaDescriptor, attributeBinding ) );
 				}
+				//noinspection unchecked
+				jpaDescriptor.getBuilder().applyIdClassAttributes( idClassAttributes );
 			}
 		}
 	}

@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.binder.ConstraintNamingStrategyHelper.ForeignKeyNamingStrategyHelper;
 import org.hibernate.metamodel.source.spi.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -99,14 +100,18 @@ public class ForeignKeyHelper {
 	public SingularAttributeBinding determineReferencedAttributeBinding(
 			final ForeignKeyContributingSource foreignKeyContributingSource,
 			final EntityBinding referencedEntityBinding) {
+		// todo : this is definitely the place that leads to problems with @Id @ManyToOne
+
 		final ForeignKeyContributingSource.JoinColumnResolutionDelegate resolutionDelegate =
 				foreignKeyContributingSource.getForeignKeyTargetColumnResolutionDelegate();
-		final ForeignKeyContributingSource.JoinColumnResolutionContext resolutionContext = resolutionDelegate == null ? null : new JoinColumnResolutionContextImpl(
-				referencedEntityBinding
-		);
 		if ( resolutionDelegate == null ) {
-			return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
+			return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
+					.getEntityIdentifierBinding()
+					.getAttributeBinding();
 		}
+
+		final ForeignKeyContributingSource.JoinColumnResolutionContext resolutionContext =
+				new JoinColumnResolutionContextImpl( referencedEntityBinding );
 
 		final String explicitName = resolutionDelegate.getReferencedAttributeName();
 		final AttributeBinding referencedAttributeBinding;
@@ -256,33 +261,34 @@ public class ForeignKeyHelper {
 				String logicalTableName,
 				String logicalSchemaName,
 				String logicalCatalogName) {
-			if ( bindingContext().quoteIdentifiersInContext() && !org.hibernate
-					.internal
-					.util
-					.StringHelper
-					.isQuoted( logicalColumnName ) ) {
-				logicalColumnName = org.hibernate.internal.util.StringHelper.quote( logicalColumnName );
+			if ( bindingContext().quoteIdentifiersInContext()
+					&& !StringHelper.isQuoted( logicalColumnName ) ) {
+				logicalColumnName = StringHelper.quote( logicalColumnName );
 			}
-			return resolveTable( logicalTableName, logicalSchemaName, logicalCatalogName ).locateOrCreateColumn(
-					logicalColumnName
-			);
+			return resolveTable( logicalTableName, logicalSchemaName, logicalCatalogName )
+					.locateOrCreateColumn( logicalColumnName );
 		}
 
 		@Override
 		public TableSpecification resolveTable(String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
 			Identifier tableIdentifier = helperContext.relationalIdentifierHelper().createIdentifier( logicalTableName );
 			if ( tableIdentifier == null ) {
+				// todo : why not just return referencedEntityBinding.getPrimaryTable() here?
+				//  		is it really valid to expect the table name to be missing, but the
+				// 			schema/catalog to be specified as an indication to look for a table
+				// 			with the same name as the primary table, but in the specified
+				//			schema/catalog?
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}
 
-
-			Identifier catalogName = org.hibernate.internal.util.StringHelper.isNotEmpty( logicalCatalogName ) ?
-					Identifier.toIdentifier( logicalCatalogName )
+			final Identifier catalogName = StringHelper.isNotEmpty( logicalCatalogName )
+					? Identifier.toIdentifier( logicalCatalogName )
 					: referencedEntityBinding.getPrimaryTable().getSchema().getName().getCatalog();
-			Identifier schemaName = org.hibernate.internal.util.StringHelper.isNotEmpty( logicalCatalogName ) ?
-					Identifier.toIdentifier( logicalSchemaName )
+			final Identifier schemaName = StringHelper.isNotEmpty( logicalCatalogName )
+					? Identifier.toIdentifier( logicalSchemaName )
 					: referencedEntityBinding.getPrimaryTable().getSchema().getName().getSchema();
-			Schema schema = bindingContext().getMetadataCollector().getDatabase().getSchema( catalogName, schemaName );
+			final Schema schema = bindingContext().getMetadataCollector().getDatabase()
+					.getSchema( catalogName, schemaName );
 			return schema.locateTable( tableIdentifier );
 		}
 
@@ -316,7 +322,10 @@ public class ForeignKeyHelper {
 
 		private SingularAttributeBinding resolveReferencedAttributeBinding(String attributeName) {
 			if ( attributeName == null ) {
-				return referencedEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
+				return referencedEntityBinding.getHierarchyDetails()
+						.getEntityIdentifier()
+						.getEntityIdentifierBinding()
+						.getAttributeBinding();
 			}
 			final AttributeBinding referencedAttributeBinding =
 					referencedEntityBinding.locateAttributeBindingByPath( attributeName, true );

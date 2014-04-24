@@ -48,9 +48,9 @@ public class RelationalValueBindingContainer {
 	}
 
 	public List<RelationalValueBinding> relationalValueBindings() {
-		return isListModifiable ?
-				Collections.unmodifiableList( relationalValueBindings ) :
-				relationalValueBindings;
+		return isListModifiable
+				? Collections.unmodifiableList( relationalValueBindings )
+				: relationalValueBindings;
 	}
 
 	public List<Value> values() {

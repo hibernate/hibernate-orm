@@ -104,7 +104,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 				BagType.class,
 				Collection.class,
 				simpleEntityBinding,
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(),
 				Identifier.toIdentifier( "theBagOwner" ),
 				FetchTiming.DELAYED,
 				true
@@ -116,7 +116,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 				SetType.class,
 				Set.class,
 				simpleEntityBinding,
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(),
 				Identifier.toIdentifier( "theSetOwner" ),
 				FetchTiming.IMMEDIATE,
 				false
@@ -128,7 +128,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 				ListType.class,
 				List.class,
 				simpleEntityBinding,
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(),
 				Identifier.toIdentifier( "theListOwner" ),
 				FetchTiming.IMMEDIATE,
 				false
@@ -140,7 +140,7 @@ public abstract class AbstractUnidirectionalOneToManyBindingTests extends BaseUn
 				MapType.class,
 				Map.class,
 				simpleEntityBinding,
-				entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(),
 				Identifier.toIdentifier( "theMapOwner" ),
 				FetchTiming.DELAYED,
 				false

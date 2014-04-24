@@ -28,11 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIdElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
@@ -52,7 +50,7 @@ class SingularIdentifierAttributeSourceImpl
 		implements SingularAttributeSource {
 
 	private final JaxbIdElement idElement;
-	private final HibernateTypeSource typeSource;
+	private final HibernateTypeSourceImpl typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	private final AttributeRole attributeRole;
@@ -64,31 +62,17 @@ class SingularIdentifierAttributeSourceImpl
 			final JaxbIdElement idElement) {
 		super( mappingDocument );
 		this.idElement = idElement;
-		this.typeSource = new HibernateTypeSource() {
-			private final String name = idElement.getTypeAttribute() != null
-					? idElement.getTypeAttribute()
-					: idElement.getType() != null
-							? idElement.getType().getName()
-							: null;
-			private final Map<String, String> parameters = ( idElement.getType() != null )
-					? Helper.extractParameters( idElement.getType().getParam() )
-					: null;
 
-			@Override
-			public String getName() {
-				return name;
-			}
+		final String name = idElement.getTypeAttribute() != null
+				? idElement.getTypeAttribute()
+				: idElement.getType() != null
+						? idElement.getType().getName()
+						: null;
+		final Map<String, String> parameters = ( idElement.getType() != null )
+				? Helper.extractParameters( idElement.getType().getParam() )
+				: null;
+		this.typeSource = new HibernateTypeSourceImpl( name, parameters );
 
-			@Override
-			public Map<String, String> getParameters() {
-				return parameters;
-			}
-
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -145,7 +129,7 @@ class SingularIdentifierAttributeSourceImpl
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return typeSource;
 	}
 

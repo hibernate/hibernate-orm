@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -228,11 +229,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 			TableSpecification table,
 			List<? extends Value> values,
 			boolean searchParent) {
-		SingularAttributeBinding attributeBinding = null;
-		SingularAttributeBinding idAttributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
-		if ( primaryTable.equals( table ) && idAttributeBinding.getValues().equals( values ) ) {
-			attributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
-		}
+		SingularAttributeBinding attributeBinding = locateAttributeBindingFromIdentifier( table, values );
 		if ( attributeBinding ==  null ) {
 			attributeBinding = locateAttributeBinding( table, values );
 		}
@@ -240,6 +237,28 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 			attributeBinding = getSuperEntityBinding().locateAttributeBinding( table, values, searchParent );
 		}
 		return attributeBinding;
+	}
+
+	private SingularAttributeBinding locateAttributeBindingFromIdentifier(
+			TableSpecification table,
+			List<? extends Value> values) {
+		if ( !primaryTable.equals( table ) ) {
+			return null;
+		}
+
+		final EntityIdentifier idInfo = hierarchyDetails.getEntityIdentifier();
+		final SingularAttributeBinding idAttributeBinding = idInfo.getEntityIdentifierBinding().getAttributeBinding();
+		final List<? extends Value> idAttributeValues = idAttributeBinding.getValues();
+		// order-insensitive check (column order handled later)
+		if ( idAttributeValues.size() == values.size()
+				&& idAttributeValues.containsAll( values ) ) {
+			return idAttributeBinding;
+		}
+//		if ( idAttributeValues.equals( values ) ) {
+//			return idAttributeBinding;
+//		}
+
+		return null;
 	}
 
 	public AttributeBinding locateAttributeBindingByPath(String path, boolean searchParent) {
@@ -519,27 +538,29 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		);
 	}
 
+
 	public EmbeddedAttributeBinding makeVirtualCompositeAttributeBinding(
 			SingularAttribute syntheticAttribute,
-			MetaAttributeContext metaAttributeContext,
-			List<SingularAttributeBinding> idAttributeBindings) {
+			EmbeddableBindingImplementor virtualEmbeddableBinding,
+			MetaAttributeContext metaAttributeContext) {
 		if ( !syntheticAttribute.isSynthetic() ) {
 			throw new AssertionFailure(
 					"Illegal attempt to create synthetic attribute binding from non-synthetic attribute reference"
 			);
 		}
-		// TODO: make sure all attributes are singular
-		final EmbeddedAttributeBinding binding = EmbeddedAttributeBinding.createVirtualEmbeddedAttributeBinding(
+
+		return new EmbeddedAttributeBinding(
 				this,
 				syntheticAttribute,
+				"embedded",  // TODO: get rid of "magic" string.
+				false,
+				false,
 				NaturalIdMutability.NOT_NATURAL_ID,
 				metaAttributeContext,
 				getRoleBase(),
 				getPathBase(),
-				idAttributeBindings
+				virtualEmbeddableBinding
 		);
-//		registerAttributeBinding( binding );
-		return binding;
 	}
 
 	public BackRefAttributeBinding makeBackRefAttributeBinding(
@@ -664,7 +685,9 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public List<AttributeBinding> getNonIdAttributeBindings() {
 		final List<AttributeBinding> list = new ArrayList<AttributeBinding>();
 		for ( final AttributeBinding ab : attributeBindings() ) {
-			boolean isId = getHierarchyDetails().getEntityIdentifier().isIdentifierAttributeBinding( ab );
+			boolean isId = getHierarchyDetails().getEntityIdentifier()
+					.getEntityIdentifierBinding()
+					.isIdentifierAttributeBinding( ab );
 			if ( !isId ) {
 				list.add( ab );
 			}
@@ -813,8 +836,10 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	private List<RelationalValueBinding> keyRelationalValueBindings;
 
 	public List<RelationalValueBinding> getKeyRelationalValueBindings() {
-		if(keyRelationalValueBindings == null){
-			keyRelationalValueBindings = getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getRelationalValueBindings();
+		if ( keyRelationalValueBindings == null ) {
+			keyRelationalValueBindings = getHierarchyDetails().getEntityIdentifier()
+					.getEntityIdentifierBinding()
+					.getRelationalValueBindings();
 		}
 		return keyRelationalValueBindings;
 	}
@@ -837,5 +862,4 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		}
 		return 0;
 	}
-
 }

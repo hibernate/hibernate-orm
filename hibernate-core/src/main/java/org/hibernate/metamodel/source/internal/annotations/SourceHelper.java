@@ -31,6 +31,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.internal.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.EmbeddedAttribute;
 import org.hibernate.metamodel.source.internal.annotations.attribute.OverrideAndConverterCollector;
@@ -44,9 +45,12 @@ import org.hibernate.metamodel.source.internal.annotations.entity.MappedSupercla
 import org.hibernate.metamodel.source.internal.annotations.entity.RootEntityTypeMetadata;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
+import org.hibernate.metamodel.source.spi.MapsIdSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
+
+import org.jboss.jandex.AnnotationValue;
 
 /**
  * Utilities for building attribute source objects.
@@ -234,6 +238,37 @@ public class SourceHelper {
 				}
 			}
 		}
+	}
+
+	public static List<MapsIdSource> buildMapsIdSources(
+			RootEntityTypeMetadata entityTypeMetadata,
+			IdentifierPathAttributeBuilder attributeBuilder) {
+		final List<MapsIdSource> result = new ArrayList<MapsIdSource>();
+		for ( final SingularAssociationAttribute attribute : entityTypeMetadata.getMapsIdAttributes() ) {
+			final ToOneAttributeSource attributeSource = attributeBuilder.buildToOneAttribute(
+					attribute,
+					entityTypeMetadata
+			);
+
+			final AnnotationValue mapsIdNameValue = attribute.getMapsIdAnnotation().value();
+			final String mappedIdAttributeName = mapsIdNameValue == null
+					? null
+					: StringHelper.nullIfEmpty( mapsIdNameValue.asString() );
+			result.add(
+					new MapsIdSource() {
+						@Override
+						public String getMappedIdAttributeName() {
+							return mappedIdAttributeName;
+						}
+
+						@Override
+						public ToOneAttributeSource getAssociationAttributeSource() {
+							return attributeSource;
+						}
+					}
+			);
+		}
+		return result;
 	}
 
 	public static interface AttributeBuilder {

@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.AttributePath;
 import org.hibernate.metamodel.spi.AttributeRole;
@@ -48,9 +49,9 @@ public class EmbeddedAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularNonAssociationAttributeBinding, Cascadeable, EmbeddableBindingContributor {
 
-	private final AbstractEmbeddableBinding embeddableBinding;
+	private final EmbeddableBindingImplementor embeddableBinding;
 
-	private EmbeddedAttributeBinding(
+	public EmbeddedAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			String propertyAccessorName,
@@ -60,7 +61,7 @@ public class EmbeddedAttributeBinding
 			MetaAttributeContext metaAttributeContext,
 			AttributeRole attributeRole,
 			AttributePath attributePath,
-			AbstractEmbeddableBinding embeddableBinding) {
+			EmbeddableBindingImplementor embeddableBinding) {
 		super(
 				container,
 				attribute,
@@ -79,7 +80,7 @@ public class EmbeddedAttributeBinding
 
 	public static EmbeddedAttributeBinding createEmbeddedAttributeBinding(
 			final AttributeBindingContainer container,
-			SingularAttribute attribute,
+			final SingularAttribute attribute,
 			String propertyAccessorName,
 			boolean includedInOptimisticLocking,
 			boolean lazy,
@@ -114,6 +115,11 @@ public class EmbeddedAttributeBinding
 			public boolean isAggregated() {
 				return true;
 			}
+
+			@Override
+			public JavaTypeDescriptor getTypeDescriptor() {
+				return attribute.getSingularAttributeType().getDescriptor();
+			}
 		};
 
 		if ( ! attribute.getSingularAttributeType().isAggregate() ) {
@@ -134,61 +140,61 @@ public class EmbeddedAttributeBinding
 				embeddableBinding
 		);
 	}
-
-	// TODO: Get rid of this when non-aggregated composite IDs is no longer modelled as a EmbeddedAttributeBinding.
-	public static EmbeddedAttributeBinding createVirtualEmbeddedAttributeBinding(
-			final AttributeBindingContainer container,
-			SingularAttribute syntheticAttribute,
-			NaturalIdMutability naturalIdMutability,
-			MetaAttributeContext metaAttributeContext,
-			AttributeRole attributeRole,
-			AttributePath attributePath,
-			final List<SingularAttributeBinding> subAttributeBindings) {
-		AbstractEmbeddableBinding embeddableBinding = new AbstractEmbeddableBinding(
-				container.seekEntityBinding(),
-				(AttributeContainer) syntheticAttribute.getSingularAttributeType(),
-				container.getPrimaryTable(),
-				attributeRole,
-				attributePath,
-				metaAttributeContext,
-				null,
-				null) {
-			private final Map<String, AttributeBinding> attributeBindingMap = createUnmodifiableAttributeBindingMap( subAttributeBindings );
-
-			@Override
-			protected boolean isModifiable() {
-				return false;
-			}
-
-			@Override
-			protected Map<String, AttributeBinding> attributeBindingMapInternal() {
-				return this.attributeBindingMap;
-			}
-
-			@Override
-			public boolean isAggregated() {
-				return false;
-			}
-		};
-
-		if ( syntheticAttribute.getSingularAttributeType().isAggregate() ) {
-			throw new IllegalArgumentException(
-					"Cannot create a non-aggregated EmbeddableBinding with an aggregate attribute type"
-			);
-		}
-		return new EmbeddedAttributeBinding(
-				container,
-				syntheticAttribute,
-				"embedded",  // TODO: get rid of "magic" string.
-				false,
-				false,
-				naturalIdMutability,
-				metaAttributeContext,
-				attributeRole,
-				attributePath,
-				embeddableBinding
-		);
-	}
+//
+//	// TODO: Get rid of this when non-aggregated composite IDs is no longer modelled as a EmbeddedAttributeBinding.
+//	public static EmbeddedAttributeBinding createVirtualEmbeddedAttributeBinding(
+//			final AttributeBindingContainer container,
+//			SingularAttribute syntheticAttribute,
+//			NaturalIdMutability naturalIdMutability,
+//			MetaAttributeContext metaAttributeContext,
+//			AttributeRole attributeRole,
+//			AttributePath attributePath,
+//			final List<SingularAttributeBinding> subAttributeBindings) {
+//		AbstractEmbeddableBinding embeddableBinding = new AbstractEmbeddableBinding(
+//				container.seekEntityBinding(),
+//				(AttributeContainer) syntheticAttribute.getSingularAttributeType(),
+//				container.getPrimaryTable(),
+//				attributeRole,
+//				attributePath,
+//				metaAttributeContext,
+//				null,
+//				null) {
+//			private final Map<String, AttributeBinding> attributeBindingMap = createUnmodifiableAttributeBindingMap( subAttributeBindings );
+//
+//			@Override
+//			protected boolean isModifiable() {
+//				return false;
+//			}
+//
+//			@Override
+//			protected Map<String, AttributeBinding> attributeBindingMapInternal() {
+//				return this.attributeBindingMap;
+//			}
+//
+//			@Override
+//			public boolean isAggregated() {
+//				return false;
+//			}
+//		};
+//
+//		if ( syntheticAttribute.getSingularAttributeType().isAggregate() ) {
+//			throw new IllegalArgumentException(
+//					"Cannot create a non-aggregated EmbeddableBinding with an aggregate attribute type"
+//			);
+//		}
+//		return new EmbeddedAttributeBinding(
+//				container,
+//				syntheticAttribute,
+//				"embedded",  // TODO: get rid of "magic" string.
+//				false,
+//				false,
+//				naturalIdMutability,
+//				metaAttributeContext,
+//				attributeRole,
+//				attributePath,
+//				embeddableBinding
+//		);
+//	}
 
 	private static Map<String, AttributeBinding> createUnmodifiableAttributeBindingMap(
 			List<SingularAttributeBinding> subAttributeBindings) {

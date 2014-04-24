@@ -59,6 +59,7 @@ import org.jboss.jandex.AnnotationInstance;
 /**
  * @author Hardy Ferentschik
  * @author Gail Badner
+ * @author Steve Ebersole
  */
 public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl implements ToOneAttributeSource {
 	private final List<RelationalValueSource> relationalValueSources;
@@ -108,6 +109,10 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 			}
 			else if ( associationAttribute.isId() ) {
 				// if this association is part of the ID then this can't be a one-to-one
+				// todo : not strictly true...
+				// 		it *could* be a one-to-one if this is only value/attribute
+				// 		making up the identifier but legacy mapping did not support
+				// 		that, so supporting that would be a new feature
 				return SingularAttributeNature.MANY_TO_ONE;
 			}
 			else if ( associationAttribute.getJoinColumnValues() == null  ||
@@ -125,40 +130,49 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 	}
 	
 	@Override
-	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
+	public void resolveToOneAttributeSourceNature(AttributeSourceResolutionContext context) {
 		if ( getSingularAttributeNature() != null ) {
 			return;
 		}
-		// It would be nice to have the following block in determineNatureIfPossible(),
-		// but it requires context.resolveIdentifierColumns(), it's here instead.
-		if ( AbstractPersistentAttribute.Nature.ONE_TO_ONE.equals( associationAttribute().getNature() ) ) {
-			final List<org.hibernate.metamodel.spi.relational.Column> idColumns = context.resolveIdentifierColumns();
-			if ( associationAttribute().getJoinColumnValues().size() != idColumns.size() ) {
-				setSingularAttributeNature( SingularAttributeNature.MANY_TO_ONE );
-			}
-			else {
-				Set<String> joinColumnNames = new HashSet<String>( associationAttribute().getJoinColumnValues().size() );
-				for ( Column joinColumn : associationAttribute().getJoinColumnValues() ) {
-					joinColumnNames.add( joinColumn.getName() );
-				}
-				// if join columns are the entity's ID, then it is a one-to-one (mapToPk == true)
-				boolean areJoinColumnsSameAsIdColumns = true;
-				for ( org.hibernate.metamodel.spi.relational.Column idColumn : idColumns ) {
-					if ( ! joinColumnNames.contains( idColumn.getColumnName().getText() ) ) {
-						areJoinColumnsSameAsIdColumns = false;
-						break;
-					}
-				}
-				setSingularAttributeNature(
-						areJoinColumnsSameAsIdColumns ?
-								SingularAttributeNature.ONE_TO_ONE :
-								SingularAttributeNature.MANY_TO_ONE
-				);
-			}
+
+		final List<org.hibernate.metamodel.spi.relational.Column> idColumns = context.resolveIdentifierColumns();
+		if ( associationAttribute().getJoinColumnValues().size() != idColumns.size() ) {
+			setSingularAttributeNature( SingularAttributeNature.MANY_TO_ONE );
 		}
+		else {
+			Set<String> joinColumnNames = new HashSet<String>( associationAttribute().getJoinColumnValues().size() );
+			for ( Column joinColumn : associationAttribute().getJoinColumnValues() ) {
+				joinColumnNames.add( joinColumn.getName() );
+			}
+			// if join columns are the entity's ID, then it is a one-to-one (mapToPk == true)
+			boolean areJoinColumnsSameAsIdColumns = true;
+			for ( org.hibernate.metamodel.spi.relational.Column idColumn : idColumns ) {
+				if ( ! joinColumnNames.contains( idColumn.getColumnName().getText() ) ) {
+					areJoinColumnsSameAsIdColumns = false;
+					break;
+				}
+			}
+			setSingularAttributeNature(
+					areJoinColumnsSameAsIdColumns
+							? SingularAttributeNature.ONE_TO_ONE
+							: SingularAttributeNature.MANY_TO_ONE
+			);
+		}
+
 		if ( getSingularAttributeNature() == null ) {
 			throw new NotYetImplementedException( "unknown type of to-one attribute." );
 		}
+	}
+
+	@Override
+	public void resolveToOneAttributeSourceNatureAsPartOfIdentifier() {
+		if ( getSingularAttributeNature() != null ) {
+			return;
+		}
+
+		// atm, always treated as a MANY_TO_ONE
+		// todo see note/todo in #determineNatureIfPossible
+		setSingularAttributeNature( SingularAttributeNature.MANY_TO_ONE );
 	}
 
 	@Override
@@ -309,10 +323,9 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		@Override
 		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			final List<Value> values = new ArrayList<Value>();
-			final List<Column> joinColumns =
-					associationAttribute().getJoinTableAnnotation() == null ?
-							associationAttribute().getJoinColumnValues() :
-							associationAttribute().getInverseJoinColumnValues();
+			final List<Column> joinColumns = associationAttribute().getJoinTableAnnotation() == null
+					? associationAttribute().getJoinColumnValues()
+					: associationAttribute().getInverseJoinColumnValues();
 			for ( Column joinColumn : joinColumns ) {
 				if ( joinColumn.getReferencedColumnName() == null ) {
 					return context.resolveRelationalValuesForAttribute( null );

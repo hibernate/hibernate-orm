@@ -25,11 +25,12 @@ package org.hibernate.metamodel.source.spi;
 
 /**
  * @author Gail Badner
+ * @author Steve Ebersole
  */
 public interface ToOneAttributeSourceNatureResolver {
 
 	/**
-	 * Perform any steps to completely resolve this attribute source.
+	 * Perform any steps to completely resolve nature of this attribute source.
 	 *
 	 * If this is a {@link MappedByAssociationSource}, resolution must
 	 * resolve the association owner, and this association must be added
@@ -37,5 +38,11 @@ public interface ToOneAttributeSourceNatureResolver {
 	 *
 	 * @param context
 	 */
-	void resolveToOneAttributeSource(AttributeSourceResolutionContext context);
+	void resolveToOneAttributeSourceNature(AttributeSourceResolutionContext context);
+
+	/**
+	 * Like {@link #resolveToOneAttributeSourceNature} but specifically for to-one
+	 * attributes that are part of an identifier.
+	 */
+	void resolveToOneAttributeSourceNatureAsPartOfIdentifier();
 }

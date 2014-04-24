@@ -224,7 +224,7 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 	}
 
 	@Override
-	public LocalBindingContext getLocalBindingContext() {
+	public EntityBindingContext getLocalBindingContext() {
 		return getEntityClass().getLocalBindingContext();
 	}
 

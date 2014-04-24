@@ -68,22 +68,6 @@ import org.hibernate.metamodel.spi.binding.MetaAttribute;
  * @author Gail Badner
  */
 public class Helper {
-	public static final HibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new HibernateTypeSource() {
-		@Override
-		public String getName() {
-			return null;
-		}
-
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
-		@Override
-		public JavaTypeDescriptor getJavaType() {
-			return null;
-		}
-	};
-
 	public static LockMode interpretLockMode(JaxbLockModeAttribute lockModeAttribute, LocalBindingContext context){
 		if ( lockModeAttribute == null ) {
 			return LockMode.READ;

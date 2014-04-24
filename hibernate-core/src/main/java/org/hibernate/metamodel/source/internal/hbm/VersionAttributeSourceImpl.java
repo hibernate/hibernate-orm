@@ -25,14 +25,11 @@ package org.hibernate.metamodel.source.internal.hbm;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbVersionElement;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.source.spi.VersionAttributeSource;
@@ -51,6 +48,8 @@ class VersionAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements VersionAttributeSource {
 	private final JaxbVersionElement versionElement;
+	private final HibernateTypeSourceImpl typeSource;
+
 	private final List<RelationalValueSource> valueSources;
 
 	private final AttributePath attributePath;
@@ -62,6 +61,13 @@ class VersionAttributeSourceImpl
 			final JaxbVersionElement versionElement) {
 		super( mappingDocument );
 		this.versionElement = versionElement;
+
+		this.typeSource = new HibernateTypeSourceImpl(
+				versionElement.getType() == null
+						? "integer"
+						: versionElement.getType()
+		);
+
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -90,21 +96,6 @@ class VersionAttributeSourceImpl
 		this.attributeRole = rootEntitySource.getAttributeRoleBase().append( getName() );
 	}
 
-	private final HibernateTypeSource typeSource = new HibernateTypeSource() {
-		@Override
-		public String getName() {
-			return versionElement.getType() == null ? "integer" : versionElement.getType();
-		}
-
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
-		@Override
-		public JavaTypeDescriptor getJavaType() {
-			return null;
-		}
-	};
 
 	@Override
 	public String getUnsavedValue() {
@@ -127,7 +118,7 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return typeSource;
 	}
 

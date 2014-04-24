@@ -27,6 +27,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
+
+import org.hibernate.test.annotations.collectionelement.LocalizedString;
 import org.hibernate.test.annotations.collectionelement.TestCourse;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -42,6 +44,7 @@ public class CompositesWalkingTest extends BaseUnitTestCase {
 	public void testEntityComposite() {
 		final SessionFactory sf = new Configuration()
 				.addAnnotatedClass( TestCourse.class )
+				.addAnnotatedClass( LocalizedString.class )
 				.buildSessionFactory();
 		try {
 			final EntityPersister ep = (EntityPersister) sf.getClassMetadata( TestCourse.class );

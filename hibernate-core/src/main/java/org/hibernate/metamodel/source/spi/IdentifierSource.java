@@ -59,19 +59,4 @@ public interface IdentifierSource extends ToolingHintSourceContainer {
 	 *  @return the "unsaved" entity identifier value
 	 */
 	public String getUnsavedValue();
-
-	/**
-	 * Retrieve the class specified as the {@link javax.persistence.IdClass}, if one.
-	 *
-	 * @return The class specified as the {@link javax.persistence.IdClass}, or {@code null} if none.
-	 */
-	public Class getLookupIdClass();
-
-	/**
-	 * Obtain the property accessor name for the {@link javax.persistence.IdClass}, if one.
-	 *
-	 * @return The property accessor name for the {@link javax.persistence.IdClass}, or {@code null} if none.
-	 **/
-	public String getIdClassPropertyAccessorName();
-
 }

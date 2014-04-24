@@ -55,10 +55,14 @@ public interface BinderRootContext extends BindingContext {
 
 	public BinderLocalBindingContextSelector getLocalBindingContextSelector();
 
+	public BinderEventBus getEventBus();
+	public SourceIndex getSourceIndex();
+
 	HibernateTypeHelper typeHelper();
 	RelationalIdentifierHelper relationalIdentifierHelper();
 	TableHelper tableHelper();
 	ForeignKeyHelper foreignKeyHelper();
 	RelationalValueBindingHelper relationalValueBindingHelper();
 	NaturalIdUniqueKeyHelper naturalIdUniqueKeyHelper();
+
 }

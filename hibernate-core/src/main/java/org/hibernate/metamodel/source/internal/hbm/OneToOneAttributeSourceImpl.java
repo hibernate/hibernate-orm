@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbOneToOneElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
@@ -43,11 +45,14 @@ import org.hibernate.type.ForeignKeyDirection;
  * Implementation for {@code <one-to-one/>} mappings
  *
  * @author Gail Badner
+ * @author Steve Ebersole
  */
 class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	private final JaxbOneToOneElement oneToOneElement;
-	private final List<RelationalValueSource> valueSources;
+	private final HibernateTypeSourceImpl typeSource;
+
 	private final String containingTableName;
+	private final List<RelationalValueSource> valueSources;
 
 	private final AttributeRole attributeRole;
 	private final AttributePath attributePath;
@@ -60,6 +65,18 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 			NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument, naturalIdMutability, oneToOneElement.getPropertyRef() );
 		this.oneToOneElement = oneToOneElement;
+
+		final String referencedClassName = oneToOneElement.getClazz();
+		JavaTypeDescriptor referencedClass = null;
+		if ( StringHelper.isNotEmpty( referencedClassName ) ) {
+			referencedClass = bindingContext().getJavaTypeDescriptorRepository().getType(
+					bindingContext().getJavaTypeDescriptorRepository().buildName(
+							bindingContext().qualifyClassName( oneToOneElement.getClazz() )
+					)
+			);
+		}
+		this.typeSource = new HibernateTypeSourceImpl( referencedClass );
+
 		this.containingTableName = logicalTableName;
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
@@ -120,6 +137,11 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	@Override
 	public AttributeRole getAttributeRole() {
 		return attributeRole;
+	}
+
+	@Override
+	public HibernateTypeSourceImpl getTypeInformation() {
+		return typeSource;
 	}
 
 	@Override

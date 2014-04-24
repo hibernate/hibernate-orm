@@ -25,16 +25,13 @@ package org.hibernate.metamodel.source.internal.hbm;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.binder.Binder;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIndexElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbListIndexElement;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeSequentialIndexSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
@@ -43,110 +40,90 @@ import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 /**
  *
  */
-public class PluralAttributeSequentialIndexSourceImpl extends AbstractHbmSourceNode implements
-																					PluralAttributeSequentialIndexSource {
-	private final List< RelationalValueSource > valueSources;
-	private final HibernateTypeSource typeSource;
+public class PluralAttributeSequentialIndexSourceImpl
+		extends AbstractHbmSourceNode
+		implements PluralAttributeSequentialIndexSource {
 	private final int base;
+	private final HibernateTypeSourceImpl typeSource;
+	private final List<RelationalValueSource> valueSources;
 
 	public PluralAttributeSequentialIndexSourceImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbListIndexElement indexElement) {
 		super( sourceMappingDocument );
-		valueSources = Helper.buildValueSources( sourceMappingDocument, new Helper.ValueSourcesAdapter() {
-
-			List< JaxbColumnElement > columnElements = indexElement.getColumn() == null ? Collections.EMPTY_LIST : Collections.singletonList( indexElement.getColumn() );
-
-			@Override
-			public String getColumnAttribute() {
-				return indexElement.getColumnAttribute();
-			}
-
-			@Override
-			public List<JaxbColumnElement> getColumn() {
-				return columnElements;
-			}
-
-			@Override
-			public boolean isIncludedInInsertByDefault() {
-				return areValuesIncludedInInsertByDefault();
-			}
-
-			@Override
-			public boolean isIncludedInUpdateByDefault() {
-				return areValuesIncludedInUpdateByDefault();
-			}
-		} );
-		typeSource = new HibernateTypeSource() {
-
-			@Override
-			public String getName() {
-				return "integer";
-			}
-
-			@Override
-			public Map< String, String > getParameters() {
-				return java.util.Collections.< String, String >emptyMap();
-			}
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
 		base = Integer.parseInt( indexElement.getBase() );
+		typeSource = new HibernateTypeSourceImpl( "integer", bindingContext().typeDescriptor( "int" ) );
+		valueSources = Helper.buildValueSources(
+				sourceMappingDocument,
+				new Helper.ValueSourcesAdapter() {
+					List<JaxbColumnElement> columnElements = indexElement.getColumn() == null
+							? Collections.<JaxbColumnElement>emptyList()
+							: Collections.singletonList( indexElement.getColumn() );
+
+					@Override
+					public String getColumnAttribute() {
+						return indexElement.getColumnAttribute();
+					}
+
+					@Override
+					public List<JaxbColumnElement> getColumn() {
+						return columnElements;
+					}
+
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return areValuesIncludedInInsertByDefault();
+					}
+
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return areValuesIncludedInUpdateByDefault();
+					}
+				}
+		);
 	}
 
 	public PluralAttributeSequentialIndexSourceImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbIndexElement indexElement) {
 		super( sourceMappingDocument );
-		valueSources = Helper.buildValueSources( sourceMappingDocument, new Helper.ValueSourcesAdapter() {
-
-			@Override
-			public String getColumnAttribute() {
-				return indexElement.getColumnAttribute();
-			}
-
-			@Override
-			public SizeSource getSizeSource() {
-				return Helper.createSizeSourceIfMapped(
-						indexElement.getLength(),
-						null,
-						null
-				);
-			}
-			@Override
-			public List<JaxbColumnElement> getColumn() {
-				return indexElement.getColumn();
-			}
-
-			@Override
-			public boolean isIncludedInInsertByDefault() {
-				return areValuesIncludedInInsertByDefault();
-			}
-
-			@Override
-			public boolean isIncludedInUpdateByDefault() {
-				return areValuesIncludedInUpdateByDefault();
-			}
-		} );
-		typeSource = new HibernateTypeSource() {
-
-			@Override
-			public String getName() {
-				return StringHelper.isEmpty( indexElement.getType() ) ? "integer" : indexElement.getType();
-			}
-
-			@Override
-			public Map< String, String > getParameters() {
-				return java.util.Collections.< String, String >emptyMap();
-			}
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
 		base = 0;
+		typeSource = new HibernateTypeSourceImpl(
+				StringHelper.isEmpty( indexElement.getType() ) ? "integer" : indexElement.getType(),
+				bindingContext().typeDescriptor( "int" )
+		);
+		valueSources = Helper.buildValueSources(
+				sourceMappingDocument,
+				new Helper.ValueSourcesAdapter() {
+					@Override
+					public String getColumnAttribute() {
+						return indexElement.getColumnAttribute();
+					}
+
+					@Override
+					public SizeSource getSizeSource() {
+						return Helper.createSizeSourceIfMapped(
+								indexElement.getLength(),
+								null,
+								null
+						);
+					}
+					@Override
+					public List<JaxbColumnElement> getColumn() {
+						return indexElement.getColumn();
+					}
+
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return areValuesIncludedInInsertByDefault();
+					}
+
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return areValuesIncludedInUpdateByDefault();
+					}
+				}
+		);
 	}
 
 	@Override
@@ -185,7 +162,7 @@ public class PluralAttributeSequentialIndexSourceImpl extends AbstractHbmSourceN
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return typeSource;
 	}
 

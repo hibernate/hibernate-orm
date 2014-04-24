@@ -268,8 +268,8 @@ public class AssociationHelper {
 		}
 
 		// only valid for to-one associations
-		if ( !PersistentAttribute.Nature.MANY_TO_ONE.equals( attributeNature )
-				&& !PersistentAttribute.Nature.MANY_TO_ONE.equals( attributeNature ) ) {
+		if ( PersistentAttribute.Nature.MANY_TO_ONE != attributeNature
+				&& PersistentAttribute.Nature.ONE_TO_ONE != attributeNature ) {
 			throw localBindingContext.makeMappingException(
 					"@MapsId can only be specified on a many-to-one or one-to-one " +
 							"associations, property: " + member.toString()

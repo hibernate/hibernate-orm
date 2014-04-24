@@ -25,10 +25,10 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Properties;
 
-import org.hibernate.MappingException;
+import org.hibernate.AnnotationException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -37,11 +37,15 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.property.Setter;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 
 import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
 import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
@@ -58,6 +62,19 @@ import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
  *         multi-attribute identifier - non-aggregated composite identifiers
  *     </li>
  * </ul>
+ * <p/>
+ * The EntityIdentifier instance is created when the entity hierarchy is, but at
+ * that time we do not know all the information needed for interpreting the nature
+ * of the identifier.  So at some point after creation, one of the prepare methods
+ * must be called:<ul>
+ *     <li>{@link #prepareAsSimpleIdentifier}</li>
+ *     <li>{@link #prepareAsAggregatedCompositeIdentifier}</li>
+ *     <li>{@link #prepareAsNonAggregatedCompositeIdentifier}</li>
+ * </ul>
+ * Attempts to prepare the EntityIdentifier more than once will result in an
+ * exception.  Attempts to access the information contained in the
+ * EntityIdentifier prior to binding will (generally) result in an
+ * exception.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -66,8 +83,7 @@ import static org.hibernate.id.EntityIdentifierNature.SIMPLE;
 public class EntityIdentifier {
 	private final EntityBinding entityBinding;
 
-	private Binding binding;
-	private LookupClassBinding lookupClassBinding;
+	private BindingImplementor identifierBinding;
 
 	private IdentifierGenerator identifierGenerator;
 
@@ -84,129 +100,158 @@ public class EntityIdentifier {
 		return entityBinding;
 	}
 
-	public void prepareAsSimpleIdentifier(
+	public SimpleIdentifierBinding prepareAsSimpleIdentifier(
 			SingularAttributeBinding attributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
-			String unsavedValue,
-			Class lookupIdClass,
-			String lookupIdClassAccessType) {
+			String unsavedValue) {
 		ensureNotBound();
-		this.entityIdentifierBinding = new SimpleAttributeIdentifierBindingImpl(
+		this.identifierBinding = new SimpleIdentifierBindingImpl(
+				this.getEntityBinding(),
 				attributeBinding,
 				identifierGeneratorDefinition,
 				unsavedValue
 		);
-		this.lookupClassBinding = new LookupClassBindingImpl( lookupIdClass, lookupIdClassAccessType );
+		return (SimpleIdentifierBinding) identifierBinding;
 	}
 
-	public void prepareAsAggregatedCompositeIdentifier(
+	public AggregatedCompositeIdentifierBinding prepareAsAggregatedCompositeIdentifier(
 			EmbeddedAttributeBinding attributeBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
-			String unsavedValue,
-			Class lookupIdClass,
-			String lookupIdClassAccessType) {
+			String unsavedValue) {
 		ensureNotBound();
-		this.entityIdentifierBinding = new AggregatedComponentIdentifierBindingImpl(
+		this.identifierBinding = new AggregatedCompositeIdentifierBindingImpl(
+				this.getEntityBinding(),
 				attributeBinding,
 				identifierGeneratorDefinition,
 				unsavedValue
 		);
-		this.lookupClassBinding = new LookupClassBindingImpl( lookupIdClass, lookupIdClassAccessType );
+		return (AggregatedCompositeIdentifierBinding) identifierBinding;
 	}
 
-	public void prepareAsNonAggregatedCompositeIdentifier(
-			EmbeddedAttributeBinding embeddedAttributeBinding,
+	public NonAggregatedCompositeIdentifierBinding prepareAsNonAggregatedCompositeIdentifier(
+			EmbeddableBindingImplementor virtualEmbeddableBinding,
+			EmbeddedAttributeBinding virtualAttributeBinding,
+			EmbeddableBindingImplementor idClassEmbeddableBinding,
 			IdentifierGeneratorDefinition identifierGeneratorDefinition,
-			String unsavedValue,
-			Class lookupIdClass,
-			String lookupIdClassAccessType) {
+			String unsavedValue) {
 		ensureNotBound();
-		this.entityIdentifierBinding = new NonAggregatedCompositeIdentifierBindingImpl(
-				embeddedAttributeBinding,
+		this.identifierBinding = new NonAggregatedCompositeIdentifierBindingImpl(
+				this.getEntityBinding(),
+				virtualEmbeddableBinding,
+				virtualAttributeBinding,
+				idClassEmbeddableBinding,
 				identifierGeneratorDefinition,
-				unsavedValue,
-				lookupIdClass,
-				lookupIdClassAccessType
+				unsavedValue
 		);
-		this.lookupClassBinding = new LookupClassBindingImpl( lookupIdClass, lookupIdClassAccessType );
+
+		return (NonAggregatedCompositeIdentifierBinding) identifierBinding;
 	}
 
-	public EntityIdentifierBinding getEntityIdentifierBinding() {
-		return entityIdentifierBinding;
-	}
-
-	public LookupClassBinding getLookupClassBinding() {
-		return lookupClassBinding;
-	}
 
 	public EntityIdentifierNature getNature() {
 		ensureBound();
-		return binding.getNature();
+		return identifierBinding.getNature();
 	}
 
-	public SingularAttributeBinding getAttributeBinding() {
+	public Binding getEntityIdentifierBinding() {
 		ensureBound();
-		return entityIdentifierBinding.getAttributeBinding();
+		return identifierBinding;
 	}
 
-	public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
+	public boolean definesIdClass() {
 		ensureBound();
-		return entityIdentifierBinding.isIdentifierAttributeBinding( attributeBinding );
+		return getNature() == NON_AGGREGATED_COMPOSITE
+				&& ( (NonAggregatedCompositeIdentifierBinding) identifierBinding ).getIdClassMetadata() != null;
 	}
 
-	public boolean isCascadeDeleteEnabled() {
-		if ( getAttributeBinding() instanceof Cascadeable ) {
-			Cascadeable cascadeable = Cascadeable.class.cast( getAttributeBinding() );
-			cascadeable.getCascadeStyle();//todo
-		}
-		return false;
-	}
-
-	public String getUnsavedValue() {
-		ensureBound();
-		return binding.getUnsavedValue();
-	}
-
-	public boolean isNonAggregatedComposite() {
-		ensureBound();
-		return getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
-	}
-
-	/**
-	 * Get the Class of the {@link javax.persistence.IdClass} associated with the entity, if one.
-	 *
-	 * @deprecated Use {@link #getLookupClassBinding()} instead
-	 */
-	@Deprecated
-	public Class getIdClassClass() {
-		ensureBound();
-		return getLookupClassBinding().getIdClassType();
-	}
-
-	/**
-	 * @deprecated Use {@link #getLookupClassBinding()} instead
-	 */
-	@Deprecated
-	public String getIdClassPropertyAccessorName() {
-		ensureBound();
-		return getLookupClassBinding().getAccessStrategy();
-	}
-
-	/**
-	 * @deprecated Use {@link #getLookupClassBinding()} instead
-	 */
-	@Deprecated
-	public boolean isIdentifierMapper() {
-		ensureBound();
-		return isNonAggregatedComposite() && getLookupClassBinding().getIdClassType() != null;
-	}
+//	public IdClassMetadata getIdClassMetadata() {
+//		return idClassMetadata;
+//	}
+//
+//
+//	/**
+//	 * @deprecated  Use the {@link #getEntityIdentifierBinding} instead
+//	 */
+//	@Deprecated
+//	public SingularAttributeBinding getAttributeBinding() {
+//		ensureBound();
+//		return identifierBinding.getAttributeBinding();
+//	}
+//
+//	/**
+//	 * @deprecated  Use the {@link #getEntityIdentifierBinding} instead
+//	 */
+//	@Deprecated
+//	public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
+//		ensureBound();
+//		return identifierBinding.isIdentifierAttributeBinding( attributeBinding );
+//	}
+//
+//	/**
+//	 * @deprecated No real replacement; not even used atm
+//	 */
+//	@Deprecated
+//	public boolean isCascadeDeleteEnabled() {
+//		if ( getAttributeBinding() instanceof Cascadeable ) {
+//			Cascadeable cascadeable = Cascadeable.class.cast( getAttributeBinding() );
+//			cascadeable.getCascadeStyle();//todo
+//		}
+//		return false;
+//	}
+//
+//	/**
+//	 * @deprecated  Use the {@link #getEntityIdentifierBinding} instead
+//	 */
+//	@Deprecated
+//	public String getUnsavedValue() {
+//		ensureBound();
+//		return identifierBinding.getUnsavedValue();
+//	}
+//
+//	/**
+//	 * @deprecated  Check nature
+//	 */
+//	@Deprecated
+//	public boolean isNonAggregatedComposite() {
+//		ensureBound();
+//		return getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
+//	}
+//
+//	/**
+//	 * Get the Class of the {@link javax.persistence.IdClass} associated with the entity, if one.
+//	 *
+//	 * @deprecated Use {@link #getIdClassMetadata()} instead
+//	 */
+//	@Deprecated
+//	public JavaTypeDescriptor getIdClassClass() {
+//		ensureBound();
+//		return getIdClassMetadata().getIdClassType();
+//	}
+//
+//	/**
+//	 * @deprecated Use {@link #getIdClassMetadata()} instead
+//	 */
+//	@Deprecated
+//	public String getIdClassPropertyAccessorName() {
+//		ensureBound();
+//		return null;
+//	}
+//
+//	/**
+//	 * @deprecated Use {@link #getIdClassMetadata()} instead
+//	 */
+//	@Deprecated
+//	public boolean isIdentifierMapper() {
+//		ensureBound();
+//		return isNonAggregatedComposite() && getIdClassMetadata().getIdClassType() != null;
+//	}
 
 	// todo do we really need this createIdentifierGenerator and how do we make sure the getter is not called too early
 	// maybe some sort of visitor pattern here!? (HF)
 	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties) {
 		ensureBound();
 		if ( identifierGenerator == null ) {
-			identifierGenerator = entityIdentifierBinding.createIdentifierGenerator( factory, properties );
+			identifierGenerator = identifierBinding.createIdentifierGenerator( factory, properties );
 		}
 		return identifierGenerator;
 	}
@@ -228,117 +273,218 @@ public class EntityIdentifier {
 		}
 	}
 
-	protected boolean isBound() {
-		return entityIdentifierBinding != null;
+	public boolean isBound() {
+		return identifierBinding != null;
 	}
 
-	public int getColumnCount() {
-		ensureBound();
-		return entityIdentifierBinding.getColumnCount();
-	}
 
 	/**
-	 * For now simply models {@link javax.persistence.IdClass} information.  Ultimately should
-	 * handle {@link javax.persistence.MapsId} information as well.
+	 * @deprecated Use {@link #getEntityIdentifierBinding()} instead
 	 */
-	public static interface LookupClassBinding {
-		public boolean definedIdClass();
-		public Class getIdClassType();
-		public String getAccessStrategy();
+	@Deprecated
+	public int getColumnCount() {
+		ensureBound();
+		return identifierBinding.getColumnCount();
 	}
 
-	private static class LookupClassBindingImpl implements LookupClassBinding {
-		private final Class idClassType;
-		private final String accessStrategy;
+	// todo : expose IdClassMetadata just from NonAggregatedCompositeIdentifierBindingImpl ?
+	//		- that is the only place it has relevance
 
-		private LookupClassBindingImpl(Class idClassType, String accessStrategy) {
-			this.idClassType = idClassType;
-			this.accessStrategy = idClassType == null ? null : accessStrategy;
+	/**
+	 * Models {@link javax.persistence.IdClass} information.
+	 */
+	public static interface IdClassMetadata {
+		public EmbeddableBinding getEmbeddableBinding();
+		public JavaTypeDescriptor getIdClassType();
+		public String getAccessStrategy(String attributeName);
+		public Type getHibernateType(ServiceRegistry serviceRegistry, TypeFactory typeFactory);
+	}
+
+	private static class IdClassMetadataImpl implements IdClassMetadata {
+		private final EmbeddableBinding idClassBinding;
+
+		private Type type;
+
+		private IdClassMetadataImpl(EmbeddableBinding idClassBinding) {
+			this.idClassBinding = idClassBinding;
 		}
 
 		@Override
-		public boolean definedIdClass() {
-			return getIdClassType() != null;
+		public EmbeddableBinding getEmbeddableBinding() {
+			return idClassBinding;
 		}
 
 		@Override
-		public Class getIdClassType() {
-			return idClassType;
+		public JavaTypeDescriptor getIdClassType() {
+			return idClassBinding.getTypeDescriptor();
 		}
 
 		@Override
-		public String getAccessStrategy() {
-			return accessStrategy;
+		public String getAccessStrategy(String attributeName) {
+			final AttributeBinding attributeBinding = idClassBinding.locateAttributeBinding( attributeName );
+			if ( attributeBinding == null ) {
+				throw new AnnotationException(
+						String.format(
+								Locale.ENGLISH,
+								"Unable to locate IdClass attribute by that name : %s, %s",
+								getIdClassType().getName().toString(),
+								attributeName
+						)
+				);
+			}
+
+			return attributeBinding.getPropertyAccessorName();
+		}
+
+		@Override
+		public Type getHibernateType(ServiceRegistry serviceRegistry, TypeFactory typeFactory) {
+			if ( type == null && idClassBinding != null ) {
+				type = typeFactory.embeddedComponent(
+						new ComponentMetamodel( serviceRegistry, idClassBinding, true, false )
+				);
+			}
+			return type;
 		}
 	}
 
-	private abstract class EntityIdentifierBinding {
-		private final EntityIdentifierNature nature;
-		private final SingularAttributeBinding identifierAttributeBinding;
+	public static interface Binding {
+		public EntityIdentifierNature getNature();
+		public SingularAttributeBinding getAttributeBinding();
+		public String getUnsavedValue();
+		public List<RelationalValueBinding> getRelationalValueBindings();
+		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding);
+		public Type getHibernateType();
+	}
+
+	public static interface AttributeBasedIdentifierBinding extends Binding {
+	}
+
+	public static interface SimpleIdentifierBinding extends AttributeBasedIdentifierBinding {
+	}
+
+	public static interface AggregatedCompositeIdentifierBinding extends AttributeBasedIdentifierBinding {
+		@Override
+		public EmbeddedAttributeBinding getAttributeBinding();
+	}
+
+	public static interface NonAggregatedCompositeIdentifierBinding extends Binding {
+		/**
+		 * Obtain the virtual Embeddable representation of the identifier.  This
+		 * maps to the entity class, but handles just the id attributes.
+		 *
+		 * @return The virtual Embeddable binding
+		 */
+		public EmbeddableBinding getVirtualEmbeddableBinding();
+
+		/**
+		 * Obtain metadata about the IdClass, if one.
+		 *
+		 * @return Metadata about the defined IdClass, or {@code null} if
+		 * no IdClass was defined.
+		 */
+		public IdClassMetadata getIdClassMetadata();
+
+		/**
+		 * Builds the Type for the "virtual embeddable".  See
+		 * {@link IdClassMetadata#getHibernateType} for obtaining the Type
+		 * relating to the IdClass
+		 *
+		 * Caches the Type reference after first call.
+		 *
+		 * @param serviceRegistry The ServiceRegistry
+		 * @param typeFactory The TypeFactory
+		 *
+		 * @return The resolved Type
+		 */
+		public Type getHibernateType(ServiceRegistry serviceRegistry, TypeFactory typeFactory);
+	}
+
+	private static interface BindingImplementor extends Binding {
+		public int getColumnCount();
+		public IdentifierGenerator createIdentifierGenerator(
+				IdentifierGeneratorFactory identifierGeneratorFactory,
+				Properties properties);
+	}
+
+	private static abstract class AbstractIdentifierBinding implements BindingImplementor {
+		private final EntityBinding entityBinding;
 		private final IdentifierGeneratorDefinition identifierGeneratorDefinition;
 		private final String unsavedValue;
+
+		protected AbstractIdentifierBinding(
+				EntityBinding entityBinding,
+				IdentifierGeneratorDefinition identifierGeneratorDefinition,
+				String unsavedValue) {
+			this.entityBinding = entityBinding;
+			this.identifierGeneratorDefinition = identifierGeneratorDefinition;
+			this.unsavedValue = unsavedValue;
+		}
+
+		public EntityBinding getEntityBinding() {
+			return entityBinding;
+		}
+
+		@Override
+		public String getUnsavedValue() {
+			return unsavedValue;
+		}
+
+		public IdentifierGeneratorDefinition getGeneratorDefinition() {
+			return identifierGeneratorDefinition;
+		}
+	}
+
+	private static abstract class AbstractAttributeBasedIdentifierBinding
+			extends AbstractIdentifierBinding
+			implements AttributeBasedIdentifierBinding {
+		private final SingularAttributeBinding identifierAttributeBinding;
 		private final int columnCount;
 
-		protected EntityIdentifierBinding(
-				EntityIdentifierNature nature,
+		protected AbstractAttributeBasedIdentifierBinding(
+				EntityBinding entityBinding,
 				SingularAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
-			this.nature = nature;
+			super( entityBinding, identifierGeneratorDefinition, unsavedValue );
 			this.identifierAttributeBinding = identifierAttributeBinding;
-			this.identifierGeneratorDefinition = identifierGeneratorDefinition;
-			this.unsavedValue = unsavedValue;
 
 			// Configure primary key in relational model
 			final List<RelationalValueBinding> relationalValueBindings = identifierAttributeBinding.getRelationalValueBindings();
 			this.columnCount = relationalValueBindings.size();
 			for ( final RelationalValueBinding valueBinding : relationalValueBindings ) {
-				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( (Column) valueBinding.getValue() );
+				entityBinding.getPrimaryTable()
+						.getPrimaryKey()
+						.addColumn( (Column) valueBinding.getValue() );
 			}
 		}
 
-		public EntityIdentifierNature getNature() {
-			return nature;
-		}
-
+		@Override
 		public SingularAttributeBinding getAttributeBinding() {
 			return identifierAttributeBinding;
 		}
 
-		public String getUnsavedValue() {
-			return unsavedValue;
-		}
-
-		protected IdentifierGeneratorDefinition getIdentifierGeneratorDefinition() {
-			return identifierGeneratorDefinition;
-		}
-
+		@Override
 		public int getColumnCount() {
 			return columnCount;
 		}
 
+		@Override
+		public List<RelationalValueBinding> getRelationalValueBindings() {
+			return getAttributeBinding().getRelationalValueBindings();
+		}
+
+		@Override
 		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
 			return getAttributeBinding().equals( attributeBinding );
 		}
 
+		@Override
 		public IdentifierGenerator createIdentifierGenerator(
 				IdentifierGeneratorFactory identifierGeneratorFactory,
 				Properties properties) {
-			final List<RelationalValueBinding> relationalValueBindings =
-					getAttributeBinding().getRelationalValueBindings();
 
-			// TODO: If multiple @Column annotations exist within an id's
-			// @Columns, we need a more solid solution than simply grabbing
-			// the first one to get the TableSpecification.
-
-			final RelationalValueBinding relationalValueBinding = relationalValueBindings.get( 0 );
-			final TableSpecification table = relationalValueBinding.getTable();
-			if ( !Column.class.isInstance( relationalValueBinding.getValue() ) ) {
-				throw new MappingException(
-						"Cannot create an IdentifierGenerator because the value is not a column: " +
-								relationalValueBinding.getValue().toLoggableString()
-				);
-			}
+			final List<RelationalValueBinding> valueBindings = getAttributeBinding().getRelationalValueBindings();
+			final TableSpecification table = getEntityBinding().getPrimaryTable();
 
 			Properties params = new Properties();
 			params.putAll( properties );
@@ -356,8 +502,8 @@ public class EntityIdentifier {
 				}
 			}
 
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntityName() );
-			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, entityBinding.getJpaEntityName() );
+			params.setProperty( IdentifierGenerator.ENTITY_NAME, getEntityBinding().getEntityName() );
+			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, getEntityBinding().getJpaEntityName() );
 
 			//init the table here instead of earlier, so that we can get a quoted table name
 			//TODO: would it be better to simply pass the qualified table name, instead of
@@ -365,73 +511,94 @@ public class EntityIdentifier {
 			String tableName = table.getQualifiedName( identifierGeneratorFactory.getDialect() );
 			params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
-			params.setProperty(
-					PersistentIdentifierGenerator.PK,
-					( (Column) relationalValueBinding.getValue() ).getColumnName().getText(
-							identifierGeneratorFactory.getDialect()
-					)
-			);
-			if ( entityBinding.getHierarchyDetails().getInheritanceType() != InheritanceType.TABLE_PER_CLASS ) {
+			if ( valueBindings.size() == 1 ) {
+				final RelationalValueBinding rvBinding = valueBindings.get( 0 );
+				if ( Column.class.isInstance( rvBinding.getValue() ) ) {
+					final Column pkColumn = (Column) rvBinding.getValue();
+					params.setProperty(
+							PersistentIdentifierGenerator.PK,
+							pkColumn.getColumnName().getText( identifierGeneratorFactory.getDialect() )
+					);
+				}
+			}
+
+			if ( getEntityBinding().getHierarchyDetails().getInheritanceType() != InheritanceType.TABLE_PER_CLASS ) {
 				params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
-			} else {
+			}
+			else {
 				params.setProperty(
 						PersistentIdentifierGenerator.TABLES,
-						resolveTableNames( identifierGeneratorFactory.getDialect(), entityBinding )
+						resolveTableNames( identifierGeneratorFactory.getDialect(), getEntityBinding() )
 				);
 			}
-			params.putAll( getIdentifierGeneratorDefinition().getParameters() );
+			params.putAll( getGeneratorDefinition().getParameters() );
 			return identifierGeneratorFactory.createIdentifierGenerator(
-					getIdentifierGeneratorDefinition().getStrategy(),
+					getGeneratorDefinition().getStrategy(),
 					getAttributeBinding().getHibernateTypeDescriptor().getResolvedTypeMapping(),
 					params
 			);
 		}
+
+		private String resolveTableNames(Dialect dialect, EntityBinding entityBinding) {
+			EntityBinding[] ebs = entityBinding.getPostOrderSubEntityBindingClosure();
+			StringBuilder tableNames = new StringBuilder();
+			String tbName = resolveTableName( dialect, entityBinding );
+			if( StringHelper.isNotEmpty( tbName )){
+				tableNames.append( tbName );
+			}
+
+			for ( EntityBinding eb : ebs ) {
+				tbName = resolveTableName( dialect, eb );
+				if(StringHelper.isNotEmpty( tbName )){
+					tableNames.append( ", " ).append( tbName );
+				}
+			}
+			return tableNames.toString();
+		}
+
+		private String resolveTableName(Dialect dialect, EntityBinding entityBinding) {
+			TableSpecification tableSpecification = entityBinding.getPrimaryTable();
+			if ( tableSpecification instanceof Table ) {
+				Table tb = (Table) tableSpecification;
+				if ( tb.isPhysicalTable() ) {
+					return tb.getTableName().toText( dialect );
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public Type getHibernateType() {
+			return getAttributeBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
+		}
 	}
 
-	private class SimpleAttributeIdentifierBindingImpl extends EntityIdentifierBinding {
-		SimpleAttributeIdentifierBindingImpl(
+	private class SimpleIdentifierBindingImpl
+			extends AbstractAttributeBasedIdentifierBinding
+			implements SimpleIdentifierBinding {
+		SimpleIdentifierBindingImpl(
+				EntityBinding entityBinding,
 				SingularAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
-			super( SIMPLE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
+			super( entityBinding, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
 		}
 
+		@Override
+		public EntityIdentifierNature getNature() {
+			return SIMPLE;
+		}
 	}
 
-	private String resolveTableNames(Dialect dialect, EntityBinding entityBinding) {
-		EntityBinding[] ebs = entityBinding.getPostOrderSubEntityBindingClosure();
-		StringBuilder tableNames = new StringBuilder();
-		String tbName = resolveTableName( dialect, entityBinding );
-		if( StringHelper.isNotEmpty( tbName )){
-			tableNames.append( tbName );
-		}
-
-		for ( EntityBinding eb : ebs ) {
-			tbName = resolveTableName( dialect, eb );
-			if(StringHelper.isNotEmpty( tbName )){
-				tableNames.append( ", " ).append( tbName );
-			}
-		}
-		return tableNames.toString();
-	}
-
-	private String resolveTableName(Dialect dialect, EntityBinding entityBinding) {
-		TableSpecification tableSpecification = entityBinding.getPrimaryTable();
-		if ( tableSpecification instanceof Table ) {
-			Table tb = (Table) tableSpecification;
-			if ( tb.isPhysicalTable() ) {
-				return tb.getTableName().toText( dialect );
-			}
-		}
-		return null;
-	}
-
-	private class AggregatedComponentIdentifierBindingImpl extends EntityIdentifierBinding {
-		AggregatedComponentIdentifierBindingImpl(
+	private class AggregatedCompositeIdentifierBindingImpl
+			extends AbstractAttributeBasedIdentifierBinding
+			implements AggregatedCompositeIdentifierBinding {
+		AggregatedCompositeIdentifierBindingImpl(
+				EntityBinding entityBinding,
 				EmbeddedAttributeBinding identifierAttributeBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
-			super( AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
+			super( entityBinding, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
 			if ( ! identifierAttributeBinding.getEmbeddableBinding().isAggregated() ) {
 				throw new IllegalArgumentException(
 						String.format(
@@ -442,20 +609,31 @@ public class EntityIdentifier {
 			}
 		}
 
+		@Override
+		public EntityIdentifierNature getNature() {
+			return AGGREGATED_COMPOSITE;
+		}
+
+		@Override
+		public EmbeddedAttributeBinding getAttributeBinding() {
+			return (EmbeddedAttributeBinding) super.getAttributeBinding();
+		}
+
+		@Override
 		public IdentifierGenerator createIdentifierGenerator(
 				IdentifierGeneratorFactory factory,
 				Properties properties) {
 			if ( entityBinding.getSuperEntityBinding() != null ) {
 				throw new AssertionError( "Creating an identifier generator for a component on a subclass." );
 			}
-			final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 
-			final boolean hasCustomGenerator = ! "assigned".equals( getIdentifierGeneratorDefinition().getStrategy() );
+			final boolean hasCustomGenerator = ! "assigned".equals( getGeneratorDefinition().getStrategy() );
 			if ( hasCustomGenerator ) {
 				return super.createIdentifierGenerator(
 						factory, properties
 				);
 			}
+
 			// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 			//		various scenarios for which we need to account here
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
@@ -471,98 +649,83 @@ public class EntityIdentifier {
 		}
 	}
 
-	private static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final String propertyName;
-		private final IdentifierGenerator subGenerator;
-		private final Setter injector;
+	private class NonAggregatedCompositeIdentifierBindingImpl
+			extends AbstractIdentifierBinding
+			implements NonAggregatedCompositeIdentifierBinding {
+		private final EmbeddableBindingImplementor virtualEmbeddableBinding;
+		private final EmbeddedAttributeBinding virtualAttributeBinding;
 
-		public ValueGenerationPlan(
-				String propertyName,
-				IdentifierGenerator subGenerator,
-				Setter injector) {
-			this.propertyName = propertyName;
-			this.subGenerator = subGenerator;
-			this.injector = injector;
-		}
+		private final IdClassMetadata idClassMetadata;
 
-		/**
-		 * {@inheritDoc}
-		 */
-		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
-			final Object generatedValue = subGenerator.generate( session, incomingObject );
-			injector.set( injectionContext, generatedValue, session.getFactory() );
-		}
+		private Type type;
 
-		public void registerPersistentGenerators(Map generatorMap) {
-			if ( PersistentIdentifierGenerator.class.isInstance( subGenerator ) ) {
-				generatorMap.put( ( (PersistentIdentifierGenerator) subGenerator ).generatorKey(), subGenerator );
-			}
-		}
-	}
-
-	private class NonAggregatedCompositeIdentifierBindingImpl extends EntityIdentifierBinding {
-		private final Class externalAggregatingClass;
-		private final String externalAggregatingPropertyAccessorName;
-
-		NonAggregatedCompositeIdentifierBindingImpl(
-				EmbeddedAttributeBinding identifierAttributeBinding,
+		public NonAggregatedCompositeIdentifierBindingImpl(
+				EntityBinding entityBinding,
+				EmbeddableBindingImplementor virtualEmbeddableBinding,
+				EmbeddedAttributeBinding virtualAttributeBinding,
+				EmbeddableBindingImplementor idClassEmbeddableBinding,
 				IdentifierGeneratorDefinition identifierGeneratorDefinition,
-				String unsavedValue,
-				Class externalAggregatingClass,
-				String externalAggregatingPropertyAccessorName) {
-			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
-			if ( identifierAttributeBinding.getEmbeddableBinding().isAggregated() ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"identifierAttributeBinding must be a non-aggregated EmbeddedAttributeBinding: %s",
-								identifierAttributeBinding.getAttribute().getName()
-						)
-				);
-			}
-			this.externalAggregatingClass = externalAggregatingClass;
-			this.externalAggregatingPropertyAccessorName = externalAggregatingPropertyAccessorName;
-			if ( identifierAttributeBinding.getEmbeddableBinding().attributeBindingSpan() == 0 ) {
-				throw new MappingException(
-						"A composite ID has 0 attributes for " + entityBinding.getEntityName()
-				);
-			}
-			for ( AttributeBinding attributeBinding : identifierAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
-				if ( ! attributeBinding.getAttribute().isSingular() ) {
-					throw new MappingException(
-							String.format(
-									"The composite ID for [%s] contains an attribute [%s} that is plural.",
-									entityBinding.getEntityName(),
-									attributeBinding.getAttribute().getName()
-							)
-					);
-				}
+				String unsavedValue) {
+			super( entityBinding, identifierGeneratorDefinition, unsavedValue );
+			this.virtualEmbeddableBinding = virtualEmbeddableBinding;
+			this.virtualAttributeBinding = virtualAttributeBinding;
+			this.idClassMetadata = idClassEmbeddableBinding == null
+					? null
+					: new IdClassMetadataImpl( idClassEmbeddableBinding );
+
+			final List<RelationalValueBinding> relationalValueBindings = virtualAttributeBinding.getRelationalValueBindings();
+			for ( final RelationalValueBinding valueBinding : relationalValueBindings ) {
+				entityBinding.getPrimaryTable()
+						.getPrimaryKey()
+						.addColumn( (Column) valueBinding.getValue() );
 			}
 		}
 
-		private EmbeddedAttributeBinding getNonAggregatedCompositeAttributeBinding() {
-			return (EmbeddedAttributeBinding) getAttributeBinding();
+		@Override
+		public EntityIdentifierNature getNature() {
+			return NON_AGGREGATED_COMPOSITE;
 		}
+
+		@Override
+		public EmbeddableBinding getVirtualEmbeddableBinding() {
+			return virtualEmbeddableBinding;
+		}
+
+		@Override
+		public SingularAttributeBinding getAttributeBinding() {
+			return virtualAttributeBinding;
+		}
+
+		@Override
+		public IdClassMetadata getIdClassMetadata() {
+			return idClassMetadata;
+		}
+
+		@Override
+		public List<RelationalValueBinding> getRelationalValueBindings() {
+			return virtualAttributeBinding.getRelationalValueBindings();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return getRelationalValueBindings().size();
+		}
+
+		@Override
 		public boolean isIdentifierAttributeBinding(AttributeBinding attributeBinding) {
-			if ( !isIdentifierMapper() && getNonAggregatedCompositeAttributeBinding().equals( attributeBinding ) ) {
+			if ( virtualAttributeBinding.equals( attributeBinding ) ) {
 				return true;
 
 			}
-			for ( AttributeBinding idAttributeBindings : getNonAggregatedCompositeAttributeBinding().getEmbeddableBinding().attributeBindings() ) {
-				if ( idAttributeBindings.equals( attributeBinding ) ) {
+			for ( AttributeBinding embAttrBinding : virtualEmbeddableBinding.attributeBindings() ) {
+				if ( embAttrBinding.equals( attributeBinding ) ) {
 					return true;
 				}
 			}
 			return false;
 		}
 
-		public Class getIdClassClass() {
-			return externalAggregatingClass;
-		}
-
-		public String getIdClassPropertyAccessorName() {
-			return externalAggregatingPropertyAccessorName;
-		}
-
+		@Override
 		public IdentifierGenerator createIdentifierGenerator(
 				IdentifierGeneratorFactory factory,
 				Properties properties) {
@@ -589,14 +752,56 @@ public class EntityIdentifier {
 			// TODO: set up IdentifierGenerator for non-assigned sub-attributes
 			return new CompositeNestedGeneratedValueGenerator( locator );
 		}
+
+		@Override
+		public Type getHibernateType(ServiceRegistry serviceRegistry, TypeFactory typeFactory) {
+			if ( type == null ) {
+				type = typeFactory.embeddedComponent(
+						new ComponentMetamodel(
+								serviceRegistry,
+								virtualEmbeddableBinding,
+								true,
+								false
+						)
+				);
+			}
+			return type;
+		}
+
+		@Override
+		public Type getHibernateType() {
+			return type;
+		}
 	}
 
-	public static interface Binding {
-		public EntityIdentifierNature getNature();
 
-		public String getUnsavedValue();
 
-		public IdentifierGeneratorDefinition getGeneratorDefinition();
-	}
-
+//	private static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
+//		private final String propertyName;
+//		private final IdentifierGenerator subGenerator;
+//		private final Setter injector;
+//
+//		public ValueGenerationPlan(
+//				String propertyName,
+//				IdentifierGenerator subGenerator,
+//				Setter injector) {
+//			this.propertyName = propertyName;
+//			this.subGenerator = subGenerator;
+//			this.injector = injector;
+//		}
+//
+//		/**
+//		 * {@inheritDoc}
+//		 */
+//		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
+//			final Object generatedValue = subGenerator.generate( session, incomingObject );
+//			injector.set( injectionContext, generatedValue, session.getFactory() );
+//		}
+//
+//		public void registerPersistentGenerators(Map generatorMap) {
+//			if ( PersistentIdentifierGenerator.class.isInstance( subGenerator ) ) {
+//				generatorMap.put( ( (PersistentIdentifierGenerator) subGenerator ).generatorKey(), subGenerator );
+//			}
+//		}
+//	}
 }

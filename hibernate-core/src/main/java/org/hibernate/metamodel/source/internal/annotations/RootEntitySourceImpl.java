@@ -25,8 +25,10 @@ package org.hibernate.metamodel.source.internal.annotations;
 
 import java.util.List;
 
+import org.hibernate.metamodel.source.internal.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.entity.RootEntityTypeMetadata;
+import org.hibernate.metamodel.source.spi.MapsIdSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.TableSpecificationSource;
 
@@ -42,6 +44,7 @@ import org.jboss.jandex.AnnotationInstance;
  */
 public class RootEntitySourceImpl extends EntitySourceImpl {
 	private List<SingularAttributeSource> identifierAttributes;
+	private List<MapsIdSource> mapsIdSources;
 
 	/**
 	 * Constructs the root entity.  Called from the construction of the
@@ -71,10 +74,19 @@ public class RootEntitySourceImpl extends EntitySourceImpl {
 				entityTypeMetadata,
 				SourceHelper.IdentifierPathAttributeBuilder.INSTANCE
 		);
+
+		this.mapsIdSources = SourceHelper.buildMapsIdSources(
+				entityTypeMetadata,
+				SourceHelper.IdentifierPathAttributeBuilder.INSTANCE
+		);
 	}
 
 	public List<SingularAttributeSource> getIdentifierAttributes() {
 		return identifierAttributes;
+	}
+
+	public List<MapsIdSource> getMapsIdSources() {
+		return mapsIdSources;
 	}
 
 	@Override

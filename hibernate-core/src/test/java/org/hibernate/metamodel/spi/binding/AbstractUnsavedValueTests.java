@@ -74,7 +74,7 @@ public abstract class AbstractUnsavedValueTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( EntityWithAssignedId.class.getName() );
 		// Generator is explicitly "assigned", so unsaved ID value should be "undefined"
-		assertEquals( "undefined", entityBinding.getHierarchyDetails().getEntityIdentifier().getUnsavedValue() );
+		assertEquals( "undefined", entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getUnsavedValue() );
 	}
 
 	@Test
@@ -84,7 +84,7 @@ public abstract class AbstractUnsavedValueTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( EntityWithSequenceId.class.getName() );
 		// Generator is explicitly "increment", so unsaved ID value should be null
-		assertEquals( null, entityBinding.getHierarchyDetails().getEntityIdentifier().getUnsavedValue() );
+		assertEquals( null, entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getUnsavedValue() );
 	}
 
 	@Test
@@ -94,7 +94,7 @@ public abstract class AbstractUnsavedValueTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( EntityWithVersion.class.getName() );
 		// Generator is explicitly "assigned", so unsaved ID value should be "undefined"
-		assertEquals( "undefined", entityBinding.getHierarchyDetails().getEntityIdentifier().getUnsavedValue() );
+		assertEquals( "undefined", entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getUnsavedValue() );
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public abstract class AbstractUnsavedValueTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( EntityWithTimestamp.class.getName() );
 		// Generator is explicitly "assigned", so unsaved ID value should be "undefined"
-		assertEquals( "undefined", entityBinding.getHierarchyDetails().getEntityIdentifier().getUnsavedValue() );
+		assertEquals( "undefined", entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getUnsavedValue() );
 	}
 
 	public abstract void addSourcesForAssignedIdDefaultUnsavedValue(MetadataSources sources);

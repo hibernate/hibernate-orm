@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbManyToOneElement;
 import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
@@ -46,6 +48,8 @@ import org.hibernate.type.ForeignKeyDirection;
  */
 class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	private final JaxbManyToOneElement manyToOneElement;
+	private final HibernateTypeSourceImpl typeSource;
+
 	private final String containingTableName;
 	private final List<RelationalValueSource> valueSources;
 
@@ -60,6 +64,18 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 			NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument, naturalIdMutability, manyToOneElement.getPropertyRef() );
 		this.manyToOneElement = manyToOneElement;
+
+		final String referencedClassName = manyToOneElement.getClazz();
+		JavaTypeDescriptor referencedClass = null;
+		if ( StringHelper.isNotEmpty( referencedClassName ) ) {
+			referencedClass = bindingContext().getJavaTypeDescriptorRepository().getType(
+					bindingContext().getJavaTypeDescriptorRepository().buildName(
+							bindingContext().qualifyClassName( manyToOneElement.getClazz() )
+					)
+			);
+		}
+		this.typeSource = new HibernateTypeSourceImpl( referencedClass );
+
 		this.containingTableName = logicalTableName;
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
@@ -118,6 +134,11 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	@Override
 	public AttributeRole getAttributeRole() {
 		return attributeRole;
+	}
+
+	@Override
+	public HibernateTypeSourceImpl getTypeInformation() {
+		return typeSource;
 	}
 
 	@Override

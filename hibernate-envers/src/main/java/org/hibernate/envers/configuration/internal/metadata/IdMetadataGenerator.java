@@ -37,6 +37,7 @@ import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EmbeddableBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
@@ -65,14 +66,14 @@ public final class IdMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	private boolean addIdProperties(
 			Element parent,
-			EmbeddedAttributeBinding embeddedAttributeBinding,
+			EmbeddableBinding embeddableBinding,
 			SimpleMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
 		//if ( embeddedAttributeBinding.getAttribute().isSynthetic() ) {
 		//	return true;
 		//}
-		for ( AttributeBinding attributeBinding : embeddedAttributeBinding.getEmbeddableBinding().attributeBindings() ) {
+		for ( AttributeBinding attributeBinding : embeddableBinding.attributeBindings() ) {
 			final Type propertyType = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 			final boolean added;
 			if ( propertyType instanceof ManyToOneType ) {
@@ -127,16 +128,20 @@ public final class IdMetadataGenerator {
 		//	return null;
 		//}
 
-		final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
+		final EntityIdentifier idInfo = entityBinding.getHierarchyDetails().getEntityIdentifier();
 		SimpleIdMapperBuilder mapper;
-		if ( entityIdentifier.getLookupClassBinding().definedIdClass() ) {
+		if ( idInfo.definesIdClass() ) {
 			// Multiple id
-			final Class componentClass = entityIdentifier.getLookupClassBinding().getIdClassType();
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding =
+					(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			final Class componentClass = context.getClassLoaderService().classForName(
+					idBinding.getIdClassMetadata().getIdClassType().getName().toString()
+			);
 
 			mapper = new MultipleIdMapper( componentClass );
 			if ( !addIdProperties(
 					relIdMapping,
-					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
+					idBinding.getVirtualEmbeddableBinding(),
 					mapper,
 					false,
 					audited
@@ -147,7 +152,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
+					idBinding.getVirtualEmbeddableBinding(),
 					null,
 					true,
 					audited
@@ -155,16 +160,19 @@ public final class IdMetadataGenerator {
 				return null;
 			}
 		}
-		else if ( entityIdentifier.getNature() == EntityIdentifierNature.AGGREGATED_COMPOSITE ) {
+		else if ( idInfo.getNature() == EntityIdentifierNature.AGGREGATED_COMPOSITE ) {
 			// Embeddable id
+			final EntityIdentifier.AggregatedCompositeIdentifierBinding idBinding =
+					(EntityIdentifier.AggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+
 			// TODO: get rid of classloading.
 			final Class embeddableClass = context.getClassLoaderService().classForName(
-					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor().getJavaTypeDescriptor().getName().toString()
+					idBinding.getAttributeBinding().getEmbeddableBinding().getTypeDescriptor().getName().toString()
 			);
-			mapper = new EmbeddedIdMapper( getIdPropertyData( entityIdentifier.getAttributeBinding() ), embeddableClass );
+			mapper = new EmbeddedIdMapper( getIdPropertyData( idBinding.getAttributeBinding() ), embeddableClass );
 			if ( !addIdProperties(
 					relIdMapping,
-					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
+					idBinding.getAttributeBinding().getEmbeddableBinding(),
 					mapper,
 					false,
 					audited
@@ -175,7 +183,7 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			if ( !addIdProperties(
 					origIdMapping,
-					(EmbeddedAttributeBinding) entityIdentifier.getAttributeBinding(),
+					idBinding.getAttributeBinding().getEmbeddableBinding(),
 					null,
 					true,
 					audited
@@ -184,16 +192,19 @@ public final class IdMetadataGenerator {
 			}
 		}
 		else {
+			final EntityIdentifier.SimpleIdentifierBinding idBinding =
+					(EntityIdentifier.SimpleIdentifierBinding) idInfo.getEntityIdentifierBinding();
+
 			// Single id
 			mapper = new SingleIdMapper();
 
 			// Last but one parameter: ids are always insertable
 			mainGenerator.getBasicMetadataGenerator().addBasic(
 					relIdMapping,
-					getIdPersistentPropertyAuditingData( entityIdentifier.getAttributeBinding() ),
-					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor(),
-					entityIdentifier.getAttributeBinding().getValues(),
-					entityIdentifier.getAttributeBinding().isIncludedInInsert(),
+					getIdPersistentPropertyAuditingData( idBinding.getAttributeBinding() ),
+					idBinding.getAttributeBinding().getHibernateTypeDescriptor(),
+					idBinding.getAttributeBinding().getValues(),
+					idBinding.getAttributeBinding().isIncludedInInsert(),
 					mapper,
 					false
 			);
@@ -201,10 +212,10 @@ public final class IdMetadataGenerator {
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
 			mainGenerator.getBasicMetadataGenerator().addBasic(
 					origIdMapping,
-					getIdPersistentPropertyAuditingData( entityIdentifier.getAttributeBinding() ),
-					entityIdentifier.getAttributeBinding().getHibernateTypeDescriptor(),
-					entityIdentifier.getAttributeBinding().getValues(),
-					entityIdentifier.getAttributeBinding().isIncludedInInsert(),
+					getIdPersistentPropertyAuditingData( idBinding.getAttributeBinding() ),
+					idBinding.getAttributeBinding().getHibernateTypeDescriptor(),
+					idBinding.getAttributeBinding().getValues(),
+					idBinding.getAttributeBinding().isIncludedInInsert(),
 					null,
 					true
 			);

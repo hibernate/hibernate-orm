@@ -27,6 +27,7 @@ import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
@@ -36,6 +37,7 @@ import org.hibernate.testing.junit4.ExtraAssertions;
 import org.hibernate.test.metamodel.derivedid.e1.Employee;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -59,17 +61,24 @@ public class MappingTest extends BaseUnitTestCase {
 				EntityIdentifierNature.SIMPLE,
 				employeeBinding.getHierarchyDetails().getEntityIdentifier().getNature()
 		);
-		SingularAttributeBinding empIdAttrBinding = employeeBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
+		SingularAttributeBinding empIdAttrBinding = employeeBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding();
 		Type empIdType = empIdAttrBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 		assertNotNull( empIdType );
-		ExtraAssertions.assertTyping( LongType.class, empIdType );
+		assertTyping( LongType.class, empIdType );
 
 		EntityBinding depBinding = metadata.getEntityBinding( Dependent.class.getName() );
 		assertEquals(
 				EntityIdentifierNature.NON_AGGREGATED_COMPOSITE,
 				depBinding.getHierarchyDetails().getEntityIdentifier().getNature()
 		);
-		assertNotNull( depBinding.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().getIdClassType() );
+		EntityIdentifier.NonAggregatedCompositeIdentifierBinding identifierBinding = assertTyping(
+				EntityIdentifier.NonAggregatedCompositeIdentifierBinding.class,
+				depBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding()
+		);
+
+		assertNotNull( identifierBinding.getIdClassMetadata() );
+		assertNotNull( identifierBinding.getIdClassMetadata().getIdClassType() );
+		assertNotNull( identifierBinding.getIdClassMetadata().getEmbeddableBinding() );
 
 		// The issue here is the lack of understanding that the IdClass attributes
 		// are not the same types as the entity attribute(s).

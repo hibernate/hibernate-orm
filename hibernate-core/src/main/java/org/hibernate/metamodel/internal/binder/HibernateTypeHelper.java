@@ -36,6 +36,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
@@ -54,6 +55,7 @@ import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.PluralAttributeNature;
+import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
@@ -84,6 +86,8 @@ import org.hibernate.type.TypeFactory;
 import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
+import static org.hibernate.metamodel.spi.binding.EntityIdentifier.IdClassMetadata;
+
 /**
  * Delegate for handling:<ol>
  * <li>
@@ -112,7 +116,7 @@ import org.jboss.logging.Logger;
  * @author Gail Badner
  * @author Brett Meyer
  */
-class HibernateTypeHelper {
+public class HibernateTypeHelper {
 	private static final Logger log = Logger.getLogger( HibernateTypeHelper.class );
 
 	/**
@@ -414,6 +418,33 @@ class HibernateTypeHelper {
 				elementBinding.getRelationalValueBindings()
 		);
 	}
+
+
+	public void bindNonAggregatedCompositeIdentifierType(
+			ServiceRegistry serviceRegistry,
+			EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding) {
+		final CompositeType idType;
+
+		final CompositeType virtualIdType = (CompositeType) idBinding.getHibernateType( serviceRegistry, typeFactory() );
+		final IdClassMetadata idClassMetadata = idBinding.getIdClassMetadata();
+		if ( idClassMetadata != null ) {
+			idType = (CompositeType) idClassMetadata.getHibernateType( serviceRegistry, typeFactory() );
+		}
+		else {
+			idType = virtualIdType;
+		}
+
+		idBinding.getAttributeBinding().getHibernateTypeDescriptor().setResolvedTypeMapping( idType );
+		bindHibernateTypeDescriptor(
+				idBinding.getAttributeBinding().getHibernateTypeDescriptor(),
+				idType.getReturnedClass().getName(),
+				null,
+				null,
+				idType
+		);
+
+	}
+
 	void bindNonAggregatedCompositeIdentifierType(
 			final ServiceRegistry serviceRegistry,
 			final EmbeddedAttributeBinding syntheticAttributeBinding,
@@ -433,6 +464,7 @@ class HibernateTypeHelper {
 				resolvedType
 		);
 	}
+
 	void bindManyToManyAttributeType(
 			final PluralAttributeElementBindingManyToMany elementBinding,
 			final PluralAttributeElementSourceManyToMany elementSource,
@@ -483,14 +515,17 @@ class HibernateTypeHelper {
 		final JavaTypeDescriptor defaultTypeDescriptor;
 		if ( attributeTypeDescriptor != null ) {
 			attributeBinding.getAttribute().resolveType(
-					makeDomainType( attributeTypeDescriptor.getName().toString() )
+					bindingContext().locateOrBuildDomainType(
+							attributeTypeDescriptor,
+							attributeSource.getSingularAttributeNature() == SingularAttributeNature.COMPOSITE
+					)
 			);
 			defaultTypeDescriptor = attributeTypeDescriptor;
 		}
 		else {
 			defaultTypeDescriptor = null;
 		}
-		//do our best to full fill hibernateTypeDescriptor
+		//do our best to fully fill hibernateTypeDescriptor
 		bindHibernateTypeDescriptor(
 				hibernateTypeDescriptor,
 				attributeSource.getTypeInformation(),
@@ -969,10 +1004,14 @@ class HibernateTypeHelper {
 	 */
 	private static String getReferencedPropertyNameIfNotId(
 			final PluralAttributeBinding pluralAttributeBinding) {
-		EntityIdentifier entityIdentifier =
-				pluralAttributeBinding.getContainer().seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
-		final String idAttributeName =
-				entityIdentifier.getAttributeBinding().getAttribute().getName();
+		EntityIdentifier entityIdentifier = pluralAttributeBinding.getContainer()
+				.seekEntityBinding()
+				.getHierarchyDetails()
+				.getEntityIdentifier();
+		final String idAttributeName = entityIdentifier.getEntityIdentifierBinding()
+				.getAttributeBinding()
+				.getAttribute()
+				.getName();
 		return pluralAttributeBinding.getReferencedPropertyName().equals( idAttributeName ) ?
 				null :
 				pluralAttributeBinding.getReferencedPropertyName();

@@ -135,24 +135,27 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		}
 		assertEquals( 1, directAttributeBindings.size() );
 		assertSame(
-				noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(),
+				noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(),
 				directAttributeBindings.iterator().next()
 		);
 		assertEquals( 1, noInheritanceEntityBinding.getAttributeBindingClosureSpan() );
 		Iterator<AttributeBinding> iterator = noInheritanceEntityBinding.attributeBindings().iterator();
 		assertTrue( iterator.hasNext() );
-		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), iterator.next() );
+		assertSame(
+				noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(),
+				iterator.next()
+		);
 		assertFalse( iterator.hasNext() );
 
 		AttributeBinding[] attributeBindings = noInheritanceEntityBinding.getAttributeBindingClosure();
 		assertTrue( attributeBindings.length > 0 );
 		int index =0;
-		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), attributeBindings[index++] );
+		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(), attributeBindings[index++] );
 		assertFalse( index < attributeBindings.length );
 		attributeBindings =  noInheritanceEntityBinding.getEntitiesAttributeBindingClosure();
 		index = 0;
 		assertTrue( attributeBindings.length > 0 );
-		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding(), attributeBindings[index++] );
+		assertSame( noInheritanceEntityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding(), attributeBindings[index++] );
 		assertFalse( index < attributeBindings.length );
 	}
 

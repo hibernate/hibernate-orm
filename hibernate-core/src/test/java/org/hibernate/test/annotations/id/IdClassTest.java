@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.annotations.id;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.entities.Location;
 import org.hibernate.test.annotations.id.entities.Tower;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 

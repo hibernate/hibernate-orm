@@ -23,7 +23,9 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
@@ -40,6 +42,8 @@ public class HibernateTypeDescriptor {
 
 	private Type resolvedTypeMapping;
 	private JavaTypeDescriptor typeDescriptor;
+
+	private List<ResolutionListener> resolutionListeners;
 
 	public String getExplicitTypeName() {
 		return explicitTypeName;
@@ -71,6 +75,10 @@ public class HibernateTypeDescriptor {
 
 	public void setResolvedTypeMapping(Type resolvedTypeMapping) {
 		this.resolvedTypeMapping = resolvedTypeMapping;
+
+		if ( this.resolvedTypeMapping != null ) {
+			notifyResolutionListeners();
+		}
 	}
 
 	public void copyFrom(HibernateTypeDescriptor hibernateTypeDescriptor) {
@@ -78,5 +86,26 @@ public class HibernateTypeDescriptor {
 		setExplicitTypeName( hibernateTypeDescriptor.getExplicitTypeName() );
 		getTypeParameters().putAll( hibernateTypeDescriptor.getTypeParameters() );
 		setResolvedTypeMapping( hibernateTypeDescriptor.getResolvedTypeMapping() );
+	}
+
+	public static interface ResolutionListener {
+		public void typeResolved(HibernateTypeDescriptor typeDescriptor);
+	}
+
+	public void addResolutionListener(ResolutionListener listener) {
+		if ( resolutionListeners == null ) {
+			resolutionListeners = new ArrayList<ResolutionListener>();
+		}
+		resolutionListeners.add( listener );
+	}
+
+	private void notifyResolutionListeners() {
+		if ( resolutionListeners == null ) {
+			return;
+		}
+
+		for ( ResolutionListener resolutionListener : resolutionListeners ) {
+			resolutionListener.typeResolved( this );
+		}
 	}
 }

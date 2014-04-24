@@ -41,29 +41,9 @@ public interface ToOneAttributeSource
 			FetchableAttributeSource,
 			AssociationSource {
 
-	public MapsIdSource getMapsIdSource();
-
 	public boolean isUnique();
 	public boolean isUnWrapProxy();
 	ForeignKeyDirection getForeignKeyDirection();
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding);
 
-	/**
-	 * Source for JPA {@link javax.persistence.MapsId} annotation information
-	 */
-	public static interface MapsIdSource {
-		/**
-		 * Was a MapsId annotation present on the to-one?
-		 *
-		 * @return {@code true} if MapsId annotation was present; {@code false} otherwise.
-		 */
-		public boolean isDefined();
-
-		/**
-		 * The {@link javax.persistence.MapsId#value()} value.
-		 *
-		 * @return The indicated name
-		 */
-		public String getLookupClassAttributeName();
-	}
 }

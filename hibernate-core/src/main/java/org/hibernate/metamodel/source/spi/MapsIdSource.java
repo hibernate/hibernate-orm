@@ -21,30 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.internal.annotations;
-
-import java.util.Collection;
-import java.util.Collections;
-
-import org.hibernate.metamodel.source.spi.IdentifierSource;
-import org.hibernate.metamodel.source.spi.ToolingHintSource;
+package org.hibernate.metamodel.source.spi;
 
 /**
+ * Describes a relationship annotated with {@link javax.persistence.MapsId}
+ * 
  * @author Steve Ebersole
  */
-public abstract class AbstractIdentifierSource implements IdentifierSource {
-	private final RootEntitySourceImpl rootEntitySource;
+public interface MapsIdSource {
+	/**
+	 * Obtain the {@link javax.persistence.MapsId#value()} naming the attribute
+	 * within the EmbeddedId mapped by this relationship.
+	 * 
+	 * @return The corresponding id attribute name.
+	 */
+	public String getMappedIdAttributeName();
 
-	protected AbstractIdentifierSource(RootEntitySourceImpl rootEntitySource) {
-		this.rootEntitySource = rootEntitySource;
-	}
-
-	protected RootEntitySourceImpl rootEntitySource() {
-		return rootEntitySource;
-	}
-
-	@Override
-	public Collection<? extends ToolingHintSource> getToolingHintSources() {
-		return Collections.emptySet();
-	}
+	/**
+	 * The attribute source information
+	 * 
+	 * @return The association attribute information
+	 */
+	public ToOneAttributeSource getAssociationAttributeSource();
 }

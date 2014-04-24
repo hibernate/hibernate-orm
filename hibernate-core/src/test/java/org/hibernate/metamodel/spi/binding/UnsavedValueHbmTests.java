@@ -44,7 +44,7 @@ public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( EntityWithAssignedId.class.getName() );
 		// unsaved-value was mapped as "any"; that should be used, regardless of ID generator.
-		assertEquals( "any", entityBinding.getHierarchyDetails().getEntityIdentifier().getUnsavedValue() );
+		assertEquals( "any", entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getUnsavedValue() );
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( EntityWithSequenceId.class.getName() );
 		// unsaved-value was mapped as "null"; that should be used, regardless of ID generator.
-		assertEquals( "null", entityBinding.getHierarchyDetails().getEntityIdentifier().getUnsavedValue() );
+		assertEquals( "null", entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getUnsavedValue() );
 	}
 
 	@Test

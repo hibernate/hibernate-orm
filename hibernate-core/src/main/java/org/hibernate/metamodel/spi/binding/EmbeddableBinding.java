@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
@@ -32,6 +33,8 @@ import org.hibernate.tuple.component.ComponentTuplizer;
 public interface EmbeddableBinding extends AttributeBindingContainer {
 	boolean isAggregated();
 	SingularAttribute getParentReference();
+
+	JavaTypeDescriptor getTypeDescriptor();
 
 	@Override
 	Class<? extends ComponentTuplizer> getCustomTuplizerClass();

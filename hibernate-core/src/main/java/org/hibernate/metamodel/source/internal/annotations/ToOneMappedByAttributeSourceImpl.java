@@ -62,7 +62,7 @@ public class ToOneMappedByAttributeSourceImpl
 	}
 
 	@Override
-	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
+	public void resolveToOneAttributeSourceNature(AttributeSourceResolutionContext context) {
 		if ( getSingularAttributeNature() != null && owner != null) {
 			return;
 		}
@@ -94,6 +94,11 @@ public class ToOneMappedByAttributeSourceImpl
 			}
 			setSingularAttributeNature( singularAttributeNature );
 		}
+	}
+
+	@Override
+	public void resolveToOneAttributeSourceNatureAsPartOfIdentifier() {
+		// should this be an error?
 	}
 
 	@Override

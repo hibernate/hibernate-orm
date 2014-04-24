@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
@@ -499,7 +498,7 @@ public class PluralAttributeSourceImpl
 
 	private static class CollectionIdSourceImpl implements CollectionIdSource {
 		private final ColumnSourceImpl columnSource;
-		private final HibernateTypeSource typeSource;
+		private final HibernateTypeSourceImpl typeSource;
 		private final String generatorName;
 
 		public CollectionIdSourceImpl(CollectionIdInformation collectionIdInformation, EntityBindingContext context) {
@@ -520,69 +519,32 @@ public class PluralAttributeSourceImpl
 			return new ColumnSourceImpl( columns.get( 0 ) );
 		}
 
-		private HibernateTypeSource createTypeSource(AttributeTypeResolver typeResolver) {
+		private HibernateTypeSourceImpl createTypeSource(AttributeTypeResolver typeResolver) {
 			if ( typeResolver == null ) {
-				return EmptyHibernateTypeSource.INSTANCE;
+				return new HibernateTypeSourceImpl();
 			}
 
 			final String resolvedTypeName = typeResolver.getExplicitHibernateTypeName();
 			if ( StringHelper.isEmpty( resolvedTypeName ) ) {
-				return EmptyHibernateTypeSource.INSTANCE;
+				return new HibernateTypeSourceImpl();
 			}
 
-			return new HibernateTypeSource() {
-				@Override
-				public String getName() {
-					return resolvedTypeName;
-				}
-
-				@Override
-				public Map<String, String> getParameters() {
-					return Collections.emptyMap();
-				}
-
-				@Override
-				public JavaTypeDescriptor getJavaType() {
-					return null;
-				}
-			};
+			return new HibernateTypeSourceImpl( resolvedTypeName );
 		}
 
 		@Override
 		public ColumnSource getColumnSource() {
-			return null;
+			return columnSource;
 		}
 
 		@Override
-		public HibernateTypeSource getTypeInformation() {
-			return null;
+		public HibernateTypeSourceImpl getTypeInformation() {
+			return typeSource;
 		}
 
 		@Override
 		public String getGeneratorName() {
-			return null;
-		}
-	}
-
-	private static class EmptyHibernateTypeSource implements HibernateTypeSource {
-		/**
-		 * Singleton access
-		 */
-		public static final EmptyHibernateTypeSource INSTANCE = new EmptyHibernateTypeSource();
-
-		@Override
-		public String getName() {
-			return null;
-		}
-
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
-
-		@Override
-		public JavaTypeDescriptor getJavaType() {
-			return null;
+			return generatorName;
 		}
 	}
 }

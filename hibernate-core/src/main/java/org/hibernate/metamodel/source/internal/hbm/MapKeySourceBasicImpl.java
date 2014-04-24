@@ -29,11 +29,9 @@ import java.util.Map;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.internal.binder.Binder;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbIndexElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbMapKeyElement;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeMapKeySourceBasic;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.SizeSource;
@@ -45,11 +43,18 @@ import org.hibernate.metamodel.spi.PluralAttributeIndexNature;
 public class MapKeySourceBasicImpl extends AbstractHbmSourceNode implements PluralAttributeMapKeySourceBasic {
 	private final PluralAttributeIndexNature nature;
 	private final List<RelationalValueSource> valueSources;
-	private final HibernateTypeSource typeSource;
+	private final HibernateTypeSourceImpl typeSource;
 
 	public MapKeySourceBasicImpl(MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey) {
 		super( sourceMappingDocument );
-		valueSources = Helper.buildValueSources(
+
+		final String typeName = extractTypeName( mapKey );
+		final Map<String, String> typeParams = mapKey.getType() != null
+				? Helper.extractParameters( mapKey.getType().getParam() )
+				: java.util.Collections.<String, String>emptyMap();
+		this.typeSource = new HibernateTypeSourceImpl( typeName, typeParams );
+
+		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
 
@@ -94,35 +99,25 @@ public class MapKeySourceBasicImpl extends AbstractHbmSourceNode implements Plur
 					}
 				}
 		);
-		this.typeSource = new HibernateTypeSource() {
-			@Override
-			public String getName() {
-				if ( mapKey.getTypeAttribute() != null ) {
-					return mapKey.getTypeAttribute();
-				}
-				if ( mapKey.getType() != null ) {
-					return mapKey.getType().getName();
-				}
-				return null;
-			}
 
-			@Override
-			public Map<String, String> getParameters() {
-				return mapKey.getType() != null
-						? Helper.extractParameters( mapKey.getType().getParam() )
-						: java.util.Collections.<String, String>emptyMap();
-			}
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
 		this.nature = PluralAttributeIndexNature.BASIC;
+	}
+
+	private String extractTypeName(JaxbMapKeyElement mapKey) {
+		if ( mapKey.getTypeAttribute() != null ) {
+			return mapKey.getTypeAttribute();
+		}
+		if ( mapKey.getType() != null ) {
+			return mapKey.getType().getName();
+		}
+		return null;
 	}
 
 	public MapKeySourceBasicImpl(MappingDocument sourceMappingDocument, final JaxbIndexElement indexElement) {
 		super( sourceMappingDocument );
-		valueSources = Helper.buildValueSources(
+		this.typeSource = new HibernateTypeSourceImpl( indexElement.getType() );
+
+		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument,
 				new Helper.ValueSourcesAdapter() {
 
@@ -157,22 +152,6 @@ public class MapKeySourceBasicImpl extends AbstractHbmSourceNode implements Plur
 					}
 				}
 		);
-		typeSource = new HibernateTypeSource() {
-			@Override
-			public String getName() {
-				return indexElement.getType();
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return java.util.Collections.emptyMap();
-			}
-
-			@Override
-			public JavaTypeDescriptor getJavaType() {
-				return null;
-			}
-		};
 
 		this.nature = PluralAttributeIndexNature.BASIC;
 	}
@@ -210,7 +189,7 @@ public class MapKeySourceBasicImpl extends AbstractHbmSourceNode implements Plur
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return typeSource;
 	}
 

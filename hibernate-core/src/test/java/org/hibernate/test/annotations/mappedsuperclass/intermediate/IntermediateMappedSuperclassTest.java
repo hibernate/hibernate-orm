@@ -36,7 +36,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class IntermediateMappedSuperclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

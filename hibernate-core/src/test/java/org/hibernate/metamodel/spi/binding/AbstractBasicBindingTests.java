@@ -125,7 +125,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				entityWithManyToOneBinding,
 				attributeBinding,
 				SingularAttributeBinding.class.cast( 
-						simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
+						simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding()
 				),
 				defaultManyToOneColumnReferencingId,
 				false
@@ -266,11 +266,11 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 	protected void assertIdAndSimpleProperty(EntityBinding entityBinding) {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier() );
-		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
+		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding() );
 
 		AttributeBinding idAttributeBinding = entityBinding.locateAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );
-		assertSame( idAttributeBinding, entityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding() );
+		assertSame( idAttributeBinding, entityBinding.getHierarchyDetails().getEntityIdentifier().getEntityIdentifierBinding().getAttributeBinding() );
 		assertSame( LongType.INSTANCE, idAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 
 		assertTrue( idAttributeBinding.getAttribute().isSingular() );

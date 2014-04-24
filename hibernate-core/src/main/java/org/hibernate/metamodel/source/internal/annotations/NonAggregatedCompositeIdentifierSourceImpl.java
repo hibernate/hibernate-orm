@@ -27,17 +27,29 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.reflite.spi.MemberDescriptor;
+import org.hibernate.metamodel.source.internal.AttributeConversionInfo;
+import org.hibernate.metamodel.source.internal.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.source.internal.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.source.internal.annotations.attribute.EmbeddedContainer;
+import org.hibernate.metamodel.source.internal.annotations.entity.EmbeddableTypeMetadata;
+import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
+import org.hibernate.metamodel.source.spi.AttributeSource;
+import org.hibernate.metamodel.source.spi.EmbeddableSource;
 import org.hibernate.metamodel.source.spi.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
+import org.hibernate.metamodel.spi.AttributePath;
+import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 /**
 * @author Steve Ebersole
@@ -45,26 +57,34 @@ import org.jboss.jandex.DotName;
 class NonAggregatedCompositeIdentifierSourceImpl
 		extends AbstractIdentifierSource
 		implements NonAggregatedCompositeIdentifierSource {
+	private static final Logger log = Logger.getLogger( NonAggregatedCompositeIdentifierSourceImpl.class );
 
-	private final List<SingularAttributeSource> idAttributes;
-	private final Class lookupIdClass;
+	private final List<SingularAttributeSource> idAttributeSources;
+	private final IdClassSource idClassSource;
 
 	public NonAggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
 		super( rootEntitySource );
 
-		this.idAttributes = rootEntitySource.getIdentifierAttributes();
+		this.idAttributeSources = rootEntitySource.getIdentifierAttributes();
 
 		final JavaTypeDescriptor idClassDescriptor = resolveIdClassDescriptor();
 		if ( idClassDescriptor == null ) {
-			// probably this is an error...
-			this.lookupIdClass = null;
+			// todo : map this a MessageLogger message
+			log.warnf(
+					"Encountered non-aggregated identifier with no IdClass specified; while this is supported, " +
+							"its use should be considered deprecated"
+			);
+			this.idClassSource = null;
 		}
 		else {
-			final ClassLoaderService cls = rootEntitySource.getLocalBindingContext()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
-			this.lookupIdClass = cls.classForName( idClassDescriptor.getName().toString() );
+			this.idClassSource = new IdClassSource( rootEntitySource, idClassDescriptor );
 		}
+
+
+
+
+
+
 	}
 
 	private JavaTypeDescriptor resolveIdClassDescriptor() {
@@ -86,13 +106,13 @@ class NonAggregatedCompositeIdentifierSourceImpl
 	}
 
 	@Override
-	public Class getLookupIdClass() {
-		return lookupIdClass;
+	public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
+		return idAttributeSources;
 	}
 
 	@Override
-	public String getIdClassPropertyAccessorName() {
-		return idAttributes.get( 0 ).getPropertyAccessorName();
+	public EmbeddableSource getIdClassSource() {
+		return idClassSource;
 	}
 
 	@Override
@@ -124,8 +144,159 @@ class NonAggregatedCompositeIdentifierSourceImpl
 		return Collections.emptySet();
 	}
 
-	@Override
-	public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
-		return idAttributes;
+	private class IdClassSource implements EmbeddableSource, EmbeddedContainer {
+		private final JavaTypeDescriptor idClassDescriptor;
+		private final EmbeddableTypeMetadata idClassTypeMetadata;
+
+		private final AttributeRole attributeRoleBase;
+		private final AttributePath attributePathBase;
+
+		private List<AttributeSource> attributeSources;
+
+		private IdClassSource(RootEntitySourceImpl rootEntitySource, JavaTypeDescriptor idClassDescriptor) {
+			this.idClassDescriptor = idClassDescriptor;
+
+			this.attributeRoleBase = rootEntitySource.getAttributeRoleBase().append( "<IdClass>" );
+			this.attributePathBase = rootEntitySource.getAttributePathBase().append( "<IdClass>" );
+
+			final AnnotationAttributeSource firstIdAttribute =
+					(AnnotationAttributeSource) rootEntitySource.getIdentifierAttributes().get( 0 );
+
+			this.idClassTypeMetadata = new EmbeddableTypeMetadata(
+					idClassDescriptor,
+					this,
+					attributeRoleBase,
+					attributePathBase,
+					firstIdAttribute.getAnnotatedAttribute().getAccessType(),
+					null,
+					rootEntitySource.getLocalBindingContext()
+			);
+
+			// todo : locate MapsId annotations and build a specialized AttributeBuilder
+
+			this.attributeSources = SourceHelper.buildAttributeSources(
+					idClassTypeMetadata,
+					SourceHelper.IdentifierPathAttributeBuilder.INSTANCE
+			);
+
+			if ( log.isDebugEnabled() ) {
+				String attributeDescriptors = null;
+				for ( AttributeSource attributeSource : attributeSources ) {
+					if ( attributeDescriptors == null ) {
+						attributeDescriptors = attributeSource.getName();
+					}
+					else {
+						attributeDescriptors += ", " + attributeSource.getName();
+					}
+				}
+				log.debugf(
+						"Built IdClassSource : %s : %s",
+						idClassTypeMetadata.getJavaTypeDescriptor().getName(),
+						attributeDescriptors
+				);
+			}
+
+			// todo : validate the IdClass attributes against the entity's id attributes
+
+			// todo : we need similar (MapsId, validation) in the EmbeddedId case too.
+		}
+
+		@Override
+		public JavaTypeDescriptor getTypeDescriptor() {
+			return idClassDescriptor;
+		}
+
+		@Override
+		public String getParentReferenceAttributeName() {
+			return null;
+		}
+
+		@Override
+		public String getExplicitTuplizerClassName() {
+			return idClassTypeMetadata.getCustomTuplizerClassName();
+		}
+
+		@Override
+		public AttributePath getAttributePathBase() {
+			return attributePathBase;
+		}
+
+		@Override
+		public AttributeRole getAttributeRoleBase() {
+			return attributeRoleBase;
+		}
+
+		@Override
+		public List<AttributeSource> attributeSources() {
+			return attributeSources;
+		}
+
+		@Override
+		public EntityBindingContext getLocalBindingContext() {
+			return idClassTypeMetadata.getLocalBindingContext();
+		}
+
+		// EmbeddedContainer impl (most of which we don't care about here
+
+		@Override
+		public MemberDescriptor getBackingMember() {
+			return null;
+		}
+
+		@Override
+		public AttributeConversionInfo locateConversionInfo(AttributePath attributePath) {
+			return null;
+		}
+
+		@Override
+		public AttributeOverride locateAttributeOverride(AttributePath attributePath) {
+			return null;
+		}
+
+		@Override
+		public AssociationOverride locateAssociationOverride(
+				AttributePath attributePath) {
+			return null;
+		}
+
+		@Override
+		public NaturalIdMutability getContainerNaturalIdMutability() {
+			return null;
+		}
+
+		@Override
+		public boolean getContainerOptionality() {
+			return false;
+		}
+
+		@Override
+		public boolean getContainerUpdatability() {
+			return false;
+		}
+
+		@Override
+		public boolean getContainerInsertability() {
+			return false;
+		}
+
+		@Override
+		public void registerConverter(
+				AttributePath attributePath, AttributeConversionInfo conversionInfo) {
+
+		}
+
+		@Override
+		public void registerAttributeOverride(
+				AttributePath attributePath, AttributeOverride override) {
+
+		}
+
+		@Override
+		public void registerAssociationOverride(
+				AttributePath attributePath, AssociationOverride override) {
+
+		}
 	}
+
+
 }

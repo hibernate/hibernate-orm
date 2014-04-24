@@ -37,6 +37,8 @@ import org.hibernate.metamodel.spi.binding.HierarchyDetails;
  * @author Steve Ebersole
  */
 public class BinderRootContextImpl extends BaseDelegatingBindingContext implements BinderRootContext {
+	private final SourceIndex sourceIndex;
+	private final BinderEventBus eventBus;
 	private Map<EntityHierarchySource,HierarchyDetails> hierarchySourceToBindingMap
 			= new HashMap<EntityHierarchySource, HierarchyDetails>();
 	private Map<EntitySource,EntityBinding> entitySourceToBindingMap
@@ -51,8 +53,10 @@ public class BinderRootContextImpl extends BaseDelegatingBindingContext implemen
 
 	private final BinderLocalBindingContextSelector localBindingContextSelector;
 
-	public BinderRootContextImpl(BindingContext parent) {
+	public BinderRootContextImpl(BindingContext parent, SourceIndex sourceIndex, BinderEventBus eventBus) {
 		super( parent );
+		this.sourceIndex = sourceIndex;
+		this.eventBus = eventBus;
 
 		this.typeHelper = new HibernateTypeHelper( this );
 		this.relationalIdentifierHelper = new RelationalIdentifierHelper( this );
@@ -61,6 +65,15 @@ public class BinderRootContextImpl extends BaseDelegatingBindingContext implemen
 		this.relationalValueBindingHelper = new RelationalValueBindingHelper( this );
 		this.naturalIdUniqueKeyHelper = new NaturalIdUniqueKeyHelper( this );
 		this.localBindingContextSelector = new BinderLocalBindingContextSelectorImpl( this );
+	}
+
+	public BinderEventBus getEventBus() {
+		return eventBus;
+	}
+
+	@Override
+	public SourceIndex getSourceIndex() {
+		return sourceIndex;
 	}
 
 	public void addMapping(EntityHierarchySource source, HierarchyDetails binding) {

@@ -154,7 +154,7 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
-	protected boolean isPersistable(FieldDescriptor fieldDescriptor) {
+	public static boolean isPersistable(FieldDescriptor fieldDescriptor) {
 		if ( Modifier.isTransient( fieldDescriptor.getModifiers() ) ) {
 			return false;
 		}
@@ -188,7 +188,7 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
-	protected boolean isPersistable(MethodDescriptor methodDescriptor) {
+	public static boolean isPersistable(MethodDescriptor methodDescriptor) {
 		if ( !methodDescriptor.getArgumentTypes().isEmpty() ) {
 			return false;
 		}

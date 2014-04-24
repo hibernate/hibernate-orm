@@ -39,45 +39,52 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
  * EntitySource structure skipping MapperSuperclassSource types.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class BinderProcessHelper {
 	private final BinderRootContext context;
-
-	public static final BinderStepHierarchyStrategy NOOP_HIERARCHY_STRATEGY = new BinderStepHierarchyStrategy() {
-		@Override
-		public void visit(EntityHierarchySource source, BinderLocalBindingContext context) {
-
-		}
-	};
-
-	public static final BinderStepEntityStrategy NOOP_ENTITY_STRATEGY = new BinderStepEntityStrategy() {
-		@Override
-		public boolean applyToRootEntity() {
-			return false;
-		}
-
-		@Override
-		public void visit(EntitySource source, BinderLocalBindingContext context) {
-
-		}
-	};
 
 	public BinderProcessHelper(BinderRootContext context) {
 		this.context = context;
 	}
 
+	/**
+	 * Public method to apply the "hierarchy strategy" to each hierarchy source
+	 * object.
+	 *
+	 * @param hierarchySources The hierarchy sources
+	 * @param hierarchyStrategy The strategy to call back into
+	 */
 	public void apply(
 			Collection<EntityHierarchySource> hierarchySources,
 			BinderStepHierarchyStrategy hierarchyStrategy) {
 		for ( EntityHierarchySource hierarchySource : hierarchySources ) {
-			apply( hierarchySource, hierarchyStrategy );
+			apply( hierarchySource, hierarchyStrategy, NOOP_ENTITY_STRATEGY );
 		}
 	}
 
-	public void apply(EntityHierarchySource hierarchySource, BinderStepHierarchyStrategy hierarchyStrategy) {
-		apply( hierarchySource, hierarchyStrategy, NOOP_ENTITY_STRATEGY );
+	/**
+	 * Public method to apply the "entity strategy" to each hierarchy source
+	 * object.
+	 *
+	 * @param hierarchySources The hierarchy sources
+	 * @param entityStrategy The strategy to call back into
+	 */
+	public void apply(
+			Collection<EntityHierarchySource> hierarchySources,
+			BinderStepEntityStrategy entityStrategy) {
+		for ( EntityHierarchySource hierarchySource: hierarchySources ) {
+			apply( hierarchySource, NOOP_HIERARCHY_STRATEGY, entityStrategy );
+		}
 	}
 
+	/**
+	 * Public method to apply the "combined strategy" to each hierarchy source
+	 * object.
+	 *
+	 * @param hierarchySources The hierarchy sources
+	 * @param strategy The strategy to call back into
+	 */
 	public void apply(
 			Collection<EntityHierarchySource> hierarchySources,
 			BinderStepCombinedStrategy strategy) {
@@ -86,22 +93,26 @@ public class BinderProcessHelper {
 		}
 	}
 
+
+	/**
+	 * Public method to apply the "combined strategy" to a single hierarchy source
+	 * object.
+	 *
+	 * @param hierarchySource The hierarchy source
+	 * @param strategy The strategy to call back into
+	 */
 	public void apply(EntityHierarchySource hierarchySource, BinderStepCombinedStrategy strategy) {
 		apply( hierarchySource, strategy, strategy );
 	}
 
-	public void apply(
-			Collection<EntityHierarchySource> hierarchySources,
-			BinderStepEntityStrategy entityStrategy) {
-		for ( EntityHierarchySource hierarchySource: hierarchySources ) {
-			apply( hierarchySource, entityStrategy );
-		}
-	}
-
-	public void apply(EntityHierarchySource hierarchySource, BinderStepEntityStrategy strategy) {
-		apply( hierarchySource, NOOP_HIERARCHY_STRATEGY, strategy );
-	}
-
+	/**
+	 * Public method to apply the "combined strategy" to each hierarchy source
+	 * object.
+	 *
+	 * @param hierarchySources The hierarchy sources
+	 * @param hierarchyStrategy The hierarchy strategy to call back into
+	 * @param entityStrategy The entity strategy to call back into
+	 */
 	public void apply(
 			Collection<EntityHierarchySource> hierarchySources,
 			BinderStepHierarchyStrategy hierarchyStrategy,
@@ -129,6 +140,10 @@ public class BinderProcessHelper {
 		if ( hierarchySource.getHierarchyInheritanceType() != InheritanceType.NO_INHERITANCE ) {
 			visitSubclasses( rootEntitySource, entityStrategy, localContext );
 		}
+
+		entityStrategy.afterAllEntitiesInHierarchy();
+
+		selector.unsetCurrent();
 	}
 
 	private void visitSubclasses(
@@ -142,4 +157,32 @@ public class BinderProcessHelper {
 			visitSubclasses( subType, entityStrategy, localContext );
 		}
 	}
+
+
+	/**
+	 * A no-op version of the BinderStepHierarchyStrategy contract
+	 */
+	public static final BinderStepHierarchyStrategy NOOP_HIERARCHY_STRATEGY = new BinderStepHierarchyStrategy() {
+		@Override
+		public void visit(EntityHierarchySource source, BinderLocalBindingContext context) {
+		}
+	};
+
+	/**
+	 * A no-op version of the BinderStepEntityStrategy contract
+	 */
+	public static final BinderStepEntityStrategy NOOP_ENTITY_STRATEGY = new BinderStepEntityStrategy() {
+		@Override
+		public boolean applyToRootEntity() {
+			return false;
+		}
+
+		@Override
+		public void visit(EntitySource source, BinderLocalBindingContext context) {
+		}
+
+		@Override
+		public void afterAllEntitiesInHierarchy() {
+		}
+	};
 }

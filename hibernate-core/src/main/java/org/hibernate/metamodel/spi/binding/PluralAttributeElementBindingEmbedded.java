@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.PluralAttributeNature;
@@ -78,7 +79,7 @@ public class PluralAttributeElementBindingEmbedded
 	}
 
 	public EmbeddableBinding createBindingContainer(
-			Aggregate aggregate,
+			final Aggregate aggregate,
 			MetaAttributeContext metaAttributeContext,
 			SingularAttribute parentReference,
 			Class<? extends ComponentTuplizer> tuplizerClass) {
@@ -114,6 +115,11 @@ public class PluralAttributeElementBindingEmbedded
 			@Override
 			public boolean isAggregated() {
 				return true;
+			}
+
+			@Override
+			public JavaTypeDescriptor getTypeDescriptor() {
+				return aggregate.getDescriptor();
 			}
 		};
 

@@ -35,7 +35,6 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.binder.Binder;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.MappedByAssociationSource;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
@@ -60,11 +59,6 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		super( sourceMappingDocument );
 		this.naturalIdMutability = naturalIdMutability;
 		this.propertyRef = propertyRef;
-
-	}
-	@Override
-	public HibernateTypeSource getTypeInformation() {
-		return Helper.TO_ONE_ATTRIBUTE_TYPE_SOURCE;
 	}
 
 	@Override
@@ -229,7 +223,12 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	}
 
 	@Override
-	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
+	public void resolveToOneAttributeSourceNature(AttributeSourceResolutionContext context) {
+		// nothing to do
+	}
+
+	@Override
+	public void resolveToOneAttributeSourceNatureAsPartOfIdentifier() {
 		// nothing to do
 	}
 
@@ -267,27 +266,5 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	public boolean createForeignKeyConstraint() {
 		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?
 		return true;
-	}
-
-	@Override
-	public MapsIdSource getMapsIdSource() {
-		return MapsIdSourceImpl.INSTANCE;
-	}
-
-	private static class MapsIdSourceImpl implements MapsIdSource {
-		/**
-		 * Singleton access
-		 */
-		public static final MapsIdSourceImpl INSTANCE = new MapsIdSourceImpl();
-
-		@Override
-		public boolean isDefined() {
-			return false;
-		}
-
-		@Override
-		public String getLookupClassAttributeName() {
-			return null;
-		}
 	}
 }

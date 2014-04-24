@@ -25,13 +25,10 @@ package org.hibernate.metamodel.source.internal.hbm;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbTimestampElement;
-import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
 import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.source.spi.VersionAttributeSource;
@@ -49,6 +46,8 @@ class TimestampAttributeSourceImpl
 		extends AbstractHbmSourceNode
 		implements VersionAttributeSource {
 	private final JaxbTimestampElement timestampElement;
+	private final HibernateTypeSourceImpl typeSource;
+
 	private final List<RelationalValueSource> valueSources;
 
 	private final AttributePath attributePath;
@@ -60,6 +59,13 @@ class TimestampAttributeSourceImpl
 			final JaxbTimestampElement timestampElement) {
 		super( mappingDocument );
 		this.timestampElement = timestampElement;
+
+		this.typeSource = new HibernateTypeSourceImpl(
+				"db".equals( timestampElement.getSource().value() )
+						? "dbtimestamp"
+						: "timestamp"
+		);
+
 		this.valueSources = Helper.buildValueSources(
 				sourceMappingDocument(),
 				new Helper.ValueSourcesAdapter() {
@@ -83,22 +89,6 @@ class TimestampAttributeSourceImpl
 		this.attributeRole = rootEntitySource.getAttributeRoleBase().append( getName() );
 	}
 
-	private final HibernateTypeSource typeSource = new HibernateTypeSource() {
-		@Override
-		public String getName() {
-			return "db".equals( timestampElement.getSource() ) ? "dbtimestamp" : "timestamp";
-		}
-
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
-		@Override
-		public JavaTypeDescriptor getJavaType() {
-			return null;
-		}
-	};
-
 	@Override
 	public String getName() {
 		return timestampElement.getName();
@@ -115,7 +105,7 @@ class TimestampAttributeSourceImpl
 	}
 
 	@Override
-	public HibernateTypeSource getTypeInformation() {
+	public HibernateTypeSourceImpl getTypeInformation() {
 		return typeSource;
 	}
 

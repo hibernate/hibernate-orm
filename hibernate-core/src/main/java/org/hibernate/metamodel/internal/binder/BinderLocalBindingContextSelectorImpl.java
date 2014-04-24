@@ -95,6 +95,16 @@ public class BinderLocalBindingContextSelectorImpl implements BinderLocalBinding
 		}
 
 		@Override
+		public BinderEventBus getEventBus() {
+			return parent().getEventBus();
+		}
+
+		@Override
+		public SourceIndex getSourceIndex() {
+			return parent().getSourceIndex();
+		}
+
+		@Override
 		public HibernateTypeHelper typeHelper() {
 			return parent().typeHelper();
 		}

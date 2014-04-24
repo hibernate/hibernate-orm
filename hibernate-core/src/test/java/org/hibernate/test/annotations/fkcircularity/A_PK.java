@@ -1,6 +1,7 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
 import java.io.Serializable;
+import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
 /**
@@ -9,6 +10,7 @@ import javax.persistence.ManyToOne;
  * @author Hardy Ferentschik
  *
  */
+@Embeddable
 @SuppressWarnings("serial")
 public class A_PK implements Serializable {
 	public D d;

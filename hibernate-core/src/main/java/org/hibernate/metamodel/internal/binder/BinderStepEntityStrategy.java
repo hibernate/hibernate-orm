@@ -39,4 +39,6 @@ public interface BinderStepEntityStrategy {
 	public boolean applyToRootEntity();
 
 	public void visit(EntitySource source, BinderLocalBindingContext context);
+
+	public void afterAllEntitiesInHierarchy();
 }

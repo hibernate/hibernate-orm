@@ -32,11 +32,18 @@ public abstract class AbstractAttributeKey {
 	private final AbstractAttributeKey parent;
 	private final String property;
 	private final String fullPath;
+	private final int depth;
 
+	/**
+	 * Constructor for the base AttributePath
+	 */
 	protected AbstractAttributeKey() {
 		this( null, "" );
 	}
 
+	/**
+	 * Constructor for the base AttributeRole
+	 */
 	protected AbstractAttributeKey(String base) {
 		this( null, base );
 	}
@@ -54,12 +61,18 @@ public abstract class AbstractAttributeKey {
 			else {
 				prefix = resolvedParent + getDelimiter();
 			}
+			depth = parent.getDepth() + 1;
 		}
 		else {
 			prefix = "";
+			depth = 0;
 		}
 
 		this.fullPath = prefix + property;
+	}
+
+	public int getDepth() {
+		return depth;
 	}
 
 	protected abstract char getDelimiter();

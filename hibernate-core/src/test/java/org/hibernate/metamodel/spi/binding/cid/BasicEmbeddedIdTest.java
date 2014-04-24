@@ -42,6 +42,7 @@ import org.junit.Test;
 import static org.hibernate.metamodel.spi.binding.BindingHelper.locateAttributeBinding;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -78,8 +79,8 @@ public class BasicEmbeddedIdTest extends BaseAnnotationBindingTestCase {
 				EntityIdentifierNature.AGGREGATED_COMPOSITE,
 				courseBinding.getHierarchyDetails().getEntityIdentifier().getNature()
 		);
-		assertNull(
-				courseBinding.getHierarchyDetails().getEntityIdentifier().getLookupClassBinding().getIdClassType()
+		assertFalse(
+				courseBinding.getHierarchyDetails().getEntityIdentifier().definesIdClass()
 		);
 
 		// Course should be interpreted as defining 2 attributes: `key` and `title`
@@ -94,7 +95,10 @@ public class BasicEmbeddedIdTest extends BaseAnnotationBindingTestCase {
 				"key",
 				EmbeddedAttributeBinding.class
 		);
-		SingularAttributeBinding identifierAttribute =  courseBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding();
+		SingularAttributeBinding identifierAttribute =  courseBinding.getHierarchyDetails()
+				.getEntityIdentifier()
+				.getEntityIdentifierBinding()
+				.getAttributeBinding();
 		// NOTE : assertSame() does '=='
 		assertSame( keyBinding, identifierAttribute );
 

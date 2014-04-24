@@ -67,14 +67,19 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			boolean isIdentifierMapper) {
 		super( serviceRegistry, component, isIdentifierMapper );
 
-		final EntityIdentifier entityIdentifier =
-				component.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
-
+		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 		if ( isIdentifierMapper ) {
-			this.componentClass = entityIdentifier.getLookupClassBinding().getIdClassType();
+			final EntityIdentifier idInfo = component.seekEntityBinding()
+					.getHierarchyDetails()
+					.getEntityIdentifier();
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding =
+					(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			final EntityIdentifier.IdClassMetadata idClassMetadata = idBinding.getIdClassMetadata();
+			this.componentClass = cls.classForName(
+					idClassMetadata.getIdClassType().getName().toString()
+			);
 		}
 		else {
-			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
 			this.componentClass = cls.classForName(
 					component.getAttributeContainer().getDescriptor().getName().toString()
 			);
@@ -198,20 +203,37 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		// TODO: when compositeAttributeBinding is wrapped for an identifier mapper
 		//       there will be no need for PropertyFactory.getIdentifierMapperGetter()
 		//       and PropertyFactory.getIdentifierMapperSetter
+
+		// this.componentClass is not set yet because of ctor calls - yucky bad design
+
 		if ( isIdentifierMapper ) {
-			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
-			//             must be completely bound when this method is called.
-			final EntityIdentifier entityIdentifier =
-					embeddableBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
+			// (steve w/ metamodel) : utterly confused here.  What exactly is the
+			//		thing we are trying to accomplish here?  it *seems* like we
+			// 		are trying to build a getter for the id class (isIdentifierMapper == true),
+			// 		so why do we pass in the composite representing	the virtual,
+			// 		non-aggregated id?  why not just pass in the IdClass composite?
+			// 		so confusing :)
+
+			final EntityIdentifier idInfo = embeddableBinding.seekEntityBinding()
+					.getHierarchyDetails()
+					.getEntityIdentifier();
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding =
+					(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			final EntityIdentifier.IdClassMetadata idClassMetadata = idBinding.getIdClassMetadata();
+
+			final Class componentClass = classForName(
+					idClassMetadata.getIdClassType().getName().toString()
+			);
 			return getGetter(
-					entityIdentifier.getLookupClassBinding().getIdClassType(),
+					componentClass,
 					attributeBinding.getAttribute().getName(),
-					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getLookupClassBinding().getAccessStrategy() )
+					PropertyAccessorFactory.getPropertyAccessor(
+							idClassMetadata.getAccessStrategy( attributeBinding.getAttribute().getName() )
+					)
 			);
 		}
 		else {
-			final ClassLoaderService cls = serviceRegistry().getService( ClassLoaderService.class );
-			final Class clazz = cls.classForName(
+			final Class clazz = classForName(
 					embeddableBinding.getAttributeContainer().getDescriptor().getName().toString()
 			);
 			return getGetter(
@@ -228,16 +250,25 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			boolean isIdentifierMapper,
 			AttributeBinding attributeBinding) {
 		if ( isIdentifierMapper ) {
-			// HACK ALERT: when isIdentifierMapper is true, the entity identifier
-			//             must be completely bound when this method is called.
-			final EntityIdentifier entityIdentifier =
-					embeddableBinding.seekEntityBinding().getHierarchyDetails().getEntityIdentifier();
-			return getSetter(
-					entityIdentifier.getLookupClassBinding().getIdClassType(),
-					attributeBinding.getAttribute().getName(),
-					PropertyAccessorFactory.getPropertyAccessor( entityIdentifier.getLookupClassBinding().getAccessStrategy() )
-			);
+			// see discussion about confusing in #buildGetter
 
+			final EntityIdentifier idInfo = embeddableBinding.seekEntityBinding()
+					.getHierarchyDetails()
+					.getEntityIdentifier();
+			final EntityIdentifier.NonAggregatedCompositeIdentifierBinding idBinding =
+					(EntityIdentifier.NonAggregatedCompositeIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			final EntityIdentifier.IdClassMetadata idClassMetadata = idBinding.getIdClassMetadata();
+
+			final Class componentClass = classForName(
+					idClassMetadata.getIdClassType().getName().toString()
+			);
+			return getSetter(
+					componentClass,
+					attributeBinding.getAttribute().getName(),
+					PropertyAccessorFactory.getPropertyAccessor(
+							idClassMetadata.getAccessStrategy( attributeBinding.getAttribute().getName() )
+					)
+			);
 		}
 		else {
 			final Class clazz = classForName(

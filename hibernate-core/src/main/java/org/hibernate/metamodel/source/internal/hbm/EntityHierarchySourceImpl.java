@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.hbm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.EntityMode;
@@ -32,6 +33,7 @@ import org.hibernate.TruthValue;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbClassElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbCompositeIdElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbDiscriminatorElement;
@@ -40,12 +42,16 @@ import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbKeyPropertyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbMultiTenancyElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbPolymorphismAttribute;
 import org.hibernate.metamodel.source.spi.AggregatedCompositeIdentifierSource;
+import org.hibernate.metamodel.source.spi.AttributeSource;
+import org.hibernate.metamodel.source.spi.AttributeSourceContainer;
 import org.hibernate.metamodel.source.spi.DiscriminatorSource;
+import org.hibernate.metamodel.source.spi.EmbeddableSource;
 import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.EntityHierarchySource;
 import org.hibernate.metamodel.source.spi.EntitySource;
 import org.hibernate.metamodel.source.spi.IdentifierSource;
 import org.hibernate.metamodel.source.spi.MappingException;
+import org.hibernate.metamodel.source.spi.MapsIdSource;
 import org.hibernate.metamodel.source.spi.MultiTenancySource;
 import org.hibernate.metamodel.source.spi.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.source.spi.RelationalValueSource;
@@ -56,6 +62,7 @@ import org.hibernate.metamodel.source.spi.ToolingHintSource;
 import org.hibernate.metamodel.source.spi.VersionAttributeSource;
 import org.hibernate.metamodel.spi.AttributePath;
 import org.hibernate.metamodel.spi.AttributeRole;
+import org.hibernate.metamodel.spi.LocalBindingContext;
 import org.hibernate.metamodel.spi.NaturalIdMutability;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
@@ -121,7 +128,8 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			return new SimpleIdentifierSourceImpl();
 		}
 		else {
-			// if we get here, we should have a composite identifier.  Just need to determine if it is aggregated, or not...
+			// if we get here, we should have a composite identifier.  Just need
+			// to determine if it is aggregated, or non-aggregated...
 			if ( StringHelper.isEmpty( entityElement().getCompositeId().getName() ) ) {
 				if ( entityElement().getCompositeId().isMapped() &&
 						StringHelper.isEmpty( entityElement().getCompositeId().getClazz() ) ) {
@@ -391,16 +399,6 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		public Collection<? extends ToolingHintSource> getToolingHintSources() {
 			return entityElement().getId().getMeta();
 		}
-
-		@Override
-		public Class getLookupIdClass() {
-			return determineJpaIdClass();
-		}
-
-		@Override
-		public String getIdClassPropertyAccessorName() {
-			return null;
-		}
 	}
 
 	private class AggregatedCompositeIdentifierSourceImpl implements AggregatedCompositeIdentifierSource {
@@ -410,6 +408,11 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		@Override
 		public EmbeddedAttributeSource getIdentifierAttributeSource() {
 			return componentAttributeSource;
+		}
+
+		@Override
+		public List<MapsIdSource> getMapsIdSources() {
+			return Collections.emptyList();
 		}
 
 		@Override
@@ -445,16 +448,6 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		@Override
 		public String getUnsavedValue() {
 			return entityElement().getCompositeId().getUnsavedValue().value();
-		}
-
-		@Override
-		public Class getLookupIdClass() {
-			return determineJpaIdClass();
-		}
-
-		@Override
-		public String getIdClassPropertyAccessorName() {
-			return null;
 		}
 
 		@Override
@@ -529,47 +522,41 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		}
 	}
 
-
 	private class NonAggregatedCompositeIdentifierSourceImpl implements NonAggregatedCompositeIdentifierSource {
-		@Override
-		public Class getLookupIdClass() {
-			return determineJpaIdClass();
+		private final List<SingularAttributeSource> attributeSources;
+		private final EmbeddableSource idClassSource;
+
+		private NonAggregatedCompositeIdentifierSourceImpl() {
+			this.attributeSources = new ArrayList<SingularAttributeSource>();
+			collectCompositeIdAttributes( attributeSources, rootEntitySource );
+
+			// NOTE : the HBM support for IdClass is very limited.  Essentially
+			// we assume that all identifier attributes occur in the IdClass
+			// using the same name and type.
+			this.idClassSource = interpretIdClass();
 		}
 
-		@Override
-		public String getIdClassPropertyAccessorName() {
-			return null;
+		private EmbeddableSource interpretIdClass() {
+			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
+			// if <composite-id/> is null here we have much bigger problems :)
+
+			final String className = compositeId.getClazz();
+			if ( StringHelper.isEmpty( className ) ) {
+				return null;
+			}
+
+			return new IdClassSource( rootEntitySource.getLocalBindingContext().typeDescriptor( className ) );
 		}
 
 		@Override
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
-			final List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
-			final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
-			final List list = compositeId.getKeyPropertyOrKeyManyToOne();
-			for ( final Object obj : list ) {
-				if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
-					JaxbKeyPropertyElement key = JaxbKeyPropertyElement.class.cast( obj );
-					attributeSources.add(
-							new IdentifierKeyAttributeSourceImpl(
-									sourceMappingDocument(),
-									rootEntitySource,
-									key
-							)
-					);
-				}
-				if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
-					JaxbKeyManyToOneElement key = JaxbKeyManyToOneElement.class.cast( obj );
-					attributeSources.add(
-							new IdentifierKeyManyToOneSourceImpl(
-									sourceMappingDocument(),
-									rootEntitySource,
-									key
-							)
-					);
-				}
-			}
-
 			return attributeSources;
+		}
+
+
+		@Override
+		public EmbeddableSource getIdClassSource() {
+			return idClassSource;
 		}
 
 		@Override
@@ -610,6 +597,81 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		@Override
 		public Collection<? extends ToolingHintSource> getToolingHintSources() {
 			return entityElement().getCompositeId().getMeta();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void collectCompositeIdAttributes(
+			List attributeSources,
+			AttributeSourceContainer attributeSourceContainer) {
+		final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
+		final List list = compositeId.getKeyPropertyOrKeyManyToOne();
+		for ( final Object obj : list ) {
+			if ( JaxbKeyPropertyElement.class.isInstance( obj ) ) {
+				JaxbKeyPropertyElement key = JaxbKeyPropertyElement.class.cast( obj );
+				attributeSources.add(
+						new IdentifierKeyAttributeSourceImpl(
+								sourceMappingDocument(),
+								attributeSourceContainer,
+								key
+						)
+				);
+			}
+			if ( JaxbKeyManyToOneElement.class.isInstance( obj ) ) {
+				JaxbKeyManyToOneElement key = JaxbKeyManyToOneElement.class.cast( obj );
+				attributeSources.add(
+						new IdentifierKeyManyToOneSourceImpl(
+								sourceMappingDocument(),
+								attributeSourceContainer,
+								key
+						)
+				);
+			}
+		}
+	}
+
+	private class IdClassSource implements EmbeddableSource {
+		private final JavaTypeDescriptor idClassDescriptor;
+		private final List<AttributeSource> attributeSources;
+
+		private IdClassSource(JavaTypeDescriptor idClassDescriptor) {
+			this.idClassDescriptor = idClassDescriptor;
+			this.attributeSources = new ArrayList<AttributeSource>();
+			collectCompositeIdAttributes( attributeSources, this );
+		}
+		@Override
+		public JavaTypeDescriptor getTypeDescriptor() {
+			return idClassDescriptor;
+		}
+
+		@Override
+		public String getParentReferenceAttributeName() {
+			return null;
+		}
+
+		@Override
+		public String getExplicitTuplizerClassName() {
+			return null;
+		}
+
+		@Override
+		public AttributePath getAttributePathBase() {
+			return rootEntitySource.getAttributePathBase().append( "<IdClass>" );
+		}
+
+		@Override
+		public AttributeRole getAttributeRoleBase() {
+			return rootEntitySource.getAttributeRoleBase().append( "<IdClass>" );
+		}
+
+		@Override
+		public List<AttributeSource> attributeSources() {
+			return attributeSources;
+		}
+
+		@Override
+		public LocalBindingContext getLocalBindingContext() {
+			return rootEntitySource.getLocalBindingContext();
 		}
 	}
 
@@ -660,30 +722,6 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			return keyManyToOneElementList;
 		}
 
-	}
-
-	private Class determineJpaIdClass() {
-		// this would be a <composite-id/> defined with mapped="false"
-		final JaxbCompositeIdElement compositeId = entityElement().getCompositeId();
-		if ( compositeId == null ) {
-			return null;
-		}
-
-		if ( !"".equals( compositeId.getName() ) ) {
-			return null;
-		}
-
-		if ( compositeId.isMapped() ) {
-			return null;
-		}
-
-		if ( compositeId.getClazz() == null ) {
-			return null;
-		}
-
-		// todo : do we really want to be loading this?
-		return rootEntitySource.bindingContext().getClassLoaderAccess().classForName(				rootEntitySource.bindingContext().qualifyClassName( compositeId.getClazz() )
-		);
 	}
 
 	private String getEntityName() {

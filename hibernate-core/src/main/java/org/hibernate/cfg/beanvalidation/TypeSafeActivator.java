@@ -48,6 +48,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -58,6 +59,7 @@ import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EmbeddedAttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
@@ -404,9 +406,18 @@ class TypeSafeActivator {
 	 * {@code propertyPath} is {@code null} or empty, the id attribute binding is returned.
 	 */
 	private static AttributeBinding findPropertyByName(EntityBinding entityBinding, String propertyPath) {
-		final AttributeBinding idAttributeBinding = entityBinding.getHierarchyDetails()
-				.getEntityIdentifier()
-				.getAttributeBinding();
+		final AttributeBinding idAttributeBinding;
+
+		final EntityIdentifier idInfo = entityBinding.getHierarchyDetails().getEntityIdentifier();
+		if ( idInfo.getNature() == EntityIdentifierNature.NON_AGGREGATED_COMPOSITE ) {
+			idAttributeBinding = null;
+		}
+		else {
+			final EntityIdentifier.AttributeBasedIdentifierBinding identifierBinding =
+					(EntityIdentifier.AttributeBasedIdentifierBinding) idInfo.getEntityIdentifierBinding();
+			idAttributeBinding = identifierBinding.getAttributeBinding();
+		}
+
 		final String idAttributeName = idAttributeBinding == null ? null : idAttributeBinding.getAttribute().getName();
 
 		if ( propertyPath == null || propertyPath.length() == 0 || propertyPath.equals( idAttributeName ) ) {

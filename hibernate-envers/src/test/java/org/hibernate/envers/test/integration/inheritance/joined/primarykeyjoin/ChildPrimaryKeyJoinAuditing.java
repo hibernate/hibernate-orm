@@ -109,6 +109,7 @@ public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase
 						)
 						.getHierarchyDetails()
 						.getEntityIdentifier()
+						.getEntityIdentifierBinding()
 						.getAttributeBinding()
 						.getValues()
 						.get( 0 ) ).getColumnName().getText()

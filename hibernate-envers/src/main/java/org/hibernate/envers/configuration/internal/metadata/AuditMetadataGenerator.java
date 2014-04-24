@@ -296,7 +296,8 @@ public final class AuditMetadataGenerator {
 		else if ( type instanceof OneToOneType ) {
 			final OneToOneAttributeBinding oneToOneAttributeBinding = (OneToOneAttributeBinding) attributeBinding;
 			if ( oneToOneAttributeBinding.getReferencedAttributeBinding().getAttribute().getName() != null &&
-					!oneToOneAttributeBinding.getReferencedEntityBinding().getHierarchyDetails().getEntityIdentifier()
+					!oneToOneAttributeBinding.getReferencedEntityBinding().getHierarchyDetails()
+							.getEntityIdentifier().getEntityIdentifierBinding()
 							.isIdentifierAttributeBinding(  oneToOneAttributeBinding.getReferencedAttributeBinding() ) ) {
 				toOneRelationMetadataGenerator.addOneToOneNotOwning(
 						propertyAuditingData,

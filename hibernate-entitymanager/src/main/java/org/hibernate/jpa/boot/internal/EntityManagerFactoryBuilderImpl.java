@@ -99,6 +99,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
@@ -689,10 +690,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	private ScanResult scanDeployment(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final Scanner scanner = locateOrBuildScanner( bootstrapServiceRegistry );
-		final ScanOptions scanOptions = determineScanOptions();
+		IndexView jandexIndex = (IndexView) configurationValues.remove( JANDEX_INDEX );
+		Indexer indexer = null;
+		if ( jandexIndex != null ) {
+			indexer = new Indexer();
+		}
 
-		return scanner.scan( persistenceUnit, scanOptions );
+		final Scanner scanner = locateOrBuildScanner( bootstrapServiceRegistry );
+		final ScanOptions scanOptions = determineScanOptions( indexer );
+
+		ScanResult scanResult = scanner.scan( persistenceUnit, scanOptions );
+
+		if ( indexer != null ) {
+			jandexIndex = indexer.complete();
+			configurationValues.put( JANDEX_INDEX, jandexIndex );
+		}
+		return scanResult;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -733,10 +746,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private ScanOptions determineScanOptions() {
+	private ScanOptions determineScanOptions(Indexer indexer) {
 		return new StandardScanOptions(
 				(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
-				persistenceUnit.isExcludeUnlistedClasses()
+				persistenceUnit.isExcludeUnlistedClasses(),
+				indexer
 		);
 	}
 

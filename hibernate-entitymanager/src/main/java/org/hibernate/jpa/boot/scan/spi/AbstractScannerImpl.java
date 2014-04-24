@@ -23,12 +23,16 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.PersistenceException;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
@@ -110,6 +114,8 @@ public abstract class AbstractScannerImpl implements Scanner {
 					   PackageInfoArchiveEntryHandler.Callback,
 					   ClassFileArchiveEntryHandler.Callback,
 					   NonClassFileArchiveEntryHandler.Callback {
+		private final ScanOptions scanOptions;
+
 		private final ClassFileArchiveEntryHandler classFileHandler;
 		private final PackageInfoArchiveEntryHandler packageInfoHandler;
 		private final NonClassFileArchiveEntryHandler fileHandler;
@@ -119,6 +125,8 @@ public abstract class AbstractScannerImpl implements Scanner {
 		private final Set<MappingFileDescriptor> mappingFileSet = new HashSet<MappingFileDescriptor>();
 
 		public ResultCollector(ScanOptions scanOptions) {
+			this.scanOptions = scanOptions;
+
 			this.classFileHandler = new ClassFileArchiveEntryHandler( scanOptions, this );
 			this.packageInfoHandler = new PackageInfoArchiveEntryHandler( scanOptions, this );
 			this.fileHandler = new NonClassFileArchiveEntryHandler( scanOptions, this );
@@ -141,34 +149,75 @@ public abstract class AbstractScannerImpl implements Scanner {
 
 		@Override
 		public void locatedPackage(PackageDescriptor packageDescriptor) {
+			final PackageDescriptor keeper;
+
 			if ( PackageDescriptorImpl.class.isInstance( packageDescriptor ) ) {
-				packageDescriptorSet.add( packageDescriptor );
+				keeper = packageDescriptor;
 			}
 			else {
 				// to make sure we have proper equals/hashcode
-				packageDescriptorSet.add(
-						new PackageDescriptorImpl(
-								packageDescriptor.getName(),
-								packageDescriptor.getStreamAccess()
-						)
+				keeper = new PackageDescriptorImpl(
+						packageDescriptor.getName(),
+						packageDescriptor.getStreamAccess()
 				);
 			}
+
+			if ( scanOptions.getJandexIndexer() != null ) {
+				InputStream stream = keeper.getStreamAccess().accessInputStream();
+				try {
+					scanOptions.getJandexIndexer().index( stream );
+				}
+				catch (IOException e) {
+					throw new PersistenceException( "Could not add package-info to Jandex Indexer", e );
+				}
+				finally {
+					try {
+						stream.close();
+					}
+					catch (IOException ignore) {
+					}
+				}
+			}
+
+			packageDescriptorSet.add( keeper );
 		}
 
 		@Override
 		public void locatedClass(ClassDescriptor classDescriptor) {
+			// to make sure we have proper equals/hashcode
+			final ClassDescriptor keeper;
+
 			if ( ClassDescriptorImpl.class.isInstance( classDescriptor ) ) {
-				classDescriptorSet.add( classDescriptor );
+				keeper = classDescriptor;
 			}
 			else {
-				// to make sure we have proper equals/hashcode
-				classDescriptorSet.add(
-						new ClassDescriptorImpl(
-								classDescriptor.getName(),
-								classDescriptor.getStreamAccess()
-						)
+				keeper = new ClassDescriptorImpl(
+						classDescriptor.getName(),
+						classDescriptor.getStreamAccess()
 				);
 			}
+
+			if ( scanOptions.getJandexIndexer() != null ) {
+				InputStream stream = keeper.getStreamAccess().accessInputStream();
+				try {
+					scanOptions.getJandexIndexer().index( stream );
+				}
+				catch (IOException e) {
+					throw new PersistenceException(
+							"Could not add class [" + keeper.getName() + "] to Jandex Indexer",
+							e
+					);
+				}
+				finally {
+					try {
+						stream.close();
+					}
+					catch (IOException ignore) {
+					}
+				}
+			}
+
+			classDescriptorSet.add( keeper );
 		}
 
 		@Override

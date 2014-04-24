@@ -25,6 +25,8 @@ package org.hibernate.jpa.boot.scan.internal;
 
 import org.hibernate.jpa.boot.scan.spi.ScanOptions;
 
+import org.jboss.jandex.Indexer;
+
 /**
  * @author Steve Ebersole
  */
@@ -32,22 +34,32 @@ public class StandardScanOptions implements ScanOptions {
 	private final boolean detectClassesInRoot;
 	private final boolean detectClassesInNonRoot;
 	private final boolean detectHibernateMappingFiles;
+	private final Indexer jandexIndexer;
 
 	public StandardScanOptions() {
 		this( "hbm,class", false );
 	}
+	public StandardScanOptions(
+			String explicitDetectionSetting,
+			boolean persistenceUnitExcludeUnlistedClassesValue) {
+		this( explicitDetectionSetting, persistenceUnitExcludeUnlistedClassesValue, null );
+	}
 
-	public StandardScanOptions(String explicitDetectionSetting, boolean persistenceUnitExcludeUnlistedClassesValue) {
+	public StandardScanOptions(
+			String explicitDetectionSetting,
+			boolean persistenceUnitExcludeUnlistedClassesValue,
+			Indexer jandexIndexer) {
 		if ( explicitDetectionSetting == null ) {
-			detectHibernateMappingFiles = true;
-			detectClassesInRoot = ! persistenceUnitExcludeUnlistedClassesValue;
-			detectClassesInNonRoot = true;
+			this.detectHibernateMappingFiles = true;
+			this.detectClassesInRoot = ! persistenceUnitExcludeUnlistedClassesValue;
+			this.detectClassesInNonRoot = true;
 		}
 		else {
-			detectHibernateMappingFiles = explicitDetectionSetting.contains( "hbm" );
-			detectClassesInRoot = explicitDetectionSetting.contains( "class" );
-			detectClassesInNonRoot = detectClassesInRoot;
+			this.detectHibernateMappingFiles = explicitDetectionSetting.contains( "hbm" );
+			this.detectClassesInRoot = explicitDetectionSetting.contains( "class" );
+			this.detectClassesInNonRoot = this.detectClassesInRoot;
 		}
+		this.jandexIndexer = jandexIndexer;
 	}
 
 	@Override
@@ -63,5 +75,10 @@ public class StandardScanOptions implements ScanOptions {
 	@Override
 	public boolean canDetectHibernateMappingFiles() {
 		return detectHibernateMappingFiles;
+	}
+
+	@Override
+	public Indexer getJandexIndexer() {
+		return jandexIndexer;
 	}
 }

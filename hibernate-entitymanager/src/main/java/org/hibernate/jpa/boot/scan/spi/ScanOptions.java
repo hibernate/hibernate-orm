@@ -23,6 +23,8 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
+import org.jboss.jandex.Indexer;
+
 /**
  * @author Steve Ebersole
  */
@@ -31,4 +33,6 @@ public interface ScanOptions {
 	public boolean canDetectUnlistedClassesInNonRoot();
 
 	public boolean canDetectHibernateMappingFiles();
+
+	public Indexer getJandexIndexer();
 }

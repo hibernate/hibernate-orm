@@ -67,6 +67,7 @@ import org.hibernate.metamodel.internal.binder.HibernateTypeHelper.ReflectedColl
 import org.hibernate.metamodel.internal.resolver.AssociationRelationalBindingResolver;
 import org.hibernate.metamodel.internal.resolver.MappedByAssociationRelationalBindingResolverImpl;
 import org.hibernate.metamodel.internal.resolver.StandardAssociationRelationalBindingResolverImpl;
+import org.hibernate.metamodel.reflite.internal.DynamicTypeDescriptorImpl;
 import org.hibernate.metamodel.reflite.internal.Primitives;
 import org.hibernate.metamodel.reflite.spi.ClassDescriptor;
 import org.hibernate.metamodel.reflite.spi.FieldDescriptor;
@@ -3488,14 +3489,23 @@ public class Binder {
 				}
 
 				// Resolve the domain definition of the PK class
-				final JavaTypeDescriptor pkClassTypeDescriptor = determinePkClassTypeDescriptor(
-						binding.getRootEntityBinding(),
-						identifierSource
-				);
-				final Aggregate pkClass = (Aggregate) localBindingContext().locateOrBuildDomainType(
-						pkClassTypeDescriptor,
-						true
-				);
+				final Aggregate pkClass;
+				if ( source.getEntityMode() == EntityMode.MAP ) {
+					pkClass = (Aggregate) localBindingContext().locateOrBuildDomainType(
+							new DynamicTypeDescriptorImpl( DotName.createSimple( "CID" ), null ),
+							true
+					);
+				}
+				else {
+					final JavaTypeDescriptor pkClassTypeDescriptor = determinePkClassTypeDescriptor(
+							binding.getRootEntityBinding(),
+							identifierSource
+					);
+					pkClass = (Aggregate) localBindingContext().locateOrBuildDomainType(
+							pkClassTypeDescriptor,
+							true
+					);
+				}
 
 
 				// `pkAttribute` is the (domain) attribute reference for the @EmbeddedId attribute

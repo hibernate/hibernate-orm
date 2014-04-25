@@ -23,8 +23,6 @@
  */
 package org.hibernate.testing.junit4;
 
-import static org.junit.Assert.fail;
-
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -66,15 +64,18 @@ import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.type.Type;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.type.Type;
 import org.junit.After;
 import org.junit.Before;
+
+import static org.junit.Assert.fail;
 
 /**
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}
@@ -212,15 +213,19 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return;
 		}
 
-		for ( EntityBinding entityBinding : metadataImplementor.getEntityBindings() ) {
+		overrideCacheSettings( metadataImplementor, getCacheConcurrencyStrategy() );
+	}
+
+	public static void overrideCacheSettings(MetadataImplementor metadata, String accessType) {
+		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			if ( entityBinding.getSuperEntityBinding() == null ) {
-				overrideEntityCache( entityBinding );
+				overrideEntityCache( entityBinding, accessType );
 			}
-			overrideCollectionCachesForEntity( entityBinding );
+			overrideCollectionCachesForEntity( entityBinding, accessType );
 		}
 	}
 
-	private void overrideEntityCache(EntityBinding entityBinding) {
+	private static void overrideEntityCache(EntityBinding entityBinding, String accessType) {
 		boolean hasLob = false;
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
 			if ( attributeBinding.getAttribute().isSingular() ) {
@@ -240,15 +245,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			entityBinding.getHierarchyDetails().getCaching().setRequested( TruthValue.TRUE );
 			entityBinding.getHierarchyDetails().getCaching().setRegion( entityBinding.getEntityName() );
 			entityBinding.getHierarchyDetails().getCaching().setCacheLazyProperties( true );
-			entityBinding.getHierarchyDetails().getCaching().setAccessType(
-					AccessType.fromExternalName(
-							getCacheConcurrencyStrategy()
-					)
-			);
+			entityBinding.getHierarchyDetails().getCaching().setAccessType( AccessType.fromExternalName( accessType ) );
 		}
 	}
 
-	private void overrideCollectionCachesForEntity(EntityBinding entityBinding) {
+	private static void overrideCollectionCachesForEntity(EntityBinding entityBinding, String accessType) {
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
 			if ( !attributeBinding.getAttribute().isSingular() ) {
 				AbstractPluralAttributeBinding binding = AbstractPluralAttributeBinding.class.cast( attributeBinding );
@@ -261,7 +262,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 						)
 				);
 				binding.getCaching().setCacheLazyProperties( true );
-				binding.getCaching().setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+				binding.getCaching().setAccessType( AccessType.fromExternalName( accessType ) );
 			}
 		}
 	}

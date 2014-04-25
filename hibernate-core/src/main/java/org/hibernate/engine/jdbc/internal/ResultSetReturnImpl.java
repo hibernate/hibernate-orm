@@ -91,14 +91,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	private boolean isTypeOf(final Statement statement, final Class<? extends Statement> type) {
-		// Default is to match based on assignable class verification
-		boolean matches = type.isAssignableFrom(statement.getClass());
+		// Default is to match based on class type
+		boolean matches = type.isInstance(statement);
 		
 		try {
-			// Attempt to verify if the statement instance implements the JDBC 4 API
 			boolean jdbc4;
 			try {
-				// Verify if the statement instance doesn't implement JDBC 4
+				// Attempt to verify if the statement instance implements the JDBC 4 API
 				jdbc4 = (statement.getClass().getMethod("isWrapperFor", new Class<?>[] { Class.class }) != null);
 			} catch (Exception e) {
 				jdbc4 = false;
@@ -110,7 +109,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				matches = statement.isWrapperFor(type);
 			}
 		} catch (Exception e) {
-			// No operation
+			// No operation.  Note that this catches more than just SQLException to
+			// cover edge cases where a driver might throw an UnsupportedOperationException
 		}
 		return matches;
 	}

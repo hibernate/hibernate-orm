@@ -34,6 +34,12 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Reha CENANI
  */
 public class FirebirdDialect extends InterbaseDialect {
+	
+	public FirebirdDialect() {
+		super();
+		registerFunction( "replace", new SQLFunctionTemplate( StandardBasicTypes.STRING, "replace(?1, ?2, ?3)" ) );
+	}
+	
 	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop generator " + sequenceName;

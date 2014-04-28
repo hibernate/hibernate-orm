@@ -23,10 +23,12 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for Firebird.

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,29 +23,26 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
-import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
-import org.hibernate.jpa.boot.internal.MappingFileDescriptorImpl;
-import org.hibernate.jpa.boot.scan.internal.ScanResultCollector;
+import java.net.URL;
+import java.util.List;
+
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 /**
- * Defines handling and filtering for all non-class file (package-info is also a class file...) entries within an archive
- *
  * @author Steve Ebersole
  */
-public class NonClassFileArchiveEntryHandler implements ArchiveEntryHandler {
-	private final ScanResultCollector resultCollector;
+public interface ScanEnvironment {
+	public URL getRootUrl();
+	public List<URL> getNonRootUrls();
 
-	public NonClassFileArchiveEntryHandler(ScanResultCollector resultCollector) {
-		this.resultCollector = resultCollector;
-	}
+	public List<String> getExplicitlyListedClassNames();
+	public List<String> getExplicitlyListedMappingFiles();
 
-	@Override
-	public void handleEntry(ArchiveEntry entry, ArchiveContext context) {
-		resultCollector.handleMappingFile(
-				new MappingFileDescriptorImpl( entry.getNameWithinArchive(), entry.getStreamAccess() ),
-				context.isRootUrl()
-		);
-	}
+	/**
+	 * @deprecated Added temporarily to support legacy
+	 * {@link org.hibernate.jpa.boot.archive.spi.ArchiveContext#getPersistenceUnitDescriptor()}
+	 * calls
+	 */
+	@Deprecated
+	public PersistenceUnitDescriptor getPersistenceUnitDescriptor();
 }

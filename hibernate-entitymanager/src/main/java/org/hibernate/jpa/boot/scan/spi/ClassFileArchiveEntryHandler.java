@@ -26,18 +26,15 @@ package org.hibernate.jpa.boot.scan.spi;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.persistence.Converter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 
-import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
+import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.jpa.boot.archive.spi.ArchiveException;
 import org.hibernate.jpa.boot.internal.ClassDescriptorImpl;
+import org.hibernate.jpa.boot.scan.internal.ScanResultCollector;
 import org.hibernate.jpa.boot.spi.ClassDescriptor;
 
 /**
@@ -45,37 +42,16 @@ import org.hibernate.jpa.boot.spi.ClassDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ClassFileArchiveEntryHandler extends AbstractJavaArtifactArchiveEntryHandler {
-	private final Callback callback;
+public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
+	private final ScanResultCollector resultCollector;
 
-	/**
-	 * Contract for the thing interested in being notified about accepted class descriptors.
-	 */
-	public static interface Callback {
-		public void locatedClass(ClassDescriptor classDescriptor);
-	}
-
-	public ClassFileArchiveEntryHandler(ScanOptions scanOptions, Callback callback) {
-		super( scanOptions );
-		this.callback = callback;
+	public ClassFileArchiveEntryHandler(ScanResultCollector resultCollector) {
+		this.resultCollector = resultCollector;
 	}
 
 	@Override
 	public void handleEntry(ArchiveEntry entry, ArchiveContext context) {
-		final ClassFile classFile = toClassFile( entry );
-		final ClassDescriptor classDescriptor = toClassDescriptor( classFile, entry );
-
-		if ( ! isListedOrDetectable( context, classDescriptor.getName() ) ) {
-			return;
-		}
-
-		// we are only interested in classes with certain annotations, so see if the JavaTypeDescriptor
-		// represents a class which contains any of those annotations
-		if ( ! containsClassAnnotationsOfInterest( classFile ) ) {
-			return;
-		}
-
-		notifyMatchedClass( classDescriptor );
+		resultCollector.handleClass( toClassDescriptor( toClassFile( entry ), entry ), context.isRootUrl() );
 	}
 
 	private ClassFile toClassFile(ArchiveEntry entry) {
@@ -102,24 +78,7 @@ public class ClassFileArchiveEntryHandler extends AbstractJavaArtifactArchiveEnt
 		}
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
-	private boolean containsClassAnnotationsOfInterest(ClassFile cf) {
-		final AnnotationsAttribute visibleAnnotations = (AnnotationsAttribute) cf.getAttribute( AnnotationsAttribute.visibleTag );
-		if ( visibleAnnotations == null ) {
-			return false;
-		}
-
-		return visibleAnnotations.getAnnotation( Entity.class.getName() ) != null
-				|| visibleAnnotations.getAnnotation( MappedSuperclass.class.getName() ) != null
-				|| visibleAnnotations.getAnnotation( Embeddable.class.getName() ) != null
-				|| visibleAnnotations.getAnnotation( Converter.class.getName() ) != null;
-	}
-
-	protected ClassDescriptor toClassDescriptor(ClassFile classFile, ArchiveEntry entry) {
+	private ClassDescriptor toClassDescriptor(ClassFile classFile, ArchiveEntry entry) {
 		return new ClassDescriptorImpl( classFile.getName(), entry.getStreamAccess() );
-	}
-
-	protected final void notifyMatchedClass(ClassDescriptor classDescriptor) {
-		callback.locatedClass( classDescriptor );
 	}
 }

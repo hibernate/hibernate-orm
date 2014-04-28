@@ -45,6 +45,7 @@ import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
+import org.hibernate.jpa.test.LastUpdateListener;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.jpa.test.pack.defaultpar.IncrementListener;
@@ -289,7 +290,11 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class,fileName );
 		archive.addClasses(
 				Morito.class,
-				Item.class
+				Item.class,
+				Distributor.class,
+				Cat.class,
+				Kitten.class,
+				LastUpdateListener.class
 		);
 
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );

@@ -23,8 +23,6 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-
 /**
  * Defines the contract for Hibernate to be able to scan for classes, packages and resources inside a
  * persistence unit.
@@ -34,13 +32,11 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
  */
 public interface Scanner {
 	/**
-	 * Perform the scanning against the described persistence unit using the defined options, and return the scan
-	 * results.
+	 * Perform the scanning against the described environment using the
+	 * defined options, and return the scan results.
 	 *
-	 * @param persistenceUnit THe description of the persistence unit.
-	 * @param options The scan options
-	 *
-	 * @return The scan results.
+	 * @param environment The scan environment
+	 * @param options The options to control the scanning
 	 */
-	public ScanResult scan(PersistenceUnitDescriptor persistenceUnit, ScanOptions options);
+	public ScanResult scan(ScanEnvironment environment, ScanOptions options);
 }

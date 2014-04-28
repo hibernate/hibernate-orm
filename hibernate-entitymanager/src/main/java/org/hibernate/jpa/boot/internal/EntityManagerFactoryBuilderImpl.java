@@ -64,8 +64,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.jpa.boot.scan.internal.StandardJpaScanEnvironmentImpl;
 import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
 import org.hibernate.jpa.boot.scan.internal.StandardScanner;
+import org.hibernate.jpa.boot.scan.spi.ScanEnvironment;
 import org.hibernate.jpa.boot.scan.spi.ScanOptions;
 import org.hibernate.jpa.boot.scan.spi.ScanResult;
 import org.hibernate.jpa.boot.scan.spi.Scanner;
@@ -691,28 +694,37 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	@SuppressWarnings("unchecked")
 	private ScanResult scanDeployment(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		IndexView jandexIndex = (IndexView) configurationValues.remove( JANDEX_INDEX );
-		Indexer indexer = null;
-		if ( jandexIndex != null ) {
-			indexer = new Indexer();
+		Indexer jandexIndexer = null;
+		if ( jandexIndex == null ) {
+			// If we don't have a Jandex index passed to us, we need to build one.
+			jandexIndexer = new Indexer();
 		}
 
 		final Scanner scanner = locateOrBuildScanner( bootstrapServiceRegistry );
-		final ScanOptions scanOptions = determineScanOptions( indexer );
+		final ScanEnvironment environment = new StandardJpaScanEnvironmentImpl( persistenceUnit );
+		final ScanOptions options = determineScanOptions( jandexIndexer, jandexIndex );
+		final ScanResult result = scanner.scan( environment, options );
 
-		ScanResult scanResult = scanner.scan( persistenceUnit, scanOptions );
-
-		if ( indexer != null ) {
-			jandexIndex = indexer.complete();
-			configurationValues.put( JANDEX_INDEX, jandexIndex );
+		if ( jandexIndexer != null ) {
+			jandexIndex = jandexIndexer.complete();
+			// if the indexer indexed anything use that index
+			//
+			// IMPL NOTE : (unfortunately?) Jandex has no way to see if an Indexer
+			// actually indexed anything.  But, it also manages package-info.class
+			// as any other class, so this check should be fine
+			if ( !jandexIndex.getKnownClasses().isEmpty() ) {
+				configurationValues.put( JANDEX_INDEX, jandexIndex );
+			}
 		}
-		return scanResult;
+
+		return result;
 	}
 
 	@SuppressWarnings("unchecked")
 	private Scanner locateOrBuildScanner(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		final Object value = configurationValues.remove( AvailableSettings.SCANNER );
 		if ( value == null ) {
-			return new StandardScanner();
+			return createStandardScanner( bootstrapServiceRegistry );
 		}
 
 		if ( Scanner.class.isInstance( value ) ) {
@@ -746,11 +758,56 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private ScanOptions determineScanOptions(Indexer indexer) {
+	@SuppressWarnings("unchecked")
+	private Scanner createStandardScanner(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		final Object value = configurationValues.remove( AvailableSettings.SCANNER_ARCHIVE_DELEGATE );
+		if ( value == null ) {
+			return new StandardScanner();
+		}
+
+		if ( ArchiveDescriptorFactory.class.isInstance( value ) ) {
+			return new StandardScanner( (ArchiveDescriptorFactory) value );
+		}
+
+		final Class<? extends ArchiveDescriptorFactory> delegateClass;
+		if ( Class.class.isInstance( value ) ) {
+			try {
+				delegateClass = (Class<? extends ArchiveDescriptorFactory>) value;
+			}
+			catch ( ClassCastException e ) {
+				throw persistenceException(
+						"Expecting ArchiveDescriptorFactory implementation, but found " + ((Class) value).getName()
+				);
+			}
+		}
+		else {
+			final String delegateClassName = value.toString();
+			try {
+				delegateClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName( delegateClassName );
+			}
+			catch ( ClassCastException e ) {
+				throw persistenceException(
+						"Expecting ArchiveDescriptorFactory implementation, but found " + delegateClassName
+				);
+			}
+		}
+
+		try {
+			final ArchiveDescriptorFactory delegate = delegateClass.newInstance();
+			return new StandardScanner( delegate );
+		}
+		catch (Exception e) {
+			throw persistenceException( "Unable to instantiate ArchiveDescriptorFactory class: " + delegateClass, e );
+		}
+
+	}
+
+	private ScanOptions determineScanOptions(Indexer indexer, IndexView jandexIndex) {
 		return new StandardScanOptions(
+				indexer,
+				jandexIndex,
 				(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
-				persistenceUnit.isExcludeUnlistedClasses(),
-				indexer
+				persistenceUnit.isExcludeUnlistedClasses()
 		);
 	}
 

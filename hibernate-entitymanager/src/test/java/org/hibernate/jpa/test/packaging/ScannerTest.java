@@ -31,13 +31,15 @@ import java.util.HashMap;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.scan.internal.StandardJpaScanEnvironmentImpl;
 import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
+import org.hibernate.jpa.boot.scan.spi.ScanEnvironment;
+import org.hibernate.jpa.boot.scan.spi.ScanOptions;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.scan.internal.StandardScanner;
 import org.hibernate.jpa.boot.spi.ClassDescriptor;
 import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
 import org.hibernate.jpa.boot.spi.NamedInputStream;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
 import org.hibernate.jpa.boot.scan.spi.ScanResult;
 import org.hibernate.jpa.boot.scan.spi.Scanner;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
@@ -61,9 +63,10 @@ public class ScannerTest extends PackagingTestCase {
 		addPackageToClasspath( defaultPar );
 
 		PersistenceUnitDescriptor descriptor = new ParsedPersistenceXmlDescriptor( defaultPar.toURL() );
+		ScanEnvironment env = new StandardJpaScanEnvironmentImpl( descriptor );
 		ScanOptions options = new StandardScanOptions( "hbm,class", descriptor.isExcludeUnlistedClasses() );
 		Scanner scanner = new StandardScanner();
-		ScanResult scanResult = scanner.scan( descriptor, options );
+		ScanResult scanResult = scanner.scan( env, options );
 
 		assertEquals( 3, scanResult.getLocatedClasses().size() );
 		assertClassesContained( scanResult, ApplicationServer.class );

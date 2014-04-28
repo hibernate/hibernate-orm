@@ -24,6 +24,7 @@
 package org.hibernate.jpa.boot.scan.internal;
 
 import org.hibernate.jpa.boot.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.jpa.boot.scan.spi.AbstractScannerImpl;
 
 /**
@@ -35,6 +36,10 @@ import org.hibernate.jpa.boot.scan.spi.AbstractScannerImpl;
  */
 public class StandardScanner extends AbstractScannerImpl {
 	public StandardScanner() {
-		super( StandardArchiveDescriptorFactory.INSTANCE );
+		this( StandardArchiveDescriptorFactory.INSTANCE );
+	}
+
+	public StandardScanner(ArchiveDescriptorFactory value) {
+		super( value );
 	}
 }

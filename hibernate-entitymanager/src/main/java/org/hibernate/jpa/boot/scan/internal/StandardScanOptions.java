@@ -25,30 +25,27 @@ package org.hibernate.jpa.boot.scan.internal;
 
 import org.hibernate.jpa.boot.scan.spi.ScanOptions;
 
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 
 /**
  * @author Steve Ebersole
  */
 public class StandardScanOptions implements ScanOptions {
+	private final Indexer jandexIndexer;
+	private final IndexView jandexView;
+
 	private final boolean detectClassesInRoot;
 	private final boolean detectClassesInNonRoot;
 	private final boolean detectHibernateMappingFiles;
-	private final Indexer jandexIndexer;
 
-	public StandardScanOptions() {
-		this( "hbm,class", false );
-	}
 	public StandardScanOptions(
+			Indexer jandexIndexer,
+			IndexView jandexView,
 			String explicitDetectionSetting,
 			boolean persistenceUnitExcludeUnlistedClassesValue) {
-		this( explicitDetectionSetting, persistenceUnitExcludeUnlistedClassesValue, null );
-	}
-
-	public StandardScanOptions(
-			String explicitDetectionSetting,
-			boolean persistenceUnitExcludeUnlistedClassesValue,
-			Indexer jandexIndexer) {
+		this.jandexIndexer = jandexIndexer;
+		this.jandexView = jandexView;
 		if ( explicitDetectionSetting == null ) {
 			this.detectHibernateMappingFiles = true;
 			this.detectClassesInRoot = ! persistenceUnitExcludeUnlistedClassesValue;
@@ -59,7 +56,32 @@ public class StandardScanOptions implements ScanOptions {
 			this.detectClassesInRoot = explicitDetectionSetting.contains( "class" );
 			this.detectClassesInNonRoot = this.detectClassesInRoot;
 		}
-		this.jandexIndexer = jandexIndexer;
+	}
+
+	/**
+	 * INTENDED FOR TESTING ONLY
+	 */
+	public StandardScanOptions() {
+		this( "hbm,class", false );
+	}
+
+	/**
+	 * INTENDED FOR TESTING ONLY
+	 */
+	public StandardScanOptions(
+			String explicitDetectionSetting,
+			boolean persistenceUnitExcludeUnlistedClassesValue) {
+		this( new Indexer(), null, explicitDetectionSetting, persistenceUnitExcludeUnlistedClassesValue );
+	}
+
+	@Override
+	public Indexer getJandexIndexer() {
+		return jandexIndexer;
+	}
+
+	@Override
+	public IndexView getJandexView() {
+		return jandexView;
 	}
 
 	@Override
@@ -75,10 +97,5 @@ public class StandardScanOptions implements ScanOptions {
 	@Override
 	public boolean canDetectHibernateMappingFiles() {
 		return detectHibernateMappingFiles;
-	}
-
-	@Override
-	public Indexer getJandexIndexer() {
-		return jandexIndexer;
 	}
 }

@@ -23,29 +23,15 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.PersistenceException;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
-import org.hibernate.jpa.boot.internal.ClassDescriptorImpl;
-import org.hibernate.jpa.boot.internal.MappingFileDescriptorImpl;
-import org.hibernate.jpa.boot.internal.PackageDescriptorImpl;
-import org.hibernate.jpa.boot.spi.ClassDescriptor;
-import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
-import org.hibernate.jpa.boot.spi.PackageDescriptor;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.scan.internal.ResultCoordinator;
+import org.hibernate.jpa.boot.scan.internal.ScanResultCollector;
 
 /**
  * @author Steve Ebersole
@@ -59,194 +45,43 @@ public abstract class AbstractScannerImpl implements Scanner {
 	}
 
 	@Override
-	public ScanResult scan(PersistenceUnitDescriptor persistenceUnit, ScanOptions scanOptions) {
-		final ResultCollector resultCollector = new ResultCollector( scanOptions );
+	public ScanResult scan(ScanEnvironment environment, ScanOptions options) {
+		final ScanResultCollector collector = new ScanResultCollector( environment, options );
+		final ResultCoordinator resultCoordinator = new ResultCoordinator( collector );
 
-		if ( persistenceUnit.getJarFileUrls() != null ) {
-			for ( URL url : persistenceUnit.getJarFileUrls() ) {
-				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, false, scanOptions );
-				final ArchiveContext context = buildArchiveContext( persistenceUnit, false, resultCollector );
+		if ( environment.getNonRootUrls() != null ) {
+			final ArchiveContext context = new ArchiveContextImpl( environment, false, resultCoordinator );
+			for ( URL url : environment.getNonRootUrls() ) {
+				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, false );
 				descriptor.visitArchive( context );
 			}
 		}
 
-		if ( persistenceUnit.getPersistenceUnitRootUrl() != null ) {
-			final ArchiveDescriptor descriptor = buildArchiveDescriptor( persistenceUnit.getPersistenceUnitRootUrl(), true, scanOptions );
-			final ArchiveContext context = buildArchiveContext( persistenceUnit, true, resultCollector );
+		if ( environment.getRootUrl() != null ) {
+			final ArchiveContext context = new ArchiveContextImpl( environment, true, resultCoordinator );
+			final ArchiveDescriptor descriptor = buildArchiveDescriptor( environment.getRootUrl(), true );
 			descriptor.visitArchive( context );
 		}
 
-		return ScanResultImpl.from( resultCollector );
+		return collector.toScanResult();
 	}
 
-	private ArchiveContext buildArchiveContext(
-			PersistenceUnitDescriptor persistenceUnit,
-			boolean isRoot,
-			ArchiveEntryHandlers entryHandlers) {
-		return new ArchiveContextImpl( persistenceUnit, isRoot, entryHandlers );
-	}
 
-	protected static interface ArchiveEntryHandlers {
-		public ArchiveEntryHandler getClassFileHandler();
-		public ArchiveEntryHandler getPackageInfoHandler();
-		public ArchiveEntryHandler getFileHandler();
-	}
-
-	private ArchiveDescriptor buildArchiveDescriptor(URL url, boolean isRootUrl, ScanOptions scanOptions) {
+	private ArchiveDescriptor buildArchiveDescriptor(URL url, boolean isRootUrl) {
 		final ArchiveDescriptor descriptor;
 		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url );
 		if ( descriptorInfo == null ) {
 			descriptor = archiveDescriptorFactory.buildArchiveDescriptor( url );
 			archiveDescriptorCache.put(
 					url,
-					new ArchiveDescriptorInfo( descriptor, isRootUrl, scanOptions )
+					new ArchiveDescriptorInfo( descriptor, isRootUrl )
 			);
 		}
 		else {
-			validateReuse( descriptorInfo, isRootUrl, scanOptions );
+			validateReuse( descriptorInfo, isRootUrl );
 			descriptor = descriptorInfo.archiveDescriptor;
 		}
 		return descriptor;
-	}
-
-	public static class ResultCollector
-			implements ArchiveEntryHandlers,
-					   PackageInfoArchiveEntryHandler.Callback,
-					   ClassFileArchiveEntryHandler.Callback,
-					   NonClassFileArchiveEntryHandler.Callback {
-		private final ScanOptions scanOptions;
-
-		private final ClassFileArchiveEntryHandler classFileHandler;
-		private final PackageInfoArchiveEntryHandler packageInfoHandler;
-		private final NonClassFileArchiveEntryHandler fileHandler;
-
-		private final Set<PackageDescriptor> packageDescriptorSet = new HashSet<PackageDescriptor>();
-		private final Set<ClassDescriptor> classDescriptorSet = new HashSet<ClassDescriptor>();
-		private final Set<MappingFileDescriptor> mappingFileSet = new HashSet<MappingFileDescriptor>();
-
-		public ResultCollector(ScanOptions scanOptions) {
-			this.scanOptions = scanOptions;
-
-			this.classFileHandler = new ClassFileArchiveEntryHandler( scanOptions, this );
-			this.packageInfoHandler = new PackageInfoArchiveEntryHandler( scanOptions, this );
-			this.fileHandler = new NonClassFileArchiveEntryHandler( scanOptions, this );
-		}
-
-		@Override
-		public ArchiveEntryHandler getClassFileHandler() {
-			return classFileHandler;
-		}
-
-		@Override
-		public ArchiveEntryHandler getPackageInfoHandler() {
-			return packageInfoHandler;
-		}
-
-		@Override
-		public ArchiveEntryHandler getFileHandler() {
-			return fileHandler;
-		}
-
-		@Override
-		public void locatedPackage(PackageDescriptor packageDescriptor) {
-			final PackageDescriptor keeper;
-
-			if ( PackageDescriptorImpl.class.isInstance( packageDescriptor ) ) {
-				keeper = packageDescriptor;
-			}
-			else {
-				// to make sure we have proper equals/hashcode
-				keeper = new PackageDescriptorImpl(
-						packageDescriptor.getName(),
-						packageDescriptor.getStreamAccess()
-				);
-			}
-
-			if ( scanOptions.getJandexIndexer() != null ) {
-				InputStream stream = keeper.getStreamAccess().accessInputStream();
-				try {
-					scanOptions.getJandexIndexer().index( stream );
-				}
-				catch (IOException e) {
-					throw new PersistenceException( "Could not add package-info to Jandex Indexer", e );
-				}
-				finally {
-					try {
-						stream.close();
-					}
-					catch (IOException ignore) {
-					}
-				}
-			}
-
-			packageDescriptorSet.add( keeper );
-		}
-
-		@Override
-		public void locatedClass(ClassDescriptor classDescriptor) {
-			// to make sure we have proper equals/hashcode
-			final ClassDescriptor keeper;
-
-			if ( ClassDescriptorImpl.class.isInstance( classDescriptor ) ) {
-				keeper = classDescriptor;
-			}
-			else {
-				keeper = new ClassDescriptorImpl(
-						classDescriptor.getName(),
-						classDescriptor.getStreamAccess()
-				);
-			}
-
-			if ( scanOptions.getJandexIndexer() != null ) {
-				InputStream stream = keeper.getStreamAccess().accessInputStream();
-				try {
-					scanOptions.getJandexIndexer().index( stream );
-				}
-				catch (IOException e) {
-					throw new PersistenceException(
-							"Could not add class [" + keeper.getName() + "] to Jandex Indexer",
-							e
-					);
-				}
-				finally {
-					try {
-						stream.close();
-					}
-					catch (IOException ignore) {
-					}
-				}
-			}
-
-			classDescriptorSet.add( keeper );
-		}
-
-		@Override
-		public void locatedMappingFile(MappingFileDescriptor mappingFileDescriptor) {
-			if ( MappingFileDescriptorImpl.class.isInstance( mappingFileDescriptor ) ) {
-				mappingFileSet.add( mappingFileDescriptor );
-			}
-			else {
-				// to make sure we have proper equals/hashcode
-				mappingFileSet.add(
-						new MappingFileDescriptorImpl(
-								mappingFileDescriptor.getName(),
-								mappingFileDescriptor.getStreamAccess()
-						)
-				);
-			}
-		}
-
-		public Set<PackageDescriptor> getPackageDescriptorSet() {
-			return packageDescriptorSet;
-		}
-
-		public Set<ClassDescriptor> getClassDescriptorSet() {
-			return classDescriptorSet;
-		}
-
-		public Set<MappingFileDescriptor> getMappingFileSet() {
-			return mappingFileSet;
-		}
 	}
 
 	// This needs to be protected and attributes/constructor visible in case
@@ -254,100 +89,18 @@ public abstract class AbstractScannerImpl implements Scanner {
 	protected static class ArchiveDescriptorInfo {
 		public final ArchiveDescriptor archiveDescriptor;
 		public final boolean isRoot;
-		public final ScanOptions scanOptions;
 
-		public ArchiveDescriptorInfo(
-				ArchiveDescriptor archiveDescriptor,
-				boolean isRoot,
-				ScanOptions scanOptions) {
+		public ArchiveDescriptorInfo(ArchiveDescriptor archiveDescriptor, boolean isRoot) {
 			this.archiveDescriptor = archiveDescriptor;
 			this.isRoot = isRoot;
-			this.scanOptions = scanOptions;
 		}
 	}
 
-	protected void validateReuse(ArchiveDescriptorInfo descriptor, boolean root, ScanOptions options) {
+	@SuppressWarnings("UnusedParameters")
+	protected void validateReuse(ArchiveDescriptorInfo descriptor, boolean root) {
 		// is it really reasonable that a single url be processed multiple times?
 		// for now, throw an exception, mainly because I am interested in situations where this might happen
 		throw new IllegalStateException( "ArchiveDescriptor reused; can URLs be processed multiple times?" );
-	}
-
-	public static class ArchiveContextImpl implements ArchiveContext {
-		private final PersistenceUnitDescriptor persistenceUnitDescriptor;
-		private final boolean isRootUrl;
-		private final ArchiveEntryHandlers entryHandlers;
-
-		public ArchiveContextImpl(
-				PersistenceUnitDescriptor persistenceUnitDescriptor,
-				boolean isRootUrl,
-				ArchiveEntryHandlers entryHandlers) {
-			this.persistenceUnitDescriptor = persistenceUnitDescriptor;
-			this.isRootUrl = isRootUrl;
-			this.entryHandlers = entryHandlers;
-		}
-
-		@Override
-		public PersistenceUnitDescriptor getPersistenceUnitDescriptor() {
-			return persistenceUnitDescriptor;
-		}
-
-		@Override
-		public boolean isRootUrl() {
-			return isRootUrl;
-		}
-
-		@Override
-		public ArchiveEntryHandler obtainArchiveEntryHandler(ArchiveEntry entry) {
-			final String nameWithinArchive = entry.getNameWithinArchive();
-
-			if ( nameWithinArchive.endsWith( "package-info.class" ) ) {
-				return entryHandlers.getPackageInfoHandler();
-			}
-			else if ( nameWithinArchive.endsWith( ".class" ) ) {
-				return entryHandlers.getClassFileHandler();
-			}
-			else {
-				return entryHandlers.getFileHandler();
-			}
-		}
-	}
-
-	private static class ScanResultImpl implements ScanResult {
-		private final Set<PackageDescriptor> packageDescriptorSet;
-		private final Set<ClassDescriptor> classDescriptorSet;
-		private final Set<MappingFileDescriptor> mappingFileSet;
-
-		private ScanResultImpl(
-				Set<PackageDescriptor> packageDescriptorSet,
-				Set<ClassDescriptor> classDescriptorSet,
-				Set<MappingFileDescriptor> mappingFileSet) {
-			this.packageDescriptorSet = packageDescriptorSet;
-			this.classDescriptorSet = classDescriptorSet;
-			this.mappingFileSet = mappingFileSet;
-		}
-
-		private static ScanResult from(ResultCollector resultCollector) {
-			return new ScanResultImpl(
-					Collections.unmodifiableSet( resultCollector.packageDescriptorSet ),
-					Collections.unmodifiableSet( resultCollector.classDescriptorSet ),
-					Collections.unmodifiableSet( resultCollector.mappingFileSet )
-			);
-		}
-
-		@Override
-		public Set<PackageDescriptor> getLocatedPackages() {
-			return packageDescriptorSet;
-		}
-
-		@Override
-		public Set<ClassDescriptor> getLocatedClasses() {
-			return classDescriptorSet;
-		}
-
-		@Override
-		public Set<MappingFileDescriptor> getLocatedMappingFiles() {
-			return mappingFileSet;
-		}
 	}
 
 }

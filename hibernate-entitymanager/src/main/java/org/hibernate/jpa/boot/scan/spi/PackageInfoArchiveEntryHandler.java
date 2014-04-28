@@ -25,7 +25,9 @@ package org.hibernate.jpa.boot.scan.spi;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
+import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.jpa.boot.internal.PackageDescriptorImpl;
+import org.hibernate.jpa.boot.scan.internal.ScanResultCollector;
 import org.hibernate.jpa.boot.spi.PackageDescriptor;
 
 /**
@@ -33,19 +35,11 @@ import org.hibernate.jpa.boot.spi.PackageDescriptor;
  *
  * @author Steve Ebersole
  */
-public class PackageInfoArchiveEntryHandler extends AbstractJavaArtifactArchiveEntryHandler  {
-	private final Callback callback;
+public class PackageInfoArchiveEntryHandler implements ArchiveEntryHandler {
+	private final ScanResultCollector resultCollector;
 
-	/**
-	 * Contract for the thing interested in being notified about accepted package-info descriptors.
-	 */
-	public static interface Callback {
-		public void locatedPackage(PackageDescriptor packageDescriptor);
-	}
-
-	public PackageInfoArchiveEntryHandler(ScanOptions scanOptions, Callback callback) {
-		super( scanOptions );
-		this.callback = callback;
+	public PackageInfoArchiveEntryHandler(ScanResultCollector resultCollector) {
+		this.resultCollector = resultCollector;
 	}
 
 	@Override
@@ -55,12 +49,7 @@ public class PackageInfoArchiveEntryHandler extends AbstractJavaArtifactArchiveE
 			return;
 		}
 
-		if ( ! isListedOrDetectable( context, entry.getName() ) ) {
-			// the package is not explicitly listed, and we are not allowed to detect it.
-			return;
-		}
-
-		notifyMatchedPackage( toPackageDescriptor( entry ) );
+		resultCollector.handlePackage( toPackageDescriptor( entry ), context.isRootUrl() );
 	}
 
 	protected PackageDescriptor toPackageDescriptor(ArchiveEntry entry) {
@@ -69,9 +58,5 @@ public class PackageInfoArchiveEntryHandler extends AbstractJavaArtifactArchiveE
 				.replace( '/', '.' );
 
 		return new PackageDescriptorImpl( packageName, entry.getStreamAccess() );
-	}
-
-	protected final void notifyMatchedPackage(PackageDescriptor packageDescriptor) {
-		callback.locatedPackage( packageDescriptor );
 	}
 }

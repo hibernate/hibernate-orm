@@ -23,10 +23,12 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for Firebird.
@@ -34,6 +36,12 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Reha CENANI
  */
 public class FirebirdDialect extends InterbaseDialect {
+	
+	public FirebirdDialect() {
+		super();
+		registerFunction( "replace", new SQLFunctionTemplate( StandardBasicTypes.STRING, "replace(?1, ?2, ?3)" ) );
+	}
+	
 	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop generator " + sequenceName;

@@ -109,7 +109,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 *
 	 * @return
 	 */
-	protected void afterMetadataBuilt(MetadataImplementor metadataImplementor) {
+	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
 		super.afterConstructAndConfigureMetadata( metadataImplementor );
 		initializeSpatialTestSupport( metadataImplementor );
 	}

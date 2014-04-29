@@ -36,8 +36,10 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.jpa.criteria.compile.RenderingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
+import org.hibernate.jpa.criteria.PathSource;
 import org.hibernate.jpa.criteria.MapJoinImplementor;
 import org.hibernate.jpa.criteria.PathImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -109,6 +111,20 @@ public class MapKeyHelpers {
 			// todo : if key is an entity, this is probably not enough
 			return (MapKeyPath<T>) this;
 		}
+
+		@Override
+		public String render(RenderingContext renderingContext) {
+			PathSource<?> source = getPathSource();
+			String name;
+			if ( source != null ) {
+				source.prepareAlias( renderingContext );
+				name = source.getPathIdentifier();
+			}
+			else {
+				name = getAttribute().getName();
+			}
+			return "key(" + name + ")";
+		}
 	}
 
 	/**
@@ -164,6 +180,12 @@ public class MapKeyHelpers {
 		public <T extends Map<K, V>> PathImplementor<T> treatAs(Class<T> treatAsType) {
 			throw new UnsupportedOperationException();
 		}
+
+		@Override
+		public String getPathIdentifier() {
+			return mapJoin.getPathIdentifier();
+		}
+
 	}
 
 	/**

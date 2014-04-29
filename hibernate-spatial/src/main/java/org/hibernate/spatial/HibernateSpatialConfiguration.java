@@ -1,5 +1,7 @@
 package org.hibernate.spatial;
 
+import java.io.Serializable;
+
 import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
 
 /**
@@ -9,7 +11,7 @@ import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/16/13
  */
-public class HibernateSpatialConfiguration {
+public class HibernateSpatialConfiguration implements Serializable {
 
 	private static final Log LOG = LogFactory.make();
 	private Boolean isOgcStrict = Boolean.TRUE;

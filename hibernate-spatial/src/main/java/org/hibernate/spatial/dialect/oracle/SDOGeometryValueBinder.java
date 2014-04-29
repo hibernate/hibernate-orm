@@ -398,7 +398,6 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	 * @return the lrs position for the SDOGeometry.SDOGType
 	 */
 	private int getCoordinateLrsPosition(Geometry geom) {
-		final Coordinate c = geom.getCoordinate();
 		final int measurePos = 0;
 //		if ( c != null && !Double.isNaN( c.m ) ) {
 //			measurePos = ( Double.isNaN( c.z ) ) ? 3 : 4;

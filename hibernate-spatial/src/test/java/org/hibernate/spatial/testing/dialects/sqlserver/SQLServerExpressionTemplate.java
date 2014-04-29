@@ -30,7 +30,7 @@ import org.hibernate.spatial.testing.WktUtility;
  */
 public class SQLServerExpressionTemplate implements SQLExpressionTemplate {
 
-	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', Geometry::STGeomFromText('%s', %d))";
+	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', Geometry::STGeomFromText('%s', %d))";
 
 	public String toInsertSql(TestDataElement testDataElement) {
 		int srid = WktUtility.getSRID( testDataElement.wkt );

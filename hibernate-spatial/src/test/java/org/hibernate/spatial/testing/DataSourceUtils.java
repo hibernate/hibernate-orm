@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -220,7 +221,8 @@ public class DataSourceUtils {
 			cn.commit();
 			stmt.close();
 			LOG.info( "Loaded " + sum( insCounts ) + " rows." );
-		}finally {
+		}
+		finally {
 			try {
 				if ( cn != null ) {
 					cn.close();
@@ -247,9 +249,10 @@ public class DataSourceUtils {
 		if ( is == null ) {
 			throw new RuntimeException( "File " + fileName + " not found on Classpath." );
 		}
+		BufferedReader reader = null;
 		try {
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader( is )
+			reader = new BufferedReader(
+					new InputStreamReader( is, Charset.forName( "UTF-8" ) )
 			);
 
 			StringWriter sw = new StringWriter();
@@ -262,9 +265,8 @@ public class DataSourceUtils {
 			return sw.toString();
 		}
 		finally {
-			if ( is != null ) {
-				is.close();
-			}
+			if (reader != null) reader.close();
+			is.close();
 		}
 	}
 

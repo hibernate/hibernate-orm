@@ -422,7 +422,7 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 		final int dim = sdoGeom.getDimension();
 		final Coordinate[] coordinates = new Coordinate[oordinates.length / dim];
 		final int zDim = sdoGeom.getZDimension() - 1;
-		final int lrsDim = sdoGeom.getLRSDimension() - 1;
+//		final int lrsDim = sdoGeom.getLRSDimension() - 1;
 		for ( int i = 0; i < coordinates.length; i++ ) {
 			if ( dim == 2 ) {
 				coordinates[i] = new Coordinate(

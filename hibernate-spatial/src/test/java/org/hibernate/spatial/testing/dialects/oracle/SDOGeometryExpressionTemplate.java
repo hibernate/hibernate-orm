@@ -26,8 +26,9 @@ import org.hibernate.spatial.testing.TestDataElement;
 
 public class SDOGeometryExpressionTemplate implements SQLExpressionTemplate {
 
-	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', %s)";
+	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', %s)";
 
+	@SuppressWarnings( "unchecked" )
 	public String toInsertSql(TestDataElement testDataElement) {
 		SDOTestDataElement sdoTestDataElement = (SDOTestDataElement) testDataElement;
 		return String.format( SQL_TEMPLATE, sdoTestDataElement.id, sdoTestDataElement.type, sdoTestDataElement.sdo );

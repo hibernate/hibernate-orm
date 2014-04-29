@@ -49,8 +49,8 @@ import static org.junit.Assert.fail;
  */
 public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
 
-	protected static String JTS = "jts";
-	protected static String GEOLATTE = "geolatte";
+	protected final static String JTS = "jts";
+	protected final static String GEOLATTE = "geolatte";
 
 	protected TestData testData;
 	protected DataSourceUtils dataSourceUtils;
@@ -210,14 +210,14 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	protected <T> void compare(Map<Integer, T> expected, Map<Integer, T> received, String geometryType) {
-		for ( Integer id : expected.keySet() ) {
+		for ( Map.Entry<Integer, T> entry:  expected.entrySet()) {
+			Integer id = entry.getKey();
 			getLogger().debug( "Case :" + id );
 			getLogger().debug( "expected: " + expected.get( id ) );
 			getLogger().debug( "received: " + received.get( id ) );
-			compare( id, expected.get( id ), received.get( id ), geometryType );
+			compare( id, entry.getValue(), received.get( id ), geometryType );
 		}
 	}
-
 
 	protected void compare(Integer id, Object expected, Object received, String geometryType) {
 		assertTrue( expected != null || ( expected == null && received == null ) );
@@ -225,7 +225,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 			assertArrayEquals( "Failure on testsuite-suite for case " + id, (byte[]) expected, (byte[]) received );
 
 		} else if ( expected instanceof Geometry ) {
-			if ( geometryType == JTS ) {
+			if ( JTS.equals(geometryType) ) {
 				if ( !( received instanceof Geometry ) ) {
 					fail(
 							"Expected a JTS Geometry, but received an object of type " + received.getClass()

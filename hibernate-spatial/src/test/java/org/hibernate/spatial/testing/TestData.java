@@ -21,7 +21,6 @@
 
 package org.hibernate.spatial.testing;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -37,7 +36,6 @@ import java.util.ListIterator;
 public class TestData implements List<TestDataElement> {
 
 	private List<TestDataElement> testDataElements;
-	private InputStream in;
 
 	protected TestData() {
 	}

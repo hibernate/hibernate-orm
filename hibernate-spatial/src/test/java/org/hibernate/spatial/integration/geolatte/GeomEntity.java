@@ -92,7 +92,7 @@ public class GeomEntity {
 
 		GeomEntity geomEntity = (GeomEntity) o;
 
-		if ( id != geomEntity.id ) {
+		if ( ! id.equals(geomEntity.id) ) {
 			return false;
 		}
 

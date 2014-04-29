@@ -21,8 +21,8 @@
 
 package org.hibernate.spatial;
 
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.MessageLogger;
+import org.jboss.logging.annotations.MessageLogger;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * The logger interface for the Hibernate Spatial module.
@@ -30,6 +30,6 @@ import org.jboss.logging.MessageLogger;
  * @author Karel Maesen, Geovise BVBA
  */
 @MessageLogger(projectCode = "HS")
-public interface Log extends BasicLogger {
+public interface Log extends CoreMessageLogger {
 
 }

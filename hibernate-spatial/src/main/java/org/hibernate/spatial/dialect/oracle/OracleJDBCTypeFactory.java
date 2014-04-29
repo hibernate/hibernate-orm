@@ -45,11 +45,6 @@ import org.hibernate.spatial.helper.FinderException;
 public class OracleJDBCTypeFactory implements SQLTypeFactory {
 
 	private final Class<?> datumClass;
-	private final Class<?> numberClass;
-	private final Class<?> arrayClass;
-	private final Class<?> structClass;
-	private final Class<?> arrayDescriptorClass;
-	private final Class<?> structDescriptorClass;
 	private final Method structDescriptorCreator;
 	private final Method arrayDescriptorCreator;
 	private final Constructor<?> numberConstructor;
@@ -68,15 +63,15 @@ public class OracleJDBCTypeFactory implements SQLTypeFactory {
 		}
 		this.connectionFinder = connectionFinder;
 		Object[] obj = findDescriptorCreator( "oracle.sql.StructDescriptor" );
-		structDescriptorClass = (Class<?>) obj[0];
+		Class<?> structDescriptorClass = (Class<?>) obj[0];
 		structDescriptorCreator = (Method) obj[1];
 		obj = findDescriptorCreator( "oracle.sql.ArrayDescriptor" );
-		arrayDescriptorClass = (Class<?>) obj[0];
+		Class<?> arrayDescriptorClass = (Class<?>) obj[0];
 		arrayDescriptorCreator = (Method) obj[1];
 		datumClass = findClass( "oracle.sql.Datum" );
-		numberClass = findClass( "oracle.sql.NUMBER" );
-		arrayClass = findClass( "oracle.sql.ARRAY" );
-		structClass = findClass( "oracle.sql.STRUCT" );
+		Class<?> numberClass = findClass( "oracle.sql.NUMBER" );
+		Class<?> arrayClass = findClass( "oracle.sql.ARRAY" );
+		Class<?> structClass = findClass( "oracle.sql.STRUCT" );
 
 		numberConstructor = findConstructor( numberClass, java.lang.Integer.TYPE );
 		arrayConstructor = findConstructor( arrayClass, arrayDescriptorClass, Connection.class, Object.class );

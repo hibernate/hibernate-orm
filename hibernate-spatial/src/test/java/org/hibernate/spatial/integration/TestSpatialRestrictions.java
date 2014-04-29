@@ -211,11 +211,11 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
 	private void compare(Map<Integer, Boolean> dbexpected, List list) {
 		int cnt = 0;
-		for ( Integer id : dbexpected.keySet() ) {
-			if ( dbexpected.get( id ) ) {
+		for ( Map.Entry<Integer, Boolean> entry : dbexpected.entrySet() ) {
+			if ( entry.getValue() ) {
 				cnt++;
-				if ( !findInList( id, (List<GeomEntity>) list ) ) {
-					fail( String.format( "Expected object with id= %d, but not found in result", id ) );
+				if ( !findInList( entry.getKey(), (List<GeomEntity>) list ) ) {
+					fail( String.format( "Expected object with id= %d, but not found in result", entry.getKey() ) );
 				}
 			}
 		}
@@ -225,7 +225,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
 	private boolean findInList(Integer id, List<GeomEntity> list) {
 		for ( GeomEntity entity : list ) {
-			if ( entity.getId() == id ) {
+			if ( entity.getId().equals( id ) ) {
 				return true;
 			}
 		}

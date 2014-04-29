@@ -43,7 +43,7 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 
 	@Test
 	public void testAfterStoreRetrievingEqualObject() throws WktDecodeException {
-		Map<Integer,GeomEntity> stored = new HashMap<Integer, GeomEntity>();
+		Map<Integer, GeomEntity> stored = new HashMap<Integer, GeomEntity>();
 		//check whether we retrieve exactly what we store
 		storeTestObjects( stored );
 		retrieveAndCompare( stored );
@@ -90,14 +90,14 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 		String expectedText = ( storedGeometry != null ? storedGeometry.asText() : "NULL" );
 		String retrievedText = ( retrievedGeometry != null ? retrievedGeometry.asText() : "NULL" );
 		return String.format(
-				"Equality testsuite-suite failed for %d.\nExpected: %s\nReceived:%s",
+				"Equality testsuite-suite failed for %d.%nExpected: %s%nReceived:%s",
 				id,
 				expectedText,
 				retrievedText
 		);
 	}
 
-	private void storeTestObjects(Map<Integer,GeomEntity> stored) {
+	private void storeTestObjects(Map<Integer, GeomEntity> stored) {
 		Session session = null;
 		Transaction tx = null;
 		int id = -1;
@@ -144,7 +144,8 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 			if ( tx != null ) {
 				tx.rollback();
 			}
-			throw new RuntimeException( "Failed storing testsuite-suite object with id:" + entity.getId(), e );
+			Integer id = entity != null ? entity.getId() : -1;
+			throw new RuntimeException( "Failed storing testsuite-suite object with id:" + id, e );
 		}
 		finally {
 			if ( session != null ) {

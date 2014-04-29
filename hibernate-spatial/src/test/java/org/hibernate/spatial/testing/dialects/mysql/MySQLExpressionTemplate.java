@@ -33,7 +33,7 @@ import org.hibernate.spatial.testing.WktUtility;
  */
 public class MySQLExpressionTemplate implements SQLExpressionTemplate {
 
-	final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', GeomFromText('%s', %d))";
+	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', GeomFromText('%s', %d))";
 
 	public String toInsertSql(TestDataElement testDataElement) {
 		String wkt = WktUtility.getWkt( testDataElement.wkt );

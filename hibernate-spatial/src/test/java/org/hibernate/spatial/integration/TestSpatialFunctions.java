@@ -681,9 +681,8 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		if ( params == null ) {
 			return;
 		}
-		for ( String param : params.keySet() ) {
-			Object value = params.get( param );
-			query.setParameter( param, value );
+		for ( Map.Entry<String, Object> entry: params.entrySet() ) {
+			query.setParameter( entry.getKey(), entry.getValue() );
 		}
 	}
 

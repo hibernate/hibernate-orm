@@ -87,7 +87,7 @@ public class TestStoreRetrieveUsingJTS extends SpatialFunctionalTestCase {
 		String expectedText = ( storedGeometry != null ? storedGeometry.toText() : "NULL" );
 		String retrievedText = ( retrievedGeometry != null ? retrievedGeometry.toText() : "NULL" );
 		return String.format(
-				"Equality testsuite-suite failed for %d.\nExpected: %s\nReceived:%s",
+				"Equality testsuite-suite failed for %d.%nExpected: %s%nReceived:%s",
 				id,
 				expectedText,
 				retrievedText
@@ -141,7 +141,8 @@ public class TestStoreRetrieveUsingJTS extends SpatialFunctionalTestCase {
 			if ( tx != null ) {
 				tx.rollback();
 			}
-			throw new RuntimeException( "Failed storing testsuite-suite object with id:" + entity.getId(), e );
+			Integer id = entity != null ? entity.getId() : -1;
+			throw new RuntimeException( "Failed storing testsuite-suite object with id:" + id, e );
 		}
 		finally {
 			if ( session != null ) {

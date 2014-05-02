@@ -1398,6 +1398,11 @@ public class Configuration implements Serializable {
 				if ( StringHelper.isNotEmpty( catalog ) ) {
 					getProperties().put( Environment.DEFAULT_CATALOG, catalog );
 				}
+				// Set cascade-persist if orm.xml declares it.
+				final Object cascadePersist = defaults.get( "cascade-persist" );
+				if ( cascadePersist != null && cascadePersist == Boolean.TRUE ) {
+					getProperties().put( Environment.CASCADE_PERSIST, "true" );
+				}
 
 				AnnotationBinder.bindDefaults( createMappings() );
 				isDefaultProcessed = true;
@@ -3779,6 +3784,9 @@ public class Configuration implements Serializable {
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
 			Mappings mappings = createMappings();
+			if("true".equals(getProperty(AvailableSettings.CASCADE_PERSIST))) {
+				mappings.setDefaultCascade("persist");
+			}
 			Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
 					orderedClasses, mappings
 			);

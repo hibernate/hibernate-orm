@@ -145,6 +145,11 @@ public interface AvailableSettings {
 	String DEFAULT_CATALOG = "hibernate.default_catalog";
 
 	/**
+	 * Enable transitive persistence by default
+	 */
+	String CASCADE_PERSIST = "hibernate.cascade_persist";
+
+	/**
 	 * Enable logging of generated SQL to the console
 	 */
 	String SHOW_SQL ="hibernate.show_sql";

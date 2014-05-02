@@ -203,11 +203,11 @@ public interface AvailableSettings {
 	/**
 	 * Used to define how the current thread context {@link ClassLoader} must be used
 	 * for class lookup.
-	 * 
+	 *
 	 * @see TcclLookupPrecedence
 	 */
 	String TC_CLASSLOADER = "hibernate.classLoader.tccl_lookup_precedence";
-        
+
 	/**
 	 * Names the {@link ClassLoader} used to load user application classes.
 	 * @since 4.0
@@ -1494,7 +1494,7 @@ public interface AvailableSettings {
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
 	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
-	 * 
+	 *
 	 * {@code LEGACY} is the default value.
 	 */
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";

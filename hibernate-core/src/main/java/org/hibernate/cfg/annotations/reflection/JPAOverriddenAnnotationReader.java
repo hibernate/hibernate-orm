@@ -13,6 +13,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -779,6 +780,52 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private Annotation overridesDefaultCascadePersist(Annotation annotation, XMLContext.Default defaults) {
+		if ( Boolean.TRUE.equals( defaults.getCascadePersist() ) ) {
+			final Class<? extends Annotation> annotationType = annotation.annotationType();
+
+			if ( annotationType == ManyToOne.class ) {
+				ManyToOne manyToOne = (ManyToOne) annotation;
+				List<CascadeType> cascades = new ArrayList<>( Arrays.asList( manyToOne.cascade() ) );
+				if ( !cascades.contains( CascadeType.ALL ) && !cascades.contains( CascadeType.PERSIST ) ) {
+					cascades.add( CascadeType.PERSIST );
+				}
+				else {
+					return annotation;
+				}
+
+				AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
+				ad.setValue( "cascade", cascades.toArray( new CascadeType[] {} ) );
+				ad.setValue( "targetEntity", manyToOne.targetEntity() );
+				ad.setValue( "fetch", manyToOne.fetch() );
+				ad.setValue( "optional", manyToOne.optional() );
+
+				return AnnotationFactory.create( ad );
+			}
+			else if ( annotationType == OneToOne.class ) {
+				OneToOne oneToOne = (OneToOne) annotation;
+				List<CascadeType> cascades = new ArrayList<>( Arrays.asList( oneToOne.cascade() ) );
+				if ( !cascades.contains( CascadeType.ALL ) && !cascades.contains( CascadeType.PERSIST ) ) {
+					cascades.add( CascadeType.PERSIST );
+				}
+				else {
+					return annotation;
+				}
+
+				AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
+				ad.setValue( "cascade", cascades.toArray( new CascadeType[] {} ) );
+				ad.setValue( "targetEntity", oneToOne.targetEntity() );
+				ad.setValue( "fetch", oneToOne.fetch() );
+				ad.setValue( "optional", oneToOne.optional() );
+				ad.setValue( "mappedBy", oneToOne.mappedBy() );
+				ad.setValue( "orphanRemoval", oneToOne.orphanRemoval() );
+
+				return AnnotationFactory.create( ad );
+			}
+		}
+		return annotation;
+	}
+
 	private void getJoinTable(List<Annotation> annotationList, Element tree, XMLContext.Default defaults) {
 		addIfNotNull( annotationList, buildJoinTable( tree, defaults ) );
 	}
@@ -857,6 +904,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
 			Annotation annotation = getPhysicalAnnotation( annotationType );
 			if ( annotation != null ) {
+				annotation = overridesDefaultCascadePersist( annotation, defaults );
 				annotationList.add( annotation );
 				annotation = overridesDefaultsInJoinTable( annotation, defaults );
 				addIfNotNull( annotationList, annotation );

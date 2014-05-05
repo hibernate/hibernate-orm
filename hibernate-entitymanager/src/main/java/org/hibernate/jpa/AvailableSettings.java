@@ -453,29 +453,7 @@ public interface AvailableSettings {
 	//Use the org.hibernate prefix. instead of hibernate. as it is a query hint se QueryHints
 	String FLUSH_MODE = "org.hibernate.flushMode";
 
-	/**
-	 * Pass an implementation of {@link org.hibernate.jpa.boot.scan.spi.Scanner}
-	 * (or the deprecated {@link org.hibernate.ejb.packaging.Scanner}).  Accepts
-	 * either:<ul>
-	 *     <li>an actual instance</li>
-	 *     <li>a reference to a Class that implements Scanner</li>
-	 *     <li>a fully qualified name of a Class that implements Scanner</li>
-	 * </ul>
-	 */
-	String SCANNER = "hibernate.ejb.resource_scanner";
-
-	/**
-	 * Pass {@link org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory} to use
-	 * in the scanning process.  Accepts either:<ul>
-	 *     <li>an ArchiveDescriptorFactory instance</li>
-	 *     <li>a reference to a Class that implements ArchiveDescriptorFactory</li>
-	 *     <li>a fully qualified name of a Class that implements ArchiveDescriptorFactory</li>
-	 * </ul>
-	 *
-	 * @see #SCANNER
-	 * @see org.hibernate.jpa.boot.scan.spi.Scanner
-	 */
-	String SCANNER_ARCHIVE_DELEGATE = "hibernate.jpa.scanner_archive_delegate";
+	String SCANNER = org.hibernate.cfg.AvailableSettings.SCANNER;
 
 	/**
 	 * List of classes names

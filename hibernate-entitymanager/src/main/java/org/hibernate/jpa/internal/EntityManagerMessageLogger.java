@@ -63,24 +63,49 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
     @Message( value = "An Ejb3Configuration was unbound from name: %s", id = 15004 )
     void ejb3ConfigurationUnboundFromName( String name );
 
+	/**
+	 * @deprecated Moved to the {@link org.hibernate.internal.UrlMessageBundle}
+	 * contract
+	 */
+	@Deprecated
     @LogMessage( level = WARN )
     @Message( value = "Exploded jar file does not exist (ignored): %s", id = 15005 )
     void explodedJarDoesNotExist( URL jarUrl );
 
+	/**
+	 * @deprecated Moved to the {@link org.hibernate.internal.UrlMessageBundle}
+	 * contract
+	 */
+	@Deprecated
     @LogMessage( level = WARN )
     @Message( value = "Exploded jar file not a directory (ignored): %s", id = 15006 )
     void explodedJarNotDirectory( URL jarUrl );
 
+	/**
+	 * @deprecated Moved to the {@link org.hibernate.internal.UrlMessageBundle}
+	 * contract
+	 */
+	@Deprecated
     @LogMessage( level = ERROR )
     @Message( value = "Malformed URL: %s", id = 15008 )
     void malformedUrl( URL jarUrl,
                        @Cause URISyntaxException e );
 
+	/**
+	 * @deprecated Moved to the {@link org.hibernate.internal.UrlMessageBundle}
+	 * contract
+	 */
+	@Deprecated
     @LogMessage( level = WARN )
     @Message( value = "Malformed URL: %s", id = 15009 )
     void malformedUrlWarning( URL jarUrl,
                               @Cause URISyntaxException e );
 
+	/**
+	 * @deprecated Moved to the {@link org.hibernate.internal.UrlMessageBundle}
+	 * contract
+	 */
+	@Deprecated
     @LogMessage( level = WARN )
     @Message( value = "Unable to find file (ignored): %s", id = 15010 )
     void unableToFindFile( URL jarUrl,

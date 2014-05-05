@@ -33,28 +33,23 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.ClassLoaderAccessImpl;
+import org.hibernate.metamodel.internal.JandexInitManager;
 import org.hibernate.metamodel.internal.MetadataBuilderImpl;
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
-import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbConverter;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEmbeddable;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
@@ -64,11 +59,6 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMappedSuperclass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitDefaults;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbClassElement;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbJoinedSubclassElement;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbSubclassElement;
-import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbUnionSubclassElement;
 import org.hibernate.metamodel.source.spi.InvalidMappingException;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.source.spi.MappingNotFoundException;
@@ -79,13 +69,8 @@ import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
-import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import org.w3c.dom.Document;
@@ -564,6 +549,10 @@ public class MetadataSources {
 		return this;
 	}
 
+	/**
+	 * @deprecated Use {@link #indexKnownClasses} instead
+	 */
+	@Deprecated
 	public IndexView buildJandexView() {
 		return buildJandexView( false );
 	}
@@ -573,46 +562,55 @@ public class MetadataSources {
 	 *
 	 * @param autoIndexMemberTypes Should the types of class members automatically be added to the built index?
 	 *
-	 * @return
+	 * @return The built Jandex Index
+	 *
+	 * @deprecated Use {@link #indexKnownClasses} instead
 	 */
+	@Deprecated
 	public IndexView buildJandexView(boolean autoIndexMemberTypes) {
-		return JandexIndexBuilder.process( autoIndexMemberTypes, this );
+		JandexInitManager jandexInitManager = new JandexInitManager(
+				null,
+				new ClassLoaderAccessImpl(
+						null,
+						getServiceRegistry().getService( ClassLoaderService.class )
+				),
+				autoIndexMemberTypes
+		);
+		JandexIndexBuilder.process( jandexInitManager, this );
+		return jandexInitManager.buildIndex();
+	}
+
+	public void indexKnownClasses(JandexInitManager jandexInitManager) {
+		JandexIndexBuilder.process( jandexInitManager, this );
 	}
 
 	public static class JandexIndexBuilder {
 		private static final Logger log = Logger.getLogger( JandexIndexBuilder.class );
 
-		private final DotName OBJECT_DOT_NAME = DotName.createSimple( Object.class.getName() );
+		private final JandexInitManager jandexInitManager;
 
-		private final boolean autoIndexMemberTypes;
-		private final ClassLoaderService classLoaderService;
-
-		private final Indexer indexer = new Indexer();
-		private final Set<DotName> processedClassNames = new HashSet<DotName>();
-
-		private JandexIndexBuilder(boolean autoIndexMemberTypes, ServiceRegistry serviceRegistry) {
-			this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-			this.autoIndexMemberTypes = autoIndexMemberTypes;
+		private JandexIndexBuilder(JandexInitManager jandexInitManager) {
+			this.jandexInitManager = jandexInitManager;
 		}
 
-		public static IndexView process(boolean autoIndexMemberTypes, MetadataSources sources) {
-			return new JandexIndexBuilder( autoIndexMemberTypes, sources.getServiceRegistry() ).process( sources );
+		public static void process(JandexInitManager jandexInitManager, MetadataSources sources) {
+			new JandexIndexBuilder( jandexInitManager ).process( sources );
 		}
 
-		private IndexView process(MetadataSources sources) {
+		private void process(MetadataSources sources) {
 			// start off with any already-loaded Class references...
 			for ( Class<?> clazz : sources.getAnnotatedClasses() ) {
-				indexLoadedClass( clazz );
+				jandexInitManager.indexLoadedClass( clazz );
 			}
 
 			if ( sources.converterClasses != null ) {
 				for ( Class<? extends AttributeConverter> converterClass : sources.converterClasses ) {
-					indexLoadedClass( converterClass );
+					jandexInitManager.indexLoadedClass( converterClass );
 				}
 			}
 
 			for ( String className : sources.getAnnotatedClassNames() ) {
-				indexClassName( DotName.createSimple( className ) );
+				jandexInitManager.indexClassName( DotName.createSimple( className ) );
 			}
 
 			// add package-info from the configured packages
@@ -620,7 +618,7 @@ public class MetadataSources {
 				// older code seemed to simply ignore packages that did not have package-info,
 				// so do same
 				try {
-					indexResource( packageName.replace( '.', '/' ) + "/package-info.class" );
+					jandexInitManager.indexResource( packageName.replace( '.', '/' ) + "/package-info.class" );
 				}
 				catch (Exception e) {
 					log.debugf( "Skipping package [%s] which caused error indexing : %s", packageName, e.getMessage() );
@@ -636,164 +634,6 @@ public class MetadataSources {
 					}
 				}
 			}
-
-			final Index jandexIndex = indexer.complete();
-			if ( log.isTraceEnabled() ) {
-				jandexIndex.printSubclasses();
-				jandexIndex.printAnnotations();
-			}
-			return jandexIndex;
-		}
-
-		private void indexLoadedClass(Class loadedClass) {
-			if ( loadedClass == null ) {
-				return;
-			}
-
-			final DotName classDotName = DotName.createSimple( loadedClass.getName() );
-			if ( !needsProcessing( classDotName ) ) {
-				return;
-			}
-
-			// index super type first
-			indexLoadedClass( loadedClass.getSuperclass() );
-
-			// index any inner classes
-			for ( Class innerClass : loadedClass.getDeclaredClasses() ) {
-				indexLoadedClass( innerClass );
-			}
-
-			// then index the class itself
-			ClassInfo classInfo = indexResource( loadedClass.getName().replace( '.', '/' ) + ".class" );
-
-			if ( !autoIndexMemberTypes ) {
-				return;
-			}
-
-			for ( Class<?> fieldType : ReflectHelper.getMemberTypes( loadedClass ) ) {
-				if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
-					indexLoadedClass( fieldType );
-				}
-			}
-
-			// Also check for classes within a @Target annotation.
-			// 		[steve] - not so sure about this.  target would name an entity, which should be
-			// 			known to us somehow
-			for ( AnnotationInstance targetAnnotation : JandexHelper.getAnnotations( classInfo, HibernateDotNames.TARGET ) ) {
-				String targetClassName = targetAnnotation.value().asClass().name().toString();
-				Class<?> targetClass = classLoaderService.classForName( targetClassName );
-				indexLoadedClass( targetClass );
-			}
-		}
-
-
-		private boolean needsProcessing(DotName classDotName) {
-			if ( classDotName == null || OBJECT_DOT_NAME.equals( classDotName ) ) {
-				return false;
-			}
-
-			if ( processedClassNames.contains( classDotName ) ) {
-				return false;
-			}
-
-			processedClassNames.add( classDotName );
-			return true;
-		}
-
-		private ClassInfo indexResource(String resourceName) {
-			final URL resourceUrl = classLoaderService.locateResource( resourceName );
-
-			if ( resourceUrl == null ) {
-				throw new IllegalArgumentException( "Could not locate resource [" + resourceName + "]" );
-			}
-
-			try {
-				final InputStream stream = resourceUrl.openStream();
-				try {
-					final ClassInfo classInfo = indexer.index( stream );
-					furtherProcess( classInfo );
-					return classInfo;
-				}
-				catch ( IOException e ) {
-					throw new HibernateException( "Unable to index from resource stream [" + resourceName + "]", e );
-				}
-				finally {
-					try {
-						stream.close();
-					}
-					catch ( IOException e ) {
-						log.debug( "Unable to close resource stream [" + resourceName + "] : " + e.getMessage() );
-					}
-				}
-			}
-			catch ( IOException e ) {
-				throw new HibernateException( "Unable to open input stream for resource [" + resourceName + "]", e );
-			}
-		}
-
-		private void furtherProcess(ClassInfo classInfo) {
-			final List<AnnotationInstance> entityListenerAnnotations = classInfo.annotations().get( JPADotNames.ENTITY_LISTENERS );
-			if ( entityListenerAnnotations != null ) {
-				for ( AnnotationInstance entityListenerAnnotation : entityListenerAnnotations ) {
-					final Type[] entityListenerClassTypes = entityListenerAnnotation.value().asClassArray();
-					for ( Type entityListenerClassType : entityListenerClassTypes ) {
-						indexClassName( entityListenerClassType.name() );
-					}
-				}
-			}
-
-			// todo : others?
-		}
-
-		private void indexClassName(DotName classDotName) {
-			if ( !needsProcessing( classDotName ) ) {
-				return;
-			}
-
-			ClassInfo classInfo = indexResource( classDotName.toString().replace( '.', '/' ) + ".class" );
-			if ( classInfo.superName() != null ) {
-				indexClassName( classInfo.superName() );
-			}
-		}
-
-		private void indexHbmReferences(JaxbHibernateMapping hbmRoot) {
-			final String packageName = hbmRoot.getPackage();
-
-			for ( JaxbClassElement hbmRootClass : hbmRoot.getClazz() ) {
-				if ( StringHelper.isNotEmpty( hbmRootClass.getName() ) ) {
-					indexClassName( toDotName( hbmRootClass.getName(), packageName ) );
-
-					for ( JaxbSubclassElement hbmSubclassElement : hbmRootClass.getSubclass() ) {
-						processHbmSubclass( hbmSubclassElement, packageName );
-					}
-
-					for ( JaxbJoinedSubclassElement hbmJoinedSubclass : hbmRootClass.getJoinedSubclass() ) {
-						processHbmJoinedSubclass( hbmJoinedSubclass, packageName );
-					}
-
-					for ( JaxbUnionSubclassElement hbmUnionSubclass : hbmRoot.getUnionSubclass() ) {
-						processHbmUnionSubclass( hbmUnionSubclass, packageName );
-					}
-				}
-			}
-
-			for ( JaxbSubclassElement hbmSubclassElement : hbmRoot.getSubclass() ) {
-				if ( StringHelper.isNotEmpty( hbmSubclassElement.getName() ) ) {
-					processHbmSubclass( hbmSubclassElement, packageName );
-				}
-			}
-
-			for ( JaxbJoinedSubclassElement hbmJoinedSubclass : hbmRoot.getJoinedSubclass() ) {
-				if ( StringHelper.isNotEmpty( hbmJoinedSubclass.getName() ) ) {
-					processHbmJoinedSubclass( hbmJoinedSubclass, packageName );
-				}
-			}
-
-			for ( JaxbUnionSubclassElement hbmUnionSubclass : hbmRoot.getUnionSubclass() ) {
-				if ( StringHelper.isNotEmpty( hbmUnionSubclass.getName() ) ) {
-					processHbmUnionSubclass( hbmUnionSubclass, packageName );
-				}
-			}
 		}
 
 		private DotName toDotName(String className, String packageName) {
@@ -804,30 +644,6 @@ public class MetadataSources {
 			}
 
 			return DotName.createSimple( className );
-		}
-
-		private void processHbmSubclass(JaxbSubclassElement hbmSubclassElement, String packageName) {
-			indexClassName( toDotName( hbmSubclassElement.getName(), packageName ) );
-
-			for ( JaxbSubclassElement hbmSubclassElement2 : hbmSubclassElement.getSubclass() ) {
-				processHbmSubclass( hbmSubclassElement2, packageName );
-			}
-		}
-
-		private void processHbmJoinedSubclass(JaxbJoinedSubclassElement hbmJoinedSubclass, String packageName) {
-			indexClassName( toDotName( hbmJoinedSubclass.getName(), packageName ) );
-
-			for ( JaxbJoinedSubclassElement hbmJoinedSubclass2 : hbmJoinedSubclass.getJoinedSubclass() ) {
-				processHbmJoinedSubclass( hbmJoinedSubclass2, packageName );
-			}
-		}
-
-		private void processHbmUnionSubclass(JaxbUnionSubclassElement hbmUnionSubclass, String packageName) {
-			indexClassName( toDotName( hbmUnionSubclass.getName(), packageName ) );
-
-			for ( JaxbUnionSubclassElement hbmUnionSubclass2 : hbmUnionSubclass.getUnionSubclass() ) {
-				processHbmUnionSubclass( hbmUnionSubclass2, packageName );
-			}
 		}
 
 		private boolean isMappingMetadataComplete(JaxbEntityMappings ormXmlRoot) {
@@ -847,19 +663,19 @@ public class MetadataSources {
 			}
 
 			for ( JaxbConverter jaxbConverter : ormXmlRoot.getConverter() ) {
-				indexClassName( toDotName( jaxbConverter.getClazz(), packageName ) );
+				jandexInitManager.indexClassName( toDotName( jaxbConverter.getClazz(), packageName ) );
 			}
 
 			for ( JaxbEmbeddable jaxbEmbeddable : ormXmlRoot.getEmbeddable() ) {
-				indexClassName( toDotName( jaxbEmbeddable.getClazz(), packageName ) );
+				jandexInitManager.indexClassName( toDotName( jaxbEmbeddable.getClazz(), packageName ) );
 			}
 
 			for ( JaxbMappedSuperclass jaxbMappedSuperclass : ormXmlRoot.getMappedSuperclass() ) {
-				indexClassName( toDotName( jaxbMappedSuperclass.getClazz(), packageName ) );
+				jandexInitManager.indexClassName( toDotName( jaxbMappedSuperclass.getClazz(), packageName ) );
 			}
 
 			for ( JaxbEntity jaxbEntity : ormXmlRoot.getEntity() ) {
-				indexClassName( toDotName( jaxbEntity.getClazz(), packageName ) );
+				jandexInitManager.indexClassName( toDotName( jaxbEntity.getClazz(), packageName ) );
 				indexEntityListeners( jaxbEntity.getEntityListeners(), packageName );
 			}
 		}
@@ -871,7 +687,7 @@ public class MetadataSources {
 
 			for ( JaxbEntityListener listener : listeners.getEntityListener() ) {
 				if ( StringHelper.isNotEmpty( listener.getClazz() ) ) {
-					indexClassName( toDotName( listener.getClazz(), packageName ) );
+					jandexInitManager.indexClassName( toDotName( listener.getClazz(), packageName ) );
 				}
 			}
 		}

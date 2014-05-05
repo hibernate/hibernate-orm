@@ -31,19 +31,21 @@ import java.util.HashMap;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.scan.internal.StandardJpaScanEnvironmentImpl;
-import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
-import org.hibernate.jpa.boot.scan.spi.ScanEnvironment;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
+import org.hibernate.jpa.boot.internal.StandardJpaScanEnvironmentImpl;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.boot.scan.internal.StandardScanner;
-import org.hibernate.jpa.boot.spi.ClassDescriptor;
-import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
-import org.hibernate.jpa.boot.spi.NamedInputStream;
-import org.hibernate.jpa.boot.scan.spi.ScanResult;
-import org.hibernate.jpa.boot.scan.spi.Scanner;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanOptions;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanner;
+import org.hibernate.metamodel.archive.scan.spi.ClassDescriptor;
+import org.hibernate.metamodel.archive.scan.spi.JandexInitializer;
+import org.hibernate.metamodel.archive.scan.spi.MappingFileDescriptor;
+import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
+import org.hibernate.metamodel.archive.scan.spi.ScanOptions;
+import org.hibernate.metamodel.archive.scan.spi.ScanParameters;
+import org.hibernate.metamodel.archive.scan.spi.ScanResult;
+import org.hibernate.metamodel.archive.scan.spi.Scanner;
+import org.hibernate.metamodel.internal.JandexInitManager;
 
 import org.junit.Test;
 
@@ -66,7 +68,17 @@ public class ScannerTest extends PackagingTestCase {
 		ScanEnvironment env = new StandardJpaScanEnvironmentImpl( descriptor );
 		ScanOptions options = new StandardScanOptions( "hbm,class", descriptor.isExcludeUnlistedClasses() );
 		Scanner scanner = new StandardScanner();
-		ScanResult scanResult = scanner.scan( env, options );
+		ScanResult scanResult = scanner.scan(
+				env,
+				options,
+				new ScanParameters() {
+					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+						return jandexInitManager;
+					}
+				}
+		);
 
 		assertEquals( 3, scanResult.getLocatedClasses().size() );
 		assertClassesContained( scanResult, ApplicationServer.class );
@@ -77,11 +89,6 @@ public class ScannerTest extends PackagingTestCase {
 			assertNotNull( mappingFileDescriptor.getName() );
 			assertNotNull( mappingFileDescriptor.getStreamAccess() );
 			InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
-			assertNotNull( stream );
-			stream.close();
-			NamedInputStream namedInputStream = mappingFileDescriptor.getStreamAccess().asNamedInputStream();
-			assertNotNull( namedInputStream );
-			stream = namedInputStream.getStream();
 			assertNotNull( stream );
 			stream.close();
 		}

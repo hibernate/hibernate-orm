@@ -36,25 +36,25 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
-import org.hibernate.jpa.boot.archive.internal.ExplodedArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.JarFileBasedArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.JarProtocolArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
-import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
-import org.hibernate.jpa.boot.internal.ClassDescriptorImpl;
-import org.hibernate.jpa.boot.scan.internal.ResultCoordinator;
-import org.hibernate.jpa.boot.scan.internal.ScanResultCollector;
-import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
-import org.hibernate.jpa.boot.scan.internal.StandardScanner;
-import org.hibernate.jpa.boot.scan.spi.ArchiveContextImpl;
-import org.hibernate.jpa.boot.scan.spi.ScanEnvironment;
-import org.hibernate.jpa.boot.scan.spi.ScanResult;
-import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
 import org.hibernate.jpa.test.pack.explodedpar.Carpet;
+import org.hibernate.metamodel.archive.internal.ArchiveHelper;
+import org.hibernate.metamodel.archive.internal.ExplodedArchiveDescriptor;
+import org.hibernate.metamodel.archive.internal.JarFileBasedArchiveDescriptor;
+import org.hibernate.metamodel.archive.internal.JarProtocolArchiveDescriptor;
+import org.hibernate.metamodel.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.metamodel.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.metamodel.archive.scan.internal.ScanResultCollector;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanOptions;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanner;
+import org.hibernate.metamodel.archive.scan.spi.AbstractScannerImpl;
+import org.hibernate.metamodel.archive.scan.spi.JandexInitializer;
+import org.hibernate.metamodel.archive.scan.spi.MappingFileDescriptor;
+import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
+import org.hibernate.metamodel.archive.scan.spi.ScanParameters;
+import org.hibernate.metamodel.archive.scan.spi.ScanResult;
+import org.hibernate.metamodel.archive.spi.ArchiveDescriptor;
+import org.hibernate.metamodel.internal.JandexInitManager;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -97,7 +97,17 @@ public class JarVisitorTest extends PackagingTestCase {
 
 	private ScanResult standardScan(URL url) {
 		ScanEnvironment env = new ScanEnvironmentImpl( url );
-		return new StandardScanner().scan( env, new StandardScanOptions() );
+		return new StandardScanner().scan(
+				env,
+				new StandardScanOptions(),
+				new ScanParameters() {
+					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+						return jandexInitManager;
+					}
+				}
+		);
 	}
 
 	private static class ScanEnvironmentImpl implements ScanEnvironment {
@@ -125,11 +135,6 @@ public class JarVisitorTest extends PackagingTestCase {
 		@Override
 		public List<String> getExplicitlyListedMappingFiles() {
 			return Collections.emptyList();
-		}
-
-		@Override
-		public PersistenceUnitDescriptor getPersistenceUnitDescriptor() {
-			return null;
 		}
 	}
 
@@ -178,14 +183,20 @@ public class JarVisitorTest extends PackagingTestCase {
 		);
 
 		ScanEnvironment environment = new ScanEnvironmentImpl( rootUrl );
-		ScanResultCollector collector = new ScanResultCollector( environment, new StandardScanOptions() );
+		ScanResultCollector collector = new ScanResultCollector(
+				environment,
+				new StandardScanOptions(),
+				new ScanParameters() {
+					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+						return jandexInitManager;
+					}
+				}
+		);
 
 		archiveDescriptor.visitArchive(
-				new ArchiveContextImpl(
-						environment,
-						true,
-						new ResultCoordinator( collector )
-				)
+				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
 		);
 
 		validateResults(
@@ -203,14 +214,20 @@ public class JarVisitorTest extends PackagingTestCase {
 		);
 
 		environment = new ScanEnvironmentImpl( rootUrl );
-		collector = new ScanResultCollector( environment, new StandardScanOptions() );
+		collector = new ScanResultCollector(
+				environment,
+				new StandardScanOptions(),
+				new ScanParameters() {
+					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+						return jandexInitManager;
+					}
+				}
+		);
 
 		archiveDescriptor.visitArchive(
-				new ArchiveContextImpl(
-						environment,
-						true,
-						new ResultCoordinator( collector )
-				)
+				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
 		);
 		validateResults(
 				collector.toScanResult(),
@@ -234,14 +251,20 @@ public class JarVisitorTest extends PackagingTestCase {
 		);
 
 		final ScanEnvironment environment = new ScanEnvironmentImpl( rootUrl );
-		final ScanResultCollector collector = new ScanResultCollector( environment, new StandardScanOptions() );
+		final ScanResultCollector collector = new ScanResultCollector(
+				environment,
+				new StandardScanOptions(),
+				new ScanParameters() {
+					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+						return jandexInitManager;
+					}
+				}
+		);
 
 		archiveDescriptor.visitArchive(
-				new ArchiveContextImpl(
-						environment,
-						true,
-						new ResultCoordinator( collector )
-				)
+				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
 		);
 
 		validateResults(

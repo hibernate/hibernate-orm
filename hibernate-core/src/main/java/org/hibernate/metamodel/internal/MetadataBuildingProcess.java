@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,14 +44,12 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -58,10 +59,21 @@ import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.SessionFactoryBuilder;
+import org.hibernate.metamodel.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanner;
+import org.hibernate.metamodel.archive.scan.spi.ClassDescriptor;
+import org.hibernate.metamodel.archive.scan.spi.JandexInitializer;
+import org.hibernate.metamodel.archive.scan.spi.MappingFileDescriptor;
+import org.hibernate.metamodel.archive.scan.spi.PackageDescriptor;
+import org.hibernate.metamodel.archive.scan.spi.ScanParameters;
+import org.hibernate.metamodel.archive.scan.spi.ScanResult;
+import org.hibernate.metamodel.archive.scan.spi.Scanner;
+import org.hibernate.metamodel.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.metamodel.internal.binder.Binder;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
@@ -137,19 +149,53 @@ public class MetadataBuildingProcess {
 	private static final Logger log = Logger.getLogger( MetadataBuildingProcess.class );
 
 	public static MetadataImpl build(MetadataSources sources, final MetadataBuildingOptions options) {
+		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
+				options.getTempClassLoader(),
+				options.getServiceRegistry()
+		);
+
+		final JandexInitManager jandexInitializer = buildJandexInitializer( options, classLoaderAccess );
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// preliminary phases
-		final IndexView jandexView = handleJandex( options, sources );
+		// scanning - Jandex initialization and source discovery
+		if ( options.getScanEnvironment() != null ) {
+			final Scanner scanner = buildScanner( options, classLoaderAccess );
+			final ScanResult scanResult = scanner.scan(
+					options.getScanEnvironment(),
+					options.getScanOptions(),
+					new ScanParameters() {
+						@Override
+						public JandexInitializer getJandexInitializer() {
+							return jandexInitializer;
+						}
+					}
+			);
+
+			// Add to the MetadataSources any classes/packages/mappings discovered during scanning
+			addScanResultsToSources( scanResult, sources );
+		}
+
+		// todo : add options.getScanEnvironment().getExplicitlyListedClassNames() to jandex?
+		//		^^ - another option is to make sure that they are added to sources
+
+		if ( !jandexInitializer.wasIndexSupplied() ) {
+			// If the Jandex Index(View) was supplied, we consider that supplied
+			// one "complete".
+			// Here though we were NOT supplied an index; in this case we want to
+			// additionally ensure that any-and-all "known" classes are added to
+			// the index we are building
+			sources.indexKnownClasses( jandexInitializer );
+		}
+
+		final IndexView jandexView = augmentJandexFromMappings( jandexInitializer.buildIndex(), sources, options );
+
+
 		final BasicTypeRegistry basicTypeRegistry = handleTypes( options );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// prep to start handling binding in earnest
 		final MappingDefaultsImpl mappingDefaults = new MappingDefaultsImpl( options );
-		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-				options.getTempClassLoader(),
-				options.getServiceRegistry()
-		);
 		final JandexAccessImpl jandexAccess = new JandexAccessImpl(
 				jandexView,
 				classLoaderAccess
@@ -229,22 +275,154 @@ public class MetadataBuildingProcess {
 		return metadataCollector.buildMetadataInstance();
 	}
 
-	private static IndexView handleJandex(MetadataBuildingOptions options, MetadataSources sources) {
-		final ConfigurationService configurationService = options.getServiceRegistry().getService( ConfigurationService.class );
+	private static JandexInitManager buildJandexInitializer(
+			MetadataBuildingOptions options,
+			ClassLoaderAccess classLoaderAccess) {
+		final boolean autoIndexMembers = ConfigurationHelper.getBoolean(
+				org.hibernate.cfg.AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES,
+				options.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
+				false
+		);
 
-		final IndexView baseJandexIndex;
-		if ( options.getJandexView() != null ) {
-			baseJandexIndex = options.getJandexView();
+		return new JandexInitManager( options.getJandexView(), classLoaderAccess, autoIndexMembers );
+	}
+
+	private static final Class[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
+
+	private static Scanner buildScanner(MetadataBuildingOptions options, ClassLoaderAccess classLoaderAccess) {
+		final Object scannerSetting = options.getScanner();
+		final ArchiveDescriptorFactory archiveDescriptorFactory = options.getArchiveDescriptorFactory();
+
+		if ( scannerSetting == null ) {
+			// No custom Scanner specified, use the StandardScanner
+			if ( archiveDescriptorFactory == null ) {
+				return new StandardScanner();
+			}
+			else {
+				return new StandardScanner( archiveDescriptorFactory );
+			}
 		}
 		else {
-			final boolean autoIndexMemberTypes = configurationService.getSetting(
-					AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES,
-					StandardConverters.BOOLEAN,
-					false
-			);
-			baseJandexIndex = sources.buildJandexView( autoIndexMemberTypes );
+			if ( Scanner.class.isInstance( scannerSetting ) ) {
+				if ( archiveDescriptorFactory != null ) {
+					throw new IllegalStateException(
+							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
+									"specify one or the other, or if you need to supply both, Scanner class to use " +
+									"(assuming it has a constructor accepting a ArchiveDescriptorFactory).  " +
+									"Alternatively, just pass the ArchiveDescriptorFactory during your own " +
+									"Scanner constructor assuming it is statically known."
+					);
+				}
+				return (Scanner) scannerSetting;
+			}
+
+			final Class<? extends  Scanner> scannerImplClass;
+			if ( Class.class.isInstance( scannerSetting ) ) {
+				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
+			}
+			else {
+				scannerImplClass = classLoaderAccess.classForName( scannerSetting.toString() );
+			}
+
+
+			if ( archiveDescriptorFactory != null ) {
+				// find the single-arg constructor - its an error if none exists
+				try {
+					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
+					try {
+						return constructor.newInstance( archiveDescriptorFactory );
+					}
+					catch (Exception e) {
+						throw new IllegalStateException(
+								"Error trying to instantiate custom specified Scanner [" +
+										scannerImplClass.getName() + "]",
+								e
+						);
+					}
+				}
+				catch (NoSuchMethodException e) {
+					throw new IllegalArgumentException(
+							"Configuration named a custom Scanner and a custom ArchiveDescriptorFactory, but " +
+									"Scanner impl did not define a constructor accepting ArchiveDescriptorFactory"
+					);
+				}
+			}
+			else {
+				// could be either ctor form...
+				// find the single-arg constructor - its an error if none exists
+				try {
+					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
+					try {
+						return constructor.newInstance( StandardArchiveDescriptorFactory.INSTANCE );
+					}
+					catch (Exception e) {
+						throw new IllegalStateException(
+								"Error trying to instantiate custom specified Scanner [" +
+										scannerImplClass.getName() + "]",
+								e
+						);
+					}
+				}
+				catch (NoSuchMethodException e) {
+					try {
+						final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor();
+						try {
+							return constructor.newInstance();
+						}
+						catch (Exception e2) {
+							throw new IllegalStateException(
+									"Error trying to instantiate custom specified Scanner [" +
+											scannerImplClass.getName() + "]",
+									e2
+							);
+						}
+					}
+					catch (NoSuchMethodException ignore) {
+						throw new IllegalArgumentException(
+								"Configuration named a custom Scanner, but we were unable to locate " +
+										"an appropriate constructor"
+						);
+					}
+				}
+			}
+		}
+	}
+
+	private static void addScanResultsToSources(ScanResult scanResult, MetadataSources sources) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Add mapping files found as a result of scanning
+		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
+			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
+			try {
+				sources.addInputStream( stream );
+			}
+			finally {
+				try {
+					stream.close();
+				}
+				catch ( IOException ignore ) {
+					log.trace( "Was unable to close input stream" );
+				}
+			}
 		}
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Add packages found as a result of scanning
+		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
+			sources.addPackage( packageDescriptor.getName() );
+		}
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Add classes found as a result of scanning
+		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
+			sources.addAnnotatedClassName( classDescriptor.getName() );
+		}
+	}
+
+	private static IndexView augmentJandexFromMappings(
+			IndexView baseJandexIndex,
+			MetadataSources sources,
+			MetadataBuildingOptions options) {
 		final List<BindResult<JaxbEntityMappings>> jpaXmlBindings = new ArrayList<BindResult<JaxbEntityMappings>>();
 		for ( BindResult bindResult : sources.getBindResultList() ) {
 			if ( JaxbEntityMappings.class.isInstance( bindResult.getRoot() ) ) {

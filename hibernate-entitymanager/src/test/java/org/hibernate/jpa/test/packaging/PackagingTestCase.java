@@ -69,6 +69,7 @@ import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.fail;
 
@@ -76,7 +77,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
-public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
+public abstract class PackagingTestCase extends BaseUnitTestCase {
 	protected static ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 	protected static ClassLoader bundleClassLoader;
 	protected static File packageTargetDir;
@@ -290,11 +291,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class,fileName );
 		archive.addClasses(
 				Morito.class,
-				Item.class,
-				Distributor.class,
-				Cat.class,
-				Kitten.class,
-				LastUpdateListener.class
+				Item.class
 		);
 
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );

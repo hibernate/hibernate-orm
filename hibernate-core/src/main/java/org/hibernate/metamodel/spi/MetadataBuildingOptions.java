@@ -32,6 +32,10 @@ import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
+import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
+import org.hibernate.metamodel.archive.scan.spi.ScanOptions;
+import org.hibernate.metamodel.archive.scan.spi.Scanner;
+import org.hibernate.metamodel.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.type.BasicType;
 
@@ -79,6 +83,39 @@ public interface MetadataBuildingOptions {
 	 * @return The Jandex index
 	 */
 	IndexView getJandexView();
+
+	/**
+	 * Access to the options to be used for scanning
+	 *
+	 * @return The scan options
+	 */
+	ScanOptions getScanOptions();
+
+	/**
+	 * Access to the environment for scanning.  Consider this temporary; see discussion on
+	 * {@link ScanEnvironment}
+	 *
+	 * @return The scan environment
+	 */
+	ScanEnvironment getScanEnvironment();
+
+	/**
+	 * Access to the Scanner to be used for scanning.  Can be:<ul>
+	 *     <li>A Scanner instance</li>
+	 *     <li>A Class reference to the Scanner implementor</li>
+	 *     <li>A String naming the Scanner implementor</li>
+	 * </ul>
+	 *
+	 * @return The scanner
+	 */
+	Object getScanner();
+
+	/**
+	 * Access to the ArchiveDescriptorFactory to be used for scanning
+	 *
+	 * @return The ArchiveDescriptorFactory
+	 */
+	ArchiveDescriptorFactory getArchiveDescriptorFactory();
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by

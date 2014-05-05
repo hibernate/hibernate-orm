@@ -1,10 +1,10 @@
 package org.hibernate.jpa.test.packaging;
 
-import org.hibernate.jpa.boot.scan.internal.StandardScanner;
-import org.hibernate.jpa.boot.scan.spi.ScanEnvironment;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
-import org.hibernate.jpa.boot.scan.spi.ScanResult;
-import org.hibernate.jpa.boot.scan.spi.Scanner;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanner;
+import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
+import org.hibernate.metamodel.archive.scan.spi.ScanOptions;
+import org.hibernate.metamodel.archive.scan.spi.ScanParameters;
+import org.hibernate.metamodel.archive.scan.spi.Scanner;
 
 /**
  * @author Emmanuel Bernard
@@ -22,8 +22,11 @@ public class CustomScanner implements Scanner {
 	}
 
 	@Override
-	public ScanResult scan(ScanEnvironment environment, ScanOptions options) {
+	public org.hibernate.metamodel.archive.scan.spi.ScanResult scan(
+			ScanEnvironment environment,
+			ScanOptions options,
+			ScanParameters parameters) {
 		isUsed = true;
-		return delegate.scan( environment, options );
+		return delegate.scan( environment, options, parameters );
 	}
 }

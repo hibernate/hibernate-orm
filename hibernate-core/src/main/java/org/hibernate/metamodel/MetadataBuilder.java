@@ -28,6 +28,10 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
+import org.hibernate.metamodel.archive.scan.spi.ScanOptions;
+import org.hibernate.metamodel.archive.scan.spi.Scanner;
+import org.hibernate.metamodel.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.metamodel.spi.PersistentAttributeMemberResolver;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.type.BasicType;
@@ -108,6 +112,42 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder with(IndexView jandexView);
+
+	/**
+	 * Specify the options to be used in performing scanning.
+	 *
+	 * @param scanOptions The scan options.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public MetadataBuilder with(ScanOptions scanOptions);
+
+	/**
+	 * Consider this temporary as discussed on {@link ScanEnvironment}
+	 *
+	 * @param scanEnvironment The environment for scanning
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public MetadataBuilder with(ScanEnvironment scanEnvironment);
+
+	/**
+	 * Specify a particular Scanner instance to use.
+	 *
+	 * @param scanner The scanner to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public MetadataBuilder with(Scanner scanner);
+
+	/**
+	 * Specify a particular ArchiveDescriptorFactory instance to use in scanning.
+	 *
+	 * @param factory The ArchiveDescriptorFactory to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public MetadataBuilder with(ArchiveDescriptorFactory factory);
 
 	/**
 	 * Should the new (well "new" since 3.2) identifier generators be used for

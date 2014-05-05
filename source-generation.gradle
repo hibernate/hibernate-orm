@@ -74,9 +74,6 @@ class SourceGenerationPlugin implements Plugin<Project> {
 }
 
 class SourceGenerationPluginConvention {
-	public static final String LOGGING_DEPENDENCY_CONFIG_NAME = "jbossLoggingTool";
-	public static final String LOGGING_PROCESSOR_NAME = "org.jboss.logging.processor.apt.LoggingToolsProcessor";
-
 	public static final String METAGEN_DEPENDENCY_CONFIG_NAME = "hibernateJpaModelGenTool";
 	public static final String METAGEN_PROCESSOR_NAME = "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor";
 
@@ -88,12 +85,6 @@ class SourceGenerationPluginConvention {
 
 	SourceGenerationPluginConvention(Project project) {
 		this.project = project
-	}
-
-	public void addLoggingProcessor(SourceSet sourceSet) {
-		AnnotationProcessorOnlyTask task = getLocateProcessorOnlyTask( sourceSet )
-		task.processors += LOGGING_PROCESSOR_NAME
-		task.classpath += project.configurations[LOGGING_DEPENDENCY_CONFIG_NAME];
 	}
 
 	private AnnotationProcessorOnlyTask getLocateProcessorOnlyTask(SourceSet sourceSet) {

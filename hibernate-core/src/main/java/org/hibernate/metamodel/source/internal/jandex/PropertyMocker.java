@@ -31,6 +31,7 @@ import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmType;
@@ -38,6 +39,7 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKey;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyClass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyJoinColumn;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbOnDeleteType;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -264,8 +266,26 @@ public abstract class PropertyMocker extends AnnotationMocker {
 	
 	//@Type
 	protected AnnotationInstance parseType(String name, AnnotationTarget target) {
-		List<AnnotationValue> typeAnnotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.stringValue( "type", name, typeAnnotationValueList );
-		return create( HibernateDotNames.TYPE, target, typeAnnotationValueList );
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "type", name, annotationValueList );
+		return create( HibernateDotNames.TYPE, target, annotationValueList );
+	}
+	
+	//@OnDelete
+	protected void parseOnDelete(JaxbOnDeleteType onDelete, AnnotationTarget target) {
+		if (onDelete != null) {
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			OnDeleteAction action;
+			switch (onDelete) {
+				case CASCADE:
+					action = OnDeleteAction.CASCADE;
+					break;
+				default:
+					action = OnDeleteAction.NO_ACTION;
+			}
+			MockHelper.enumValue( "action", DotName.createSimple( OnDeleteAction.class.getName() ), action,
+					annotationValueList );
+			create( HibernateDotNames.ON_DELETE, target, annotationValueList );
+		}
 	}
 }

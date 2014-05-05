@@ -26,26 +26,26 @@
  */
 package org.hibernate.test.resulttransformer;
 
-import java.sql.ResultSet;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.ResultTransformer;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Sharath Reddy
  */
+@FailureExpectedWithNewUnifiedXsd(message = "named query return-join")
 public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -35,6 +35,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
@@ -50,6 +51,7 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
 public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

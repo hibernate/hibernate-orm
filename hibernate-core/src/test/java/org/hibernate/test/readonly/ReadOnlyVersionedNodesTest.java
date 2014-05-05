@@ -24,9 +24,9 @@
 package org.hibernate.test.readonly;
 
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +36,7 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {

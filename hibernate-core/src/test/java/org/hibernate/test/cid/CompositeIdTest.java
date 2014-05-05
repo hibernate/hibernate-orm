@@ -40,12 +40,14 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "MultipleBagFetchException")
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

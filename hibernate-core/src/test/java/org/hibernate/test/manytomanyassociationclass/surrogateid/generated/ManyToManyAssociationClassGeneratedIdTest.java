@@ -31,6 +31,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static org.junit.Assert.fail;
 
@@ -39,6 +40,7 @@ import static org.junit.Assert.fail;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "mapping looks off: Membership and subclass have Serializable id, but mapping uses type=long")
 public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override
 	public String[] getMappings() {

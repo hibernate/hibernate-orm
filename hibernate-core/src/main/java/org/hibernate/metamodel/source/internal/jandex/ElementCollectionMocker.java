@@ -84,6 +84,7 @@ public class ElementCollectionMocker extends PropertyMocker {
 		parseMapKey( elementCollection.getMapKey(), getTarget() );
 		parseMapKeyColumn( elementCollection.getMapKeyColumn(), getTarget() );
 		parseMapKeyClass( elementCollection.getMapKeyClass(), getTarget() );
+		parseMapKeyType( elementCollection.getMapKeyType(), getTarget() );
 		parseMapKeyEnumerated( elementCollection.getMapKeyEnumerated(), getTarget() );
 		parseMapKeyTemporal( elementCollection.getMapKeyTemporal(), getTarget() );
 	}

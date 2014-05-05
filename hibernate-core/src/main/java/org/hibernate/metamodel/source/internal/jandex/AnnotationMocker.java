@@ -162,7 +162,15 @@ public abstract class AnnotationMocker extends AbstractMocker {
 		if ( column == null ) {
 			return null;
 		}
+		
+		// TODO: Not sure if this should be here...
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "forColumn", column.getName(), annotationValueList );
+		MockHelper.stringValue( "read", column.getRead(), annotationValueList );
+		MockHelper.stringValue( "write", column.getWrite(), annotationValueList );
+		create( HibernateDotNames.COLUMN_TRANSFORMER, target, annotationValueList );
+		
+		annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", column.getName(), annotationValueList );
 		MockHelper.stringValue( "columnDefinition", column.getColumnDefinition(), annotationValueList );
 		MockHelper.stringValue( "table", column.getTable(), annotationValueList );

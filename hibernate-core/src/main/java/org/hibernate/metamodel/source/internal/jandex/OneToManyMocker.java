@@ -57,9 +57,15 @@ public class OneToManyMocker extends PropertyMocker {
 			MockHelper.stringValue( "type", collectionTypeName, annotationValueList );
 			create( HibernateDotNames.COLLECTION_TYPE, annotationValueList );
 		}
-		if (oneToMany.isInverse()) {
+		if (oneToMany.isInverse() != null && oneToMany.isInverse()) {
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 			create( HibernateDotNames.INVERSE, getTarget(), annotationValueList );
+		}
+		if (oneToMany.getHbmFetchMode() != null) {
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.enumValue( "value", HibernateDotNames.FETCH_MODE, oneToMany.getHbmFetchMode(),
+					annotationValueList );
+			create( HibernateDotNames.FETCH, getTarget(), annotationValueList );
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue( "targetEntity", oneToMany.getTargetEntity(), annotationValueList, getDefaults(),
@@ -80,6 +86,7 @@ public class OneToManyMocker extends PropertyMocker {
 		parseJoinColumnList( oneToMany.getJoinColumn(), getTarget() );
 		parseOrderColumn( oneToMany.getOrderColumn(), getTarget() );
 		parseJoinTable( oneToMany.getJoinTable(), getTarget() );
+		parseOnDelete( oneToMany.getOnDelete(), getTarget() );
 		if ( oneToMany.getOrderBy() != null ) {
 			create( ORDER_BY, getTarget(), MockHelper.stringValueArray( "value", oneToMany.getOrderBy() ) );
 		}

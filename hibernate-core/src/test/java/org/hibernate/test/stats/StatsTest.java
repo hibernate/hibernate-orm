@@ -36,6 +36,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.QueryStatistics;
 
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -48,6 +49,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewUnifiedXsd(message = "What does <import> translate to in annotations?")
 public class StatsTest extends BaseUnitTestCase {
 	public String[] getMappings() {
 		return new String[] { "stats/Continent.hbm.xml" };

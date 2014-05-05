@@ -43,6 +43,7 @@ import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.Filter;
@@ -138,6 +139,7 @@ public interface HibernateDotNames {
 	DotName DYNAMIC_INSERT = DotName.createSimple( DynamicInsert.class.getName() );
 	DotName DYNAMIC_UPDATE = DotName.createSimple( DynamicUpdate.class.getName() );
 	DotName FETCH = DotName.createSimple( Fetch.class.getName() );
+	DotName FETCH_MODE = DotName.createSimple( FetchMode.class.getName() );
 	DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
 	DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );
 	DotName FETCH_OVERRIDE = DotName.createSimple( FetchProfile.FetchOverride.class.getName() );

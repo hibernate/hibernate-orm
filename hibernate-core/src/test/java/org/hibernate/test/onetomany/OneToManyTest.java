@@ -24,9 +24,9 @@
 package org.hibernate.test.onetomany;
 
 import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -36,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "onetomany/Parent.hbm.xml" };

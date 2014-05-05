@@ -1,28 +1,12 @@
 package org.hibernate.envers.event.spi;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.IndexView;
-import org.jboss.logging.Logger;
-
-import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.envers.configuration.internal.AnnotationProxyBuilder;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
@@ -38,10 +22,14 @@ import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.AttributeContainer;
-import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+import org.jboss.logging.Logger;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -72,7 +60,6 @@ public class EnversJaxbRootProducer implements AdditionalJaxbRootProducer {
 		private final InFlightMetadataCollector metadataCollector;
 		private final AdditionalJaxbRootProducerContext additionalJaxbRootProducerContext;
 		private final AnnotationProxyBuilder annotationProxyBuilder = new AnnotationProxyBuilder();
-		private final MappingXmlBinder jaxbProcessor;
 		private final List<BindResult> bindResults = new ArrayList<BindResult>();
 		private final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
 		private final GlobalConfiguration globalCfg;
@@ -88,9 +75,6 @@ public class EnversJaxbRootProducer implements AdditionalJaxbRootProducer {
 			final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
 			this.revInfoCfgResult = revInfoCfg.configure( metadataCollector, additionalJaxbRootProducerContext );
 			this.auditEntCfg = new AuditEntitiesConfiguration( additionalJaxbRootProducerContext.getServiceRegistry(), revInfoCfgResult.getRevisionInfoEntityName() );
-			jaxbProcessor = new MappingXmlBinder(
-					additionalJaxbRootProducerContext.getServiceRegistry()
-			);
 		}
 
 		@Override
@@ -175,22 +159,7 @@ public class EnversJaxbRootProducer implements AdditionalJaxbRootProducer {
 
 		@Override
 		public void addDocument(org.w3c.dom.Document document) {
-
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			Source xmlSource = new DOMSource( document );
-			Result outputTarget = new StreamResult( outputStream );
-			try {
-				TransformerFactory.newInstance().newTransformer().transform(xmlSource, outputTarget);
-			}
-			catch ( TransformerConfigurationException ex ){
-				throw new MappingException( ex );
-			}
-			catch ( TransformerException ex ) {
-				throw new MappingException( ex );
-			}
-			InputStream is = new ByteArrayInputStream(outputStream.toByteArray());
-			bindResults.add( jaxbProcessor.bind( is, origin ) );
-
+			// TODO
 		}
 
 		private List<BindResult> getBindResults() {

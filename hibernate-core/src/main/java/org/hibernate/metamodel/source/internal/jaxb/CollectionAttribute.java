@@ -29,11 +29,19 @@ import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
 
 /**
- * Common interface for JAXB bindings that represent persistent attributes supporting Map collection types.
+ * Common interface for JAXB bindings that represent persistent collection attributes.
  *
  * @author Brett Meyer
  */
-public interface MapAttribute {
+public interface CollectionAttribute extends FetchableAttribute {
+
+    public String getOrderBy();
+
+    public void setOrderBy(String value);
+
+    public JaxbOrderColumn getOrderColumn();
+
+    public void setOrderColumn(JaxbOrderColumn value);
 	
 	public JaxbMapKey getMapKey();
 

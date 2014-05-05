@@ -30,6 +30,7 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -37,6 +38,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "m2o with orphan removal")
 public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "orphan/one2one/fk/reversed/unidirectional/Mapping.hbm.xml" };

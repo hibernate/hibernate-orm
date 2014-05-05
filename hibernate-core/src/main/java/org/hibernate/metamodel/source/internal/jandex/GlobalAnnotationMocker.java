@@ -27,8 +27,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFetchProfile.JaxbFetch;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef.JaxbFilterParam;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFetchProfile;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedNativeQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbQueryHint;
@@ -39,6 +45,7 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingEntit
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingFieldResult;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbTableGenerator;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 
 /**
@@ -72,6 +79,12 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 		}
 		if ( !globalAnnotations.getSqlResultSetMappingMap().isEmpty() ) {
 			parseSqlResultSetMappings( globalAnnotations.getSqlResultSetMappingMap().values() );
+		}
+		if ( !globalAnnotations.getFilterDefMap().isEmpty() ) {
+			parseFilterDefs( globalAnnotations.getFilterDefMap().values() );
+		}
+		if ( !globalAnnotations.getFetchProfileMap().isEmpty() ) {
+			parseFetchProfiles( globalAnnotations.getFetchProfileMap().values() );
 		}
 		indexBuilder.finishGlobalConfigurationMocking( globalAnnotations );
 	}
@@ -308,6 +321,100 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 						TABLE_GENERATOR, null, annotationValueList
 
 				);
+	}
+	
+	private void parseFilterDefs(Collection<JaxbHbmFilterDef> filterDefs) {
+		if (! filterDefs.isEmpty() ) {
+			AnnotationValue[] filterDefAnnotations = new AnnotationValue[filterDefs.size()];
+			int i = 0;
+			for ( JaxbHbmFilterDef filterDef : filterDefs ) {
+				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+				MockHelper.stringValue( "name", filterDef.getName(), annotationValueList );
+				MockHelper.stringValue( "defaultCondition", filterDef.getCondition(), annotationValueList );
+				nestedFilterParams( filterDef.getFilterParam(), annotationValueList );
+				
+				AnnotationInstance annotationInstance = create(
+						HibernateDotNames.FILTER_DEF, null, annotationValueList );
+				filterDefAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.addToCollectionIfNotNull( annotationValueList,
+					AnnotationValue.createArrayValue( "value", filterDefAnnotations ) );
+			
+			create( HibernateDotNames.FILTER_DEFS, null, annotationValueList );
+		}
+	}
+	
+	private void nestedFilterParams(List<JaxbFilterParam> filterParams, List<AnnotationValue> annotationValueList) {
+		if (! filterParams.isEmpty() ) {
+			AnnotationValue[] filterParamAnnotations = new AnnotationValue[filterParams.size()];
+			int i = 0;
+			for ( JaxbFilterParam filterParam : filterParams ) {
+				List<AnnotationValue> filterParamannotationValueList = new ArrayList<AnnotationValue>();
+				MockHelper.stringValue( "name", filterParam.getName(), filterParamannotationValueList );
+				MockHelper.stringValue( "type", filterParam.getType(), filterParamannotationValueList );
+				
+				AnnotationInstance annotationInstance = create(
+						HibernateDotNames.PARAM_DEF, null, filterParamannotationValueList );
+				filterParamAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			MockHelper.addToCollectionIfNotNull( annotationValueList,
+					AnnotationValue.createArrayValue( "parameters", filterParamAnnotations ) );
+		}
+	}
+	
+	private void parseFetchProfiles(Collection<JaxbHbmFetchProfile> fetchProfiles) {
+		if (! fetchProfiles.isEmpty() ) {
+			AnnotationValue[] fetchProfileAnnotations = new AnnotationValue[fetchProfiles.size()];
+			int i = 0;
+			for ( JaxbHbmFetchProfile fetchProfile : fetchProfiles ) {
+				AnnotationInstance annotationInstance = parseFetchProfile( fetchProfile );
+				fetchProfileAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.addToCollectionIfNotNull( annotationValueList,
+					AnnotationValue.createArrayValue( "value", fetchProfileAnnotations ) );
+			
+			create( HibernateDotNames.FETCH_PROFILES, null, annotationValueList );
+		}
+	}
+	
+	private AnnotationInstance parseFetchProfile(JaxbHbmFetchProfile fetchProfile) {
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "name", fetchProfile.getName(), annotationValueList );
+		
+		AnnotationValue[] fetchAnnotations = new AnnotationValue[fetchProfile.getFetch().size()];
+		int i = 0;
+		for ( JaxbFetch fetch : fetchProfile.getFetch() ) {
+			List<AnnotationValue> fetchAnnotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.stringValue( "association", fetch.getAssociation(), fetchAnnotationValueList );
+			MockHelper.classValue( "entity", fetch.getEntity(), fetchAnnotationValueList, getDefaults(),
+					indexBuilder.getServiceRegistry() );
+			MockHelper.enumValue( "mode", HibernateDotNames.FETCH_MODE, convertFetchMode( fetch.getStyle() ),
+					fetchAnnotationValueList );
+			AnnotationInstance annotationInstance = create(
+					HibernateDotNames.FETCH_OVERRIDE, null, fetchAnnotationValueList );
+			fetchAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+		}
+		
+		MockHelper.addToCollectionIfNotNull( annotationValueList,
+				AnnotationValue.createArrayValue( "fetchOverrides", fetchAnnotations ) );
+		
+		return create(HibernateDotNames.FETCH_PROFILE, null, annotationValueList );
+	}
+	
+	private FetchMode convertFetchMode(String fetchMode) {
+		if (fetchMode.equalsIgnoreCase( "join" )) {
+			return FetchMode.JOIN;
+		}
+		else if (fetchMode.equalsIgnoreCase( "subselect" )) {
+			return FetchMode.SUBSELECT;
+		}
+		else {
+			return FetchMode.SELECT;
+		}
 	}
 
 	@Override

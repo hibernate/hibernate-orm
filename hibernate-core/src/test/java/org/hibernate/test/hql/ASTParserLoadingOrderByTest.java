@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -36,6 +35,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +46,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
 public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	StateProvince stateProvince;
 	private Zoo zoo1;

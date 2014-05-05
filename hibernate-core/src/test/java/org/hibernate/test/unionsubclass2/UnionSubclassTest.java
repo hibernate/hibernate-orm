@@ -23,10 +23,13 @@
  */
 package org.hibernate.test.unionsubclass2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -34,16 +37,14 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "no support for JaxbInheritanceType.UNION_SUBCLASS")
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	protected String[] getMappings() {
 		return new String[] { "unionsubclass2/Person.hbm.xml" };

@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Max Rydahl Andersen
  */
+@FailureExpectedWithNewUnifiedXsd(message = "New schema only defines where at the class level, not collections.")
 public class WhereTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "where/File.hbm.xml" };

@@ -32,12 +32,14 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "formulas not yet supported in associations")
 public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

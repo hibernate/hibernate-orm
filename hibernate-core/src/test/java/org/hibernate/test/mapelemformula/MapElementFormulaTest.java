@@ -24,9 +24,9 @@
 package org.hibernate.test.mapelemformula;
 
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -34,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "formulas not yet supported in associations")
 public class MapElementFormulaTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "mapelemformula/UserGroup.hbm.xml" };

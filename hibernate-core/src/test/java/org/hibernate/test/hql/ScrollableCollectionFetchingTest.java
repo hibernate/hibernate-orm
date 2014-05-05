@@ -39,6 +39,7 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
@@ -51,6 +52,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
 public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };

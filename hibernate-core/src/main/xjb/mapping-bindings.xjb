@@ -41,6 +41,12 @@
 					printMethod="org.hibernate.metamodel.source.internal.jaxb.marshalling.FetchTypeMarshalling.toXml" />
         </bindings>
 
+		<bindings node="//xsd:simpleType[@name='hbm-fetch-mode']">
+			<javaType name="org.hibernate.annotations.FetchMode"
+					parseMethod="org.hibernate.metamodel.source.internal.jaxb.marshalling.FetchModeMarshalling.fromXml"
+					printMethod="org.hibernate.metamodel.source.internal.jaxb.marshalling.FetchModeMarshalling.toXml" />
+        </bindings>
+
 		<bindings node="//xsd:simpleType[@name='flush-mode-type']">
 			<javaType name="org.hibernate.FlushMode"
 					parseMethod="org.hibernate.metamodel.source.internal.jaxb.marshalling.FlushModeMarshalling.fromXml"
@@ -148,13 +154,15 @@
         </bindings>
         <bindings node="//xsd:complexType[@name='many-to-one']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.FetchableAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='one-to-many']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.MapAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.CollectionAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='one-to-one']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.FetchableAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='embedded-id']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
@@ -164,11 +172,11 @@
         </bindings>
         <bindings node="//xsd:complexType[@name='many-to-many']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.MapAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.CollectionAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='element-collection']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.MapAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.CollectionAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='any']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>

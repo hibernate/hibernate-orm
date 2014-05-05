@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -76,6 +77,7 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6790")
+	@FailureExpectedWithNewUnifiedXsd(message = "multiple mappings of the same class/table")
 	public void testSequencePerEntity() {
 		final String overriddenEntityName = "SpecialEntity";
 		EntityPersister persister = sessionFactory().getEntityPersister( overriddenEntityName );

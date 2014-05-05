@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 
 	@Test

@@ -29,10 +29,12 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+@FailureExpectedWithNewUnifiedXsd(message = "many-to-manys w/ orphan removal not yet supported")
 public class ManyToManyOrphanTest extends BaseCoreFunctionalTestCase {
 
 	@Override

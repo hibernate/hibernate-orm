@@ -29,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -37,6 +38,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
+@FailureExpectedWithNewUnifiedXsd(message = "metamodel doesn't appear to be able to handle the composite-id key-many-to-one's on-delete (translated to @OnDelete)")
 public class KeyManyToOneCascadeDeleteTest extends BaseCoreFunctionalTestCase {
 	@Override
     public String[] getMappings() {

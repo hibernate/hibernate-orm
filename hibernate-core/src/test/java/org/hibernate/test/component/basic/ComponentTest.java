@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.component.basic;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -43,17 +44,17 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class ComponentTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -172,6 +173,7 @@ public class ComponentTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd
 	public void testComponentQueries() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

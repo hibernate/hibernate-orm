@@ -23,16 +23,16 @@
  */
 package org.hibernate.test.version;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Max Rydahl Andersen
@@ -74,6 +74,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
+	@FailureExpectedWithNewUnifiedXsd
 	public void testCollectionVersion() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

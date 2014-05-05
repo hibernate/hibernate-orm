@@ -32,6 +32,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -41,6 +42,7 @@ import org.junit.Test;
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "extra lazy not yet supported in the unified schema")
 public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 	private StandardServiceRegistryImpl serviceRegistry;
 

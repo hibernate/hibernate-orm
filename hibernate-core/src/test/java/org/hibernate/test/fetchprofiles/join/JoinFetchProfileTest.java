@@ -22,9 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.fetchprofiles.join;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -32,18 +35,16 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Various tests related to join-style fetch profiles.
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "appears using component.field as the association path is failing")
 public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "fetchprofiles/join/Mappings.hbm.xml" };

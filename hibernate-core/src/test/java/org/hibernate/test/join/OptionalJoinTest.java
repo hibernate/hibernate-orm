@@ -23,20 +23,21 @@
  */
 package org.hibernate.test.join;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
 
 /**
  * @author Chris Jones and Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
 public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

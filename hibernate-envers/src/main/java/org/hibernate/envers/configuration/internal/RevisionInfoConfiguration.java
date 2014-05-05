@@ -26,6 +26,9 @@ package org.hibernate.envers.configuration.internal;
 import java.sql.Date;
 import java.util.Collection;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentFactory;
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.envers.DefaultRevisionEntity;
@@ -46,29 +49,23 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.envers.internal.tools.Tools;
-import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer.AdditionalJaxbRootProducerContext;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.spi.binding.SetBinding;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
-
-import org.dom4j.Document;
-import org.dom4j.Element;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
-
-import static org.hibernate.metamodel.spi.AdditionalJaxbRootProducer.AdditionalJaxbRootProducerContext;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -102,7 +99,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private Document generateDefaultRevisionInfoXmlMapping() {
-		final Document document = XMLHelper.getDocumentFactory().createDocument();
+		final Document document = DocumentFactory.getInstance().createDocument();
 
 		final Element classMapping = MetadataTools.createEntity(
 				document,
@@ -185,7 +182,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private Element generateRevisionInfoRelationMapping() {
-		final Document document = XMLHelper.getDocumentFactory().createDocument();
+		final Document document = DocumentFactory.getInstance().createDocument();
 		final Element revRelMapping = document.addElement( "key-many-to-one" );
 		// TODO: this does not belong here; does it belong somewhere else????
 		//revRelMapping.addAttribute( "type", revisionPropType );

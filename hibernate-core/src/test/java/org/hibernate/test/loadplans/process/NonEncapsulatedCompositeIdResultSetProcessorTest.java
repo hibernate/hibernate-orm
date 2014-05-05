@@ -42,9 +42,8 @@ import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-
 import org.junit.Test;
-
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.onetoone.formula.Address;
 import org.hibernate.test.onetoone.formula.Person;
@@ -55,6 +54,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "formulas not yet supported in associations")
 public class NonEncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override

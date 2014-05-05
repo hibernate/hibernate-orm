@@ -30,7 +30,6 @@ import java.util.Collections;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
@@ -40,6 +39,7 @@ import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
@@ -55,6 +55,7 @@ import static org.junit.Assert.fail;
  *
  * @author Max Rydahl Andersen
  */
+@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
 public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	private boolean initialVersion2SqlFlagValue;
 

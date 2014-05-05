@@ -24,7 +24,7 @@
 package org.hibernate.test.optlock;
 
 
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
@@ -32,10 +32,10 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Tests relating to the optimistic-lock mapping option.
@@ -47,6 +47,7 @@ import static org.junit.Assert.fail;
 		value = DialectChecks.DoesRepeatableReadNotCauseReadersToBlockWritersCheck.class,
 		comment = "potential deadlock"
 )
+@FailureExpectedWithNewUnifiedXsd(message = "multiple mappings of the same class/table")
 public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

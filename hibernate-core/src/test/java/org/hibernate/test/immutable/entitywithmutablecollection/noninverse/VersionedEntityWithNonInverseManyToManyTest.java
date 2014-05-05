@@ -24,10 +24,12 @@
 package org.hibernate.test.immutable.entitywithmutablecollection.noninverse;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithManyToManyTest;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewUnifiedXsd(message = "mapping looks off -- shouldn't Contract#parties be inverse?")
 public class VersionedEntityWithNonInverseManyToManyTest extends AbstractEntityWithManyToManyTest {
 	@Override
 	public String[] getMappings() {

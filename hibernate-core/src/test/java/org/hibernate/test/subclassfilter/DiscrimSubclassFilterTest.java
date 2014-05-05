@@ -29,9 +29,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +39,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd( message = "<filter> within a collection not supported by schema" )
 public class DiscrimSubclassFilterTest extends BaseCoreFunctionalTestCase {
 	public final String[] getMappings() {
 		return new String[] { "subclassfilter/discrim-subclass.hbm.xml" };

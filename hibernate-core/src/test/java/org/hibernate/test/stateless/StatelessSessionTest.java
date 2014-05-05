@@ -31,6 +31,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertNotSame;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "stateless/Document.hbm.xml" };

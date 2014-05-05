@@ -35,6 +35,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.loader.BatchFetchStyle;
 
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "New schema only defines batch-size at the class level, not collections.")
 public class BatchFetchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -23,9 +23,13 @@
  */
 package org.hibernate.test.unionsubclass;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -33,18 +37,15 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewUnifiedXsd(message = "no support for JaxbInheritanceType.UNION_SUBCLASS")
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

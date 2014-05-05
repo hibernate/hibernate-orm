@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertEquals;
         comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
+@FailureExpectedWithNewUnifiedXsd(message = "single filter used across joined-subclasses")
 public class JoinedSubclassFilterTest extends BaseCoreFunctionalTestCase {
 	public final String[] getMappings() {
 		return new String[] { "subclassfilter/joined-subclass.hbm.xml" };

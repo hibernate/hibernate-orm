@@ -23,22 +23,23 @@
  */
 package org.hibernate.test.mixed;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
 @SkipForDialect( SybaseASE15Dialect.class )
+@FailureExpectedWithNewUnifiedXsd(message = "multiple mappings of the same class/table")
 public class MixedTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

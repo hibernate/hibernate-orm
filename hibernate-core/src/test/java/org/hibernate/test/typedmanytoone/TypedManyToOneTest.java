@@ -26,11 +26,11 @@ package org.hibernate.test.typedmanytoone;
 import java.util.List;
 
 import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewUnifiedXsd(message = "formulas not yet supported in associations")
 public class TypedManyToOneTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "typedmanytoone/Customer.hbm.xml" };

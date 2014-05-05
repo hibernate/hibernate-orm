@@ -49,11 +49,10 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
-
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-
 import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
@@ -66,6 +65,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd( message = "<filter> within a collection not supported by schema" )
 @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
 public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( DynamicFilterTest.class );

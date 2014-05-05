@@ -23,7 +23,12 @@
  */
 package org.hibernate.test.manytomany.batchload;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
+
+import junit.framework.Assert;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
@@ -37,14 +42,9 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.stat.CollectionStatistics;
-
-import org.junit.Test;
-import junit.framework.Assert;
-
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Tests loading of many-to-many collection which should trigger
@@ -52,6 +52,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "New schema only defines batch-size at the class level, not collections.")
 public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

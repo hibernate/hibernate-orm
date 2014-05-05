@@ -125,7 +125,7 @@ public class OneToOneCacheTest extends LegacyTestCase {
 
 		Serializable id = generatedId;
 
-		MainObject mo = ( MainObject ) session.load( MainObject.class, id );
+		MainObject mo = ( MainObject ) session.get( MainObject.class, id );
 
 		tx.commit();
 		session.close();

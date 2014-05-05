@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.internal.jandex;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheElement;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbDiscriminatorColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityListeners;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilter;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbIdClass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbInheritance;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPostLoad;
@@ -103,7 +105,13 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		parseSecondaryTableList( entity.getSecondaryTable(), getTarget() );
 		
 		//@Cache
-		parseCache( entity.getCache() );
+		parseCache( entity.getCache(), getTarget() );
+		
+		// @Filters
+		parseFilters( entity.getFilter(), getTarget() );
+		
+		// @BatchSize
+		parseBatchSize( entity.getBatchSize(), getTarget() );
 	}
 
 	//@Table  (entity only)
@@ -295,7 +303,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 
 	}
 	
-	private void parseCache(JaxbCacheElement cache) {
+	private void parseCache(JaxbCacheElement cache, AnnotationTarget target) {
 		if ( cache == null ) {
 			return;
 		}
@@ -304,6 +312,51 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		MockHelper.stringValue( "include", cache.getInclude(), annotationValueList );
 		MockHelper.enumValue( "usage", HibernateDotNames.CACHE_CONCURRENCY_STRATEGY,
 				CacheConcurrencyStrategy.parse( cache.getUsage() ), annotationValueList );
-		create( HibernateDotNames.CACHE, annotationValueList );
+		create( HibernateDotNames.CACHE, target, annotationValueList );
+	}
+	
+	private void parseFilters(List<JaxbHbmFilter> filters, AnnotationTarget target) {
+		if (! filters.isEmpty() ) {
+			AnnotationValue[] filterAnnotations = new AnnotationValue[filters.size()];
+			int i = 0;
+			for ( JaxbHbmFilter filter : filters ) {
+				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+				MockHelper.stringValue( "name", filter.getName(), annotationValueList );
+				
+				String condition = "";
+				if (! StringHelper.isEmpty( filter.getConditionAttribute() )) {
+					condition = filter.getConditionAttribute();
+				}
+				
+				for (Serializable contentElement : filter.getContent()) {
+					if ( String.class.isInstance( contentElement ) ) {
+						String s = (String) contentElement;
+						condition = s.trim();
+					}
+					// TODO: Could be aliases -- see xsd
+				}
+				
+				MockHelper.stringValue( "condition", condition, annotationValueList );
+				
+				AnnotationInstance annotationInstance = create(
+						HibernateDotNames.FILTER, null, annotationValueList );
+				filterAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.addToCollectionIfNotNull( annotationValueList,
+					AnnotationValue.createArrayValue( "value", filterAnnotations ) );
+			
+			create( HibernateDotNames.FILTERS, target, annotationValueList );
+		}
+	}
+	
+	private void parseBatchSize(Integer batchSize, AnnotationTarget target) {
+		if ( batchSize == null ) {
+			return;
+		}
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.integerValue( "size", batchSize, annotationValueList );
+		create( HibernateDotNames.BATCH_SIZE, target, annotationValueList );
 	}
 }

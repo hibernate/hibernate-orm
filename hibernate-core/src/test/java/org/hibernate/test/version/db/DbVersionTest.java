@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "New schema only defines batch-size at the class level, not collections.")
 public class DbVersionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

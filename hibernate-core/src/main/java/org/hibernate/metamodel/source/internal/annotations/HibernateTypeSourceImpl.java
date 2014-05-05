@@ -64,23 +64,9 @@ public class HibernateTypeSourceImpl implements HibernateTypeSource, JavaTypeDes
 	}
 
 	public HibernateTypeSourceImpl(final PluralAttributeElementDetails element) {
-		this.nameHolder = new ValueHolder<String>(
-				new ValueHolder.DeferredInitializer<String>() {
-					@Override
-					public String initialize() {
-						return element.getTypeResolver().getExplicitHibernateTypeName();
-					}
-				}
-		);
-		this.parameterHolder = new ValueHolder<Map<String, String>>(
-				new ValueHolder.DeferredInitializer<Map<String, String>>() {
-					@Override
-					public Map<String, String> initialize() {
-						return element.getTypeResolver().getExplicitHibernateTypeParameters();
-					}
-				}
-		);
-		this.javaType = element.getJavaType();
+		this.name = element.getTypeResolver().getExplicitHibernateTypeName();
+		this.parameters = element.getTypeResolver().getExplicitHibernateTypeParameters();
+		this.javaTypeDescriptor = element.getJavaType();
 	}
 
 	@Override

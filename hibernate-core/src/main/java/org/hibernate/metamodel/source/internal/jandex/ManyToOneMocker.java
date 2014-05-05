@@ -26,9 +26,10 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbManyToOne;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
-
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
@@ -51,12 +52,14 @@ public class ManyToOneMocker extends PropertyMocker {
 	@Override
 	protected void doProcess() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.classValue( "targetEntity", manyToOne.getTargetEntity(), annotationValueList, getDefaults(),
-				indexBuilder.getServiceRegistry() );
+		MockHelper.classValue( "targetEntity",
+				StringHelper.qualifyIfNot( getDefaults().getPackageName(), manyToOne.getTargetEntity() ),
+				annotationValueList, getDefaults(), indexBuilder.getServiceRegistry() );
 		MockHelper.enumValue( "fetch", FETCH_TYPE, manyToOne.getFetch(), annotationValueList );
 		MockHelper.booleanValue( "optional", manyToOne.isOptional(), annotationValueList );
 		MockHelper.cascadeValue( "cascade", manyToOne.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( MANY_TO_ONE, annotationValueList );
+
 		parseJoinColumnList( manyToOne.getJoinColumn(), getTarget() );
 		parseJoinTable( manyToOne.getJoinTable(), getTarget() );
 		if ( manyToOne.getMapsId() != null ) {
@@ -65,5 +68,9 @@ public class ManyToOneMocker extends PropertyMocker {
 		if ( manyToOne.isId() != null && manyToOne.isId() ) {
 			create( ID );
 		}
+		
+		annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.cascadeValue( "value", manyToOne.getHbmCascade(), annotationValueList );
+		create( HibernateDotNames.CASCADE, getTarget(), annotationValueList );
 	}
 }

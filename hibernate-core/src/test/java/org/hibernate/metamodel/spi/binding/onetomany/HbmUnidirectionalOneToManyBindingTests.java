@@ -24,10 +24,12 @@
 package org.hibernate.metamodel.spi.binding.onetomany;
 
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 /**
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewUnifiedXsd(message = "extra lazy not yet supported in the unified schema")
 public class HbmUnidirectionalOneToManyBindingTests extends AbstractUnidirectionalOneToManyBindingTests {
 	@Override
 	public void addSources(MetadataSources sources) {

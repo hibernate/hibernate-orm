@@ -24,10 +24,12 @@
 package org.hibernate.metamodel.spi.binding.basiccollections;
 
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 /**
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewUnifiedXsd(message = "extra lazy")
 public class HbmBasicCollectionBindingTests extends AbstractBasicCollectionBindingTests {
 	public void addSources(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/basiccollections/EntityWithBasicCollections.hbm.xml" );

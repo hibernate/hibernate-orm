@@ -25,13 +25,13 @@ package org.hibernate.metamodel.source.internal.jandex;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.AccessType;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbIndex;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbUniqueConstraint;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;

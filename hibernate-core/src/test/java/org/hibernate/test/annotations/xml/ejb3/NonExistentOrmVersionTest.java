@@ -27,6 +27,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.spi.InvalidMappingException;
 
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-6271")
+@FailureExpectedWithNewUnifiedXsd
 public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {

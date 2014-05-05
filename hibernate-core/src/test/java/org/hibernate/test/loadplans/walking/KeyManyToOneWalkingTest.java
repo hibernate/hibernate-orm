@@ -25,15 +25,15 @@ package org.hibernate.test.loadplans.walking;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
-
 import org.junit.Test;
-
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.onetoone.formula.Address;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewUnifiedXsd(message = "formulas not yet supported in associations")
 public class KeyManyToOneWalkingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {

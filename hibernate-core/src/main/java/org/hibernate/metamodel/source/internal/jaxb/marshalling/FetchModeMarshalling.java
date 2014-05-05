@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.immutable.entitywithmutablecollection.noninverse;
+package org.hibernate.metamodel.source.internal.jaxb.marshalling;
 
-import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
-import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
+import org.hibernate.annotations.FetchMode;
 
 /**
- * @author Gail Badner
+ * Marshalling support for dealing with Hibernate FetchMode enums.  Plugged into JAXB for binding
+ *
+ * @author Brett Meyer
  */
-@FailureExpectedWithNewUnifiedXsd(message = "mapping looks off -- shouldn't Contract#parties be inverse?")
-public class EntityWithNonInverseOneToManyTest extends AbstractEntityWithOneToManyTest {
-	public String[] getMappings() {
-		return new String[] { "immutable/entitywithmutablecollection/noninverse/ContractVariation.hbm.xml" };
+public class FetchModeMarshalling {
+	public static FetchMode fromXml(String name) {
+		return FetchMode.valueOf( name );
+	}
+
+	public static String toXml(FetchMode fetchMode) {
+		return fetchMode.name();
 	}
 }

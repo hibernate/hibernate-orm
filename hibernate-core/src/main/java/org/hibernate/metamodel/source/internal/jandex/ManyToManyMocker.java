@@ -62,6 +62,12 @@ public class ManyToManyMocker extends PropertyMocker {
 			MockHelper.stringValue( "hbmKey", manyToMany.getHbmKey(), annotationValueList );
 			create( HibernateDotNames.INVERSE, getTarget(), annotationValueList );
 		}
+		if (manyToMany.getHbmFetchMode() != null) {
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.enumValue( "value", HibernateDotNames.FETCH_MODE, manyToMany.getHbmFetchMode(),
+					annotationValueList );
+			create( HibernateDotNames.FETCH, getTarget(), annotationValueList );
+		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue( "targetEntity", manyToMany.getTargetEntity(), annotationValueList, getDefaults(),
 				indexBuilder.getServiceRegistry() );

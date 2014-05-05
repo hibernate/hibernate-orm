@@ -52,12 +52,14 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
+@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 

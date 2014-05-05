@@ -59,6 +59,10 @@ public class AttributesBuilder extends AbstractAttributesBuilder {
 	
 	@Override
 	protected void parse() {
+		if (getAttributesContainer() == null) {
+			return;
+		}
+		
 		super.parse();
 		
 		if ( attributes.getNaturalId() != null ) {

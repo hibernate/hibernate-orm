@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -55,6 +56,7 @@ public class InterfaceProxyTest extends BaseCoreFunctionalTestCase {
 			value = DialectChecks.SupportsExpectedLobUsagePattern.class,
 			comment = "database/driver does not support expected LOB usage pattern"
 	)
+	@FailureExpectedWithNewUnifiedXsd(message = "proxy attributes")
 	public void testInterfaceProxies() {
 		Session s = openSession( new DocumentInterceptor() );
 		Transaction t = s.beginTransaction();

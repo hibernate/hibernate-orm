@@ -30,6 +30,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -323,6 +324,70 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 		t = session.beginTransaction();
 		assertNull( session.get(Part.class, "Widge") );
 		assertNotNull( session.get(Part.class, "Get") );
+		session.delete( session.get(Product.class, "Widget") );
+		t.commit();
+		session.close();
+	}
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
+	public void testOrphanDeleteOnMergeRemoveElementMerge() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+		Product prod = new Product();
+		prod.setName( "Widget" );
+		Part part = new Part();
+		part.setName("Widge");
+		part.setDescription("part if a Widget");
+		prod.getParts().add(part);
+		session.persist(prod);
+		t.commit();
+		session.close();
+
+		session = openSession();
+		t = session.beginTransaction();
+		session.merge(prod);
+		prod.getParts().remove( part );
+		session.merge( prod );
+		t.commit();
+		session.close();
+
+		session = openSession();
+		t = session.beginTransaction();
+		assertNull( session.get( Part.class, "Widge" ) );
+		session.delete( session.get(Product.class, "Widget") );
+		t.commit();
+		session.close();
+	}
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
+	@FailureExpected(jiraKey = "HHH-9171")
+	public void testOrphanDeleteOnAddElementMergeRemoveElementMerge() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+		Product prod = new Product();
+		prod.setName( "Widget" );
+		session.persist(prod);
+		t.commit();
+		session.close();
+
+		Part part = new Part();
+		part.setName("Widge");
+		part.setDescription("part if a Widget");
+		prod.getParts().add(part);
+
+		session = openSession();
+		t = session.beginTransaction();
+		session.merge(prod);
+		prod.getParts().remove(part);
+		session.merge( prod );
+		t.commit();
+		session.close();
+
+		session = openSession();
+		t = session.beginTransaction();
+		assertNull( session.get( Part.class, "Widge" ) );
 		session.delete( session.get(Product.class, "Widget") );
 		t.commit();
 		session.close();

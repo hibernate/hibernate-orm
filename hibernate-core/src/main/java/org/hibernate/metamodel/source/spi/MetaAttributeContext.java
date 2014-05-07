@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.spi;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 
@@ -34,7 +35,7 @@ import org.hibernate.metamodel.spi.binding.MetaAttribute;
  */
 public class MetaAttributeContext {
 	private final MetaAttributeContext parentContext;
-	private final ConcurrentHashMap<String, MetaAttribute> metaAttributeMap = new ConcurrentHashMap<String, MetaAttribute>();
+	private final ConcurrentMap<String, MetaAttribute> metaAttributeMap = new ConcurrentHashMap<String, MetaAttribute>();
 
 	public MetaAttributeContext() {
 		this( null );

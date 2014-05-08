@@ -64,7 +64,8 @@ task jaxb {
         }
     }
 }
-runSourceGenerators.dependsOn jaxb
+
+sourceSets.main.sourceGeneratorsTask.dependsOn jaxb
 
 checkstyleMain.exclude '**/jaxb/**'
 

@@ -177,5 +177,5 @@ task jaxb {
 
 }
 
-runSourceGenerators.dependsOn jaxb
-runSourceGenerators.dependsOn generateGrammarSource
+sourceSets.main.sourceGeneratorsTask.dependsOn jaxb
+sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource

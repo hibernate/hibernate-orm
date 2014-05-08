@@ -33,6 +33,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -44,6 +45,11 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanOptions;
+import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
+import org.hibernate.metamodel.archive.scan.spi.ScanOptions;
+import org.hibernate.metamodel.archive.scan.spi.Scanner;
+import org.hibernate.metamodel.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.metamodel.spi.MetadataSourcesContributor;
 import org.hibernate.metamodel.spi.PersistentAttributeMemberResolver;
 import org.hibernate.metamodel.spi.StandardPersistentAttributeMemberResolver;
@@ -61,6 +67,8 @@ import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 import org.xml.sax.EntityResolver;
+
+import static org.hibernate.internal.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * The implementation of the {@link MetadataBuilder} contract.
@@ -149,6 +157,30 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	@Override
 	public MetadataBuilder with(IndexView jandexView) {
 		this.options.jandexView = jandexView;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(ScanOptions scanOptions) {
+		this.options.scanOptions = scanOptions;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(ScanEnvironment scanEnvironment) {
+		this.options.scanEnvironment = scanEnvironment;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(Scanner scanner) {
+		this.options.scannerSetting = scanner;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(ArchiveDescriptorFactory factory) {
+		this.options.archiveDescriptorFactory = factory;
 		return this;
 	}
 
@@ -287,6 +319,12 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
+
+		private ScanOptions scanOptions;
+		private ScanEnvironment scanEnvironment;
+		private Object scannerSetting;
+		private ArchiveDescriptorFactory archiveDescriptorFactory;
+
 		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
 		private AccessType defaultCacheAccessType;
@@ -306,7 +344,9 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		public Options(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 
+			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+
 			this.databaseDefaults = new DatabaseDefaults( configService );
 
 			// cache access type
@@ -318,6 +358,25 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 							return AccessType.fromExternalName( value.toString() );
 						}
 					}
+			);
+
+			jandexView = (IndexView) configService.getSettings().get( AvailableSettings.JANDEX_INDEX );
+
+			scanOptions = new StandardScanOptions(
+					(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
+					false
+			);
+			// ScanEnvironment must be set explicitly
+			scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
+			if ( scannerSetting == null ) {
+				scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
+				if ( scannerSetting != null ) {
+					DEPRECATION_LOGGER.logScannerDeprecation();
+				}
+			}
+			archiveDescriptorFactory = strategySelector.resolveStrategy(
+					ArchiveDescriptorFactory.class,
+					configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 			);
 
 			useNewIdentifierGenerators = configService.getSetting(
@@ -359,6 +418,27 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		@Override
 		public IndexView getJandexView() {
 			return jandexView;
+		}
+
+		@Override
+		public ScanOptions getScanOptions() {
+			return scanOptions;
+		}
+
+		@Override
+		public ScanEnvironment getScanEnvironment() {
+			return scanEnvironment;
+		}
+
+
+		@Override
+		public Object getScanner() {
+			return scannerSetting;
+		}
+
+		@Override
+		public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
+			return archiveDescriptorFactory;
 		}
 
 		@Override

@@ -24,8 +24,6 @@
 package org.hibernate.jpa.boot.internal;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,19 +62,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.cfg.JaxbHibernateConfiguration;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.jpa.boot.scan.internal.StandardJpaScanEnvironmentImpl;
-import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
-import org.hibernate.jpa.boot.scan.internal.StandardScanner;
-import org.hibernate.jpa.boot.scan.spi.ScanEnvironment;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
-import org.hibernate.jpa.boot.scan.spi.ScanResult;
-import org.hibernate.jpa.boot.scan.spi.Scanner;
-import org.hibernate.jpa.boot.spi.ClassDescriptor;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
-import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
-import org.hibernate.jpa.boot.spi.PackageDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -90,6 +77,7 @@ import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
+import org.hibernate.metamodel.archive.scan.internal.StandardScanOptions;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
@@ -100,9 +88,6 @@ import org.hibernate.service.ConfigLoader;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
@@ -147,11 +132,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * Names a {@link TypeContributorList}
 	 */
 	public static final String TYPE_CONTRIBUTORS = "hibernate.type_contributors";
-
-	/**
-	 * Names a Jandex {@link Index} instance to use.
-	 */
-	public static final String JANDEX_INDEX = "hibernate.jandex_index";
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,13 +182,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			this.standardServiceRegistry = ssrBuilder.build();
 			configure( standardServiceRegistry, mergedSettings );
 
-
-			// Perform deployment scanning
-			final ScanResult scanResult = scanDeployment( bsr );
-
 			// Build the Metadata object
 			final MetadataSources metadataSources = new MetadataSources( bsr );
-			populate( metadataSources, scanResult, mergedSettings, standardServiceRegistry );
+			populate( metadataSources, mergedSettings, standardServiceRegistry );
 			final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( standardServiceRegistry );
 			populate( metamodelBuilder, mergedSettings, standardServiceRegistry );
 			this.metadata = (MetadataImplementor) metamodelBuilder.build();
@@ -692,134 +668,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	private ScanResult scanDeployment(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		IndexView jandexIndex = (IndexView) configurationValues.remove( JANDEX_INDEX );
-		Indexer jandexIndexer = null;
-		if ( jandexIndex == null ) {
-			// If we don't have a Jandex index passed to us, we need to build one.
-			jandexIndexer = new Indexer();
-		}
-
-		final Scanner scanner = locateOrBuildScanner( bootstrapServiceRegistry );
-		final ScanEnvironment environment = new StandardJpaScanEnvironmentImpl( persistenceUnit );
-		final ScanOptions options = determineScanOptions( jandexIndexer, jandexIndex );
-		final ScanResult result = scanner.scan( environment, options );
-
-		if ( jandexIndexer != null ) {
-			jandexIndex = jandexIndexer.complete();
-			// if the indexer indexed anything use that index
-			//
-			// IMPL NOTE : (unfortunately?) Jandex has no way to see if an Indexer
-			// actually indexed anything.  But, it also manages package-info.class
-			// as any other class, so this check should be fine
-			if ( !jandexIndex.getKnownClasses().isEmpty() ) {
-				configurationValues.put( JANDEX_INDEX, jandexIndex );
-			}
-		}
-
-		return result;
-	}
-
-	@SuppressWarnings("unchecked")
-	private Scanner locateOrBuildScanner(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final Object value = configurationValues.remove( AvailableSettings.SCANNER );
-		if ( value == null ) {
-			return createStandardScanner( bootstrapServiceRegistry );
-		}
-
-		if ( Scanner.class.isInstance( value ) ) {
-			return (Scanner) value;
-		}
-
-		Class<? extends Scanner> scannerClass;
-		if ( Class.class.isInstance( value ) ) {
-			try {
-				scannerClass = (Class<? extends Scanner>) value;
-			}
-			catch ( ClassCastException e ) {
-				throw persistenceException( "Expecting Scanner implementation, but found " + ((Class) value).getName() );
-			}
-		}
-		else {
-			final String scannerClassName = value.toString();
-			try {
-				scannerClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName( scannerClassName );
-			}
-			catch ( ClassCastException e ) {
-				throw persistenceException( "Expecting Scanner implementation, but found " + scannerClassName );
-			}
-		}
-
-		try {
-			return scannerClass.newInstance();
-		}
-		catch ( Exception e ) {
-			throw persistenceException( "Unable to instantiate Scanner class: " + scannerClass, e );
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private Scanner createStandardScanner(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final Object value = configurationValues.remove( AvailableSettings.SCANNER_ARCHIVE_DELEGATE );
-		if ( value == null ) {
-			return new StandardScanner();
-		}
-
-		if ( ArchiveDescriptorFactory.class.isInstance( value ) ) {
-			return new StandardScanner( (ArchiveDescriptorFactory) value );
-		}
-
-		final Class<? extends ArchiveDescriptorFactory> delegateClass;
-		if ( Class.class.isInstance( value ) ) {
-			try {
-				delegateClass = (Class<? extends ArchiveDescriptorFactory>) value;
-			}
-			catch ( ClassCastException e ) {
-				throw persistenceException(
-						"Expecting ArchiveDescriptorFactory implementation, but found " + ((Class) value).getName()
-				);
-			}
-		}
-		else {
-			final String delegateClassName = value.toString();
-			try {
-				delegateClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName( delegateClassName );
-			}
-			catch ( ClassCastException e ) {
-				throw persistenceException(
-						"Expecting ArchiveDescriptorFactory implementation, but found " + delegateClassName
-				);
-			}
-		}
-
-		try {
-			final ArchiveDescriptorFactory delegate = delegateClass.newInstance();
-			return new StandardScanner( delegate );
-		}
-		catch (Exception e) {
-			throw persistenceException( "Unable to instantiate ArchiveDescriptorFactory class: " + delegateClass, e );
-		}
-
-	}
-
-	private ScanOptions determineScanOptions(Indexer indexer, IndexView jandexIndex) {
-		return new StandardScanOptions(
-				indexer,
-				jandexIndex,
-				(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
-				persistenceUnit.isExcludeUnlistedClasses()
-		);
-	}
-
-	@SuppressWarnings("unchecked")
 	private void populate(
 			MetadataSources metadataSources,
-			ScanResult scanResult,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr) {
 		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
 
-		// todo : make MetadataSources/Metadata capable of handling duplicates
+		// todo : make sure MetadataSources/Metadata are capable of handling duplicate sources
 
 		// explicit persistence unit mapping files listings
 		if ( persistenceUnit.getMappingFileNames() != null ) {
@@ -904,35 +759,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metadataSources.addResource( ormXml );
 			}
 		}
-
-		// Add mapping files found as a result of scanning
-		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
-			try {
-				metadataSources.addInputStream( stream );
-			}
-			finally {
-				try {
-					stream.close();
-				}
-				catch ( IOException ignore ) {
-					LOG.trace( "Was unable to close input stream" );
-				}
-			}
-		}
-
-		// Add packages found as a result of scanning
-		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
-			metadataSources.addPackage( packageDescriptor.getName() );
-		}
-
-		// Add classes found as a result of scanning
-		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
-			metadataSources.addAnnotatedClassName( classDescriptor.getName() );
-		}
 	}
 
 	private void populate(MetadataBuilder metamodelBuilder, MergedSettings mergedSettings, StandardServiceRegistry ssr) {
+		metamodelBuilder.with( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
+		metamodelBuilder.with(
+				new StandardScanOptions(
+						(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
+						persistenceUnit.isExcludeUnlistedClasses()
+				)
+		);
+
 		if ( mergedSettings.cacheRegionDefinitions != null ) {
 			for ( CacheRegionDefinition localCacheRegionDefinition : mergedSettings.cacheRegionDefinitions ) {
 				metamodelBuilder.with( localCacheRegionDefinition );
@@ -952,11 +789,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			for ( TypeContributor typeContributor : typeContributorList.getTypeContributors() ) {
 				metamodelBuilder.with( typeContributor );
 			}
-		}
-
-		IndexView jandexIndex = (IndexView) configurationValues.remove( JANDEX_INDEX );
-		if ( jandexIndex != null ) {
-			metamodelBuilder.with( jandexIndex );
 		}
 	}
 

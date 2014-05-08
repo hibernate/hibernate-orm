@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi;
 
+import java.net.URL;
+
 /**
  * During the process of building this metamodel, accessing the ClassLoader
  * is very discouraged.  However, sometimes it is needed.  This contract helps
@@ -39,4 +41,6 @@ public interface ClassLoaderAccess {
 	 * @return The Class.
 	 */
 	public <T> Class<T> classForName(String name);
+
+	public URL locateResource(String resourceName);
 }

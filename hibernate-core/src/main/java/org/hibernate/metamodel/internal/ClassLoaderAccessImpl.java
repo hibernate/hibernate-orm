@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.net.URL;
+
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -51,7 +53,8 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 	}
 
 	@Override
-	public Class classForName(String name) {
+	@SuppressWarnings("unchecked")
+	public Class<?> classForName(String name) {
 		if ( isSafeClass( name ) ) {
 			return classLoaderService.classForName( name );
 		}
@@ -86,5 +89,10 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 				|| name.startsWith( "javax." )
 				|| name.startsWith( "org.hibernate" );
 
+	}
+
+	@Override
+	public URL locateResource(String resourceName) {
+		return classLoaderService.locateResource( resourceName );
 	}
 }

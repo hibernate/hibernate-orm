@@ -207,6 +207,28 @@ subprojects { subProject ->
 		]
 	}
 
+	compileJava {
+		File mainAptDir = mkdir( "${subProject.buildDir}/generated-src/apt/main" )
+		options.compilerArgs += [ "-s", "$mainAptDir.absolutePath" ]
+
+		doFirst {
+			if ( !mainAptDir.exists() ) {
+				mainAptDir.mkdirs();
+			}
+		}
+	}
+
+	compileTestJava {
+		File testAptDir = mkdir( "${subProject.buildDir}/generated-src/apt/test" );
+		options.compilerArgs += [ "-s", "$testAptDir.absolutePath" ]
+
+		doFirst {
+			if ( !testAptDir.exists() ) {
+				testAptDir.mkdirs();
+			}
+		}
+	}
+
 	jar {
 		manifest = osgiManifest {
 			// GRADLE-1411: Even if we override Imports and Exports

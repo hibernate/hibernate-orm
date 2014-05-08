@@ -3,6 +3,11 @@ configurations {
 	osgiRuntimeBnd
 }
 
+// HHH-9173 - Temporarily disable hibernate-osgi tests
+test {
+	enabled = false
+}
+
 sourceSets {
 	testClientBundle
 }

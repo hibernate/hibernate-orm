@@ -371,7 +371,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			if ( scannerSetting == null ) {
 				scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
 				if ( scannerSetting != null ) {
-					DEPRECATION_LOGGER.logScannerDeprecation();
+					DEPRECATION_LOGGER.logDeprecatedScannerSetting();
 				}
 			}
 			archiveDescriptorFactory = strategySelector.resolveStrategy(

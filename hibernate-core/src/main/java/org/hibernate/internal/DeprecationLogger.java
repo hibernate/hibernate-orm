@@ -53,5 +53,5 @@ public interface DeprecationLogger {
 					"use [hibernate.archive.scanner] instead",
 			id = 90000001
 	)
-	public void logScannerDeprecation();
+	public void logDeprecatedScannerSetting();
 }

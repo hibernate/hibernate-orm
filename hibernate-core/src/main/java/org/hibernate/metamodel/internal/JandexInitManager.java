@@ -94,27 +94,27 @@ public class JandexInitManager implements JandexInitializer {
 	 * INTENDED FOR TESTING ONLY
 	 */
 	public JandexInitManager() {
-		this(
-				null,
-				new ClassLoaderAccess() {
-					@Override
-					@SuppressWarnings("unchecked")
-					public <T> Class<T> classForName(String name) {
-						try {
-							return (Class<T>) getClass().getClassLoader().loadClass( name );
-						}
-						catch ( Exception e ) {
-							throw new ClassLoadingException( "Could not load class by name : " + name );
-						}
-					}
+		this( null, TestingOnlyClassLoaderAccess.INSTANCE, false );
+	}
 
-					@Override
-					public URL locateResource(String resourceName) {
-						return getClass().getClassLoader().getResource( resourceName );
-					}
-				},
-				false
-		);
+	private static class TestingOnlyClassLoaderAccess implements ClassLoaderAccess {
+		public static final TestingOnlyClassLoaderAccess INSTANCE = new TestingOnlyClassLoaderAccess();
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> classForName(String name) {
+			try {
+				return (Class<T>) getClass().getClassLoader().loadClass( name );
+			}
+			catch ( Exception e ) {
+				throw new ClassLoadingException( "Could not load class by name : " + name );
+			}
+		}
+
+		@Override
+		public URL locateResource(String resourceName) {
+			return getClass().getClassLoader().getResource( resourceName );
+		}
 	}
 
 	public boolean wasIndexSupplied() {

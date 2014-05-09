@@ -1220,7 +1220,7 @@ public abstract class AbstractEntityPersister
 			LOG.tracev( "Initializing lazy properties of: {0}, field access: {1}", MessageHelper.infoString( this, id, getFactory() ), fieldName );
 		}
 
-		if ( hasCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
 			final CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, getCacheAccessStrategy() );
 			if ( ce != null ) {
@@ -4299,7 +4299,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check to see if it is in the second-level cache
-		if ( hasCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
 			final CacheKey ck = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
 			if ( ce != null ) {

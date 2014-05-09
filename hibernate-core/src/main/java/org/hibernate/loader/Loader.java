@@ -1592,7 +1592,7 @@ public abstract class Loader {
 			);
 
 		// see if the entity defines reference caching, and if so use the cached reference (if one).
-		if ( persister.canUseReferenceCacheEntries() ) {
+		if ( session.getCacheMode().isGetEnabled() && persister.canUseReferenceCacheEntries() ) {
 			final Object cachedEntry = CacheHelper.fromSharedCache(
 					session,
 					session.generateCacheKey(

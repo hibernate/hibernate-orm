@@ -167,7 +167,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @return The SqlExceptionHelper
 	 */
 	public SqlExceptionHelper sqlExceptionHelper() {
-		return transactionEnvironment().getJdbcServices().getSqlExceptionHelper();
+		return exceptionHelper;
 	}
 
 

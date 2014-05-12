@@ -383,20 +383,27 @@ public class PostgreSQL81Dialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			try {
 				final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
-				switch (sqlState) {
-					// CHECK VIOLATION
-					case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
-					// UNIQUE VIOLATION
-					case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
-					// FOREIGN KEY VIOLATION
-					case 23503: return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-					// NOT NULL VIOLATION
-					case 23502: return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-					// TODO: RESTRICT VIOLATION
-					case 23001: return null;
-					// ALL OTHER
-					default: return null;
-				}
+                String constraintName = null;
+                do {
+                    switch (sqlState) {
+                        // CHECK VIOLATION
+                        case 23514: constraintName = extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() ); break;
+                        // UNIQUE VIOLATION
+                        case 23505: constraintName = extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() ); break;
+                        // FOREIGN KEY VIOLATION
+                        case 23503: constraintName = extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() ); break;
+                        // NOT NULL VIOLATION
+                        case 23502: constraintName = extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() ); break;
+                        // TODO: RESTRICT VIOLATION
+                        case 23001: constraintName = null; break;
+                        // ALL OTHER
+                        default: constraintName = null; break;
+				    }
+                    if(sqle.getNextException() == sqle) break;
+                    if(sqle.getNextException() == null) break;
+                    sqle = sqle.getNextException();
+                } while(constraintName == null);
+                return constraintName;
 			}
 			catch (NumberFormatException nfe) {
 				return null;

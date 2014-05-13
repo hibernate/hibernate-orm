@@ -270,6 +270,45 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-9154" )
+	public void testClassAsParameter() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		Type[] types = s.createQuery( "select h.name from Human h" ).getReturnTypes();
+		assertEquals( 1, types.length );
+		assertTrue( types[0] instanceof ComponentType );
+
+		s.createQuery( "from Human h where h.name = :class" ).setParameter( "class", new Name() ).list();
+		s.createQuery( "from Human where name = :class" ).setParameter( "class", new Name() ).list();
+		s.createQuery( "from Human h where :class = h.name" ).setParameter( "class", new Name() ).list();
+		s.createQuery( "from Human h where :class <> h.name" ).setParameter( "class", new Name() ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-9154" )
+	public void testObjectAsParameter() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		Type[] types = s.createQuery( "select h.name from Human h" ).getReturnTypes();
+		assertEquals( 1, types.length );
+		assertTrue( types[0] instanceof ComponentType );
+
+		s.createQuery( "from Human h where h.name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
+		s.createQuery( "from Human where name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
+		s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
+		s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
 	public void testComponentJoins() {
 		Session s = openSession();
 		s.beginTransaction();

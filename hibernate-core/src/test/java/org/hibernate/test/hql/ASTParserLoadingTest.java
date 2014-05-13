@@ -265,32 +265,22 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpected( jiraKey = "HHH-9154" )
 	public void testClassAsParameter() {
-		// just checking syntax here...
 		Session s = openSession();
 		s.beginTransaction();
 
-		///////////////////////////////////////////////////////////////
-		// where clause
-		// control
-		s.createQuery( "from Animal a where a.class = :class" ).setParameter( "class", Dog.class ).list();
+		Type[] types = s.createQuery( "select h.name from Human h" ).getReturnTypes();
+		assertEquals( 1, types.length );
+		assertTrue( types[0] instanceof ComponentType );
 
-		///////////////////////////////////////////////////////////////
-		// select clause (at some point we should unify these)
-		// control
-		Query query = s.createQuery( "select a.class from Animal a where a.class = :class" ).setParameter( "class", Dog.class );
-		query.list(); // checks syntax
-		assertEquals( 1, query.getReturnTypes().length );
-		assertEquals( Integer.class, query.getReturnTypes()[0].getReturnedClass() ); // always integer for joined
-		// test
-		query = s.createQuery( "select type(a) from Animal a where type(a) = Dog" );
-		query.list(); // checks syntax
-		assertEquals( 1, query.getReturnTypes().length );
-		assertEquals( DiscriminatorType.class, query.getReturnTypes()[0].getClass() );
-		assertEquals( Class.class, query.getReturnTypes()[0].getReturnedClass() );
+		s.createQuery( "from Human h where h.name = :class" ).setParameter( "class", new Name() ).list();
+		s.createQuery( "from Human where name = :class" ).setParameter( "class", new Name() ).list();
+		s.createQuery( "from Human h where :class = h.name" ).setParameter( "class", new Name() ).list();
+		s.createQuery( "from Human h where :class <> h.name" ).setParameter( "class", new Name() ).list();
 
 		s.getTransaction().commit();
 		s.close();
 	}
+
 
 	@Test
 	@FailureExpected( jiraKey = "HHH-9154" )
@@ -302,10 +292,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, types.length );
 		assertTrue( types[0] instanceof ComponentType );
 
-		s.createQuery( "from Human h where h.name = :Object" ).setParameter( "object", new Name() ).list();
-		s.createQuery( "from Human where name = :object" ).setParameter( "object", new Name() ).list();
-		s.createQuery( "from Human h where :object = h.name" ).setParameter( "object", new Name() ).list();
-		s.createQuery( "from Human h where :object <> h.name" ).setParameter( "object", new Name() ).list();
+		s.createQuery( "from Human h where h.name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
+		s.createQuery( "from Human where name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
+		s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
+		s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
 
 		s.getTransaction().commit();
 		s.close();

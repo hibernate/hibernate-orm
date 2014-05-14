@@ -35,8 +35,15 @@ public class SQLServer2012SequenceGeneratorTest extends BaseCoreFunctionalTestCa
         s.persist(person);
         tx.commit();
         s.close();
-        
+
         assertTrue(person.getId() == 10);
-    }
+
+		s = openSession();
+		tx = s.beginTransaction();
+		s.createQuery( "delete from Person" ).executeUpdate();
+		tx.commit();
+		s.close();
+
+	}
 
 }

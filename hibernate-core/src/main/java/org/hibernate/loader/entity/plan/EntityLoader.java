@@ -63,8 +63,7 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		private final OuterJoinLoadable persister;
 		private int batchSize = 1;
 		private LoadQueryInfluencers influencers = LoadQueryInfluencers.NONE;
-		private LockMode lockMode = LockMode.NONE;
-		private LockOptions lockOptions;
+		private LockOptions lockOptions = new LockOptions( LockMode.NONE );
 
 		public Builder(OuterJoinLoadable persister) {
 			this.persister = persister;
@@ -81,7 +80,7 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		}
 
 		public Builder withLockMode(LockMode lockMode) {
-			this.lockMode = lockMode;
+			this.lockOptions.setLockMode( lockMode );
 			return this;
 		}
 
@@ -113,7 +112,7 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 
 						@Override
 						public LockMode getLockMode() {
-							return lockMode;
+							return lockOptions.getLockMode();
 						}
 
 						@Override

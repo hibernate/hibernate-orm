@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.id">
+
+	<class name="Person">
+		<id name="id" column="id">
+			<generator class="sequence">
+                <param name="parameters">start with 10</param>
+            </generator>
+		</id>
+	</class>
+
+</hibernate-mapping>

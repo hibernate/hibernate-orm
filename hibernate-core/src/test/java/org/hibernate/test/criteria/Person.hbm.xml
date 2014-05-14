@@ -7,7 +7,7 @@
 
     <class name="Person">
         <id name="id" type="long">
-            <generator class="sequence"/>
+            <generator class="enhanced-sequence"/>
         </id>
         <property name="name" type="string"/>
         <property name="weight" type="integer"/>

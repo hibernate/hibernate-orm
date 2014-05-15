@@ -55,6 +55,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
@@ -653,17 +654,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	@Override
 	public boolean needsRecreate(CollectionPersister persister) {
-		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
-		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
+		// Workaround for situations like HHH-7072 and HHH-9186.  If the collection element is a component that consists
+		// entirely of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
 		// of hasNotNullableColumns in the AbstractCollectionPersister constructor for more info.  In order to delete
 		// row-by-row, that would require SQL like "WHERE ( COL = ? OR ( COL is null AND ? is null ) )", rather than
 		// the current "WHERE COL = ?" (fails for null for most DBs).  Note that
 		// the param would have to be bound twice.  Until we eventually add "parameter bind points" concepts to the
 		// AST in ORM 5+, handling this type of condition is either extremely difficult or impossible.  Forcing
 		// recreation isn't ideal, but not really any other option in ORM 4.
-		if (persister.getElementType() instanceof ComponentType) {
-			ComponentType componentType = (ComponentType) persister.getElementType();
+		Type elementType = persister.getElementType();
+		if ( elementType instanceof ComponentType ) {
+			ComponentType componentType = (ComponentType) elementType;
 			return !componentType.hasNotNullProperty();
+		}
+		else if ( elementType instanceof CompositeCustomType ) {
+			// Unfortunately there is no way to tell if the composite cumstom type has nullable properties or not.
+			return true;
 		}
 		return false;
 	}

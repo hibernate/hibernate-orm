@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -28,6 +29,7 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9186")
+	@FailureExpected(jiraKey = "HHH-9186")
 	public void testRemovalWithNullableFields() {
 		Session session = openSession();
 

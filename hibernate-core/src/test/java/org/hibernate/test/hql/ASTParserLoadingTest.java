@@ -23,15 +23,6 @@
  */
 package org.hibernate.test.hql;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -74,6 +65,20 @@ import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.Type;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.any.IntegerPropertyValue;
 import org.hibernate.test.any.PropertySet;
 import org.hibernate.test.any.PropertyValue;
@@ -97,6 +102,17 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -264,45 +280,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, query.getReturnTypes().length );
 		assertEquals( DiscriminatorType.class, query.getReturnTypes()[0].getClass() );
 		assertEquals( Class.class, query.getReturnTypes()[0].getReturnedClass() );
-
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	@FailureExpected( jiraKey = "HHH-9154" )
-	public void testClassAsParameter() {
-		Session s = openSession();
-		s.beginTransaction();
-
-		Type[] types = s.createQuery( "select h.name from Human h" ).getReturnTypes();
-		assertEquals( 1, types.length );
-		assertTrue( types[0] instanceof ComponentType );
-
-		s.createQuery( "from Human h where h.name = :class" ).setParameter( "class", new Name() ).list();
-		s.createQuery( "from Human where name = :class" ).setParameter( "class", new Name() ).list();
-		s.createQuery( "from Human h where :class = h.name" ).setParameter( "class", new Name() ).list();
-		s.createQuery( "from Human h where :class <> h.name" ).setParameter( "class", new Name() ).list();
-
-		s.getTransaction().commit();
-		s.close();
-	}
-
-
-	@Test
-	@FailureExpected( jiraKey = "HHH-9154" )
-	public void testObjectAsParameter() {
-		Session s = openSession();
-		s.beginTransaction();
-
-		Type[] types = s.createQuery( "select h.name from Human h" ).getReturnTypes();
-		assertEquals( 1, types.length );
-		assertTrue( types[0] instanceof ComponentType );
-
-		s.createQuery( "from Human h where h.name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
-		s.createQuery( "from Human where name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
-		s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
-		s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
 
 		s.getTransaction().commit();
 		s.close();

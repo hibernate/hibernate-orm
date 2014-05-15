@@ -198,6 +198,13 @@ tokens
 	public void weakKeywords() throws TokenStreamException {
 	}
 
+	/**
+	 * Called after we have recognized ':'.  The expectation is to handle converting
+	 * any non-IDENT token where possibleID == true into an IDENT
+	 */
+	public void expectNamedParameterName() throws TokenStreamException {
+	}
+
 	public void processMemberOf(Token n,AST p,ASTPair currentAST) {
 	}
 
@@ -666,15 +673,24 @@ quantifiedExpression
 //      * method call ( '.' ident '(' exprList ') )
 //      * function : differentiated from method call via explicit keyword
 atom
-    : { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
-    | { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
-    | primaryExpression
+	: primaryExpression
 		(
 			DOT^ identifier
 				( options { greedy=true; } :
 					( op:OPEN^ {#op.setType(METHOD_CALL);} exprList CLOSE! ) )?
 		|	lb:OPEN_BRACKET^ {#lb.setType(INDEX_OP);} expression CLOSE_BRACKET!
 		)*
+	;
+
+
+// level 0 - the basic element of an expression
+primaryExpression
+    : { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
+    | { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
+	| identPrimary ( options {greedy=true;} : DOT^ "class" )?
+	| constant
+	| parameter
+	| OPEN! (expressionOrVector | subQuery) CLOSE!
 	;
 
 jpaFunctionSyntax!
@@ -710,18 +726,8 @@ castTargetType
 	: identifier { handleDotIdent(); } ( options { greedy=true; } : DOT^ identifier )*
 	;
 
-
-// level 0 - the basic element of an expression
-primaryExpression
-	:   identPrimary ( options {greedy=true;} : DOT^ "class" )?
-	|   constant
-	|   parameter
-	// TODO: Add parens to the tree so the user can control the operator evaluation order.
-	|   OPEN! (expressionOrVector | subQuery) CLOSE!
-	;
-
 parameter
-	: COLON^ identifier
+	: COLON^ { expectNamedParameterName(); } IDENT
 	| PARAM^ (NUM_INT)?
 	;
 

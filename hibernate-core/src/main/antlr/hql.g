@@ -197,8 +197,16 @@ tokens
 
 	public void weakKeywords() throws TokenStreamException { }
 
-	public void processMemberOf(Token n,AST p,ASTPair currentAST) { }
-	
+	/**
+	 * Called after we have recognized ':'.  The expectation is to handle converting
+	 * any non-IDENT token where possibleID == true into an IDENT
+	 */
+	public void expectNamedParameterName() throws TokenStreamException {
+	}
+
+	public void processMemberOf(Token n,AST p,ASTPair currentAST) {
+	}
+
 	protected boolean validateSoftKeyword(String text) throws TokenStreamException {
 		return validateLookAheadText(1, text);
 	}
@@ -633,8 +641,7 @@ quantifiedExpression
 // ident qualifier ('.' ident ), array index ( [ expr ] ),
 // method call ( '.' ident '(' exprList ') )
 atom
-	: { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
-    | primaryExpression
+	: primaryExpression
 		(
 			DOT^ identifier
 				( options { greedy=true; } :
@@ -657,17 +664,18 @@ castTargetType
 	: identifier { handleDotIdent(); } ( options { greedy=true; } : DOT^ identifier )*
 	;
 
+
 // level 0 - the basic element of an expression
 primaryExpression
-	:   identPrimary ( options {greedy=true;} : DOT^ "class" )?
-	|   constant
-	|   parameter
-	// TODO: Add parens to the tree so the user can control the operator evaluation order.
-	|   OPEN! (expressionOrVector | subQuery) CLOSE!
+	: { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
+ 	| identPrimary ( options {greedy=true;} : DOT^ "class" )?
+	| constant
+	| parameter
+	| OPEN! (expressionOrVector | subQuery) CLOSE!
 	;
 
 parameter
-	: COLON^ identifier
+	: COLON^ { expectNamedParameterName(); } IDENT
 	| PARAM^ (NUM_INT)?
 	;
 

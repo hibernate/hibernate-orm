@@ -34,6 +34,7 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
@@ -41,7 +42,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Jakob Braeuchi.
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-8908")
+@TestForIssue(jiraKey = "HHH-9193")
 @FailureExpectedWithNewMetamodel( message = "Aggregate.getSuperType() returns null when it should return a MappedSuperclass")
 public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
 	private long id;
@@ -70,6 +71,7 @@ public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestC
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-9193" )
 	public void testEmbeddableThatExtendsMappedSuperclass() {
 
 		// Reload and Compare Revision
@@ -85,7 +87,9 @@ public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestC
 
 		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
 
-		// value is read from AUD Table
-		Assert.assertEquals( entityLoaded.getValue(), entityRev1.getValue() );
+		// only value.codeArt should be audited because it is the only audited field in EmbeddableWithDeclaredData;
+		// fields in AbstractEmbeddable should not be audited.
+		Assert.assertEquals( entityLoaded.getValue().getCodeart(), entityRev1.getValue().getCodeart() );
+		Assert.assertNull( entityRev1.getValue().getCode() );
 	}
 }

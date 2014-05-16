@@ -72,7 +72,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class AuditedPropertiesReader {
-	private final boolean defaultAudited;
+	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
 	private final GlobalConfiguration globalCfg;
@@ -91,13 +91,13 @@ public class AuditedPropertiesReader {
 	private final Set<XClass> overriddenNotAuditedClasses;
 
 	public AuditedPropertiesReader(
-			boolean defaultAudited,
+			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			GlobalConfiguration globalCfg,
 			ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
-		this.defaultAudited = defaultAudited;
+		this.defaultStore = defaultStore;
 		this.persistentPropertiesSource = persistentPropertiesSource;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
 		this.globalCfg = globalCfg;
@@ -368,7 +368,7 @@ public class AuditedPropertiesReader {
 				allClassAudited
 		);
 
-		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() || defaultAudited ) {
+		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
 			final XClass superclazz = clazz.getSuperclass();
 			if ( !clazz.isInterface() && !"java.lang.Object".equals( superclazz.getName() ) ) {
 				addPropertiesFromClass( superclazz );
@@ -432,8 +432,8 @@ public class AuditedPropertiesReader {
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-					defaultAudited, componentPropertiesSource, componentData, globalCfg,
-					reflectionManager, propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
+					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
 			);
 			audPropReader.read();
 
@@ -458,7 +458,7 @@ public class AuditedPropertiesReader {
 		}
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
-				isAudited,
+				ModificationStore.FULL,
 				componentPropertiesSource,
 				componentData,
 				globalCfg,

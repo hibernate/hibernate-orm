@@ -11,6 +11,8 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.collection.EmbeddableSetEntity;
 import org.hibernate.envers.test.entities.components.Component3;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 /**
@@ -24,6 +26,8 @@ public class EmbeddableSet extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-9199")
+	@FailureExpected(jiraKey = "HHH-9199")
 	public void testRemoval() {
 		EntityManager em = getEntityManager();
 

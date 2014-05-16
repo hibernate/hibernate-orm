@@ -24,7 +24,6 @@
 package org.hibernate.envers.test.integration.components.mappedsuperclass;
 
 import javax.persistence.Embeddable;
-import javax.persistence.Transient;
 
 /**
  * @author Jakob Braeuchi.

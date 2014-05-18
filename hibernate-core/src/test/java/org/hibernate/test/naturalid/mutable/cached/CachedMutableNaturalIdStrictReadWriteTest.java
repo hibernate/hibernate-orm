@@ -1,14 +1,17 @@
 package org.hibernate.test.naturalid.mutable.cached;
 
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.stat.NaturalIdCacheStatistics;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.cache.CachingRegionFactory;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.junit.Test;
 
 public class CachedMutableNaturalIdStrictReadWriteTest extends
 		CachedMutableNaturalIdTest {
@@ -150,5 +153,28 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		session.delete(it);
 		session.getTransaction().commit();
 		assertEquals("In a strict access strategy we would excpect a hit here", 1, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9200" )
+	public void testNaturalIdCacheStatisticsReset() {
+		final String naturalIdCacheRegion = "hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId";
+		sessionFactory().getStatistics().clear();
+
+		final Session session = openSession();
+		session.beginTransaction();
+		final Another it = new Another( "IT");
+		session.save( it );
+		session.getTransaction().commit();
+		session.close();
+
+		NaturalIdCacheStatistics statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
+		assertEquals( 1, statistics.getPutCount() );
+
+		sessionFactory().getStatistics().clear();
+
+		// Refresh statistics reference.
+		statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
+		assertEquals( 0, statistics.getPutCount() );
 	}
 }

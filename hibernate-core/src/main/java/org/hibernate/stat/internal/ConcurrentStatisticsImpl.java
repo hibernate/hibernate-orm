@@ -187,6 +187,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		entityStatistics.clear();
 		collectionStatistics.clear();
 		queryStatistics.clear();
+		naturalIdCacheStatistics.clear();
 
 		startTime = System.currentTimeMillis();
 	}

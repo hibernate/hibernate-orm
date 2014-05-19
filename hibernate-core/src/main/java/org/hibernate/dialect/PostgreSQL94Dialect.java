@@ -29,7 +29,7 @@ import org.hibernate.type.StandardBasicTypes;
 /**
  * An SQL dialect for Postgres 9.4 and later. Adds support for various date and time functions
  */
-public class PostgreSQL94Dialect extends PostgreSQL9Dialect {
+public class PostgreSQL94Dialect extends PostgreSQL92Dialect {
 
 	/**
 	 * Constructs a PostgreSQL94Dialect

@@ -31,8 +31,12 @@ import java.sql.Types;
  * @author Mark Robinson
  */
 public class PostgreSQL92Dialect extends PostgreSQL9Dialect {
-    public PostgreSQL92Dialect() {
-        super();
-        this.registerColumnType(Types.JAVA_OBJECT, "json");
-    }
+
+	/**
+	 * Constructs a PostgreSQL92Dialect
+	 */
+	public PostgreSQL92Dialect() {
+		super();
+		this.registerColumnType( Types.JAVA_OBJECT, "json" );
+	}
 }

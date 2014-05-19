@@ -222,7 +222,10 @@ public class QueryPlanCache implements Serializable {
 		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
 		if ( value == null ) {
 			LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
-			value = new NativeSQLQueryPlan( spec, factory);
+			value = factory.getServiceRegistry()
+					.getService(QueryPlanFactory.class )
+					.createNativeQueryPlan( spec, factory );
+
 			queryPlanCache.putIfAbsent( spec, value );
 		}
 		else {

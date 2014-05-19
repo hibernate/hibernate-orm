@@ -155,8 +155,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 	
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id,
-			int nextIndex, SessionImplementor session)
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		// nothing to do
 	}

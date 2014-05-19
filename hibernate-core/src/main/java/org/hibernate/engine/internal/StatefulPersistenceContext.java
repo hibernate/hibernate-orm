@@ -1739,7 +1739,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 										}
 									}
 									else {
-										naturalIdCacheAccessStrategy.remove( naturalIdCacheKey );
+										naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
 									}
 								}
 							}

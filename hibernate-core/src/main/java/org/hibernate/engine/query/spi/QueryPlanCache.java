@@ -135,37 +135,13 @@ public class QueryPlanCache implements Serializable {
 	public ParameterMetadata getSQLParameterMetadata(final String query)  {
 		ParameterMetadata value = parameterMetadataCache.get( query );
 		if ( value == null ) {
-			value = buildParameterMetadata( query );
+			value = factory.getServiceRegistry()
+					.getService( ParameterMetadataRecognizer.class )
+					.getParameterMetadata( query );
+
 			parameterMetadataCache.putIfAbsent( query, value );
 		}
 		return value;
-	}
-	
-	private ParameterMetadata buildParameterMetadata(String query){
-		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( query );
-
-		final int size = recognizer.getOrdinalParameterLocationList().size();
-		final OrdinalParameterDescriptor[] ordinalDescriptors = new OrdinalParameterDescriptor[ size ];
-		for ( int i = 0; i < size; i++ ) {
-			final Integer position = recognizer.getOrdinalParameterLocationList().get( i );
-			ordinalDescriptors[i] = new OrdinalParameterDescriptor( i, null, position );
-		}
-
-		final Map<String, NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String, NamedParameterDescriptor>();
-		final Map<String, ParamLocationRecognizer.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
-		for ( final String name : map.keySet() ) {
-			final ParamLocationRecognizer.NamedParameterDescription description = map.get( name );
-			namedParamDescriptorMap.put(
-					name,
-					new NamedParameterDescriptor(
-							name,
-							null,
-							description.buildPositionsArray(),
-							description.isJpaStyle()
-					)
-			);
-		}
-		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
 	}
 
 	/**

@@ -30,23 +30,15 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.CollectionType;
 
 /**
- * A set with no nullable element columns. It will have a primary key
- * consisting of all table columns (ie. key columns + element columns).
+ * A set which only has a primary key, if all columns are not nullable. A primary key consists of all table columns (ie.
+ * key columns + element columns).
  * @author Gavin King
+ * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
 public class Set extends Collection {
 
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
-		//for backward compatibility, disable this:
-		/*Iterator iter = getElement().getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column col = (Column) iter.next();
-			if ( !col.isNullable() ) {
-				return;
-			}
-		}
-		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
 	public Set(Mappings mappings, PersistentClass owner) {
@@ -76,31 +68,38 @@ public class Set extends Collection {
 	}
 
 	void createPrimaryKey() {
-		if ( !isOneToMany() ) {
+		if ( !isOneToMany() && !hasNullableColumn() ) {
 			PrimaryKey pk = new PrimaryKey();
 			pk.addColumns( getKey().getColumnIterator() );
-			Iterator iter = getElement().getColumnIterator();
+			Iterator<?> iter = getElement().getColumnIterator();
 			while ( iter.hasNext() ) {
 				Object selectable = iter.next();
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
-					if ( !col.isNullable() ) {
-						pk.addColumn(col);
-					}
+					pk.addColumn(col);
 				}
 			}
-			if ( pk.getColumnSpan()==getKey().getColumnSpan() ) { 
-				//for backward compatibility, allow a set with no not-null 
-				//element columns, using all columns in the row locater SQL
-				//TODO: create an implicit not null constraint on all cols?
-			}
-			else {
-				getCollectionTable().setPrimaryKey(pk);
-			}
+			getCollectionTable().setPrimaryKey(pk);
 		}
 		else {
 			//create an index on the key columns??
 		}
+	}
+
+	private boolean hasNullableColumn() {
+		boolean result = false;
+		final Iterator<?> iter = getElement().getColumnIterator();
+		while ( iter.hasNext() ) {
+			Object selectable = iter.next();
+			if ( selectable instanceof Column ) {
+				Column col = (Column) selectable;
+				if ( col.isNullable() ) {
+					result = true;
+					break;
+				}
+			}
+		}
+		return result;
 	}
 
 	public Object accept(ValueVisitor visitor) {

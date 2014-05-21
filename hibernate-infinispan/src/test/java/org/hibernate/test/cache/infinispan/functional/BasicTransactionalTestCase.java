@@ -44,6 +44,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -221,6 +222,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd
 	public void testQueryCacheInvalidation() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

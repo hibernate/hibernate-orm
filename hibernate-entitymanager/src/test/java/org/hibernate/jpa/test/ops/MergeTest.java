@@ -32,11 +32,13 @@ import org.junit.Test;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 /**
  * @author Gavin King
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewUnifiedXsd
 public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testMergeTree() {

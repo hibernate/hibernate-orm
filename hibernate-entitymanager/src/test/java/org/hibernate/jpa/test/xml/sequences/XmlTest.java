@@ -30,12 +30,14 @@ import org.junit.Test;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard
  */
 @RequiresDialectFeature( DialectChecks.SupportsSequences.class )
+@FailureExpectedWithNewUnifiedXsd
 public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testXmlMappingCorrectness() throws Exception {

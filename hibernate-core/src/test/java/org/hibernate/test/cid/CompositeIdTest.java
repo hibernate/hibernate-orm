@@ -47,7 +47,6 @@ import org.junit.Test;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewUnifiedXsd(message = "MultipleBagFetchException")
 public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -147,6 +146,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "MultipleBagFetchException")
 	public void testCompositeIds() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -311,6 +311,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "MultipleBagFetchException")
 	public void testMultipleCollectionFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

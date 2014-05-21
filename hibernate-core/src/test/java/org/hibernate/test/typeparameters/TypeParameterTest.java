@@ -35,7 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -44,7 +44,6 @@ import org.junit.Test;
  * 
  * @author Michael Gloegl
  */
-@FailureExpectedWithNewMetamodel
 public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {
@@ -54,6 +53,7 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd
 	public void testSave() throws Exception {
 		deleteData();
 

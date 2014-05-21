@@ -61,9 +61,9 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewUnifiedXsd(message = "one-to-one refers to entity-name")
 public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "one-to-one refers to entity-name")
 	public void testJoinedOneToOne() {
 		// tests the mappings defined in org.hibernate.test.onetoone.joined.JoinedSubclassOneToOneTest
 

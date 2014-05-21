@@ -42,7 +42,6 @@ import static org.junit.Assert.assertEquals;
         comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
-@FailureExpectedWithNewUnifiedXsd(message = "joined subclass not getting columns defined by superclass")
 public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {
@@ -78,6 +77,7 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "joined subclass not getting columns defined by superclass")
 	public void testFilteredJoinedSubclassHqlDeleteNonLeaf() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -104,6 +104,7 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "joined subclass not getting columns defined by superclass")
 	public void testFilteredJoinedSubclassHqlDeleteLeaf() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -156,6 +157,7 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "joined subclass not getting columns defined by superclass")
 	public void testFilteredJoinedSubclassHqlUpdateNonLeaf() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -185,6 +187,7 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "joined subclass not getting columns defined by superclass")
 	public void testFilteredJoinedSubclassHqlUpdateLeaf() {
 		Session s = openSession();
 		s.beginTransaction();

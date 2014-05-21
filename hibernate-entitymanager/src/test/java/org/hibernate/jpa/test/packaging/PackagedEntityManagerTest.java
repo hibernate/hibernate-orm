@@ -61,6 +61,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -149,7 +150,8 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testListenersDefaultPar() throws Exception {
+	@FailureExpectedWithNewUnifiedXsd
+    public void testListenersDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
 
@@ -189,7 +191,8 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testExplodedPar() throws Exception {
+	@FailureExpectedWithNewUnifiedXsd
+    public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );
 

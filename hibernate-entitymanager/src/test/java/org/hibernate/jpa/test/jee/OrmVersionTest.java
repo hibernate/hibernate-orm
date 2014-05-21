@@ -45,6 +45,7 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.pack.defaultpar.Lighter;
 import org.hibernate.jpa.test.pack.defaultpar_1_0.Lighter1;
 
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
@@ -54,7 +55,8 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  */
 public class OrmVersionTest extends BaseUnitTestCase {
     @Test
-	public void testOrm1() {
+	@FailureExpectedWithNewUnifiedXsd
+    public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-1.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
@@ -64,7 +66,8 @@ public class OrmVersionTest extends BaseUnitTestCase {
 	}
 
     @Test
-	public void testOrm2() {
+    @FailureExpectedWithNewUnifiedXsd
+    public void testOrm2() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-2.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();

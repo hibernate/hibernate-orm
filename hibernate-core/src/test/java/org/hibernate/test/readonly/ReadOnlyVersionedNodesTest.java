@@ -36,7 +36,6 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Gail Badner
  */
-@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	@Override
 	public String[] getMappings() {
@@ -264,6 +263,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 	public void testAddNewChildToReadOnlyParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -301,6 +301,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 	public void testUpdateParentWithNewChildCommitWithReadOnlyParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -348,6 +349,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 	public void testMergeDetachedParentWithNewChildCommitWithReadOnlyParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -395,6 +397,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 	public void testGetParentMakeReadOnlyThenMergeDetachedParentWithNewChildC() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -594,6 +597,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 	public void testMergeDetachedChildWithNewParentCommitWithReadOnlyChild() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -641,6 +645,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "statistics are failing")
 	public void testGetChildMakeReadOnlyThenMergeDetachedChildWithNewParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();

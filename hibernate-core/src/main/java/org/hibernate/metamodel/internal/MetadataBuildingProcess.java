@@ -148,10 +148,6 @@ public class MetadataBuildingProcess {
 				options.getTempClassLoader(),
 				options.getServiceRegistry()
 		);
-		
-		// It's necessary to delay the binding of XML resources until now.  ClassLoaderAccess is needed for
-		// reflection, etc.
-		sources.buildBindResults( classLoaderAccess );
 
 		final JandexInitManager jandexInitializer = buildJandexInitializer( options, classLoaderAccess );
 		
@@ -185,9 +181,12 @@ public class MetadataBuildingProcess {
 			// the index we are building
 			sources.indexKnownClasses( jandexInitializer );
 		}
+		
+		// It's necessary to delay the binding of XML resources until now.  ClassLoaderAccess is needed for
+		// reflection, etc.
+		sources.buildBindResults( classLoaderAccess );
 
 		final IndexView jandexView = augmentJandexFromMappings( jandexInitializer.buildIndex(), sources, options );
-
 
 		final BasicTypeRegistry basicTypeRegistry = handleTypes( options );
 

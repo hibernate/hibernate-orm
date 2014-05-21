@@ -33,6 +33,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  * @author Hardy Ferentschik
  */
+@FailureExpectedWithNewUnifiedXsd
 public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testGetLoad() {

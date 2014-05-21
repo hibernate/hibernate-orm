@@ -24,8 +24,6 @@
 package org.hibernate.test.cfg.cache;
 
 import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -38,9 +36,6 @@ public class CacheConfigurationTest extends BaseUnitTestCase {
 	public static final String CFG_XML = "org/hibernate/test/cfg/cache/hibernate.cfg.xml";
 
 	@Test
-	@FailureExpectedWithNewMetamodel(
-			message = "problem handling 'spread' hbm inheritance with explicit extends XML attribute"
-	)
 	public void testCacheConfiguration() throws Exception {
 		// we only care if the SF builds successfully.
 		Configuration cfg = new Configuration().configure(CFG_XML);

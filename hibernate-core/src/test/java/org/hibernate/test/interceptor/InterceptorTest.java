@@ -51,7 +51,6 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
 public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -78,6 +77,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
 	public void testPropertyIntercept() {
 		Session s = openSession( new PropertyInterceptor() );
 		Transaction t = s.beginTransaction();
@@ -104,6 +104,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@TestForIssue( jiraKey = "HHH-1921" )
+	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
 	public void testPropertyIntercept2() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -233,6 +234,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
 	public void testInitiateIntercept() {
 		final String injectedString = "******";
 		final InstantiateInterceptor initiateInterceptor = new InstantiateInterceptor( injectedString );
@@ -279,6 +281,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6594" )
+	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
 	public void testPrepareStatementIntercept() {
 		final Queue<String> expectedSQLs = new LinkedList<String>();
 		// Transaction 1

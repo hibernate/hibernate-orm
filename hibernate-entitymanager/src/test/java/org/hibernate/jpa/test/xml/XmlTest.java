@@ -34,10 +34,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewUnifiedXsd
 public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 
 	// failures from org.hibernate.tuple.PropertyFactory.buildEntityBasedAttribute again

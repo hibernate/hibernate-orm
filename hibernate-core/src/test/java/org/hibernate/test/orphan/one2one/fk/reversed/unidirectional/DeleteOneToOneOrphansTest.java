@@ -38,7 +38,6 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewUnifiedXsd(message = "m2o with orphan removal")
 public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "orphan/one2one/fk/reversed/unidirectional/Mapping.hbm.xml" };
@@ -64,6 +63,7 @@ public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "m2o with orphan removal")
 	public void testOrphanedWhileManaged() {
 		createData();
 
@@ -140,6 +140,7 @@ public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-6484")
+	@FailureExpectedWithNewUnifiedXsd(message = "m2o with orphan removal")
 	public void testReplacedWhileManaged() {
 		createData();
 

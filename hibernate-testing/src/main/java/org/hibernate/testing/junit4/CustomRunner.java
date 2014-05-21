@@ -32,16 +32,18 @@ import java.util.List;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
+import org.jboss.logging.Logger;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -51,8 +53,6 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-
-import org.jboss.logging.Logger;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}
@@ -137,8 +137,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	protected Statement classBlock( RunNotifier notifier ) {
 		log.info( BeforeClass.class.getSimpleName() + ": " + getName() );
 
-		if ( getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) != null
-				|| getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) {
+		if ( FailureExpectedUtil.hasFailureExpectedMarker( getTestClass().getJavaClass().getAnnotations() ) ) {
 			log.info( FailureExpected.class.getSimpleName() );
 		}
 
@@ -149,8 +148,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	protected Statement methodBlock(FrameworkMethod method) {
 		log.info( Test.class.getSimpleName() + ": " + method.getName() );
 
-		if ( method.getAnnotation( FailureExpected.class ) != null
-				|| method.getAnnotation( FailureExpectedWithNewMetamodel.class ) != null ) {
+		if ( FailureExpectedUtil.hasFailureExpectedMarker( method.getAnnotations() ) ) {
 			log.info( FailureExpected.class.getSimpleName() );
 		}
 
@@ -210,12 +208,21 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 		for ( FrameworkMethod frameworkMethod : methods ) {
 			FailureExpected failureExpected = Helper.locateAnnotation( FailureExpected.class, frameworkMethod, getTestClass() );
+			// TODO: Re-think what's given to the ExtendedFrameworkMethod, rather than mocking the FailureExpected?
 			if ( failureExpected == null ) {
-				// see if there is a FailureExpectedWithNewMetamodel, and if so treat it like FailureExpected
 				final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel
 						= Helper.locateAnnotation( FailureExpectedWithNewMetamodel.class, frameworkMethod, getTestClass() );
 				if ( failureExpectedWithNewMetamodel != null ) {
-					failureExpected = new FailureExpectedWithNewMetamodelAdapter( failureExpectedWithNewMetamodel );
+					failureExpected = new FailureExpectedAdapter( failureExpectedWithNewMetamodel.message(),
+							failureExpectedWithNewMetamodel.jiraKey() );
+				}
+			}
+			if ( failureExpected == null ) {
+				final FailureExpectedWithNewUnifiedXsd failureExpectedWithNewUnifiedXsd
+						= Helper.locateAnnotation( FailureExpectedWithNewUnifiedXsd.class, frameworkMethod, getTestClass() );
+				if ( failureExpectedWithNewUnifiedXsd != null ) {
+					failureExpected = new FailureExpectedAdapter( failureExpectedWithNewUnifiedXsd.message(),
+							failureExpectedWithNewUnifiedXsd.jiraKey() );
 				}
 			}
 			// potentially ignore based on expected failure
@@ -378,11 +385,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	}
 
 	@SuppressWarnings("ClassExplicitlyAnnotation")
-	private class FailureExpectedWithNewMetamodelAdapter implements FailureExpected {
-		private final FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel;
+	private class FailureExpectedAdapter implements FailureExpected {
+		private final String message;
+		
+		private final String jiraKey;
 
-		public FailureExpectedWithNewMetamodelAdapter(FailureExpectedWithNewMetamodel failureExpectedWithNewMetamodel) {
-			this.failureExpectedWithNewMetamodel = failureExpectedWithNewMetamodel;
+		public FailureExpectedAdapter(String message, String jiraKey) {
+			this.message = message;
+			this.jiraKey = jiraKey;
 		}
 		@Override
 		public Class< ? extends Annotation > annotationType() {
@@ -391,12 +401,12 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 		@Override
 		public String message() {
-			return failureExpectedWithNewMetamodel.message();
+			return message;
 		}
 
 		@Override
 		public String jiraKey() {
-			return failureExpectedWithNewMetamodel.jiraKey();
+			return jiraKey;
 		}
 	}
 }

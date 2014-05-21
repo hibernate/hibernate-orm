@@ -22,9 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.joinfetch;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -34,17 +36,14 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not support formulas within map keys")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not support formulas within map keys")
 public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

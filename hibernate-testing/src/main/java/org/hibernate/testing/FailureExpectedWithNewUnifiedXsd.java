@@ -28,25 +28,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Annotation used to mark a test as an expected failure.
- *
- * @author Hardy Ferentschik
- * @author Steve Ebersole
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Retention( RetentionPolicy.RUNTIME )
+@Target( { ElementType.METHOD, ElementType.TYPE } )
 @FailureExpectedMarker
-public @interface FailureExpected {
-	/**
-	 * The key of a JIRA issue which covers this expected failure.
-	 * @return The jira issue key
-	 */
-	String jiraKey();
+public @interface FailureExpectedWithNewUnifiedXsd {
 
 	/**
-	 * A message explaining the reason for the expected failure.  Optional.
-	 * @return The reason
+	 * @return an optional JIRA issue key that covers the expected failure
+	 */
+	String jiraKey() default "";
+
+	/**
+	 * @return an optional message related to the expected failure
 	 */
 	String message() default "";
 }

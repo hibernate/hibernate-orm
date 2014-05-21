@@ -22,13 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.entitymode.map.basic;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
 
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
@@ -36,17 +38,14 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

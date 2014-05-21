@@ -23,13 +23,18 @@
  */
 package org.hibernate.test.tm;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.transaction.Transaction;
 
-import org.junit.Test;
+import javax.transaction.Transaction;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
@@ -40,22 +45,17 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class CMTTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

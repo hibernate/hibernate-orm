@@ -36,9 +36,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.junit.Test;
 
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class MapTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

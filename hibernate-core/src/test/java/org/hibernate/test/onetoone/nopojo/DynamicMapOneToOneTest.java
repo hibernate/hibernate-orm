@@ -1,26 +1,25 @@
 //$Id: DynamicMapOneToOneTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.onetoone.nopojo;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.junit.Test;
 
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.EntityStatistics;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class DynamicMapOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

@@ -23,10 +23,8 @@
  */
 package org.hibernate.testing.junit4;
 
+import org.hibernate.testing.FailureExpectedUtil;
 import org.junit.runners.model.Statement;
-
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Steve Ebersole
@@ -48,8 +46,7 @@ public class BeforeClassCallbackHandler extends Statement {
 		}
 		catch ( Throwable error ) {
 			runner.setBeforeClassMethodFailed();
-			if ( runner.getTestClass().getJavaClass().getAnnotation( FailureExpected.class ) == null
-					&& runner.getTestClass().getJavaClass().getAnnotation( FailureExpectedWithNewMetamodel.class ) == null ) {
+			if (FailureExpectedUtil.hasFailureExpectedMarker( runner.getTestClass().getJavaClass().getAnnotations() )) {
 				throw error;
 			}
 		}

@@ -46,7 +46,7 @@ import javax.persistence.OneToMany;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentMap;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -57,7 +57,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not support formulas within map keys")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not support formulas within map keys")
 public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

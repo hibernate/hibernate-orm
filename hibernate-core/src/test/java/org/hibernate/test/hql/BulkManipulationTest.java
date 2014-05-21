@@ -46,6 +46,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
@@ -58,7 +59,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel(message = "*.hbm.xml mappings are doing something not supported in the transformer")
+@FailureExpectedWithNewUnifiedXsd(message = "*.hbm.xml mappings are doing something not supported in the transformer")
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {

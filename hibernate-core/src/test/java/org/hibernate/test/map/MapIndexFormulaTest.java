@@ -22,22 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.map;
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not support formulas within map keys")
+@FailureExpectedWithNewUnifiedXsd(message = "HbmXmlTransformer does not support formulas within map keys")
 public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "map/UserGroup.hbm.xml" };

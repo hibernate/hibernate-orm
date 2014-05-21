@@ -23,28 +23,30 @@
  */
 package org.hibernate.test.metamodel.unified.jaxb;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.metamodel.internal.ClassLoaderAccessImpl;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbBasic;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.xml.internal.jaxb.UnifiedMappingBinder;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
 public class SimpleBindingTest extends BaseUnitTestCase {
-	private UnifiedMappingBinder binder = new UnifiedMappingBinder( true );
+	private UnifiedMappingBinder binder = new UnifiedMappingBinder( true,
+			new ClassLoaderAccessImpl( null, new BootstrapServiceRegistryImpl() ) );
 
 	@Test
 	public void simpleSpecCompliantMappingTest() throws Exception {

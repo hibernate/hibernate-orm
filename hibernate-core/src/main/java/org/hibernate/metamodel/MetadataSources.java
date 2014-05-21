@@ -61,9 +61,9 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMappedSuperclass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitDefaults;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
-import org.hibernate.metamodel.source.spi.InvalidMappingException;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.source.spi.MappingNotFoundException;
+import org.hibernate.metamodel.spi.ClassLoaderAccess;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 import org.hibernate.xml.internal.jaxb.UnifiedMappingBinder;
@@ -86,15 +86,12 @@ public class MetadataSources {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
-	private final UnifiedMappingBinder jaxbProcessor;
 	private List<BindResult> bindResultList = new ArrayList<BindResult>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private List<Class<? extends AttributeConverter>> converterClasses;
-
-	private boolean hasOrmXmlJaxbRoots;
 
 	public MetadataSources() {
 		this( new BootstrapServiceRegistryBuilder().build() );
@@ -115,12 +112,18 @@ public class MetadataSources {
 			);
 		}
 		this.serviceRegistry = serviceRegistry;
-		this.jaxbProcessor = new UnifiedMappingBinder();
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
 		return BootstrapServiceRegistry.class.isInstance( serviceRegistry )
 				|| StandardServiceRegistry.class.isInstance( serviceRegistry );
+	}
+	
+	public void buildBindResults(ClassLoaderAccess classLoaderAccess) {
+		final UnifiedMappingBinder jaxbProcessor = new UnifiedMappingBinder( classLoaderAccess );
+		for ( BindResult bindResult : bindResultList ) {
+			bindResult.bind( jaxbProcessor );
+		}
 	}
 
 	public List<BindResult> getBindResultList() {
@@ -243,24 +246,9 @@ public class MetadataSources {
 	}
 
 	private BindResult add(InputStream inputStream, Origin origin, boolean close) {
-		try {
-			BindResult bindResult = new BindResult( jaxbProcessor.bind( inputStream, origin ), origin );
-			addJaxbRoot( bindResult );
-			return bindResult;
-		}
-		catch ( Exception e ) {
-			throw new InvalidMappingException( origin, e );
-		}
-		finally {
-			if ( close ) {
-				try {
-					inputStream.close();
-				}
-				catch ( IOException ignore ) {
-					LOG.trace( "Was unable to close input stream" );
-				}
-			}
-		}
+		BindResult bindResult = new BindResult( inputStream, origin, close );
+		bindResultList.add( bindResult );
+		return bindResult;
 	}
 
 	/**
@@ -419,7 +407,7 @@ public class MetadataSources {
 		}
 
 		LOG.readingCachedMappings( cachedFile );
-		addJaxbRoot( (BindResult) SerializationHelper.deserialize( new FileInputStream( cachedFile ) ) );
+		bindResultList.add( (BindResult) SerializationHelper.deserialize( new FileInputStream( cachedFile ) ) );
 		return this;
 	}
 
@@ -470,14 +458,8 @@ public class MetadataSources {
 	@Deprecated
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
-		BindResult bindResult = new BindResult( jaxbProcessor.bind( new DOMSource( document ), origin ), origin );
-		addJaxbRoot( bindResult );
+		bindResultList.add( new BindResult( new DOMSource( document ), origin ) );
 		return this;
-	}
-
-	private void addJaxbRoot(BindResult bindResult) {
-		hasOrmXmlJaxbRoots = hasOrmXmlJaxbRoots || JaxbEntityMappings.class.isInstance( bindResult.getRoot() );
-		bindResultList.add( bindResult );
 	}
 
 	/**

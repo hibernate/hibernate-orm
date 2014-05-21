@@ -29,6 +29,7 @@ import javax.xml.stream.events.StartElement;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.source.internal.jaxb.hbm.HbmXmlTransformer;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.spi.ClassLoaderAccess;
 import org.hibernate.xml.internal.stax.LocalSchema;
 import org.hibernate.xml.spi.Origin;
 
@@ -41,13 +42,17 @@ import org.jboss.logging.Logger;
  */
 public class UnifiedMappingBinder extends AbstractUnifiedBinder<JaxbEntityMappings> {
 	private static final Logger log = Logger.getLogger( UnifiedMappingBinder.class );
+	
+	private final ClassLoaderAccess classLoaderAccess;
 
-	public UnifiedMappingBinder() {
+	public UnifiedMappingBinder(ClassLoaderAccess classLoaderAccess) {
 		super();
+		this.classLoaderAccess = classLoaderAccess;
 	}
 
-	public UnifiedMappingBinder(boolean validateXml) {
+	public UnifiedMappingBinder(boolean validateXml, ClassLoaderAccess classLoaderAccess) {
 		super( validateXml );
+		this.classLoaderAccess = classLoaderAccess;
 	}
 
 	@Override
@@ -65,7 +70,7 @@ public class UnifiedMappingBinder extends AbstractUnifiedBinder<JaxbEntityMappin
 
 			XMLEventReader hbmReader = new HbmEventReader( staxEventReader );
 			JaxbHibernateMapping hbmBindings = jaxb( hbmReader, LocalSchema.HBM.getSchema(), JaxbHibernateMapping.class, origin );
-			return HbmXmlTransformer.INSTANCE.transform( hbmBindings, origin );
+			return HbmXmlTransformer.INSTANCE.transform( hbmBindings, origin, classLoaderAccess );
 		}
 		else {
 			final XMLEventReader reader = new UnifiedMappingEventReader( staxEventReader );

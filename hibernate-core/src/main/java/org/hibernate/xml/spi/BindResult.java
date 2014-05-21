@@ -23,7 +23,16 @@
  */
 package org.hibernate.xml.spi;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+
+import javax.xml.transform.Source;
+
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.metamodel.source.spi.InvalidMappingException;
+import org.hibernate.xml.internal.jaxb.AbstractUnifiedBinder;
+import org.jboss.logging.Logger;
 
 /**
  * Return object for the result of performing JAXB binding.
@@ -32,12 +41,30 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public class BindResult<T> implements Serializable {
-	private final T root;
+	private static final Logger LOG = CoreLogging.logger( BindResult.class );
+	
+	private final DelayedBinder<T> binder;
+	
 	private final Origin origin;
+	
+	private final boolean close;
+	
+	private T root;
 
-	public BindResult(T root, Origin origin) {
-		this.root = root;
+	public BindResult(Source source, Origin origin) {
+		binder = new DelayedSourceBinder<T>( source );
 		this.origin = origin;
+		close = false;
+	}
+
+	public BindResult(InputStream inputStream, Origin origin, boolean close) {
+		binder = new DelayedInputStreamBinder<T>( inputStream );
+		this.origin = origin;
+		this.close = close;
+	}
+	
+	public void bind(AbstractUnifiedBinder<T> jaxbProcessor) {
+		root = binder.bind( jaxbProcessor );
 	}
 
 	/**
@@ -56,5 +83,48 @@ public class BindResult<T> implements Serializable {
 	 */
 	public Origin getOrigin() {
 		return origin;
+	}
+	
+	private interface DelayedBinder<T> {
+		public T bind(AbstractUnifiedBinder<T> jaxbProcessor);
+	}
+	
+	private class DelayedSourceBinder<T> implements DelayedBinder<T> {
+		private final Source source;
+		
+		public DelayedSourceBinder(Source source) {
+			this.source = source;
+		}
+		
+		public T bind(AbstractUnifiedBinder<T> jaxbProcessor) {
+			return jaxbProcessor.bind( source, origin );
+		}
+	}
+	
+	private class DelayedInputStreamBinder<T> implements DelayedBinder<T> {
+		private final InputStream inputStream;
+		
+		public DelayedInputStreamBinder(InputStream inputStream) {
+			this.inputStream = inputStream;
+		}
+		
+		public T bind(AbstractUnifiedBinder<T> jaxbProcessor) {
+			try {
+				return jaxbProcessor.bind( inputStream, origin );
+			}
+			catch ( Exception e ) {
+				throw new InvalidMappingException( origin, e );
+			}
+			finally {
+				if ( close ) {
+					try {
+						inputStream.close();
+					}
+					catch ( IOException ignore ) {
+						LOG.trace( "Was unable to close input stream" );
+					}
+				}
+			}
+		}
 	}
 }

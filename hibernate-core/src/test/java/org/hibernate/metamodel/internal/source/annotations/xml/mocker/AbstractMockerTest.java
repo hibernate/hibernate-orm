@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,26 +33,22 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
+import org.hibernate.metamodel.internal.ClassLoaderAccessImpl;
 import org.hibernate.metamodel.source.internal.jandex.EntityMappingsMocker;
 import org.hibernate.metamodel.source.internal.jandex.IndexBuilder;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.xml.internal.jaxb.UnifiedMappingBinder;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-
-import org.hibernate.testing.ServiceRegistryBuilder;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * @author Strong Liu
@@ -72,18 +71,20 @@ public abstract class AbstractMockerTest {
 	}
 
 	protected EntityMappingsMocker getEntityMappingsMocker(String... mappingFiles) {
-		MappingXmlBinder processor = new MappingXmlBinder( getServiceRegistry() );
+		UnifiedMappingBinder processor = new UnifiedMappingBinder(
+				new ClassLoaderAccessImpl(null, getServiceRegistry() ) );
 		ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
-		List<JaxbEntityMappings> xmlEntityMappingsList = new ArrayList<JaxbEntityMappings>();
+		List<BindResult<JaxbEntityMappings>> xmlBindings = new ArrayList<BindResult<JaxbEntityMappings>>();
 		for ( String fileName : mappingFiles ) {
-			BindResult bindResult = processor.bind(
+			BindResult bindResult = new BindResult(
 					classLoaderService.locateResourceStream( packagePrefix + fileName ),
-					new Origin( SourceType.FILE, packagePrefix + fileName )
+					new Origin( SourceType.FILE, packagePrefix + fileName ),
+					true
 			);
-			JaxbEntityMappings entityMappings = (JaxbEntityMappings) bindResult.getRoot();
-			xmlEntityMappingsList.add( entityMappings );
+			bindResult.bind( processor );
+			xmlBindings.add( bindResult );
 		}
-		return new EntityMappingsMocker( xmlEntityMappingsList, getIndex(), getServiceRegistry() );
+		return new EntityMappingsMocker( xmlBindings, getIndex(), getServiceRegistry() );
 	}
 
 	protected Index getIndex() {

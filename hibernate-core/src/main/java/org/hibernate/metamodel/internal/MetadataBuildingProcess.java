@@ -148,9 +148,13 @@ public class MetadataBuildingProcess {
 				options.getTempClassLoader(),
 				options.getServiceRegistry()
 		);
+		
+		// It's necessary to delay the binding of XML resources until now.  ClassLoaderAccess is needed for
+		// reflection, etc.
+		sources.buildBindResults( classLoaderAccess );
 
 		final JandexInitManager jandexInitializer = buildJandexInitializer( options, classLoaderAccess );
-
+		
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// scanning - Jandex initialization and source discovery
 		if ( options.getScanEnvironment() != null ) {

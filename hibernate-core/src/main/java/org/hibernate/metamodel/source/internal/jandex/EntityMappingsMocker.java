@@ -39,8 +39,6 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitDefaults;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.xml.spi.BindResult;
-import org.hibernate.xml.spi.Origin;
-import org.hibernate.xml.spi.SourceType;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 
@@ -66,30 +64,6 @@ public class EntityMappingsMocker {
 		this.xmlBindings = xmlBindings;
 		this.indexBuilder = new IndexBuilder( index, serviceRegistry );
 		this.globalAnnotations = new GlobalAnnotations();
-	}
-
-	public EntityMappingsMocker(
-			List<JaxbEntityMappings> xmlEntityMappingsList,
-			Index index,
-			ServiceRegistry serviceRegistry) {
-		this(
-				grabJaxbEntityMappings( xmlEntityMappingsList ),
-				index,
-				serviceRegistry
-		);
-	}
-
-	private static List<BindResult<JaxbEntityMappings>> grabJaxbEntityMappings(List<JaxbEntityMappings> xmlEntityMappingsList) {
-		final List<BindResult<JaxbEntityMappings>> result = new ArrayList<BindResult<JaxbEntityMappings>>();
-		for ( JaxbEntityMappings binding : xmlEntityMappingsList ) {
-			result.add(
-					new BindResult<JaxbEntityMappings>(
-							binding,
-							new Origin( SourceType.OTHER, Origin.UNKNOWN_FILE_PATH )
-					)
-			);
-		}
-		return result;
 	}
 
 	/**

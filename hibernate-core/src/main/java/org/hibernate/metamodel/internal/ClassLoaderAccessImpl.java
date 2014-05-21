@@ -25,11 +25,10 @@ package org.hibernate.metamodel.internal;
 
 import java.net.URL;
 
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.metamodel.spi.ClassLoaderAccess;
-
+import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
@@ -48,7 +47,7 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 		this.classLoaderService = classLoaderService;
 	}
 
-	public ClassLoaderAccessImpl(ClassLoader tempClassLoader, StandardServiceRegistry serviceRegistry) {
+	public ClassLoaderAccessImpl(ClassLoader tempClassLoader, ServiceRegistry serviceRegistry) {
 		this( tempClassLoader, serviceRegistry.getService( ClassLoaderService.class ) );
 	}
 

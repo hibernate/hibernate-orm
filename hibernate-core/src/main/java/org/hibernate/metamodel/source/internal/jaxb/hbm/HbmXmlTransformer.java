@@ -30,7 +30,6 @@ import javax.xml.bind.JAXBElement;
 
 import org.hibernate.FlushMode;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.internal.jandex.MockHelper;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAny;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbBasic;
@@ -62,7 +61,6 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmTypeDef;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbId;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbIdClass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbJoinColumn;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbJoinTable;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbManyToOne;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedNativeQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedQuery;
@@ -72,6 +70,7 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbQueryParamType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSynchronizeType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbTable;
+import org.hibernate.metamodel.spi.ClassLoaderAccess;
 import org.hibernate.xml.spi.Origin;
 import org.jboss.logging.Logger;
 
@@ -91,9 +90,12 @@ public class HbmXmlTransformer {
 
 	private Origin origin;
 	private JaxbEntityMappings ormRoot;
+	private ClassLoaderAccess classLoaderAccess;
 
-	public JaxbEntityMappings transform(JaxbHibernateMapping hbmXmlMapping, Origin origin) {
+	public JaxbEntityMappings transform(JaxbHibernateMapping hbmXmlMapping, Origin origin,
+			ClassLoaderAccess classLoaderAccess) {
 		this.origin = origin;
+		this.classLoaderAccess = classLoaderAccess;
 
 		ormRoot = new JaxbEntityMappings();
 		ormRoot.setDescription(

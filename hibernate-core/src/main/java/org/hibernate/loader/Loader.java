@@ -1675,69 +1675,80 @@ public abstract class Loader {
 
 		boolean eagerPropertyFetch = isEagerPropertyFetchEnabled(i);
 
-		// add temp entry so that the next step is circular-reference
-		// safe - only needed because some types don't take proper
-		// advantage of two-phase-load (esp. components)
-		TwoPhaseLoad.addUninitializedEntity(
-				key,
-				object,
-				persister,
-				lockMode,
-				!eagerPropertyFetch,
-				session
-			);
-
-		//This is not very nice (and quite slow):
-		final String[][] cols = persister == rootPersister ?
-				getEntityAliases()[i].getSuffixedPropertyAliases() :
-				getEntityAliases()[i].getSuffixedPropertyAliases(persister);
-
-		final Object[] values = persister.hydrate(
-				rs,
-				id,
-				object,
-				rootPersister,
-				cols,
-				eagerPropertyFetch,
-				session
-			);
-
-		final Object rowId = persister.hasRowId() ? rs.getObject(rowIdAlias) : null;
-
-		final AssociationType[] ownerAssociationTypes = getOwnerAssociationTypes();
-		if ( ownerAssociationTypes != null && ownerAssociationTypes[i] != null ) {
-			String ukName = ownerAssociationTypes[i].getRHSUniqueKeyPropertyName();
-			if (ukName!=null) {
-				final int index = ( (UniqueKeyLoadable) persister ).getPropertyIndex(ukName);
-				final Type type = persister.getPropertyTypes()[index];
-
-				// polymorphism not really handled completely correctly,
-				// perhaps...well, actually its ok, assuming that the
-				// entity name used in the lookup is the same as the
-				// the one used here, which it will be
-
-				EntityUniqueKey euk = new EntityUniqueKey(
-						rootPersister.getEntityName(), //polymorphism comment above
-						ukName,
-						type.semiResolve( values[index], session, object ),
-						type,
-						persister.getEntityMode(),
-						session.getFactory()
+		//Lock the PersistenceContext as if the same entity is being fetched by another
+        //asynchronous query call then the EntityEntry would be present in the context
+        //with loadedState=null, which will cause NPE in TwoPhaseLoad.doInitializeEntity
+        //where the flow depends on the hydratesState aka, entityEntry.getLoadedState()
+        //This will happen only if one thread has performed TwoPhaseLoad.addUninitializedEntity
+        //and has not yet completed the TwoPhaseLoad.postHydrate execution, another thread
+        //which got the same object (implements equals with id), find the loadedState=null
+        //and fails with NPE
+        synchronized (session.getPersistenceContext())
+        {
+			// add temp entry so that the next step is circular-reference
+			// safe - only needed because some types don't take proper
+			// advantage of two-phase-load (esp. components)
+			TwoPhaseLoad.addUninitializedEntity(
+					key,
+					object,
+					persister,
+					lockMode,
+					!eagerPropertyFetch,
+					session
 				);
-				session.getPersistenceContext().addEntity( euk, object );
-			}
-		}
 
-		TwoPhaseLoad.postHydrate(
-				persister,
-				id,
-				values,
-				rowId,
-				object,
-				lockMode,
-				!eagerPropertyFetch,
-				session
-		);
+			//This is not very nice (and quite slow):
+			final String[][] cols = persister == rootPersister ?
+					getEntityAliases()[i].getSuffixedPropertyAliases() :
+					getEntityAliases()[i].getSuffixedPropertyAliases(persister);
+
+			final Object[] values = persister.hydrate(
+					rs,
+					id,
+					object,
+					rootPersister,
+					cols,
+					eagerPropertyFetch,
+					session
+				);
+
+			final Object rowId = persister.hasRowId() ? rs.getObject(rowIdAlias) : null;
+
+			final AssociationType[] ownerAssociationTypes = getOwnerAssociationTypes();
+			if ( ownerAssociationTypes != null && ownerAssociationTypes[i] != null ) {
+				String ukName = ownerAssociationTypes[i].getRHSUniqueKeyPropertyName();
+				if (ukName!=null) {
+					final int index = ( (UniqueKeyLoadable) persister ).getPropertyIndex(ukName);
+					final Type type = persister.getPropertyTypes()[index];
+
+					// polymorphism not really handled completely correctly,
+					// perhaps...well, actually its ok, assuming that the
+					// entity name used in the lookup is the same as the
+					// the one used here, which it will be
+
+					EntityUniqueKey euk = new EntityUniqueKey(
+							rootPersister.getEntityName(), //polymorphism comment above
+							ukName,
+							type.semiResolve( values[index], session, object ),
+							type,
+							persister.getEntityMode(),
+							session.getFactory()
+					);
+					session.getPersistenceContext().addEntity( euk, object );
+				}
+			}
+
+			TwoPhaseLoad.postHydrate(
+					persister,
+					id,
+					values,
+					rowId,
+					object,
+					lockMode,
+					!eagerPropertyFetch,
+					session
+			);
+		}
 
 	}
 

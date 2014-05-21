@@ -6,6 +6,11 @@ configurations {
     }
 }
 
+// HHH-7490 - Temporarily disable tests
+test {
+	enabled = false
+}
+
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( project( ':hibernate-entitymanager' ) )

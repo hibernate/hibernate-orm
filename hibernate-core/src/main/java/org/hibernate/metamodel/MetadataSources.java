@@ -37,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -64,15 +65,13 @@ import org.hibernate.metamodel.source.spi.MappingException;
 import org.hibernate.metamodel.source.spi.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
-import org.hibernate.xml.internal.jaxb.MappingXmlBinder;
+import org.hibernate.xml.internal.jaxb.UnifiedMappingBinder;
 import org.hibernate.xml.spi.BindResult;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.SourceType;
-
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
 import org.w3c.dom.Document;
 
 /**
@@ -86,7 +85,7 @@ public class MetadataSources {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
-	private final MappingXmlBinder jaxbProcessor;
+	private final UnifiedMappingBinder jaxbProcessor;
 	private List<BindResult> bindResultList = new ArrayList<BindResult>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
@@ -115,7 +114,7 @@ public class MetadataSources {
 			);
 		}
 		this.serviceRegistry = serviceRegistry;
-		this.jaxbProcessor = new MappingXmlBinder( serviceRegistry );
+		this.jaxbProcessor = new UnifiedMappingBinder();
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
@@ -244,7 +243,7 @@ public class MetadataSources {
 
 	private BindResult add(InputStream inputStream, Origin origin, boolean close) {
 		try {
-			BindResult bindResult = jaxbProcessor.bind( inputStream, origin );
+			BindResult bindResult = new BindResult( jaxbProcessor.bind( inputStream, origin ), origin );
 			addJaxbRoot( bindResult );
 			return bindResult;
 		}
@@ -469,7 +468,7 @@ public class MetadataSources {
 	 */
 	public MetadataSources addDocument(Document document) {
 		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
-		BindResult bindResult = jaxbProcessor.bind( document, origin );
+		BindResult bindResult = new BindResult( jaxbProcessor.bind( document, origin ), origin );
 		addJaxbRoot( bindResult );
 		return this;
 	}

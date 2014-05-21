@@ -24,6 +24,7 @@
 package org.hibernate.xml.internal.jaxb;
 
 import java.io.InputStream;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -33,6 +34,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.validation.Schema;
 
 import org.hibernate.metamodel.source.spi.MappingException;
@@ -40,6 +42,7 @@ import org.hibernate.xml.internal.stax.BufferedXMLEventReader;
 import org.hibernate.xml.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.xml.spi.Origin;
 import org.hibernate.xml.spi.UnifiedBinder;
+import org.w3c.dom.Document;
 
 /**
  * @author Steve Ebersole
@@ -87,6 +90,24 @@ public abstract class AbstractUnifiedBinder<T> implements UnifiedBinder<T> {
 		try {
 			// create a standard StAX reader
 			final XMLEventReader staxReader = staxFactory().createXMLEventReader( source );
+			// and wrap it in a buffered reader (keeping 100 element sized buffer)
+			return new BufferedXMLEventReader( staxReader, 100 );
+		}
+		catch ( XMLStreamException e ) {
+			throw new MappingException( "Unable to create stax reader", e, origin );
+		}
+	}
+
+	@Override
+	public T bind(Document document, Origin origin) {
+		final XMLEventReader eventReader = createReader( document, origin );
+		return doBind( eventReader, origin );
+	}
+
+	protected XMLEventReader createReader(Document document, Origin origin) {
+		try {
+			// create a standard StAX reader
+			final XMLEventReader staxReader = staxFactory().createXMLEventReader( new DOMSource( document ) );
 			// and wrap it in a buffered reader (keeping 100 element sized buffer)
 			return new BufferedXMLEventReader( staxReader, 100 );
 		}

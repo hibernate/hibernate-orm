@@ -1387,7 +1387,9 @@ public class Configuration implements Serializable {
 			inSecondPass = true;
 			processSecondPassesOfType( PkDrivenByDefaultMapsIdSecondPass.class );
 			processSecondPassesOfType( SetSimpleValueTypeSecondPass.class );
-			processSecondPassesOfType( CopyIdentifierComponentSecondPass.class );
+
+			processCopyIdentifierSecondPassesInOrder();
+
 			processFkSecondPassInOrder();
 			processSecondPassesOfType( CreateKeySecondPass.class );
 			processSecondPassesOfType( SecondaryTableSecondPass.class );
@@ -1437,6 +1439,56 @@ public class Configuration implements Serializable {
 		}
 	}
 
+	private void processCopyIdentifierSecondPassesInOrder() {
+		List<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasses = getSecondPassesOfTypeOnly(
+				CopyIdentifierComponentSecondPass.class
+		);
+
+		if ( copyIdentifierComponentSecondPasses.size() == 0 ) {
+			return; // nothing to do here
+		}
+
+		copyIdentifierComponentSecondPasses = sortCopyIdentifierComponentSecondPasses(
+				copyIdentifierComponentSecondPasses
+		);
+		// process the ordered CopyIdentifierComponentSecondPasses
+		for ( CopyIdentifierComponentSecondPass sp : copyIdentifierComponentSecondPasses ) {
+			sp.doSecondPass( classes );
+		}
+	}
+
+	private List<CopyIdentifierComponentSecondPass> sortCopyIdentifierComponentSecondPasses(
+			List<CopyIdentifierComponentSecondPass> unsorted) {
+
+		ArrayList<CopyIdentifierComponentSecondPass> sorted =
+				new ArrayList<CopyIdentifierComponentSecondPass>( unsorted.size() );
+		topologicalSort( sorted, new HashSet<CopyIdentifierComponentSecondPass>( unsorted ) );
+		return sorted;
+	}
+
+	/* naive O(n^3) topological sort */
+	private void topologicalSort( List<CopyIdentifierComponentSecondPass> sorted, Set<CopyIdentifierComponentSecondPass> toSort ) {
+		while (!toSort.isEmpty()) {
+			CopyIdentifierComponentSecondPass independent = null;
+
+			searchForIndependent:
+			for ( CopyIdentifierComponentSecondPass secondPass : toSort ) {
+				for ( CopyIdentifierComponentSecondPass other : toSort ) {
+					if (secondPass.dependentUpon( other )) {
+						continue searchForIndependent;
+					}
+				}
+				independent = secondPass;
+				break;
+			}
+			if (independent == null) {
+				throw new MappingException( "cyclic dependency in derived identities" );
+			}
+			toSort.remove( independent );
+			sorted.add( independent );
+		}
+	}
+
 	/**
 	 * Processes FKSecondPass instances trying to resolve any
 	 * graph circularity (ie PK made of a many to one linking to
@@ -1444,7 +1496,7 @@ public class Configuration implements Serializable {
 	 */
 	private void processFkSecondPassInOrder() {
 		LOG.debug("Processing fk mappings (*ToOne and JoinedSubclass)");
-		List<FkSecondPass> fkSecondPasses = getFKSecondPassesOnly();
+		List<FkSecondPass> fkSecondPasses = getSecondPassesOfTypeOnly( FkSecondPass.class );
 
 		if ( fkSecondPasses.size() == 0 ) {
 			return; // nothing to do here
@@ -1487,18 +1539,21 @@ public class Configuration implements Serializable {
 	 * @return Returns a list of all <code>secondPasses</code> instances which are a instance of
 	 *         <code>FkSecondPass</code>.
 	 */
-	private List<FkSecondPass> getFKSecondPassesOnly() {
+	private <T extends SecondPass> List<T> getSecondPassesOfTypeOnly(Class<T> selectedType) {
+		if ( secondPasses.isEmpty() ) {
+			return Collections.emptyList();
+		}
 		Iterator iter = secondPasses.iterator();
-		List<FkSecondPass> fkSecondPasses = new ArrayList<FkSecondPass>( secondPasses.size() );
+		List<T> selectedSecondPasses = new ArrayList<T>( secondPasses.size() );
 		while ( iter.hasNext() ) {
 			SecondPass sp = ( SecondPass ) iter.next();
-			//do the second pass of fk before the others and remove them
-			if ( sp instanceof FkSecondPass ) {
-				fkSecondPasses.add( ( FkSecondPass ) sp );
+			// if sp is of the selected type, add the SecondPass to selectedPasses and remove from this.secondPasses.
+			if ( selectedType.isInstance( sp ) ) {
+				selectedSecondPasses.add( selectedType.cast( sp ) );
 				iter.remove();
 			}
 		}
-		return fkSecondPasses;
+		return selectedSecondPasses;
 	}
 
 	/**

@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+import static org.junit.Assert.assertTrue;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
 
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
@@ -36,13 +36,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-
-@FailureExpectedWithNewMetamodel(
-		jiraKey = "HHH-9055",
-		message = "Caused by: org.hibernate.MappingException: broken column mapping [Commento#marelo.id]; expecting 1 columns, but type defined 2"
-)
+@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class MapTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

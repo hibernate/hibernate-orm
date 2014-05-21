@@ -31,6 +31,8 @@ import javax.persistence.CascadeType;
  */
 public interface AssociationAttribute {
 	public String getMappedByAttributeName();
+	@Deprecated
+	public boolean isInverse();
 
 	public Set<CascadeType> getJpaCascadeTypes();
 	public Set<org.hibernate.annotations.CascadeType> getHibernateCascadeTypes();

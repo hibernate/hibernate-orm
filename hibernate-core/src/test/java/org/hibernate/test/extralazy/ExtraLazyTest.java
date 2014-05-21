@@ -34,6 +34,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -41,6 +42,7 @@ import org.junit.Test;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not support formulas within map keys")
 public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

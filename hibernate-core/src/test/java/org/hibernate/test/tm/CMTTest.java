@@ -55,6 +55,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class CMTTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

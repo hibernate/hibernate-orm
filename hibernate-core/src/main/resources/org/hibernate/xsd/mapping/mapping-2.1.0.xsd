@@ -461,7 +461,6 @@
     <!-- **************************************************** -->
 
     <xsd:complexType name="cascade-type">
-        <!-- todo : account for Hibernate cascade types -->
         <xsd:annotation>
             <xsd:documentation>
                 javax.persistence.CascadeType enum values
@@ -474,6 +473,29 @@
             <xsd:element name="cascade-remove" type="orm:emptyType" minOccurs="0"/>
             <xsd:element name="cascade-refresh" type="orm:emptyType" minOccurs="0"/>
             <xsd:element name="cascade-detach" type="orm:emptyType" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <!-- **************************************************** -->
+
+    <xsd:complexType name="hbm-cascade-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                org.hibernate.annotations.CascadeType enum values
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="cascade-all" type="orm:emptyType" minOccurs="0"/>
+            <xsd:element name="cascade-persist" type="orm:emptyType" minOccurs="0"/>
+            <xsd:element name="cascade-merge" type="orm:emptyType" minOccurs="0"/>
+            <xsd:element name="cascade-remove" type="orm:emptyType" minOccurs="0"/>
+            <xsd:element name="cascade-refresh" type="orm:emptyType" minOccurs="0"/>
+            <xsd:element name="cascade-detach" type="orm:emptyType" minOccurs="0"/>
+            <xsd:element name="cascade-delete" type="orm:emptyType" minOccurs="0"/>
+			<xsd:element name="cascade-save-update" type="orm:emptyType" minOccurs="0"/>
+			<xsd:element name="cascade-replicate" type="orm:emptyType" minOccurs="0"/>
+			<xsd:element name="cascade-lock" type="orm:emptyType" minOccurs="0"/>
         </xsd:sequence>
     </xsd:complexType>
 
@@ -675,6 +697,7 @@
                 </xsd:sequence>
             </xsd:choice>
             <xsd:element name="collection-table" type="orm:collection-table" minOccurs="0"/>
+            <xsd:element name="collection-type" minOccurs="0" type="orm:hbm-type"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="target-class" type="xsd:string"/>
@@ -1327,6 +1350,8 @@
             </xsd:choice>
             <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="hbm-cascade" type="orm:hbm-cascade-type" minOccurs="0"/>
+            <xsd:element name="collection-type" minOccurs="0" type="orm:hbm-type"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -1335,6 +1360,8 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
+        <xsd:attribute name="inverse" type="xsd:boolean"/> <!-- DEPRECATED -->
+        <xsd:attribute name="hbmKey" type="xsd:string"/> <!-- DEPRECATED (needed to carry the inverse side's <key> -->
     </xsd:complexType>
 
 
@@ -1358,6 +1385,7 @@
                 <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="hbm-cascade" type="orm:hbm-cascade-type" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -1707,6 +1735,8 @@
                 </xsd:sequence>
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="hbm-cascade" type="orm:hbm-cascade-type" minOccurs="0"/>
+            <xsd:element name="collection-type" minOccurs="0" type="orm:hbm-type"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -1715,6 +1745,7 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
+        <xsd:attribute name="inverse" type="xsd:boolean"/> <!-- DEPRECATED -->
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
     </xsd:complexType>
 
@@ -1741,6 +1772,7 @@
                 <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="hbm-cascade" type="orm:hbm-cascade-type" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -1750,6 +1782,7 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
+        <xsd:attribute name="inverse" type="xsd:boolean"/> <!-- DEPRECATED -->
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="maps-id" type="xsd:string"/>
         <xsd:attribute name="id" type="xsd:boolean"/>

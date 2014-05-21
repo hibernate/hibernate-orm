@@ -25,7 +25,7 @@ public class PluralAttributeElementSourceBasicImpl
 
 	@Override
 	public HibernateTypeSource getExplicitHibernateTypeSource() {
-		return new HibernateTypeSourceImpl( getPluralAttribute() );
+		return new HibernateTypeSourceImpl( getPluralAttribute().getElementDetails() );
 	}
 
 	@Override

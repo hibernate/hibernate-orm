@@ -29,6 +29,7 @@ import org.hibernate.annotations.AnyMetaDefs;
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Check;
@@ -56,6 +57,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Inverse;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
@@ -122,6 +124,7 @@ public interface HibernateDotNames {
 	DotName ATTRIBUTE_ACCESSOR = DotName.createSimple( AttributeAccessor.class.getName() );
 	DotName BATCH_SIZE = DotName.createSimple( BatchSize.class.getName() );
 	DotName CACHE = DotName.createSimple( Cache.class.getName() );
+	DotName CACHE_CONCURRENCY_STRATEGY = DotName.createSimple( CacheConcurrencyStrategy.class.getName() );
 	DotName CACHE_MODE_TYPE = DotName.createSimple( CacheModeType.class.getName() );
 	DotName CASCADE = DotName.createSimple( Cascade.class.getName() );
 	DotName CHECK = DotName.createSimple( Check.class.getName() );
@@ -150,6 +153,8 @@ public interface HibernateDotNames {
 	DotName GENERIC_GENERATOR = DotName.createSimple( GenericGenerator.class.getName() );
 	DotName GENERIC_GENERATORS = DotName.createSimple( GenericGenerators.class.getName() );
 	DotName IMMUTABLE = DotName.createSimple( Immutable.class.getName() );
+	@Deprecated
+	DotName INVERSE = DotName.createSimple( Inverse.class.getName() );
 	DotName JOIN_COLUMN_OR_FORMULA = DotName.createSimple( JoinColumnOrFormula.class.getName() );
 	DotName JOIN_COLUMNS_OR_FORMULAS = DotName.createSimple( JoinColumnsOrFormulas.class.getName() );
 	DotName JOIN_FORMULA = DotName.createSimple( JoinFormula.class.getName() );

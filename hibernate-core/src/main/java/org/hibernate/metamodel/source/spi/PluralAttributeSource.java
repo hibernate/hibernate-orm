@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.spi;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
+import org.hibernate.metamodel.source.internal.annotations.attribute.PluralAttribute;
 import org.hibernate.metamodel.spi.PluralAttributeNature;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
@@ -76,5 +77,7 @@ public interface PluralAttributeSource
 	public int getBatchSize();
 
 	public boolean usesJoinTable();
+	
+	public PluralAttribute getPluralAttribute();
 
 }

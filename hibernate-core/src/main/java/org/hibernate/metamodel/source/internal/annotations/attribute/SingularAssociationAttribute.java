@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.internal.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Set;
+
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 
@@ -40,7 +41,6 @@ import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotName
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.spi.AttributePath;
 import org.hibernate.metamodel.spi.AttributeRole;
-
 import org.jboss.jandex.AnnotationInstance;
 
 /**
@@ -52,7 +52,8 @@ public class SingularAssociationAttribute
 		implements FetchableAttribute, AssociationAttribute {
 
 	private final String target;
-	private final String mappedByAttributeName;
+	private String mappedByAttributeName;
+	private final boolean isInverse;
 	private final Set<CascadeType> jpaCascadeTypes;
 	private final Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes;
 	private final boolean isOrphanRemoval;
@@ -144,9 +145,13 @@ public class SingularAssociationAttribute
 					backingMember,
 					getContext()
 			);
+			
+			final AnnotationInstance inverseAnnotation = backingMember.getAnnotations().get( HibernateDotNames.INVERSE );
+			isInverse = inverseAnnotation != null;
 		}
 		else {
 			this.joinTableAnnotation = null;
+			isInverse = true;
 		}
 		joinColumnValues.trimToSize();
 		inverseJoinColumnValues.trimToSize();
@@ -172,6 +177,15 @@ public class SingularAssociationAttribute
 	@Override
 	public String getMappedByAttributeName() {
 		return mappedByAttributeName;
+	}
+
+	public void setMappedByAttributeName(String mappedByAttributeName) {
+		this.mappedByAttributeName = mappedByAttributeName;
+	}
+
+	@Override
+	public boolean isInverse() {
+		return isInverse;
 	}
 
 	@Override

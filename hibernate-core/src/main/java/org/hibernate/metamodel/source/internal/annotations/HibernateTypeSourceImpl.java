@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.source.internal.annotations.attribute.PersistentAttribute;
+import org.hibernate.metamodel.source.internal.annotations.attribute.PluralAttributeElementDetails;
 import org.hibernate.metamodel.source.spi.HibernateTypeSource;
 import org.hibernate.metamodel.source.spi.JavaTypeDescriptorResolvable;
 
@@ -60,6 +61,26 @@ public class HibernateTypeSourceImpl implements HibernateTypeSource, JavaTypeDes
 	public HibernateTypeSourceImpl(String name) {
 		this.name = name;
 		this.parameters = Collections.emptyMap();
+	}
+
+	public HibernateTypeSourceImpl(final PluralAttributeElementDetails element) {
+		this.nameHolder = new ValueHolder<String>(
+				new ValueHolder.DeferredInitializer<String>() {
+					@Override
+					public String initialize() {
+						return element.getTypeResolver().getExplicitHibernateTypeName();
+					}
+				}
+		);
+		this.parameterHolder = new ValueHolder<Map<String, String>>(
+				new ValueHolder.DeferredInitializer<Map<String, String>>() {
+					@Override
+					public Map<String, String> initialize() {
+						return element.getTypeResolver().getExplicitHibernateTypeParameters();
+					}
+				}
+		);
+		this.javaType = element.getJavaType();
 	}
 
 	@Override

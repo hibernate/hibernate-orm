@@ -167,7 +167,7 @@ public class DynamicTypeDescriptorImpl implements DynamicTypeDescriptor, Annotat
 
 	@Override
 	public AnnotationInstance findLocalTypeAnnotation(DotName annotationType) {
-		return typeAnnotationMap.get( annotationType );
+		return typeAnnotationMap == null ? null : typeAnnotationMap.get( annotationType );
 	}
 
 	@Override

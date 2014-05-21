@@ -32,6 +32,8 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKey;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyClass;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyColumn;
@@ -169,6 +171,16 @@ public abstract class PropertyMocker extends AnnotationMocker {
 				getDefaults(), indexBuilder.getServiceRegistry() ) );
 	}
 
+	protected AnnotationInstance parseMapKeyType(JaxbHbmType mapKeyType, AnnotationTarget target) {
+		if ( mapKeyType == null ) {
+			return null;
+		}
+		
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.nestedAnnotationValue( "value", parseType( mapKeyType.getName(), null ), annotationValueList );
+		return create( HibernateDotNames.MAP_KEY_TYPE, target, annotationValueList );
+	}
+
 	protected AnnotationInstance parseMapKeyTemporal(TemporalType temporalType, AnnotationTarget target) {
 		if ( temporalType == null ) {
 			return null;
@@ -249,6 +261,11 @@ public abstract class PropertyMocker extends AnnotationMocker {
 		MockHelper.booleanValue( "updatable", column.isUpdatable(), annotationValueList );
 		return create( MAP_KEY_JOIN_COLUMN, target, annotationValueList );
 	}
-
-
+	
+	//@Type
+	protected AnnotationInstance parseType(String name, AnnotationTarget target) {
+		List<AnnotationValue> typeAnnotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "type", name, typeAnnotationValueList );
+		return create( HibernateDotNames.TYPE, target, typeAnnotationValueList );
+	}
 }

@@ -43,7 +43,13 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheModeType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCascadeType;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbEmptyType;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmCascadeType;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BagType;
+import org.hibernate.type.ListType;
+import org.hibernate.type.MapType;
+import org.hibernate.type.SetType;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -214,7 +220,25 @@ public class MockHelper {
 		}
 	}
 
-	private static void addIfNotNull(Object expect, List<Enum> enumList, CascadeType value) {
+	static void cascadeValue(String name, JaxbHbmCascadeType cascadeType, List<AnnotationValue> annotationValueList) {
+		List<Enum> enumList = new ArrayList<Enum>();
+		if ( cascadeType != null ) {
+			addIfNotNull( cascadeType.getCascadeAll(), enumList, org.hibernate.annotations.CascadeType.ALL );
+			addIfNotNull( cascadeType.getCascadePersist(), enumList, org.hibernate.annotations.CascadeType.PERSIST );
+			addIfNotNull( cascadeType.getCascadeMerge(), enumList, org.hibernate.annotations.CascadeType.MERGE );
+			addIfNotNull( cascadeType.getCascadeRemove(), enumList, org.hibernate.annotations.CascadeType.REMOVE );
+			addIfNotNull( cascadeType.getCascadeRefresh(), enumList, org.hibernate.annotations.CascadeType.REFRESH );
+			addIfNotNull( cascadeType.getCascadeDetach(), enumList , org.hibernate.annotations.CascadeType.DETACH );
+			addIfNotNull( cascadeType.getCascadeSaveUpdate(), enumList , org.hibernate.annotations.CascadeType.SAVE_UPDATE );
+			addIfNotNull( cascadeType.getCascadeReplicate(), enumList , org.hibernate.annotations.CascadeType.REPLICATE );
+			addIfNotNull( cascadeType.getCascadeLock(), enumList , org.hibernate.annotations.CascadeType.LOCK );
+		}
+		if ( !enumList.isEmpty() ) {
+			MockHelper.enumArrayValue( name, JPADotNames.CASCADE_TYPE, enumList, annotationValueList );
+		}
+	}
+
+	private static void addIfNotNull(Object expect, List<Enum> enumList, Enum value) {
 		if ( expect != null ) {
 			enumList.add( value);
 		}
@@ -506,5 +530,21 @@ public class MockHelper {
 			default:
 				throw new AssertionFailure( "Unknown jaxbCacheMode: " + jaxbCacheMode );
 		}
+	}
+	
+	public static String getCollectionType(String collectionTypeName) {
+		if (collectionTypeName.equalsIgnoreCase( "set" )) {
+			collectionTypeName = SetType.class.getName();
+		}
+		if (collectionTypeName.equalsIgnoreCase( "bag" )) {
+			collectionTypeName = BagType.class.getName();
+		}
+		if (collectionTypeName.equalsIgnoreCase( "list" )) {
+			collectionTypeName = ListType.class.getName();
+		}
+		if (collectionTypeName.equalsIgnoreCase( "map" )) {
+			collectionTypeName = MapType.class.getName();
+		}
+		return collectionTypeName;
 	}
 }

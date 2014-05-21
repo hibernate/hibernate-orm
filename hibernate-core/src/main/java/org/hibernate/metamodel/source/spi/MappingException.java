@@ -46,7 +46,11 @@ public class MappingException extends org.hibernate.MappingException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " : origin(" + origin.getName() + ")";
+		String message = super.getMessage();
+		if (origin != null) {
+			message += " : origin(" + origin.getName() + ")";
+		}
+		return message;
 	}
 
 	public Origin getOrigin() {

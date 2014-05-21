@@ -151,6 +151,7 @@
         </bindings>
         <bindings node="//xsd:complexType[@name='one-to-many']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.MapAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='one-to-one']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
@@ -163,9 +164,11 @@
         </bindings>
         <bindings node="//xsd:complexType[@name='many-to-many']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.MapAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='element-collection']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.MapAttribute</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='any']">
             <inheritance:implements>org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute</inheritance:implements>

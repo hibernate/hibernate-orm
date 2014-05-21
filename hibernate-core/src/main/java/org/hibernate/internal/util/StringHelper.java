@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -806,5 +807,13 @@ public final class StringHelper {
 
 	public static String nullIfEmpty(String value) {
 		return isEmpty( value ) ? null : value;
+	}
+	
+	public static boolean containsIgnoreCase(List<String> list, String s) {
+		s = toLowerCase( s );
+		for (int i = 0; i < list.size(); i++) {
+			list.set( i, toLowerCase( list.get( i ) ) );
+		}
+		return list.contains( s );
 	}
 }

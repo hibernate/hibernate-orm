@@ -24,10 +24,13 @@
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel(message = "The mapping seems really off.  Ex: Many of the classes have an inverse "
+		+ "<one-to-many class=\"Info\"/> w/ a <key column=\"col_plan\"/>, but the Info class has no associations.")
 public class VersionedEntityWithInverseOneToManyTest extends AbstractEntityWithOneToManyTest {
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersioned.hbm.xml" };

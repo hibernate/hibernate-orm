@@ -29,9 +29,12 @@ import java.util.Map;
 
 import javax.persistence.AccessType;
 
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheElement;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbDiscriminatorColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntity;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityListeners;
@@ -89,6 +92,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 
 			);
 		}
+		
 		//@Table
 		parseTable( entity.getTable() );
 		parseInheritance( entity.getInheritance() );
@@ -97,6 +101,9 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		parseAssociationOverrides( entity.getAssociationOverride(), getTarget() );
 		parsePrimaryKeyJoinColumnList( entity.getPrimaryKeyJoinColumn(), getTarget() );
 		parseSecondaryTableList( entity.getSecondaryTable(), getTarget() );
+		
+		//@Cache
+		parseCache( entity.getCache() );
 	}
 
 	//@Table  (entity only)
@@ -286,5 +293,17 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		}
 		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;
 
+	}
+	
+	private void parseCache(JaxbCacheElement cache) {
+		if ( cache == null ) {
+			return;
+		}
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "region", cache.getRegion(), annotationValueList );
+		MockHelper.stringValue( "include", cache.getInclude(), annotationValueList );
+		MockHelper.enumValue( "usage", HibernateDotNames.CACHE_CONCURRENCY_STRATEGY,
+				CacheConcurrencyStrategy.parse( cache.getUsage() ), annotationValueList );
+		create( HibernateDotNames.CACHE, annotationValueList );
 	}
 }

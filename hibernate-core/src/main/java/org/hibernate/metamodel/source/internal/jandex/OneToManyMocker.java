@@ -26,9 +26,9 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbOneToMany;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
-
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
@@ -50,6 +50,17 @@ public class OneToManyMocker extends PropertyMocker {
 
 	@Override
 	protected void doProcess() {
+		if (oneToMany.getCollectionType() != null) {
+			// TODO: Move this to a helper?
+			String collectionTypeName = MockHelper.getCollectionType( oneToMany.getCollectionType().getName() );
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.stringValue( "type", collectionTypeName, annotationValueList );
+			create( HibernateDotNames.COLLECTION_TYPE, annotationValueList );
+		}
+		if (oneToMany.isInverse()) {
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			create( HibernateDotNames.INVERSE, getTarget(), annotationValueList );
+		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue( "targetEntity", oneToMany.getTargetEntity(), annotationValueList, getDefaults(),
 				indexBuilder.getServiceRegistry() );
@@ -63,6 +74,7 @@ public class OneToManyMocker extends PropertyMocker {
 		parseMapKey( oneToMany.getMapKey(), getTarget() );
 		parseMapKeyColumn( oneToMany.getMapKeyColumn(), getTarget() );
 		parseMapKeyClass( oneToMany.getMapKeyClass(), getTarget() );
+		parseMapKeyType( oneToMany.getMapKeyType(), getTarget() );
 		parseMapKeyTemporal( oneToMany.getMapKeyTemporal(), getTarget() );
 		parseMapKeyEnumerated( oneToMany.getMapKeyEnumerated(), getTarget() );
 		parseJoinColumnList( oneToMany.getJoinColumn(), getTarget() );
@@ -71,5 +83,9 @@ public class OneToManyMocker extends PropertyMocker {
 		if ( oneToMany.getOrderBy() != null ) {
 			create( ORDER_BY, getTarget(), MockHelper.stringValueArray( "value", oneToMany.getOrderBy() ) );
 		}
+		
+		annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.cascadeValue( "value", oneToMany.getHbmCascade(), annotationValueList );
+		create( HibernateDotNames.CASCADE, getTarget(), annotationValueList );
 	}
 }

@@ -80,7 +80,7 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-		if ( attribute.getMappedByAttributeName() != null ) {
+		if ( attribute.isInverse() ) {
 			throw new IllegalStateException( "Cannot determine foreign key information because association is not the owner." );
 		}
 		for ( Column joinColumn : attribute.getJoinColumnValues() ) {

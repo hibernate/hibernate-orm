@@ -106,7 +106,7 @@ public abstract class AnnotationMocker extends AbstractMocker {
 		return create( ASSOCIATION_OVERRIDE, target, annotationValueList );
 	}
 
-	private AnnotationValue[] nestedJoinColumnList(String name, List<JaxbJoinColumn> columns, List<AnnotationValue> annotationValueList) {
+	private void nestedJoinColumnList(String name, List<JaxbJoinColumn> columns, List<AnnotationValue> annotationValueList) {
 		if ( CollectionHelper.isNotEmpty( columns ) ) {
 			AnnotationValue[] values = new AnnotationValue[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
@@ -118,9 +118,7 @@ public abstract class AnnotationMocker extends AbstractMocker {
 			MockHelper.addToCollectionIfNotNull(
 					annotationValueList, AnnotationValue.createArrayValue( name, values )
 			);
-			return values;
 		}
-		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -428,11 +426,12 @@ public abstract class AnnotationMocker extends AbstractMocker {
 				return parseJoinColumn( joinColumnList.get( 0 ), target );
 			}
 			else {
-				AnnotationValue[] values = nestedJoinColumnList( "value", joinColumnList, null );
+				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+				nestedJoinColumnList( "value", joinColumnList, annotationValueList );
 				return create(
 						JOIN_COLUMNS,
 						target,
-						values
+						annotationValueList
 				);
 			}
 		}

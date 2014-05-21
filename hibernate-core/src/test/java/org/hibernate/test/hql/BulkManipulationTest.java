@@ -58,6 +58,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel(message = "*.hbm.xml mappings are doing something not supported in the transformer")
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {

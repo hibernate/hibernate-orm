@@ -51,6 +51,10 @@ public class Column {
 	private String columnDefinition; // used for DDL creation
 
 	private String referencedColumnName; // from @JoinColumn
+	
+	public Column() {
+		
+	}
 
 	public Column(AnnotationInstance columnAnnotation) {
 		applyCheck( columnAnnotation );

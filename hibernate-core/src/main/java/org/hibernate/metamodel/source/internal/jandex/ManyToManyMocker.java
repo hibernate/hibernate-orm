@@ -26,9 +26,9 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbManyToMany;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
-
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
@@ -50,6 +50,18 @@ public class ManyToManyMocker extends PropertyMocker {
 
 	@Override
 	protected void doProcess() {
+		if (manyToMany.getCollectionType() != null) {
+			// TODO: Move this to a helper?
+			String collectionTypeName = MockHelper.getCollectionType( manyToMany.getCollectionType().getName() );
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.stringValue( "type", collectionTypeName, annotationValueList );
+			create( HibernateDotNames.COLLECTION_TYPE, annotationValueList );
+		}
+		if (manyToMany.isInverse() == null || manyToMany.isInverse()) {
+			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+			MockHelper.stringValue( "hbmKey", manyToMany.getHbmKey(), annotationValueList );
+			create( HibernateDotNames.INVERSE, getTarget(), annotationValueList );
+		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue( "targetEntity", manyToMany.getTargetEntity(), annotationValueList, getDefaults(),
 				indexBuilder.getServiceRegistry() );
@@ -58,6 +70,7 @@ public class ManyToManyMocker extends PropertyMocker {
 		MockHelper.cascadeValue( "cascade", manyToMany.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( MANY_TO_MANY, annotationValueList );
 		parseMapKeyClass( manyToMany.getMapKeyClass(), getTarget() );
+		parseMapKeyType( manyToMany.getMapKeyType(), getTarget() );
 		parseMapKeyTemporal( manyToMany.getMapKeyTemporal(), getTarget() );
 		parseMapKeyEnumerated( manyToMany.getMapKeyEnumerated(), getTarget() );
 		parseMapKey( manyToMany.getMapKey(), getTarget() );
@@ -68,5 +81,9 @@ public class ManyToManyMocker extends PropertyMocker {
 		if ( manyToMany.getOrderBy() != null ) {
 			create( ORDER_BY, MockHelper.stringValueArray( "value", manyToMany.getOrderBy() ) );
 		}
+		
+		annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.cascadeValue( "value", manyToMany.getHbmCascade(), annotationValueList );
+		create( HibernateDotNames.CASCADE, getTarget(), annotationValueList );
 	}
 }

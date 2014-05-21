@@ -35,4 +35,6 @@ public interface AttributeSourceResolutionContext {
 	public IdentifierSource resolveIdentifierSource(String entityName);
 	public AttributeSource resolveAttributeSource(String entityName, String attributeName);
 	public List<Column> resolveIdentifierColumns();
+	// Used to resolve inverse attribute sources.
+	public String resolveAttributeName(String entityName, List<String> columnNames);
 }

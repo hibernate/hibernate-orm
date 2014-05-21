@@ -70,12 +70,15 @@ public class AttributesBuilder extends AbstractAttributesBuilder {
 			}
 			for ( JaxbBasic basic : naturalId.getBasic() ) {
 				new NaturalIdMocker( indexBuilder, classInfo, defaults, basic, naturalId.isMutable() ).process();
+				new BasicMocker( indexBuilder, classInfo, defaults, basic ).process();
 			}
-			for ( JaxbEmbedded embedded : getAttributesContainer().getEmbedded() ) {
+			for ( JaxbEmbedded embedded : naturalId.getEmbedded() ) {
 				new NaturalIdMocker( indexBuilder, classInfo, defaults, embedded, naturalId.isMutable() ).process();
+				new EmbeddedMocker( indexBuilder, classInfo, defaults, embedded ).process();
 			}
-			for ( JaxbManyToOne manyToOne : getAttributesContainer().getManyToOne() ) {
+			for ( JaxbManyToOne manyToOne : naturalId.getManyToOne() ) {
 				new NaturalIdMocker( indexBuilder, classInfo, defaults, manyToOne, naturalId.isMutable() ).process();
+				new ManyToOneMocker( indexBuilder, classInfo, defaults, manyToOne ).process();
 			}
 			// TODO: @NaturalIdCache?
 		}

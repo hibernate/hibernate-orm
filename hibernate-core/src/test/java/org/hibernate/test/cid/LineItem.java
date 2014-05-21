@@ -77,6 +77,7 @@ public class LineItem {
 
 	public LineItem(Order o, Product p) {
 		this.order = o;
+		this.product = p;
 		this.id.orderNumber = o.getId().getOrderNumber();
 		this.id.customerId = o.getId().getCustomerId();
 		this.id.productId = p.getProductId();

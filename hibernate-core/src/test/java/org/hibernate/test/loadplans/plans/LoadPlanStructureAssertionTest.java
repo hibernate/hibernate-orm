@@ -256,6 +256,8 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel(message = "The mapping seems really off.  Ex: Many of the classes have an inverse "
+			+ "<one-to-many class=\"Info\"/> w/ a <key column=\"col_plan\"/>, but the Info class has no associations.")
 	public void testManyToMany() {
 		Configuration cfg = new Configuration();
 		cfg.addResource( "org/hibernate/test/immutable/entitywithmutablecollection/inverse/ContractVariation.hbm.xml" );

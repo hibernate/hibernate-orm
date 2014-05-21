@@ -34,9 +34,12 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.internal.annotations.RootEntitySourceImpl;
 import org.hibernate.metamodel.source.spi.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.source.spi.AttributeSource;
 import org.hibernate.metamodel.source.spi.AttributeSourceResolutionContext;
+import org.hibernate.metamodel.source.spi.ColumnSource;
 import org.hibernate.metamodel.source.spi.EmbeddedAttributeSource;
 import org.hibernate.metamodel.source.spi.EntityHierarchySource;
 import org.hibernate.metamodel.source.spi.EntitySource;
@@ -46,6 +49,8 @@ import org.hibernate.metamodel.source.spi.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.source.spi.NonAggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.source.spi.PluralAttributeIndexSourceResolver;
 import org.hibernate.metamodel.source.spi.PluralAttributeSource;
+import org.hibernate.metamodel.source.spi.RelationalValueSource;
+import org.hibernate.metamodel.source.spi.RelationalValueSourceContainer;
 import org.hibernate.metamodel.source.spi.SimpleIdentifierSource;
 import org.hibernate.metamodel.source.spi.SingularAttributeSource;
 import org.hibernate.metamodel.source.spi.ToOneAttributeSource;
@@ -55,7 +60,6 @@ import org.hibernate.metamodel.spi.SingularAttributeNature;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -357,6 +361,10 @@ public class SourceIndex {
 			);
 		}
 	}
+	
+	public EntitySource entitySource(String entityName) {
+		return entitySourceIndexByEntityName.get( entityName ).entitySource;
+	}
 
 	private static class EntitySourceIndex implements AttributeIndexingTarget {
 		private final SourceIndex sourceIndex;
@@ -489,7 +497,7 @@ public class SourceIndex {
 
 			// Resolve plural attributes.
 			for ( PluralAttributeSource pluralAttributeSource : inversePluralAttributeSourcesByKey.values() ) {
-				if ( pluralAttributeSource.getMappedBy() != null ) {
+				if ( pluralAttributeSource.isInverse() ) {
 					// This plural attribute is mappedBy the opposite side of the association,
 					// so it needs to be resolved.
 					pluralAttributeSource.resolvePluralAttributeElementSource( sourceResolutionContext );
@@ -564,6 +572,78 @@ public class SourceIndex {
 				@Override
 				public List<Column> resolveIdentifierColumns() {
 					return context.locateBinding( entitySource ).getPrimaryTable().getPrimaryKey().getColumns();
+				}
+				
+				@Override
+				public String resolveAttributeName(String entityName, List<String> columnNames) {
+					final EntitySource entitySource = sourceIndex.entitySource( entityName );
+					for (AttributeSource attributeSource : entitySource.attributeSources()) {
+						final String owningAttributeName = resolveAttributeName( attributeSource, entityName, columnNames );
+						if (! StringHelper.isEmpty( owningAttributeName )) {
+							return owningAttributeName;
+						}
+					}
+					
+					// TODO: yuck
+					if (RootEntitySourceImpl.class.isInstance( entitySource )) {
+						final RootEntitySourceImpl rootSource = (RootEntitySourceImpl) entitySource;
+						for (AttributeSource attributeSource : rootSource.getIdentifierAttributes()) {
+							final String owningAttributeName = resolveAttributeName( attributeSource, entityName, columnNames );
+							if (! StringHelper.isEmpty( owningAttributeName )) {
+								return owningAttributeName;
+							}
+						}
+					}
+					return null;
+				}
+				
+				private String resolveAttributeName(AttributeSource attributeSource, String entityName, List<String> columnNames) {
+					if (EmbeddedAttributeSource.class.isInstance( attributeSource )) {
+						final EmbeddedAttributeSource embeddedSource = (EmbeddedAttributeSource) attributeSource;
+						for (AttributeSource embeddedAttributeSource : embeddedSource.getEmbeddableSource().attributeSources()) {
+							final String owningAttributeName = resolveAttributeName( embeddedAttributeSource, entityName, columnNames );
+							if (! StringHelper.isEmpty( owningAttributeName )) {
+								return embeddedSource.getName() + "." + owningAttributeName;
+							}
+						}
+					}
+					else if (SingularAttributeSource.class.isInstance( attributeSource )) {
+						final SingularAttributeSource singularSource = (SingularAttributeSource) attributeSource;
+						int count = 0;
+						for (RelationalValueSource relationalSource : singularSource.relationalValueSources()) {
+							if (ColumnSource.class.isInstance( relationalSource )) {
+								final ColumnSource columnSource = (ColumnSource) relationalSource;
+								if (StringHelper.containsIgnoreCase( columnNames, columnSource.getName() )) {
+									count++;
+								}
+							}
+						}
+						if (count == columnNames.size()
+								&& singularSource.relationalValueSources().size() == columnNames.size()) {
+							return attributeSource.getName();
+						}
+					}
+					else if (PluralAttributeSource.class.isInstance( attributeSource )) {
+						final PluralAttributeSource pluralSource = (PluralAttributeSource) attributeSource;
+						if (pluralSource.getElementSource() instanceof RelationalValueSourceContainer) {
+							final RelationalValueSourceContainer relationalSourceContainer
+									= (RelationalValueSourceContainer) pluralSource.getElementSource();
+							int count = 0;
+							for (RelationalValueSource relationalSource : relationalSourceContainer.relationalValueSources()) {
+								if (ColumnSource.class.isInstance( relationalSource )) {
+									final ColumnSource columnSource = (ColumnSource) relationalSource;
+									if (StringHelper.containsIgnoreCase( columnNames, columnSource.getName() )) {
+										count++;
+									}
+								}
+							}
+							if (count == columnNames.size()
+									&& pluralSource.getPluralAttribute().getJoinColumnValues().size() == columnNames.size()) {
+								return attributeSource.getName();
+							}
+						}
+					}
+					return null;
 				}
 			};
 		}

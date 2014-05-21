@@ -102,7 +102,8 @@ public class PluralAttribute
 			PluralAttributeNature.ARRAY
 	);
 
-	private final String mappedByAttributeName;
+	private String mappedByAttributeName;
+	private final boolean isInverse;
 	private final Set<CascadeType> jpaCascadeTypes;
 	private final Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes;
 	private final boolean isOrphanRemoval;
@@ -274,9 +275,20 @@ public class PluralAttribute
 					backingMember,
 					getContext()
 			);
+			
+			final AnnotationInstance inverseAnnotation = backingMember.getAnnotations().get( HibernateDotNames.INVERSE );
+			isInverse = inverseAnnotation != null;
+			
+			// TODO: Temporary!
+			if (inverseAnnotation != null && inverseAnnotation.value( "hbmKey" ) != null) {
+				final Column joinColumn = new Column();
+				joinColumn.setName( inverseAnnotation.value( "hbmKey" ).asString() );
+				joinColumnValues.add( joinColumn );
+			}
 		}
 		else {
 			this.joinTableAnnotation = null;
+			isInverse = true;
 		}
 		joinColumnValues.trimToSize();
 		inverseJoinColumnValues.trimToSize();
@@ -458,6 +470,7 @@ public class PluralAttribute
 		final AnnotationInstance mapKeyColumnAnnotation = backingMember.getAnnotations().get( MAP_KEY_COLUMN );
 		final AnnotationInstance mapKeyEnumeratedAnnotation = backingMember.getAnnotations().get( MAP_KEY_ENUMERATED );
 		final AnnotationInstance mapKeyTemporalAnnotation = backingMember.getAnnotations().get( MAP_KEY_TEMPORAL );
+		final AnnotationInstance mapKeyTypeAnnotation = backingMember.getAnnotations().get( HibernateDotNames.MAP_KEY_TYPE);
 
 		final List<AnnotationInstance> mapKeyJoinColumnAnnotations = collectMapKeyJoinColumnAnnotations( backingMember );
 
@@ -471,7 +484,7 @@ public class PluralAttribute
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Level 1 : @MapKey
+		// @MapKey
 
 		if ( mapKeyAnnotation != null ) {
 			final AnnotationValue value = mapKeyAnnotation.value( "name" );
@@ -485,7 +498,7 @@ public class PluralAttribute
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Level 2 : @MapKeyEnumerated / @MapKeyTemporal imply basic key
+		// @MapKeyEnumerated / @MapKeyTemporal imply basic key
 
 		if ( mapKeyEnumeratedAnnotation != null || mapKeyTemporalAnnotation != null ) {
 			return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, indexType, mapKeyColumnAnnotation );
@@ -493,11 +506,17 @@ public class PluralAttribute
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Level 3 : if we could not decode a specific key type, we assume basic
+		// if we could not decode a specific key type, we assume basic
 
 		JavaTypeDescriptor mapKeyType = indexType;
 		if ( mapKeyClassAnnotation != null ) {
 			final DotName name = mapKeyClassAnnotation.value().asClass().name();
+			mapKeyType = getContext().getJavaTypeDescriptorRepository().getType( name );
+		}
+		if (mapKeyType == null && mapKeyTypeAnnotation != null) {
+			final AnnotationInstance typeAnnotation = JandexHelper.getValue( mapKeyTypeAnnotation, "value",
+					AnnotationInstance.class, classLoaderService );
+			final DotName name = DotName.createSimple( typeAnnotation.value( "type" ).asString() );
 			mapKeyType = getContext().getJavaTypeDescriptorRepository().getType( name );
 		}
 		if ( mapKeyType == null ) {
@@ -505,7 +524,7 @@ public class PluralAttribute
 				throw getContext().makeMappingException(
 						"Map key type could not be resolved (to determine entity name to use as key), " +
 								"but @MapKeyJoinColumn(s) was present.  Map should either use generics or " +
-								"use @MapKeyClass to specify entity class"
+								"use @MapKeyClass/@MapKeyType to specify entity class"
 				);
 			}
 			return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, indexType, mapKeyColumnAnnotation );
@@ -531,7 +550,7 @@ public class PluralAttribute
 			throw new NotYetImplementedException( "Entities as map keys not yet implemented" );
 		}
 
-		return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, indexType, mapKeyColumnAnnotation );
+		return new PluralAttributeIndexDetailsMapKeyBasic( this, backingMember, mapKeyType, mapKeyColumnAnnotation );
 	}
 
 	private List<AnnotationInstance> collectMapKeyJoinColumnAnnotations(MemberDescriptor backingMember) {
@@ -744,6 +763,15 @@ public class PluralAttribute
 		return mappedByAttributeName;
 	}
 
+	public void setMappedByAttributeName(String mappedByAttributeName) {
+		this.mappedByAttributeName = mappedByAttributeName;
+	}
+
+	@Override
+	public boolean isInverse() {
+		return isInverse;
+	}
+
 	@Override
 	public Set<CascadeType> getJpaCascadeTypes() {
 		return jpaCascadeTypes;
@@ -864,7 +892,7 @@ public class PluralAttribute
 	public boolean isIncludeInOptimisticLocking() {
 		return hasOptimisticLockAnnotation()
 				? super.isIncludeInOptimisticLocking()
-				: StringHelper.isEmpty(	getMappedByAttributeName() );
+				: !isInverse;
 	}
 
 	public int getBatchSize() {

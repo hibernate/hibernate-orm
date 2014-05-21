@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gavin King
  */
+@FailureExpectedWithNewMetamodel(message = "HbmXmlTransformer does not currently support EntityMode.MAP")
 public class DynamicMapOneToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

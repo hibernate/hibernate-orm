@@ -27,10 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbGeneratedValue;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmIdGenerator;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmParam;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbId;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -56,6 +60,7 @@ public class IdMocker extends PropertyMocker {
 		create( ID );
 		parseColumn( id.getColumn(), getTarget() );
 		parseGeneratedValue( id.getGeneratedValue(), getTarget() );
+		parseGenerator( id.getGenerator(), getTarget() );
 		parseTemporalType( id.getTemporal(), getTarget() );
 	}
 
@@ -78,5 +83,50 @@ public class IdMocker extends PropertyMocker {
 			MockHelper.stringValue( "strategy", generatedValue.getGenerator(), annotationValueList );
 			create( HibernateDotNames.GENERIC_GENERATOR, target, annotationValueList );
 		}
+	}
+
+	private void parseGenerator(JaxbHbmIdGenerator generator, AnnotationTarget target) {
+		if ( generator == null ) {
+			return;
+		}
+		
+		// TODO: Is it a safe assumption that this always needs generated?
+		final String generatorName = getTargetName() + "." + id.getName() + ".IdGen";
+		
+		// @GeneratedValue(generator = "...")
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "generator", generatorName, annotationValueList );
+		create( GENERATED_VALUE, target, annotationValueList );
+		
+		// @GenericGenerator(name = "...", strategy = "...")
+		annotationValueList = new ArrayList<AnnotationValue>();
+		// just generate one
+		MockHelper.stringValue( "name", generatorName, annotationValueList );
+		MockHelper.stringValue( "strategy", generator.getStrategy(), annotationValueList );
+		nestedParamList( "parameters", generator.getParam(), annotationValueList );
+		create( HibernateDotNames.GENERIC_GENERATOR, target, annotationValueList );
+	}
+	
+	protected void nestedParamList(String name, List<JaxbHbmParam> params, List<AnnotationValue> annotationValueList) {
+		if ( CollectionHelper.isNotEmpty( params ) ) {
+			AnnotationValue[] values = new AnnotationValue[params.size()];
+			for ( int i = 0; i < params.size(); i++ ) {
+				AnnotationInstance annotationInstance = parseParam( params.get( i ), null );
+				values[i] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+		}
+
+	}
+
+	// @Index
+	protected AnnotationInstance parseParam(JaxbHbmParam param, AnnotationTarget target) {
+		if ( param == null ) {
+			return null;
+		}
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "name", param.getName(), annotationValueList );
+		MockHelper.stringValue( "value", param.getValue(), annotationValueList );
+		return create( HibernateDotNames.PARAMETER, target, annotationValueList );
 	}
 }

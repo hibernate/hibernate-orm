@@ -30,11 +30,12 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.type.Enumer
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.source.internal.annotations.attribute.type.TemporalTypeResolver;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.spi.PluralAttributeElementNature;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Steve Ebersole
@@ -55,7 +56,8 @@ public class PluralAttributeElementDetailsBasic implements PluralAttributeElemen
 			return elementType;
 		}
 
-		final AnnotationInstance annotation = pluralAttribute.getBackingMember().getAnnotations().get( JPADotNames.ELEMENT_COLLECTION );
+		final AnnotationInstance annotation = pluralAttribute.getBackingMember().getAnnotations().get(
+				JPADotNames.ELEMENT_COLLECTION );
 		if ( annotation == null ) {
 			throw pluralAttribute.getContext().makeMappingException(
 					"Could not determine element type information for plural attribute ["
@@ -64,18 +66,27 @@ public class PluralAttributeElementDetailsBasic implements PluralAttributeElemen
 			);
 		}
 
+		DotName dotName = null;
 		final AnnotationValue targetClassValue = annotation.value( "targetClass" );
 		if ( targetClassValue == null ) {
-			throw pluralAttribute.getContext().makeMappingException(
-					"Could not determine element type information for plural attribute ["
-							+ pluralAttribute.getBackingMember().toString()
-							+ "]; @ElementCollection did not specify targetClass"
-			);
+			final AnnotationInstance typeAnnotation = pluralAttribute.getBackingMember().getAnnotations().get(
+					HibernateDotNames.TYPE );
+			if (typeAnnotation != null) {
+				dotName = DotName.createSimple( typeAnnotation.value( "type" ).asString() );
+			}
+			else {
+				throw pluralAttribute.getContext().makeMappingException(
+						"Could not determine element type information for plural attribute ["
+								+ pluralAttribute.getBackingMember().toString()
+								+ "]; Either specify targetClass in @ElementCollection or provide @Type"
+				);
+			}
+		}
+		else {
+			dotName = targetClassValue.asClass().name();
 		}
 
-		return pluralAttribute.getContext().getJavaTypeDescriptorRepository().getType(
-				targetClassValue.asClass().name()
-		);
+		return pluralAttribute.getContext().getJavaTypeDescriptorRepository().getType( dotName );
 	}
 
 	private static AttributeTypeResolver buildTypeResolver(PluralAttribute pluralAttribute, JavaTypeDescriptor javaType) {

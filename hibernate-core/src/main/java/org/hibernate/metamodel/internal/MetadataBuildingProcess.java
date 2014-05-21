@@ -60,7 +60,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.NamedStoredProcedureQueryDefinition;
 import org.hibernate.metamodel.SessionFactoryBuilder;
@@ -78,10 +77,9 @@ import org.hibernate.metamodel.internal.binder.Binder;
 import org.hibernate.metamodel.reflite.internal.JavaTypeDescriptorRepositoryImpl;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptor;
 import org.hibernate.metamodel.reflite.spi.JavaTypeDescriptorRepository;
-import org.hibernate.metamodel.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.internal.annotations.AnnotationMetadataSourceProcessor;
 import org.hibernate.metamodel.source.internal.annotations.JandexAccess;
 import org.hibernate.metamodel.source.internal.annotations.JandexAccessImpl;
-import org.hibernate.metamodel.source.internal.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.source.internal.jandex.Unifier;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbEntityMappings;
 import org.hibernate.metamodel.source.spi.FilterDefinitionSource;
@@ -91,12 +89,12 @@ import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.TypeDescriptorSource;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
+import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer.AdditionalJaxbRootProducerContext;
 import org.hibernate.metamodel.spi.BindingContext;
 import org.hibernate.metamodel.spi.ClassLoaderAccess;
 import org.hibernate.metamodel.spi.InFlightMetadataCollector;
 import org.hibernate.metamodel.spi.MetadataBuildingOptions;
 import org.hibernate.metamodel.spi.MetadataContributor;
-import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.PluralAttributeElementNature;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
@@ -132,12 +130,9 @@ import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.xml.spi.BindResult;
-
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
-import static org.hibernate.metamodel.spi.AdditionalJaxbRootProducer.AdditionalJaxbRootProducerContext;
 
 /**
  * Represents the process of building a Metadata object.  The main entry point is the
@@ -224,25 +219,14 @@ public class MetadataBuildingProcess {
 		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
 
-		final MetadataSourceProcessor[] metadataSourceProcessors;
-		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
-			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new HbmMetadataSourceProcessorImpl( rootBindingContext, sources ),
-					new AnnotationMetadataSourceProcessorImpl( rootBindingContext, jandexView )
-			};
-		}
-		else {
-			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new AnnotationMetadataSourceProcessorImpl( rootBindingContext, jandexView ),
-					new HbmMetadataSourceProcessorImpl( rootBindingContext, sources )
-			};
-		}
+		final AnnotationMetadataSourceProcessor processor = new AnnotationMetadataSourceProcessor(
+				rootBindingContext, jandexView );
 
-		processTypeDefinitions( metadataSourceProcessors, rootBindingContext );
-		processFilterDefinitions( metadataSourceProcessors, rootBindingContext );
-		processIdentifierGenerators( metadataSourceProcessors, rootBindingContext );
-		processMappings( metadataSourceProcessors, rootBindingContext );
-		bindMappingDependentMetadata( metadataSourceProcessors, rootBindingContext );
+		processTypeDefinitions( processor, rootBindingContext );
+		processFilterDefinitions( processor, rootBindingContext );
+		processIdentifierGenerators( processor, rootBindingContext );
+		processMappings( processor, rootBindingContext );
+		bindMappingDependentMetadata( processor, rootBindingContext );
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
@@ -265,10 +249,6 @@ public class MetadataBuildingProcess {
 		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
 			bindResults.addAll( producer.produceRoots( metadataCollector, jaxbRootProducerContext ) );
 		}
-		final HbmMetadataSourceProcessorImpl processor = new HbmMetadataSourceProcessorImpl( rootBindingContext, bindResults );
-		final Binder binder = new Binder( rootBindingContext );
-		binder.addEntityHierarchies( processor.extractEntityHierarchies() );
-		binder.bindEntityHierarchies();
 
 		secondPass( rootBindingContext );
 
@@ -476,40 +456,36 @@ public class MetadataBuildingProcess {
 	}
 
 	private static void processTypeDefinitions(
-			MetadataSourceProcessor[] metadataSourceProcessors,
+			AnnotationMetadataSourceProcessor processor,
 			RootBindingContextImpl bindingContext) {
 		final ClassLoaderService cls = bindingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDefinitionSources() ) {
-				bindingContext.getMetadataCollector().addTypeDefinition(
-						new TypeDefinition(
-								typeDescriptorSource.getName(),
-								cls.classForName( typeDescriptorSource.getTypeImplementationClassName() ),
-								typeDescriptorSource.getRegistrationKeys(),
-								typeDescriptorSource.getParameters()
-						)
-				);
-			}
+		for ( TypeDescriptorSource typeDescriptorSource : processor.extractTypeDefinitionSources() ) {
+			bindingContext.getMetadataCollector().addTypeDefinition(
+					new TypeDefinition(
+							typeDescriptorSource.getName(),
+							cls.classForName( typeDescriptorSource.getTypeImplementationClassName() ),
+							typeDescriptorSource.getRegistrationKeys(),
+							typeDescriptorSource.getParameters()
+					)
+			);
 		}
 	}
 
 	private static void processFilterDefinitions(
-			MetadataSourceProcessor[] metadataSourceProcessors,
+			AnnotationMetadataSourceProcessor processor,
 			RootBindingContextImpl bindingContext) {
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( FilterDefinitionSource filterDefinitionSource : processor.extractFilterDefinitionSources() ) {
-				bindingContext.getMetadataCollector().addFilterDefinition(
-						new FilterDefinition(
-								filterDefinitionSource.getName(),
-								filterDefinitionSource.getCondition(),
-								resolveFilterDefinitionParamType(
-										filterDefinitionSource.getParameterSources(),
-										bindingContext
-								)
-						)
-				);
-			}
+		for ( FilterDefinitionSource filterDefinitionSource : processor.extractFilterDefinitionSources() ) {
+			bindingContext.getMetadataCollector().addFilterDefinition(
+					new FilterDefinition(
+							filterDefinitionSource.getName(),
+							filterDefinitionSource.getCondition(),
+							resolveFilterDefinitionParamType(
+									filterDefinitionSource.getParameterSources(),
+									bindingContext
+							)
+					)
+			);
 		}
 	}
 
@@ -533,34 +509,30 @@ public class MetadataBuildingProcess {
 	}
 
 	private static void processIdentifierGenerators(
-			MetadataSourceProcessor[] metadataSourceProcessors,
+			AnnotationMetadataSourceProcessor processor,
 			RootBindingContextImpl bindingContext) {
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			for ( IdentifierGeneratorSource identifierGeneratorSource : processor.extractGlobalIdentifierGeneratorSources() ) {
-				bindingContext.getMetadataCollector().addIdGenerator(
-						new IdentifierGeneratorDefinition(
-								identifierGeneratorSource.getGeneratorName(),
-								identifierGeneratorSource.getGeneratorImplementationName(),
-								identifierGeneratorSource.getParameters()
-						)
-				);
-			}
+		for ( IdentifierGeneratorSource identifierGeneratorSource : processor.extractGlobalIdentifierGeneratorSources() ) {
+			bindingContext.getMetadataCollector().addIdGenerator(
+					new IdentifierGeneratorDefinition(
+							identifierGeneratorSource.getGeneratorName(),
+							identifierGeneratorSource.getGeneratorImplementationName(),
+							identifierGeneratorSource.getParameters()
+					)
+			);
 		}
 	}
 
 	private static void processMappings(
-			MetadataSourceProcessor[] metadataSourceProcessors,
+			AnnotationMetadataSourceProcessor processor,
 			RootBindingContextImpl bindingContext) {
 		final Binder binder = new Binder( bindingContext );
 		// Add all hierarchies first, before binding.
-		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
-			binder.addEntityHierarchies( processor.extractEntityHierarchies() );
-		}
+		binder.addEntityHierarchies( processor.extractEntityHierarchies() );
 		binder.bindEntityHierarchies();
 	}
 
 	private static void bindMappingDependentMetadata(
-			MetadataSourceProcessor[] metadataSourceProcessors,
+			AnnotationMetadataSourceProcessor processor,
 			RootBindingContextImpl bindingContext) {
 		// Create required back references, which are required for one-to-many associations with key bindings that are non-inverse,
 		// non-nullable, and unidirectional
@@ -643,9 +615,7 @@ public class MetadataBuildingProcess {
 			}
 		}
 
-		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
-			metadataSourceProcessor.processMappingDependentMetadata();
-		}
+		processor.processMappingDependentMetadata();
 	}
 
 	private static void secondPass(RootBindingContextImpl bindingContext) {

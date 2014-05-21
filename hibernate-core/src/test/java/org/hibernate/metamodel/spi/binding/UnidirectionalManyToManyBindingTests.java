@@ -23,22 +23,20 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -56,22 +54,13 @@ public class UnidirectionalManyToManyBindingTests extends BaseUnitTestCase {
 		serviceRegistry.destroy();
 	}
 
-//	@Test
-//	public void testAnnotations() {
-//		doTest( MetadataSourceProcessingOrder.ANNOTATIONS_FIRST );
-//	}
-
 	@Test
 	@TestForIssue( jiraKey = "HHH-7436" )
 	public void testHbm() {
-		doTest( MetadataSourceProcessingOrder.HBM_FIRST );
-	}
-
-	private void doTest(MetadataSourceProcessingOrder processingOrder) {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
 		sources.addResource( "org/hibernate/metamodel/spi/binding/EntityWithUnidirectionalManyToManys.hbm.xml" );
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntity.hbm.xml" );
-		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().with( processingOrder ).build();
+		MetadataImpl metadata = (MetadataImpl) sources.getMetadataBuilder().build();
 
 		final EntityBinding entityBinding = metadata.getEntityBinding( EntityWithUnidirectionalManyToMany.class.getName() );
 		final EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );

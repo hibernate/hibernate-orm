@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -43,7 +44,6 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.metamodel.MetadataBuilder;
-import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.archive.scan.internal.StandardScanOptions;
 import org.hibernate.metamodel.archive.scan.spi.ScanEnvironment;
@@ -62,10 +62,8 @@ import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
-
 import org.xml.sax.EntityResolver;
 
 import static org.hibernate.internal.DeprecationLogger.DEPRECATION_LOGGER;
@@ -133,12 +131,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	@Override
 	public MetadataBuilder with(EntityResolver entityResolver) {
 		this.options.entityResolver = entityResolver;
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder) {
-		this.options.metadataSourceProcessingOrder = metadataSourceProcessingOrder;
 		return this;
 	}
 
@@ -338,7 +330,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 				StandardPersistentAttributeMemberResolver.INSTANCE;
 
 		// todo : go away
-		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
 		private EntityResolver entityResolver = EJB3DTDEntityResolver.INSTANCE;
 
 		public Options(StandardServiceRegistry serviceRegistry) {
@@ -489,11 +480,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		@Override
 		public PersistentAttributeMemberResolver getPersistentAttributeMemberResolver() {
 			return persistentAttributeMemberResolver;
-		}
-
-		@Override
-		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder() {
-			return metadataSourceProcessingOrder;
 		}
 
 		@Override

@@ -42,8 +42,6 @@ import org.hibernate.metamodel.source.spi.FilterDefinitionSource;
 import org.hibernate.metamodel.source.spi.IdentifierGeneratorSource;
 import org.hibernate.metamodel.source.spi.TypeDescriptorSource;
 import org.hibernate.metamodel.spi.BindingContext;
-import org.hibernate.metamodel.spi.MetadataSourceProcessor;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.IndexView;
 
@@ -55,10 +53,10 @@ import org.jboss.jandex.IndexView;
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
+public class AnnotationMetadataSourceProcessor {
 	private final AnnotationBindingContext bindingContext;
 
-	public AnnotationMetadataSourceProcessorImpl(BindingContext bindingContext, IndexView jandexView) {
+	public AnnotationMetadataSourceProcessor(BindingContext bindingContext, IndexView jandexView) {
 
 		if ( !jandexView.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ).isEmpty() ) {
 			// todo : this needs to move to AnnotationBindingContext
@@ -69,7 +67,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		this.bindingContext = new AnnotationBindingContextImpl( bindingContext );
 	}
 
-	@Override
 	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources() {
 		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
@@ -84,7 +81,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		return typeDescriptorSources;
 	}
 
-	@Override
 	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources() {
 		List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
@@ -99,18 +95,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		return filterDefinitionSources;
 	}
 
-	@Override
 	public Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources() {
 		return IdGeneratorProcessor.extractGlobalIdentifierGeneratorSources( bindingContext );
 	}
 
-	@Override
 	public Collection<EntityHierarchySource> extractEntityHierarchies() {
 		// need to order our annotated entities into an order we can process
 		return EntityHierarchyBuilder.createEntityHierarchies( bindingContext );
 	}
 
-	@Override
 	public void processMappingDependentMetadata() {
 		TableProcessor.bind( bindingContext );
 		FetchProfileProcessor.bind( bindingContext );

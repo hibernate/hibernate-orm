@@ -37,9 +37,7 @@ import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
 import org.jboss.jandex.IndexView;
-
 import org.xml.sax.EntityResolver;
 
 /**
@@ -66,15 +64,6 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public MetadataBuilder with(EntityResolver entityResolver);
-
-	/**
-	 * Specify the order in which to process metadata sources.
-	 *
-	 * @param metadataSourceProcessingOrder The order.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder);
 
 	/**
 	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or

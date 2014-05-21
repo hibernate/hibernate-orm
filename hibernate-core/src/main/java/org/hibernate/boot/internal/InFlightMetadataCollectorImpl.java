@@ -1611,7 +1611,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
 			processSecondPasses( setSimpleValueTypeSecondPassList );
-			processSecondPasses( copyIdentifierComponentSecondPasList );
+
+			processCopyIdentifierSecondPassesInOrder();
 
 			processFkSecondPassesInOrder();
 
@@ -1637,6 +1638,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+	private void processCopyIdentifierSecondPassesInOrder() {
+		if ( copyIdentifierComponentSecondPasList == null ) {
+			return;
+		}
+		sortCopyIdentifierComponentSecondPasses();
+		processSecondPasses( copyIdentifierComponentSecondPasList );
+	}
+
 	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
 		if ( secondPasses == null ) {
 			return;
@@ -1648,6 +1657,40 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		secondPasses.clear();
 	}
+
+	private void sortCopyIdentifierComponentSecondPasses() {
+
+		ArrayList<CopyIdentifierComponentSecondPass> sorted =
+				new ArrayList<CopyIdentifierComponentSecondPass>( copyIdentifierComponentSecondPasList.size() );
+		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<CopyIdentifierComponentSecondPass>();
+		toSort.addAll( copyIdentifierComponentSecondPasList );
+		topologicalSort( sorted, toSort );
+		copyIdentifierComponentSecondPasList = sorted;
+	}
+
+	/* naive O(n^3) topological sort */
+	private void topologicalSort( List<CopyIdentifierComponentSecondPass> sorted, Set<CopyIdentifierComponentSecondPass> toSort ) {
+		while (!toSort.isEmpty()) {
+			CopyIdentifierComponentSecondPass independent = null;
+
+			searchForIndependent:
+			for ( CopyIdentifierComponentSecondPass secondPass : toSort ) {
+				for ( CopyIdentifierComponentSecondPass other : toSort ) {
+					if (secondPass.dependentUpon( other )) {
+						continue searchForIndependent;
+					}
+				}
+				independent = secondPass;
+				break;
+			}
+			if (independent == null) {
+				throw new MappingException( "cyclic dependency in derived identities" );
+			}
+			toSort.remove( independent );
+			sorted.add( independent );
+		}
+	}
+
 
 	private void processFkSecondPassesInOrder() {
 		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {

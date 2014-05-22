@@ -212,6 +212,9 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
 						.getName();
 				value.addColumn( new Column( columnName ) );
+				if ( joinColumn != null ) {
+					joinColumn.linkWithValue( value );
+				}
 				column.setValue( value );
 			}
 		}

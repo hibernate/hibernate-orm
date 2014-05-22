@@ -104,8 +104,8 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		while ( properties.hasNext() ) {
 			Property referencedProperty = properties.next();
 			if ( referencedProperty.isComposite() ) {
-				throw new AssertionFailure( "Unexpected nested component on the referenced entity when mapping a @MapsId: "
-						+ referencedEntityName);
+				Property property = createComponentProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
+				component.addProperty( property );
 			}
 			else {
 				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
@@ -113,6 +113,47 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			}
 		}
 	}
+
+	private Property createComponentProperty(
+			PersistentClass referencedPersistentClass,
+			boolean isExplicitReference,
+			Map<String, Ejb3JoinColumn> columnByReferencedName,
+			AtomicInteger index,
+			Property referencedProperty ) {
+		Property property = new Property();
+		property.setName( referencedProperty.getName() );
+		property.setNodeName( referencedProperty.getNodeName() );
+		//FIXME set optional?
+		//property.setOptional( property.isOptional() );
+		property.setPersistentClass( component.getOwner() );
+		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
+		Component value = new Component( mappings, component.getOwner() );
+
+		property.setValue( value );
+		final Component referencedValue = (Component) referencedProperty.getValue();
+		value.setTypeName( referencedValue.getTypeName() );
+		value.setTypeParameters( referencedValue.getTypeParameters() );
+		value.setComponentClassName( referencedValue.getComponentClassName() );
+
+
+		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
+		while(propertyIterator.hasNext())
+		{
+			Property referencedComponentProperty = propertyIterator.next();
+
+			if ( referencedComponentProperty.isComposite() ) {
+				Property componentProperty = createComponentProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
+				value.addProperty( componentProperty );
+			}
+			else {
+				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
+				value.addProperty( componentProperty );
+			}
+		}
+
+		return property;
+	}
+
 
 	private Property createSimpleProperty(
 			PersistentClass referencedPersistentClass,

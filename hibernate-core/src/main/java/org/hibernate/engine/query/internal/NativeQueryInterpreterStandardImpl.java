@@ -21,19 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.query.spi;
+package org.hibernate.engine.query.internal;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.engine.query.spi.NamedParameterDescriptor;
+import org.hibernate.engine.query.spi.NativeQueryInterpreter;
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
+import org.hibernate.engine.query.spi.ParamLocationRecognizer;
+import org.hibernate.engine.query.spi.ParameterMetadata;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.loader.custom.sql.SQLCustomQuery;
+
 /**
- * A {@link ParameterMetadataRecognizer} which retrieves parameter meta-data
- * from native SQL queries.
- *
- * @author Gunnar Morling
- *
+ * @author Steve Ebersole
  */
-public class SQLParameterMetadataRecognizer implements ParameterMetadataRecognizer {
+public class NativeQueryInterpreterStandardImpl implements NativeQueryInterpreter {
+	/**
+	 * Singleton access
+	 */
+	public static final NativeQueryInterpreterStandardImpl INSTANCE = new NativeQueryInterpreterStandardImpl();
 
 	@Override
 	public ParameterMetadata getParameterMetadata(String nativeQuery) {
@@ -63,5 +74,20 @@ public class SQLParameterMetadataRecognizer implements ParameterMetadataRecogniz
 		}
 
 		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
+	}
+
+	@Override
+	public NativeSQLQueryPlan createQueryPlan(
+			NativeSQLQuerySpecification specification,
+			SessionFactoryImplementor sessionFactory) {
+
+		CustomQuery customQuery = new SQLCustomQuery(
+				specification.getQueryString(),
+				specification.getQueryReturns(),
+				specification.getQuerySpaces(),
+				sessionFactory
+		);
+
+		return new NativeSQLQueryPlan( specification.getQueryString(), customQuery );
 	}
 }

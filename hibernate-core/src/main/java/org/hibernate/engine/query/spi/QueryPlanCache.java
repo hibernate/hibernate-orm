@@ -81,6 +81,9 @@ public class QueryPlanCache implements Serializable {
 	 */
 	private final BoundedConcurrentHashMap<String,ParameterMetadata> parameterMetadataCache;
 
+
+	private NativeQueryInterpreter nativeQueryInterpreterService;
+
 	/**
 	 * Constructs the QueryPlanCache to be used by the given SessionFactory
 	 *
@@ -120,6 +123,7 @@ public class QueryPlanCache implements Serializable {
 				BoundedConcurrentHashMap.Eviction.LIRS
 		);
 
+		nativeQueryInterpreterService = factory.getServiceRegistry().getService( NativeQueryInterpreter.class );
 	}
 
 	/**
@@ -135,10 +139,7 @@ public class QueryPlanCache implements Serializable {
 	public ParameterMetadata getSQLParameterMetadata(final String query)  {
 		ParameterMetadata value = parameterMetadataCache.get( query );
 		if ( value == null ) {
-			value = factory.getServiceRegistry()
-					.getService( ParameterMetadataRecognizer.class )
-					.getParameterMetadata( query );
-
+			value = nativeQueryInterpreterService.getParameterMetadata( query );
 			parameterMetadataCache.putIfAbsent( query, value );
 		}
 		return value;
@@ -222,10 +223,7 @@ public class QueryPlanCache implements Serializable {
 		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
 		if ( value == null ) {
 			LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
-			value = factory.getServiceRegistry()
-					.getService(QueryPlanFactory.class )
-					.createNativeQueryPlan( spec, factory );
-
+			value = nativeQueryInterpreterService.createQueryPlan( spec, factory );
 			queryPlanCache.putIfAbsent( spec, value );
 		}
 		else {

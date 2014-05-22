@@ -24,32 +24,39 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 
 /**
- * Initiates the default {@link QueryPlanFactory}.
- *
- * @author Gunnar Morling
+ * @author Steve Ebersole
  */
-public class QueryPlanFactoryInitiator implements SessionFactoryServiceInitiator<QueryPlanFactory> {
-
-	public static final QueryPlanFactoryInitiator INSTANCE = new QueryPlanFactoryInitiator();
+public class NativeQueryInterpreterInitiator implements SessionFactoryServiceInitiator<NativeQueryInterpreter> {
+	/**
+	 * Singleton access
+	 */
+	public static final NativeQueryInterpreterInitiator INSTANCE = new NativeQueryInterpreterInitiator();
 
 	@Override
-	public QueryPlanFactory initiateService(SessionFactoryImplementor sessionFactory, Configuration configuration, ServiceRegistryImplementor registry) {
-		return new DefaultQueryPlanFactory();
+	public NativeQueryInterpreter initiateService(
+			SessionFactoryImplementor sessionFactory,
+			Configuration configuration,
+			ServiceRegistryImplementor registry) {
+		return NativeQueryInterpreterStandardImpl.INSTANCE;
 	}
 
 	@Override
-	public QueryPlanFactory initiateService(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata, ServiceRegistryImplementor registry) {
-		return new DefaultQueryPlanFactory();
+	public NativeQueryInterpreter initiateService(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor metadata,
+			ServiceRegistryImplementor registry) {
+		return NativeQueryInterpreterStandardImpl.INSTANCE;
 	}
 
 	@Override
-	public Class<QueryPlanFactory> getServiceInitiated() {
-		return QueryPlanFactory.class;
+	public Class<NativeQueryInterpreter> getServiceInitiated() {
+		return NativeQueryInterpreter.class;
 	}
 }

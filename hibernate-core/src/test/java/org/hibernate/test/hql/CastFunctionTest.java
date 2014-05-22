@@ -40,7 +40,7 @@ public class CastFunctionTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Integer id;
 		private String name;
-		private Number theLostNumber;
+		private Double theLostNumber;
 	}
 
 	@Override

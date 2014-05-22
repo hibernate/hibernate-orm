@@ -76,6 +76,6 @@ public class DerivedIdentityEmbeddedIdParentEmbeddedIdGrandparentEmbeddedIdColum
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{Dependent.class, Policy.class, Employee.class};
+		return new Class<?>[]{Policy.class, Dependent.class, Employee.class};
 	}
 }

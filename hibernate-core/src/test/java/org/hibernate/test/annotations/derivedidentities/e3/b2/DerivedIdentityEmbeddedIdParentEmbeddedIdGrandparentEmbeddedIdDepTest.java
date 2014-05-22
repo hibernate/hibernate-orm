@@ -82,6 +82,6 @@ public class DerivedIdentityEmbeddedIdParentEmbeddedIdGrandparentEmbeddedIdDepTe
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{Dependent.class, Employee.class, Policy.class};
+		return new Class<?>[]{Policy.class, Dependent.class, Employee.class};
 	}
 }

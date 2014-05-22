@@ -24,32 +24,39 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 
 /**
- * Initiates the default {@link ParameterMetadataRecognizer}.
- *
- * @author Gunnar Morling
+ * @author Steve Ebersole
  */
-public class ParameterMetadataRecognizerInitiator implements SessionFactoryServiceInitiator<ParameterMetadataRecognizer> {
-
-	public static final ParameterMetadataRecognizerInitiator INSTANCE = new ParameterMetadataRecognizerInitiator();
+public class NativeQueryInterpreterInitiator implements SessionFactoryServiceInitiator<NativeQueryInterpreter> {
+	/**
+	 * Singleton access
+	 */
+	public static final NativeQueryInterpreterInitiator INSTANCE = new NativeQueryInterpreterInitiator();
 
 	@Override
-	public ParameterMetadataRecognizer initiateService(SessionFactoryImplementor sessionFactory, Configuration configuration, ServiceRegistryImplementor registry) {
-		return new SQLParameterMetadataRecognizer();
+	public NativeQueryInterpreter initiateService(
+			SessionFactoryImplementor sessionFactory,
+			Configuration configuration,
+			ServiceRegistryImplementor registry) {
+		return NativeQueryInterpreterStandardImpl.INSTANCE;
 	}
 
 	@Override
-	public ParameterMetadataRecognizer initiateService(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata, ServiceRegistryImplementor registry) {
-		return new SQLParameterMetadataRecognizer();
+	public NativeQueryInterpreter initiateService(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor metadata,
+			ServiceRegistryImplementor registry) {
+		return NativeQueryInterpreterStandardImpl.INSTANCE;
 	}
 
 	@Override
-	public Class<ParameterMetadataRecognizer> getServiceInitiated() {
-		return ParameterMetadataRecognizer.class;
+	public Class<NativeQueryInterpreter> getServiceInitiated() {
+		return NativeQueryInterpreter.class;
 	}
 }

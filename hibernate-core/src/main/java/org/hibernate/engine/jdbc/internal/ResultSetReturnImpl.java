@@ -44,6 +44,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	private final Dialect dialect;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
+	
+	private boolean isJdbc4 = true;
 
 	/**
 	 * Constructs a ResultSetReturnImpl
@@ -91,29 +93,23 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	private boolean isTypeOf(final Statement statement, final Class<? extends Statement> type) {
-		// Default is to match based on class type
-		boolean matches = type.isInstance(statement);
-		
-		try {
-			boolean jdbc4;
-			try {
-				// Attempt to verify if the statement instance implements the JDBC 4 API
-				jdbc4 = (statement.getClass().getMethod("isWrapperFor", new Class<?>[] { Class.class }) != null);
-			} catch (Exception e) {
-				jdbc4 = false;
-			}
-
-			// If the statement implements the JDBC 4 API, verify if the statement either implements
-			// the interface directly or is a wrapper for the specified type via the JDBC API
-			if (jdbc4) {
-				matches = statement.isWrapperFor(type);
-			}
-		} catch (Exception e) {
-			// No operation.  Note that this catches more than just SQLException to
-			// cover edge cases where a driver might throw an UnsupportedOperationException
-		}
-		return matches;
-	}
+        if (isJdbc4) {
+            try {
+                // This is "more correct" than #isInstance, but not always supported.
+                return statement.isWrapperFor( type );
+            }
+            catch (SQLException e) {
+                // No operation
+            }
+            catch (Throwable e) {
+                // No operation. Note that this catches more than just SQLException to
+                // cover edge cases where a driver might throw an UnsupportedOperationException, AbstractMethodError,
+                // etc.  If so, skip permanently.
+                isJdbc4 = false;
+            }
+        }
+        return type.isInstance( statement );
+    }
 
 	@Override
 	public ResultSet extract(CallableStatement callableStatement) {

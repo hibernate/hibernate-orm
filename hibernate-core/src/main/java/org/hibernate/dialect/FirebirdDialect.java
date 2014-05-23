@@ -39,7 +39,7 @@ public class FirebirdDialect extends InterbaseDialect {
 	
 	public FirebirdDialect() {
 		super();
-		registerFunction( "replace", new SQLFunctionTemplate( StandardBasicTypes.STRING, "replace(?1, ?2, ?3)" ) );
+		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
 	}
 	
 	@Override

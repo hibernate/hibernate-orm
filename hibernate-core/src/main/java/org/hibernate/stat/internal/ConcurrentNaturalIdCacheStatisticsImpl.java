@@ -31,7 +31,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.NaturalIdCacheStatistics;
 
@@ -145,7 +145,7 @@ public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistic
 		final Iterator iter = this.region.toMap().entrySet().iterator();
 		while ( iter.hasNext() ) {
 			final Map.Entry me = (Map.Entry) iter.next();
-			map.put( ( (CacheKey) me.getKey() ).getKey(), me.getValue() );
+			map.put( ( (NaturalIdCacheKey) me.getKey() ).getNaturalIdValues(), me.getValue() );
 		}
 		return map;
 	}

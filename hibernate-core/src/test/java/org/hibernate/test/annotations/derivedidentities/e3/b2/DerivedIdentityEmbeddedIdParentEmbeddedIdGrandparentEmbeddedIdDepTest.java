@@ -25,7 +25,7 @@ package org.hibernate.test.annotations.derivedidentities.e3.b2;
 
 import org.hibernate.Session;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -36,21 +36,21 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  * @author Matt Drees
  */
-public class DerivedIdentityEmbeddedIdParentEmbeddedIdGrandparentEmbeddedIdDepTest extends BaseCoreFunctionalTestCase {
+public class DerivedIdentityEmbeddedIdParentEmbeddedIdGrandparentEmbeddedIdDepTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_firstName", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_lastName", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "name", configuration() ) );
-		assertTrue( !SchemaUtil.isColumnPresent( "Dependent", "firstName", configuration() ) );
-		assertTrue( !SchemaUtil.isColumnPresent( "Dependent", "lastName", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_firstName", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_lastName", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "name", metadata() ) );
+		assertTrue( !SchemaUtil.isColumnPresent( "Dependent", "firstName", metadata() ) );
+		assertTrue( !SchemaUtil.isColumnPresent( "Dependent", "lastName", metadata() ) );
 
-		assertTrue( SchemaUtil.isColumnPresent( "Policy", "dep_emp_firstName", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Policy", "dep_emp_lastName", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Policy", "type", configuration() ) );
-		assertTrue( !SchemaUtil.isColumnPresent( "Policy", "firstName", configuration() ) );
-		assertTrue( !SchemaUtil.isColumnPresent( "Policy", "lastName", configuration() ) );
-		assertTrue( !SchemaUtil.isColumnPresent( "Policy", "name", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Policy", "dep_emp_firstName", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Policy", "dep_emp_lastName", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Policy", "type", metadata() ) );
+		assertTrue( !SchemaUtil.isColumnPresent( "Policy", "firstName", metadata() ) );
+		assertTrue( !SchemaUtil.isColumnPresent( "Policy", "lastName", metadata() ) );
+		assertTrue( !SchemaUtil.isColumnPresent( "Policy", "name", metadata() ) );
 
 
 		final Employee e = new Employee();

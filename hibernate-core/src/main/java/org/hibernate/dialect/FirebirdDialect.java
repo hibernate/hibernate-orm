@@ -23,7 +23,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -35,7 +35,7 @@ public class FirebirdDialect extends InterbaseDialect {
 	
 	public FirebirdDialect() {
 		super();
-		registerFunction( "replace", new SQLFunctionTemplate( StandardBasicTypes.STRING, "replace(?1, ?2, ?3)" ) );
+		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
 	}
 	
 	@Override

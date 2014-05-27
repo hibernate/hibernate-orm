@@ -1476,7 +1476,8 @@ hibernate.cache.use_structured_entries true</programlisting>
 &lt;/enhance&gt;</programlisting>
              </para>
              <note>
-              <para>The EnhancementTask is intended as a replacement for <link linkend="performance-fetching-lazyproperties">InstrumentTask</link>.</para>
+              <para>The EnhancementTask is intended as a replacement for <link linkend="performance-fetching-lazyproperties">InstrumentTask</link>. It is also incompatible so instrumented classels
+              will need building from source again.</para>
              </note>
           </section>
           <section xml:id="entityentry-lookup-buildtime-instrument-maven">

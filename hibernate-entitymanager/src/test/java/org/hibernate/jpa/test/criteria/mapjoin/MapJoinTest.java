@@ -11,8 +11,10 @@ import org.hibernate.jpa.test.metamodel.MapEntity;
 import org.hibernate.jpa.test.metamodel.MapEntityLocal;
 import org.hibernate.jpa.test.metamodel.MapEntityLocal_;
 import org.hibernate.jpa.test.metamodel.MapEntity_;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
 
+@FailureExpectedWithNewMetamodel
 public class MapJoinTest extends AbstractMetamodelSpecificTest {
 
 	@Override

@@ -1708,8 +1708,25 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key,
+	/**
+	 * Process queued operations within the PersistentCollection.
+	 *
+	 * @param collection The collection
+	 * @param key The collection key
+	 * @param nextIndex The next index to write
+	 * @param session The session
+	 * @throws HibernateException
+	 *
+	 * @deprecated Use {@link #doProcessQueuedOps(org.hibernate.collection.spi.PersistentCollection, java.io.Serializable, org.hibernate.engine.spi.SessionImplementor)}
+	 */
+	@Deprecated
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable key,
 			int nextIndex, SessionImplementor session)
+			throws HibernateException {
+		doProcessQueuedOps( collection, key, session );
+	}
+
+	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
 			throws HibernateException;
 
 	@Override

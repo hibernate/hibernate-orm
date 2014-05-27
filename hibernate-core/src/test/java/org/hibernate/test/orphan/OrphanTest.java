@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -362,7 +363,7 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpected(jiraKey = "HHH-9171")
+	@TestForIssue(jiraKey = "HHH-9171")
 	public void testOrphanDeleteOnAddElementMergeRemoveElementMerge() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -380,6 +381,11 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		t = session.beginTransaction();
 		session.merge(prod);
+		// In Section 2.9, Entity Relationships, the JPA 2.1 spec says:
+		// "If the entity being orphaned is a detached, new, or removed entity,
+		// the semantics of orphanRemoval do not apply."
+		// In other words, since part is a new entity, it will not be deleted when removed
+		// from prod.parts, even though cascade for the association includes "delete-orphan".
 		prod.getParts().remove(part);
 		session.merge( prod );
 		t.commit();
@@ -387,7 +393,7 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		t = session.beginTransaction();
-		assertNull( session.get( Part.class, "Widge" ) );
+		assertNotNull( session.get( Part.class, "Widge" ) );
 		session.delete( session.get(Product.class, "Widget") );
 		t.commit();
 		session.close();

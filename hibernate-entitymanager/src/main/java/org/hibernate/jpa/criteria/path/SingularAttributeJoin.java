@@ -23,16 +23,16 @@
  */
 package org.hibernate.jpa.criteria.path;
 
+import javax.persistence.criteria.JoinType;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.SingularAttribute;
+
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.CriteriaSubqueryImpl;
 import org.hibernate.jpa.criteria.FromImplementor;
 import org.hibernate.jpa.criteria.PathSource;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
-
-import javax.persistence.criteria.JoinType;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.SingularAttribute;
 
 /**
  * Models a join based on a singular attribute

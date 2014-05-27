@@ -78,36 +78,49 @@ public class DeleteExecutor extends BasicExecutor {
 				parameterSpecifications = new ArrayList<ParameterSpecification>();
 				idSubselectWhere = "";
 			}
-			
-			// If many-to-many, delete the FK row in the collection table.
+
+			// find plural attributes defined for the entity being deleted...
 			for ( Type type : persister.getPropertyTypes() ) {
-				if ( type.isCollectionType() ) {
-					final CollectionType cType = (CollectionType) type;
-					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory
+				if ( ! type.isCollectionType() ) {
+					continue;
+				}
+
+				// if the plural attribute maps to a "collection table" we need
+				// to remove the rows from that table corresponding to any
+				// owners we are about to delete.  "collection table" is
+				// (unfortunately) indicated in a number of ways, but here we
+				// are mainly concerned with:
+				//		1) many-to-many mappings
+				//		2) basic collection mappings
+				final CollectionType cType = (CollectionType) type;
+				final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory
 							.getCollectionPersister( cType.getRole() );
-					if ( cPersister.isManyToMany() ) {
-						if ( persister.getIdentifierColumnNames().length > 1
-								&& !dialect.supportsTuplesInSubqueries() ) {
-							LOG.warn(
-									"This dialect is unable to cascade the delete into the many-to-many join table" +
+				final boolean hasCollectionTable = cPersister.isManyToMany()
+						|| !cPersister.getElementType().isAssociationType();
+				if ( !hasCollectionTable ) {
+					continue;
+				}
+
+				if ( persister.getIdentifierColumnNames().length > 1
+						&& !dialect.supportsTuplesInSubqueries() ) {
+					LOG.warn(
+							"This dialect is unable to cascade the delete into the many-to-many join table" +
 									" when the entity has multiple primary keys.  Either properly setup cascading on" +
 									" the constraints or manually clear the associations prior to deleting the entities."
-							);
-						}
-						else {
-							final String idSubselect = "(select "
-									+ StringHelper.join( ", ", persister.getIdentifierColumnNames() ) + " from "
-									+ persister.getTableName() + idSubselectWhere + ")";
-							final String where = "(" + StringHelper.join( ", ", cPersister.getKeyColumnNames() )
-									+ ") in " + idSubselect;
-							final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
-							if ( factory.getSettings().isCommentsEnabled() ) {
-								delete.setComment( "delete FKs in join table" );
-							}
-							deletes.add( delete.toStatementString() );
-						}
-					}
+					);
+					continue;
 				}
+
+				final String idSubselect = "(select "
+						+ StringHelper.join( ", ", persister.getIdentifierColumnNames() ) + " from "
+						+ persister.getTableName() + idSubselectWhere + ")";
+				final String where = "(" + StringHelper.join( ", ", cPersister.getKeyColumnNames() )
+						+ ") in " + idSubselect;
+				final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
+				if ( factory.getSettings().isCommentsEnabled() ) {
+					delete.setComment( "bulk delete - collection table clean up (" + cPersister.getRole() + ")" );
+				}
+				deletes.add( delete.toStatementString() );
 			}
 		}
 		catch (RecognitionException e) {

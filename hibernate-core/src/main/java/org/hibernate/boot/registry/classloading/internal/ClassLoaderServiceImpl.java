@@ -387,7 +387,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		boolean set = false;
 
 		try {
-			Thread.currentThread().setContextClassLoader( aggregatedClassLoader );
+			Thread.currentThread().setContextClassLoader(
+					new TcclSafeAggregatedClassLoader( aggregatedClassLoader, tccl ) );
 			set = true;
 		}
 		catch (Exception ignore) {
@@ -402,6 +403,31 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			}
 		}
 
+	}
+	
+	// TODO: Remove in ORM 5!  See HHH-8818
+	private class TcclSafeAggregatedClassLoader extends ClassLoader {
+		private final AggregatedClassLoader aggregatedClassLoader;
+		
+		private TcclSafeAggregatedClassLoader(AggregatedClassLoader aggregatedClassLoader, ClassLoader tccl) {
+			super(tccl);
+			this.aggregatedClassLoader = aggregatedClassLoader;
+		}
+		
+		@Override
+		public Enumeration<URL> getResources(String name) throws IOException {
+			return aggregatedClassLoader.getResources( name );
+		}
+
+		@Override
+		protected URL findResource(String name) {
+			return aggregatedClassLoader.findResource( name );
+		}
+
+		@Override
+		protected Class<?> findClass(String name) throws ClassNotFoundException {
+			return aggregatedClassLoader.findClass( name );
+		}
 	}
 
 }

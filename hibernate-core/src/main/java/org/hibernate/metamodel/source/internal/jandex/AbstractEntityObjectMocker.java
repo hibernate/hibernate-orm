@@ -45,6 +45,7 @@ import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	private ListenerMocker listenerparse;

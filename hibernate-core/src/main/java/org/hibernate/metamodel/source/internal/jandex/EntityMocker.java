@@ -34,6 +34,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributes;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCacheElement;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbDiscriminatorColumn;
@@ -86,8 +87,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 			create( DISCRIMINATOR_VALUE, MockHelper.stringValueArray( "value", entity.getDiscriminatorValue() ) );
 		}
 		if (entity.isSelectBeforeUpdate() != null) {
-			create( HibernateDotNames.SELECT_BEFORE_UPDATE, MockHelper.booleanValueArray(
-					"value", entity.isSelectBeforeUpdate() ) );
+			create( SELECT_BEFORE_UPDATE, MockHelper.booleanValueArray( "value", entity.isSelectBeforeUpdate() ) );
 		}
 		
 		//@Table
@@ -121,7 +121,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		MockHelper.stringValue( "schema", table.getSchema(), annotationValueList );
 		nestedUniqueConstraintList( "uniqueConstraints", table.getUniqueConstraint(), annotationValueList );
 		nestedIndexConstraintList( "indexes", table.getIndex(), annotationValueList );
-		return create( TABLE, annotationValueList );
+		return create( JPADotNames.TABLE, annotationValueList );
 	}
 
 	protected AccessType getDefaultAccess() {
@@ -259,7 +259,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 						nestedSecondaryTableList( "value", primaryKeyJoinColumnList, null )
 				);
 				create(
-						HibernateDotNames.TABLES,
+						TABLES,
 						target,
 						nestedHibernateTableList( "value", primaryKeyJoinColumnList, null )
 				);
@@ -335,9 +335,9 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "region", cache.getRegion(), annotationValueList );
 		MockHelper.stringValue( "include", cache.getInclude(), annotationValueList );
-		MockHelper.enumValue( "usage", HibernateDotNames.CACHE_CONCURRENCY_STRATEGY,
+		MockHelper.enumValue( "usage", CACHE_CONCURRENCY_STRATEGY,
 				CacheConcurrencyStrategy.parse( cache.getUsage() ), annotationValueList );
-		create( HibernateDotNames.CACHE, target, annotationValueList );
+		create( CACHE, target, annotationValueList );
 	}
 	
 	private void parseFilters(List<JaxbHbmFilter> filters, AnnotationTarget target) {
@@ -363,8 +363,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 				
 				MockHelper.stringValue( "condition", condition, annotationValueList );
 				
-				AnnotationInstance annotationInstance = create(
-						HibernateDotNames.FILTER, null, annotationValueList );
+				AnnotationInstance annotationInstance = create( FILTER, null, annotationValueList );
 				filterAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
 			}
 			
@@ -372,7 +371,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 			MockHelper.addToCollectionIfNotNull( annotationValueList,
 					AnnotationValue.createArrayValue( "value", filterAnnotations ) );
 			
-			create( HibernateDotNames.FILTERS, target, annotationValueList );
+			create( FILTERS, target, annotationValueList );
 		}
 	}
 	
@@ -382,7 +381,7 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.integerValue( "size", batchSize, annotationValueList );
-		create( HibernateDotNames.BATCH_SIZE, target, annotationValueList );
+		create( BATCH_SIZE, target, annotationValueList );
 	}
 	
 	private void parseProxy(String proxy, Boolean isLazy, AnnotationTarget target) {
@@ -395,6 +394,6 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		if (isLazy != null) {
 			MockHelper.booleanValue( "lazy", isLazy, annotationValueList );
 		}
-		create( HibernateDotNames.PROXY, target, annotationValueList );
+		create( PROXY, target, annotationValueList );
 	}
 }

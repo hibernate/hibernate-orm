@@ -33,7 +33,6 @@ import javax.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmType;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKey;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbMapKeyClass;
@@ -49,6 +48,7 @@ import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public abstract class PropertyMocker extends AnnotationMocker {
 	protected ClassInfo classInfo;
@@ -180,7 +180,7 @@ public abstract class PropertyMocker extends AnnotationMocker {
 		
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.nestedAnnotationValue( "value", parseType( mapKeyType.getName(), null ), annotationValueList );
-		return create( HibernateDotNames.MAP_KEY_TYPE, target, annotationValueList );
+		return create( MAP_KEY_TYPE, target, annotationValueList );
 	}
 
 	protected AnnotationInstance parseMapKeyTemporal(TemporalType temporalType, AnnotationTarget target) {
@@ -268,7 +268,7 @@ public abstract class PropertyMocker extends AnnotationMocker {
 	protected AnnotationInstance parseType(String name, AnnotationTarget target) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "type", name, annotationValueList );
-		return create( HibernateDotNames.TYPE, target, annotationValueList );
+		return create( TYPE, target, annotationValueList );
 	}
 	
 	//@OnDelete
@@ -285,7 +285,7 @@ public abstract class PropertyMocker extends AnnotationMocker {
 			}
 			MockHelper.enumValue( "action", DotName.createSimple( OnDeleteAction.class.getName() ), action,
 					annotationValueList );
-			create( HibernateDotNames.ON_DELETE, target, annotationValueList );
+			create( ON_DELETE, target, annotationValueList );
 		}
 	}
 }

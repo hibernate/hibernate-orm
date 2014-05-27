@@ -28,13 +28,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFetchProfile.JaxbFetch;
-import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef.JaxbFilterParam;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFetchProfile;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFetchProfile.JaxbFetch;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmFilterDef.JaxbFilterParam;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedNativeQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbNamedQuery;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbQueryHint;
@@ -45,11 +44,11 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingEntit
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingFieldResult;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbTableGenerator;
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class GlobalAnnotationMocker extends AbstractMocker {
 	private GlobalAnnotations globalAnnotations;
@@ -59,32 +58,31 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 		this.globalAnnotations = globalAnnotations;
 	}
 
-
 	void process() {
-		if ( !globalAnnotations.getTableGeneratorMap().isEmpty() ) {
-			for ( JaxbTableGenerator generator : globalAnnotations.getTableGeneratorMap().values() ) {
+		if ( !globalAnnotations.getTableGenerators().isEmpty() ) {
+			for ( JaxbTableGenerator generator : globalAnnotations.getTableGenerators() ) {
 				parseTableGenerator( generator );
 			}
 		}
-		if ( !globalAnnotations.getSequenceGeneratorMap().isEmpty() ) {
-			for ( JaxbSequenceGenerator generator : globalAnnotations.getSequenceGeneratorMap().values() ) {
+		if ( !globalAnnotations.getSequenceGenerators().isEmpty() ) {
+			for ( JaxbSequenceGenerator generator : globalAnnotations.getSequenceGenerators() ) {
 				parseSequenceGenerator( generator );
 			}
 		}
-		if ( !globalAnnotations.getNamedQueryMap().isEmpty() ) {
-			parseNamedQueries( globalAnnotations.getNamedQueryMap().values() );
+		if ( !globalAnnotations.getNamedQueries().isEmpty() ) {
+			parseNamedQueries( globalAnnotations.getNamedQueries() );
 		}
-		if ( !globalAnnotations.getNamedNativeQueryMap().isEmpty() ) {
-			parseNamedNativeQueries( globalAnnotations.getNamedNativeQueryMap().values() );
+		if ( !globalAnnotations.getNamedNativeQueries().isEmpty() ) {
+			parseNamedNativeQueries( globalAnnotations.getNamedNativeQueries() );
 		}
-		if ( !globalAnnotations.getSqlResultSetMappingMap().isEmpty() ) {
-			parseSqlResultSetMappings( globalAnnotations.getSqlResultSetMappingMap().values() );
+		if ( !globalAnnotations.getSqlResultSetMappings().isEmpty() ) {
+			parseSqlResultSetMappings( globalAnnotations.getSqlResultSetMappings() );
 		}
-		if ( !globalAnnotations.getFilterDefMap().isEmpty() ) {
-			parseFilterDefs( globalAnnotations.getFilterDefMap().values() );
+		if ( !globalAnnotations.getFilterDefs().isEmpty() ) {
+			parseFilterDefs( globalAnnotations.getFilterDefs() );
 		}
-		if ( !globalAnnotations.getFetchProfileMap().isEmpty() ) {
-			parseFetchProfiles( globalAnnotations.getFetchProfileMap().values() );
+		if ( !globalAnnotations.getFetchProfiles().isEmpty() ) {
+			parseFetchProfiles( globalAnnotations.getFetchProfiles() );
 		}
 		indexBuilder.finishGlobalConfigurationMocking( globalAnnotations );
 	}
@@ -206,10 +204,10 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 				MockHelper.booleanValue( "readOnly", namedQuery.isReadOnly(), annotationValueList );
 				MockHelper.integerValue( "fetchSize", namedQuery.getFetchSize(), annotationValueList );
 				MockHelper.integerValue( "timeout", namedQuery.getTimeout(), annotationValueList );
-				MockHelper.enumValue( "cacheMode", HibernateDotNames.CACHE_MODE_TYPE,
-						MockHelper.convert( namedQuery.getCacheMode() ), annotationValueList );
-				MockHelper.enumValue( "flushMode", HibernateDotNames.FLUSH_MODE_TYPE,
-						MockHelper.convert( namedQuery.getFlushMode() ), annotationValueList );
+				MockHelper.enumValue( "cacheMode", CACHE_MODE_TYPE, MockHelper.convert( namedQuery.getCacheMode() ),
+						annotationValueList );
+				MockHelper.enumValue( "flushMode", FLUSH_MODE_TYPE, MockHelper.convert( namedQuery.getFlushMode() ),
+						annotationValueList );
 				
 				AnnotationInstance annotationInstance = create(
 						HibernateDotNames.NAMED_QUERY, null, annotationValueList );
@@ -241,9 +239,9 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 //				MockHelper.booleanValue( "callable", namedQuery.isCallable(), annotationValueList );
 				MockHelper.integerValue( "fetchSize", namedQuery.getFetchSize(), annotationValueList );
 				MockHelper.integerValue( "timeout", namedQuery.getTimeout(), annotationValueList );
-				MockHelper.enumValue( "cacheMode", HibernateDotNames.CACHE_MODE_TYPE,
+				MockHelper.enumValue( "cacheMode", CACHE_MODE_TYPE,
 						MockHelper.convert( namedQuery.getCacheMode() ), annotationValueList );
-				MockHelper.enumValue( "flushMode", HibernateDotNames.FLUSH_MODE_TYPE,
+				MockHelper.enumValue( "flushMode", FLUSH_MODE_TYPE,
 						MockHelper.convert( namedQuery.getFlushMode() ), annotationValueList );
 				MockHelper.classValue( "resultClass", namedQuery.getResultClass(), annotationValueList, getDefaults(),
 						indexBuilder.getServiceRegistry() );
@@ -333,8 +331,7 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 				MockHelper.stringValue( "defaultCondition", filterDef.getCondition(), annotationValueList );
 				nestedFilterParams( filterDef.getFilterParam(), annotationValueList );
 				
-				AnnotationInstance annotationInstance = create(
-						HibernateDotNames.FILTER_DEF, null, annotationValueList );
+				AnnotationInstance annotationInstance = create( FILTER_DEF, null, annotationValueList );
 				filterDefAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
 			}
 			
@@ -342,7 +339,7 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 			MockHelper.addToCollectionIfNotNull( annotationValueList,
 					AnnotationValue.createArrayValue( "value", filterDefAnnotations ) );
 			
-			create( HibernateDotNames.FILTER_DEFS, null, annotationValueList );
+			create( FILTER_DEFS, null, annotationValueList );
 		}
 	}
 	
@@ -355,8 +352,7 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 				MockHelper.stringValue( "name", filterParam.getName(), filterParamannotationValueList );
 				MockHelper.stringValue( "type", filterParam.getType(), filterParamannotationValueList );
 				
-				AnnotationInstance annotationInstance = create(
-						HibernateDotNames.PARAM_DEF, null, filterParamannotationValueList );
+				AnnotationInstance annotationInstance = create( PARAM_DEF, null, filterParamannotationValueList );
 				filterParamAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
 			}
 			MockHelper.addToCollectionIfNotNull( annotationValueList,
@@ -377,7 +373,7 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 			MockHelper.addToCollectionIfNotNull( annotationValueList,
 					AnnotationValue.createArrayValue( "value", fetchProfileAnnotations ) );
 			
-			create( HibernateDotNames.FETCH_PROFILES, null, annotationValueList );
+			create( FETCH_PROFILES, null, annotationValueList );
 		}
 	}
 	
@@ -392,17 +388,16 @@ public class GlobalAnnotationMocker extends AbstractMocker {
 			MockHelper.stringValue( "association", fetch.getAssociation(), fetchAnnotationValueList );
 			MockHelper.classValue( "entity", fetch.getEntity(), fetchAnnotationValueList, getDefaults(),
 					indexBuilder.getServiceRegistry() );
-			MockHelper.enumValue( "mode", HibernateDotNames.FETCH_MODE, convertFetchMode( fetch.getStyle() ),
+			MockHelper.enumValue( "mode", FETCH_MODE, convertFetchMode( fetch.getStyle() ),
 					fetchAnnotationValueList );
-			AnnotationInstance annotationInstance = create(
-					HibernateDotNames.FETCH_OVERRIDE, null, fetchAnnotationValueList );
+			AnnotationInstance annotationInstance = create( FETCH_OVERRIDE, null, fetchAnnotationValueList );
 			fetchAnnotations[i++] = MockHelper.nestedAnnotationValue( "", annotationInstance );
 		}
 		
 		MockHelper.addToCollectionIfNotNull( annotationValueList,
 				AnnotationValue.createArrayValue( "fetchOverrides", fetchAnnotations ) );
 		
-		return create(HibernateDotNames.FETCH_PROFILE, null, annotationValueList );
+		return create(FETCH_PROFILE, null, annotationValueList );
 	}
 	
 	private FetchMode convertFetchMode(String fetchMode) {

@@ -29,6 +29,7 @@ import java.util.List;
 import javax.persistence.AccessType;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbIndex;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbUniqueConstraint;
@@ -42,7 +43,7 @@ import org.jboss.jandex.DotName;
  *
  * @author Strong Liu
  */
-public abstract class AbstractMocker implements JPADotNames {
+public abstract class AbstractMocker implements JPADotNames, HibernateDotNames {
 	final protected IndexBuilder indexBuilder;
 	final private Default defaults;
 

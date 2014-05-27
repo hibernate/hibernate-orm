@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbOneToOne;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 import org.jboss.jandex.AnnotationValue;
@@ -35,6 +34,7 @@ import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class OneToOneMocker extends PropertyMocker {
 	private JaxbOneToOne oneToOne;
@@ -74,6 +74,6 @@ public class OneToOneMocker extends PropertyMocker {
 		
 		annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.cascadeValue( "value", oneToOne.getHbmCascade(), annotationValueList );
-		create( HibernateDotNames.CASCADE, getTarget(), annotationValueList );
+		create( CASCADE, getTarget(), annotationValueList );
 	}
 }

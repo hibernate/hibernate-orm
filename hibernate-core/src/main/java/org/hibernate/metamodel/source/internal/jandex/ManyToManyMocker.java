@@ -26,7 +26,7 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbManyToMany;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 import org.jboss.jandex.AnnotationValue;
@@ -34,6 +34,7 @@ import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class ManyToManyMocker extends PropertyMocker {
 	private final JaxbManyToMany manyToMany;
@@ -55,18 +56,17 @@ public class ManyToManyMocker extends PropertyMocker {
 			String collectionTypeName = MockHelper.getCollectionType( manyToMany.getCollectionType().getName() );
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 			MockHelper.stringValue( "type", collectionTypeName, annotationValueList );
-			create( HibernateDotNames.COLLECTION_TYPE, annotationValueList );
+			create( COLLECTION_TYPE, annotationValueList );
 		}
 		if (manyToMany.isInverse() == null || manyToMany.isInverse()) {
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 			MockHelper.stringValue( "hbmKey", manyToMany.getHbmKey(), annotationValueList );
-			create( HibernateDotNames.INVERSE, getTarget(), annotationValueList );
+			create( INVERSE, getTarget(), annotationValueList );
 		}
 		if (manyToMany.getHbmFetchMode() != null) {
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-			MockHelper.enumValue( "value", HibernateDotNames.FETCH_MODE, manyToMany.getHbmFetchMode(),
-					annotationValueList );
-			create( HibernateDotNames.FETCH, getTarget(), annotationValueList );
+			MockHelper.enumValue( "value", FETCH_MODE, manyToMany.getHbmFetchMode(), annotationValueList );
+			create( FETCH, getTarget(), annotationValueList );
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue( "targetEntity", manyToMany.getTargetEntity(), annotationValueList, getDefaults(),
@@ -85,11 +85,11 @@ public class ManyToManyMocker extends PropertyMocker {
 		parseOrderColumn( manyToMany.getOrderColumn(), getTarget() );
 		parseJoinTable( manyToMany.getJoinTable(), getTarget() );
 		if ( manyToMany.getOrderBy() != null ) {
-			create( ORDER_BY, MockHelper.stringValueArray( "value", manyToMany.getOrderBy() ) );
+			create( JPADotNames.ORDER_BY, MockHelper.stringValueArray( "value", manyToMany.getOrderBy() ) );
 		}
 		
 		annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.cascadeValue( "value", manyToMany.getHbmCascade(), annotationValueList );
-		create( HibernateDotNames.CASCADE, getTarget(), annotationValueList );
+		create( CASCADE, getTarget(), annotationValueList );
 	}
 }

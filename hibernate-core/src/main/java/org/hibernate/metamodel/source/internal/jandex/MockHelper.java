@@ -61,6 +61,7 @@ import org.jboss.jandex.Type;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class MockHelper {
 

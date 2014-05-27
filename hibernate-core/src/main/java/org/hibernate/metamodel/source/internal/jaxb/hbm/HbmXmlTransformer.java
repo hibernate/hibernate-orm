@@ -112,12 +112,15 @@ public class HbmXmlTransformer {
 	 */
 	public static final HbmXmlTransformer INSTANCE = new HbmXmlTransformer();
 
+	private JaxbHibernateMapping hbmXmlMapping;
 	private Origin origin;
-	private JaxbEntityMappings ormRoot;
 	private ClassLoaderAccess classLoaderAccess;
+	
+	private JaxbEntityMappings ormRoot;
 
 	public JaxbEntityMappings transform(JaxbHibernateMapping hbmXmlMapping, Origin origin,
 			ClassLoaderAccess classLoaderAccess) {
+		this.hbmXmlMapping = hbmXmlMapping;
 		this.origin = origin;
 		this.classLoaderAccess = classLoaderAccess;
 
@@ -134,8 +137,6 @@ public class HbmXmlTransformer {
 						"This transformation only specifies xml-mapping-metadata-complete."
 		);
 
-		transferToolingHints( hbmXmlMapping, ormRoot );
-
 		ormRoot.setPackage( hbmXmlMapping.getPackage() );
 		ormRoot.setSchema( hbmXmlMapping.getSchema() );
 		ormRoot.setCatalog( hbmXmlMapping.getCatalog() );
@@ -144,64 +145,57 @@ public class HbmXmlTransformer {
 		ormRoot.setAutoImport( hbmXmlMapping.isAutoImport() );
 		ormRoot.setDefaultLazy( hbmXmlMapping.isDefaultLazy() );
 
-		transferTypeDefs( hbmXmlMapping, ormRoot );
-		transferIdentifierGenerators( hbmXmlMapping, ormRoot );
-		transferFilterDefs( hbmXmlMapping, ormRoot );
-		transferFetchProfiles( hbmXmlMapping, ormRoot );
-		transferImports( hbmXmlMapping, ormRoot );
-
-		transferResultSetMappings( hbmXmlMapping, ormRoot );
-		transferNamedQuery( hbmXmlMapping, ormRoot );
-		transferNamedSqlQuery( hbmXmlMapping, ormRoot );
-
-		transferDatabaseObjects( hbmXmlMapping, ormRoot );
-
-		transferEntities( hbmXmlMapping, ormRoot );
+		transferToolingHints();
+		transferTypeDefs();
+		transferIdentifierGenerators();
+		transferFilterDefs();
+		transferFetchProfiles();
+		transferImports();
+		transferResultSetMappings();
+		transferNamedQueries();
+		transferNamedNativeQueries();
+		transferDatabaseObjects();
+		transferEntities();
 
 		return ormRoot;
 	}
 
-	private void transferToolingHints(JaxbMetaContainerElement hbmMetaContainer, JaxbEntityMappings entityMappings) {
-		if ( hbmMetaContainer.getMeta().isEmpty() ) {
-			return;
-		}
-
-		for ( JaxbMetaElement hbmMetaElement : hbmMetaContainer.getMeta() ) {
+	private void transferToolingHints() {
+		for ( JaxbMetaElement hbmMetaElement : hbmXmlMapping.getMeta() ) {
 			final JaxbHbmToolingHint toolingHint = new JaxbHbmToolingHint();
-			entityMappings.getToolingHint().add( toolingHint );
+			ormRoot.getToolingHint().add( toolingHint );
 			toolingHint.setName( hbmMetaElement.getName() );
 			toolingHint.setInheritable( hbmMetaElement.isInheritable() );
 			toolingHint.setValue( hbmMetaElement.getValue() );
 		}
 	}
 
-	private void transferTypeDefs(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getTypedef().isEmpty() ) {
-			return;
-		}
-
+	private void transferTypeDefs() {
 		for ( JaxbTypedefElement hbmXmlTypeDef : hbmXmlMapping.getTypedef() ) {
 			final JaxbHbmTypeDef typeDef = new JaxbHbmTypeDef();
 			ormRoot.getTypeDef().add( typeDef );
 			typeDef.setName( hbmXmlTypeDef.getName() );
 			typeDef.setClazz( hbmXmlTypeDef.getClazz() );
 
-			if ( !hbmXmlTypeDef.getParam().isEmpty() ) {
-				for ( JaxbParamElement hbmParam : hbmXmlTypeDef.getParam() ) {
-					final JaxbHbmParam param = new JaxbHbmParam();
-					typeDef.getParam().add( param );
-					param.setName( hbmParam.getName() );
-					param.setValue( hbmParam.getValue() );
-				}
+			for ( JaxbParamElement hbmParam : hbmXmlTypeDef.getParam() ) {
+				final JaxbHbmParam param = new JaxbHbmParam();
+				typeDef.getParam().add( param );
+				param.setName( hbmParam.getName() );
+				param.setValue( hbmParam.getValue() );
 			}
 		}
 	}
 
-	private void transferFilterDefs(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getFilterDef().isEmpty() ) {
-			return;
+	private void transferIdentifierGenerators() {
+		for ( JaxbIdentifierGeneratorElement hbmGenerator : hbmXmlMapping.getIdentifierGenerator() ) {
+			final JaxbHbmIdGeneratorDef generatorDef = new JaxbHbmIdGeneratorDef();
+			ormRoot.getIdentifierGeneratorDef().add( generatorDef );
+			generatorDef.setName( hbmGenerator.getName() );
+			generatorDef.setClazz( hbmGenerator.getClazz() );
 		}
+	}
 
+	private void transferFilterDefs() {
 		for ( JaxbFilterDefElement hbmFilterDef : hbmXmlMapping.getFilterDef() ) {
 			JaxbHbmFilterDef filterDef = new JaxbHbmFilterDef();
 			ormRoot.getFilterDef().add( filterDef );
@@ -232,24 +226,7 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	private void transferIdentifierGenerators(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getIdentifierGenerator().isEmpty() ) {
-			return;
-		}
-
-		for ( JaxbIdentifierGeneratorElement hbmGenerator : hbmXmlMapping.getIdentifierGenerator() ) {
-			final JaxbHbmIdGeneratorDef generatorDef = new JaxbHbmIdGeneratorDef();
-			ormRoot.getIdentifierGeneratorDef().add( generatorDef );
-			generatorDef.setName( hbmGenerator.getName() );
-			generatorDef.setClazz( hbmGenerator.getClazz() );
-		}
-	}
-
-	private void transferImports(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getImport().isEmpty() ) {
-			return;
-		}
-
+	private void transferImports() {
 		for ( JaxbImportElement hbmImport : hbmXmlMapping.getImport() ) {
 			final JaxbEntityMappings.JaxbImport ormImport = new JaxbEntityMappings.JaxbImport();
 			ormRoot.getImport().add( ormImport );
@@ -258,7 +235,7 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	private void transferResultSetMappings(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+	private void transferResultSetMappings() {
 		for ( JaxbResultsetElement hbmResultSet : hbmXmlMapping.getResultset() ) {
 			final JaxbSqlResultSetMapping mapping = new JaxbSqlResultSetMapping();
 			mapping.setName( hbmResultSet.getName() );
@@ -295,11 +272,7 @@ public class HbmXmlTransformer {
 		return entityResult;
 	}
 
-	private void transferFetchProfiles(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getFetchProfile().isEmpty() ) {
-			return;
-		}
-
+	private void transferFetchProfiles() {
 		for ( JaxbFetchProfileElement hbmFetchProfile : hbmXmlMapping.getFetchProfile() ) {
 			ormRoot.getFetchProfile().add( transferFetchProfile( hbmFetchProfile ) );
 		}
@@ -318,17 +291,13 @@ public class HbmXmlTransformer {
 		return fetchProfile;
 	}
 
-	private void transferNamedQuery(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getQuery().isEmpty() ) {
-			return;
-		}
-
+	private void transferNamedQueries() {
 		for ( JaxbQueryElement hbmQuery : hbmXmlMapping.getQuery() ) {
-			ormRoot.getNamedQuery().add( convert( hbmQuery, hbmQuery.getName() ) );
+			ormRoot.getNamedQuery().add( transferNamedQuery( hbmQuery, hbmQuery.getName() ) );
 		}
 	}
 	
-	private JaxbNamedQuery convert(JaxbQueryElement hbmQuery, String name) {
+	private JaxbNamedQuery transferNamedQuery(JaxbQueryElement hbmQuery, String name) {
 		final JaxbNamedQuery query = new JaxbNamedQuery();
 		query.setName( name );
 		query.setCacheable( hbmQuery.isCacheable() );
@@ -336,7 +305,7 @@ public class HbmXmlTransformer {
 		query.setCacheRegion( hbmQuery.getCacheRegion() );
 		query.setComment( hbmQuery.getComment() );
 		query.setFetchSize( hbmQuery.getFetchSize() );
-		query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
+		query.setFlushMode( convert( hbmQuery.getFlushMode() ) );
 		query.setFetchSize( hbmQuery.getFetchSize() );
 		query.setReadOnly( hbmQuery.isReadOnly() );
 		query.setTimeout( hbmQuery.getTimeout() );
@@ -360,35 +329,13 @@ public class HbmXmlTransformer {
 		return query;
 	}
 
-	private JaxbCacheModeType convert(JaxbCacheModeAttribute cacheMode) {
-		final String value = cacheMode == null ? null : cacheMode.value();
-		if ( StringHelper.isEmpty( value ) ) {
-			return JaxbCacheModeType.NORMAL;
-		}
-
-		return JaxbCacheModeType.fromValue( value );
-	}
-
-	private FlushMode interpret(JaxbFlushModeAttribute flushMode) {
-		final String value = flushMode == null ? null : flushMode.value();
-		if ( StringHelper.isEmpty( value ) ) {
-			return null;
-		}
-
-		return FlushMode.valueOf( value );
-	}
-
-	private void transferNamedSqlQuery(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
-		if ( hbmXmlMapping.getSqlQuery().isEmpty() ) {
-			return;
-		}
-
+	private void transferNamedNativeQueries() {
 		for ( JaxbSqlQueryElement hbmQuery : hbmXmlMapping.getSqlQuery() ) {
-			ormRoot.getNamedNativeQuery().add( convert( hbmQuery, hbmQuery.getName() ) );
+			ormRoot.getNamedNativeQuery().add( transferNamedNativeQuery( hbmQuery, hbmQuery.getName() ) );
 		}
 	}
 	
-	private JaxbNamedNativeQuery convert(JaxbSqlQueryElement hbmQuery, String name) {
+	private JaxbNamedNativeQuery transferNamedNativeQuery(JaxbSqlQueryElement hbmQuery, String name) {
 		final JaxbNamedNativeQuery query = new JaxbNamedNativeQuery();
 		query.setName( name );
 		query.setCacheable( hbmQuery.isCacheable() );
@@ -396,7 +343,7 @@ public class HbmXmlTransformer {
 		query.setCacheRegion( hbmQuery.getCacheRegion() );
 		query.setComment( hbmQuery.getComment() );
 		query.setFetchSize( hbmQuery.getFetchSize() );
-		query.setFlushMode( interpret( hbmQuery.getFlushMode() ) );
+		query.setFlushMode( convert( hbmQuery.getFlushMode() ) );
 		query.setFetchSize( hbmQuery.getFetchSize() );
 		query.setReadOnly( hbmQuery.isReadOnly() );
 		query.setTimeout( hbmQuery.getTimeout() );
@@ -431,55 +378,42 @@ public class HbmXmlTransformer {
 		return query;
 	}
 
-	private void transferDatabaseObjects(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+	private void transferDatabaseObjects() {
 		// todo : implement
 	}
 
-	private void transferEntities(JaxbHibernateMapping hbmXmlMapping, JaxbEntityMappings ormRoot) {
+	private void transferEntities() {
 		// thoughts...
 		//		1) We only need to transfer the "extends" attribute if the model is dynamic (map mode),
 		//			otherwise it will be discovered via jandex
 		//		2) ?? Have abstract hbm class mappings become MappedSuperclass mappings ??
 
-		if ( !hbmXmlMapping.getClazz().isEmpty() ) {
-			for ( JaxbClassElement hbmClass : hbmXmlMapping.getClazz() ) {
-				final JaxbEntity entity = new JaxbEntity();
-				ormRoot.getEntity().add( entity );
-				transferEntity( hbmClass, entity );
-			}
+		for ( JaxbClassElement hbmClass : hbmXmlMapping.getClazz() ) {
+			final JaxbEntity entity = new JaxbEntity();
+			ormRoot.getEntity().add( entity );
+			transferEntity( hbmClass, entity );
 		}
 
-		if ( !hbmXmlMapping.getSubclass().isEmpty() ) {
-			for ( JaxbSubclassElement hbmSubclass : hbmXmlMapping.getSubclass() ) {
-				final JaxbEntity entity = new JaxbEntity();
-				ormRoot.getEntity().add( entity );
+		for ( JaxbSubclassElement hbmSubclass : hbmXmlMapping.getSubclass() ) {
+			final JaxbEntity entity = new JaxbEntity();
+			ormRoot.getEntity().add( entity );
 
-				transferDiscriminatorSubclass( hbmSubclass, entity );
-			}
+			transferDiscriminatorSubclass( hbmSubclass, entity );
 		}
 
-		if ( !hbmXmlMapping.getJoinedSubclass().isEmpty() ) {
-			for ( JaxbJoinedSubclassElement hbmSubclass : hbmXmlMapping.getJoinedSubclass() ) {
-				final JaxbEntity entity = new JaxbEntity();
-				ormRoot.getEntity().add( entity );
+		for ( JaxbJoinedSubclassElement hbmSubclass : hbmXmlMapping.getJoinedSubclass() ) {
+			final JaxbEntity entity = new JaxbEntity();
+			ormRoot.getEntity().add( entity );
 
-				transferJoinedSubclass( hbmSubclass, entity );
-			}
+			transferJoinedSubclass( hbmSubclass, entity );
 		}
 
-		if ( !hbmXmlMapping.getUnionSubclass().isEmpty() ) {
-			for ( JaxbUnionSubclassElement hbmSubclass : hbmXmlMapping.getUnionSubclass() ) {
-				final JaxbEntity entity = new JaxbEntity();
-				ormRoot.getEntity().add( entity );
+		for ( JaxbUnionSubclassElement hbmSubclass : hbmXmlMapping.getUnionSubclass() ) {
+			final JaxbEntity entity = new JaxbEntity();
+			ormRoot.getEntity().add( entity );
 
-				transferUnionSubclass( hbmSubclass, entity );
-			}
+			transferUnionSubclass( hbmSubclass, entity );
 		}
-
-//		<xs:element name="class" type="class-element"/>
-//		<xs:element name="subclass" type="subclass-element"/>
-//		<xs:element name="joined-subclass" type="joined-subclass-element"/>
-//		<xs:element name="union-subclass" type="union-subclass-element"/>
 
 	}
 
@@ -495,12 +429,11 @@ public class HbmXmlTransformer {
 		entity.getTable().setComment( hbmClass.getComment() );
 		entity.getTable().setCheck( hbmClass.getCheck() );
 		entity.setSubselect( hbmClass.getSubselect() );
-		if ( !hbmClass.getSynchronize().isEmpty() ) {
-			for ( JaxbSynchronizeElement hbmSync : hbmClass.getSynchronize() ) {
-				final JaxbSynchronizeType sync = new JaxbSynchronizeType();
-				sync.setTable( hbmSync.getTable() );
-				entity.getSynchronize().add( sync );
-			}
+		
+		for ( JaxbSynchronizeElement hbmSync : hbmClass.getSynchronize() ) {
+			final JaxbSynchronizeType sync = new JaxbSynchronizeType();
+			sync.setTable( hbmSync.getTable() );
+			entity.getSynchronize().add( sync );
 		}
 
 		if ( hbmClass.getLoader() != null ) {
@@ -564,72 +497,58 @@ public class HbmXmlTransformer {
 			entity.getCache().setInclude( hbmClass.getCache().getInclude().value() );
 		}
 		
-		if (! hbmClass.getQuery().isEmpty() ) {
-			for ( JaxbQueryElement hbmQuery : hbmClass.getQuery() ) {
-				entity.getNamedQuery().add( convert( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
-			}
+		for ( JaxbQueryElement hbmQuery : hbmClass.getQuery() ) {
+			entity.getNamedQuery().add( transferNamedQuery( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
 		}
 		
-		if (! hbmClass.getSqlQuery().isEmpty() ) {
-			for ( JaxbSqlQueryElement hbmQuery : hbmClass.getSqlQuery() ) {
-				entity.getNamedNativeQuery().add( convert( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
-			}
+		for ( JaxbSqlQueryElement hbmQuery : hbmClass.getSqlQuery() ) {
+			entity.getNamedNativeQuery().add( transferNamedNativeQuery( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
 		}
 		
-		if (! hbmClass.getFilter().isEmpty()) {
-			for (JaxbFilterElement hbmFilter : hbmClass.getFilter()) {
-				entity.getFilter().add( convert( hbmFilter ) );
-			}
+		for (JaxbFilterElement hbmFilter : hbmClass.getFilter()) {
+			entity.getFilter().add( convert( hbmFilter ) );
 		}
 		
-		if (! hbmClass.getFetchProfile().isEmpty()) {
-			for (JaxbFetchProfileElement hbmFetchProfile : hbmClass.getFetchProfile()) {
-				entity.getFetchProfile().add( transferFetchProfile( hbmFetchProfile ) );
-			}
+		for (JaxbFetchProfileElement hbmFetchProfile : hbmClass.getFetchProfile()) {
+			entity.getFetchProfile().add( transferFetchProfile( hbmFetchProfile ) );
 		}
 
 		transferAttributes( entity, hbmClass );
 		
-		if (! hbmClass.getJoinedSubclass().isEmpty()) {
-			for (JaxbJoinedSubclassElement hbmSubclass : hbmClass.getJoinedSubclass()) {
-				entity.setInheritance( new JaxbInheritance() );
-				entity.getInheritance().setStrategy( JaxbInheritanceType.JOINED );
-				
-				final JaxbEntity subclassEntity = new JaxbEntity();
-				ormRoot.getEntity().add( subclassEntity );
-				transferJoinedSubclass( hbmSubclass, subclassEntity );
-			}
+		for (JaxbJoinedSubclassElement hbmSubclass : hbmClass.getJoinedSubclass()) {
+			entity.setInheritance( new JaxbInheritance() );
+			entity.getInheritance().setStrategy( JaxbInheritanceType.JOINED );
+			
+			final JaxbEntity subclassEntity = new JaxbEntity();
+			ormRoot.getEntity().add( subclassEntity );
+			transferJoinedSubclass( hbmSubclass, subclassEntity );
 		}
 		
-		if (! hbmClass.getUnionSubclass().isEmpty()) {
-			for (JaxbUnionSubclassElement hbmSubclass : hbmClass.getUnionSubclass()) {
-				entity.setInheritance( new JaxbInheritance() );
-				entity.getInheritance().setStrategy( JaxbInheritanceType.UNION_SUBCLASS );
-				
-				final JaxbEntity subclassEntity = new JaxbEntity();
-				ormRoot.getEntity().add( subclassEntity );
-				transferUnionSubclass( hbmSubclass, subclassEntity );
-			}
+		for (JaxbUnionSubclassElement hbmSubclass : hbmClass.getUnionSubclass()) {
+			entity.setInheritance( new JaxbInheritance() );
+			entity.getInheritance().setStrategy( JaxbInheritanceType.UNION_SUBCLASS );
+			
+			final JaxbEntity subclassEntity = new JaxbEntity();
+			ormRoot.getEntity().add( subclassEntity );
+			transferUnionSubclass( hbmSubclass, subclassEntity );
 		}
 		
-		if (! hbmClass.getSubclass().isEmpty()) {
-			for (JaxbSubclassElement hbmSubclass : hbmClass.getSubclass()) {
-				final JaxbEntity subclassEntity = new JaxbEntity();
-				ormRoot.getEntity().add( subclassEntity );
-				transferDiscriminatorSubclass( hbmSubclass, subclassEntity );
-			}
+		for (JaxbSubclassElement hbmSubclass : hbmClass.getSubclass()) {
+			final JaxbEntity subclassEntity = new JaxbEntity();
+			ormRoot.getEntity().add( subclassEntity );
+			transferDiscriminatorSubclass( hbmSubclass, subclassEntity );
 		}
 		
 		for ( JaxbQueryElement hbmQuery : hbmClass.getQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
-			ormRoot.getNamedQuery().add( convert( hbmQuery, name ) );
+			ormRoot.getNamedQuery().add( transferNamedQuery( hbmQuery, name ) );
 		}
 		
 		for ( JaxbSqlQueryElement hbmQuery : hbmClass.getSqlQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
-			ormRoot.getNamedNativeQuery().add( convert( hbmQuery, name ) );
+			ormRoot.getNamedNativeQuery().add( transferNamedNativeQuery( hbmQuery, name ) );
 		}
 	}
 
@@ -685,13 +604,6 @@ public class HbmXmlTransformer {
 				transferJoinedSubclass( nestedHbmSubclass, nestedSubclassEntity );
 			}
 		}
-	}
-
-	private JaxbHbmCustomSqlCheckEnum convert(JaxbCheckAttribute check) {
-		if ( check == null ) {
-			return null;
-		}
-		return JaxbHbmCustomSqlCheckEnum.valueOf( check.value() );
 	}
 
 	private void transferColumn(
@@ -793,13 +705,11 @@ public class HbmXmlTransformer {
 				if ( hbmId.getType() != null ) {
 					id.setType( new JaxbHbmType() );
 					id.getType().setName( hbmId.getType().getName() );
-					if ( !hbmId.getType().getParam().isEmpty() ) {
-						for ( JaxbParamElement hbmParam : hbmId.getType().getParam() ) {
-							final JaxbHbmParam param = new JaxbHbmParam();
-							param.setName( hbmParam.getName() );
-							param.setValue( hbmParam.getValue() );
-							id.getType().getParam().add( param );
-						}
+					for ( JaxbParamElement hbmParam : hbmId.getType().getParam() ) {
+						final JaxbHbmParam param = new JaxbHbmParam();
+						param.setName( hbmParam.getName() );
+						param.setValue( hbmParam.getValue() );
+						id.getType().getParam().add( param );
 					}
 				}
 			}
@@ -1036,8 +946,6 @@ public class HbmXmlTransformer {
 			}
 		}
 		
-		// TODO: If hbmProp isUnique or notNull is set, bind the column?
-
 		if ( StringHelper.isNotEmpty( hbmProp.getFormulaAttribute() ) ) {
 			basic.getColumnOrFormula().add( hbmProp.getFormulaAttribute() );
 		}
@@ -1552,54 +1460,6 @@ public class HbmXmlTransformer {
 		return m2m;
 	}
 	
-	private JaxbHbmCascadeType convertCascadeType(String s) {
-		final JaxbHbmCascadeType cascadeType = new JaxbHbmCascadeType();
-		
-		if (! StringHelper.isEmpty( s )) {
-			s = s.replaceAll( " ", "" );
-			s = StringHelper.toLowerCase( s );
-			final String[] split = s.split( "," );
-			for (String hbmCascade : split) {
-				if (hbmCascade.contains( "all" )) {
-					cascadeType.setCascadeAll( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "persist" )) {
-					cascadeType.setCascadePersist( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "merge" )) {
-					cascadeType.setCascadeMerge( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "refresh" )) {
-					cascadeType.setCascadeRefresh( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "save-update" )) {
-					cascadeType.setCascadeSaveUpdate( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "evict" ) || hbmCascade.contains( "detach" )) {
-					cascadeType.setCascadeDetach( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "replicate" )) {
-					cascadeType.setCascadeReplicate( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "lock" )) {
-					cascadeType.setCascadeLock( new JaxbEmptyType() );
-				}
-				if (hbmCascade.contains( "delete" )) {
-					cascadeType.setCascadeDelete( new JaxbEmptyType() );
-				}
-			}
-		}
-		return cascadeType;
-	}
-	
-	private boolean isOrphanRemoval(String s) {
-		if (! StringHelper.isEmpty( s )) {
-			s = StringHelper.toLowerCase( s );
-			return s.contains( "orphan" );
-		}
-		return false;
-	}
-	
 	// ToOne
 	private void transferFetchable(JaxbLazyAttributeWithNoProxy hbmLazy, JaxbFetchStyleAttribute hbmFetch,
 			JaxbOuterJoinAttribute hbmOuterJoin, Boolean constrained, FetchableAttribute fetchable) {
@@ -1711,6 +1571,79 @@ public class HbmXmlTransformer {
 			filter.getContent().add( content );
 		}
 		return filter;
+	}
+
+	private JaxbCacheModeType convert(JaxbCacheModeAttribute cacheMode) {
+		final String value = cacheMode == null ? null : cacheMode.value();
+		if ( StringHelper.isEmpty( value ) ) {
+			return JaxbCacheModeType.NORMAL;
+		}
+
+		return JaxbCacheModeType.fromValue( value );
+	}
+
+	private FlushMode convert(JaxbFlushModeAttribute flushMode) {
+		final String value = flushMode == null ? null : flushMode.value();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+
+		return FlushMode.valueOf( value );
+	}
+
+	private JaxbHbmCustomSqlCheckEnum convert(JaxbCheckAttribute check) {
+		if ( check == null ) {
+			return null;
+		}
+		return JaxbHbmCustomSqlCheckEnum.valueOf( check.value() );
+	}
+	
+	private JaxbHbmCascadeType convertCascadeType(String s) {
+		final JaxbHbmCascadeType cascadeType = new JaxbHbmCascadeType();
+		
+		if (! StringHelper.isEmpty( s )) {
+			s = s.replaceAll( " ", "" );
+			s = StringHelper.toLowerCase( s );
+			final String[] split = s.split( "," );
+			for (String hbmCascade : split) {
+				if (hbmCascade.contains( "all" )) {
+					cascadeType.setCascadeAll( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "persist" )) {
+					cascadeType.setCascadePersist( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "merge" )) {
+					cascadeType.setCascadeMerge( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "refresh" )) {
+					cascadeType.setCascadeRefresh( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "save-update" )) {
+					cascadeType.setCascadeSaveUpdate( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "evict" ) || hbmCascade.contains( "detach" )) {
+					cascadeType.setCascadeDetach( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "replicate" )) {
+					cascadeType.setCascadeReplicate( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "lock" )) {
+					cascadeType.setCascadeLock( new JaxbEmptyType() );
+				}
+				if (hbmCascade.contains( "delete" )) {
+					cascadeType.setCascadeDelete( new JaxbEmptyType() );
+				}
+			}
+		}
+		return cascadeType;
+	}
+	
+	private boolean isOrphanRemoval(String s) {
+		if (! StringHelper.isEmpty( s )) {
+			s = StringHelper.toLowerCase( s );
+			return s.contains( "orphan" );
+		}
+		return false;
 	}
 	
 	private String getFqClassName(String className) {

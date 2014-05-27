@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -49,7 +48,7 @@ public class NaturalIdMocker extends PropertyMocker {
 	protected void doProcess() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.booleanValue( "mutable", mutable, annotationValueList );
-		create( HibernateDotNames.NATURAL_ID, annotationValueList );
+		create( NATURAL_ID, annotationValueList );
 	}
 
 	@Override

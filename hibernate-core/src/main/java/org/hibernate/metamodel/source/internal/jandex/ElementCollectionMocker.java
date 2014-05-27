@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbElementCollection;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 import org.jboss.jandex.AnnotationValue;
@@ -35,6 +35,7 @@ import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class ElementCollectionMocker extends PropertyMocker {
 	private final JaxbElementCollection elementCollection;
@@ -65,7 +66,7 @@ public class ElementCollectionMocker extends PropertyMocker {
 			String collectionTypeName = MockHelper.getCollectionType( elementCollection.getCollectionType().getName() );
 			List<AnnotationValue> collectionTypeAnnotationValueList = new ArrayList<AnnotationValue>();
 			MockHelper.stringValue( "type", collectionTypeName, collectionTypeAnnotationValueList );
-			create( HibernateDotNames.COLLECTION_TYPE, collectionTypeAnnotationValueList );
+			create( COLLECTION_TYPE, collectionTypeAnnotationValueList );
 		}
 		MockHelper.enumValue( "fetch", FETCH_TYPE, elementCollection.getFetch(), annotationValueList );
 		create( ELEMENT_COLLECTION, annotationValueList );
@@ -77,7 +78,7 @@ public class ElementCollectionMocker extends PropertyMocker {
 		parseAssociationOverrides( elementCollection.getAssociationOverride(), getTarget() );
 		parseAttributeOverrides( elementCollection.getAttributeOverride(), getTarget() );
 		if ( elementCollection.getOrderBy() != null ) {
-			create( ORDER_BY, MockHelper.stringValueArray( "value", elementCollection.getOrderBy() ) );
+			create( JPADotNames.ORDER_BY, MockHelper.stringValueArray( "value", elementCollection.getOrderBy() ) );
 		}
 		parseAttributeOverrides( elementCollection.getMapKeyAttributeOverride(), getTarget() );
 		parseMapKeyJoinColumnList( elementCollection.getMapKeyJoinColumn(), getTarget() );

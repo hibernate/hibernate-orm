@@ -29,13 +29,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAssociationOverride;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbAttributeOverride;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbCollectionTable;
@@ -45,7 +45,6 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbJoinTable;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbLob;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbOrderColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPrimaryKeyJoinColumn;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -53,6 +52,7 @@ import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public abstract class AnnotationMocker extends AbstractMocker {
 
@@ -134,7 +134,7 @@ public abstract class AnnotationMocker extends AbstractMocker {
 			if ( String.class.isInstance( columnOrFormula ) ) {
 				List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 				MockHelper.stringValue( "value", (String) columnOrFormula, annotationValueList );
-				return create( HibernateDotNames.FORMULA, target, annotationValueList );
+				return create( FORMULA, target, annotationValueList );
 			}
 			else {
 				return parseColumn( (JaxbColumn) columnOrFormula, target );
@@ -152,7 +152,7 @@ public abstract class AnnotationMocker extends AbstractMocker {
 				annotationValueList.add( MockHelper.nestedAnnotationValue( "", annotationInstance ) );
 			}
 
-			return create( HibernateDotNames.COLUMNS, target, MockHelper.toArray( annotationValueList ) );
+			return create( COLUMNS, target, MockHelper.toArray( annotationValueList ) );
 		}
 	}
 
@@ -168,7 +168,7 @@ public abstract class AnnotationMocker extends AbstractMocker {
 		MockHelper.stringValue( "forColumn", column.getName(), annotationValueList );
 		MockHelper.stringValue( "read", column.getRead(), annotationValueList );
 		MockHelper.stringValue( "write", column.getWrite(), annotationValueList );
-		create( HibernateDotNames.COLUMN_TRANSFORMER, target, annotationValueList );
+		create( COLUMN_TRANSFORMER, target, annotationValueList );
 		
 		annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", column.getName(), annotationValueList );

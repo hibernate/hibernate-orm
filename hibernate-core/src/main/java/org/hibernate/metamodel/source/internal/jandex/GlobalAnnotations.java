@@ -26,13 +26,9 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
@@ -52,43 +48,36 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbTableGenerator;
 import org.hibernate.metamodel.source.internal.jaxb.SchemaAware;
 import org.hibernate.metamodel.source.spi.MappingException;
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
-// TODO: Much of this class is unnecessary -- use simple lists and let duplication be checked later on?
 public class GlobalAnnotations implements JPADotNames {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GlobalAnnotations.class );
-
-	private final Map<String, JaxbSequenceGenerator> sequenceGeneratorMap = new HashMap<String, JaxbSequenceGenerator>();
-	private final Map<String, JaxbTableGenerator> tableGeneratorMap = new HashMap<String, JaxbTableGenerator>();
-	private final Map<String, JaxbNamedQuery> namedQueryMap = new HashMap<String, JaxbNamedQuery>();
-	private final Map<String, JaxbNamedNativeQuery> namedNativeQueryMap = new HashMap<String, JaxbNamedNativeQuery>();
-	private final Map<String, JaxbSqlResultSetMapping> sqlResultSetMappingMap = new HashMap<String, JaxbSqlResultSetMapping>();
-	private final Map<DotName, List<AnnotationInstance>> annotationInstanceMap = new HashMap<DotName, List<AnnotationInstance>>();
-	private final List<AnnotationInstance> indexedAnnotationInstanceList = new ArrayList<AnnotationInstance>();
-	private final Map<String, JaxbHbmFilterDef> filterDefMap = new HashMap<String, JaxbHbmFilterDef>();
-	private final Map<String, JaxbHbmFetchProfile> fetchProfileMap = new HashMap<String, JaxbHbmFetchProfile>();
-	//---------------------------
-	private final Set<String> defaultNamedNativeQueryNames = new HashSet<String>();
-	private final Set<String> defaultNamedQueryNames = new HashSet<String>();
-	private final Set<String> defaultNamedGenerators = new HashSet<String>();
-	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<String>();
+	private final List<JaxbSequenceGenerator> sequenceGenerators = new ArrayList<JaxbSequenceGenerator>();
+	private final List<JaxbTableGenerator> tableGenerators = new ArrayList<JaxbTableGenerator>();
+	private final List<JaxbNamedQuery> namedQuerys = new ArrayList<JaxbNamedQuery>();
+	private final List<JaxbNamedNativeQuery> namedNativeQuerys = new ArrayList<JaxbNamedNativeQuery>();
+	private final List<JaxbSqlResultSetMapping> sqlResultSetMappings = new ArrayList<JaxbSqlResultSetMapping>();
+	private final List<JaxbHbmFilterDef> filterDefs = new ArrayList<JaxbHbmFilterDef>();
+	private final List<JaxbHbmFetchProfile> fetchProfiles = new ArrayList<JaxbHbmFetchProfile>();
+	
+	private final List<AnnotationInstance> indexedAnnotationInstances = new ArrayList<AnnotationInstance>();
+	private final Map<DotName, List<AnnotationInstance>> annotationInstances = new HashMap<DotName, List<AnnotationInstance>>();
 
 	Map<DotName, List<AnnotationInstance>> getAnnotationInstanceMap() {
-		return annotationInstanceMap;
+		return annotationInstances;
 	}
 
 	AnnotationInstance push(DotName name, AnnotationInstance annotationInstance) {
 		if ( name == null || annotationInstance == null ) {
 			return null;
 		}
-		List<AnnotationInstance> list = annotationInstanceMap.get( name );
+		List<AnnotationInstance> list = annotationInstances.get( name );
 		if ( list == null ) {
 			list = new ArrayList<AnnotationInstance>();
-			annotationInstanceMap.put( name, list );
+			annotationInstances.put( name, list );
 		}
 		list.add( annotationInstance );
 		return annotationInstance;
@@ -97,7 +86,7 @@ public class GlobalAnnotations implements JPADotNames {
 
 	void addIndexedAnnotationInstance(Collection<AnnotationInstance> annotationInstanceList) {
 		if ( CollectionHelper.isNotEmpty( annotationInstanceList ) ) {
-			indexedAnnotationInstanceList.addAll( annotationInstanceList );
+			indexedAnnotationInstances.addAll( annotationInstanceList );
 		}
 	}
 
@@ -105,73 +94,63 @@ public class GlobalAnnotations implements JPADotNames {
 	 * do the orm xmls define global configurations?
 	 */
 	boolean hasGlobalConfiguration() {
-		return !( namedQueryMap.isEmpty()
-				&& namedNativeQueryMap.isEmpty()
-				&& sequenceGeneratorMap.isEmpty()
-				&& tableGeneratorMap.isEmpty()
-				&& sqlResultSetMappingMap.isEmpty()
-				&& filterDefMap.isEmpty()
-				&& fetchProfileMap.isEmpty() );
+		return !( namedQuerys.isEmpty()
+				&& namedNativeQuerys.isEmpty()
+				&& sequenceGenerators.isEmpty()
+				&& tableGenerators.isEmpty()
+				&& sqlResultSetMappings.isEmpty()
+				&& filterDefs.isEmpty()
+				&& fetchProfiles.isEmpty() );
 	}
 
-	Map<String, JaxbNamedNativeQuery> getNamedNativeQueryMap() {
-		return namedNativeQueryMap;
+	List<JaxbNamedNativeQuery> getNamedNativeQueries() {
+		return namedNativeQuerys;
 	}
 
-	Map<String, JaxbNamedQuery> getNamedQueryMap() {
-		return namedQueryMap;
+	List<JaxbNamedQuery> getNamedQueries() {
+		return namedQuerys;
 	}
 
-	Map<String, JaxbSequenceGenerator> getSequenceGeneratorMap() {
-		return sequenceGeneratorMap;
+	List<JaxbSequenceGenerator> getSequenceGenerators() {
+		return sequenceGenerators;
 	}
 
-	Map<String, JaxbSqlResultSetMapping> getSqlResultSetMappingMap() {
-		return sqlResultSetMappingMap;
+	List<JaxbSqlResultSetMapping> getSqlResultSetMappings() {
+		return sqlResultSetMappings;
 	}
 
-	Map<String, JaxbTableGenerator> getTableGeneratorMap() {
-		return tableGeneratorMap;
+	List<JaxbTableGenerator> getTableGenerators() {
+		return tableGenerators;
 	}
 
-	Map<String, JaxbHbmFilterDef> getFilterDefMap() {
-		return filterDefMap;
+	List<JaxbHbmFilterDef> getFilterDefs() {
+		return filterDefs;
 	}
 
-	Map<String, JaxbHbmFetchProfile> getFetchProfileMap() {
-		return fetchProfileMap;
+	List<JaxbHbmFetchProfile> getFetchProfiles() {
+		return fetchProfiles;
 	}
 
 
 	public void filterIndexedAnnotations() {
-		for ( AnnotationInstance annotationInstance : indexedAnnotationInstanceList ) {
-			pushIfNotExist( annotationInstance );
+		for ( AnnotationInstance annotationInstance : indexedAnnotationInstances ) {
+			push( annotationInstance );
 		}
 	}
 
-	private void pushIfNotExist(AnnotationInstance annotationInstance) {
+	private void push(AnnotationInstance annotationInstance) {
 		DotName annName = annotationInstance.name();
-		boolean isNotExist = false;
-		if ( annName.equals( SQL_RESULT_SET_MAPPINGS ) ) {
+		if ( annName.equals( SQL_RESULT_SET_MAPPINGS )
+				|| annName.equals( NAMED_NATIVE_QUERIES )
+				|| annName.equals( NAMED_QUERIES )
+				|| annName.equals( HibernateDotNames.FILTER_DEFS )
+				|| annName.equals( HibernateDotNames.FETCH_PROFILES )) {
 			AnnotationInstance[] annotationInstances = annotationInstance.value().asNestedArray();
 			for ( AnnotationInstance ai : annotationInstances ) {
-				pushIfNotExist( ai );
+				push( ai );
 			}
 		}
 		else {
-			AnnotationValue value = annotationInstance.value( "name" );
-			if ( value != null ) {
-				String name = value.asString();
-				isNotExist = ( annName.equals( TABLE_GENERATOR ) && !tableGeneratorMap.containsKey( name ) ) ||
-						( annName.equals( SEQUENCE_GENERATOR ) && !sequenceGeneratorMap.containsKey( name ) ) ||
-						( annName.equals( NAMED_QUERY ) && !namedQueryMap.containsKey( name ) ) ||
-						( annName.equals( NAMED_NATIVE_QUERY ) && !namedNativeQueryMap.containsKey( name ) ) ||
-						( annName.equals( SQL_RESULT_SET_MAPPING ) && !sqlResultSetMappingMap.containsKey( name ) ) ||
-						( annName.equals( HibernateDotNames.FILTER_DEF ) && !filterDefMap.containsKey( name ) ) ||
-						( annName.equals( HibernateDotNames.FETCH_PROFILE ) && !fetchProfileMap.containsKey( name ) );
-			}
-		}
-		if ( isNotExist ) {
 			push( annName, annotationInstance );
 		}
 	}
@@ -179,27 +158,22 @@ public class GlobalAnnotations implements JPADotNames {
 	void collectGlobalMappings(JaxbEntityMappings entityMappings, Default defaults) {
 		for ( JaxbSequenceGenerator generator : entityMappings.getSequenceGenerator() ) {
 			put( generator, defaults );
-			defaultNamedGenerators.add( generator.getName() );
 		}
 		for ( JaxbTableGenerator generator : entityMappings.getTableGenerator() ) {
 			put( generator, defaults );
-			defaultNamedGenerators.add( generator.getName() );
 		}
 		for ( JaxbNamedQuery namedQuery : entityMappings.getNamedQuery() ) {
 			put( namedQuery );
-			defaultNamedQueryNames.add( namedQuery.getName() );
 		}
 		for ( JaxbNamedNativeQuery namedNativeQuery : entityMappings.getNamedNativeQuery() ) {
 			put( namedNativeQuery );
-			defaultNamedNativeQueryNames.add( namedNativeQuery.getName() );
 		}
 		for ( JaxbSqlResultSetMapping sqlResultSetMapping : entityMappings.getSqlResultSetMapping() ) {
 			put( sqlResultSetMapping );
-			defaultSqlResultSetMappingNames.add( sqlResultSetMapping.getName() );
 		}
 		for ( JaxbHbmFilterDef filterDef : entityMappings.getFilterDef() ) {
 			if (filterDef != null) {
-				filterDefMap.put( filterDef.getName(), filterDef );
+				filterDefs.add( filterDef );
 			}
 		}
 		for ( JaxbHbmFetchProfile fetchProfile : entityMappings.getFetchProfile() ) {
@@ -209,37 +183,21 @@ public class GlobalAnnotations implements JPADotNames {
 
 	void collectGlobalMappings(JaxbEntity entity, Default defaults) {
 		for ( JaxbNamedQuery namedQuery : entity.getNamedQuery() ) {
-			if ( !defaultNamedQueryNames.contains( namedQuery.getName() ) ) {
-				put( namedQuery );
-			}
-			else {
-				LOG.warn( "Named Query [" + namedQuery.getName() + "] duplicated." );
-			}
+			put( namedQuery );
 		}
 		for ( JaxbNamedNativeQuery namedNativeQuery : entity.getNamedNativeQuery() ) {
-			if ( !defaultNamedNativeQueryNames.contains( namedNativeQuery.getName() ) ) {
-				put( namedNativeQuery );
-			}
-			else {
-				LOG.warn( "Named native Query [" + namedNativeQuery.getName() + "] duplicated." );
-			}
+			put( namedNativeQuery );
 		}
 		for ( JaxbSqlResultSetMapping sqlResultSetMapping : entity.getSqlResultSetMapping() ) {
-			if ( !defaultSqlResultSetMappingNames.contains( sqlResultSetMapping.getName() ) ) {
-				put( sqlResultSetMapping );
-			}
+			put( sqlResultSetMapping );
 		}
 		JaxbSequenceGenerator sequenceGenerator = entity.getSequenceGenerator();
 		if ( sequenceGenerator != null ) {
-			if ( !defaultNamedGenerators.contains( sequenceGenerator.getName() ) ) {
-				put( sequenceGenerator, defaults );
-			}
+			put( sequenceGenerator, defaults );
 		}
 		JaxbTableGenerator tableGenerator = entity.getTableGenerator();
 		if ( tableGenerator != null ) {
-			if ( !defaultNamedGenerators.contains( tableGenerator.getName() ) ) {
-				put( tableGenerator, defaults );
-			}
+			put( tableGenerator, defaults );
 		}
 		JaxbAttributes attributes = entity.getAttributes();
 		if ( attributes != null ) {
@@ -272,49 +230,32 @@ public class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	private void checkQueryName(String name) {
-		if ( namedQueryMap.containsKey( name ) || namedNativeQueryMap.containsKey( name ) ) {
-			throw new MappingException( "Duplicated query mapping " + name, null );
-		}
-	}
-	private void checkDuplicated(Object old, String name){
-		if ( old != null ) {
-			LOG.duplicateGeneratorName( name );
-		}
-	}
-
 	private void put(JaxbNamedQuery query) {
 		if ( query != null ) {
-			checkQueryName( query.getName() );
-			namedQueryMap.put( query.getName(), query );
+			namedQuerys.add( query );
 		}
 	}
 
 	private void put(JaxbSequenceGenerator generator, Default defaults) {
 		if ( generator != null ) {
 			overrideGenerator( generator, defaults );
-			Object old = sequenceGeneratorMap.put( generator.getName(), generator );
-			checkDuplicated( old, generator.getName() );
 		}
 	}
 
 	private void put(JaxbTableGenerator generator, Default defaults) {
 		if ( generator != null ) {
 			overrideGenerator( generator, defaults );
-			Object old = tableGeneratorMap.put( generator.getName(), generator );
-			checkDuplicated( old, generator.getName() );
 		}
 	}
 	private void put(JaxbNamedNativeQuery query) {
 		if ( query != null ) {
-			checkQueryName( query.getName() );
-			namedNativeQueryMap.put( query.getName(), query );
+			namedNativeQuerys.add( query );
 		}
 	}
 
 	private void put(JaxbSqlResultSetMapping mapping) {
 		if ( mapping != null ) {
-			Object old = sqlResultSetMappingMap.put( mapping.getName(), mapping );
+			Object old = sqlResultSetMappings.add( mapping );
 			if ( old != null ) {
 				throw new MappingException( "Duplicated SQL result set mapping " +  mapping.getName(), null );
 			}
@@ -327,7 +268,7 @@ public class GlobalAnnotations implements JPADotNames {
 				String entityName = StringHelper.isEmpty( fetch.getEntity() ) ? defaultClassName : fetch.getEntity();
 				fetch.setEntity( MockHelper.buildSafeClassName( entityName, packageName ) );
 			}
-			fetchProfileMap.put( fetchProfile.getName(), fetchProfile );
+			fetchProfiles.add( fetchProfile );
 		}
 	}
 }

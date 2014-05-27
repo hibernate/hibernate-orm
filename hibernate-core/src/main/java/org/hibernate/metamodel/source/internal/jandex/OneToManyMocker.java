@@ -26,7 +26,7 @@ package org.hibernate.metamodel.source.internal.jandex;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
+import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbOneToMany;
 import org.hibernate.metamodel.source.internal.jaxb.PersistentAttribute;
 import org.jboss.jandex.AnnotationValue;
@@ -34,6 +34,7 @@ import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class OneToManyMocker extends PropertyMocker {
 	private final JaxbOneToMany oneToMany;
@@ -55,17 +56,16 @@ public class OneToManyMocker extends PropertyMocker {
 			String collectionTypeName = MockHelper.getCollectionType( oneToMany.getCollectionType().getName() );
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 			MockHelper.stringValue( "type", collectionTypeName, annotationValueList );
-			create( HibernateDotNames.COLLECTION_TYPE, annotationValueList );
+			create( COLLECTION_TYPE, annotationValueList );
 		}
 		if (oneToMany.isInverse() != null && oneToMany.isInverse()) {
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-			create( HibernateDotNames.INVERSE, getTarget(), annotationValueList );
+			create( INVERSE, getTarget(), annotationValueList );
 		}
 		if (oneToMany.getHbmFetchMode() != null) {
 			List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-			MockHelper.enumValue( "value", HibernateDotNames.FETCH_MODE, oneToMany.getHbmFetchMode(),
-					annotationValueList );
-			create( HibernateDotNames.FETCH, getTarget(), annotationValueList );
+			MockHelper.enumValue( "value", FETCH_MODE, oneToMany.getHbmFetchMode(), annotationValueList );
+			create( FETCH, getTarget(), annotationValueList );
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue( "targetEntity", oneToMany.getTargetEntity(), annotationValueList, getDefaults(),
@@ -88,11 +88,11 @@ public class OneToManyMocker extends PropertyMocker {
 		parseJoinTable( oneToMany.getJoinTable(), getTarget() );
 		parseOnDelete( oneToMany.getOnDelete(), getTarget() );
 		if ( oneToMany.getOrderBy() != null ) {
-			create( ORDER_BY, getTarget(), MockHelper.stringValueArray( "value", oneToMany.getOrderBy() ) );
+			create( JPADotNames.ORDER_BY, getTarget(), MockHelper.stringValueArray( "value", oneToMany.getOrderBy() ) );
 		}
 		
 		annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.cascadeValue( "value", oneToMany.getHbmCascade(), annotationValueList );
-		create( HibernateDotNames.CASCADE, getTarget(), annotationValueList );
+		create( CASCADE, getTarget(), annotationValueList );
 	}
 }

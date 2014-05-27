@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbGeneratedValue;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmIdGenerator;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbHbmParam;
@@ -41,6 +40,7 @@ import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Strong Liu
+ * @author Brett Meyer
  */
 public class IdMocker extends PropertyMocker {
 	private final JaxbId id;
@@ -81,7 +81,7 @@ public class IdMocker extends PropertyMocker {
 			annotationValueList = new ArrayList<AnnotationValue>();
 			MockHelper.stringValue( "name", generatedValue.getGenerator(), annotationValueList );
 			MockHelper.stringValue( "strategy", generatedValue.getGenerator(), annotationValueList );
-			create( HibernateDotNames.GENERIC_GENERATOR, target, annotationValueList );
+			create( GENERIC_GENERATOR, target, annotationValueList );
 		}
 	}
 
@@ -104,7 +104,7 @@ public class IdMocker extends PropertyMocker {
 		MockHelper.stringValue( "name", generatorName, annotationValueList );
 		MockHelper.stringValue( "strategy", generator.getStrategy(), annotationValueList );
 		nestedParamList( "parameters", generator.getParam(), annotationValueList );
-		create( HibernateDotNames.GENERIC_GENERATOR, target, annotationValueList );
+		create( GENERIC_GENERATOR, target, annotationValueList );
 	}
 	
 	protected void nestedParamList(String name, List<JaxbHbmParam> params, List<AnnotationValue> annotationValueList) {
@@ -127,6 +127,6 @@ public class IdMocker extends PropertyMocker {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", param.getName(), annotationValueList );
 		MockHelper.stringValue( "value", param.getValue(), annotationValueList );
-		return create( HibernateDotNames.PARAMETER, target, annotationValueList );
+		return create( PARAMETER, target, annotationValueList );
 	}
 }

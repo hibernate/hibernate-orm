@@ -23,12 +23,21 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.type.StandardBasicTypes;
+
 /**
  * An SQL dialect for Firebird.
  *
  * @author Reha CENANI
  */
 public class FirebirdDialect extends InterbaseDialect {
+	
+	public FirebirdDialect() {
+		super();
+		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
+	}
+	
 	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop generator " + sequenceName;

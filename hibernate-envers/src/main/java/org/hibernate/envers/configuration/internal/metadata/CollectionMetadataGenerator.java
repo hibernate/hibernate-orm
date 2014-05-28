@@ -605,7 +605,7 @@ public final class CollectionMetadataGenerator {
 			final ReflectionManager reflectionManager = mainGenerator.getCfg().getReflectionManager();
 
 			new ComponentAuditedPropertiesReader(
-					true, // true because the collection is being audited
+					ModificationStore.FULL,
 					new AuditedPropertiesReader.ComponentPropertiesSource( reflectionManager, component ),
 					auditData, mainGenerator.getGlobalCfg(), reflectionManager, ""
 			).read();

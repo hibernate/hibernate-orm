@@ -218,7 +218,7 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
-		if ( persister.hasCache() ) {
+		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			final CacheKey key = context.getSession().generateCacheKey(
 					entityKey.getIdentifier(),
 					persister.getIdentifierType(),
@@ -331,7 +331,7 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(Serializable collectionKey, CollectionPersister persister) {
-		if ( persister.hasCache() ) {
+		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			CacheKey cacheKey = context.getSession().generateCacheKey(
 					collectionKey,
 					persister.getKeyType(),

@@ -81,6 +81,9 @@ public class QueryPlanCache implements Serializable {
 	 */
 	private final BoundedConcurrentHashMap<String,ParameterMetadata> parameterMetadataCache;
 
+
+	private NativeQueryInterpreter nativeQueryInterpreterService;
+
 	/**
 	 * Constructs the QueryPlanCache to be used by the given SessionFactory
 	 *
@@ -120,6 +123,7 @@ public class QueryPlanCache implements Serializable {
 				BoundedConcurrentHashMap.Eviction.LIRS
 		);
 
+		nativeQueryInterpreterService = factory.getServiceRegistry().getService( NativeQueryInterpreter.class );
 	}
 
 	/**
@@ -135,37 +139,10 @@ public class QueryPlanCache implements Serializable {
 	public ParameterMetadata getSQLParameterMetadata(final String query)  {
 		ParameterMetadata value = parameterMetadataCache.get( query );
 		if ( value == null ) {
-			value = buildParameterMetadata( query );
+			value = nativeQueryInterpreterService.getParameterMetadata( query );
 			parameterMetadataCache.putIfAbsent( query, value );
 		}
 		return value;
-	}
-	
-	private ParameterMetadata buildParameterMetadata(String query){
-		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( query );
-
-		final int size = recognizer.getOrdinalParameterLocationList().size();
-		final OrdinalParameterDescriptor[] ordinalDescriptors = new OrdinalParameterDescriptor[ size ];
-		for ( int i = 0; i < size; i++ ) {
-			final Integer position = recognizer.getOrdinalParameterLocationList().get( i );
-			ordinalDescriptors[i] = new OrdinalParameterDescriptor( i, null, position );
-		}
-
-		final Map<String, NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String, NamedParameterDescriptor>();
-		final Map<String, ParamLocationRecognizer.NamedParameterDescription> map = recognizer.getNamedParameterDescriptionMap();
-		for ( final String name : map.keySet() ) {
-			final ParamLocationRecognizer.NamedParameterDescription description = map.get( name );
-			namedParamDescriptorMap.put(
-					name,
-					new NamedParameterDescriptor(
-							name,
-							null,
-							description.buildPositionsArray(),
-							description.isJpaStyle()
-					)
-			);
-		}
-		return new ParameterMetadata( ordinalDescriptors, namedParamDescriptorMap );
 	}
 
 	/**
@@ -246,7 +223,7 @@ public class QueryPlanCache implements Serializable {
 		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
 		if ( value == null ) {
 			LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
-			value = new NativeSQLQueryPlan( spec, factory);
+			value = nativeQueryInterpreterService.createQueryPlan( spec, factory );
 			queryPlanCache.putIfAbsent( spec, value );
 		}
 		else {

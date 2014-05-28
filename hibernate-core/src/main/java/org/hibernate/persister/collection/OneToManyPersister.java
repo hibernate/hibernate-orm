@@ -193,9 +193,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 	
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id,
-			int nextIndex, SessionImplementor session) throws HibernateException {
-		writeIndex( collection, collection.queuedAdditionIterator(), id, nextIndex, session );
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
+			throws HibernateException {
+		writeIndex( collection, collection.queuedAdditionIterator(), id, getSize( id, session ), session );
 	}
 	
 	private void writeIndex(PersistentCollection collection, Iterator entries, Serializable id,

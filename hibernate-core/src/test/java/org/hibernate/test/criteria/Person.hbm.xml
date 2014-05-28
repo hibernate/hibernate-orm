@@ -7,7 +7,7 @@
 
     <class name="Person">
         <id name="id" type="long">
-            <generator class="sequence"/>
+            <generator class="org.hibernate.id.enhanced.SequenceStyleGenerator"/>
         </id>
         <property name="name" type="string"/>
         <property name="weight" type="integer"/>

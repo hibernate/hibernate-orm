@@ -4,7 +4,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false">
     <!-- shortened table name for Oracle -->
-    <class name="org.hibernate.envers.test.integration.components.dynamic.PlainEntity" table="Plain_entity">
+    <class name="org.hibernate.envers.test.integration.components.dynamic.PlainEntity" table="PEntity">
         <id name="id" type="long" column="id"/>
         <property name="note" type="string"/>
         <component name="component" class="org.hibernate.envers.test.integration.components.dynamic.PlainComponent">

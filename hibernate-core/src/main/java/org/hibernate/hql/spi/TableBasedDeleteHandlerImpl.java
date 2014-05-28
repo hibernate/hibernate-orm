@@ -83,17 +83,39 @@ public class TableBasedDeleteHandlerImpl
 		final String idSubselect = generateIdSubselect( targetedPersister );
 		deletes = new ArrayList<String>();
 		
-		// If many-to-many, delete the FK row in the collection table.
-		// This partially overlaps with DeleteExecutor, but it instead uses the temp table in the idSubselect.
+		// find plural attributes defined for the entity being deleted...
+		//
+		// NOTE : this partially overlaps with DeleteExecutor, but it instead
+		// 		uses the temp table in the idSubselect.
 		for ( Type type : targetedPersister.getPropertyTypes() ) {
-			if ( type.isCollectionType() ) {
-				CollectionType cType = (CollectionType) type;
-				AbstractCollectionPersister cPersister = (AbstractCollectionPersister)factory.getCollectionPersister( cType.getRole() );
-				if ( cPersister.isManyToMany() ) {
-					deletes.add( generateDelete( cPersister.getTableName(),
-							cPersister.getKeyColumnNames(), idSubselect, "bulk delete - m2m join table cleanup"));
-				}
+			if ( ! type.isCollectionType() ) {
+				continue;
 			}
+
+			final CollectionType cType = (CollectionType) type;
+			final AbstractCollectionPersister cPersister = (AbstractCollectionPersister)factory.getCollectionPersister( cType.getRole() );
+
+			// if the plural attribute maps to a "collection table" we need
+			// to remove the rows from that table corresponding to any
+			// owners we are about to delete.  "collection table" is
+			// (unfortunately) indicated in a number of ways, but here we
+			// are mainly concerned with:
+			//		1) many-to-many mappings
+			//		2) basic collection mappings
+			final boolean hasCollectionTable = cPersister.isManyToMany()
+					|| !cPersister.getElementType().isAssociationType();
+			if ( !hasCollectionTable ) {
+				continue;
+			}
+
+			deletes.add(
+					generateDelete(
+							cPersister.getTableName(),
+							cPersister.getKeyColumnNames(),
+							idSubselect,
+							"bulk delete - collection table clean up (" + cPersister.getRole() + ")"
+					)
+			);
 		}
 
 		String[] tableNames = targetedPersister.getConstraintOrderedTableNameClosure();
@@ -103,7 +125,7 @@ public class TableBasedDeleteHandlerImpl
 			//      the difficulty is the ordering of the tables here vs the cascade attributes on the persisters ->
 			//          the table info gotten here should really be self-contained (i.e., a class representation
 			//          defining all the needed attributes), then we could then get an array of those
-			deletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect, "bulk delete"));
+			deletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect, "bulk delete" ) );
 		}
 	}
 	

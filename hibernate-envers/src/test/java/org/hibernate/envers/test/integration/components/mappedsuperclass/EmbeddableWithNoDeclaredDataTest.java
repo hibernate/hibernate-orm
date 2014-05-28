@@ -40,7 +40,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Jakob Braeuchi.
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-8908")
+@TestForIssue(jiraKey = "HHH-9193")
 public class EmbeddableWithNoDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
 	private long id;
 
@@ -83,7 +83,8 @@ public class EmbeddableWithNoDeclaredDataTest extends BaseEnversJPAFunctionalTes
 
 		Assert.assertEquals( entityLoaded.getName(), entityRev1.getName() );
 
-		// value is read from AUD Table
-		Assert.assertEquals( entityLoaded.getValue(), entityRev1.getValue() );
+		// value should be null because there is no data in EmbeddableWithNoDeclaredData
+		// and the fields in AbstractEmbeddable should not be audited.
+		Assert.assertNull( entityRev1.getValue() );
 	}
 }

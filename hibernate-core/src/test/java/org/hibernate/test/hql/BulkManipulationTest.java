@@ -23,16 +23,15 @@
  */
 package org.hibernate.test.hql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
-
-import junit.framework.AssertionFailedError;
+import java.util.TreeSet;
 
 import org.hibernate.QueryException;
 import org.hibernate.Session;
@@ -43,7 +42,9 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -51,6 +52,12 @@ import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests execution of bulk UPDATE/DELETE statements through the new AST parser.
@@ -1412,6 +1419,144 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9222" )
+	public void testBulkDeleteOfEntityWithElementCollection() {
+		// set up test data
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			Farm farm = new Farm();
+			farm.setName( "Old McDonald Farm 'o the Earth" );
+			farm.setAccreditations( new HashSet<Farm.Accreditation>() );
+			farm.getAccreditations().add( Farm.Accreditation.ORGANIC );
+			farm.getAccreditations().add( Farm.Accreditation.SUSTAINABLE );
+			s.save( farm );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// assertion that accreditations collection table got populated
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			s.doWork(
+					new Work() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							final Statement statement = connection.createStatement();
+							final ResultSet resultSet = statement.executeQuery( "select count(*) from farm_accreditations" );
+							assertTrue( resultSet.next() );
+							final int count = resultSet.getInt( 1 );
+							assertEquals( 2, count );
+						}
+					}
+			);
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// do delete
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			s.createQuery( "delete Farm" ).executeUpdate();
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// assertion that accreditations collection table got cleaned up
+		//		if they didn't, the delete should have caused a constraint error, but just to be sure...
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			s.doWork(
+					new Work() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							final Statement statement = connection.createStatement();
+							final ResultSet resultSet = statement.executeQuery( "select count(*) from farm_accreditations" );
+							assertTrue( resultSet.next() );
+							final int count = resultSet.getInt( 1 );
+							assertEquals( 0, count );
+						}
+					}
+			);
+			s.getTransaction().commit();
+			s.close();
+		}
+
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9222" )
+	public void testBulkDeleteOfMultiTableEntityWithElementCollection() {
+		// set up test data
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			Human human = new Human();
+			human.setNickNames( new TreeSet() );
+			human.getNickNames().add( "Johnny" );
+			s.save( human );
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// assertion that nickname collection table got populated
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			s.doWork(
+					new Work() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							final Statement statement = connection.createStatement();
+							final ResultSet resultSet = statement.executeQuery( "select count(*) from human_nick_names" );
+							assertTrue( resultSet.next() );
+							final int count = resultSet.getInt( 1 );
+							assertEquals( 1, count );
+						}
+					}
+			);
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// do delete
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			s.createQuery( "delete Human" ).executeUpdate();
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		// assertion that nickname collection table got cleaned up
+		//		if they didn't, the delete should have caused a constraint error, but just to be sure...
+		{
+			Session s = openSession();
+			s.beginTransaction();
+			s.doWork(
+					new Work() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							final Statement statement = connection.createStatement();
+							final ResultSet resultSet = statement.executeQuery( "select count(*) from human_nick_names" );
+							assertTrue( resultSet.next() );
+							final int count = resultSet.getInt( 1 );
+							assertEquals( 0, count );
+						}
+					}
+			);
+			s.getTransaction().commit();
+			s.close();
+		}
+	}
+
+
+
 
 	private class TestData {
 

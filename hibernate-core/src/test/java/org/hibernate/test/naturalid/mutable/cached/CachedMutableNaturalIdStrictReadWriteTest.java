@@ -4,8 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.Test;
@@ -17,6 +21,30 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 	public void configure(Configuration cfg) {
 		super.configure(cfg);
 		cfg.setProperty( CachingRegionFactory.DEFAULT_ACCESSTYPE, "read-write" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9203" )
+	public void testToMapConversion() {
+		sessionFactory().getStatistics().clear();
+
+		final Session session = openSession();
+		session.getTransaction().begin();
+		final AllCached it = new AllCached( "IT" );
+		session.save( it );
+		session.getTransaction().commit();
+		session.close();
+
+		final NaturalIdCacheStatistics stats = sessionFactory().getStatistics().getNaturalIdCacheStatistics(
+				"hibernate.test." + AllCached.class.getName() + "##NaturalId"
+		);
+
+		final Map entries = stats.getEntries();
+		assertEquals( 1, entries.size() );
+		final Serializable[] cacheKey = (Serializable[]) entries.keySet().iterator().next();
+		assertEquals( 1, cacheKey.length );
+		assertEquals( it.getName(), cacheKey[0] );
+		assertNotNull( entries.get( cacheKey ) );
 	}
 	
 	@Test
@@ -150,5 +178,28 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		session.delete(it);
 		session.getTransaction().commit();
 		assertEquals("In a strict access strategy we would excpect a hit here", 1, session.getSessionFactory().getStatistics().getNaturalIdCacheHitCount());
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9200" )
+	public void testNaturalIdCacheStatisticsReset() {
+		final String naturalIdCacheRegion = "hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId";
+		sessionFactory().getStatistics().clear();
+
+		final Session session = openSession();
+		session.beginTransaction();
+		final Another it = new Another( "IT");
+		session.save( it );
+		session.getTransaction().commit();
+		session.close();
+
+		NaturalIdCacheStatistics statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
+		assertEquals( 1, statistics.getPutCount() );
+
+		sessionFactory().getStatistics().clear();
+
+		// Refresh statistics reference.
+		statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
+		assertEquals( 0, statistics.getPutCount() );
 	}
 }

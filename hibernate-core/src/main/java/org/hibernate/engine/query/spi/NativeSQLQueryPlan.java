@@ -33,16 +33,14 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.loader.custom.sql.SQLCustomQuery;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.type.Type;
 
 /**
@@ -54,31 +52,24 @@ public class NativeSQLQueryPlan implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( NativeSQLQueryPlan.class );
 
 	private final String sourceQuery;
-	private final SQLCustomQuery customQuery;
+	private final CustomQuery customQuery;
 
 	/**
-	 * Constructs a NativeSQLQueryPlan
-	 *
-	 * @param specification The query spec
-	 * @param factory The SessionFactory
-	 */
-	public NativeSQLQueryPlan(
-			NativeSQLQuerySpecification specification,
-			SessionFactoryImplementor factory) {
-		this.sourceQuery = specification.getQueryString();
-		this.customQuery = new SQLCustomQuery(
-				specification.getQueryString(),
-				specification.getQueryReturns(),
-				specification.getQuerySpaces(),
-				factory
-		);
+	  * Constructs a NativeSQLQueryPlan.
+	  *
+	  * @param sourceQuery The original native query to create a plan for
+	  * @param customQuery The query executed via this plan
+	  */
+	public NativeSQLQueryPlan(String sourceQuery, CustomQuery customQuery) {
+		this.sourceQuery = sourceQuery;
+		this.customQuery = customQuery;
 	}
 
 	public String getSourceQuery() {
 		return sourceQuery;
 	}
 
-	public SQLCustomQuery getCustomQuery() {
+	public CustomQuery getCustomQuery() {
 		return customQuery;
 	}
 

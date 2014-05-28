@@ -1364,17 +1364,17 @@ hibernate.cache.use_structured_entries true</programlisting>
       </section>
 
       <section xml:id="entityentry-lookup-buildtime-instrument">
-          <title>Buildtime instrument</title>
-          <para>Besides above two approaches, Hibernate also provides you a 
+          <title>Build-time instrument</title>
+          <para>Besides the above two approaches, Hibernate also provides a 
           third choice which is build time bytecode enhancement. Applications 
-          should use enhanced entity classes annotated with either <classname>javax.persistence.Entity</classname> 
+          can use enhanced entity classes, annotated with either <classname>javax.persistence.Entity</classname> 
           or composite <classname>javax.persistence.Embeddable</classname>.
 
           <section xml:id="entityentry-lookup-buildtime-instrument-ant">
              <title>Ant Task</title>
              <para>To use the task <classname>org.hibernate.tool.enhance.EnhancementTask</classname> 
-             define a taskdef and call the task as the example shows. This code uses a
-             pre defined classpathref and a property referencing the compiled classes
+             define a taskdef and call the task, as shown below. This code uses a
+             pre-defined classpathref and a property referencing the compiled classes
              directory.
              <programlisting role="XML">&lt;taskdef name="enhance" classname="org.hibernate.tool.enhance.EnhancementTask" classpathref="enhancement.classpath" /&gt;
 &lt;enhance&gt;
@@ -1382,8 +1382,9 @@ hibernate.cache.use_structured_entries true</programlisting>
 &lt;/enhance&gt;</programlisting>
              </para>
              <note>
-              <para>The EnhancementTask is intended as a replacement for <link linkend="performance-fetching-lazyproperties">InstrumentTask</link>. It is also incompatible so instrumented classels
-              will need building from source again.</para>
+              <para>The EnhancementTask is intended as a total replacement for <link linkend="performance-fetching-lazyproperties">InstrumentTask</link>.
+              Further, it is also incompatible with <link linkend="performance-fetching-lazyproperties">InstrumentTask</link>, so any existing instrumented classes
+              will need to be built from source again.</para>
              </note>
           </section>
           <section xml:id="entityentry-lookup-buildtime-instrument-maven">

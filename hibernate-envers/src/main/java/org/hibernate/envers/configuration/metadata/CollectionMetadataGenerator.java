@@ -482,7 +482,6 @@ public final class CollectionMetadataGenerator {
 
 			new ComponentAuditedPropertiesReader(
 					ModificationStore.FULL,
-					true, // true because the collection is being audited
 					new AuditedPropertiesReader.ComponentPropertiesSource( reflectionManager, component ),
 					auditData, mainGenerator.getGlobalCfg(), reflectionManager, ""
 			).read();

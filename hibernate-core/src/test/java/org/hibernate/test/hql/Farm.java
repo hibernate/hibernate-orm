@@ -21,9 +21,12 @@
 package org.hibernate.test.hql;
 
 import java.util.List;
-
+import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
@@ -38,9 +41,14 @@ public class Farm {
 	private long id;
 	
 	private String name;
-	
+
 	@ManyToMany(cascade = CascadeType.ALL)
 	private List<Crop> crops;
+
+	@ElementCollection
+	@Enumerated
+	@CollectionTable( name = "farm_accreditations" )
+	private Set<Accreditation> accreditations;
 
 	public long getId() {
 		return id;
@@ -64,5 +72,19 @@ public class Farm {
 
 	public void setCrops(List<Crop> crops) {
 		this.crops = crops;
+	}
+
+	public Set<Accreditation> getAccreditations() {
+		return accreditations;
+	}
+
+	public void setAccreditations(Set<Accreditation> accreditations) {
+		this.accreditations = accreditations;
+	}
+
+	public static enum Accreditation {
+		ORGANIC,
+		SUSTAINABLE,
+		FARM_TO_TABLE
 	}
 }

@@ -653,7 +653,6 @@ public final class CollectionMetadataGenerator {
 
 			new ComponentAuditedPropertiesReader(
 					context,
-					true, // true because the collection is being audited
 					auditData,
 					new AuditedPropertiesReader.ComponentPropertiesSource(
 							context.getClassInfo( embeddableBinding.getAttributeContainer() ),

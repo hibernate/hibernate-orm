@@ -80,7 +80,6 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  */
 public class AuditedPropertiesReader {
 	private final AuditConfiguration.AuditConfigurationContext context;
-	private final boolean defaultAudited;
 	// TODO: is AttributeBindingContainer actually needed or is Hierarchical sufficient?
 	private final PersistentPropertiesSource processedPersistentPropertiesSource;
 	private final ClassInfo processedClassInfo;
@@ -100,12 +99,10 @@ public class AuditedPropertiesReader {
 
 	public AuditedPropertiesReader(
 			AuditConfiguration.AuditConfigurationContext context,
-			boolean defaultAudited,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			PersistentPropertiesSource processedPersistentPropertiesSource,
 			String propertyNamePrefix) {
 		this.context = context;
-		this.defaultAudited = defaultAudited;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
 		this.processedPersistentPropertiesSource = processedPersistentPropertiesSource;
 		this.processedClassInfo = context.getClassInfo(
@@ -402,7 +399,7 @@ public class AuditedPropertiesReader {
 		addFromProperties( getAttributeBindings( attributeBindingContainer, "field" ), "field", fieldAccessedPersistentProperties, allClassAudited );
 		addFromProperties( getAttributeBindings( attributeBindingContainer, "property" ), "property", propertyAccessedPersistentProperties, allClassAudited );
 
-		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() || defaultAudited ) {
+		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
 			if ( Hierarchical.class.isInstance( attributeBindingContainer.getAttributeContainer() ) ) {
 				// attributeBindingContainer *should* always be an Hierarchical
 				final Hierarchical hierarchical = (Hierarchical) attributeBindingContainer.getAttributeContainer();
@@ -481,7 +478,7 @@ public class AuditedPropertiesReader {
 //					propertyValue
 //			);
 //			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-//					defaultAudited, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+//					componentPropertiesSource, componentData, globalCfg, reflectionManager,
 //					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
 //			);
 //			audPropReader.read();
@@ -511,7 +508,6 @@ public class AuditedPropertiesReader {
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				context,
-				isAudited,
 				componentData,
 				componentPropertiesSource,
 				propertyNamePrefix + MappingTools.createComponentPrefix( attributeBinding.getAttribute().getName() )

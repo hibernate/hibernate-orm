@@ -45,12 +45,11 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	public ComponentAuditedPropertiesReader(
 			AuditConfiguration.AuditConfigurationContext context,
-			boolean defaultAudited,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			PersistentPropertiesSource persistentPropertiesSource,
 			String propertyNamePrefix) {
 		super(
-				context, defaultAudited, auditedPropertiesHolder, persistentPropertiesSource, propertyNamePrefix
+				context, auditedPropertiesHolder, persistentPropertiesSource, propertyNamePrefix
 		);
 	}
 

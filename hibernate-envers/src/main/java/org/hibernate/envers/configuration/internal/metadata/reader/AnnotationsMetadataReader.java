@@ -69,7 +69,7 @@ public final class AnnotationsMetadataReader {
 		this.context = context;
 	}
 
-	private ModificationStore getDefaultAuditedModStore(ClassInfo classInfo) {
+	private ModificationStore getDefaultAudited(ClassInfo classInfo) {
 		final AnnotationInstance audited = JandexHelper.getSingleAnnotation(
 				classInfo.annotations(),
 				EnversDotNames.AUDITED,
@@ -148,12 +148,11 @@ public final class AnnotationsMetadataReader {
 				)
 		);
 
-		ModificationStore defaultStore = getDefaultAuditedModStore( persistentClassPropertiesSource.getClassInfo() );
+		ModificationStore defaultStore = getDefaultAudited( persistentClassPropertiesSource.getClassInfo() );
 		auditData.setDefaultAudited( defaultStore != null );
 
 		new AuditedPropertiesReader(
 				context,
-				auditData.isAudited(),
 				auditData,
 				persistentClassPropertiesSource,
 				""

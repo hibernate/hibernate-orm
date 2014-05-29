@@ -66,7 +66,9 @@ public class ArchiveHelper {
 		try {
 			final String protocol = url.getProtocol();
 
-			if ( "jar".equals( protocol ) || "wsjar".equals( protocol ) ) {
+			//In case of an uber jar, e.g. "jar:file:/path/to/uber.jar!/lib.jar!/path/to/entry"
+			//fall back to URL reconstruction to keep the jar:file protocol
+			if ( ( "jar".equals( protocol ) || "wsjar".equals( protocol ) ) && ( ! file.contains( "!" ) ) ) {
 				//Original URL is like jar:protocol
 				//WebSphere has it's own way
 				jarUrl = new URL( file );

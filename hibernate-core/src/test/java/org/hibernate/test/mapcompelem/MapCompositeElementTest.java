@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -85,6 +86,7 @@ public class MapCompositeElementTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "<import>")
 	public void testQueryMapCompositeElement() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

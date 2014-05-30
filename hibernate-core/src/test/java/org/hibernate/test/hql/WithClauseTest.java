@@ -37,7 +37,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.hql.internal.ast.InvalidWithClauseException;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -47,7 +46,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
 public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml", "hql/SimpleEntityWithAssociation.hbm.xml" };

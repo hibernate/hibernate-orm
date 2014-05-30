@@ -54,7 +54,6 @@ import org.junit.Test;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class ComponentTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

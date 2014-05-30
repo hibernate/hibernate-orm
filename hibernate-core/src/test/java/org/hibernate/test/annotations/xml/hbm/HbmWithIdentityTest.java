@@ -25,7 +25,6 @@ package org.hibernate.test.annotations.xml.hbm;
 
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@FailureExpectedWithNewUnifiedXsd(message = "proxy attributes")
 public class HbmWithIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneAndInterface() throws Exception {

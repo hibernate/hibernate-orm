@@ -59,7 +59,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
+@FailureExpectedWithNewUnifiedXsd
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 

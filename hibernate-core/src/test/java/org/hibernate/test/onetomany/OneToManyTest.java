@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
+@FailureExpectedWithNewUnifiedXsd
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "onetomany/Parent.hbm.xml" };

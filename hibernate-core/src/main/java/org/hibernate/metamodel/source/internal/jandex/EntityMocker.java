@@ -77,22 +77,17 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		//@Entity
 		create( ENTITY, MockHelper.stringValueArray( "name", entity.getName() ) );
 
-
 		if ( entity.isCacheable() != null ) {
 			//@Cacheable
-			create(
-					CACHEABLE,
-					MockHelper.booleanValueArray( "value", entity.isCacheable() )
-
-			);
+			create( CACHEABLE, MockHelper.booleanValueArray( "value", entity.isCacheable() ) );
 		}
 		if ( StringHelper.isNotEmpty( entity.getDiscriminatorValue() ) ) {
 			//@DiscriminatorValue
-			create(
-					DISCRIMINATOR_VALUE,
-					MockHelper.stringValueArray( "value", entity.getDiscriminatorValue() )
-
-			);
+			create( DISCRIMINATOR_VALUE, MockHelper.stringValueArray( "value", entity.getDiscriminatorValue() ) );
+		}
+		if (entity.isSelectBeforeUpdate() != null) {
+			create( HibernateDotNames.SELECT_BEFORE_UPDATE, MockHelper.booleanValueArray(
+					"value", entity.isSelectBeforeUpdate() ) );
 		}
 		
 		//@Table
@@ -106,12 +101,12 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		
 		//@Cache
 		parseCache( entity.getCache(), getTarget() );
-		
 		// @Filters
 		parseFilters( entity.getFilter(), getTarget() );
-		
 		// @BatchSize
 		parseBatchSize( entity.getBatchSize(), getTarget() );
+		// @Proxy
+		parseProxy( entity.getProxy(), entity.isLazy(), getTarget() );
 	}
 
 	//@Table  (entity only)
@@ -251,38 +246,25 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 
 	}
 
-	//@SecondaryTable
-	protected AnnotationInstance parseSecondaryTable(JaxbSecondaryTable secondaryTable, AnnotationTarget target) {
-		if ( secondaryTable == null ) {
-			return null;
-		}
-		DefaultConfigurationHelper.INSTANCE.applyDefaults(secondaryTable,getDefaults());
-		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		MockHelper.stringValue( "name", secondaryTable.getName(), annotationValueList );
-		MockHelper.stringValue( "catalog", secondaryTable.getCatalog(), annotationValueList );
-		MockHelper.stringValue( "schema", secondaryTable.getSchema(), annotationValueList );
-		nestedPrimaryKeyJoinColumnList("pkJoinColumns", secondaryTable.getPrimaryKeyJoinColumn(), annotationValueList);
-		nestedUniqueConstraintList("uniqueConstraints", secondaryTable.getUniqueConstraint(), annotationValueList);
-		nestedIndexConstraintList( "indexes", secondaryTable.getIndex(), annotationValueList );
-		return create( SECONDARY_TABLE, target, annotationValueList );
-	}
-
-
-	protected AnnotationInstance parseSecondaryTableList(List<JaxbSecondaryTable> primaryKeyJoinColumnList, AnnotationTarget target) {
+	protected void parseSecondaryTableList(List<JaxbSecondaryTable> primaryKeyJoinColumnList, AnnotationTarget target) {
 		if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
 			if ( primaryKeyJoinColumnList.size() == 1 ) {
-				return parseSecondaryTable( primaryKeyJoinColumnList.get( 0 ), target );
+				parseSecondaryTable( primaryKeyJoinColumnList.get( 0 ), target );
+				parseHibernateTable( primaryKeyJoinColumnList.get( 0 ), target );
 			}
 			else {
-				return create(
+				create(
 						SECONDARY_TABLES,
 						target,
 						nestedSecondaryTableList( "value", primaryKeyJoinColumnList, null )
 				);
+				create(
+						HibernateDotNames.TABLES,
+						target,
+						nestedHibernateTableList( "value", primaryKeyJoinColumnList, null )
+				);
 			}
 		}
-		return null;
-
 	}
 
 	protected AnnotationValue[] nestedSecondaryTableList(String name, List<JaxbSecondaryTable> secondaryTableList, List<AnnotationValue> annotationValueList) {
@@ -300,7 +282,50 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 			return values;
 		}
 		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;
+	}
 
+	protected AnnotationValue[] nestedHibernateTableList(String name, List<JaxbSecondaryTable> secondaryTableList, List<AnnotationValue> annotationValueList) {
+		if ( CollectionHelper.isNotEmpty( secondaryTableList ) ) {
+			AnnotationValue[] values = new AnnotationValue[secondaryTableList.size()];
+			for ( int i = 0; i < secondaryTableList.size(); i++ ) {
+				AnnotationInstance annotationInstance = parseHibernateTable( secondaryTableList.get( i ), null );
+				values[i] = MockHelper.nestedAnnotationValue(
+						"", annotationInstance
+				);
+			}
+			MockHelper.addToCollectionIfNotNull(
+					annotationValueList, AnnotationValue.createArrayValue( name, values )
+			);
+			return values;
+		}
+		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;
+	}
+
+	//@SecondaryTable
+	protected AnnotationInstance parseSecondaryTable(JaxbSecondaryTable secondaryTable, AnnotationTarget target) {
+		if ( secondaryTable == null ) {
+			return null;
+		}
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(secondaryTable,getDefaults());
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "name", secondaryTable.getName(), annotationValueList );
+		MockHelper.stringValue( "catalog", secondaryTable.getCatalog(), annotationValueList );
+		MockHelper.stringValue( "schema", secondaryTable.getSchema(), annotationValueList );
+		nestedPrimaryKeyJoinColumnList("pkJoinColumns", secondaryTable.getPrimaryKeyJoinColumn(), annotationValueList);
+		nestedUniqueConstraintList("uniqueConstraints", secondaryTable.getUniqueConstraint(), annotationValueList);
+		nestedIndexConstraintList( "indexes", secondaryTable.getIndex(), annotationValueList );
+		return create( SECONDARY_TABLE, target, annotationValueList );
+	}
+
+	//Hibernate @Table
+	protected AnnotationInstance parseHibernateTable(JaxbSecondaryTable secondaryTable, AnnotationTarget target) {
+		if ( secondaryTable == null ) {
+			return null;
+		}
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "appliesTo", secondaryTable.getName(), annotationValueList );
+		MockHelper.booleanValue( "optional", secondaryTable.isOptional(), annotationValueList );
+		return create( HibernateDotNames.TABLE, target, annotationValueList );
 	}
 	
 	private void parseCache(JaxbCacheElement cache, AnnotationTarget target) {
@@ -358,5 +383,18 @@ public class EntityMocker extends AbstractEntityObjectMocker {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.integerValue( "size", batchSize, annotationValueList );
 		create( HibernateDotNames.BATCH_SIZE, target, annotationValueList );
+	}
+	
+	private void parseProxy(String proxy, Boolean isLazy, AnnotationTarget target) {
+		if ( StringHelper.isEmpty( proxy ) ) {
+			return;
+		}
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.classValue( "proxyClass", proxy, annotationValueList, getDefaults(),
+				indexBuilder.getServiceRegistry() );
+		if (isLazy != null) {
+			MockHelper.booleanValue( "lazy", isLazy, annotationValueList );
+		}
+		create( HibernateDotNames.PROXY, target, annotationValueList );
 	}
 }

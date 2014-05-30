@@ -23,23 +23,22 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * "Unsaved" value tests of {@code hbm.xml} binding code
  *
  * @author Gail Badner
  */
-@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "unsaved-value")
 	public void testAssignedSimpleIdNonDefaultUnsavedValue() {
 		MetadataSources sources = new MetadataSources( basicServiceRegistry() );
 		addNonDefaultSources( sources );
@@ -50,6 +49,7 @@ public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "unsaved-value")
 	public void testIncrementSimpleIdNonDefaultUnsavedValue() {
 		MetadataSources sources = new MetadataSources( basicServiceRegistry() );
 		addNonDefaultSources( sources );
@@ -60,6 +60,7 @@ public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "unsaved-value")
 	public void testNonDefaultUnsavedVersion() {
 		MetadataSources sources = new MetadataSources( basicServiceRegistry() );
 		addNonDefaultSources( sources );
@@ -70,6 +71,7 @@ public class UnsavedValueHbmTests extends AbstractUnsavedValueTests {
 	}
 
 	@Test
+	@FailureExpectedWithNewUnifiedXsd(message = "unsaved-value")
 	public void testNonDefaultUnsavedTimestamp() {
 		MetadataSources sources = new MetadataSources( basicServiceRegistry() );
 		addNonDefaultSources( sources );

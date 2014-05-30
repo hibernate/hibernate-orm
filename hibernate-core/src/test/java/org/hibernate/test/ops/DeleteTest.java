@@ -23,15 +23,12 @@
  */
 package org.hibernate.test.ops;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewUnifiedXsd(message = "timestamps")
 public class DeleteTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})

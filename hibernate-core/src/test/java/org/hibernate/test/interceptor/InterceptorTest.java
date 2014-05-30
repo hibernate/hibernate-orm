@@ -22,12 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.interceptor;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-
-import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EmptyInterceptor;
@@ -35,17 +40,11 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -77,7 +76,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
+	@FailureExpectedWithNewMetamodel
 	public void testPropertyIntercept() {
 		Session s = openSession( new PropertyInterceptor() );
 		Transaction t = s.beginTransaction();
@@ -104,7 +103,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	 */
 	@Test
 	@TestForIssue( jiraKey = "HHH-1921" )
-	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
+	@FailureExpectedWithNewMetamodel
 	public void testPropertyIntercept2() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -234,7 +233,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
+	@FailureExpectedWithNewMetamodel
 	public void testInitiateIntercept() {
 		final String injectedString = "******";
 		final InstantiateInterceptor initiateInterceptor = new InstantiateInterceptor( injectedString );
@@ -281,7 +280,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6594" )
-	@FailureExpectedWithNewUnifiedXsd(message = "select-before-update")
+	@FailureExpectedWithNewMetamodel
 	public void testPrepareStatementIntercept() {
 		final Queue<String> expectedSQLs = new LinkedList<String>();
 		// Transaction 1

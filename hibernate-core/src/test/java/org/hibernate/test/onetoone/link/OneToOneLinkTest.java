@@ -43,7 +43,8 @@ import org.junit.Test;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
+@FailureExpectedWithNewUnifiedXsd(message = "null rows attempted on secondary table, even though optional <join> " +
+		"is handled in EntityMocker.")
 public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

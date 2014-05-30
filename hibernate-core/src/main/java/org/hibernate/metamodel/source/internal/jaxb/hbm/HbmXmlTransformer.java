@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.FetchType;
+import javax.persistence.TemporalType;
 import javax.xml.bind.JAXBElement;
 
 import org.hibernate.FlushMode;
@@ -88,6 +89,7 @@ import org.hibernate.metamodel.source.internal.jaxb.JaxbOrderColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPersistenceUnitMetadata;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbPrimaryKeyJoinColumn;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbQueryParamType;
+import org.hibernate.metamodel.source.internal.jaxb.JaxbSecondaryTable;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMapping;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingEntityResult;
 import org.hibernate.metamodel.source.internal.jaxb.JaxbSqlResultSetMappingFieldResult;
@@ -657,11 +659,6 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferJoinedSubclass(JaxbJoinedSubclassElement hbmSubclass, JaxbEntity subclassEntity) {
-		if (! StringHelper.isEmpty( hbmSubclass.getProxy() )) {
-			// TODO
-			throw new MappingException( "HBM transformation: proxy attributes not yet supported" );
-		}
-		
 		transferEntityElement( hbmSubclass, subclassEntity );
 		transferEntityElementAttributes( subclassEntity, hbmSubclass );
 		
@@ -941,35 +938,76 @@ public class HbmXmlTransformer {
 	}
 	
 	private void transferVersion(JaxbEntity entity, JaxbClassElement hbmClass) {
-		if ( hbmClass.getOptimisticLock() == JaxbOptimisticLockAttribute.VERSION ) {
-			final JaxbVersionElement hbmVersion = hbmClass.getVersion();
-			if (hbmVersion != null) {
-				final JaxbVersion version = new JaxbVersion();
-				version.setName( hbmVersion.getName() );
-				// TODO: multiple columns?
-				if (! StringHelper.isEmpty( hbmVersion.getColumnAttribute() )) {
-					version.setColumn( new JaxbColumn() );
-					version.getColumn().setName( hbmVersion.getColumnAttribute() );
-				}
-				entity.getAttributes().getVersion().add( version );
+//		if ( hbmClass.getOptimisticLock() == JaxbOptimisticLockAttribute.VERSION ) {
+		final JaxbVersionElement hbmVersion = hbmClass.getVersion();
+		if (hbmVersion != null) {
+			final JaxbVersion version = new JaxbVersion();
+			version.setName( hbmVersion.getName() );
+			// TODO: multiple columns?
+			if (! StringHelper.isEmpty( hbmVersion.getColumnAttribute() )) {
+				version.setColumn( new JaxbColumn() );
+				version.getColumn().setName( hbmVersion.getColumnAttribute() );
 			}
-
-			// oddly the jpa xsd allows multiple <version/> elements?
+			entity.getAttributes().getVersion().add( version );
 		}
+//		}
 	}
 	
 	private void transferTimestamp(JaxbEntity entity, JaxbClassElement hbmClass) {
 		final JaxbTimestampElement hbmTimestamp = hbmClass.getTimestamp();
 		if (hbmTimestamp != null) {
-			// TODO
-			throw new MappingException( "HBM transformation: HBM timestamps are not yet supported." );
+			final JaxbVersion version = new JaxbVersion();
+			version.setName( hbmTimestamp.getName() );
+			// TODO: multiple columns?
+			if (! StringHelper.isEmpty( hbmTimestamp.getColumnAttribute() )) {
+				version.setColumn( new JaxbColumn() );
+				version.getColumn().setName( hbmTimestamp.getColumnAttribute() );
+			}
+			version.setTemporal( TemporalType.TIMESTAMP );
+			entity.getAttributes().getVersion().add( version );
 		}
 	}
 	
 	private void transferJoins(JaxbEntity entity, JaxbClassElement hbmClass) {
 		for ( JaxbJoinElement hbmJoin : hbmClass.getJoin() ) {
-			// TODO
-			throw new MappingException( "HBM transformation: HBM joins are not yet supported." );
+			if (! hbmJoin.isInverse()) {
+				final JaxbSecondaryTable secondaryTable = new JaxbSecondaryTable();
+				secondaryTable.setCatalog( hbmJoin.getCatalog() );
+				secondaryTable.setComment( hbmJoin.getComment() );
+				secondaryTable.setName( hbmJoin.getTable() );
+				secondaryTable.setSchema( hbmJoin.getSchema() );
+				secondaryTable.setOptional( hbmJoin.isOptional() );
+				if (hbmJoin.getKey() != null) {
+					final JaxbPrimaryKeyJoinColumn joinColumn = new JaxbPrimaryKeyJoinColumn();
+					// TODO: multiple columns?
+					joinColumn.setName( hbmJoin.getKey().getColumnAttribute() );
+					secondaryTable.getPrimaryKeyJoinColumn().add( joinColumn );
+				}
+				entity.getSecondaryTable().add( secondaryTable );
+			}
+			
+			for (JaxbPropertyElement hbmProp : hbmJoin.getProperty()) {
+				final JaxbBasic prop = transferBasicAttribute( hbmProp );
+				for (Serializable columnOrFormula : prop.getColumnOrFormula()) {
+					if (columnOrFormula instanceof JaxbColumn) {
+						((JaxbColumn) columnOrFormula).setTable( hbmJoin.getTable() );
+					}
+				}
+				entity.getAttributes().getBasic().add( prop );
+			}
+			for (JaxbComponentElement hbmComp : hbmJoin.getComponent()) {
+				// TODO: Not sure how to handle this.  Attribute overrides?
+				throw new MappingException( "HBM transformation: <component> within a <join> not yet supported." );
+			}
+			for (JaxbManyToOneElement hbmM2O : hbmJoin.getManyToOne()) {
+				final JaxbManyToOne m2o = transferManyToOneAttribute( hbmM2O );
+				final JaxbJoinTable joinTable = new JaxbJoinTable();
+				joinTable.setCatalog( hbmJoin.getCatalog() );
+				joinTable.setName( hbmJoin.getTable() );
+				joinTable.setSchema( hbmJoin.getSchema() );
+				m2o.setJoinTable( joinTable );
+				entity.getAttributes().getManyToOne().add( m2o );
+			}
 		}
 	}
 
@@ -1058,6 +1096,19 @@ public class HbmXmlTransformer {
 		}
 		for (JaxbComponentElement component : hbmComponent.getComponent()) {
 			// TODO
+		}
+		return embeddable;
+	}
+	
+	private JaxbEmbeddable transferEmbeddable(JaxbEntity entity, JaxbCompositeElementElement hbmComponent) {
+		final JaxbEmbeddable embeddable = new JaxbEmbeddable();
+		embeddable.setClazz( hbmComponent.getClazz() );
+		embeddable.setAttributes( new JaxbEmbeddableAttributes() );
+		for (JaxbPropertyElement property : hbmComponent.getProperty()) {
+			embeddable.getAttributes().getBasic().add( transferBasicAttribute( property ) );
+		}
+		for (JaxbManyToOneElement manyToOne : hbmComponent.getManyToOne()) {
+			embeddable.getAttributes().getManyToOne().add( transferManyToOneAttribute( manyToOne ) );
 		}
 		return embeddable;
 	}
@@ -1295,7 +1346,7 @@ public class HbmXmlTransformer {
 		CollectionAttribute collection = null;
 		if (pluralAttribute.getElement() != null) {
 			final JaxbElementCollection elementCollection = transferElementCollection(
-					pluralAttribute, collectionTypeName, orderBy );
+					pluralAttribute, pluralAttribute.getElement(), collectionTypeName, orderBy );
 			entity.getAttributes().getElementCollection().add( elementCollection );
 			collection = elementCollection;
 		}
@@ -1308,6 +1359,14 @@ public class HbmXmlTransformer {
 			final JaxbManyToMany m2m = transferManyToManyAttribute( pluralAttribute, collectionTypeName );
 			entity.getAttributes().getManyToMany().add( m2m );
 			collection = m2m;
+		}
+		else if (pluralAttribute.getCompositeElement() != null) {
+			ormRoot.getEmbeddable().add( transferEmbeddable( entity, pluralAttribute.getCompositeElement() ) );
+			
+			final JaxbElementCollection elementCollection = transferElementCollection(
+					pluralAttribute, pluralAttribute.getCompositeElement(), collectionTypeName, orderBy );
+			entity.getAttributes().getElementCollection().add( elementCollection );
+			collection = elementCollection;
 		}
 		
 		if (collection != null) {
@@ -1358,9 +1417,8 @@ public class HbmXmlTransformer {
 		}
 	}
 	
-	private JaxbElementCollection transferElementCollection(
-			PluralAttributeElement pluralAttribute, String collectionTypeName, String orderBy) {
-		final JaxbElementElement hbmElement = pluralAttribute.getElement();
+	private JaxbElementCollection transferElementCollection(PluralAttributeElement pluralAttribute,
+			JaxbElementElement hbmElement, String collectionTypeName, String orderBy) {
 		final JaxbElementCollection element = new JaxbElementCollection();
 		element.setName( pluralAttribute.getName() );
 		final JaxbColumn column = new JaxbColumn();
@@ -1374,6 +1432,20 @@ public class HbmXmlTransformer {
 		element.setCollectionType( collectionType );
 		element.setOrderBy( orderBy );
 		transferFetchable( pluralAttribute.getLazy(), pluralAttribute.getFetch(), pluralAttribute.getOuterJoin(), element );
+		return element;
+	}
+	
+	private JaxbElementCollection transferElementCollection(PluralAttributeElement pluralAttribute,
+			JaxbCompositeElementElement hbmElement, String collectionTypeName, String orderBy) {
+		final JaxbElementCollection element = new JaxbElementCollection();
+		element.setName( pluralAttribute.getName() );
+		final JaxbHbmType collectionType = new JaxbHbmType();
+		collectionType.setName( collectionTypeName );
+		element.setCollectionType( collectionType );
+		element.setOrderBy( orderBy );
+		transferFetchable( pluralAttribute.getLazy(), pluralAttribute.getFetch(), pluralAttribute.getOuterJoin(),
+				element );
+		element.setTargetClass( hbmElement.getClazz() );
 		return element;
 	}
 

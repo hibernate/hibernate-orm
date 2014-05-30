@@ -38,7 +38,7 @@ import org.hibernate.testing.FailureExpected;
         comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
                 "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
 )
-@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
+@FailureExpectedWithNewUnifiedXsd
 public class VersionedEntityWithInverseOneToManyJoinFailureExpectedTest extends AbstractEntityWithOneToManyTest {
 	public String[] getMappings() {
 //		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml" };

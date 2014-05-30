@@ -46,7 +46,7 @@ import org.junit.Test;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewUnifiedXsd(message = "hbm joins not yet supported")
+@FailureExpectedWithNewUnifiedXsd
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

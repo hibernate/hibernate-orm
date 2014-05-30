@@ -1,5 +1,12 @@
 package org.hibernate.test.sql.hand.query;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -8,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -18,8 +24,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
@@ -46,13 +52,7 @@ import org.hibernate.type.FloatType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.TimestampType;
-
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Tests of various features of native SQL queries.
@@ -148,7 +148,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	{
 		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder();
 		builder.setName("namedQuery");
-		builder.setQuery("select count(*) AS count from organization");
+		builder.setQuery("select count(*) AS c from organization");
 		builder.setQueryReturns(new NativeSQLQueryReturn[1]);
 		
 		sessionFactory().registerNamedSQLQueryDefinition("namedQuery", builder.createNamedQueryDefinition());
@@ -156,13 +156,13 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		final Session s = openSession();
 		s.beginTransaction();
 		final SQLQuery query = (SQLQuery) s.getNamedQuery("namedQuery");
-		query.addScalar("count");
-		final Object result = query.uniqueResult();
+		query.addScalar("c");
+		final Number result = (Number) query.uniqueResult();
  		s.getTransaction().commit();
 		s.close();
 		
 		assertNotNull(result);
-		assertEquals(BigInteger.valueOf(0), result);
+		assertTrue(0 == result.intValue());
 	}
 
 	@Test

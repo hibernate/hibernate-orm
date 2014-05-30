@@ -45,6 +45,8 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tuple.ValueGenerator;
@@ -57,6 +59,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
+@SkipForDialect(value=SybaseDialect.class, comment="CURRENT_TIMESTAMP not supported as default value in Sybase")
 public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test

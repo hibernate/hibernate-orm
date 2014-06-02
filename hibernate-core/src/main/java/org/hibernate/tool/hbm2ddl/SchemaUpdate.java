@@ -84,6 +84,11 @@ public class SchemaUpdate {
 		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
+        public SchemaUpdate(Configuration cfg, Connection connection) throws HibernateException {
+		this( cfg, cfg.getProperties() );
+		connectionHelper = new org.hibernate.tool.hbm2ddl.SuppliedConnectionHelper(connection);
+	}
+
 	public SchemaUpdate(Configuration cfg, Settings settings) throws HibernateException {
 		this.configuration = cfg;
 		dialect = settings.getDialect();

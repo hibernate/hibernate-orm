@@ -44,6 +44,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.TestForIssue;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -209,6 +210,56 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			txn = s.beginTransaction();
 			item = (VersionedItem) s.load( VersionedItem.class, item.getId() );
 			s.delete( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5690")
+	public void testPersistEntityFlushRollbackNotInEntityCache() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		Item item = null;
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = new Item();
+			item.setName( "steve" );
+			item.setDescription( "steve's item" );
+			s.persist( item );
+			s.flush();
+			setRollbackOnlyTx();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+			s.close();
+		}
+
+		// item should not be in entity cache.
+		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
+		assertTrue( slcs.getEntries().isEmpty() );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			assertNull( item );
 			txn.commit();
 			s.close();
 		}

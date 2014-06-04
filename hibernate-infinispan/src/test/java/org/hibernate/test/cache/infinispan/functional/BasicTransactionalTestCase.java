@@ -32,10 +32,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.Cache;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -44,6 +46,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import static junit.framework.Assert.assertEquals;
@@ -142,6 +145,254 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9231")
+	public void testAddNewOneToManyElementInitFlushLeaveCacheConsistent() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+		SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
+
+		Item item = null;
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = new Item();
+			item.setName( "steve" );
+			item.setDescription( "steve's item" );
+			s.save( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		// create an element for item.itsms
+		Item itemElement = new Item();
+		itemElement.setName( "element" );
+		itemElement.setDescription( "element item" );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			assertFalse( Hibernate.isInitialized( item.getItems() ) );
+			// Add an element to item.items (a Set); it will initialize the Set.
+			item.addItem( itemElement );
+			assertTrue( Hibernate.isInitialized( item.getItems() ) );
+			s.persist( itemElement );
+			s.flush();
+			setRollbackOnlyTx();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTxExpected(e);
+		}
+		finally {
+			commitOrRollbackTx();
+			if ( s != null && s.isOpen() ) {
+				try {
+					s.close();
+				}
+				catch (Throwable ignore) {
+				}
+			}
+		}
+
+		beginTx();
+		try {
+			// cleanup
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			Hibernate.initialize( item.getItems() );
+			assertTrue( item.getItems().isEmpty() );
+			s.delete( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9231")
+	public void testAddNewOneToManyElementNoInitFlushLeaveCacheConsistent() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+		SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
+
+		Item item = null;
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = new Item();
+			item.setName( "steve" );
+			item.setDescription( "steve's item" );
+			s.save( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		// create an element for item.bagOfItems
+		Item itemElement = new Item();
+		itemElement.setName( "element" );
+		itemElement.setDescription( "element item" );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			assertFalse( Hibernate.isInitialized( item.getItems() ) );
+			// Add an element to item.bagOfItems (a bag); it will not initialize the bag.
+			item.addItemToBag( itemElement );
+			assertFalse( Hibernate.isInitialized( item.getBagOfItems() ) );
+			s.persist( itemElement );
+			s.flush();
+			setRollbackOnlyTx();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTxExpected(e);
+		}
+		finally {
+			commitOrRollbackTx();
+			if ( s != null && s.isOpen() ) {
+				try {
+					s.close();
+				}
+				catch (Throwable ignore) {
+				}
+			}
+		}
+
+		beginTx();
+		try {
+			// cleanup
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			Hibernate.initialize( item.getItems() );
+			assertTrue( item.getItems().isEmpty() );
+			s.delete( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-9231")
+	public void testAddNewOneToManyElementNoInitFlushInitLeaveCacheConsistent() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+		SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
+
+		Item item = null;
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = new Item();
+			item.setName( "steve" );
+			item.setDescription( "steve's item" );
+			s.save( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		// create an element for item.bagOfItems
+		Item itemElement = new Item();
+		itemElement.setName( "element" );
+		itemElement.setDescription( "element item" );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			assertFalse( Hibernate.isInitialized( item.getBagOfItems() ) );
+			// Add an element to item.bagOfItems (a bag); it will not initialize the bag.
+			item.addItemToBag( itemElement );
+			assertFalse( Hibernate.isInitialized( item.getBagOfItems() ) );
+			s.persist( itemElement );
+			s.flush();
+			// Now initialize the collection; it will contain the uncommitted itemElement.
+			Hibernate.initialize( item.getBagOfItems() );
+			setRollbackOnlyTx();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTxExpected(e);
+		}
+		finally {
+			commitOrRollbackTx();
+			if ( s != null && s.isOpen() ) {
+				try {
+					s.close();
+				}
+				catch (Throwable ignore) {
+				}
+			}
+		}
+
+		beginTx();
+		try {
+			// cleanup
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			// Because of HHH-9231, the following will fail due to ObjectNotFoundException because the
+			// collection will be read from the cache and it still contains the uncommitted element,
+			// which cannot be found.
+			Hibernate.initialize( item.getBagOfItems() );
+			assertTrue( item.getBagOfItems().isEmpty() );
+			s.delete( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+	}
+
+	@Test
 	public void testStaleWritesLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -227,6 +478,8 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
+		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
+
 		Item item = null;
 		Transaction txn = null;
 		Session s = null;
@@ -240,6 +493,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			item.setDescription( "steve's item" );
 			s.persist( item );
 			s.flush();
+			assertNotNull( slcs.getEntries().get( item.getId() ) );
 			setRollbackOnlyTx();
 		}
 		catch (Exception e) {
@@ -247,11 +501,81 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 		}
 		finally {
 			commitOrRollbackTx();
-			s.close();
+			if ( s != null && s.isOpen() ) {
+				try {
+					s.close();
+				}
+				catch (Throwable ignore) {
+				}
+			}
 		}
 
 		// item should not be in entity cache.
+		assertTrue( slcs.getEntries().isEmpty() );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = (Item) s.get( Item.class, item.getId() );
+			assertNull( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5690")
+	public void testPersistEntityFlushEvictGetRollbackNotInEntityCache() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
 		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
+
+		Item item = null;
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			item = new Item();
+			item.setName( "steve" );
+			item.setDescription( "steve's item" );
+			s.persist( item );
+			s.flush();
+			// item is cached on insert.
+			assertNotNull( slcs.getEntries().get( item.getId() ) );
+			s.evict( item );
+			assertEquals( slcs.getHitCount(), 0 );
+			item = (Item) s.get( Item.class, item.getId() );
+			assertNotNull( item );
+			assertEquals( slcs.getHitCount(), 1 );
+			assertNotNull( slcs.getEntries().get( item.getId() ) );
+			setRollbackOnlyTx();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+			if ( s != null && s.isOpen() ) {
+				try {
+					s.close();
+				}
+				catch (Throwable ignore) {
+				}
+			}
+		}
+
+		// item should not be in entity cache.
+		//slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
 		assertTrue( slcs.getEntries().isEmpty() );
 
 		beginTx();

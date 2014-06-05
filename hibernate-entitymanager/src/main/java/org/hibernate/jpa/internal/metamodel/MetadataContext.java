@@ -141,7 +141,7 @@ class MetadataContext {
 
 	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
 		entityTypes.put( entityType.getBindableJavaType(), entityType );
-		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
+		entityTypesByEntityName.put( persistentClass.getJpaEntityName(), entityType );
 		entityTypesByPersistentClass.put( persistentClass, entityType );
 		orderedMappings.add( persistentClass );
 	}

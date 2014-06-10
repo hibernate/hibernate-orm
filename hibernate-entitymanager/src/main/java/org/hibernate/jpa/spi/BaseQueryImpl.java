@@ -315,28 +315,14 @@ public abstract class BaseQueryImpl implements Query {
 				applied = applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
 			}
 			else if ( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = (CacheRetrieveMode) value;
-
-				CacheStoreMode storeMode = hints != null
-						? (CacheStoreMode) hints.get( AvailableSettings.SHARED_CACHE_STORE_MODE )
-						: null;
-				if ( storeMode == null ) {
-					storeMode = (CacheStoreMode) entityManager.getProperties().get( AvailableSettings.SHARED_CACHE_STORE_MODE );
-				}
+				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
+				final CacheStoreMode storeMode = getHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.class );
 				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
 			}
 			else if ( AvailableSettings.SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = (CacheStoreMode) value;
-
-				CacheRetrieveMode retrieveMode = hints != null
-						? (CacheRetrieveMode) hints.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE )
-						: null;
-				if ( retrieveMode == null ) {
-					retrieveMode = (CacheRetrieveMode) entityManager.getProperties().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
-				}
-				applied = applyCacheModeHint(
-						CacheModeHelper.interpretCacheMode( storeMode, retrieveMode )
-				);
+				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString () ) : null;
+				final CacheRetrieveMode retrieveMode = getHint( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.class );
+				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
 			}
 			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
 				if ( !isNativeSqlQuery() ) {
@@ -409,6 +395,16 @@ public abstract class BaseQueryImpl implements Query {
 		}
 
 		return this;
+	}
+
+	private <T extends Enum<T>> T getHint(String key, Class<T> hintClass) {
+		Object hint = hints != null ? hints.get( key ) : null;
+
+		if ( hint == null ) {
+			hint = entityManager.getProperties().get( key );
+		}
+
+		return hint != null ? Enum.valueOf( hintClass, hint.toString() ) : null;
 	}
 
 	/**

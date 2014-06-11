@@ -35,7 +35,6 @@ import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -44,7 +43,6 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import static junit.framework.Assert.assertNotNull;
@@ -146,7 +144,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9231")
+	@TestForIssue( jiraKey = "HHH-9231" )
 	public void testAddNewOneToManyElementInitFlushLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -227,7 +225,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9231")
+	@TestForIssue( jiraKey = "HHH-9231" )
 	public void testAddNewOneToManyElementNoInitFlushLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -308,7 +306,6 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9231")
 	public void testAddNewOneToManyElementNoInitFlushInitLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();

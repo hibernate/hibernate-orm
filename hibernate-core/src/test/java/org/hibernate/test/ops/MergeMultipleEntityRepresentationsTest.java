@@ -31,6 +31,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -668,7 +669,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-9106" )
+	@FailureExpected( jiraKey = "HHH-9240" )
 	public void testTopLevelUnidirOneToManyBackrefWithNewElement() {
 		Item item1 = new Item();
 		item1.setName( "item1 name" );
@@ -723,7 +724,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-9171" )
+	@FailureExpected( jiraKey = "HHH-9239" )
 	public void testNestedUnidirOneToManyBackrefWithNewElement() {
 		Item item1 = new Item();
 		item1.setName( "item1 name" );
@@ -758,29 +759,19 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		s = openSession();
 		tx = s.beginTransaction();
 		Item item1Merged = (Item) s.merge( item1 );
-		// The new SubItem was persisted because it is added to the nested item's collection.
-		// item1.subItems overwrites the collection (effectively removing the new SubItem from
-		// the collection). Because delete-orpban is not enabled, the new SubItem should not be
-		// deleted; an exception should have been thrown because the new SubItem is no longer
-		// in a collection and the collection key is non-nullable.
-		//
-		// Because cascade includes "delete-orphan", that new SubItem should have been
-		// deleted, but due to HHH-9171 it was not deleted. Because the collection key
-		// is non-nullable, SubItem still has a backref to the same collection owner.
-		// The collection resulting from the merge looks OK here.
-		assertEquals( 1, item1Merged.getSubItemsBackref().size() );
+		// The resulting collection should contain the added element
+		assertEquals( 2, item1Merged.getSubItemsBackref().size() );
 		assertEquals( "subItem1 name", item1Merged.getSubItemsBackref().get( 0 ).getName() );
+		assertEquals( "subItem2 name", item1Merged.getSubItemsBackref().get( 1 ).getName() );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
 		item1 = (Item) s.get( Item.class, item1.getId() );
-		// The following fails due to HHH-9171 because in that new SubItem (that should
-		// have been deleted) from the previous transaction gets loaded into the collection
-		// because it still has the collection key set.
-		assertEquals( 1, item1.getSubItemsBackref().size() );
+		assertEquals( 2, item1.getSubItemsBackref().size() );
 		assertEquals( "subItem1 name", item1.getSubItemsBackref().get( 0 ).getName() );
+		assertEquals( "subItem2 name", item1Merged.getSubItemsBackref().get( 1 ).getName() );
 		tx.commit();
 		s.close();
 
@@ -826,7 +817,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		s = openSession();
 		tx = s.beginTransaction();
 		Item item1Merged = (Item) s.merge( item1 );
-		// top-level collection should win
+		// entity should have been removed
 		assertEquals( 1, item1Merged.getSubItemsBackref().size() );
 		tx.commit();
 		s.close();
@@ -845,7 +836,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-9171" )
+	@FailureExpected( jiraKey = "HHH-9239" )
 	public void testNestedUnidirOneToManyBackrefWithRemovedElement() {
 		Item item1 = new Item();
 		item1.setName( "item1 name" );
@@ -881,21 +872,19 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		s = openSession();
 		tx = s.beginTransaction();
 		Item item1Merged = (Item) s.merge( item1 );
-		// collection from top-level Item should win
-		assertEquals( 2, item1Merged.getSubItemsBackref().size() );
-		assertTrue( item1Merged.getSubItemsBackref().contains( subItem1 ) );
-		assertTrue( item1Merged.getSubItemsBackref().contains( subItem2 ) );
+		// entity should have been removed
+		assertEquals( 1, item1Merged.getSubItemsBackref().size() );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
 		item1 = (Item) s.get( Item.class, item1.getId() );
-		assertEquals( 2, item1.getSubItemsBackref().size() );
-		assertTrue( item1.getSubItemsBackref().contains( subItem1 ) );
-		assertTrue( item1.getSubItemsBackref().contains( subItem2 ) );
+		assertEquals( 1, item1.getSubItemsBackref().size() );
+		subItem1 = (SubItem) s.get( SubItem.class, subItem1.getId() );
+		// cascade does not include delete-orphan, so subItem1 should still be persistent.
+		assertNotNull( subItem1 );
 		tx.commit();
-		s.close();
 
 		cleanup();
 	}
@@ -951,6 +940,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-9239" )
 	public void testNestedUnidirOneToManyNoBackrefWithNewElement() {
 		Category category1 = new Category();
 		category1.setName( "category1 name" );
@@ -983,21 +973,15 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 
 		s = openSession();
 		tx = s.beginTransaction();
-		// top-level collection should still have just 1 element.
-		// copy of subcategory2 should still be persisted.
 		Category category1Merged = (Category) s.merge( category1 );
-		assertEquals( 1, category1Merged.getSubCategories().size() );
-		assertTrue( category1Merged.getSubCategories().contains( subCategory1 ) );
+		assertEquals( 2, category1Merged.getSubCategories().size() );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
 		category1 = (Category) s.get( Category.class, category1.getId() );
-		assertEquals( 1, category1.getSubCategories().size() );
-		assertTrue( category1.getSubCategories().contains( subCategory1 ) );
-		subCategory2 = (SubCategory) s.createQuery( "from SubCategory sc where sc.name = 'subCategory2 name'" ).uniqueResult();
-		assertNotNull( subCategory2 );
+		assertEquals( 2, category1.getSubCategories().size() );
 		tx.commit();
 		s.close();
 
@@ -1061,7 +1045,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-9171" )
+	@FailureExpected( jiraKey = "HHH-9239" )
 	public void testNestedUnidirOneToManyNoBackrefWithRemovedElement() {
 		Category category1 = new Category();
 		category1.setName( "category1 name" );
@@ -1095,10 +1079,8 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 
 		s = openSession();
 		tx = s.beginTransaction();
-		// top-level collection should still have 2 elements.
 		Category category1Merged = (Category) s.merge( category1 );
-		assertEquals( 2, category1Merged.getSubCategories().size() );
-		assertTrue( category1Merged.getSubCategories().contains( subCategory1 ) );
+		assertEquals( 1, category1Merged.getSubCategories().size() );
 		assertTrue( category1Merged.getSubCategories().contains( subCategory2 ) );
 		tx.commit();
 		s.close();
@@ -1106,9 +1088,11 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		s = openSession();
 		tx = s.beginTransaction();
 		category1 = (Category) s.get( Category.class, category1.getId() );
-		assertEquals( 2, category1.getSubCategories().size() );
-		assertTrue( category1.getSubCategories().contains( subCategory1 ) );
+		assertEquals( 1, category1.getSubCategories().size() );
 		assertTrue( category1.getSubCategories().contains( subCategory2 ) );
+		// cascade does not include delete-orphan, so subCategory1 should still be persistent.
+		subCategory1 = (SubCategory) s.get( SubCategory.class, subCategory1.getId() );
+		assertNotNull( subCategory1 );
 		tx.commit();
 		s.close();
 

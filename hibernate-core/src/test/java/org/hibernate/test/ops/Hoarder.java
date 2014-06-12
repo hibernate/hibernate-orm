@@ -66,4 +66,13 @@ public class Hoarder {
 	public void setItems(Set<Item> items) {
 		this.items = items;
 	}
+
+	@Override
+	public String toString() {
+		return "Hoarder{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", favoriteItem=" + favoriteItem +
+				'}';
+	}
 }

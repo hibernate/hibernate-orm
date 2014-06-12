@@ -1108,6 +1108,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								unmergedInstance
 						);
+						LOG.debugf(
+								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child.",
+								( found ? "contains" : "does not contain" )
+						);
 					}
 				}
 
@@ -1134,6 +1138,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								mergeMap.get( proxy )
 						);
+						LOG.debugf(
+								"Detached proxy being merged has a collection that [%s] the managed child.",
+								(found ? "contains" : "does not contain")
+						);
 						if ( !found ) {
 							found = isFoundInParent(
 									propertyName,
@@ -1141,6 +1149,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 									persister,
 									collectionPersister,
 									mergeMap.get( proxy )
+							);
+							LOG.debugf(
+									"Detached proxy being merged has a collection that [%s] the detached child being merged..",
+									(found ? "contains" : "does not contain")
 							);
 						}
 						if ( found ) {
@@ -1184,6 +1196,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild != null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
+						LOG.debugf(
+								"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
+								( index != null ? "contains" : "does not contain" )
+						);
 					}
 				}
 				if ( index != null ) {
@@ -1208,6 +1224,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild!=null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
+						LOG.debugf(
+								"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
+								(index != null ? "contains" : "does not contain" )
+						);
 					}
 				}
 

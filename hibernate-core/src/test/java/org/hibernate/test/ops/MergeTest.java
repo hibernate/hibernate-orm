@@ -29,6 +29,20 @@ import org.hibernate.testing.FailureExpectedWithNewUnifiedXsd;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueObjectException;
+import org.hibernate.Session;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.Transaction;
+import org.hibernate.criterion.Projections;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * @author Gavin King
  */
@@ -737,11 +751,11 @@ public class MergeTest extends BaseUnitTestCase {
 		Employer jboss = new Employer();
 		Employee gavin = new Employee();
 		jboss.setEmployees( new ArrayList() );
-		jboss.getEmployees().add(gavin);
-		s.merge(jboss);
+		jboss.getEmployees().add( gavin );
+		s.merge( jboss );
 		s.flush();
 		jboss = (Employer) s.createQuery("from Employer e join fetch e.employees").uniqueResult();
-		assertTrue( Hibernate.isInitialized( jboss.getEmployees() )  );
+		assertTrue( Hibernate.isInitialized( jboss.getEmployees() ) );
 		assertEquals( 1, jboss.getEmployees().size() );
 		s.clear();
 		s.merge( jboss.getEmployees().iterator().next() );
@@ -818,97 +832,6 @@ public class MergeTest extends BaseUnitTestCase {
 		s.close();
 
 		cleanup();
-	}
-
-	@Test
-	@FailureExpected( jiraKey = "HHH-9106")
-	public void testMergeTransientWithMultipleDetachedRepresentationOfSameEntity() {
-
-		Item item1 = new Item();
-		item1.setName( "item1" );
-		item1.setDescription( "item1 description" );
-
-		Session s = openSession();
-		Transaction tx = session.beginTransaction();
-		s.persist( item1 );
-		tx.commit();
-		s.close();
-
-		// Get 2 representations of the same Item from 3 different sessions.
-
-		s = openSession();
-		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
-		s.close();
-
-		s = openSession();
-		Item item1_2 = (Item) s.get( Item.class, item1.getId() );
-		s.close();
-
-		// item1_1 and item1_2 are unmodified representations of the same persistent entity.
-		assertFalse( item1_1 == item1_2 );
-		assertTrue( item1_1.equals( item1_2 ) );
-
-		// Create a transient entity that references both representations.
-		Hoarder hoarder = new Hoarder();
-		hoarder.setName( "joe" );
-		hoarder.getItems().add( item1_1 );
-		hoarder.setFavoriteItem( item1_2 );
-
-		s = openSession();
-		tx = s.beginTransaction();
-		hoarder = (Hoarder) s.merge( hoarder );
-		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
-		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
-		assertEquals( item1.getDescription(), hoarder.getFavoriteItem().getDescription() );
-		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	@FailureExpected( jiraKey = "HHH-9106")
-	public void testMergeDetachedWithDetachedRepresentationOfSameEntity() {
-		Item item1 = new Item();
-		item1.setName( "item1" );
-		item1.setDescription( "item1 description" );
-
-		Hoarder hoarder = new Hoarder();
-		hoarder.setName( "joe" );
-
-		Session s = openSession();
-		Transaction tx = session.beginTransaction();
-		s.persist( item1 );
-		s.persist( hoarder );
-		tx.commit();
-		s.close();
-
-		// Get 2 representations of the same Item from 3 different sessions.
-
-		s = openSession();
-		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
-		s.close();
-
-		s = openSession();
-		Item item1_2 = (Item) s.get( Item.class, item1.getId() );
-		s.close();
-
-		// item1_1 and item1_2 are unmodified representations of the same persistent entity.
-		assertFalse( item1_1 == item1_2 );
-		assertTrue( item1_1.equals( item1_2 ) );
-
-		// Update hoarder (detached) to references both representations.
-		hoarder.getItems().add( item1_1 );
-		hoarder.setFavoriteItem( item1_2 );
-
-		s = openSession();
-		tx = s.beginTransaction();
-		hoarder = (Hoarder) s.merge( hoarder );
-		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
-		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
-		assertEquals( item1.getDescription(), hoarder.getFavoriteItem().getDescription() );
-		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
-		tx.commit();
-		s.close();
 	}
 
 	@SuppressWarnings( {"unchecked"})

@@ -21,67 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.ops;
 
-import java.util.HashSet;
-import java.util.Set;
+package org.hibernate.event.internal;
 
 /**
+ * A {@link org.hibernate.event.spi.MergeEventListener} that does not allow merging
+ * multiple representations of the same persistent entity.
+ *
  * @author Gail Badner
  */
-public class Category {
-	private Long id;
-	private String name;
-	private Item exampleItem;
-	private int version;
-	private Set<SubCategory> subCategories = new HashSet<SubCategory>();
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Item getExampleItem() {
-		return exampleItem;
-	}
-
-	public void setExampleItem(Item exampleItem) {
-		this.exampleItem = exampleItem;
-	}
-
-	public Set<SubCategory> getSubCategories() {
-		return subCategories;
-	}
-
-	public void setSubCategories(Set<SubCategory> subCategories) {
-		this.subCategories = subCategories;
-	}
-
-	public int getVersion() {
-		return version;
-	}
-
-	public void setVersion(int version) {
-		this.version = version;
-	}
+public class NoEntityCopiesMergeEventListener extends DefaultMergeEventListener {
 
 	@Override
-	public String toString() {
-		return "Category{" +
-				"id=" + id +
-				", name='" + name + '\'' +
-				", version=" + version +
-				'}';
+	protected EntityCopyObserver createDetachedEntityCopyObserver() {
+		return new EntityCopyNotAllowedObserver();
 	}
 }

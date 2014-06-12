@@ -23,18 +23,12 @@
  */
 package org.hibernate.test.ops;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author Gail Badner
  */
-public class Category {
+public class SubCategory {
 	private Long id;
 	private String name;
-	private Item exampleItem;
-	private int version;
-	private Set<SubCategory> subCategories = new HashSet<SubCategory>();
 
 	public Long getId() {
 		return id;
@@ -52,36 +46,34 @@ public class Category {
 		this.name = name;
 	}
 
-	public Item getExampleItem() {
-		return exampleItem;
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		SubCategory item = (SubCategory) o;
+
+		if ( !name.equals( item.name ) ) {
+			return false;
+		}
+
+		return true;
 	}
 
-	public void setExampleItem(Item exampleItem) {
-		this.exampleItem = exampleItem;
-	}
-
-	public Set<SubCategory> getSubCategories() {
-		return subCategories;
-	}
-
-	public void setSubCategories(Set<SubCategory> subCategories) {
-		this.subCategories = subCategories;
-	}
-
-	public int getVersion() {
-		return version;
-	}
-
-	public void setVersion(int version) {
-		this.version = version;
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return "Category{" +
+		return "SubItem{" +
 				"id=" + id +
 				", name='" + name + '\'' +
-				", version=" + version +
 				'}';
 	}
 }

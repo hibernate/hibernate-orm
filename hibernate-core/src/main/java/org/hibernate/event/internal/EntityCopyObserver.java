@@ -21,67 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.ops;
+package org.hibernate.event.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.hibernate.event.spi.EventSource;
 
 /**
+ * An observer for detection of multiple entity representations for a persistent entity being merged.
+ *
  * @author Gail Badner
  */
-public class Category {
-	private Long id;
-	private String name;
-	private Item exampleItem;
-	private int version;
-	private Set<SubCategory> subCategories = new HashSet<SubCategory>();
+public interface EntityCopyObserver {
 
-	public Long getId() {
-		return id;
-	}
+	/**
+	 * Called when more than one representation of the same persistent entity is being merged.
+	 *
+	 * @param managedEntity The managed entity in the persistence context (the merge result).
+	 * @param mergeEntity1 A managed or detached entity being merged; must be non-null.
+	 * @param mergeEntity2 A different managed or detached entity being merged; must be non-null.
+	 * @param session The session.
+	 */
+	void entityCopyDetected(Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource session);
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	/**
+	 * Called when the top-level merge operation is complete.
+	 *
+	 * @param session The session
+	 */
+	void topLevelMergeComplete(EventSource session);
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Item getExampleItem() {
-		return exampleItem;
-	}
-
-	public void setExampleItem(Item exampleItem) {
-		this.exampleItem = exampleItem;
-	}
-
-	public Set<SubCategory> getSubCategories() {
-		return subCategories;
-	}
-
-	public void setSubCategories(Set<SubCategory> subCategories) {
-		this.subCategories = subCategories;
-	}
-
-	public int getVersion() {
-		return version;
-	}
-
-	public void setVersion(int version) {
-		this.version = version;
-	}
-
-	@Override
-	public String toString() {
-		return "Category{" +
-				"id=" + id +
-				", name='" + name + '\'' +
-				", version=" + version +
-				'}';
-	}
+	/**
+	 * Called to clear any data stored in this EntityCopyObserver.
+	 */
+	void clear();
 }

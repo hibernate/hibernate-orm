@@ -6,9 +6,12 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -29,6 +32,7 @@ import javax.persistence.OneToMany;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -88,6 +92,7 @@ import org.hibernate.criterion.Junction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
@@ -256,6 +261,7 @@ public abstract class CollectionBinder {
 			boolean isHibernateExtensionMapping,
 			MetadataBuildingContext buildingContext) {
 		final CollectionBinder result;
+
 		if ( property.isArray() ) {
 			if ( property.getElementClass().isPrimitive() ) {
 				result = new PrimitiveArrayBinder();
@@ -266,62 +272,38 @@ public abstract class CollectionBinder {
 		}
 		else if ( property.isCollection() ) {
 			//TODO consider using an XClass
-			Class returnedClass = property.getCollectionClass();
-			if ( java.util.Set.class.equals( returnedClass ) ) {
-				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					throw new AnnotationException( "Set do not support @CollectionId: "
-							+ StringHelper.qualify( entityName, property.getName() ) );
-				}
-				result = new SetBinder( false );
+			final Class returnedClass = property.getCollectionClass();
+
+			final CollectionBinder basicBinder = getBinderFromBasicCollectionType(
+					returnedClass,
+					property,
+					entityName,
+					isIndexed
+			);
+			if ( basicBinder != null ) {
+				result = basicBinder;
 			}
-			else if ( java.util.SortedSet.class.equals( returnedClass ) ) {
-				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					throw new AnnotationException( "Set do not support @CollectionId: "
-							+ StringHelper.qualify( entityName, property.getName() ) );
-				}
-				result = new SetBinder( true );
-			}
-			else if ( java.util.Map.class.equals( returnedClass ) ) {
-				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					throw new AnnotationException( "Map do not support @CollectionId: "
-							+ StringHelper.qualify( entityName, property.getName() ) );
-				}
-				result = new MapBinder( false );
-			}
-			else if ( java.util.SortedMap.class.equals( returnedClass ) ) {
-				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					throw new AnnotationException( "Map do not support @CollectionId: "
-							+ StringHelper.qualify( entityName, property.getName() ) );
-				}
-				result = new MapBinder( true );
-			}
-			else if ( java.util.Collection.class.equals( returnedClass ) ) {
-				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					result = new IdBagBinder();
+			else if ( property.isAnnotationPresent( CollectionType.class ) ) {
+				final Class semanticClass = property.getAnnotation( CollectionType.class ).semantics();
+				if ( semanticClass != void.class ) {
+					result = getBinderFromBasicCollectionType( semanticClass, property, entityName, isIndexed );
 				}
 				else {
-					result = new BagBinder();
-				}
-			}
-			else if ( java.util.List.class.equals( returnedClass ) ) {
-				if ( isIndexed ) {
-					if ( property.isAnnotationPresent( CollectionId.class ) ) {
-						throw new AnnotationException(
-								"List do not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
-								+ StringHelper.qualify( entityName, property.getName() ) );
-					}
-					result = new ListBinder();
-				}
-				else if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					result = new IdBagBinder();
-				}
-				else {
-					result = new BagBinder();
+					final Class inferredClass = inferCollectionClassFromSubclass( returnedClass );
+					result = inferredClass != null ? getBinderFromBasicCollectionType(
+							inferredClass,
+							property,
+							entityName,
+							isIndexed
+					) : null;
 				}
 			}
 			else {
+				result = null;
+			}
+			if ( result == null ) {
 				throw new AnnotationException(
-						returnedClass.getName() + " collection not yet supported: "
+						returnedClass.getName() + " collection not yet natively supported. You may have a mismatch in versions of hibernate-core and hibernate-commons-annotations."
 								+ StringHelper.qualify( entityName, property.getName() )
 				);
 			}
@@ -352,6 +334,79 @@ public abstract class CollectionBinder {
 		}
 
 		return result;
+	}
+
+	private static CollectionBinder getBinderFromBasicCollectionType(Class clazz, XProperty property, String entityName, boolean isIndexed) {
+		if ( java.util.Set.class.equals( clazz) ) {
+			if ( property.isAnnotationPresent( CollectionId.class) ) {
+				throw new AnnotationException("Set do not support @CollectionId: "
+						+ StringHelper.qualify( entityName, property.getName() ) );
+			}
+			return new SetBinder( false );
+		}
+		else if ( java.util.SortedSet.class.equals( clazz ) ) {
+			if ( property.isAnnotationPresent( CollectionId.class ) ) {
+				throw new AnnotationException( "Set do not support @CollectionId: "
+						+ StringHelper.qualify( entityName, property.getName() ) );
+			}
+			return new SetBinder( true );
+		}
+		else if ( java.util.Map.class.equals( clazz ) ) {
+			if ( property.isAnnotationPresent( CollectionId.class ) ) {
+				throw new AnnotationException( "Map do not support @CollectionId: "
+						+ StringHelper.qualify( entityName, property.getName() ) );
+			}
+			return new MapBinder( false );
+		}
+		else if ( java.util.SortedMap.class.equals( clazz ) ) {
+			if ( property.isAnnotationPresent( CollectionId.class ) ) {
+				throw new AnnotationException( "Map do not support @CollectionId: "
+						+ StringHelper.qualify( entityName, property.getName() ) );
+			}
+			return new MapBinder( true );
+		}
+		else if ( java.util.Collection.class.equals( clazz ) ) {
+			if ( property.isAnnotationPresent( CollectionId.class ) ) {
+				return new IdBagBinder();
+			}
+			else {
+				return new BagBinder();
+			}
+		}
+		else if ( java.util.List.class.equals( clazz ) ) {
+			if ( isIndexed ) {
+				if ( property.isAnnotationPresent( CollectionId.class ) ) {
+					throw new AnnotationException(
+							"List do not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
+									+ StringHelper.qualify( entityName, property.getName() ) );
+				}
+				return new ListBinder();
+			}
+			else if ( property.isAnnotationPresent( CollectionId.class ) ) {
+				return new IdBagBinder();
+			}
+			else {
+				return new BagBinder();
+			}
+		}
+		return null;
+	}
+
+	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = Collections.unmodifiableList( Arrays.asList(
+			java.util.List.class,
+			java.util.SortedSet.class,
+			java.util.Set.class,
+			java.util.SortedMap.class,
+			java.util.Map.class,
+			java.util.Collection.class) );
+
+	private static Class inferCollectionClassFromSubclass(Class clazz) {
+		for (Class<?> priorityClass : INFERRED_CLASS_PRIORITY) {
+			if (priorityClass.isAssignableFrom( clazz ) ) {
+				return priorityClass;
+			}
+		}
+		return null;
 	}
 
 	public void setMappedBy(String mappedBy) {

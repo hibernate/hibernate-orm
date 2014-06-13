@@ -23,7 +23,7 @@ apply plugin: 'java'
 apply plugin: 'hibernate-matrix-testing'
 apply plugin: 'maven'
 
-version = '4.3-SNAPSHOT'
+version = '4.3'
 
 dependencies {
 

@@ -265,7 +265,7 @@ public abstract class CollectionBinder {
 				result = new ArrayBinder();
 			}
 		}
-		else if (property.isCollection()) {
+		else if ( property.isCollection() ) {
 			//TODO consider using an XClass
 			final Class returnedClass = property.getCollectionClass();
 
@@ -273,14 +273,14 @@ public abstract class CollectionBinder {
 			if (basicBinder != null) {
 				result = basicBinder;
 			}
-			else if (property.isAnnotationPresent( CollectionType.class)) {
-				final Class semanticClass = property.getAnnotation( CollectionType.class).semantics();
+			else if ( property.isAnnotationPresent( CollectionType.class ) ) {
+				final Class semanticClass = property.getAnnotation( CollectionType.class ).semantics();
 				if (semanticClass != void.class) {
-					result = getBinderFromBasicCollectionType( semanticClass, property, entityName, isIndexed);
+					result = getBinderFromBasicCollectionType( semanticClass, property, entityName, isIndexed );
 				}
 				else {
-					final Class inferredClass = inferCollectionClassFromSubclass( returnedClass);
-					result = inferredClass != null ? getBinderFromBasicCollectionType( inferredClass, property, entityName, isIndexed) : null;
+					final Class inferredClass = inferCollectionClassFromSubclass( returnedClass );
+					result = inferredClass != null ? getBinderFromBasicCollectionType( inferredClass, property, entityName, isIndexed ) : null;
 				}
 			}
 			else {
@@ -289,14 +289,14 @@ public abstract class CollectionBinder {
 			if (result == null) {
 				throw new AnnotationException(
 						returnedClass.getName() + " collection not yet natively supported. You may have a mismatch in versions of hibernate-core and hibernate-commons-annotations."
-								+ StringHelper.qualify( entityName, property.getName())
+								+ StringHelper.qualify( entityName, property.getName() )
 				);
 			}
 		}
 		else {
 			throw new AnnotationException(
 					"Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @CollectionOfElements: "
-							+ StringHelper.qualify( entityName, property.getName())
+							+ StringHelper.qualify( entityName, property.getName() )
 			);
 		}
 
@@ -323,12 +323,12 @@ public abstract class CollectionBinder {
 	}
 
 	private static CollectionBinder getBinderFromBasicCollectionType(Class clazz, XProperty property, String entityName, boolean isIndexed) {
-		if (java.util.Set.class.equals( clazz)) {
-			if (property.isAnnotationPresent( CollectionId.class)) {
+		if ( java.util.Set.class.equals( clazz) ) {
+			if ( property.isAnnotationPresent( CollectionId.class) ) {
 				throw new AnnotationException("Set do not support @CollectionId: "
-						+ StringHelper.qualify( entityName, property.getName()));
+						+ StringHelper.qualify( entityName, property.getName() ) );
 			}
-			return new SetBinder(false);
+			return new SetBinder( false );
 		}
 		else if ( java.util.SortedSet.class.equals( clazz ) ) {
 			if ( property.isAnnotationPresent( CollectionId.class ) ) {
@@ -384,11 +384,11 @@ public abstract class CollectionBinder {
 			java.util.Set.class,
 			java.util.SortedMap.class,
 			java.util.Map.class,
-			java.util.Collection.class));
+			java.util.Collection.class) );
 
 	private static Class inferCollectionClassFromSubclass(Class clazz) {
 		for (Class<?> priorityClass : INFERRED_CLASS_PRIORITY) {
-			if (priorityClass.isAssignableFrom( clazz)) {
+			if (priorityClass.isAssignableFrom( clazz ) ) {
 				return priorityClass;
 			}
 		}

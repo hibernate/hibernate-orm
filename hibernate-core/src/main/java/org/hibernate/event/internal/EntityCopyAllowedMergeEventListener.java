@@ -21,22 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.event.internal.core;
 
-import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
-import org.hibernate.event.internal.EntityCopyObserver;
+package org.hibernate.event.internal;
 
 /**
- * Overrides {@link JpaMergeEventListener} to disallow merging multiple representations
- * of the same persistent entity.
+ * A {@link org.hibernate.event.spi.MergeEventListener} that allows merging
+ * multiple representations of the same persistent entity.
  *
  * @author Gail Badner
  */
-public class JpaNoEntityCopiesMergeEventListener extends JpaMergeEventListener {
+public class EntityCopyAllowedMergeEventListener extends DefaultMergeEventListener {
 
 	@Override
-	protected EntityCopyObserver createDetachedEntityCopyObserver() {
-		return new EntityCopyNotAllowedObserver();
+	protected EntityCopyObserver createEntityCopyObserver() {
+		return EntityCopyAllowedLoggedObserver.isDebugLoggingEnabled() ?
+				new EntityCopyAllowedLoggedObserver() :
+				new EntityCopyAllowedObserver();
 	}
-
 }

@@ -30,6 +30,9 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.event.internal.EntityCopyAllowedMergeEventListener;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -52,6 +55,11 @@ public class MergeMultipleEntityRepresentationsOrphanDeleteTest extends BaseCore
 		return new String[] {
 				"ops/HoarderOrphanDelete.hbm.xml"
 		};
+	}
+
+	protected void afterSessionFactoryBuilt() {
+		EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		registry.setListeners( EventType.MERGE, new EntityCopyAllowedMergeEventListener() );
 	}
 
 	@Test

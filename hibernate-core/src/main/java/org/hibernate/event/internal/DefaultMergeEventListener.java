@@ -64,8 +64,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		return ( (MergeContext) anything ).invertMap();
 	}
 
-	protected EntityCopyObserver createDetachedEntityCopyObserver() {
-		return new DefaultEntityCopyObserver();
+	protected EntityCopyObserver createEntityCopyObserver() {
+		return new EntityCopyNotAllowedObserver();
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		final EntityCopyObserver entityCopyObserver = createDetachedEntityCopyObserver();
+		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver();
 		final MergeContext mergeContext = new MergeContext( event.getSession(), entityCopyObserver );
 		try {
 			onMerge( event, mergeContext );

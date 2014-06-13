@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.event.internal.NoEntityCopiesMergeEventListener;
+import org.hibernate.event.internal.EntityCopyAllowedMergeEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.TestForIssue;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests merging multiple detached representations of the same entity using
- * a MergeEventListener that does not allow this.
+ * a the default MergeEventListener (that does not allow this).
  *
  * @author Gail Badner
  */
@@ -52,11 +52,6 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseCoreFu
 		return new String[] {
 				"ops/Hoarder.hbm.xml"
 		};
-	}
-
-	protected void afterSessionFactoryBuilt() {
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
-		registry.setListeners( EventType.MERGE, new NoEntityCopiesMergeEventListener() );
 	}
 
 	@Test

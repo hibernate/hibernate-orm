@@ -31,6 +31,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
+import org.hibernate.event.internal.EntityCopyAllowedMergeEventListener;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -52,6 +55,11 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		return new String[] {
 				"ops/Hoarder.hbm.xml"
 		};
+	}
+
+	protected void afterSessionFactoryBuilt() {
+		EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		registry.setListeners( EventType.MERGE, new EntityCopyAllowedMergeEventListener() );
 	}
 
 	@Test
@@ -556,6 +564,79 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		hoarder = (Hoarder) s.merge( hoarder );
 		assertEquals( 1, hoarder.getItems().size() );
 		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
+		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
+		tx.commit();
+		s.close();
+
+		cleanup();
+	}
+
+	@Test
+	public void testCascadeFromDetachedToGT2DirtyRepresentations() {
+		Item item1 = new Item();
+		item1.setName( "item1" );
+		Category category1 = new Category();
+		category1.setName( "category1" );
+		item1.setCategory( category1 );
+
+		Hoarder hoarder = new Hoarder();
+		hoarder.setName( "joe" );
+
+		Session s = openSession();
+		Transaction tx = session.beginTransaction();
+		s.persist( item1 );
+		s.persist( hoarder );
+		tx.commit();
+		s.close();
+
+		// Get another representation of the same Item from a different session.
+
+		s = openSession();
+		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
+
+		// item1 and item1_1 are unmodified representations of the same persistent entity.
+		assertFalse( item1 == item1_1 );
+		assertTrue( item1.equals( item1_1 ) );
+
+		// Get another representation of the same Item from a different session.
+
+		s = openSession();
+		Item item1_2 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
+
+		// item1_1 and item1_2 are unmodified representations of the same persistent entity.
+		assertFalse( item1 == item1_2 );
+		assertTrue( item1.equals( item1_2) );
+
+		item1_1.setName( "item1_1" );
+		item1_2.setName( "item1_2" );
+
+		// Update hoarder (detached) to references both representations.
+		item1.getCategory().setExampleItem( item1_2 );
+		hoarder.getItems().add( item1 );
+		hoarder.setFavoriteItem( item1_1 );
+		hoarder.getFavoriteItem().getCategory();
+
+		s = openSession();
+		tx = s.beginTransaction();
+		hoarder = (Hoarder) s.merge( hoarder );
+		assertEquals( 1, hoarder.getItems().size() );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getFavoriteItem().getCategory().getExampleItem() );
+		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
+		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
+		assertEquals( item1.getName(), hoarder.getFavoriteItem().getName() );
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		tx = s.beginTransaction();
+		hoarder = (Hoarder) s.merge( hoarder );
+		assertEquals( 1, hoarder.getItems().size() );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getFavoriteItem().getCategory().getExampleItem() );
 		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
 		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
 		tx.commit();
@@ -1111,18 +1192,26 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		}
 
 		for ( Category category : (List<Category>) s.createQuery( "from Category" ).list() ) {
-			if ( category.getExampleItem() != null ) {
+			Item exampleItem = category.getExampleItem();
+			if ( exampleItem != null ) {
 				category.setExampleItem( null );
+				exampleItem.setCategory( null );
 				s.delete( category );
+				s.delete (exampleItem );
 			}
 		}
 
 		for ( Item item : (List<Item>) s.createQuery( "from Item" ).list() ) {
+			Category category = item.getCategory();
 			item.setCategory( null );
+			if ( category != null ) {
+				category.setExampleItem( null );
+			}
 			s.delete( item );
 		}
 
 		s.createQuery( "delete from Item" ).executeUpdate();
+
 
 		s.getTransaction().commit();
 		s.close();

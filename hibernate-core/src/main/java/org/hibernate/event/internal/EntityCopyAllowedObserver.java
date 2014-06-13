@@ -21,19 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.event.internal;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.pretty.MessageHelper;
+
 /**
- * A {@link org.hibernate.event.spi.MergeEventListener} that does not allow merging
- * multiple representations of the same persistent entity.
+ * An {@link EntityCopyObserver} implementation that allows multiple representations of
+ * the same persistent entity to be merged.
  *
  * @author Gail Badner
  */
-public class NoEntityCopiesMergeEventListener extends DefaultMergeEventListener {
+public class EntityCopyAllowedObserver implements EntityCopyObserver {
+	@Override
+	public void entityCopyDetected(
+			Object managedEntity,
+			Object mergeEntity1,
+			Object mergeEntity2,
+			EventSource session) {
+		// do nothing.
+	}
+
+	public void clear() {
+		// do nothing.
+	}
+
 
 	@Override
-	protected EntityCopyObserver createDetachedEntityCopyObserver() {
-		return new EntityCopyNotAllowedObserver();
+	public void topLevelMergeComplete(EventSource session) {
+		// do nothing.
 	}
 }

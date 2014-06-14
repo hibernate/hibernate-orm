@@ -35,6 +35,7 @@ import org.hibernate.event.internal.EntityCopyAllowedMergeEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -860,7 +861,7 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-9106" )
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9245" )
 	public void testTopLevelUnidirOneToManyBackrefWithRemovedElement() {
 		Item item1 = new Item();
 		item1.setName( "item1 name" );

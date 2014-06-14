@@ -23,15 +23,7 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.pretty.MessageHelper;
 
 /**
  * An {@link EntityCopyObserver} implementation that allows multiple representations of

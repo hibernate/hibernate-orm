@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.emops;
+package org.hibernate.ejb.test.emops;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -33,15 +33,15 @@ import javax.persistence.ManyToOne;
  * @author Gail Badner
  */
 @Entity
-public class Item {
+public class Category {
 	@Id
 	@GeneratedValue
 	private Long id;
-	private int version;
 	private String name;
 
 	@ManyToOne( cascade = { CascadeType.PERSIST, CascadeType.MERGE } )
-	private Category category;
+	private Item exampleItem;
+	private int version;
 
 	public Long getId() {
 		return id;
@@ -49,14 +49,6 @@ public class Item {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public int getVersion() {
-		return version;
-	}
-
-	public void setVersion(int version) {
-		this.version = version;
 	}
 
 	public String getName() {
@@ -67,12 +59,29 @@ public class Item {
 		this.name = name;
 	}
 
-	public Category getCategory() {
-		return category;
+	public Item getExampleItem() {
+		return exampleItem;
 	}
 
-	public void setCategory(Category category) {
-		this.category = category;
+	public void setExampleItem(Item exampleItem) {
+		this.exampleItem = exampleItem;
+	}
+
+	public int getVersion() {
+		return version;
+	}
+
+	public void setVersion(int version) {
+		this.version = version;
+	}
+
+	@Override
+	public String toString() {
+		return "Category{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", version=" + version +
+				'}';
 	}
 
 	@Override
@@ -84,9 +93,9 @@ public class Item {
 			return false;
 		}
 
-		Item item = (Item) o;
+		Category category = (Category) o;
 
-		if ( !name.equals( item.name ) ) {
+		if ( name != null ? !name.equals( category.name ) : category.name != null ) {
 			return false;
 		}
 
@@ -95,17 +104,6 @@ public class Item {
 
 	@Override
 	public int hashCode() {
-		return name.hashCode();
-	}
-
-	@Override
-	public String toString() {
-		return "Item{" +
-				"id=" + id +
-				", version=" + version +
-				", name='" + name + '\'' +
-				//", category=" + category +
-				//", subItems=" + subItems +
-				'}';
+		return name != null ? name.hashCode() : 0;
 	}
 }

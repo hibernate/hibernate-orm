@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.emops;
+package org.hibernate.ejb.test.emops;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -33,15 +33,15 @@ import javax.persistence.ManyToOne;
  * @author Gail Badner
  */
 @Entity
-public class Category {
+public class Item {
 	@Id
 	@GeneratedValue
 	private Long id;
+	private int version;
 	private String name;
 
 	@ManyToOne( cascade = { CascadeType.PERSIST, CascadeType.MERGE } )
-	private Item exampleItem;
-	private int version;
+	private Category category;
 
 	public Long getId() {
 		return id;
@@ -49,22 +49,6 @@ public class Category {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Item getExampleItem() {
-		return exampleItem;
-	}
-
-	public void setExampleItem(Item exampleItem) {
-		this.exampleItem = exampleItem;
 	}
 
 	public int getVersion() {
@@ -75,13 +59,20 @@ public class Category {
 		this.version = version;
 	}
 
-	@Override
-	public String toString() {
-		return "Category{" +
-				"id=" + id +
-				", name='" + name + '\'' +
-				", version=" + version +
-				'}';
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Category getCategory() {
+		return category;
+	}
+
+	public void setCategory(Category category) {
+		this.category = category;
 	}
 
 	@Override
@@ -93,9 +84,9 @@ public class Category {
 			return false;
 		}
 
-		Category category = (Category) o;
+		Item item = (Item) o;
 
-		if ( name != null ? !name.equals( category.name ) : category.name != null ) {
+		if ( !name.equals( item.name ) ) {
 			return false;
 		}
 
@@ -104,6 +95,17 @@ public class Category {
 
 	@Override
 	public int hashCode() {
-		return name != null ? name.hashCode() : 0;
+		return name.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "Item{" +
+				"id=" + id +
+				", version=" + version +
+				", name='" + name + '\'' +
+				//", category=" + category +
+				//", subItems=" + subItems +
+				'}';
 	}
 }

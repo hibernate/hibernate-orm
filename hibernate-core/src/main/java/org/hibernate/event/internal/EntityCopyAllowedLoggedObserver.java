@@ -28,8 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.pretty.MessageHelper;
@@ -42,7 +43,9 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gail Badner
  */
 public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, EntityCopyAllowedLoggedObserver.class.getName()
+	);
 
 	// Tracks the number of entity copies per entity name.
 	private Map<String, Integer> countsByEntityName;

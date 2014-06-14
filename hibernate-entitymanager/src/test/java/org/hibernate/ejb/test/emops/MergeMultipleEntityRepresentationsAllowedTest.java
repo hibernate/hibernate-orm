@@ -21,29 +21,44 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.emops;
+package org.hibernate.ejb.test.emops;
 
 import java.util.List;
-
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.SessionFactory;
+import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.ejb.event.EJB3EntityCopyAllowedMergeEventListener;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.TestForIssue;
 
-import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * Tests merging multiple detached representations of the same entity using
- * a the default MergeEventListener (that does not allow this).
+ * {@link org.hibernate.ejb.event.EJB3EntityCopyAllowedMergeEventListener}.
  *
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-9106")
-public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntityManagerFunctionalTestCase {
+public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityManagerFunctionalTestCase {
+
+	@Override
+	protected void afterEntityManagerFactoryBuilt() {
+		super.afterEntityManagerFactoryBuilt();
+		SessionFactory sf = ( (HibernateEntityManagerFactory) entityManagerFactory() ).getSessionFactory();
+		EventListenerRegistry registry =
+				( (SessionFactoryImplementor) sf ).getServiceRegistry().getService( EventListenerRegistry.class );
+		registry.setListeners( EventType.MERGE, new EJB3EntityCopyAllowedMergeEventListener() );
+	}
 
 	@Test
 	public void testCascadeFromDetachedToNonDirtyRepresentations() {
@@ -60,7 +75,7 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 		em.getTransaction().commit();
 		em.close();
 
-		// Get another representation of the same Item from a different session.
+		// Get another representation of the same Item from a different EntityManager.
 
 		em = getOrCreateEntityManager();
 		Item item1_1 = em.find( Item.class, item1.getId() );
@@ -76,20 +91,27 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		try {
-			em.merge( hoarder );
-			fail( "should have failed due IllegalStateException");
-		}
-		catch (IllegalStateException ex) {
-			//expected
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+		hoarder = em.merge( hoarder );
+		assertEquals( 1, hoarder.getItems().size() );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
+		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		hoarder = em.merge( hoarder );
+		assertEquals( 1, hoarder.getItems().size() );
+		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
+		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
+		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
+		em.getTransaction().commit();
+		em.close();
 
 		cleanup();
 	}
+
 
 	@Test
 	public void testTopLevelManyToOneManagedNestedIsDetached() {
@@ -121,17 +143,19 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 		category.setExampleItem( item1_1 );
 
 		// now item1Merged is managed and it has a nested detached item
-		try {
-			em.merge( item1Merged );
-			fail( "should have failed due IllegalStateException");
-		}
-		catch (IllegalStateException ex) {
-			//expected
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+		em.merge( item1Merged );
+		assertEquals( category.getName(), item1Merged.getCategory().getName() );
+		assertSame( item1Merged, item1Merged.getCategory().getExampleItem() );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		item1 = em.find( Item.class, item1.getId() );
+		assertEquals( category.getName(), item1.getCategory().getName() );
+		assertSame( item1, item1.getCategory().getExampleItem() );
+		em.getTransaction().commit();
+		em.close();
 
 		cleanup();
 	}

@@ -90,18 +90,14 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 			detachedEntitiesForManaged = managedToMergeEntitiesXref.get( managedEntity );
 		}
 		if ( detachedEntitiesForManaged == null ) {
-			// There were no existing representations; instantiate detachedEntitiesForManaged
+			// There were no existing representations for this particular managed entity;
 			detachedEntitiesForManaged = new IdentitySet();
 			managedToMergeEntitiesXref.put( managedEntity, detachedEntitiesForManaged );
-		}
-		// Now add the detached representation for the managed entity; only count the
-		// entity copies that have not already been added to detachedEntitiesForManaged.
-		if ( detachedEntitiesForManaged.add( mergeEntity1 ) ) {
 			incrementEntityNameCount( entityName );
 		}
-		if ( detachedEntitiesForManaged.add( mergeEntity2 ) ) {
-			incrementEntityNameCount( entityName );
-		}
+		// Now add the detached representation for the managed entity;
+		detachedEntitiesForManaged.add( mergeEntity1 );
+		detachedEntitiesForManaged.add( mergeEntity2 );
 	}
 
 	private void incrementEntityNameCount(String entityName) {
@@ -131,7 +127,6 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 		}
 	}
 
-
 	@Override
 	public void topLevelMergeComplete(EventSource session) {
 		// Log the summary.
@@ -141,7 +136,7 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 				final int count = entry.getValue();
 				LOG.debug(
 						String.format(
-								"%s entity copies merged: %d",
+								"Summary: number of %s entities with multiple representations merged: %d",
 								entityName,
 								count
 						)
@@ -156,9 +151,9 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
 				Object managedEntity = entry.getKey();
 				Set mergeEntities = entry.getValue();
-				StringBuilder sb = new StringBuilder( "Found ")
+				StringBuilder sb = new StringBuilder( "Details: merged ")
 						.append( mergeEntities.size() )
-						.append( " entity representations of the same entity " )
+						.append( " representations of the same entity " )
 						.append(
 								MessageHelper.infoString(
 										session.getEntityName( managedEntity ),

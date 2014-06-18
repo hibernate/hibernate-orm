@@ -352,11 +352,13 @@ public class CollectionLoadContext {
 		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister.getKeyType(), persister.getRole() );
 
 		boolean isPutFromLoad = true;
-		for (Serializable id : entry.getState()) {
-			EntityPersister entityPersister = ((QueryableCollection) persister).getElementPersister();
-			if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
-				isPutFromLoad = false;
-				break;
+		if ( persister.getElementType().isAssociationType() ) {
+			for ( Serializable id : entry.getState() ) {
+				EntityPersister entityPersister = ( (QueryableCollection) persister ).getElementPersister();
+				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
+					isPutFromLoad = false;
+					break;
+				}
 			}
 		}
 

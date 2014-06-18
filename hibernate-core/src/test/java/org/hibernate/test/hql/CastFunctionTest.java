@@ -28,6 +28,8 @@ import javax.persistence.Id;
 
 import org.hibernate.Session;
 
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -83,6 +85,7 @@ public class CastFunctionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = { MySQLDialect.class })
 	public void testLongCasting() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -99,6 +102,7 @@ public class CastFunctionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = { MySQLDialect.class })
 	public void testFloatCasting() {
 		Session s = openSession();
 		s.beginTransaction();

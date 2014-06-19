@@ -186,7 +186,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		final String naturalIdCacheRegion = "hibernate.test.org.hibernate.test.naturalid.mutable.cached.Another##NaturalId";
 		sessionFactory().getStatistics().clear();
 
-		final Session session = openSession();
+		Session session = openSession();
 		session.beginTransaction();
 		final Another it = new Another( "IT");
 		session.save( it );
@@ -201,5 +201,11 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends
 		// Refresh statistics reference.
 		statistics = sessionFactory().getStatistics().getNaturalIdCacheStatistics( naturalIdCacheRegion );
 		assertEquals( 0, statistics.getPutCount() );
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( it );
+		session.getTransaction().commit();
+		session.clear();
 	}
 }

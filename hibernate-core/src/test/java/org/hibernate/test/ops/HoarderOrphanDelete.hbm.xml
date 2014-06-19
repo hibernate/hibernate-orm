@@ -34,7 +34,7 @@
         </set>
         <list name="subItemsBackref" lazy="true" cascade="persist,merge,save-update,delete-orphan">
             <key column="parentItem" not-null="true"/>
-            <index column="index"/>
+            <index column="indx"/>
             <one-to-many class="SubItem"/>
         </list>
     </class>

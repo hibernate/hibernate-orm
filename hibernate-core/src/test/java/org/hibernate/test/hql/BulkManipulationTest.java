@@ -45,6 +45,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.TestForIssue;
@@ -1271,7 +1272,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9222" )
+	@FailureExpected( jiraKey = "HHH-9255", message = "failed because HHH-9222 was reverted by HHH-9255." )
 	public void testBulkDeleteOfEntityWithElementCollection() {
 		// set up test data
 		{
@@ -1340,7 +1341,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9222" )
+	@FailureExpected( jiraKey = "HHH-9255", message = "failed because HHH-9222 was reverted by HHH-9255." )
 	public void testBulkDeleteOfMultiTableEntityWithElementCollection() {
 		// set up test data
 		{

@@ -103,7 +103,8 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		}
 
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
-		builder.with( osgiClassLoader );
+		final OSGiClassLoaderServiceImpl classLoaderService = new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil );
+		builder.with( classLoaderService );
 
 		final Integrator[] integrators = osgiServiceUtil.getServiceImpls( Integrator.class );
 		for ( Integrator integrator : integrators ) {
@@ -115,7 +116,7 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
 			builder.withStrategySelectors( strategyRegistrationProvider );
 		}
-        
+
 		final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls( TypeContributor.class );
 		for ( TypeContributor typeContributor : typeContributors ) {
 			configuration.registerTypeContributor( typeContributor );

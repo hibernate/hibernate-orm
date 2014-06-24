@@ -1,6 +1,6 @@
-/* 
+/*
  * Hibernate, Relational Persistence for Idiomatic Java
- * 
+ *
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
@@ -20,39 +20,12 @@
  */
 package org.hibernate.osgi.test.client;
 
-
+import org.hibernate.service.Service;
 
 /**
- * OSGi service interface providing multiple uses of Native and JPA functionality.  The use of a SF/EMF must occur in
- * this separate bundle, rather than attempting to programmatically create a bundle and obtain/use an SF/EMF there.
- * See comments on OsgiTestCase
- * 
- * @author Brett Meyer
+ * A no-op {@link Service} implementation to verify registration of discovered
+ * extension points.
  */
-public interface TestService {
-	public void saveJpa(DataPoint dp);
-	
-	public DataPoint getJpa(long id);
-	
-	public void updateJpa(DataPoint dp);
-	
-	public void deleteJpa();
-	
-	public void saveNative(DataPoint dp);
-	
-	public DataPoint getNative(long id);
-	
-	public void updateNative(DataPoint dp);
-	
-	public void deleteNative();
-	
-	public DataPoint lazyLoad(long id);
-	
-	public TestIntegrator getTestIntegrator();
-	
-	public TestStrategyRegistrationProvider getTestStrategyRegistrationProvider();
-	
-	public TestTypeContributor getTestTypeContributor();
+public class SomeService implements Service {
 
-	public boolean isCustomServiceContributorRegistered();
 }

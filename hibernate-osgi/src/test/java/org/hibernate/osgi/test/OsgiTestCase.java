@@ -216,7 +216,26 @@ public class OsgiTestCase {
 		assertNotNull( testService.getTestTypeContributor() );
 		assertTrue( testService.getTestTypeContributor().passed() );
 	}
-	
+
+	/*
+	 * FIXME: Arquillian testing infrastructure is not ready to
+	 * handle the blueprints configuration yet.
+	 *
+	 * This implies the following test might be wrong as it never worked;
+	 * we know the feature works because of a different test in the
+	 * Hibernate Search project which is using PAX rather than Arquillian.
+	 *
+	@Test
+	@InSequence(2)
+	public void testServiceContributorDiscovery() throws Exception {
+		commonTests();
+
+		final TestService testService = getTestService();
+
+		assertTrue( testService.isCustomServiceContributorRegistered() );
+	}
+	*/
+
 	/**
 	 * Test that stopping the hibernate-osgi bundle happens cleanly.
 	 * 

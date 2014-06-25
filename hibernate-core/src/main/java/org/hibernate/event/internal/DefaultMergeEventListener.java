@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2014, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -61,12 +61,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
                                                                        DefaultMergeEventListener.class.getName());
 
 	@Override
-	protected Map getMergeMap(Object anything) {
-		return ( (MergeContext) anything ).invertMap();
-	}
-
-	protected EntityCopyObserver createEntityCopyObserver() {
-		return new EntityCopyNotAllowedObserver();
+    protected Map getMergeMap(Object anything) {
+		return ( ( EventCache ) anything ).invertMap();
 	}
 
 	/**
@@ -76,16 +72,10 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver();
-		final MergeContext mergeContext = new MergeContext( event.getSession(), entityCopyObserver );
-		try {
-			onMerge( event, mergeContext );
-			entityCopyObserver.topLevelMergeComplete( event.getSession() );
-		}
-		finally {
-			entityCopyObserver.clear();
-			mergeContext.clear();
-		}
+		EventCache copyCache = new EventCache( event.getSession() );
+		onMerge( event, copyCache );
+		copyCache.clear();
+		copyCache = null;
 	}
 
 	/**
@@ -96,7 +86,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 */
 	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
 
-		final MergeContext copyCache = (MergeContext) copiedAlready;
+		final EventCache copyCache = ( EventCache ) copiedAlready;
 		final EventSource source = event.getSession();
 		final Object original = event.getOriginal();
 
@@ -188,7 +178,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		( (MergeContext) copyCache ).put( entity, entity, true );  //before cascade!
+		( ( EventCache ) copyCache ).put( entity, entity, true  );  //before cascade!
 
 		cascadeOnMerge(source, persister, entity, copyCache);
 		copyValues(persister, entity, entity, source, copyCache);
@@ -213,7 +203,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			persister.setIdentifier( copyCache.get( entity ), id, source );
 		}
 		else {
-			( (MergeContext) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
+			( ( EventCache ) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
 		}
 		final Object copy = copyCache.get( entity );
 
@@ -292,7 +282,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			entityIsTransient(event, copyCache);
 		}
 		else {
-			( (MergeContext) copyCache ).put( entity, result, true ); //before cascade!
+			( ( EventCache ) copyCache ).put( entity, result, true ); //before cascade!
 
 			final Object target = source.getPersistenceContext().unproxy(result);
 			if ( target == entity ) {

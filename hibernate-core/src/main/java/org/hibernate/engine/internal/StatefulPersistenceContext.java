@@ -1322,10 +1322,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								unmergedInstance
 						);
-						LOG.debugf(
-								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child.",
-								( found ? "contains" : "does not contain" )
-						);
 					}
 				}
 
@@ -1352,10 +1348,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								mergeMap.get( proxy )
 						);
-						LOG.debugf(
-								"Detached proxy being merged has a collection that [%s] the managed child.",
-								(found ? "contains" : "does not contain")
-						);
 						if ( !found ) {
 							found = isFoundInParent(
 									propertyName,
@@ -1363,10 +1355,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 									persister,
 									collectionPersister,
 									mergeMap.get( proxy )
-							);
-							LOG.debugf(
-									"Detached proxy being merged has a collection that [%s] the detached child being merged..",
-									(found ? "contains" : "does not contain")
 							);
 						}
 						if ( found ) {
@@ -1414,14 +1402,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				Object index = getIndexInParent(property, childEntity, persister, cp, parent);
 
 				if (index==null && mergeMap!=null) {
-					final Object unMergedInstance = mergeMap.get( parent );
-					final Object unMergedChild = mergeMap.get( childEntity );
-					if ( unMergedInstance != null && unMergedChild != null ) {
-						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
-						LOG.debugf(
-								"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
-								( index != null ? "contains" : "does not contain" )
-						);
+					Object unmergedInstance = mergeMap.get(parent);
+					Object unmergedChild = mergeMap.get(childEntity);
+					if ( unmergedInstance!=null && unmergedChild!=null ) {
+						index = getIndexInParent(property, unmergedChild, persister, cp, unmergedInstance);
 					}
 				}
 				if (index!=null) {
@@ -1437,18 +1421,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		for ( Entry<Object, EntityEntry> me : reentrantSafeEntityEntries() ) {
 			EntityEntry ee = me.getValue();
 			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
-				final Object instance = me.getKey();
+				Object instance = me.getKey();
 
-				Object index = getIndexInParent( property, childEntity, persister, cp, instance );
-				if ( index==null && mergeMap!=null ) {
-					final Object unMergedInstance = mergeMap.get( instance );
-					final Object unMergedChild = mergeMap.get( childEntity );
-					if ( unMergedInstance != null && unMergedChild!=null ) {
-						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
-						LOG.debugf(
-								"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
-								(index != null ? "contains" : "does not contain" )
-						);
+				Object index = getIndexInParent(property, childEntity, persister, cp, instance);
+
+				if (index==null && mergeMap!=null) {
+					Object unmergedInstance = mergeMap.get(instance);
+					Object unmergedChild = mergeMap.get(childEntity);
+					if ( unmergedInstance!=null && unmergedChild!=null ) {
+						index = getIndexInParent(property, unmergedChild, persister, cp, unmergedInstance);
 					}
 				}
 

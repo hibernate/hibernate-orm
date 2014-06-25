@@ -57,8 +57,6 @@ final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) )
  */
 task aggregateJavadocs(type: Javadoc) {
     description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
-    options.docletpath = configurations.asciidoclet.files.asType(List)
-    options.doclet = 'org.asciidoctor.Asciidoclet'
 
     final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
 

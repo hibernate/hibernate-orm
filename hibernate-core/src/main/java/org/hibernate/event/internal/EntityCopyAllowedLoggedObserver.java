@@ -163,7 +163,7 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 										session.getIdentifier( managedEntity )
 								)
 						)
-						.append( " being merged: " );
+						.append( "; " );
 				boolean first = true;
 				for ( Object mergeEntity : mergeEntities ) {
 					if ( first ) {

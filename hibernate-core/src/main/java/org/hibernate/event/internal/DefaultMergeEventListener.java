@@ -46,6 +46,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
 
@@ -65,8 +66,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		return ( (MergeContext) anything ).invertMap();
 	}
 
-	protected EntityCopyObserver createEntityCopyObserver() {
-		return new EntityCopyNotAllowedObserver();
+	private EntityCopyObserver createEntityCopyObserver(EventSource session) {
+		final ConfigurationService configurationService
+				= session.getFactory().getServiceRegistry().getService( ConfigurationService.class );
+		return configurationService.getSetting(
+				"hibernate.event.merge.entity_copy_observer",
+				EntityCopyObserver.class,
+				new EntityCopyNotAllowedObserver()
+		);
 	}
 
 	/**
@@ -76,7 +83,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver();
+		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( event.getSession() );
 		final MergeContext mergeContext = new MergeContext( event.getSession(), entityCopyObserver );
 		try {
 			onMerge( event, mergeContext );

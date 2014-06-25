@@ -37,8 +37,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests merging multiple detached representations of the same entity using
- * a the default MergeEventListener (that does not allow this).
+ * Tests merging multiple detached representations of the same entity
+ * using the default {@link org.hibernate.event.internal.EntityCopyObserver},
+ * which does not allow merging entity copies..
  *
  * @author Gail Badner
  */

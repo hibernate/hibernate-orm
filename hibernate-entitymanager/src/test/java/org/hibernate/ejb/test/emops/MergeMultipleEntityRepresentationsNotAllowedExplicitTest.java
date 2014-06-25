@@ -21,25 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.event;
+package org.hibernate.ejb.test.emops;
 
-import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
-import org.hibernate.event.internal.EntityCopyAllowedObserver;
-import org.hibernate.event.internal.EntityCopyObserver;
+import java.util.Map;
+
+import org.hibernate.testing.TestForIssue;
 
 /**
- * Overrides {@link EJB3MergeEventListener} that allows merging multiple representations
- * of the same persistent entity.
+ * Tests merging multiple detached representations of the same entity
+ * using {@link org.hibernate.event.internal.EntityCopyNotAllowedObserver},
+ * which does not allow merging entity copies.
  *
  * @author Gail Badner
  */
-public class EJB3EntityCopyAllowedMergeEventListener extends EJB3MergeEventListener {
+@TestForIssue( jiraKey = "HHH-9106")
+public class MergeMultipleEntityRepresentationsNotAllowedExplicitTest
+		extends MergeMultipleEntityRepresentationsNotAllowedTest {
 
-	@Override
-	protected EntityCopyObserver createEntityCopyObserver() {
-		return EntityCopyAllowedLoggedObserver.isDebugLoggingEnabled() ?
-				new EntityCopyAllowedLoggedObserver() :
-				new EntityCopyAllowedObserver();
+	protected void addConfigOptions(Map options) {
+		options.put(
+				"hibernate.event.merge.entity_copy_observer",
+				"org.hibernate.event.internal.EntityCopyNotAllowedObserver"
+		);
 	}
-
 }

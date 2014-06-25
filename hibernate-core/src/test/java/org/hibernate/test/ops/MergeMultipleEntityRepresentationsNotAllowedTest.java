@@ -29,9 +29,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.event.internal.EntityCopyAllowedMergeEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -40,8 +37,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests merging multiple detached representations of the same entity using
- * a the default MergeEventListener (that does not allow this).
+ * Tests merging multiple detached representations of the same entity
+ * using the default {@link org.hibernate.event.internal.EntityCopyObserver},
+ * which does not allow merging entity copies..
  *
  * @author Gail Badner
  */

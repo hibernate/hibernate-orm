@@ -5,6 +5,15 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.14 (2014.06.25)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-9234] - Test failure (testNaturalIdChangedWhileAttached) on SAP/SYBASE ASE
+    * [HHH-9248] - CastFunctionTest. testFloatCasting and testLongCasting fail on mysql
+    * [HHH-9252] - Error executing batch should abort rest of batch for "cleanliness" sake
+    * [HHH-9255] - Revert HHH-9222 due to bugs in bulk deleting collection elements that use a property-ref
+
 Changes in version 4.2.13 (2014.05.28)
 ------------------------------------------------------------------------------------------------------------------------
 

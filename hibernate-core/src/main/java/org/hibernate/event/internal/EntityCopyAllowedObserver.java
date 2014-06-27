@@ -23,15 +23,19 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 
 /**
- * An {@link EntityCopyObserver} implementation that allows multiple representations of
+ * An {@link org.hibernate.event.spi.EntityCopyObserver} implementation that allows multiple representations of
  * the same persistent entity to be merged.
  *
  * @author Gail Badner
  */
 public class EntityCopyAllowedObserver implements EntityCopyObserver {
+
+	public static final String SHORT_NAME = "allow";
+
 	@Override
 	public void entityCopyDetected(
 			Object managedEntity,

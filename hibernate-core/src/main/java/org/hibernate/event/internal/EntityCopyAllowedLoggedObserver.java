@@ -36,7 +36,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * An {@link EntityCopyObserver} implementation that allows multiple representations of
+ * An {@link org.hibernate.event.spi.EntityCopyObserver} implementation that allows multiple representations of
  * the same persistent entity to be merged and provides logging of the entity copies that
  * that are detected.
  *
@@ -46,6 +46,8 @@ public class EntityCopyAllowedLoggedObserver extends EntityCopyAllowedObserver {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, EntityCopyAllowedLoggedObserver.class.getName()
 	);
+
+	public static final String SHORT_NAME = "log";
 
 	// Tracks the number of entity copies per entity name.
 	private Map<String, Integer> countsByEntityName;

@@ -24,14 +24,11 @@
 package org.hibernate.jpa.test.emops;
 
 import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.jpa.event.internal.core.JpaEntityCopyAllowedMergeEventListener;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 
@@ -41,21 +38,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 /**
- * Tests merging multiple detached representations of the same entity using
- * {@link org.hibernate.jpa.event.internal.core.JpaEntityCopyAllowedMergeEventListener}.
+ * Tests merging multiple detached representations of the same entity.
  *
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-9106")
 public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		super.afterEntityManagerFactoryBuilt();
+	protected void addConfigOptions(Map options) {
 
-		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		EventListenerRegistry registry = sfi.getServiceRegistry().getService( EventListenerRegistry.class );
-		registry.setListeners( EventType.MERGE, new JpaEntityCopyAllowedMergeEventListener() );
+		options.put(
+				"hibernate.event.merge.entity_copy_observer",
+				"allow"
+		);
 	}
 
 	@Test

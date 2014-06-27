@@ -24,6 +24,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.pretty.MessageHelper;
 
@@ -31,6 +32,8 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gail Badner
  */
 public class EntityCopyNotAllowedObserver implements EntityCopyObserver {
+
+	public static final String SHORT_NAME = "disallow";
 
 	@Override
 	public void entityCopyDetected(

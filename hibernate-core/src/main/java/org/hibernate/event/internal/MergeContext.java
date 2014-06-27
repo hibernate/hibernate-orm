@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.pretty.MessageHelper;
 
@@ -53,7 +54,7 @@ import org.hibernate.pretty.MessageHelper;
  * MergeContext already contains an entry with a different entity as the key, but
  * with the same (managedEntity) value, this means that multiple entity representations
  * for the same persistent entity are being merged. If this happens,
- * {@link org.hibernate.event.internal.EntityCopyObserver#entityCopyDetected(
+ * {@link org.hibernate.event.spi.EntityCopyObserver#entityCopyDetected(
  * Object managedEntity, Object mergeEntity1, Object mergeEntity2, org.hibernate.event.spi.EventSource)}
  * will be called. It is up to that method to determine the property course of
  * action for this situation.

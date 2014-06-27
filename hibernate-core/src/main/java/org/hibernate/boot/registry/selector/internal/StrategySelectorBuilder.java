@@ -93,6 +93,10 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatfo
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
+import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
+import org.hibernate.event.internal.EntityCopyAllowedObserver;
+import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
+import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
 import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
@@ -162,6 +166,7 @@ public class StrategySelectorBuilder {
 		addJtaPlatforms( strategySelector );
 		addTransactionFactories( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
+		addEntityCopyObserverStrategies( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -370,6 +375,24 @@ public class StrategySelectorBuilder {
 				MultiTableBulkIdStrategy.class,
 				TemporaryTableBulkIdStrategy.SHORT_NAME,
 				TemporaryTableBulkIdStrategy.class
+		);
+	}
+
+	private void addEntityCopyObserverStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				EntityCopyObserver.class,
+				EntityCopyNotAllowedObserver.SHORT_NAME,
+				EntityCopyNotAllowedObserver.class
+		);
+		strategySelector.registerStrategyImplementor(
+				EntityCopyObserver.class,
+				EntityCopyAllowedObserver.SHORT_NAME,
+				EntityCopyAllowedObserver.class
+		);
+		strategySelector.registerStrategyImplementor(
+				EntityCopyObserver.class,
+				EntityCopyAllowedLoggedObserver.SHORT_NAME,
+				EntityCopyAllowedLoggedObserver.class
 		);
 	}
 }

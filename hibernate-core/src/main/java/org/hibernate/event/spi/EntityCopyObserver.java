@@ -21,21 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.event.spi;
 
-package org.hibernate.event.internal;
+import org.hibernate.event.spi.EventSource;
 
 /**
- * A {@link org.hibernate.event.spi.MergeEventListener} that allows merging
- * multiple representations of the same persistent entity.
+ * An observer for detection of multiple entity representations for a persistent entity being merged.
  *
  * @author Gail Badner
  */
-public class EntityCopyAllowedMergeEventListener extends DefaultMergeEventListener {
+public interface EntityCopyObserver {
 
-	@Override
-	protected EntityCopyObserver createEntityCopyObserver() {
-		return EntityCopyAllowedLoggedObserver.isDebugLoggingEnabled() ?
-				new EntityCopyAllowedLoggedObserver() :
-				new EntityCopyAllowedObserver();
-	}
+	/**
+	 * Called when more than one representation of the same persistent entity is being merged.
+	 *
+	 * @param managedEntity The managed entity in the persistence context (the merge result).
+	 * @param mergeEntity1 A managed or detached entity being merged; must be non-null.
+	 * @param mergeEntity2 A different managed or detached entity being merged; must be non-null.
+	 * @param session The session.
+	 */
+	void entityCopyDetected(Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource session);
+
+	/**
+	 * Called when the top-level merge operation is complete.
+	 *
+	 * @param session The session
+	 */
+	void topLevelMergeComplete(EventSource session);
+
+	/**
+	 * Called to clear any data stored in this EntityCopyObserver.
+	 */
+	void clear();
 }

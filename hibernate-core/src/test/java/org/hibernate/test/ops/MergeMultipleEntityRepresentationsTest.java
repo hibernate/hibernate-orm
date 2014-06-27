@@ -31,9 +31,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
-import org.hibernate.event.internal.EntityCopyAllowedMergeEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -57,9 +55,12 @@ public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTe
 		};
 	}
 
-	protected void afterSessionFactoryBuilt() {
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
-		registry.setListeners( EventType.MERGE, new EntityCopyAllowedMergeEventListener() );
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty(
+				"hibernate.event.merge.entity_copy_observer",
+				"allow"
+		);
 	}
 
 	@Test

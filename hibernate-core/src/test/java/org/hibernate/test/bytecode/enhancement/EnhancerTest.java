@@ -42,6 +42,7 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.engine.internal.DefaultEntityEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -295,7 +296,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 	}
 
 	private EntityEntry makeEntityEntry() {
-		return new EntityEntry(
+		return new DefaultEntityEntry(
 				Status.MANAGED,
 				null,
 				null,

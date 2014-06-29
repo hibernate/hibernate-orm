@@ -366,7 +366,7 @@ public class EntityEntryContext {
 		for ( int i = 0; i < count; i++ ) {
 			final boolean isEnhanced = ois.readBoolean();
 			final Object entity = ois.readObject();
-			final EntityEntry entry = EntityEntry.deserialize( ois, rtn );
+			final EntityEntry entry = DefaultEntityEntry.deserialize( ois, rtn );
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
 				managedEntity = (ManagedEntity) entity;

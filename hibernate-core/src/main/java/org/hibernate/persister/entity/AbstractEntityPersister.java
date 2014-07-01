@@ -5267,7 +5267,7 @@ public abstract class AbstractEntityPersister
 
 		@Override
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
-			return new ReferenceCacheEntryImpl( entity, persister.getEntityName() );
+			return new ReferenceCacheEntryImpl( entity, persister );
 		}
 	}
 

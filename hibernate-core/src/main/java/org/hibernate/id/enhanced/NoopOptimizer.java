@@ -31,13 +31,10 @@ import org.hibernate.id.IntegralDataTypeHolder;
  * An optimizer that performs no optimization.  The database is hit for
  * every request.
  *
- * @deprecated This is the fallback Optimizer chosen when we fail to instantiate one
- * of the proper implementations. Using this implementation is probably a performance
- * problem.
+ * Using this implementation is probably not the most efficient choice.
  */
-@Deprecated
 public final class NoopOptimizer extends AbstractOptimizer {
-	private volatile IntegralDataTypeHolder lastSourceValue;
+	private IntegralDataTypeHolder lastSourceValue;
 
 	/**
 	 * Constructs a NoopOptimizer
@@ -50,9 +47,13 @@ public final class NoopOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		// IMPL NOTE : it is incredibly important that the method-local variable be used here to
-		//		avoid concurrency issues.
+	public Serializable generate(AccessCallback callback) {
+		// IMPL NOTE : this method is called concurrently and is
+		// not synchronized. It is very important to work on the
+		// local variable: the field lastSourceValue is not
+		// reliable as it might be mutated by multipled threads.
+		// The lastSourceValue field is only accessed by tests,
+		// so this is not a concern.
 		IntegralDataTypeHolder value = null;
 		while ( value == null || value.lt( 1 ) ) {
 			value = callback.getNextValue();

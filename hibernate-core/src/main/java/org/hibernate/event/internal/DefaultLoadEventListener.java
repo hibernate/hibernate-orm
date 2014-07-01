@@ -674,7 +674,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister subclassPersister = factory.getEntityPersister( entry.getSubclass() );
+		final EntityPersister subclassPersister;
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
@@ -697,7 +697,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				);
 			}
 
-			entity = ( (ReferenceCacheEntryImpl) entry ).getReference();
+			ReferenceCacheEntryImpl referenceCacheEntry = (ReferenceCacheEntryImpl) entry;
+			entity = referenceCacheEntry.getReference();
 			if ( entity == null ) {
 				throw new IllegalStateException(
 						"Reference cache entry contained null : " + MessageHelper.infoString(
@@ -707,8 +708,10 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 						)
 				);
 			}
+			subclassPersister = referenceCacheEntry.getSubclassPersister();
 		}
 		else {
+			subclassPersister = factory.getEntityPersister( entry.getSubclass() );
 			final Object optionalObject = event.getInstanceToLoad();
 			entity = optionalObject == null
 					? session.instantiate( subclassPersister, entityId )

@@ -37,7 +37,8 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public interface EntityEntry {
+public interface EntityEntry extends EntityEntryExtraState {
+
 	LockMode getLockMode();
 
 	void setLockMode(LockMode lockMode);
@@ -93,4 +94,5 @@ public interface EntityEntry {
 	boolean isLoadedWithLazyPropertiesUnfetched();
 
 	public void serialize(ObjectOutputStream oos) throws IOException;
+
 }

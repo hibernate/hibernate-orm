@@ -1324,10 +1324,10 @@ public class Binder {
 						.getService( ConfigurationService.class )
 						.getSettings()
 		);
-		if ( !properties.contains( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
+		if ( !properties.containsKey( AvailableSettings.PREFER_POOLED_VALUES_LO ) ) {
 			properties.put( AvailableSettings.PREFER_POOLED_VALUES_LO, "false" );
 		}
-		if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) ) {
+		if ( !properties.containsKey( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) ) {
 			properties.put(
 					PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 					rootBindingContext.getMetadataCollector().getObjectNameNormalizer()

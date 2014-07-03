@@ -21,16 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.emops;
+package org.hibernate.test.ops;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.junit.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertFalse;
@@ -38,12 +38,18 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests merging multiple detached representations of the same entity using
- * a the default MergeEventListener (that does not allow this).
+ * a the default (that does not allow this).
  *
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-9106")
-public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntityManagerFunctionalTestCase {
+public class MergeMultipleEntityCopiesDisallowedByDefaultTest extends BaseCoreFunctionalTestCase {
+
+	public String[] getMappings() {
+		return new String[] {
+				"ops/Hoarder.hbm.xml"
+		};
+	}
 
 	@Test
 	public void testCascadeFromDetachedToNonDirtyRepresentations() {
@@ -53,18 +59,18 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 		Hoarder hoarder = new Hoarder();
 		hoarder.setName( "joe" );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( item1 );
-		em.persist( hoarder );
-		em.getTransaction().commit();
-		em.close();
+		Session s = openSession();
+		Transaction tx = session.beginTransaction();
+		s.persist( item1 );
+		s.persist( hoarder );
+		tx.commit();
+		s.close();
 
 		// Get another representation of the same Item from a different session.
 
-		em = getOrCreateEntityManager();
-		Item item1_1 = em.find( Item.class, item1.getId() );
-		em.close();
+		s = openSession();
+		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
+		s.close();
 
 		// item1_1 and item1_2 are unmodified representations of the same persistent entity.
 		assertFalse( item1 == item1_1 );
@@ -74,18 +80,18 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 		hoarder.getItems().add( item1 );
 		hoarder.setFavoriteItem( item1_1 );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		s = openSession();
+		tx = s.beginTransaction();
 		try {
-			em.merge( hoarder );
+			hoarder = (Hoarder) s.merge( hoarder );
 			fail( "should have failed due IllegalStateException");
 		}
 		catch (IllegalStateException ex) {
 			//expected
 		}
 		finally {
-			em.getTransaction().rollback();
-			em.close();
+			tx.rollback();
+			s.close();
 		}
 
 		cleanup();
@@ -100,37 +106,37 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 		item1.setCategory( category );
 		category.setExampleItem( item1 );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( item1 );
-		em.getTransaction().commit();
-		em.close();
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		s.persist( item1 );
+		tx.commit();
+		s.close();
 
 		// get another representation of item1
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Item item1_1 = em.find( Item.class, item1.getId() );
-		em.getTransaction().commit();
-		em.close();
+		s = openSession();
+		tx = s.beginTransaction();
+		Item item1_1 = (Item) s.get( Item.class, item1.getId() );
+		tx.commit();
+		s.close();
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Item item1Merged = em.merge( item1 );
+		s = openSession();
+		tx = s.beginTransaction();
+		Item item1Merged = (Item) s.merge( item1 );
 
 		item1Merged.setCategory( category );
 		category.setExampleItem( item1_1 );
 
 		// now item1Merged is managed and it has a nested detached item
 		try {
-			em.merge( item1Merged );
+			s.merge( item1Merged );
 			fail( "should have failed due IllegalStateException");
 		}
 		catch (IllegalStateException ex) {
 			//expected
 		}
 		finally {
-			em.getTransaction().rollback();
-			em.close();
+			tx.rollback();
+			s.close();
 		}
 
 		cleanup();
@@ -138,38 +144,30 @@ public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntity
 
 	@SuppressWarnings( {"unchecked"})
 	private void cleanup() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		Session s = openSession();
+		s.beginTransaction();
 
-		for ( Hoarder hoarder : (List<Hoarder>) em.createQuery( "from Hoarder" ).getResultList() ) {
+		s.createQuery( "delete from SubItem" ).executeUpdate();
+		for ( Hoarder hoarder : (List<Hoarder>) s.createQuery( "from Hoarder" ).list() ) {
 			hoarder.getItems().clear();
-			em.remove( hoarder );
+			s.delete( hoarder );
 		}
 
-		for ( Category category : (List<Category>) em.createQuery( "from Category" ).getResultList() ) {
+		for ( Category category : (List<Category>) s.createQuery( "from Category" ).list() ) {
 			if ( category.getExampleItem() != null ) {
 				category.setExampleItem( null );
-				em.remove( category );
+				s.delete( category );
 			}
 		}
 
-		for ( Item item : (List<Item>) em.createQuery( "from Item" ).getResultList() ) {
+		for ( Item item : (List<Item>) s.createQuery( "from Item" ).list() ) {
 			item.setCategory( null );
-			em.remove( item );
+			s.delete( item );
 		}
 
-		em.createQuery( "delete from Item" ).executeUpdate();
+		s.createQuery( "delete from Item" ).executeUpdate();
 
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Category.class,
-				Hoarder.class,
-				Item.class
-		};
+		s.getTransaction().commit();
+		s.close();
 	}
 }

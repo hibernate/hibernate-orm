@@ -24,7 +24,7 @@
 package org.hibernate.jpa.test.emops;
 
 import java.util.List;
-import java.util.Map;
+
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
@@ -32,26 +32,18 @@ import org.junit.Test;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 /**
- * Tests merging multiple detached representations of the same entity.
+ * Tests merging multiple detached representations of the same entity when
+ * not allowed by default.
  *
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-9106")
-public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityManagerFunctionalTestCase {
-
-	protected void addConfigOptions(Map options) {
-
-		options.put(
-				"hibernate.event.merge.entity_copy_observer",
-				"allow"
-		);
-	}
+public class MergeMultipleEntityCopiesDisallowedByDefaultTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testCascadeFromDetachedToNonDirtyRepresentations() {
@@ -68,7 +60,7 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 		em.getTransaction().commit();
 		em.close();
 
-		// Get another representation of the same Item from a different EntityManager.
+		// Get another representation of the same Item from a different session.
 
 		em = getOrCreateEntityManager();
 		Item item1_1 = em.find( Item.class, item1.getId() );
@@ -84,27 +76,20 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		hoarder = em.merge( hoarder );
-		assertEquals( 1, hoarder.getItems().size() );
-		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
-		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
-		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		hoarder = em.merge( hoarder );
-		assertEquals( 1, hoarder.getItems().size() );
-		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
-		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
-		assertEquals( item1.getCategory(), hoarder.getFavoriteItem().getCategory() );
-		em.getTransaction().commit();
-		em.close();
+		try {
+			em.merge( hoarder );
+			fail( "should have failed due IllegalStateException");
+		}
+		catch (IllegalStateException ex) {
+			//expected
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 
 		cleanup();
 	}
-
 
 	@Test
 	public void testTopLevelManyToOneManagedNestedIsDetached() {
@@ -136,19 +121,17 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 		category.setExampleItem( item1_1 );
 
 		// now item1Merged is managed and it has a nested detached item
-		em.merge( item1Merged );
-		assertEquals( category.getName(), item1Merged.getCategory().getName() );
-		assertSame( item1Merged, item1Merged.getCategory().getExampleItem() );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		item1 = em.find( Item.class, item1.getId() );
-		assertEquals( category.getName(), item1.getCategory().getName() );
-		assertSame( item1, item1.getCategory().getExampleItem() );
-		em.getTransaction().commit();
-		em.close();
+		try {
+			em.merge( item1Merged );
+			fail( "should have failed due IllegalStateException");
+		}
+		catch (IllegalStateException ex) {
+			//expected
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 
 		cleanup();
 	}

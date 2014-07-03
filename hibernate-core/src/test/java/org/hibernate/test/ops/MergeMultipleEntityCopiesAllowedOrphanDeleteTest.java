@@ -36,17 +36,16 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests merging multiple detached representations of the same entity
+ * Tests merging multiple detached representations of the same entity (allowed)
  * where some associations include cascade="delete-orphan"
  *
  * @author Gail Badner
  */
-public class MergeMultipleEntityRepresentationsOrphanDeleteTest extends BaseCoreFunctionalTestCase {
+public class MergeMultipleEntityCopiesAllowedOrphanDeleteTest extends BaseCoreFunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] {

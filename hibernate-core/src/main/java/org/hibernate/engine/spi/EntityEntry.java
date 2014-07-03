@@ -174,7 +174,7 @@ public final class EntityEntry implements Serializable {
 	}
 
 	public LockMode getLockMode() {
-		return getCompressedValue( EnumState.LOCK_MODE, LockMode.class );
+		return getCompressedValue( EnumState.LOCK_MODE );
 	}
 
 	public void setLockMode(LockMode lockMode) {
@@ -182,11 +182,11 @@ public final class EntityEntry implements Serializable {
 	}
 
 	public Status getStatus() {
-		return getCompressedValue( EnumState.STATUS, Status.class );
+		return getCompressedValue( EnumState.STATUS );
 	}
 
 	private Status getPreviousStatus() {
-		return getCompressedValue( EnumState.PREVIOUS_STATUS, Status.class );
+		return getCompressedValue( EnumState.PREVIOUS_STATUS );
 	}
 
 	public void setStatus(Status status) {
@@ -552,7 +552,7 @@ public final class EntityEntry implements Serializable {
 	 *            the value to store; The caller must make sure that it matches
 	 *            the given identifier
 	 */
-	private void setCompressedValue(EnumState state, Enum<?> value) {
+	private <E extends Enum<E>> void setCompressedValue(EnumState<E> state, E value) {
 		// reset the bits for the given property to 0
 		compressedState &= state.getUnsetMask();
 		// store the numeric representation of the enum value at the right offset
@@ -564,17 +564,12 @@ public final class EntityEntry implements Serializable {
 	 *
 	 * @param state
 	 *            identifies the value to store
-	 * @param type
-	 *            the actual enum type of the given property; The caller must
-	 *            make sure that it matches the given identifier
 	 * @return the current value of the specified property
 	 */
-	private <E extends Enum<?>> E getCompressedValue(EnumState state, Class<E> type) {
-		@SuppressWarnings("unchecked")
-		E[] enumConstants = (E[]) state.getEnumConstants();
+	private <E extends Enum<E>> E getCompressedValue(EnumState<E> state) {
 		// restore the numeric value from the bits at the right offset and return the corresponding enum constant
 		int index = ( ( compressedState & state.getMask() ) >> state.getOffset() ) - 1;
-		return index == - 1 ? null : enumConstants[index];
+		return index == - 1 ? null : state.getEnumConstants()[index];
 	}
 
 	/**
@@ -606,18 +601,18 @@ public final class EntityEntry implements Serializable {
 	 *
 	 * @author Gunnar Morling
 	 */
-	private enum EnumState {
+	private static class EnumState<E extends Enum<E>> {
 
-		LOCK_MODE(0, LockMode.class),
-		STATUS(4, Status.class),
-		PREVIOUS_STATUS(8, Status.class);
+		private static final EnumState<LockMode> LOCK_MODE = new EnumState<LockMode>( 0, LockMode.class );
+		private static final EnumState<Status> STATUS = new EnumState<Status>( 4, Status.class );
+		private static final EnumState<Status> PREVIOUS_STATUS = new EnumState<Status>( 8, Status.class );
 
 		private final int offset;
-		private Object[] enumConstants;
+		private final E[] enumConstants;
 		private final int mask;
 		private final int unsetMask;
 
-		private <E extends Enum<?>> EnumState(int offset, Class<E> enumType) {
+		private EnumState(int offset, Class<E> enumType) {
 			E[] enumConstants = enumType.getEnumConstants();
 
 			// In case any of the enums cannot be stored in 4 bits anymore, we'd have to re-structure the compressed
@@ -640,7 +635,7 @@ public final class EntityEntry implements Serializable {
 		/**
 		 * Returns the numeric value to be stored for the given enum value.
 		 */
-		private int getValue(Enum<?> value) {
+		private int getValue(E value) {
 			return value != null ? value.ordinal() + 1 : 0;
 		}
 
@@ -668,7 +663,7 @@ public final class EntityEntry implements Serializable {
 		/**
 		 * Returns the constants of the represented enum which is cached for performance reasons.
 		 */
-		private Object[] getEnumConstants() {
+		private E[] getEnumConstants() {
 			return enumConstants;
 		}
 	}

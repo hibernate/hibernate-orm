@@ -42,10 +42,10 @@ import org.hibernate.pretty.MessageHelper;
 
 /**
  * We need an entry to tell us all about the current state of an object with respect to its persistent state
- * 
+ *
  * Implementation Warning: Hibernate needs to instantiate a high amount of instances of this class,
  * therefore we need to take care of its impact on memory consumption.
- * 
+ *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  * @author Gunnar Morling
@@ -451,7 +451,7 @@ public final class EntityEntry implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityEntry" + 
+		return "EntityEntry" +
 				MessageHelper.infoString( getPersister().getEntityName(), id ) +
 				'(' + getStatus() + ')';
 	}
@@ -570,7 +570,8 @@ public final class EntityEntry implements Serializable {
 	 * @return the current value of the specified property
 	 */
 	private <E extends Enum<?>> E getCompressedValue(EnumState state, Class<E> type) {
-		E[] enumConstants = type.getEnumConstants();
+		@SuppressWarnings("unchecked")
+		E[] enumConstants = (E[]) state.getEnumConstants();
 		// restore the numeric value from the bits at the right offset and return the corresponding enum constant
 		int index = ( ( compressedState & state.getMask() ) >> state.getOffset() ) - 1;
 		return index == - 1 ? null : enumConstants[index];
@@ -612,18 +613,22 @@ public final class EntityEntry implements Serializable {
 		PREVIOUS_STATUS(8, Status.class);
 
 		private final int offset;
+		private Object[] enumConstants;
 		private final int mask;
 		private final int unsetMask;
 
 		private <E extends Enum<?>> EnumState(int offset, Class<E> enumType) {
+			E[] enumConstants = enumType.getEnumConstants();
+
 			// In case any of the enums cannot be stored in 4 bits anymore, we'd have to re-structure the compressed
 			// state int
-			if ( enumType.getEnumConstants().length > 15 ) {
+			if ( enumConstants.length > 15 ) {
 				throw new AssertionFailure( "Cannot store enum type " + enumType.getName() + " in compressed state as"
 						+ " it has too many values." );
 			}
 
 			this.offset = offset;
+			this.enumConstants = enumConstants;
 
 			// a mask for reading the four bits, starting at the right offset
 			this.mask = 0xF << offset;
@@ -658,6 +663,13 @@ public final class EntityEntry implements Serializable {
 		 */
 		private int getUnsetMask() {
 			return unsetMask;
+		}
+
+		/**
+		 * Returns the constants of the represented enum which is cached for performance reasons.
+		 */
+		private Object[] getEnumConstants() {
+			return enumConstants;
 		}
 	}
 

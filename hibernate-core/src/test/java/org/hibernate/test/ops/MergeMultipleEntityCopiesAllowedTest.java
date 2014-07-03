@@ -43,11 +43,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Tests merging multiple detached representations of the same entity.
+ * Tests merging multiple detached representations of the same entity when explicitly allowed.
  *
  * @author Gail Badner
  */
-public class MergeMultipleEntityRepresentationsTest extends BaseCoreFunctionalTestCase {
+public class MergeMultipleEntityCopiesAllowedTest extends BaseCoreFunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] {

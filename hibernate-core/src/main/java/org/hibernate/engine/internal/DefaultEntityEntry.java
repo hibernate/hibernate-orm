@@ -158,15 +158,18 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		this.persistenceContext = persistenceContext;
 	}
 
-	@Override public LockMode getLockMode() {
+	@Override
+	public LockMode getLockMode() {
 		return getCompressedValue( EnumState.LOCK_MODE );
 	}
 
-	@Override public void setLockMode(LockMode lockMode) {
+	@Override
+	public void setLockMode(LockMode lockMode) {
 		setCompressedValue( EnumState.LOCK_MODE, lockMode );
 	}
 
-	@Override public Status getStatus() {
+	@Override
+	public Status getStatus() {
 		return getCompressedValue( EnumState.STATUS );
 	}
 
@@ -174,7 +177,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		return getCompressedValue( EnumState.PREVIOUS_STATUS );
 	}
 
-	@Override public void setStatus(Status status) {
+	@Override
+	public void setStatus(Status status) {
 		if (status==Status.READ_ONLY) {
 			loadedState = null; //memory optimization
 		}
@@ -187,22 +191,26 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		}
 	}
 
-	@Override public Serializable getId() {
+	@Override
+	public Serializable getId() {
 		return id;
 	}
 
-	@Override public Object[] getLoadedState() {
+	@Override
+	public Object[] getLoadedState() {
 		return loadedState;
 	}
 
 	private static final Object[] DEFAULT_DELETED_STATE = null;
 
-	@Override public Object[] getDeletedState() {
+	@Override
+	public Object[] getDeletedState() {
 		EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
 		return extra != null ? extra.getDeletedState() : DEFAULT_DELETED_STATE;
 	}
 
-	@Override public void setDeletedState(Object[] deletedState) {
+	@Override
+	public void setDeletedState(Object[] deletedState) {
 		EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
 		if ( extra == null && deletedState == DEFAULT_DELETED_STATE ) {
 			//this is the default value and we do not store the extra state
@@ -215,15 +223,18 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		extra.setDeletedState( deletedState );
 	}
 
-	@Override public boolean isExistsInDatabase() {
+	@Override
+	public boolean isExistsInDatabase() {
 		return getCompressedValue( BooleanState.EXISTS_IN_DATABASE );
 	}
 
-	@Override public Object getVersion() {
+	@Override
+	public Object getVersion() {
 		return version;
 	}
 
-	@Override public EntityPersister getPersister() {
+	@Override
+	public EntityPersister getPersister() {
 		return persister;
 	}
 
@@ -232,7 +243,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * @return the EntityKey
 	 * @throws  IllegalStateException if getId() is null
 	 */
-	@Override public EntityKey getEntityKey() {
+	@Override
+	public EntityKey getEntityKey() {
 		if ( cachedEntityKey == null ) {
 			if ( getId() == null ) {
 				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
@@ -242,15 +254,18 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		return cachedEntityKey;
 	}
 
-	@Override public String getEntityName() {
+	@Override
+	public String getEntityName() {
 		return persister == null ? null : persister.getEntityName();
 	}
 
-	@Override public boolean isBeingReplicated() {
+	@Override
+	public boolean isBeingReplicated() {
 		return getCompressedValue( BooleanState.IS_BEING_REPLICATED );
 	}
 
-	@Override public Object getRowId() {
+	@Override
+	public Object getRowId() {
 		return rowId;
 	}
 
@@ -264,7 +279,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * new {@link #getLoadedState() loaded state}.
 	 * @param nextVersion The new version.
 	 */
-	@Override public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
+	@Override
+	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
 		this.loadedState = updatedState;
 		setLockMode( LockMode.WRITE );
 
@@ -294,7 +310,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * After actually deleting a row, record the fact that the instance no longer
 	 * exists in the database
 	 */
-	@Override public void postDelete() {
+	@Override
+	public void postDelete() {
 		setCompressedValue( EnumState.PREVIOUS_STATUS, getStatus() );
 		setCompressedValue( EnumState.STATUS, Status.GONE );
 		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, false );
@@ -304,11 +321,13 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * After actually inserting a row, record the fact that the instance exists on the 
 	 * database (needed for identity-column key generation)
 	 */
-	@Override public void postInsert(Object[] insertedState) {
+	@Override
+	public void postInsert(Object[] insertedState) {
 		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, true );
 	}
 
-	@Override public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
+	@Override
+	public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
 		if ( getStatus() == Status.SAVING ) {
 			return true;
 		}
@@ -320,7 +339,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		}
 	}
 
-	@Override public Object getLoadedValue(String propertyName) {
+	@Override
+	public Object getLoadedValue(String propertyName) {
 		if ( loadedState == null || propertyName == null ) {
 			return null;
 		}
@@ -342,7 +362,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * @return {@code true} indicates that the entity could possibly be dirty and that dirty check
 	 * should happen; {@code false} indicates there is no way the entity can be dirty
 	 */
-	@Override public boolean requiresDirtyCheck(Object entity) {
+	@Override
+	public boolean requiresDirtyCheck(Object entity) {
 		return isModifiableEntity()
 				&& ( !isUnequivocallyNonDirty( entity ) );
 	}
@@ -382,7 +403,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * </ul>
 	 * @return true, if the entity is modifiable; false, otherwise,
 	 */
-	@Override public boolean isModifiableEntity() {
+	@Override
+	public boolean isModifiableEntity() {
 		Status status = getStatus();
 		Status previousStatus = getPreviousStatus();
 		return getPersister().isMutable()
@@ -390,7 +412,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 				&& ! ( status == Status.DELETED && previousStatus == Status.READ_ONLY );
 	}
 
-	@Override public void forceLocked(Object entity, Object nextVersion) {
+	@Override
+	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		loadedState[ persister.getVersionProperty() ] = version;
 		// TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
@@ -399,7 +422,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		persister.setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 	}
 
-	@Override public boolean isReadOnly() {
+	@Override
+	public boolean isReadOnly() {
 		Status status = getStatus();
 		if ( status != Status.MANAGED && status != Status.READ_ONLY ) {
 			throw new HibernateException( "instance was not in a valid state" );
@@ -407,7 +431,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		return status == Status.READ_ONLY;
 	}
 
-	@Override public void setReadOnly(boolean readOnly, Object entity) {
+	@Override
+	public void setReadOnly(boolean readOnly, Object entity) {
 		if ( readOnly == isReadOnly() ) {
 			// simply return since the status is not being changed
 			return;
@@ -437,7 +462,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		return "DefaultEntityEntry" + MessageHelper.infoString( getPersister().getEntityName(), id ) + '(' + getStatus() + ')';
 	}
 
-	@Override public boolean isLoadedWithLazyPropertiesUnfetched() {
+	@Override
+	public boolean isLoadedWithLazyPropertiesUnfetched() {
 		return getCompressedValue( BooleanState.LOADED_WITH_LAZY_PROPERTIES_UNFETCHED );
 	}
 

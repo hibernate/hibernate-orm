@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010-1014, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010-2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -28,6 +28,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -47,32 +48,51 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Safe approach implementation of {@link org.hibernate.engine.spi.EntityEntry}.
+ * Default implementation of {@link org.hibernate.engine.spi.EntityEntry}.
  * <p>
- * Smarter implementations could have less states.
+ * Implementation Warning: Hibernate needs to instantiate a high amount of instances of this class,
+ * therefore we need to take care of its impact on memory consumption.
  *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author Gunnar Morling
+ * @author Sanne Grinovero  <sanne@hibernate.org>
  */
 public final class DefaultEntityEntry implements Serializable, EntityEntry {
-	private LockMode lockMode;
-	private Status status;
-	private Status previousStatus;
 	private final Serializable id;
 	private Object[] loadedState;
-	private Object[] deletedState;
-	private boolean existsInDatabase;
 	private Object version;
-	private transient EntityPersister persister;
-	private final String entityName;
-	// cached EntityKey (lazy-initialized)
-	private transient EntityKey cachedEntityKey;
-	private boolean isBeingReplicated;
-	//NOTE: this is not updated when properties are fetched lazily!
-	private boolean loadedWithLazyPropertiesUnfetched;
+	private final EntityPersister persister; // permanent but we only need the entityName state in a non transient way
+	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	private final transient Object rowId;
 	private final transient PersistenceContext persistenceContext;
 	private EntityEntryExtraState next;
+
+	/**
+	 * Holds several boolean and enum typed attributes in a very compact manner. Enum values are stored in 4 bits
+	 * (where 0 represents {@code null}, and each enum value is represented by its ordinal value + 1), thus allowing
+	 * for up to 15 values per enum. Boolean values are stored in one bit.
+	 * <p>
+	 * The value is structured as follows:
+	 *
+	 * <pre>
+	 * 1 - Lock mode
+	 * 2 - Status
+	 * 3 - Previous Status
+	 * 4 - existsInDatabase
+	 * 5 - isBeingReplicated
+	 * 6 - loadedWithLazyPropertiesUnfetched; NOTE: this is not updated when properties are fetched lazily!
+	 *
+	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
+	 * </pre>
+	 * Use {@link #setCompressedValue(org.hibernate.engine.internal.DefaultEntityEntry.EnumState, Enum)},
+	 * {@link #getCompressedValue(org.hibernate.engine.internal.DefaultEntityEntry.EnumState)} etc
+	 * to access the enums and booleans stored in this value.
+	 * <p>
+	 * Representing enum values by their ordinal value is acceptable for our case as this value itself is never
+	 * serialized or deserialized and thus is not affected should ordinal values change.
+	 */
+	private transient int compressedState;
 
 	public DefaultEntityEntry(
 			final Status status,
@@ -86,21 +106,21 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 			final boolean disableVersionIncrement,
 			final boolean lazyPropertiesAreUnfetched,
 			final PersistenceContext persistenceContext) {
-		this.status = status;
-		this.previousStatus = null;
+		setCompressedValue( EnumState.STATUS, status );
+		// not useful strictly speaking but more explicit
+		setCompressedValue( EnumState.PREVIOUS_STATUS, null );
 		// only retain loaded state if the status is not Status.READ_ONLY
 		if ( status != Status.READ_ONLY ) {
 			this.loadedState = loadedState;
 		}
 		this.id=id;
 		this.rowId=rowId;
-		this.existsInDatabase=existsInDatabase;
+		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
 		this.version=version;
-		this.lockMode=lockMode;
-		this.isBeingReplicated=disableVersionIncrement;
-		this.loadedWithLazyPropertiesUnfetched = lazyPropertiesAreUnfetched;
+		setCompressedValue( EnumState.LOCK_MODE, lockMode );
+		setCompressedValue( BooleanState.IS_BEING_REPLICATED, disableVersionIncrement );
+		setCompressedValue( BooleanState.LOADED_WITH_LAZY_PROPERTIES_UNFETCHED, lazyPropertiesAreUnfetched );
 		this.persister=persister;
-		this.entityName = persister == null ? null : persister.getEntityName();
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -122,47 +142,48 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 			final boolean isBeingReplicated,
 			final boolean loadedWithLazyPropertiesUnfetched,
 			final PersistenceContext persistenceContext) {
-		this.entityName = entityName;
 		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
 		this.id = id;
-		this.status = status;
-		this.previousStatus = previousStatus;
+		setCompressedValue( EnumState.STATUS, status );
+		setCompressedValue( EnumState.PREVIOUS_STATUS, previousStatus );
 		this.loadedState = loadedState;
-		this.deletedState = deletedState;
+		setDeletedState( deletedState );
 		this.version = version;
-		this.lockMode = lockMode;
-		this.existsInDatabase = existsInDatabase;
-		this.isBeingReplicated = isBeingReplicated;
-		this.loadedWithLazyPropertiesUnfetched = loadedWithLazyPropertiesUnfetched;
+		setCompressedValue( EnumState.LOCK_MODE, lockMode );
+		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
+		setCompressedValue( BooleanState.IS_BEING_REPLICATED, isBeingReplicated );
+		setCompressedValue( BooleanState.LOADED_WITH_LAZY_PROPERTIES_UNFETCHED, loadedWithLazyPropertiesUnfetched );
 		// this is equivalent to the old behavior...
 		this.rowId = null;
 		this.persistenceContext = persistenceContext;
 	}
 
 	@Override public LockMode getLockMode() {
-		return lockMode;
+		return getCompressedValue( EnumState.LOCK_MODE );
 	}
 
 	@Override public void setLockMode(LockMode lockMode) {
-		this.lockMode = lockMode;
+		setCompressedValue( EnumState.LOCK_MODE, lockMode );
 	}
 
 	@Override public Status getStatus() {
-		return status;
+		return getCompressedValue( EnumState.STATUS );
 	}
 
-	@Override public Status getPreviousStatus() {
-		return previousStatus;
+	private Status getPreviousStatus() {
+		return getCompressedValue( EnumState.PREVIOUS_STATUS );
 	}
 
 	@Override public void setStatus(Status status) {
-		if ( status == Status.READ_ONLY ) {
-			//memory optimization
-			loadedState = null;
+		if (status==Status.READ_ONLY) {
+			loadedState = null; //memory optimization
 		}
-		if ( this.status != status ) {
-			this.previousStatus = this.status;
-			this.status = status;
+
+		Status currentStatus = this.getStatus();
+
+		if ( currentStatus != status ) {
+			setCompressedValue( EnumState.PREVIOUS_STATUS, currentStatus );
+			setCompressedValue( EnumState.STATUS, status );
 		}
 	}
 
@@ -174,16 +195,28 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		return loadedState;
 	}
 
+	private static final Object[] DEFAULT_DELETED_STATE = null;
+
 	@Override public Object[] getDeletedState() {
-		return deletedState;
+		EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
+		return extra != null ? extra.getDeletedState() : DEFAULT_DELETED_STATE;
 	}
 
 	@Override public void setDeletedState(Object[] deletedState) {
-		this.deletedState = deletedState;
+		EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
+		if ( extra == null && deletedState == DEFAULT_DELETED_STATE ) {
+			//this is the default value and we do not store the extra state
+			return;
+		}
+		if ( extra == null ) {
+			extra = new EntityEntryExtraStateHolder();
+			addExtraState( extra );
+		}
+		extra.setDeletedState( deletedState );
 	}
 
 	@Override public boolean isExistsInDatabase() {
-		return existsInDatabase;
+		return getCompressedValue( BooleanState.EXISTS_IN_DATABASE );
 	}
 
 	@Override public Object getVersion() {
@@ -210,11 +243,11 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override public String getEntityName() {
-		return entityName;
+		return persister == null ? null : persister.getEntityName();
 	}
 
 	@Override public boolean isBeingReplicated() {
-		return isBeingReplicated;
+		return getCompressedValue( BooleanState.IS_BEING_REPLICATED );
 	}
 
 	@Override public Object getRowId() {
@@ -262,9 +295,9 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * exists in the database
 	 */
 	@Override public void postDelete() {
-		previousStatus = status;
-		status = Status.GONE;
-		existsInDatabase = false;
+		setCompressedValue( EnumState.PREVIOUS_STATUS, getStatus() );
+		setCompressedValue( EnumState.STATUS, Status.GONE );
+		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, false );
 	}
 
 	/**
@@ -272,7 +305,7 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * database (needed for identity-column key generation)
 	 */
 	@Override public void postInsert(Object[] insertedState) {
-		existsInDatabase = true;
+		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, true );
 	}
 
 	@Override public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
@@ -350,6 +383,8 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * @return true, if the entity is modifiable; false, otherwise,
 	 */
 	@Override public boolean isModifiableEntity() {
+		Status status = getStatus();
+		Status previousStatus = getPreviousStatus();
 		return getPersister().isMutable()
 				&& status != Status.READ_ONLY
 				&& ! ( status == Status.DELETED && previousStatus == Status.READ_ONLY );
@@ -365,6 +400,7 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override public boolean isReadOnly() {
+		Status status = getStatus();
 		if ( status != Status.MANAGED && status != Status.READ_ONLY ) {
 			throw new HibernateException( "instance was not in a valid state" );
 		}
@@ -398,11 +434,11 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public String toString() {
-		return "DefaultEntityEntry" + MessageHelper.infoString( entityName, id ) + '(' + status + ')';
+		return "DefaultEntityEntry" + MessageHelper.infoString( getPersister().getEntityName(), id ) + '(' + getStatus() + ')';
 	}
 
 	@Override public boolean isLoadedWithLazyPropertiesUnfetched() {
-		return loadedWithLazyPropertiesUnfetched;
+		return getCompressedValue( BooleanState.LOADED_WITH_LAZY_PROPERTIES_UNFETCHED );
 	}
 
 	/**
@@ -414,10 +450,10 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 	 * @throws java.io.IOException If a stream error occurs
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		oos.writeObject( getEntityName() );
-		oos.writeObject( getId() );
-		oos.writeObject( getStatus().name() );
 		Status previousStatus = getPreviousStatus();
+		oos.writeObject( getEntityName() );
+		oos.writeObject( id );
+		oos.writeObject( getStatus().name() );
 		oos.writeObject( (previousStatus == null ? "" : previousStatus.name()) );
 		// todo : potentially look at optimizing these two arrays
 		oos.writeObject( getLoadedState() );
@@ -488,6 +524,177 @@ public final class DefaultEntityEntry implements Serializable, EntityEntry {
 		}
 		else {
 			return next.getExtraState( extraStateType );
+		}
+	}
+	/**
+	 * Saves the value for the given enum property.
+	 *
+	 * @param state
+	 *            identifies the value to store
+	 * @param value
+	 *            the value to store; The caller must make sure that it matches
+	 *            the given identifier
+	 */
+	private <E extends Enum<E>> void setCompressedValue(EnumState<E> state, E value) {
+		// reset the bits for the given property to 0
+		compressedState &= state.getUnsetMask();
+		// store the numeric representation of the enum value at the right offset
+		compressedState |= ( state.getValue( value ) << state.getOffset() );
+	}
+
+	/**
+	 * Gets the current value of the given enum property.
+	 *
+	 * @param state
+	 *            identifies the value to store
+	 * @return the current value of the specified property
+	 */
+	private <E extends Enum<E>> E getCompressedValue(EnumState<E> state) {
+		// restore the numeric value from the bits at the right offset and return the corresponding enum constant
+		int index = ( ( compressedState & state.getMask() ) >> state.getOffset() ) - 1;
+		return index == - 1 ? null : state.getEnumConstants()[index];
+	}
+
+	/**
+	 * Saves the value for the given boolean flag.
+	 *
+	 * @param state
+	 *            identifies the value to store
+	 * @param value
+	 *            the value to store
+	 */
+	private void setCompressedValue(BooleanState state, boolean value) {
+		compressedState &= state.getUnsetMask();
+		compressedState |= ( state.getValue( value ) << state.getOffset() );
+	}
+
+	/**
+	 * Gets the current value of the given boolean flag.
+	 *
+	 * @param state
+	 *            identifies the value to store
+	 * @return the current value of the specified flag
+	 */
+	private boolean getCompressedValue(BooleanState state) {
+		return ( ( compressedState & state.getMask() ) >> state.getOffset() ) == 1;
+	}
+
+	/**
+	 * Represents an enum value stored within a number value, using four bits starting at a specified offset.
+	 *
+	 * @author Gunnar Morling
+	 */
+	private static class EnumState<E extends Enum<E>> {
+
+		private static final EnumState<LockMode> LOCK_MODE = new EnumState<LockMode>( 0, LockMode.class );
+		private static final EnumState<Status> STATUS = new EnumState<Status>( 4, Status.class );
+		private static final EnumState<Status> PREVIOUS_STATUS = new EnumState<Status>( 8, Status.class );
+
+		private final int offset;
+		private final E[] enumConstants;
+		private final int mask;
+		private final int unsetMask;
+
+		private EnumState(int offset, Class<E> enumType) {
+			E[] enumConstants = enumType.getEnumConstants();
+
+			// In case any of the enums cannot be stored in 4 bits anymore, we'd have to re-structure the compressed
+			// state int
+			if ( enumConstants.length > 15 ) {
+				throw new AssertionFailure( "Cannot store enum type " + enumType.getName() + " in compressed state as"
+						+ " it has too many values." );
+			}
+
+			this.offset = offset;
+			this.enumConstants = enumConstants;
+
+			// a mask for reading the four bits, starting at the right offset
+			this.mask = 0xF << offset;
+
+			// a mask for setting the four bits at the right offset to 0
+			this.unsetMask = 0xFFFF & ~mask;
+		}
+
+		/**
+		 * Returns the numeric value to be stored for the given enum value.
+		 */
+		private int getValue(E value) {
+			return value != null ? value.ordinal() + 1 : 0;
+		}
+
+		/**
+		 * Returns the offset within the number value at which this enum value is stored.
+		 */
+		private int getOffset() {
+			return offset;
+		}
+
+		/**
+		 * Returns the bit mask for reading this enum value from the number value storing it.
+		 */
+		private int getMask() {
+			return mask;
+		}
+
+		/**
+		 * Returns the bit mask for resetting this enum value from the number value storing it.
+		 */
+		private int getUnsetMask() {
+			return unsetMask;
+		}
+
+		/**
+		 * Returns the constants of the represented enum which is cached for performance reasons.
+		 */
+		private E[] getEnumConstants() {
+			return enumConstants;
+		}
+	}
+
+	/**
+	 * Represents a boolean flag stored within a number value, using one bit at a specified offset.
+	 *
+	 * @author Gunnar Morling
+	 */
+	private enum BooleanState {
+
+		EXISTS_IN_DATABASE(13),
+		IS_BEING_REPLICATED(14),
+		LOADED_WITH_LAZY_PROPERTIES_UNFETCHED(15);
+
+		private final int offset;
+		private final int mask;
+		private final int unsetMask;
+
+		private BooleanState(int offset) {
+			this.offset = offset;
+			this.mask = 0x1 << offset;
+			this.unsetMask = 0xFFFF & ~mask;
+		}
+
+		private int getValue(boolean value) {
+			return value ? 1 : 0;
+		}
+
+		/**
+		 * Returns the offset within the number value at which this boolean flag is stored.
+		 */
+		private int getOffset() {
+			return offset;
+		}
+
+		/**
+		 * Returns the bit mask for reading this flag from the number value storing it.
+		 */
+		private int getMask() {
+			return mask;
+		}
+
+		/**
+		 * Returns the bit mask for resetting this flag from the number value storing it.
+		 */
+		private int getUnsetMask() {
+			return unsetMask;
 		}
 	}
 }

@@ -45,8 +45,6 @@ public interface EntityEntry extends EntityEntryExtraState {
 
 	Status getStatus();
 
-	Status getPreviousStatus();
-
 	void setStatus(Status status);
 
 	Serializable getId();

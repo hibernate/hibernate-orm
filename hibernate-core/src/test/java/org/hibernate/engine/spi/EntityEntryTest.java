@@ -24,6 +24,8 @@
 package org.hibernate.engine.spi;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,7 +34,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.junit.Test;
 
 /**
@@ -117,7 +118,7 @@ public class EntityEntryTest {
 		oos.flush();
 
 		InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-		EntityEntry deserializedEntry = EntityEntry.deserialize(new ObjectInputStream( is ), new StatefulPersistenceContext( null ) );
+		EntityEntry deserializedEntry = EntityEntry.deserialize(new ObjectInputStream( is ), getPersistenceContextMock() );
 
 		assertEquals( LockMode.OPTIMISTIC, deserializedEntry.getLockMode() );
 		assertEquals( Status.MANAGED, deserializedEntry.getStatus() );
@@ -127,6 +128,7 @@ public class EntityEntryTest {
 	}
 
 	private EntityEntry createEntityEntry() {
+
 		return new EntityEntry(
 				Status.MANAGED,                        // status
 				new Object[]{},                        // loadedState
@@ -138,7 +140,15 @@ public class EntityEntryTest {
 				null,                                  // persister
 				true,                                  // disableVersionIncrement
 				true,                                  // lazyPropertiesAreUnfetched
-				new StatefulPersistenceContext( null ) // persistenceContext)
+				getPersistenceContextMock()            // persistenceContext)
 		);
+	}
+
+	private final PersistenceContext getPersistenceContextMock() {
+		SessionImplementor sessionMock = mock( SessionImplementor.class );
+		PersistenceContext persistenceContextMock = mock( PersistenceContext.class );
+		when( persistenceContextMock.getSession() ).thenReturn( sessionMock );
+
+		return persistenceContextMock;
 	}
 }

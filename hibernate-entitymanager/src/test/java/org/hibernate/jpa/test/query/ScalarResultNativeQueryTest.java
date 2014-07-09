@@ -36,6 +36,7 @@ import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
 
 /**
@@ -72,6 +73,7 @@ public class ScalarResultNativeQueryTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel(jiraKey = "HHH-9279", message = "Type given via @ColumnResult is not propagated")
 	public void shouldApplyConfiguredTypeForProjectionOfScalarValue() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

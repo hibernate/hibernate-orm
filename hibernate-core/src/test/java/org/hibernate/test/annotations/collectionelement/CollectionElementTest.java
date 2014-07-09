@@ -36,6 +36,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -259,6 +260,13 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultFKNameForElementCollection() throws Exception {
 		isCollectionColumnPresent( Boy.class.getName(), "hatedNames", "Boy_id" );
+	}
+
+	@Test
+	public void testDefaultTableNameUsesJpaEntityName() {
+		final Collection collection = configuration().getCollectionMapping( Matrix.class.getName() + "." + "mvalues" );
+		final Table table = collection.getCollectionTable();
+		assertEquals( "Mtx_mvalues", table.getName() );
 	}
 
 	private void isLegacyValueCollectionColumnPresent(String collectionHolder, String propertyName) {

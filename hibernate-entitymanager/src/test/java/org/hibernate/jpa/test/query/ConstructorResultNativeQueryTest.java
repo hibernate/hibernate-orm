@@ -23,8 +23,12 @@
  */
 package org.hibernate.jpa.test.query;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Date;
 import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
@@ -39,12 +43,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
-
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -83,6 +82,19 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 											}
 									)
 							}
+					),
+					@SqlResultSetMapping(
+							name = "person-id-and-name-and-weight",
+							classes = {
+									@ConstructorResult(
+											targetClass = Person.class,
+											columns = {
+													@ColumnResult( name = "id" ),
+													@ColumnResult( name = "p_name" ),
+													@ColumnResult( name = "p_weight", type=String.class )
+											}
+									)
+							}
 					)
 			}
 	)
@@ -97,6 +109,11 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 						name = "person-id-and-name2",
 						query = "select p.id, p.p_name, p.id as id2, p.p_name as p_name2 from person p order by p.p_name",
 						resultSetMapping = "person-id-and-name2"
+				),
+				@NamedNativeQuery(
+						name = "person-id-and-name-and-weight",
+						query = "select p.id, p.p_name, p.p_weight from person p order by p.p_name",
+						resultSetMapping = "person-id-and-name-and-weight"
 				)
 			}
 	)
@@ -107,6 +124,8 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 		private String name;
 		@Temporal( TemporalType.TIMESTAMP )
 		private Date birthDate;
+		@Column( name = "p_weight" )
+		private int weight;
 
 		public Person() {
 		}
@@ -120,6 +139,12 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 		public Person(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+
+		public Person(Integer id, String name, String weight) {
+			this.id = id;
+			this.name = name;
+			this.weight = Integer.valueOf(weight);
 		}
 	}
 
@@ -172,6 +197,29 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 		assertEquals( 2, result.length );
 		assertTyping( Person.class, result[0] );
 		assertTyping( Person.class, result[1] );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete from Person" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testConstructorResultNativeQuerySpecifyingType() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( new Person( 1, "John", "85" ) );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		List<?> results = em.createNamedQuery( "person-id-and-name-and-weight" ).getResultList();
+		assertEquals( 1, results.size() );
+		assertTyping( Person.class, results.get( 0 ) );
 		em.getTransaction().commit();
 		em.close();
 

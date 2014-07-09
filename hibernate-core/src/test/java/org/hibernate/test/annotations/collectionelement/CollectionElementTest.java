@@ -40,6 +40,7 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -259,6 +260,13 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		isCollectionColumnPresent( Boy.class.getName(), "hatedNames", "Boy_id" );
 	}
 
+	@Test
+	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9281" )
+	public void testDefaultTableNameUsesJpaEntityName() {
+		final TableSpecification table = getCollectionTable( Matrix.class.getName(), "mvalues");
+		assertEquals( "Mtx_mvalues", table.getLogicalName().getText() );
+	}
+
 	private void isLegacyValueCollectionColumnPresent(String collectionHolder, String propertyName) {
 
 	}
@@ -268,13 +276,18 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void isCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
-		final EntityBinding entityBinding = metadata().getEntityBinding( collectionOwner );
-		final PluralAttributeBinding binding = (PluralAttributeBinding) entityBinding.locateAttributeBinding( propertyName );
-		final TableSpecification table = binding.getPluralAttributeKeyBinding().getCollectionTable();
+		final TableSpecification table = getCollectionTable( collectionOwner, propertyName );
 
 		boolean hasColumn = table.locateColumn( propertyName ) != null;
 		assertTrue( "Could not find " + columnName, hasColumn );
 	}
+
+	private TableSpecification getCollectionTable(String collectionOwner, String propertyName) {
+		final EntityBinding entityBinding = metadata().getEntityBinding( collectionOwner );
+		final PluralAttributeBinding binding = (PluralAttributeBinding) entityBinding.locateAttributeBinding( propertyName );
+		return binding.getPluralAttributeKeyBinding().getCollectionTable();
+	}
+
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

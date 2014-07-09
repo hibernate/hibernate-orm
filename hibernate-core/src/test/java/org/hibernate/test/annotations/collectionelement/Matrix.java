@@ -17,7 +17,7 @@ import org.hibernate.annotations.Type;
 /**
  * @author Emmanuel Bernard
  */
-@Entity
+@Entity(name="Mtx")
 public class Matrix {
 	@Id
 	@GeneratedValue

@@ -43,6 +43,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.junit.Test;
 
 /**
@@ -208,6 +209,7 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel(jiraKey = "HHH-9279", message = "Type given via @ColumnResult is not propagated")
 	public void testConstructorResultNativeQuerySpecifyingType() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

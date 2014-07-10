@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -45,6 +46,20 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 	public ByteArrayTypeDescriptor() {
 		super( Byte[].class, ArrayMutabilityPlan.INSTANCE );
 	}
+	@Override
+	public boolean areEqual(Byte[] one, Byte[] another) {
+		return one == another
+				|| ( one != null && another != null && Arrays.equals(one, another) );
+	}
+	@Override
+	public int extractHashCode(Byte[] bytes) {
+		int hashCode = 1;
+		for ( byte aByte : bytes ) {
+			hashCode = 31 * hashCode + aByte;
+		}
+		return hashCode;
+	}
+
 	@Override
 	public String toString(Byte[] bytes) {
 		final StringBuilder buf = new StringBuilder();

@@ -30,6 +30,7 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -146,7 +147,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-5811")
+	@TestForIssue( jiraKey = "HHH-5811")
 	public void testVersionUnchangedByteArray() throws Exception {
 		Session s;
 		Transaction tx;

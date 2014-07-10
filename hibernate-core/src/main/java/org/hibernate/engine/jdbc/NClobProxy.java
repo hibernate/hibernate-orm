@@ -28,8 +28,6 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.NClob;
 
-import org.hibernate.internal.util.ClassLoaderHelper;
-
 /**
  * Manages aspects of proxying java.sql.NClobs for non-contextual creation, including proxy creation and
  * handling proxy invocations.  We use proxies here solely to avoid JDBC version incompatibilities.
@@ -88,10 +86,6 @@ public class NClobProxy extends ClobProxy {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	protected static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = NClobImplementer.class.getClassLoader();
-		}
-		return cl;
+		return NClobImplementer.class.getClassLoader();
 	}
 }

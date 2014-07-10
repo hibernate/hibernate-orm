@@ -31,7 +31,6 @@ import java.lang.reflect.Proxy;
 import java.sql.Blob;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * Manages aspects of proxying {@link Blob Blobs} to add serializability.
@@ -102,10 +101,6 @@ public class SerializableBlobProxy implements InvocationHandler, Serializable {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = WrappedBlob.class.getClassLoader();
-		}
-		return cl;
+		return WrappedBlob.class.getClassLoader();
 	}
 }

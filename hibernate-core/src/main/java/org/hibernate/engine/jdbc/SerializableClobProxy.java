@@ -31,7 +31,6 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * Manages aspects of proxying {@link Clob Clobs} to add serializability.
@@ -101,10 +100,6 @@ public class SerializableClobProxy implements InvocationHandler, Serializable {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = WrappedClob.class.getClassLoader();
-		}
-		return cl;
+		return WrappedClob.class.getClassLoader();
 	}
 }

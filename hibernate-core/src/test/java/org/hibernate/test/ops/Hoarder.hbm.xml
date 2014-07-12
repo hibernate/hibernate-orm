@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+-->
+
+<hibernate-mapping package="org.hibernate.test.ops">
+
+    <class name="Hoarder">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="name"/>
+        <many-to-one name="favoriteItem" cascade="persist,merge,save-update" />
+        <set name="items" cascade="persist,merge,save-update">
+            <key column="HOARDER_ID"/>
+            <one-to-many class="Item" />
+        </set>
+    </class>
+
+    <class name="Item">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <version name="version"/>
+        <property name="name" not-null="true" />
+        <many-to-one name="category" cascade="persist,merge,save-update"/>
+        <set name="colors">
+            <key column="itemId"/>
+            <element type="string" not-null="true"/>
+        </set>
+        <list name="subItemsBackref" lazy="true" cascade="persist,merge,save-update">
+            <key column="parentItem" not-null="true"/>
+            <index column="indx"/>
+            <one-to-many class="SubItem"/>
+        </list>
+    </class>
+
+    <class name="SubItem">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="name" not-null="true" />
+    </class>
+
+
+    <class name="Category">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <version name="version" />
+        <property name="name" not-null="true" />
+        <many-to-one name="exampleItem" cascade="persist,merge,save-update" />
+        <set name="subCategories" lazy="true" cascade="persist,merge,save-update">
+            <key column="parentCategory" not-null="false"/>
+            <one-to-many class="SubCategory"/>
+        </set>
+    </class>
+
+    <class name="SubCategory">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="name" not-null="true" />
+    </class>
+
+
+</hibernate-mapping>
+

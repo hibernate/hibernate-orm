@@ -86,4 +86,12 @@ public class ServiceRegistryBuilder extends org.hibernate.boot.registry.Standard
 	public StandardServiceRegistry build() {
 		return super.build();
 	}
+
+	/**
+	 * Don't remove yet: used by JBoss Tools
+	 */
+	public ServiceRegistry buildServiceRegistry() {
+		return build();
+	}
+
 }

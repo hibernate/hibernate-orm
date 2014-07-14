@@ -24,44 +24,43 @@
 package org.hibernate.ejb.test.emops;
 
 import java.util.List;
+import java.util.Map;
+
 import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
-import org.hibernate.ejb.event.EJB3EntityCopyAllowedMergeEventListener;
+import org.hibernate.Hibernate;
+import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.testing.TestForIssue;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Tests merging multiple detached representations of the same entity using
- * {@link org.hibernate.ejb.event.EJB3EntityCopyAllowedMergeEventListener}.
+ * Tests merging multiple detached representations of the same entity using a custom EntityCopyObserver.
  *
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-9106")
-public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityManagerFunctionalTestCase {
+public class MergeMultipleEntityCopiesCustomTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		super.afterEntityManagerFactoryBuilt();
-		SessionFactory sf = ( (HibernateEntityManagerFactory) entityManagerFactory() ).getSessionFactory();
-		EventListenerRegistry registry =
-				( (SessionFactoryImplementor) sf ).getServiceRegistry().getService( EventListenerRegistry.class );
-		registry.setListeners( EventType.MERGE, new EJB3EntityCopyAllowedMergeEventListener() );
+	@SuppressWarnings( {"unchecked"})
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put(
+				"hibernate.event.merge.entity_copy_observer",
+				CustomEntityCopyObserver.class.getName()
+		);
 	}
 
 	@Test
-	public void testCascadeFromDetachedToNonDirtyRepresentations() {
+	public void testMergeMultipleEntityCopiesAllowed() {
 		Item item1 = new Item();
 		item1.setName( "item1" );
 
@@ -91,6 +90,8 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
+		// the merge should succeed because it does not have Category copies.
+		// (CustomEntityCopyObserver does not allow Category copies; it does allow Item copies)
 		hoarder = em.merge( hoarder );
 		assertEquals( 1, hoarder.getItems().size() );
 		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
@@ -101,7 +102,7 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		hoarder = em.merge( hoarder );
+		hoarder = em.find( Hoarder.class, hoarder.getId() );
 		assertEquals( 1, hoarder.getItems().size() );
 		assertSame( hoarder.getFavoriteItem(), hoarder.getItems().iterator().next() );
 		assertEquals( item1.getId(), hoarder.getFavoriteItem().getId() );
@@ -112,9 +113,8 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 		cleanup();
 	}
 
-
 	@Test
-	public void testTopLevelManyToOneManagedNestedIsDetached() {
+	public void testMergeMultipleEntityCopiesAllowedAndDisallowed() {
 		Item item1 = new Item();
 		item1.setName( "item1 name" );
 		Category category = new Category();
@@ -132,6 +132,8 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Item item1_1 = em.find( Item.class, item1.getId() );
+		// make sure item1_1.category is initialized
+		Hibernate.initialize( item1_1.getCategory() );
 		em.getTransaction().commit();
 		em.close();
 
@@ -139,14 +141,26 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 		em.getTransaction().begin();
 		Item item1Merged = em.merge( item1 );
 
+		// make sure item1Merged.category is also managed
+		Hibernate.initialize( item1Merged.getCategory() );
+
 		item1Merged.setCategory( category );
 		category.setExampleItem( item1_1 );
 
 		// now item1Merged is managed and it has a nested detached item
-		em.merge( item1Merged );
-		assertEquals( category.getName(), item1Merged.getCategory().getName() );
-		assertSame( item1Merged, item1Merged.getCategory().getExampleItem() );
-		em.getTransaction().commit();
+		// and there is  multiple managed/detached Category objects
+		try {
+			// the following should fail because multiple copies of Category objects is not allowed by
+			// CustomEntityCopyObserver
+			em.merge( item1Merged );
+			fail( "should have failed because CustomEntityCopyObserver does not allow multiple copies of a Category. ");
+		}
+		catch (IllegalStateException ex ) {
+			// expected
+		}
+		finally {
+			em.getTransaction().rollback();
+		}
 		em.close();
 
 		em = getOrCreateEntityManager();
@@ -195,5 +209,27 @@ public class MergeMultipleEntityRepresentationsAllowedTest extends BaseEntityMan
 				Hoarder.class,
 				Item.class
 		};
+	}
+
+	public static class CustomEntityCopyObserver implements EntityCopyObserver {
+
+		@Override
+		public void entityCopyDetected(Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource session) {
+			if ( Category.class.isInstance( managedEntity ) ) {
+				throw new IllegalStateException(
+						String.format( "Entity copies of type [%s] not allowed", Category.class.getName() )
+				);
+			}
+		}
+
+		@Override
+		public void topLevelMergeComplete(EventSource session) {
+
+		}
+
+		@Override
+		public void clear() {
+
+		}
 	}
 }

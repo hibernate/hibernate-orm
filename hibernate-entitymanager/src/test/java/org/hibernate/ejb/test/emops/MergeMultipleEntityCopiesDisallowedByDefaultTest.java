@@ -37,13 +37,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests merging multiple detached representations of the same entity using
- * a the default MergeEventListener (that does not allow this).
+ * Tests merging multiple detached representations of the same entity when
+ * not allowed by default.
  *
  * @author Gail Badner
  */
 @TestForIssue( jiraKey = "HHH-9106")
-public class MergeMultipleEntityRepresentationsNotAllowedTest extends BaseEntityManagerFunctionalTestCase {
+public class MergeMultipleEntityCopiesDisallowedByDefaultTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testCascadeFromDetachedToNonDirtyRepresentations() {

@@ -33,9 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
@@ -51,6 +49,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
 
@@ -64,8 +65,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultMergeEventListener.class.getName());
-
-	private String entityCopyObserverStrategy;
+	private static final String ENTITY_COPY_OBSERVER_STRATEGY_PROPERTY_NAME = "hibernate.event.merge.entity_copy_observer";
+	private Class<? extends EntityCopyObserver> entityCopyObserverClass;
 
 	@Override
 	protected Map getMergeMap(Object anything) {
@@ -92,24 +93,18 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	private EntityCopyObserver createEntityCopyObserver(SessionFactoryImplementor sessionFactory) {
-		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
-		if ( entityCopyObserverStrategy == null ) {
-			final ConfigurationService configurationService
-					= serviceRegistry.getService( ConfigurationService.class );
-			entityCopyObserverStrategy = configurationService.getSetting(
-					"hibernate.event.merge.entity_copy_observer",
-					new ConfigurationService.Converter<String>() {
-						@Override
-						public String convert(Object value) {
-							return value.toString();
-						}
-					},
-					EntityCopyNotAllowedObserver.SHORT_NAME
-			);
-			LOG.debugf( "EntityCopyObserver strategy: %s", entityCopyObserverStrategy );
+		if ( entityCopyObserverClass == null ) {
+			entityCopyObserverClass = determineEntityCopyObserverClass( sessionFactory );
 		}
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		return strategySelector.resolveStrategy( EntityCopyObserver.class, entityCopyObserverStrategy );
+		try {
+			return entityCopyObserverClass.newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException(
+					String.format( "Could not instantiate EntityCopyObserver implementation [%s]", entityCopyObserverClass.getName() ),
+					e
+			);
+		}
 	}
 
 	/**
@@ -503,5 +498,47 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	@Override
     protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, Object anything)
 	throws HibernateException {
+	}
+
+	private static Class<? extends EntityCopyObserver> determineEntityCopyObserverClass(
+			SessionFactoryImplementor sessionFactory) {
+		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
+		final ConfigurationService configurationService
+				= serviceRegistry.getService( ConfigurationService.class );
+		final String entityCopyObserverStrategyString = configurationService.getSetting(
+				ENTITY_COPY_OBSERVER_STRATEGY_PROPERTY_NAME,
+				new ConfigurationService.Converter<String>() {
+					@Override
+					public String convert(Object value) {
+						return value.toString();
+					}
+				},
+				EntityCopyNotAllowedObserver.SHORT_NAME
+		);
+		LOG.debugf( "EntityCopyObserver strategy: %s", entityCopyObserverStrategyString );
+		if ( EntityCopyNotAllowedObserver.SHORT_NAME.equals( entityCopyObserverStrategyString ) ) {
+			return EntityCopyNotAllowedObserver.class;
+		}
+		else if ( EntityCopyAllowedObserver.SHORT_NAME.equals( entityCopyObserverStrategyString ) ) {
+			return EntityCopyAllowedObserver.class;
+		}
+		else if ( EntityCopyAllowedLoggedObserver.SHORT_NAME.equals( entityCopyObserverStrategyString ) ) {
+			return EntityCopyAllowedLoggedObserver.class;
+		}
+		else {
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+			try {
+				return classLoaderService.classForName( entityCopyObserverStrategyString );
+			}
+			catch (ClassLoadingException e) {
+				throw new HibernateException(
+						"Unable resolve strategy [" +
+								entityCopyObserverStrategyString +
+								"] as strategy for [" +
+								ENTITY_COPY_OBSERVER_STRATEGY_PROPERTY_NAME + "]",
+						e
+				);
+			}
+		}
 	}
 }

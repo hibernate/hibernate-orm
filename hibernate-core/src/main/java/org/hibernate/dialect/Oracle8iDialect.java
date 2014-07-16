@@ -529,7 +529,7 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public String generateTemporaryTableName(String baseTableName) {
 		final String name = super.generateTemporaryTableName( baseTableName );
-		return name.length() > 30 ? name.substring( 1, 30 ) : name;
+		return name.length() > 30 ? name.substring( 0, 30 ) : name;
 	}
 
 	@Override

@@ -5,6 +5,19 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.15 (2014.07.16)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-8310] - Lob proxy class loading problem
+    * [HHH-9231] - Uncommitted data can remain in transactional collection cache after rollback if collection is initialized after flush
+    * [HHH-9261] - Backport HHH-9106 to 4.2 (Multiple representations of the same entity cannot be merged using cascade=merge)
+    * [HHH-9280] - Table name generated for @ElementCollection uses owning entity class name instead of mapped entity name
+
+** Improvement
+    * [HHH-9268] - The NoopOptimizer used for default id generation doesn't need synchronization
+    * [HHH-9269] - Limit persister lookups in critical hot paths
+
 Changes in version 4.2.14 (2014.06.25)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -485,20 +485,21 @@ public abstract class BaseQueryImpl implements Query {
 
 	@SuppressWarnings("unchecked")
 	protected <X> ParameterRegistration<X> findParameterRegistration(String parameterName) {
-		final Integer jpaPositionalParameter = toNumberOrNull( parameterName );
-
 		if ( parameterRegistrations != null ) {
 			for ( ParameterRegistration<?> param : parameterRegistrations ) {
 				if ( parameterName.equals( param.getName() ) ) {
 					return (ParameterRegistration<X>) param;
 				}
+			}
 
-				// legacy allowance of the application to access the parameter using the position as a String
-				if ( param.isJpaPositionalParameter() && jpaPositionalParameter != null ) {
-					if ( jpaPositionalParameter.equals( param.getPosition() ) ) {
+			// legacy allowance of the application to access the parameter using the position as a String
+			final Integer jpaPositionalParameter = toNumberOrNull( parameterName );
+			if ( jpaPositionalParameter != null ) {
+				for ( ParameterRegistration<?> param : parameterRegistrations ) {
+					if ( param.isJpaPositionalParameter() && jpaPositionalParameter.equals( param.getPosition() ) ) {
 						LOG.deprecatedJpaPositionalParameterAccess( jpaPositionalParameter );
+						return (ParameterRegistration<X>) param;
 					}
-					return (ParameterRegistration<X>) param;
 				}
 			}
 		}
@@ -506,6 +507,13 @@ public abstract class BaseQueryImpl implements Query {
 	}
 
 	private Integer toNumberOrNull(String parameterName) {
+		// HHH-9294 Quick check if string is made of digits to avoid the overhead of throwing an exception
+		for(int i = 0; i < parameterName.length(); i++) {
+			if ( !Character.isDigit( parameterName.charAt( i ) ) ) {
+				return null;
+			}
+		}
+
 		try {
 			return Integer.valueOf( parameterName );
 		}

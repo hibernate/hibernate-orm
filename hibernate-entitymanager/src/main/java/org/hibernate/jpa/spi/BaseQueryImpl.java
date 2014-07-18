@@ -51,6 +51,7 @@ import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.jpa.internal.util.PessimisticNumberParser;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 
@@ -493,7 +494,7 @@ public abstract class BaseQueryImpl implements Query {
 			}
 
 			// legacy allowance of the application to access the parameter using the position as a String
-			final Integer jpaPositionalParameter = toNumberOrNull( parameterName );
+			final Integer jpaPositionalParameter = PessimisticNumberParser.toNumberOrNull( parameterName );
 			if ( jpaPositionalParameter != null ) {
 				for ( ParameterRegistration<?> param : parameterRegistrations ) {
 					if ( param.isJpaPositionalParameter() && jpaPositionalParameter.equals( param.getPosition() ) ) {
@@ -504,22 +505,6 @@ public abstract class BaseQueryImpl implements Query {
 			}
 		}
 		throw new IllegalArgumentException( "Parameter with that name [" + parameterName + "] did not exist" );
-	}
-
-	private Integer toNumberOrNull(String parameterName) {
-		// HHH-9294 Quick check if string is made of digits to avoid the overhead of throwing an exception
-		for(int i = 0; i < parameterName.length(); i++) {
-			if ( !Character.isDigit( parameterName.charAt( i ) ) ) {
-				return null;
-			}
-		}
-
-		try {
-			return Integer.valueOf( parameterName );
-		}
-		catch (NumberFormatException e) {
-			return null;
-		}
 	}
 
 	@SuppressWarnings("unchecked")

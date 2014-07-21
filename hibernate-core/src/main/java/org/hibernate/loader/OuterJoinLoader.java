@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
@@ -24,6 +26,7 @@ import org.hibernate.type.EntityType;
  * @author Gavin King
  */
 public abstract class OuterJoinLoader extends BasicLoader {
+
 	protected Loadable[] persisters;
 	protected CollectionPersister[] collectionPersisters;
 	protected int[] collectionOwners;
@@ -35,12 +38,13 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected String sql;
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
+    protected List associations;
 
-	private LoadQueryInfluencers loadQueryInfluencers;
+    private LoadQueryInfluencers loadQueryInfluencers;
 
 	protected final Dialect getDialect() {
-		return getFactory().getDialect();
-	}
+    	return getFactory().getDialect();
+    }
 
 	public OuterJoinLoader(
 			SessionFactoryImplementor factory,
@@ -110,6 +114,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		collectionOwners = walker.getCollectionOwners();
 		sql = walker.getSQLString();
 		aliases = walker.getAliases();
+		associations = walker.getAssociations();
 	}
 
 }

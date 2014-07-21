@@ -27,15 +27,16 @@ package org.hibernate.loader.criteria;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -83,7 +84,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final Map<String, Criteria> associationPathCriteriaMap = new LinkedHashMap<String, Criteria>();
 	private final Map<String, JoinType> associationPathJoinTypesMap = new LinkedHashMap<String,JoinType>();
 	private final Map<String, Criterion> withClauseMap = new HashMap<String, Criterion>();
-	
+    private final List<String> associations = new ArrayList<String>();
+
 	private final SessionFactoryImplementor sessionFactory;
 	private final SessionFactoryHelper helper;
 
@@ -260,7 +262,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 							(Queryable) sessionFactory.getEntityPersister( atype.getAssociatedEntityName( sessionFactory ) )
 					);
 				}
-				
+
 				componentPath = "";
 			}
 			else if ( type.isComponentType() ) {
@@ -278,7 +280,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				throw new QueryException( "not an association: " + componentPath );
 			}
 		}
-		
+
 		return provider;
 	}
 
@@ -321,6 +323,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 		final List<Object> values = new ArrayList<Object>();
 		final List<Type> types = new ArrayList<Type>();
+        final Map<String, String> aliasMap = new HashMap<String, String>();
+        final Map<String, Collection<Object>> valueMap = new HashMap<String, Collection<Object>>();
+        final Map<String, Collection<Type>> typeMap = new HashMap<String, Collection<Type>>();
 		final Iterator<CriteriaImpl.Subcriteria> subcriteriaIterator = rootCriteria.iterateSubcriteria();
 		while ( subcriteriaIterator.hasNext() ) {
 			final CriteriaImpl.Subcriteria subcriteria = subcriteriaIterator.next();
@@ -328,14 +333,57 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			if ( lm != null ) {
 				lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), lm );
 			}
+            aliasMap.put(subcriteria.getPath(), subcriteria.getAlias());
 			if ( subcriteria.getWithClause() != null ) {
 				final TypedValue[] tv = subcriteria.getWithClause().getTypedValues( subcriteria, this );
 				for ( TypedValue aTv : tv ) {
-					values.add( aTv.getValue() );
-					types.add( aTv.getType() );
+                    Collection<Object> valueCollection = valueMap.get(subcriteria.getPath());
+                    Collection<Type> typeCollection = typeMap.get(subcriteria.getPath());
+                    if(valueCollection == null) {
+                        valueCollection = new LinkedList<Object>();
+                        valueMap.put(subcriteria.getPath(), valueCollection);
+                    }
+                    if(typeCollection == null) {
+                        typeCollection = new LinkedList<Type>();
+                        typeMap.put(subcriteria.getPath(), typeCollection);
+                    }
+                    valueCollection.add(aTv.getValue());
+                    typeCollection.add(aTv.getType());
 				}
 			}
 		}
+        for (String association : this.associations) {
+            if(association.contains(".")) {
+                String alias = null;
+                String[] pathArray = association.split("\\.");
+                for (int i = 0; i < pathArray.length; i++) {
+                    String element = pathArray[i];
+                    if(i == (pathArray.length - 1)) {
+                        //last element
+                        Collection<Object> valueList = valueMap.get(alias + "."  + element);
+                        Collection<Type> typeList = typeMap.get(alias + "."  + element);
+                        if(typeList != null) {
+                            //value can be null, but type cannot.
+                            values.addAll(valueList);
+                            types.addAll(typeList);
+                        }
+                    } else if(alias == null) {
+                        //first element
+                        alias = aliasMap.get(element);
+                    } else {
+                        alias = aliasMap.get(alias + "." + element);
+                    }
+                }
+            } else {
+                Collection<Object> valueList = valueMap.get(association);
+                Collection<Type> typeList = typeMap.get(association);
+                if(typeList != null) {
+                    //value can be null, but type cannot.
+                    values.addAll(valueList);
+                    types.addAll(typeList);
+                }
+            }
+        }
 
 		// Type and value gathering for the WHERE clause needs to come AFTER lock mode gathering,
 		// because the lock mode gathering loop now contains join clauses which can contain
@@ -603,7 +651,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 					// remove the single quotes
 					stringValue = stringValue.substring( 1, stringValue.length() - 1 );
 				}
-				
+
 				// Convert the string value into the proper type.
 				if ( type instanceof StringRepresentableType ) {
 					final StringRepresentableType nullableType = (StringRepresentableType) type;
@@ -672,4 +720,10 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		return subcriteria != null && subcriteria.hasRestriction();
 	}
 
+    public void setAssociations(List<String> associations) {
+        this.associations.clear();
+        if(associations != null) {
+            this.associations.addAll(associations);
+        }
+    }
 }

@@ -23,6 +23,9 @@
  *
  */
 package org.hibernate.loader;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
@@ -53,6 +56,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected String sql;
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
+    protected List<String> associations = new ArrayList<String>();
 
     private LoadQueryInfluencers loadQueryInfluencers;
 
@@ -128,6 +132,14 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		collectionOwners = walker.getCollectionOwners();
 		sql = walker.getSQLString();
 		aliases = walker.getAliases();
+        for (Object assoc : walker.getAssociations()) {
+            if(assoc instanceof OuterJoinableAssociation) {
+                OuterJoinableAssociation outerJoinableAssociation = (OuterJoinableAssociation) assoc;
+                if(outerJoinableAssociation.getPropertyPath() != null) {
+                    associations.add(outerJoinableAssociation.getPropertyPath().getFullPath());
+                }
+            }
+        }
 	}
 
 }

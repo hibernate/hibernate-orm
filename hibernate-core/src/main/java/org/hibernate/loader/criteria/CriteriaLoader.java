@@ -61,8 +61,8 @@ import org.hibernate.type.Type;
  */
 public class CriteriaLoader extends OuterJoinLoader {
 
-	//TODO: this class depends directly upon CriteriaImpl, 
-	//      in the impl package ... add a CriteriaImplementor 
+	//TODO: this class depends directly upon CriteriaImpl,
+	//      in the impl package ... add a CriteriaImplementor
 	//      interface
 
 	//NOTE: unlike all other Loaders, this one is NOT
@@ -78,33 +78,33 @@ public class CriteriaLoader extends OuterJoinLoader {
 	private final int resultRowLength;
 
 	public CriteriaLoader(
-			final OuterJoinLoadable persister, 
-			final SessionFactoryImplementor factory, 
-			final CriteriaImpl criteria, 
+			final OuterJoinLoadable persister,
+			final SessionFactoryImplementor factory,
+			final CriteriaImpl criteria,
 			final String rootEntityName,
 			final LoadQueryInfluencers loadQueryInfluencers) throws HibernateException {
 		super( factory, loadQueryInfluencers );
 
 		translator = new CriteriaQueryTranslator(
-				factory, 
-				criteria, 
-				rootEntityName, 
+				factory,
+				criteria,
+				rootEntityName,
 				CriteriaQueryTranslator.ROOT_SQL_ALIAS
 			);
 
 		querySpaces = translator.getQuerySpaces();
-		
+
 		CriteriaJoinWalker walker = new CriteriaJoinWalker(
-				persister, 
+				persister,
 				translator,
-				factory, 
-				criteria, 
-				rootEntityName, 
+				factory,
+				criteria,
+				rootEntityName,
 				loadQueryInfluencers
 			);
 
 		initFromWalker(walker);
-		
+        translator.setAssociations(this.associations);
 		userAliases = walker.getUserAliases();
 		resultTypes = walker.getResultTypes();
 		includeInResultRow = walker.includeInResultRow();
@@ -113,15 +113,15 @@ public class CriteriaLoader extends OuterJoinLoader {
 		postInstantiate();
 
 	}
-	
-	public ScrollableResults scroll(SessionImplementor session, ScrollMode scrollMode) 
+
+	public ScrollableResults scroll(SessionImplementor session, ScrollMode scrollMode)
 	throws HibernateException {
 		QueryParameters qp = translator.getQueryParameters();
 		qp.setScrollMode(scrollMode);
 		return scroll(qp, resultTypes, null, session);
 	}
 
-	public List list(SessionImplementor session) 
+	public List list(SessionImplementor session)
 	throws HibernateException {
 		return list( session, translator.getQueryParameters(), querySpaces, resultTypes );
 
@@ -284,8 +284,8 @@ public class CriteriaLoader extends OuterJoinLoader {
 		return resolveResultTransformer( resultTransformer ).transformList( results );
 	}
 	@Override
-	protected String getQueryIdentifier() { 
-		return "[CRITERIA] " + getSQLString(); 
+	protected String getQueryIdentifier() {
+		return "[CRITERIA] " + getSQLString();
 	}
 
 }

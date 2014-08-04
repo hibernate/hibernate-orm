@@ -78,6 +78,10 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 				// check for it in SessionImpl. See HHH-7910.
 				delayedCompletionHandlingStatus = status;
 
+				// no matter what we need to release the Connection.  Not releasing
+				// the Connection here can lead to leaked Connections.
+				transactionCoordinator().getJdbcCoordinator().getLogicalConnection().close();
+
 				log.rollbackFromBackgroundThread( status );
 				return;
 			}

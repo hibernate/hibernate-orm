@@ -40,6 +40,19 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class InterbaseDialect extends Dialect {
 
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+	};
+
 	/**
 	 * Constructs a InterbaseDialect
 	 */
@@ -115,20 +128,9 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		final boolean hasOffset = LimitHelper.hasFirstRow(selection);
-        		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 	@Override
 	public String getCurrentTimestampSelectString() {

@@ -27,14 +27,16 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Brett Meyer
  */
 public class FirstLimitHandler extends AbstractLimitHandler {
-	
-	public FirstLimitHandler(String sql, RowSelection selection) {
-		super(sql, selection);
+
+	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler();
+
+	private FirstLimitHandler() {
+		// NOP
 	}
 	
 	@Override
-	public String getProcessedSql() {
-		boolean hasOffset = LimitHelper.hasFirstRow(selection);
+	public String processSql(String sql, RowSelection selection) {
+		final boolean hasOffset = LimitHelper.hasFirstRow( selection );
 		if ( hasOffset ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}

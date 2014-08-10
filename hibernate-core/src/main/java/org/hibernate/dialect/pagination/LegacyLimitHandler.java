@@ -23,7 +23,6 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
@@ -33,15 +32,13 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class LegacyLimitHandler extends AbstractLimitHandler {
 
+	public static final LegacyLimitHandler INSTANCE = new LegacyLimitHandler();
+
 	/**
 	 * Constructs a LegacyLimitHandler
-	 *
-	 * @param dialect The dialect
-	 * @param sql The sql
-	 * @param selection The row selection
 	 */
-	public LegacyLimitHandler(Dialect dialect, String sql, RowSelection selection) {
-		super( sql, selection );
+	private LegacyLimitHandler() {
+        // NOP
 	}
 
 	@Override
@@ -85,11 +82,7 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String getProcessedSql() {
-		final boolean useLimitOffset = supportsLimit()
-				&& supportsLimitOffset()
-				&& LimitHelper.hasFirstRow( selection )
-				&& LimitHelper.hasMaxRows( selection );
+	public String processSql(String sql, RowSelection selection) {
 		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
 	}
 }

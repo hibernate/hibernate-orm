@@ -65,6 +65,56 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class Oracle8iDialect extends Dialect {
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			sql = sql.trim();
+			boolean isForUpdate = false;
+			if (sql.toLowerCase().endsWith( " for update" )) {
+				sql = sql.substring( 0, sql.length() - 11 );
+				isForUpdate = true;
+			}
+
+			final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
+			if (hasOffset) {
+				pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
+			}
+			else {
+				pagingSelect.append( "select * from ( " );
+			}
+			pagingSelect.append( sql );
+			if (hasOffset) {
+				pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
+			}
+			else {
+				pagingSelect.append( " ) where rownum <= ?" );
+			}
+
+			if (isForUpdate) {
+				pagingSelect.append( " for update" );
+			}
+
+			return pagingSelect.toString();
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean bindLimitParametersInReverseOrder() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+	};
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	/**
@@ -247,56 +297,9 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
-        		sql = sql.trim();
-        		boolean isForUpdate = false;
-        		if ( sql.toLowerCase().endsWith( " for update" ) ) {
-        			sql = sql.substring( 0, sql.length()-11 );
-        			isForUpdate = true;
-        		}
-
-        		final StringBuilder pagingSelect = new StringBuilder( sql.length()+100 );
-        		if (hasOffset) {
-        			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
-        		}
-        		else {
-        			pagingSelect.append( "select * from ( " );
-        		}
-        		pagingSelect.append( sql );
-        		if (hasOffset) {
-        			pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
-        		}
-        		else {
-        			pagingSelect.append( " ) where rownum <= ?" );
-        		}
-
-        		if ( isForUpdate ) {
-        			pagingSelect.append( " for update" );
-        		}
-
-        		return pagingSelect.toString();
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean bindLimitParametersInReverseOrder() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean useMaxForLimit() {
-        		return true;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 	/**
 	 * Allows access to the basic {@link Dialect#getSelectClauseNullString}

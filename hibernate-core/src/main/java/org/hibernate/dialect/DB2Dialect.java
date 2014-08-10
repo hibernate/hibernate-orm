@@ -55,7 +55,36 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
-	
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			if (LimitHelper.hasFirstRow( selection )) {
+				//nest the main query in an outer select
+				return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
+						+ sql + " fetch first ? rows only ) as inner2_ ) as inner1_ where rownumber_ > "
+						+ "? order by rownumber_";
+			}
+			return sql + " fetch first ? rows only";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
+
 	private final DB2UniqueKeyExporter uniqueKeyExporter = new DB2UniqueKeyExporter( this );
 
 	/**
@@ -447,34 +476,8 @@ public class DB2Dialect extends Dialect {
 	}
 	
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		if ( LimitHelper.hasFirstRow(selection) ) {
-            		//nest the main query in an outer select
-            		return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
-            				+ sql + " fetch first ? rows only ) as inner2_ ) as inner1_ where rownumber_ > "
-            				+ "? order by rownumber_";
-        		}
-    			return sql + " fetch first ? rows only";
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean useMaxForLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean supportsVariableLimit() {
-        		return false;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 }

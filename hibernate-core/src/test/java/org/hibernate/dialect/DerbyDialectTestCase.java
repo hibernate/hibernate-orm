@@ -53,7 +53,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		RowSelection rowSelection = new RowSelection();
 		rowSelection.setFirstRow( 0 );
 		rowSelection.setMaxRows( limit );
-		final String actual = new LocalDerbyDialect().buildLimitHandler( input, rowSelection ).getProcessedSql();
+		final String actual = new LocalDerbyDialect().getLimitHandler().processSql(input, rowSelection);
 		assertEquals( expected, actual );
 	}
 
@@ -67,7 +67,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		RowSelection rowSelection = new RowSelection();
 		rowSelection.setFirstRow( offset );
 		rowSelection.setMaxRows( limit );
-		final String actual = new LocalDerbyDialect().buildLimitHandler( input, rowSelection ).getProcessedSql();
+		final String actual = new LocalDerbyDialect().getLimitHandler().processSql(input, rowSelection);
 		assertEquals( expected, actual );
 	}
 
@@ -81,7 +81,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		RowSelection rowSelection = new RowSelection();
 		rowSelection.setFirstRow( offset );
 		rowSelection.setMaxRows( limit );
-		final String actual = new LocalDerbyDialect().buildLimitHandler( input, rowSelection ).getProcessedSql();
+		final String actual = new LocalDerbyDialect().getLimitHandler().processSql(input, rowSelection);
 		assertEquals( expected, actual );
 	}
 
@@ -95,7 +95,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		RowSelection rowSelection = new RowSelection();
 		rowSelection.setFirstRow( offset );
 		rowSelection.setMaxRows( limit );
-		final String actual = new LocalDerbyDialect().buildLimitHandler( input, rowSelection ).getProcessedSql();
+		final String actual = new LocalDerbyDialect().getLimitHandler().processSql(input, rowSelection);
 		assertEquals( expected, actual );
 	}
 
@@ -109,7 +109,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		RowSelection rowSelection = new RowSelection();
 		rowSelection.setFirstRow( offset );
 		rowSelection.setMaxRows( limit );
-		final String actual = new LocalDerbyDialect().buildLimitHandler( input, rowSelection ).getProcessedSql();
+		final String actual = new LocalDerbyDialect().getLimitHandler().processSql(input, rowSelection);
 		assertEquals( expected, actual );
 	}
 }

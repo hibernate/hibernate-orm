@@ -31,10 +31,8 @@ public class TopLimitHandler extends AbstractLimitHandler {
 	private final boolean supportsVariableLimit;
 	
 	private final boolean bindLimitParametersFirst;
-	
-	public TopLimitHandler(String sql, RowSelection selection,
-			boolean supportsVariableLimit, boolean bindLimitParametersFirst) {
-		super(sql, selection);
+
+	public TopLimitHandler(boolean supportsVariableLimit, boolean bindLimitParametersFirst) {
 		this.supportsVariableLimit = supportsVariableLimit;
 		this.bindLimitParametersFirst = bindLimitParametersFirst;
 	}
@@ -59,8 +57,8 @@ public class TopLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String getProcessedSql() {
-		if ( LimitHelper.hasFirstRow(selection) ) {
+	public String processSql(String sql, RowSelection selection) {
+		if (LimitHelper.hasFirstRow( selection )) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
 

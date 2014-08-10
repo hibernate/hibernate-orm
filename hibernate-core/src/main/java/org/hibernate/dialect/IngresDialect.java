@@ -32,7 +32,6 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -232,9 +231,9 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new FirstLimitHandler(sql, selection);
-    }
+	public LimitHandler getLimitHandler() {
+		return FirstLimitHandler.INSTANCE;
+	}
 
 	@Override
 	public boolean supportsTemporaryTables() {

@@ -66,6 +66,32 @@ public class RDMSOS2200Dialect extends Dialect {
 			RDMSOS2200Dialect.class.getName()
 	);
 
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			if (hasOffset) {
+				throw new UnsupportedOperationException( "query result offset is not supported" );
+			}
+			return sql + " fetch first ? rows only ";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsLimitOffset() {
+			return false;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
 	/**
 	 * Constructs a RDMSOS2200Dialect
 	 */
@@ -331,33 +357,9 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
-        		if ( hasOffset ) {
-        			throw new UnsupportedOperationException( "query result offset is not supported" );
-        		}
-        		return sql + " fetch first ? rows only ";
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean supportsLimitOffset() {
-        		return false;
-        	}
-
-        	@Override
-        	public boolean supportsVariableLimit() {
-        		return false;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 	@Override
 	public boolean supportsUnionAll() {

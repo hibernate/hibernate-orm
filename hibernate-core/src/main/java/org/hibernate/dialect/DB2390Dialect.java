@@ -36,6 +36,32 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Kristoffer Dyrkorn
  */
 public class DB2390Dialect extends DB2Dialect {
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			if (LimitHelper.hasFirstRow( selection )) {
+				throw new UnsupportedOperationException( "query result offset is not supported" );
+			}
+			return sql + " fetch first ? rows only";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
 	@Override
 	public boolean supportsSequences() {
 		return false;
@@ -47,31 +73,8 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		if ( LimitHelper.hasFirstRow(selection) ) {
-        			throw new UnsupportedOperationException( "query result offset is not supported" );
-        		}
-    			return sql + " fetch first ? rows only";
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean useMaxForLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean supportsVariableLimit() {
-        		return false;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 }

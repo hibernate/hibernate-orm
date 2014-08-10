@@ -56,6 +56,19 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class MySQLDialect extends Dialect {
 
+	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			return sql + (hasOffset ? " limit ?, ?" : " limit ?");
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+	};
+
 	private final MySQLUniqueKeyExporter uniqueKeyExporter = new MySQLUniqueKeyExporter( this );
 	private final MySQLIndexExporter indexExporter = new MySQLIndexExporter( this );
 
@@ -258,20 +271,9 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		final boolean hasOffset = LimitHelper.hasFirstRow(selection);
-        		return sql + (hasOffset ? " limit ?, ?" : " limit ?");
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 	@Override
 	public char closeQuote() {

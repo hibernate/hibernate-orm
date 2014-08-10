@@ -33,7 +33,6 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -74,8 +73,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	@Override
-	public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-		return new SQLServer2005LimitHandler( sql, selection );
+	public LimitHandler getLimitHandler() {
+		return new SQLServer2005LimitHandler();
 	}
 
 	@Override

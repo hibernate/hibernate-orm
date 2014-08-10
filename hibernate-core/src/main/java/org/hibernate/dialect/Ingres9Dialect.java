@@ -51,6 +51,34 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Raymond Fan
  */
 public class Ingres9Dialect extends IngresDialect {
+
+	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final String soff = " offset ?";
+			final String slim = " fetch first ? rows only";
+			final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
+					.append( sql );
+			if (LimitHelper.hasFirstRow( selection )) {
+				sb.append( soff );
+			}
+			if (LimitHelper.hasMaxRows( selection )) {
+				sb.append( slim );
+			}
+			return sb.toString();
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
 	/**
 	 * Constructs a Ingres9Dialect
 	 */
@@ -157,32 +185,7 @@ public class Ingres9Dialect extends IngresDialect {
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		final StringBuilder soff = new StringBuilder( " offset ?" );
-        		final StringBuilder slim = new StringBuilder( " fetch first ? rows only" );
-        		final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
-        				.append( sql );
-        		if ( LimitHelper.hasFirstRow(selection) ) {
-        			sb.append( soff );
-        		}
-        		if ( LimitHelper.hasMaxRows(selection) ) {
-        			sb.append( slim );
-        		}
-        		return sb.toString();
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean supportsVariableLimit() {
-        		return false;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 }

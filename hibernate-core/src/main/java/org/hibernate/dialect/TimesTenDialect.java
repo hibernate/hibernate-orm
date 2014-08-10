@@ -39,7 +39,6 @@ import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
@@ -172,9 +171,9 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new FirstLimitHandler(sql, selection);
-    }
+	public LimitHandler getLimitHandler() {
+		return FirstLimitHandler.INSTANCE;
+	}
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {

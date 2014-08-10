@@ -36,7 +36,33 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Reha CENANI
  */
 public class FirebirdDialect extends InterbaseDialect {
-	
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			return new StringBuilder( sql.length() + 20 )
+					.append( sql )
+					.insert( 6, hasOffset ? " first ? skip ?" : " first ?" )
+					.toString();
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean bindLimitParametersFirst() {
+			return true;
+		}
+
+		@Override
+		public boolean bindLimitParametersInReverseOrder() {
+			return true;
+		}
+	};
+
 	public FirebirdDialect() {
 		super();
 		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
@@ -48,31 +74,7 @@ public class FirebirdDialect extends InterbaseDialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
-        		return new StringBuilder( sql.length() + 20 )
-				.append( sql )
-				.insert( 6, hasOffset ? " first ? skip ?" : " first ?" )
-				.toString();
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean bindLimitParametersFirst() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean bindLimitParametersInReverseOrder() {
-        		return true;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 }

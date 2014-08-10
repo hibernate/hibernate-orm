@@ -59,6 +59,24 @@ public class H2Dialect extends Dialect {
 			H2Dialect.class.getName()
 	);
 
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean bindLimitParametersInReverseOrder() {
+			return true;
+		}
+	};
+
 	private final String querySequenceString;
 
 	/**
@@ -235,25 +253,9 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new AbstractLimitHandler(sql, selection) {
-        	@Override
-        	public String getProcessedSql() {
-        		boolean hasOffset = LimitHelper.hasFirstRow(selection);
-        		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-        	}
-
-        	@Override
-        	public boolean supportsLimit() {
-        		return true;
-        	}
-
-        	@Override
-        	public boolean bindLimitParametersInReverseOrder() {
-        		return true;
-        	}
-        };
-    }
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
+	}
 
 	@Override
 	public boolean supportsIfExistsAfterTableName() {

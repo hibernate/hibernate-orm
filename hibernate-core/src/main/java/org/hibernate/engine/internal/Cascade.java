@@ -58,22 +58,8 @@ import org.hibernate.type.Type;
 public final class Cascade {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Cascade.class );
 
-	private int componentPathStackDepth = 0;
-	private final CascadingAction action;
-	private final EventSource eventSource;
-	private CascadePoint cascadePoint;
-
-	/**
-	 * Constructs a Cascade
-	 *
-	 * @param action The action we are cascading
-	 * @param cascadePoint The point in the action at which we are trying to cascade currently
-	 * @param eventSource The session
-	 */
-	public Cascade(final CascadingAction action, final CascadePoint cascadePoint, final EventSource eventSource) {
-		this.cascadePoint = cascadePoint;
-		this.eventSource = eventSource;
-		this.action = action;
+	private Cascade() {
+		// NOP
 	}
 
 	/**
@@ -81,9 +67,13 @@ public final class Cascade {
 	 *
 	 * @param persister The parent's entity persister
 	 * @param parent The parent reference.
+	 * @throws HibernateException
 	 */
-	public void cascade(final EntityPersister persister, final Object parent) {
-		cascade( persister, parent, null );
+	public static void cascade(
+			final CascadingAction action, final CascadePoint cascadePoint,
+			final EventSource eventSource, final EntityPersister persister, final Object parent)
+			throws HibernateException {
+		cascade( action, cascadePoint, eventSource, persister, parent, null );
 	}
 
 	/**
@@ -95,9 +85,12 @@ public final class Cascade {
 	 * @param anything Anything ;)   Typically some form of cascade-local cache
 	 * which is specific to each CascadingAction type
 	 */
-	public void cascade(final EntityPersister persister, final Object parent, final Object anything) {
-		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) {
-			// performance opt
+	public static void cascade(
+			final CascadingAction action, final CascadePoint cascadePoint,
+			final EventSource eventSource, final EntityPersister persister, final Object parent, final Object anything)
+			throws HibernateException {
+
+		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
@@ -106,6 +99,7 @@ public final class Cascade {
 			final Type[] types = persister.getPropertyTypes();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
+			final int componentPathStackDepth = 0;
 			for ( int i=0; i<types.length; i++) {
 				final CascadeStyle style = cascadeStyles[i];
 				final String propertyName = persister.getPropertyNames()[i];
@@ -116,6 +110,10 @@ public final class Cascade {
 
 				if ( style.doCascade( action ) ) {
 					cascadeProperty(
+							action,
+							cascadePoint,
+							eventSource,
+							componentPathStackDepth,
 							parent,
 							persister.getPropertyValue( parent, i ),
 							types[i],
@@ -145,7 +143,11 @@ public final class Cascade {
 	/**
 	 * Cascade an action to the child or children
 	 */
-	private void cascadeProperty(
+	private static void cascadeProperty(
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
 			final Type type,
@@ -157,8 +159,12 @@ public final class Cascade {
 		if ( child != null ) {
 			if ( type.isAssociationType() ) {
 				final AssociationType associationType = (AssociationType) type;
-				if ( cascadeAssociationNow( associationType ) ) {
+				if ( cascadeAssociationNow( cascadePoint, associationType ) ) {
 					cascadeAssociation(
+							action,
+							cascadePoint,
+							eventSource,
+							componentPathStackDepth,
 							parent,
 							child,
 							type,
@@ -169,7 +175,17 @@ public final class Cascade {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				cascadeComponent( parent, child, (CompositeType) type, propertyName, anything );
+				cascadeComponent(
+						action,
+						cascadePoint,
+						eventSource,
+						componentPathStackDepth,
+						parent,
+						child,
+						(CompositeType) type,
+						propertyName,
+						anything
+				);
 			}
 		}
 		
@@ -247,21 +263,25 @@ public final class Cascade {
 	 *
 	 * @return True if the attribute represents a logical one to one association
 	 */
-	private boolean isLogicalOneToOne(Type type) {
+	private static boolean isLogicalOneToOne(Type type) {
 		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
-	private boolean cascadeAssociationNow(AssociationType associationType) {
+	private static boolean cascadeAssociationNow(final CascadePoint cascadePoint, AssociationType associationType) {
 		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
 
-	private void cascadeComponent(
+	private static void cascadeComponent(
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
 			final CompositeType componentType,
 			final String componentPropertyName,
 			final Object anything) {
-		componentPathStackDepth++;
+
 		final Object[] children = componentType.getPropertyValues( child, eventSource );
 		final Type[] types = componentType.getSubtypes();
 		for ( int i=0; i<types.length; i++ ) {
@@ -269,6 +289,10 @@ public final class Cascade {
 			final String subPropertyName = componentType.getPropertyNames()[i];
 			if ( componentPropertyStyle.doCascade( action ) ) {
 				cascadeProperty(
+						action,
+						cascadePoint,
+						eventSource,
+						componentPathStackDepth + 1,
 						parent,
 						children[i],
 						types[i],
@@ -279,10 +303,13 @@ public final class Cascade {
 					);
 			}
 		}
-		componentPathStackDepth--;
 	}
 
-	private void cascadeAssociation(
+	private static void cascadeAssociation(
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
 			final Type type,
@@ -290,17 +317,31 @@ public final class Cascade {
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) {
 		if ( type.isEntityType() || type.isAnyType() ) {
-			cascadeToOne( parent, child, type, style, anything, isCascadeDeleteEnabled );
+			cascadeToOne( action, eventSource, parent, child, type, style, anything, isCascadeDeleteEnabled );
 		}
 		else if ( type.isCollectionType() ) {
-			cascadeCollection( parent, child, style, anything, (CollectionType) type );
+			cascadeCollection(
+					action,
+					cascadePoint,
+					eventSource,
+					componentPathStackDepth,
+					parent,
+					child,
+					style,
+					anything,
+					(CollectionType) type
+			);
 		}
 	}
 
 	/**
 	 * Cascade an action to a collection
 	 */
-	private void cascadeCollection(
+	private static void cascadeCollection(
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
 			final CascadeStyle style,
@@ -309,14 +350,18 @@ public final class Cascade {
 		final CollectionPersister persister = eventSource.getFactory().getCollectionPersister( type.getRole() );
 		final Type elemType = persister.getElementType();
 
-		final CascadePoint originalCascadePoint = cascadePoint;
-		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE) {
-			cascadePoint = CascadePoint.AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION;
+		CascadePoint elementsCascadePoint = cascadePoint;
+		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {
+			elementsCascadePoint = CascadePoint.AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION;
 		}
 
 		//cascade to current collection elements
 		if ( elemType.isEntityType() || elemType.isAnyType() || elemType.isComponentType() ) {
 			cascadeCollectionElements(
+				action,
+				elementsCascadePoint,
+				eventSource,
+				componentPathStackDepth,
 				parent,
 				child,
 				type,
@@ -326,14 +371,14 @@ public final class Cascade {
 				persister.isCascadeDeleteEnabled()
 			);
 		}
-
-		cascadePoint = originalCascadePoint;
 	}
 
 	/**
 	 * Cascade an action to a to-one association or any type
 	 */
-	private void cascadeToOne(
+	private static void cascadeToOne(
+			final CascadingAction action,
+			final EventSource eventSource,
 			final Object parent,
 			final Object child,
 			final Type type,
@@ -358,7 +403,11 @@ public final class Cascade {
 	/**
 	 * Cascade to the collection elements
 	 */
-	private void cascadeCollectionElements(
+	private static void cascadeCollectionElements(
+			final CascadingAction action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
 			final CollectionType collectionType,
@@ -377,6 +426,10 @@ public final class Cascade {
 			final Iterator itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
 			while ( itr.hasNext() ) {
 				cascadeProperty(
+						action,
+						cascadePoint,
+						eventSource,
+						componentPathStackDepth,
 						parent,
 						itr.next(),
 						elemType,
@@ -407,7 +460,7 @@ public final class Cascade {
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
 			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
-			deleteOrphans( entityName, (PersistentCollection) child );
+			deleteOrphans( eventSource, entityName, (PersistentCollection) child );
 
 			if ( traceEnabled ) {
 				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
@@ -418,7 +471,7 @@ public final class Cascade {
 	/**
 	 * Delete any entities that were removed from the collection
 	 */
-	private void deleteOrphans(String entityName, PersistentCollection pc) throws HibernateException {
+	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection pc) throws HibernateException {
 		//TODO: suck this logic into the collection!
 		final Collection orphans;
 		if ( pc.wasInitialized() ) {

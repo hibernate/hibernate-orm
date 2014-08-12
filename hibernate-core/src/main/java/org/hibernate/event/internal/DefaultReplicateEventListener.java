@@ -222,7 +222,10 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			EventSource source) {
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( CascadingActions.REPLICATE, CascadePoint.AFTER_UPDATE, source ).cascade(
+			Cascade.cascade(
+					CascadingActions.REPLICATE,
+					CascadePoint.AFTER_UPDATE,
+					source,
 					persister,
 					entity,
 					replicationMode

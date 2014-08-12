@@ -164,7 +164,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	throws HibernateException {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session ).cascade( persister, object, anything );
+			Cascade.cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
 		}
 		finally {
 			session.getPersistenceContext().decrementCascadeLevel();

@@ -350,7 +350,10 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
 			// cascade-delete to collections BEFORE the collection owner is deleted
-			new Cascade( CascadingActions.DELETE, CascadePoint.AFTER_INSERT_BEFORE_DELETE, session ).cascade(
+			Cascade.cascade(
+					CascadingActions.DELETE,
+					CascadePoint.AFTER_INSERT_BEFORE_DELETE,
+					session,
 					persister,
 					entity,
 					transientEntities
@@ -373,7 +376,10 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
 			// cascade-delete to many-to-one AFTER the parent was deleted
-			new Cascade( CascadingActions.DELETE, CascadePoint.BEFORE_INSERT_AFTER_DELETE, session ).cascade(
+			Cascade.cascade(
+					CascadingActions.DELETE,
+					CascadePoint.BEFORE_INSERT_AFTER_DELETE,
+					session,
 					persister,
 					entity,
 					transientEntities

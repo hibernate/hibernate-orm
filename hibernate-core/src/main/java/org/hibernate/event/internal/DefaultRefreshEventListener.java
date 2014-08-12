@@ -135,7 +135,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		// cascade the refresh prior to refreshing this entity
 		refreshedAlready.put( object, object );
-		new Cascade( CascadingActions.REFRESH, CascadePoint.BEFORE_REFRESH, source ).cascade(
+		Cascade.cascade(
+				CascadingActions.REFRESH,
+				CascadePoint.BEFORE_REFRESH,
+				source,
 				persister,
 				object,
 				refreshedAlready

@@ -476,7 +476,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 		boolean found = elem != null;
 		// even though we might find a pre-existing element by join path, we may not be able to reuse it...
-		boolean useFoundFromElement = found && canReuse( elem, classAlias );
+		boolean useFoundFromElement = found && canReuse( elem );
 
 		if ( !useFoundFromElement ) {
 			// If this is an implied join in a from element, then use the impled join type which is part of the
@@ -525,12 +525,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		setFromElement( elem );    // This 'dot' expression now refers to the resulting from element.
 	}
 
-	private boolean canReuse(FromElement fromElement, String requestedAlias) {
-		// implicit joins are always(?) ok to reuse
-		if ( isImplicitJoin( fromElement ) ) {
-			return true;
-		}
-
+	private boolean canReuse(FromElement fromElement) {
 		// if the from-clauses are the same, we can be a little more aggressive in terms of what we reuse
 		if ( fromElement.getFromClause() == getWalker().getCurrentFromClause() ) {
 			return true;
@@ -538,10 +533,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 		// otherwise (subquery case) dont reuse the fromElement if we are processing the from-clause of the subquery
 		return getWalker().getCurrentClauseType() != SqlTokenTypes.FROM;
-	}
-
-	private boolean isImplicitJoin(FromElement fromElement) {
-		return fromElement.isImplied();
 	}
 
 	private void setImpliedJoin(FromElement elem) {

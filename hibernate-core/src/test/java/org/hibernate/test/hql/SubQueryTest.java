@@ -23,21 +23,23 @@
  */
 package org.hibernate.test.hql;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * NOTE : some subquery related tests still exist in other test classes in the suite.  This is a later
@@ -51,6 +53,7 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	@Table( name = "ROOT" )
 	public static class Root {
 		@Id
+		@GeneratedValue
 		public Integer id;
 		public String rootName;
 		@OneToOne
@@ -62,17 +65,19 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 	@Table( name = "BRANCH" )
 	public static class Branch {
 		@Id
+		@GeneratedValue
 		public Integer id;
 		public String branchName;
 
 		@OneToMany
-		public Set<Leaf> leaves;
+		public List<Leaf> leaves;
 	}
 
 	@Entity( name = "Leaf" )
 	@Table( name = "LEAF" )
 	public static class Leaf {
 		@Id
+		@GeneratedValue
 		public Integer id;
 		public String leafName;
 	}
@@ -84,18 +89,87 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9090" )
-	@FailureExpected( jiraKey = "HHH-9090" )
 	public void testCorrelatedJoin() {
 		Session s = openSession();
 		s.beginTransaction();
-
-		// simple syntax check of the generated SQL
-		final String qry = "from Root as r " +
-				"where r.branch.branchName = 'some branch name' " +
-				"  and exists( from r.branch.leaves as s where s.leafName = 'some leaf name')";
-		s.createQuery( qry ).list();
-
+		Root root = new Root();
+		root.rootName = "root name";
+		root.branch = new Branch();
+		root.branch.branchName = "branch";
+		root.branch.leaves = new ArrayList<Leaf>();
+		Leaf leaf1 = new Leaf();
+		leaf1.leafName = "leaf1";
+		Leaf leaf2 = new Leaf();
+		leaf2.leafName = "leaf2";
+		root.branch.leaves.add( leaf1 );
+		root.branch.leaves.add( leaf2 );
+		s.persist( leaf1 );
+		s.persist( leaf2 );
+		s.persist( root.branch );
+		s.persist( root );
+		Root otherRoot = new Root();
+		otherRoot.rootName = "other root name";
+		otherRoot.branch = new Branch();
+		otherRoot.branch.branchName = "other branch";
+		otherRoot.branch.leaves = new ArrayList<Leaf>();
+		Leaf otherLeaf1 = new Leaf();
+		otherLeaf1.leafName = "leaf1";
+		Leaf otherLeaf3 = new Leaf();
+		otherLeaf3.leafName = "leaf3";
+		otherRoot.branch.leaves.add( otherLeaf1 );
+		otherRoot.branch.leaves.add( otherLeaf3 );
+		s.persist( otherLeaf1 );
+		s.persist( otherLeaf3 );
+		s.persist( otherRoot.branch );
+		s.persist( otherRoot );
 		s.getTransaction().commit();
 		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		String qry = "from Root as r " +
+				"where r.branch.branchName = 'branch' " +
+				"  and exists( from r.branch.leaves as s where s.leafName = 'leaf1')";
+		Root rootQueried = (Root) s.createQuery( qry ).uniqueResult();
+		assertEquals( root.rootName, rootQueried.rootName );
+		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
+		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );
+		assertEquals( leaf2.leafName, rootQueried.branch.leaves.get( 1 ).leafName );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		qry = "from Root as r " +
+				"where r.branch.branchName = 'branch' " +
+				"  and exists( from r.branch.leaves as s where s.leafName = 'leaf3')";
+		assertNull( s.createQuery( qry ).uniqueResult() );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		qry = "from Root as r " +
+				"where exists( from r.branch.leaves as s where r.branch.branchName = 'branch' and s.leafName = 'leaf1')";
+		rootQueried = (Root) s.createQuery( qry ).uniqueResult();
+		assertEquals( root.rootName, rootQueried.rootName );
+		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
+		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );
+		assertEquals( leaf2.leafName, rootQueried.branch.leaves.get( 1 ).leafName );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		qry = "from Root as r" +
+				" where exists( from Root r1 where r1.branch.branchName = r.branch.branchName and r1.branch.branchName != 'other branch')";
+		rootQueried = (Root) s.createQuery( qry ).uniqueResult();
+		assertEquals( root.rootName, rootQueried.rootName );
+		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
+		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );
+		assertEquals( leaf2.leafName, rootQueried.branch.leaves.get( 1 ).leafName );
+		s.getTransaction().commit();
+		s.close();
+
 	}
 }

@@ -503,7 +503,7 @@ public class SchemaExport {
 				if ( statement != null ) {
 					String trimmedSql = statement.trim();
 					if ( trimmedSql.endsWith( ";" ) ) {
-						trimmedSql = trimmedSql.substring( 0, statement.length() - 1 );
+						trimmedSql = trimmedSql.substring( 0, trimmedSql.length() - 1 );
 					}
 					if ( !StringHelper.isEmpty( trimmedSql ) ) {
 						try {

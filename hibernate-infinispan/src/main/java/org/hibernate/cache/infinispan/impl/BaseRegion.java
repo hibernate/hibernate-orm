@@ -145,12 +145,7 @@ public abstract class BaseRegion implements Region {
 
 	@Override
 	public void destroy() throws CacheException {
-		try {
-			cache.stop();
-		}
-		finally {
-			cache.removeListener( this );
-		}
+		cache.stop();
 	}
 
 	@Override

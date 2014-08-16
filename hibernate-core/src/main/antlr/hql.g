@@ -598,7 +598,7 @@ relationalExpression
 					#l.setText( (n == null) ? "like" : "not like");
 				}
 				concatenation likeEscape)
-			| (MEMBER! (OF!)? p:path! {
+			| (MEMBER! (OF!)? p:treatAsPath! {
 				processMemberOf(n,#p,currentAST);
 			  } ) )
 		)
@@ -844,6 +844,13 @@ constant
 
 path
 	: identifier ( DOT^ { weakKeywords(); } identifier )*
+	;
+
+treatAsPath
+	: path
+	| i:IDENT! OPEN! p:treatAsPath AS! a:path! CLOSE! ( DOT^ path )? {i.getText().equalsIgnoreCase("treat") }? {
+        registerTreat( #p, #a );
+    }
 	;
 
 // Wraps the IDENT token from the lexer, in order to provide

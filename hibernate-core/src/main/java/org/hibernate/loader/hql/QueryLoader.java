@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -509,7 +510,7 @@ public class QueryLoader extends BasicLoader {
 		final boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
-			startTime = System.currentTimeMillis();
+			startTime = System.nanoTime();
 		}
 
 		try {
@@ -530,11 +531,13 @@ public class QueryLoader extends BasicLoader {
 			);
 
 			if ( stats ) {
+				final long endTime = System.nanoTime();
+				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 				session.getFactory().getStatisticsImplementor().queryExecuted(
 //						"HQL: " + queryTranslator.getQueryString(),
 						getQueryIdentifier(),
 						0,
-						System.currentTimeMillis() - startTime
+						milliseconds
 				);
 			}
 

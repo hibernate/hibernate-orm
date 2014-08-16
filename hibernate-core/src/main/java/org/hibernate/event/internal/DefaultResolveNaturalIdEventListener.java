@@ -24,6 +24,7 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -117,7 +118,7 @@ public class DefaultResolveNaturalIdEventListener
 		final boolean stats = factory.getStatistics().isStatisticsEnabled();
 		long startTime = 0;
 		if ( stats ) {
-			startTime = System.currentTimeMillis();
+			startTime = System.nanoTime();
 		}
 		
 		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
@@ -129,10 +130,11 @@ public class DefaultResolveNaturalIdEventListener
 		if ( stats ) {
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = event.getEntityPersister().getNaturalIdCacheAccessStrategy();
 			final String regionName = naturalIdCacheAccessStrategy == null ? null : naturalIdCacheAccessStrategy.getRegion().getName();
-			
+			final long endTime = System.nanoTime();
+			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			factory.getStatisticsImplementor().naturalIdQueryExecuted(
 					regionName,
-					System.currentTimeMillis() - startTime );
+					milliseconds );
 		}
 		
 		//PK can be null if the entity doesn't exist

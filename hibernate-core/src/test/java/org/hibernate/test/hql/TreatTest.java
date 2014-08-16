@@ -23,7 +23,13 @@
  */
 package org.hibernate.test.hql;
 
+import static org.junit.Assert.*;
+
+import java.util.List;
+
+import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -40,13 +46,36 @@ public class TreatTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9342" )
 	public void memberOfTreatTest() {
 		final Session s = openSession();
 
-		s.createQuery( "select pet"
+		s.getTransaction().begin();
+
+		final Human owner = new Human();
+		s.persist( owner );
+
+		final Dog wildDog = new Dog();
+		s.persist( wildDog );
+
+		final Dog petDog = new Dog();
+		petDog.setOwner( owner );
+		s.persist( petDog );
+
+		final Cat petCat = new Cat();
+		petCat.setOwner( owner );
+		s.persist( petCat );
+
+		s.getTransaction().commit();
+
+		final Query q = s.createQuery( "select pet"
 				+ " from Animal pet, Animal owner"
 				+ " where pet member of treat (owner as Human).pets"
 		);
+		@SuppressWarnings("unchecked")
+		final List<Animal> results = q.list();
+
+		assertEquals( 2, results.size() );
 
 		s.close();
 	}

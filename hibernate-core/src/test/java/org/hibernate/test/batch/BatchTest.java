@@ -83,7 +83,6 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBatchInsertUpdateSizeGtJdbcBatchSize() {
-		long start = System.currentTimeMillis();
 		int batchSize = sessionFactory().getSettings().getJdbcBatchSize();
 		doBatchInsertUpdate( 50, batchSize + 1 );
 	}

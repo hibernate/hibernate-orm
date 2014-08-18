@@ -24,6 +24,9 @@
 package org.hibernate.loader.plan.build.spi;
 
 import org.hibernate.loader.plan.spi.CollectionQuerySpace;
+import org.hibernate.loader.plan.spi.Join;
+import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
+import org.hibernate.persister.collection.CollectionPropertyNames;
 
 /**
  * Describes a collection query space that allows adding joins with other
@@ -34,4 +37,19 @@ import org.hibernate.loader.plan.spi.CollectionQuerySpace;
  * @author Gail Badner
  */
 public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace, ExpandingQuerySpace {
+
+	/**
+	 * Adds a join with another query space for either a collection element or index. If {@code join}
+	 * is an instance of {@link JoinDefinedByMetadata}, then the only valid values returned by
+	 * {@link JoinDefinedByMetadata#getJoinedPropertyName} are {@link CollectionPropertyNames#COLLECTION_ELEMENTS}
+	 * and {@link CollectionPropertyNames#COLLECTION_INDICES}, for the collection element or index, respectively.
+	 *
+	 * @param join The element or index join to add.
+	 *
+	 * @throws java.lang.IllegalArgumentException if {@code join} is an instance of {@link JoinDefinedByMetadata}
+	 * and {@code join.getJoinedPropertyName() is neither {@link CollectionPropertyNames#COLLECTION_ELEMENTS}
+	 * nor {@link CollectionPropertyNames#COLLECTION_INDICES}}.
+	 * @throws java.lang.IllegalStateException if there is already an existing join with the same joined property name.
+	 */
+	public void addJoin(Join join);
 }

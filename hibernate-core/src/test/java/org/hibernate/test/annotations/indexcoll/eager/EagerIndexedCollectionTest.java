@@ -24,17 +24,18 @@
 package org.hibernate.test.annotations.indexcoll.eager;
 
 import java.util.Date;
-import java.util.Iterator;
+import java.util.List;
 
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.test.annotations.indexcoll.Gas;
 import org.hibernate.test.annotations.indexcoll.GasKey;
+import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,26 +46,26 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel( message = "@MapKeyJoinColumns not supported yet." )
 public class EagerIndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testJPA2DefaultMapColumns() throws Exception {
-		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDef", "_KEY" );
-		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesPerKeyDef", "_KEY" );
-		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDefLeg", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class, "gasesDef", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class, "gasesPerKeyDef", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class, "gasesDefLeg", "_KEY" );
 	}
 
-	private void isDefaultKeyColumnPresent(String collectionOwner, String propertyName, String suffix) {
+	private void isDefaultKeyColumnPresent(Class<?> collectionOwner, String propertyName, String suffix) {
 		assertTrue( "Could not find " + propertyName + suffix,
 				isDefaultColumnPresent(collectionOwner, propertyName, suffix) );
 	}
 
-	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
-		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+	private boolean isDefaultColumnPresent(Class<?> collectionOwner, String propertyName, String suffix) {
 		boolean hasDefault = false;
-		while ( columnIterator.hasNext() ) {
-			Column column = (Column) columnIterator.next();
-			if ( (propertyName + suffix).equals( column.getName() ) ) hasDefault = true;
+		List<Value> values = SchemaUtil.getCollectionTable( collectionOwner, propertyName, metadata() ).values();
+		for ( Value value : values ) {
+			org.hibernate.metamodel.spi.relational.Column column = (org.hibernate.metamodel.spi.relational.Column) value;
+			if ( (propertyName + suffix).equals( column.getColumnName().getText() ) ) hasDefault = true;
 		}
 		return hasDefault;
 	}

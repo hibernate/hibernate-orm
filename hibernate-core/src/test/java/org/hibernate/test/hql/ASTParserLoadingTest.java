@@ -1274,7 +1274,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "from Human h where h.name = ('John', 'X', 'Doe')" ).list();
 		s.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name" ).list();
 		s.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name" ).list();
-		s.createQuery( "from Human h where ('John', 'X', 'Doe') >= h.name" ).list();
 
 		s.createQuery( "from Human h order by h.name" ).list();
 

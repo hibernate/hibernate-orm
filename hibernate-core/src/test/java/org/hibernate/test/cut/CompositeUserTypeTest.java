@@ -28,13 +28,16 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -120,5 +123,151 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 		
 	}
 
-}
+	/**
+	 * Tests the {@code =} operator on composite types.
+	 */
+	public void testEqualOperator() {
+		final Session s = openSession();
+		s.getTransaction().begin();
 
+		final Transaction txn = new Transaction();
+		txn.setDescription( "foo" );
+		txn.setValue( new MonetoryAmount( new BigDecimal( 42 ), Currency.getInstance( "AUD" ) ) );
+		s.persist( txn );
+
+		final Query q = s.createQuery( "from Transaction where value = :amount" );
+
+		/* Both amount and currency match. */
+		q.setParameter( "amount", new MonetoryAmount( new BigDecimal( 42 ), Currency.getInstance( "AUD" ) ) );
+		assertEquals( 1, q.list().size() );
+
+		/* Only currency matches. */
+		q.setParameter( "amount", new MonetoryAmount( new BigDecimal( 36 ), Currency.getInstance( "AUD" ) ) );
+		assertEquals( 0, q.list().size() );
+
+		/* Only amount matches. */
+		q.setParameter( "amount", new MonetoryAmount( new BigDecimal( 42 ), Currency.getInstance( "EUR" ) ) );
+		assertEquals( 0, q.list().size() );
+
+		/* None match. */
+		q.setParameter( "amount", new MonetoryAmount( new BigDecimal( 76 ), Currency.getInstance( "USD" ) ) );
+		assertEquals( 0, q.list().size() );
+
+		s.delete( txn );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	/**
+	 * Tests the {@code <>} operator on composite types.
+	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-5946" )
+	public void testNotEqualOperator() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		final Transaction t1 = new Transaction();
+		t1.setDescription( "foo" );
+		t1.setValue( new MonetoryAmount( new BigDecimal( 178 ), Currency.getInstance( "EUR" ) ) );
+		s.persist( t1 );
+
+		final Transaction t2 = new Transaction();
+		t2.setDescription( "bar" );
+		t2.setValue( new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "USD" ) ) );
+		s.persist( t2 );
+
+		final Transaction t3 = new Transaction();
+		t3.setDescription( "bar" );
+		t3.setValue( new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "EUR" ) ) );
+		s.persist( t3 );
+
+		final Query q1 = s.createQuery( "from Transaction where value <> :amount" );
+		q1.setParameter( "amount", new MonetoryAmount( new BigDecimal( 178 ), Currency.getInstance( "EUR" ) ) );
+		assertEquals( 2, q1.list().size() );
+
+		final Query q2 = s.createQuery( "from Transaction where value <> :amount and description = :str" );
+		q2.setParameter( "amount", new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "USD" ) ) );
+		q2.setParameter( "str", "bar" );
+		assertEquals( 1, q2.list().size() );
+
+		s.delete( t3 );
+		s.delete( t2 );
+		s.delete( t1 );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	/**
+	 * Tests the {@code <} operator on composite types. As long as we don't support it, we need to throw an exception
+	 * rather than create a random query.
+	 */
+	@Test( expected = QuerySyntaxException.class )
+	@TestForIssue( jiraKey = "HHH-5946" )
+	public void testLessThanOperator() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		final Query q = s.createQuery( "from Transaction where value < :amount" );
+		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
+		q.list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	/**
+	 * Tests the {@code <=} operator on composite types. As long as we don't support it, we need to throw an exception
+	 * rather than create a random query.
+	 */
+	@Test( expected = QuerySyntaxException.class )
+	@TestForIssue( jiraKey = "HHH-5946" )
+	public void testLessOrEqualOperator() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		final Query q = s.createQuery( "from Transaction where value <= :amount" );
+		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
+		q.list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	/**
+	 * Tests the {@code >} operator on composite types. As long as we don't support it, we need to throw an exception
+	 * rather than create a random query.
+	 */
+	@Test( expected = QuerySyntaxException.class )
+	@TestForIssue( jiraKey = "HHH-5946" )
+	public void testGreaterThanOperator() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		final Query q = s.createQuery( "from Transaction where value > :amount" );
+		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
+		q.list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	/**
+	 * Tests the {@code >=} operator on composite types. As long as we don't support it, we need to throw an exception
+	 * rather than create a random query.
+	 */
+	@Test( expected = QuerySyntaxException.class )
+	@TestForIssue( jiraKey = "HHH-5946" )
+	public void testGreaterOrEqualOperator() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		final Query q = s.createQuery( "from Transaction where value >= :amount" );
+		q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
+		q.list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+}

@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -51,6 +52,7 @@ import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.InsertStatement;
+import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.Statement;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
@@ -271,6 +273,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		JavaConstantConverter converter = new JavaConstantConverter();
 		NodeTraverser walker = new NodeTraverser( converter );
+		walker.traverseDepthFirst( hqlAst );
+		
+		CollectionTableJoinWithKeyConverter converter2 = new CollectionTableJoinWithKeyConverter();
+		walker = new NodeTraverser( converter2 );
 		walker.traverseDepthFirst( hqlAst );
 
 		showHqlAst( hqlAst );
@@ -595,6 +601,141 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				dotStructureRoot.setFirstChild( null );
 				dotStructureRoot.setType( HqlTokenTypes.JAVA_CONSTANT );
 				dotStructureRoot.setText( expression );
+			}
+		}
+	}
+	
+	public static class CollectionTableJoinWithKeyConverter implements NodeTraverser.VisitationStrategy {
+		
+		public static class Level {
+			private AST selectFromRoot;
+			private AST joinRoot;
+			private AST leftJoinRoot;
+			private AST withRoot;
+			private boolean createdWhereClause = false;
+			private List<String> joinAliasesToAdd = new ArrayList<String>();
+		}
+		
+		private Stack<Level> levels = new Stack<Level>();
+		private Level currentLevel = new Level();
+		
+		public void visit(AST node) {
+			if ( currentLevel.joinRoot != null ) {
+                if (ASTUtil.isSubtreeChild(currentLevel.joinRoot, node)) { 
+                	visitJoin(node);
+                	return;
+                }
+                // we are now at a new tree level
+                currentLevel.joinRoot = null;
+                currentLevel.leftJoinRoot = null;
+                currentLevel.withRoot = null;
+			}
+
+			if ( currentLevel.joinRoot == null && node.getType() == HqlTokenTypes.JOIN ) {
+				currentLevel.joinRoot = node;
+			}
+			
+			if ( node.getType() == HqlTokenTypes.SELECT_FROM ) {	
+				if (currentLevel.selectFromRoot != null) {
+					levels.push( currentLevel );
+					currentLevel = new Level();
+				}
+				currentLevel.selectFromRoot = node;
+				AST whereNode = currentLevel.selectFromRoot.getNextSibling();
+				
+				if (whereNode == null || whereNode.getType() != HqlTokenTypes.WHERE) {
+					// No where clause given, so we have to generate one
+					whereNode = new Node();
+					whereNode.setType( HqlTokenTypes.WHERE );
+					whereNode.setText( "WHERE" );
+					whereNode.setNextSibling( currentLevel.selectFromRoot.getNextSibling() );
+					currentLevel.selectFromRoot.setNextSibling( whereNode );
+					currentLevel.createdWhereClause = true;
+				}
+			}
+
+			if ( currentLevel.selectFromRoot != null && node.getType() == HqlTokenTypes.WHERE ) {		
+				// Stop if we have nothing to add to the where clause
+				if (currentLevel.joinAliasesToAdd.isEmpty()) {
+					if (currentLevel.createdWhereClause) currentLevel.selectFromRoot.setNextSibling( node.getNextSibling() );
+					if (levels.size() > 0) currentLevel = levels.pop();
+					return;
+				}
+				
+				currentLevel.selectFromRoot = null;
+				currentLevel.createdWhereClause = false;
+				
+				AST lastCondition = null;
+				
+				for (String joinAlias : currentLevel.joinAliasesToAdd) {
+					AST isNotNullNode = new Node();
+					isNotNullNode.setType( HqlTokenTypes.IS_NOT_NULL );
+					isNotNullNode.setText( "is not null" );
+					AST identNode = new Node();
+					identNode.setType( HqlTokenTypes.IDENT );
+					identNode.setText( joinAlias );
+					
+					isNotNullNode.setFirstChild( identNode );
+					
+					if ( lastCondition != null) {
+						AST condition = new Node();
+						condition.setType( HqlTokenTypes.AND );
+						condition.setText( "AND" );
+						condition.setFirstChild( lastCondition );
+						lastCondition.setNextSibling( isNotNullNode );
+						lastCondition = condition;
+					} else {
+						lastCondition = isNotNullNode;
+					}
+				}
+
+				if (node.getFirstChild() == null) {
+					node.setFirstChild( lastCondition );
+				} else {
+					AST condition = new Node();
+					condition.setType( HqlTokenTypes.AND );
+					condition.setText( "AND" );
+					condition.setFirstChild( lastCondition );
+					lastCondition.setNextSibling( node.getFirstChild() );
+					node.setFirstChild( condition );
+				}
+				
+				if (levels.size() > 0) currentLevel = levels.pop();
+			}
+		}
+		
+		private void visitJoin(AST node) {
+			if ( currentLevel.leftJoinRoot != null ) {
+            	visitLeftJoin(node);
+            	return;
+			}
+
+			if ( currentLevel.leftJoinRoot == null && node.getType() == HqlTokenTypes.LEFT ) {
+				currentLevel.leftJoinRoot = node;
+			}
+		}
+		
+		private void visitLeftJoin(AST node) {
+			if ( currentLevel.withRoot != null ) {
+            	visitWith( node );
+            	return;
+			}
+
+			if ( currentLevel.withRoot == null && node.getType() == HqlTokenTypes.WITH ) {
+				currentLevel.withRoot = node;
+			}
+		}
+
+		private void visitWith(AST node) {
+			if ( node.getType() == HqlTokenTypes.KEY ) {
+				AST joinPathNode = currentLevel.leftJoinRoot.getNextSibling();
+				AST joinAliasNode = joinPathNode.getNextSibling();
+				String joinAlias = joinAliasNode.getText();
+				
+				if (node.getFirstChild().getText().equals( joinAlias )) {
+					// The key of the join relation is used
+					currentLevel.joinAliasesToAdd.add( joinAlias );
+				}
 			}
 		}
 	}

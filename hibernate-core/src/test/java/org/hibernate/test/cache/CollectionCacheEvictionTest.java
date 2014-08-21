@@ -43,7 +43,7 @@ import static org.junit.Assert.fail;
 public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { User.class, Company.class };
+		return new Class[] { User.class, Company.class, Company2.class, User2.class };
 	}
 
 	@Override
@@ -69,6 +69,15 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		Company company2 = new Company( 2 );
 		s.save( company2 );
 
+		Company2 company3 = new Company2(3);
+		s.save( company3 );
+		User2 user2 = new User2(2);
+		company3.getUsers().add(user2);
+		s.saveOrUpdate( company3 );
+		user2.getCompanies().add(company3);
+		s.saveOrUpdate( user2 );
+		
+
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -80,7 +89,10 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 		s.createQuery( "delete from org.hibernate.test.cache.User" ).executeUpdate();
 		s.createQuery( "delete from org.hibernate.test.cache.Company" ).executeUpdate();
-
+		s.createSQLQuery( "delete company_user" ).executeUpdate();		
+		s.createQuery( "delete from org.hibernate.test.cache.User2" ).executeUpdate();
+		s.createQuery( "delete from org.hibernate.test.cache.Company2" ).executeUpdate();
+	
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -91,11 +103,18 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		Company company = (Company) s.get( Company.class, 1 );
+		Company2 company2 = (Company2) s.get( Company2.class, 3 );
 		// init cache of collection
 		assertEquals( 1, company.getUsers().size() );
+		assertEquals( 1, company2.getUsers().size() );
 
 		User user = new User( 2, company );
 		s.save( user );
+		User2 user2 = new User2( 3 );
+		company2.getUsers().add(user2);
+		s.saveOrUpdate( user2 );
+		user2.getCompanies().add(company2);
+		s.saveOrUpdate(user2);
 
 		s.getTransaction().commit();
 		s.close();
@@ -104,8 +123,10 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		company = (Company) s.get( Company.class, 1 );
+		company2 = (Company2) s.get( Company2.class, 3 );
 		// fails if cache is not evicted
 		assertEquals( 2, company.getUsers().size() );
+		assertEquals( 2, company2.getUsers().size() );
 
 		s.close();
 	}
@@ -116,11 +137,17 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		Company company = (Company) s.get( Company.class, 1 );
+		Company2 company2 = (Company2) s.get( Company2.class, 3 );
 		// init cache of collection
 		assertEquals( 1, company.getUsers().size() );
+		assertEquals( 1, company2.getUsers().size() );
 
 		s.delete( company.getUsers().get( 0 ) );
-
+		User2 user2 = company2.getUsers().iterator().next();
+		company2.getUsers().remove(user2);
+		user2.getCompanies().remove(company2);
+		s.saveOrUpdate(company2);
+		s.saveOrUpdate(user2);
 		s.getTransaction().commit();
 		s.close();
 
@@ -128,9 +155,11 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		company = (Company) s.get( Company.class, 1 );
+		company2 = (Company2) s.get( Company2.class, 3 );
 		// fails if cache is not evicted
 		try {
 			assertEquals( 0, company.getUsers().size() );
+			assertEquals( 0, company2.getUsers().size() );
 		}
 		catch ( ObjectNotFoundException e ) {
 			fail( "Cached element not found" );

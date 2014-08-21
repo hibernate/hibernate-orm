@@ -126,7 +126,7 @@ public class CollectionCacheInvalidator implements Integrator, PostInsertEventLi
 				}
 				// this is the property this OneToMany relation is mapped by
 				String mappedBy = collectionPersister.getMappedByProperty();
-				if ( mappedBy != null ) {
+				if ( mappedBy != null && !"".equals(mappedBy)) {
 					int i = persister.getEntityMetamodel().getPropertyIndex( mappedBy );
 					Serializable oldId = null;
 					if ( oldState != null ) {

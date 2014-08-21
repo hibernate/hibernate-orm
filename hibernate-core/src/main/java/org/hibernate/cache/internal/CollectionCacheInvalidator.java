@@ -111,6 +111,14 @@ public class CollectionCacheInvalidator implements Integrator, PostInsertEventLi
 	}
 
 	private void evictCache(Object entity, EntityPersister persister, EventSource session, Object[] oldState) {
+		/* NOTE: This try/catch obfuscates the issue we've been encountering, and simply results a LOG.error call. 
+		 * My preference would be to make a small change here, and adjust the try/catch, though I have less understanding
+		 * over the long-term implications. Three possible solutions would be either:
+		 * a) add an additional try/catch just inside the for-loop below
+		 * b) move the try/catch just inside the for-loop
+		 * c) remove the try/catch entirely
+		 *
+		 */
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 

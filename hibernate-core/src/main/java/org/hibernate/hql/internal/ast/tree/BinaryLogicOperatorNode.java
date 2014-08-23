@@ -198,7 +198,7 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 				AST rhs = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[i] );
 				op.setFirstChild( lhs );
 				lhs.setNextSibling( rhs );
-				AST newContainer = getASTFactory().create( HqlSqlTokenTypes.AND, "AND" );
+				AST newContainer = getASTFactory().create( container.getType(), container.getText() );
 				container.setFirstChild( newContainer );
 				newContainer.setNextSibling( op );
 				container = newContainer;

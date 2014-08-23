@@ -6,14 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -28,6 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -48,8 +41,15 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * An <tt>EntityPersister</tt> implementing the normalized "table-per-subclass"
@@ -963,13 +963,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		if ( ENTITY_CLASS.equals( propertyName ) ) {
-			// This doesn't actually seem to work but it *might*
-			// work on some dbs. Also it doesn't work if there
-			// are multiple columns of results because it
-			// is not accounting for the suffix:
-			// return new String[] { getDiscriminatorColumnName() };
-
-			return new String[] { discriminatorFragment( alias ).toFragmentString() };
+			if ( explicitDiscriminatorColumnName == null ) {
+				return new String[] { discriminatorFragment( alias ).toFragmentString() };
+			}
+			else {
+				return new String[] { StringHelper.qualify( alias, explicitDiscriminatorColumnName ) };
+			}
 		}
 		else {
 			return super.toColumns( alias, propertyName );

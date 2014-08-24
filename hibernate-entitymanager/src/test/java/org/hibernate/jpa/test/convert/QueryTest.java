@@ -23,6 +23,11 @@
  */
 package org.hibernate.jpa.test.convert;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import javax.persistence.Embeddable;
@@ -30,15 +35,17 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
+import javax.persistence.Query;
 import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static junit.framework.Assert.assertNotNull;
 
 /**
  * Test AttributeConverter functioning in various Query scenarios.
@@ -55,6 +62,77 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 		Employee jDoe = em.createQuery( "from Employee e where e.salary = " + SALARY + "f", Employee.class ).getSingleResult();
 		assertNotNull( jDoe );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9356" )
+	public void testCriteriaBetween() {
+		final EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		final CriteriaBuilder cb = em.getCriteriaBuilder();
+		final CriteriaQuery<Employee> query = cb.createQuery( Employee.class );
+		final Root<Employee> root = query.from( Employee.class );
+		query.select( root );
+
+		query.where( cb.between( root.<Float>get( "salary" ), new Float( 300f ), new Float( 400f ) ) );
+		final List<Employee> result0 = em.createQuery( query ).getResultList();
+		assertEquals( 0, result0.size() );
+
+		query.where( cb.between( root.<Float>get( "salary" ), new Float( 100f ), new Float( 200f ) ) );
+		final List<Employee> result1 = em.createQuery( query ).getResultList();
+		assertEquals( 0, result1.size() );
+
+		query.where( cb.between( root.<Float>get( "salary" ), new Float( 200f ), new Float( 300f ) ));
+		final List<Employee> result2 = em.createQuery( query ).getResultList();
+		assertEquals( 1, result2.size() );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testJpqlLiteralBetween() {
+		final EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		@SuppressWarnings("unchecked")
+		final List<Employee> result0 = em.createQuery( "from Employee where salary between 300.0F and 400.0F" ).getResultList();
+		assertEquals( 0, result0.size() );
+
+		@SuppressWarnings("unchecked")
+		final List<Employee> result1 = em.createQuery( "from Employee where salary between 100.0F and 200.0F" ).getResultList();
+		assertEquals( 0, result1.size() );
+
+		@SuppressWarnings("unchecked")
+		final List<Employee> result2 = em.createQuery( "from Employee where salary between 200.0F and 300.0F" ).getResultList();
+		assertEquals( 1, result2.size() );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testJpqlParametrizedBetween() {
+		final EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		final Query query = em.createQuery( "from Employee where salary between :low and :high" );
+
+		query.setParameter( "low", new Float( 300f ) );
+		query.setParameter( "high", new Float( 400f ) );
+		assertEquals( 0, query.getResultList().size() );
+
+		query.setParameter( "low", new Float( 100f ) );
+		query.setParameter( "high", new Float( 200f ) );
+		assertEquals( 0, query.getResultList().size() );
+
+		query.setParameter( "low", new Float( 200f ) );
+		query.setParameter( "high", new Float( 300f ) );
+		assertEquals( 1, query.getResultList().size() );
+
 		em.getTransaction().commit();
 		em.close();
 	}

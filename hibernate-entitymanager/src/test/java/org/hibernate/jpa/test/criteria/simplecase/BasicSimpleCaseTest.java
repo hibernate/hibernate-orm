@@ -27,13 +27,17 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static javax.persistence.criteria.CriteriaBuilder.SimpleCase;
@@ -92,6 +96,52 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		query.orderBy( builder.asc( orderCase.otherwise( "c" ) ) );
 
 		em.createQuery( query );
+
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9343")
+	public void testCaseStringResult() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Tuple> query = builder.createTupleQuery();
+		Root<Customer> root = query.from( Customer.class );
+
+		Path<String> emailPath = root.get( "email" );
+		Case<String> case_ = builder.selectCase();
+		case_.when( builder.greaterThan( builder.length( emailPath ), 13 ), "Long" );
+		case_.when( builder.greaterThan( builder.length( emailPath ), 12 ), "Normal" );
+		Expression<String> emailType = case_.otherwise( "Unknown" );
+
+		query.multiselect( emailPath, emailType );
+
+		em.createQuery( query ).getResultList();
+
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9343")
+	public void testCaseIntegerResult() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Tuple> query = builder.createTupleQuery();
+		Root<Customer> root = query.from( Customer.class );
+
+		Path<String> emailPath = root.get( "email" );
+		Case<Integer> case_ = builder.selectCase();
+		case_.when( builder.greaterThan( builder.length( emailPath ), 13 ), 2 );
+		case_.when( builder.greaterThan( builder.length( emailPath ), 12 ), 1 );
+		Expression<Integer> emailType = case_.otherwise( 0 );
+
+		query.multiselect( emailPath, emailType );
+
+		em.createQuery( query ).getResultList();
 
 	}
 

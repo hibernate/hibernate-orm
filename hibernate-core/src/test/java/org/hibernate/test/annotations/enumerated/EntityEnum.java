@@ -7,6 +7,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
@@ -53,6 +54,10 @@ public class EntityEnum {
 	@Column(columnDefinition = "char(5)")
 	@Enumerated(EnumType.STRING)
 	private Trimmed trimmed;
+
+	@Formula("(select 'A' from dual)")
+	@Enumerated(EnumType.STRING)
+	private Trimmed formula;
 
 	public long getId() {
 		return id;
@@ -108,5 +113,13 @@ public class EntityEnum {
 
 	public void setTrimmed(Trimmed trimmed) {
 		this.trimmed = trimmed;
+	}
+
+	public Trimmed getFormula() {
+		return formula;
+	}
+
+	public void setFormula(Trimmed formula) {
+		this.formula = formula;
 	}
 }

@@ -382,7 +382,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4699")
+	@TestForIssue(jiraKey = "HHH-9369")
 	public void testFormula() throws SQLException {
 		// use native SQL to insert, forcing whitespace to occur
 		final Session s = openSession();

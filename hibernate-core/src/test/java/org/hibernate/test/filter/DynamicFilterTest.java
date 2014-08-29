@@ -33,7 +33,6 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -51,7 +50,9 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
@@ -469,6 +470,16 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 
 		session.close();
 		testData.release();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5932" )
+	@FailureExpected( jiraKey = "HHH-5932" )
+	public void testHqlQueryWithColons() {
+		final Session session = openSession();
+		session.enableFilter( "region" ).setParameter( "region", "PACA" );
+		session.createQuery( "from Salesperson p where p.name = ':hibernate'" ).list();
+		session.close();
 	}
 
 	@Test

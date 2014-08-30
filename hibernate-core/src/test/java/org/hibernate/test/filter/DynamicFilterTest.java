@@ -474,7 +474,6 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5932" )
-	@FailureExpected( jiraKey = "HHH-5932" )
 	public void testHqlQueryWithColons() {
 		final Session session = openSession();
 		session.enableFilter( "region" ).setParameter( "region", "PACA" );

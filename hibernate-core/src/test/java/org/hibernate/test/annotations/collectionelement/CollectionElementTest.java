@@ -38,6 +38,8 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.test.annotations.Country;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -263,6 +265,8 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9387")
+	@FailureExpected( jiraKey = "HHH-9387")
 	public void testDefaultTableNameUsesJpaEntityName() {
 		final Collection collection = configuration().getCollectionMapping( Matrix.class.getName() + "." + "mvalues" );
 		final Table table = collection.getCollectionTable();

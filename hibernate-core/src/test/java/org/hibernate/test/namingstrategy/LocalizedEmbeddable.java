@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.namingstrategy.regression;
+package org.hibernate.test.namingstrategy;
 
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class LocalizedEntity implements Serializable, Cloneable {
+public class LocalizedEmbeddable implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = -8539302606114365372L;
 
@@ -38,7 +38,7 @@ public class LocalizedEntity implements Serializable, Cloneable {
 	/**
 	 * Empty Constructor
 	 */
-	public LocalizedEntity() {
+	public LocalizedEmbeddable() {
 		super();
 	}
 
@@ -46,7 +46,7 @@ public class LocalizedEntity implements Serializable, Cloneable {
 	 * @param name
 	 * @param description
 	 */
-	public LocalizedEntity(String name, String description) {
+	public LocalizedEmbeddable(String name, String description) {
 		super();
 		this.name = name;
 		this.description = description;
@@ -71,8 +71,8 @@ public class LocalizedEntity implements Serializable, Cloneable {
 	}
 
 	@Override
-	public LocalizedEntity clone() {
-		return new LocalizedEntity( this.name, this.description );
+	public LocalizedEmbeddable clone() {
+		return new LocalizedEmbeddable( this.name, this.description );
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class LocalizedEntity implements Serializable, Cloneable {
 			return false;
 		if ( getClass() != obj.getClass() )
 			return false;
-		LocalizedEntity other = (LocalizedEntity) obj;
+		LocalizedEmbeddable other = (LocalizedEmbeddable) obj;
 		if ( description == null ) {
 			if ( other.description != null )
 				return false;

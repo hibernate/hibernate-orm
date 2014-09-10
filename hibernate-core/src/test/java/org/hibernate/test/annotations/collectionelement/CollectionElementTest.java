@@ -41,6 +41,8 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -261,7 +263,9 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+
 	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9281" )
+	@TestForIssue( jiraKey = "HHH-9281")
 	public void testDefaultTableNameUsesJpaEntityName() {
 		final TableSpecification table = getCollectionTable( Matrix.class.getName(), "mvalues");
 		assertEquals( "Mtx_mvalues", table.getLogicalName().getText() );

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.namingstrategy.regression;
+package org.hibernate.test.namingstrategy;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -37,19 +37,18 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 
-@Entity
-public class Workflow implements Serializable {
+import org.hibernate.test.namingstrategy.Item;
 
-	private static final long serialVersionUID = 7504955999101475681L;
+@Entity
+public class Category {
 
 	private Long id;
-	private Locale defaultLanguage;
-	private Set<Locale> supportedLocales = new HashSet<Locale>();
-	private Map<Locale, LocalizedEntity> localized = new HashMap<Locale, LocalizedEntity>();
+	private Set<Item> items = new HashSet<Item>();
 
-	public Workflow() {
+	public Category() {
 	}
 
 	@Id
@@ -62,34 +61,12 @@ public class Workflow implements Serializable {
 		this.id = id;
 	}
 
-	@Basic(optional = false)
-	public Locale getDefaultLanguage() {
-		return defaultLanguage;
+	@ManyToMany
+	public Set<Item> getItems() {
+		return items;
 	}
 
-	public void setDefaultLanguage(Locale defaultLanguage) {
-		this.defaultLanguage = defaultLanguage;
+	public void setItems(Set<Item> items) {
+		this.items = items;
 	}
-
-	@ElementCollection
-	@CollectionTable(joinColumns = { @JoinColumn(name = "ID", referencedColumnName = "ID", nullable = false, insertable = false, updatable = false) })
-	public Set<Locale> getSupportedLocales() {
-		return supportedLocales;
-	}
-
-	public void setSupportedLocales(Set<Locale> supportedLocales) {
-		this.supportedLocales = supportedLocales;
-	}
-
-	@ElementCollection
-	@CollectionTable(joinColumns = { @JoinColumn(name = "ID", referencedColumnName = "ID", nullable = false, insertable = false, updatable = false) })
-	@MapKeyColumn(name = "LANGUAGE_CODE", nullable = false, insertable = false, updatable = false)
-	public Map<Locale, LocalizedEntity> getLocalized() {
-		return localized;
-	}
-
-	public void setLocalized(Map<Locale, LocalizedEntity> localized) {
-		this.localized = localized;
-	}
-
 }

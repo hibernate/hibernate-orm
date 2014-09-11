@@ -4,17 +4,15 @@ import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.test.annotations.manytomany.PhoneNumber;
-
 @Embeddable
 public class ContactInfo {
 //	@ManyToOne
 //	Address address; // Unidirectional
 
-	List<org.hibernate.test.annotations.manytomany.PhoneNumber> phoneNumbers; // Bidirectional
+	List<PhoneNumber> phoneNumbers; // Bidirectional
 
 	@ManyToMany(cascade= CascadeType.ALL)
-	public List<org.hibernate.test.annotations.manytomany.PhoneNumber> getPhoneNumbers() {
+	public List<PhoneNumber> getPhoneNumbers() {
 		return phoneNumbers;
 	}
 

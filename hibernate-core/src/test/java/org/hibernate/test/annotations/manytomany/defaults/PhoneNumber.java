@@ -5,12 +5,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.test.annotations.manytomany.Employee;
-
 @Entity
 public class PhoneNumber {
 	int phNumber;
-	Collection<org.hibernate.test.annotations.manytomany.Employee> employees;
+	Collection<Employee> employees;
 
 	@Id
 	public int getPhNumber() {
@@ -22,7 +20,7 @@ public class PhoneNumber {
 	}
 
 	@ManyToMany(mappedBy="contactInfo.phoneNumbers", cascade= CascadeType.ALL)
-	public Collection<org.hibernate.test.annotations.manytomany.Employee> getEmployees() {
+	public Collection<Employee> getEmployees() {
 		return employees;
 	}
 

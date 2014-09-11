@@ -6,8 +6,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.test.annotations.manytomany.Store;
-
 /**
  * @author Emmanuel Bernard
  */

@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany.defaults;
+
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -10,10 +11,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.test.annotations.manytomany.*;
-import org.hibernate.test.annotations.manytomany.City;
-import org.hibernate.test.annotations.manytomany.KnownClient;
-
 /**
  * @author Emmanuel Bernard
  */
@@ -22,34 +19,19 @@ public class Store {
 	private Integer id;
 	private String name;
 	private Set<KnownClient> customers;
-	private Set<Supplier> suppliers;
 	private Set<Item> items;
 	private Set<Category> categories;
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	public Set<org.hibernate.test.annotations.manytomany.City> getImplantedIn() {
+	public Set<City> getImplantedIn() {
 		return implantedIn;
 	}
 
-	public void setImplantedIn(Set<org.hibernate.test.annotations.manytomany.City> implantedIn) {
+	public void setImplantedIn(Set<City> implantedIn) {
 		this.implantedIn = implantedIn;
 	}
 
 	private Set<City> implantedIn;
-
-	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-	@JoinTable(
-			name = "StoreSupplier",
-			joinColumns = @JoinColumn(name = "store"),
-			inverseJoinColumns = @JoinColumn(name = "supplier")
-	)
-	public Set<Supplier> getSuppliers() {
-		return suppliers;
-	}
-
-	public void setSuppliers(Set<Supplier> suppliers) {
-		this.suppliers = suppliers;
-	}
 
 	@Id
 	@GeneratedValue

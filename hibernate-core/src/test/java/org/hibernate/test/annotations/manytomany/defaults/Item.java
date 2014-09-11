@@ -30,15 +30,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
-import org.hibernate.test.annotations.manytomany.*;
-
 /**
  * @author Gail Badner
  */
 @Entity(name="ITEM")
 public class Item {
 	private Integer id;
-	private Set<org.hibernate.test.annotations.manytomany.City> producedInCities;
+	private Set<City> producedInCities;
 
 	@Id
 	@GeneratedValue
@@ -52,11 +50,11 @@ public class Item {
 	}
 
 	@ManyToMany
-	public Set<org.hibernate.test.annotations.manytomany.City> getProducedInCities() {
+	public Set<City> getProducedInCities() {
 		return producedInCities;
 	}
 
-	public void setProducedInCities(Set<org.hibernate.test.annotations.manytomany.City> producedInCities) {
+	public void setProducedInCities(Set<City> producedInCities) {
 		this.producedInCities = producedInCities;
 	}
 }

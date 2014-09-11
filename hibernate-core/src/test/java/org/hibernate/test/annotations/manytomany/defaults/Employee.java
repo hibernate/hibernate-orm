@@ -13,9 +13,6 @@ import javax.persistence.InheritanceType;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.test.annotations.manytomany.ContactInfo;
-import org.hibernate.test.annotations.manytomany.Employer;
-import org.hibernate.test.annotations.manytomany.JobInfo;
 
 /**
  * Employee in an Employer-Employee relationship
@@ -27,10 +24,8 @@ import org.hibernate.test.annotations.manytomany.JobInfo;
 @SuppressWarnings("serial")
 public class Employee implements Serializable {
 	private Integer id;
-	private Collection<Employer> employers;
 	private String name;
 	ContactInfo contactInfo;
-	JobInfo jobInfo;
 
 	// ContactInfo is for ManyToMany testing
 	@Embedded
@@ -41,17 +36,6 @@ public class Employee implements Serializable {
 	public void setContactInfo(ContactInfo contactInfo) {
 		this.contactInfo = contactInfo;
 	}
-
-	// JobInfo is for OneToMany testing
-	@Embedded
-	public JobInfo getJobInfo() {
-		return jobInfo;
-	}
-
-	public void setJobInfo(JobInfo jobInfo) {
-		this.jobInfo = jobInfo;
-	}
-
 
 	@Column(name="fld_name")
 	public String getName() {
@@ -70,19 +54,5 @@ public class Employee implements Serializable {
 
 	public void setId(Integer integer) {
 		id = integer;
-	}
-
-	@ManyToMany(
-			cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-			mappedBy = "employees"
-	)
-	@Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE,
-			org.hibernate.annotations.CascadeType.PERSIST})
-	public Collection<Employer> getEmployers() {
-		return employers;
-	}
-
-	public void setEmployers(Collection<Employer> employers) {
-		this.employers = employers;
 	}
 }

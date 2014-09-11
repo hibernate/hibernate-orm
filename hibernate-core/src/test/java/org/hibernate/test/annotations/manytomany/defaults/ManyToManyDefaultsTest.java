@@ -29,17 +29,8 @@ import org.junit.Test;
 
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.annotations.manytomany.Category;
-import org.hibernate.test.annotations.manytomany.City;
-import org.hibernate.test.annotations.manytomany.Contractor;
-import org.hibernate.test.annotations.manytomany.Employee;
-import org.hibernate.test.annotations.manytomany.Employer;
-import org.hibernate.test.annotations.manytomany.Item;
-import org.hibernate.test.annotations.manytomany.KnownClient;
-import org.hibernate.test.annotations.manytomany.PhoneNumber;
-import org.hibernate.test.annotations.manytomany.ProgramManager;
-import org.hibernate.test.annotations.manytomany.Store;
-import org.hibernate.test.annotations.manytomany.Supplier;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.EntityType;
 
@@ -168,6 +159,8 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9390")
+	@FailureExpected( jiraKey = "HHH-9390")
 	public void testUnidirOwnerPrimaryTableAssocEntityNamePKOverride() {
 		// City.stolenItems; associated entity: Item
 		// City has @Entity with no name configured and @Table(name = "tbl_city")
@@ -186,6 +179,8 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9390")
+	@FailureExpected( jiraKey = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")
@@ -261,15 +256,11 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 		return new Class[]{
 				Category.class,
 				City.class,
-				Contractor.class,
 				Employee.class,
-				Employer.class,
 				Item.class,
 				KnownClient.class,
 				PhoneNumber.class,
-				ProgramManager.class,
 				Store.class,
-				Supplier.class
 		};
 	}
 }

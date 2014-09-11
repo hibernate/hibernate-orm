@@ -27,6 +27,7 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.FailureExpected;
@@ -215,7 +216,9 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 		);
 		// The default owner and inverse join columns can only be computed if they have PK with 1 column.
 		assertEquals ( 1, ownerCollection.getOwner().getKey().getColumnSpan() );
-		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumnIterator().next().getText() );
+		assertEquals(
+				ownerForeignKeyNameExpected,
+				( (Column) ownerCollection.getKey().getColumnIterator().next() ).getText() );
 
 		final EntityType associatedEntityType =  (EntityType) ownerCollection.getElement().getType();
 		final PersistentClass associatedPersistentClass =
@@ -227,7 +230,7 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 			);
 			assertEquals(
 					inverseForeignKeyNameExpected,
-					inverseCollection.getKey().getColumnIterator().next().getText()
+					( (Column) inverseCollection.getKey().getColumnIterator().next() ).getText()
 			);
 		}
 		boolean hasOwnerFK = false;

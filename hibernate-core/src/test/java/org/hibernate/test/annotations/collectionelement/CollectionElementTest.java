@@ -381,7 +381,10 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		);
 		// The default owner join column can only be computed if it has a PK with 1 column.
 		assertEquals ( 1, ownerCollection.getOwner().getKey().getColumnSpan() );
-		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumnIterator().next().getText() );
+		assertEquals(
+				ownerForeignKeyNameExpected,
+				( (Column) ownerCollection.getKey().getColumnIterator().next() ).getText()
+		);
 
 		boolean hasOwnerFK = false;
 		for ( Iterator it=ownerCollection.getCollectionTable().getForeignKeyIterator(); it.hasNext(); ) {

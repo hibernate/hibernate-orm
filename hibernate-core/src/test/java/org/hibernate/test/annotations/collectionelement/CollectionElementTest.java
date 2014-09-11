@@ -37,10 +37,10 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -64,8 +64,8 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		boy.setLastName( "Doe" );
 		boy.getNickNames().add( "Johnny" );
 		boy.getNickNames().add( "Thing" );
-		boy.getScorePerNickName().put( "Johnny", Integer.valueOf( 3 ) );
-		boy.getScorePerNickName().put( "Thing", Integer.valueOf( 5 ) );
+		boy.getScorePerNickName().put( "Johnny", 3 );
+		boy.getScorePerNickName().put( "Thing", 5 );
 		int[] favNbrs = new int[4];
 		for (int index = 0; index < favNbrs.length - 1; index++) {
 			favNbrs[index] = index * 3;
@@ -174,8 +174,8 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		boy.setLastName( "Doe" );
 		boy.getNickNames().add( "Johnny" );
 		boy.getNickNames().add( "Thing" );
-		boy.getScorePerNickName().put( "Johnny", new Integer( 3 ) );
-		boy.getScorePerNickName().put( "Thing", new Integer( 5 ) );
+		boy.getScorePerNickName().put( "Johnny", 3 );
+		boy.getScorePerNickName().put( "Thing", 5 );
 		int[] favNbrs = new int[4];
 		for (int index = 0; index < favNbrs.length - 1; index++) {
 			favNbrs[index] = index * 3;
@@ -257,24 +257,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
 	}
 
-	@Test
-	public void testDefaultFKNameForElementCollection() throws Exception {
-		isCollectionColumnPresent( Boy.class.getName(), "hatedNames", "Boy_id" );
-	}
-
-	@Test
-
-	@FailureExpectedWithNewMetamodel( jiraKey = "HHH-9281" )
-	@TestForIssue( jiraKey = "HHH-9281")
-	public void testDefaultTableNameUsesJpaEntityName() {
-		final TableSpecification table = getCollectionTable( Matrix.class.getName(), "mvalues");
-		assertEquals( "Mtx_mvalues", table.getLogicalName().getText() );
-	}
-
-	private void isLegacyValueCollectionColumnPresent(String collectionHolder, String propertyName) {
-
-	}
-
 	private void isDefaultValueCollectionColumnPresent(String collectionOwner, String propertyName) {
 		isCollectionColumnPresent( collectionOwner, propertyName, propertyName );
 	}
@@ -286,10 +268,131 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "Could not find " + columnName, hasColumn );
 	}
 
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9387")
+	public void testDefaultTableNameNoOverrides() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+		// Products has @Entity (no @Table)
+		checkDefaultCollectionTableName( BugSystem.class, "bugs", "BugSystem_bugs" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9387")
+	public void testDefaultTableNameOwnerPrimaryTableOverride() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+		// Boy has @Entity @Table(name="tbl_Boys")
+		checkDefaultCollectionTableName( Boy.class, "hatedNames", "Boy_hatedNames" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9387")
+	@FailureExpected( jiraKey = "HHH-9387")
+	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+		// Matrix has @Entity(name="Mtx"); entity table name defaults to "Mtx"; owner PK column is configured as "mId"
+		checkDefaultCollectionTableName( Matrix.class, "mvalues", "Mtx_mvalues" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9387")
+	@FailureExpected( jiraKey = "HHH-9387")
+	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+
+		// Owner has @Entity( name="OWNER") @Table( name="OWNER_TABLE")
+		checkDefaultCollectionTableName( Owner.class, "elements", "OWNER_elements" );
+	}
+
+	private void checkDefaultCollectionTableName(
+			Class<?> ownerEntityClass,
+			String ownerCollectionPropertyName,
+			String expectedCollectionTableName) {
+		final TableSpecification table =
+				getCollectionTable( ownerEntityClass.getName(), ownerCollectionPropertyName );
+		assertEquals( expectedCollectionTableName, table.getLogicalName().getText() );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9389")
+	public void testDefaultJoinColumnNoOverrides() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+		// Products has @Entity (no @Table)
+		checkDefaultJoinColumnName( BugSystem.class, "bugs", "BugSystem_id" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9389")
+	@FailureExpected( jiraKey = "HHH-9389")
+	public void testDefaultJoinColumnOwnerPrimaryTableOverride() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+		// Boy has @Entity @Table(name="tbl_Boys")
+		checkDefaultJoinColumnName( Boy.class, "hatedNames", "Boy_id" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9389")
+	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+		// Matrix has @Entity(name="Mtx"); entity table name defaults to "Mtx"; owner PK column is configured as "mId"
+		checkDefaultJoinColumnName( Matrix.class, "mvalues", "Mtx_mId" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9389")
+	@FailureExpected( jiraKey = "HHH-9389")
+	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride() {
+		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
+		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
+
+
+		// Owner has @Entity( name="OWNER") @Table( name="OWNER_TABLE")
+		checkDefaultJoinColumnName( Owner.class, "elements", "OWNER_id" );
+	}
+
+	private void checkDefaultJoinColumnName(
+			Class<?> ownerEntityClass,
+			String ownerCollectionPropertyName,
+			String ownerForeignKeyNameExpected) {
+		final EntityBinding entityBinding = metadata().getEntityBinding( ownerEntityClass.getName() );
+		// The default owner join column can only be computed if it has a PK with 1 column.
+		assertEquals(
+				1,
+				entityBinding.getHierarchyDetails()
+						.getEntityIdentifier()
+						.getEntityIdentifierBinding()
+						.getRelationalValueBindings()
+						.size()
+		);
+
+		final ForeignKey ownerForeignKey = getCollectionForeignKey( ownerEntityClass.getName(), ownerCollectionPropertyName );
+		assertEquals( ownerForeignKeyNameExpected, ownerForeignKey.getColumns().get( 0 ).getColumnName().getText() );
+	}
+
 	private TableSpecification getCollectionTable(String collectionOwner, String propertyName) {
 		final EntityBinding entityBinding = metadata().getEntityBinding( collectionOwner );
 		final PluralAttributeBinding binding = (PluralAttributeBinding) entityBinding.locateAttributeBinding( propertyName );
 		return binding.getPluralAttributeKeyBinding().getCollectionTable();
+	}
+
+	private ForeignKey getCollectionForeignKey(String collectionOwner, String propertyName) {
+		final EntityBinding entityBinding = metadata().getEntityBinding( collectionOwner );
+		final PluralAttributeBinding binding = (PluralAttributeBinding) entityBinding.locateAttributeBinding( propertyName );
+		return binding.getPluralAttributeKeyBinding().getForeignKey();
 	}
 
 
@@ -306,7 +409,11 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 				LocalizedString.class,
 				Toy.class,
 				CountryAttitude.class,
-				Brand.class
+				Brand.class,
+				Owner.class,
+				BugSystem.class,
+				Bug.class,
+				Person.class
 		};
 	}
 }

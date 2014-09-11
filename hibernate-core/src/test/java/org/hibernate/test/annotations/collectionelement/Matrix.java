@@ -3,7 +3,7 @@ package org.hibernate.test.annotations.collectionelement;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -21,6 +21,7 @@ import org.hibernate.annotations.Type;
 public class Matrix {
 	@Id
 	@GeneratedValue
+	@Column(name="mId")
 	private Integer id;
 
 	@MapKeyType( @Type(type="integer") )

@@ -27,8 +27,10 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -206,55 +208,66 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 			String expectedCollectionTableName,
 			String ownerForeignKeyNameExpected,
 			String inverseForeignKeyNameExpected) {
-		final org.hibernate.mapping.Collection collection = configuration().getCollectionMapping( ownerEntityClass.getName() + '.' + ownerCollectionPropertyName );
-		final org.hibernate.mapping.Table table = collection.getCollectionTable();
-		assertEquals( expectedCollectionTableName, table.getName() );
+		final EntityBinding entityBinding = metadata().getEntityBinding( ownerEntityClass.getName() );
+		final PluralAttributeBinding ownerCollection =
+				(PluralAttributeBinding) entityBinding.locateAttributeBindingByPath( ownerCollectionPropertyName, false );
+		final TableSpecification collectionTable = ownerCollection.getPluralAttributeKeyBinding().getCollectionTable();
+		assertEquals( expectedCollectionTableName, collectionTable.getLogicalName().getText() );
 
-		final org.hibernate.mapping.Collection ownerCollection = configuration().getCollectionMapping(
-				ownerEntityClass.getName() + '.' + ownerCollectionPropertyName
-		);
 		// The default owner and inverse join columns can only be computed if they have PK with 1 column.
-		assertEquals ( 1, ownerCollection.getOwner().getKey().getColumnSpan() );
-		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumnIterator().next().getText() );
+		assertEquals(
+				1,
+				entityBinding.getHierarchyDetails()
+						.getEntityIdentifier()
+						.getEntityIdentifierBinding()
+						.getRelationalValueBindings()
+						.size()
+		);
 
-		final EntityType associatedEntityType =  (EntityType) ownerCollection.getElement().getType();
-		final PersistentClass associatedPersistentClass =
-				configuration().getClassMapping( associatedEntityType.getAssociatedEntityName() );
-		assertEquals( 1, associatedPersistentClass.getKey().getColumnSpan() );
+		final ForeignKey ownerFK = ownerCollection.getPluralAttributeKeyBinding().getForeignKey();
+		assertEquals( ownerForeignKeyNameExpected, ownerFK.getColumns().get( 0 ).getColumnName().getText() );
+
+		final EntityType associatedEntityType =
+				(EntityType) ownerCollection.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
+		final EntityBinding associatedEntityBinding =
+				metadata().getEntityBinding( associatedEntityType.getAssociatedEntityName() );
+
+		assertEquals(
+				1,
+				associatedEntityBinding.getHierarchyDetails()
+						.getEntityIdentifier()
+						.getEntityIdentifierBinding()
+						.getRelationalValueBindings()
+						.size()
+		);
+
 		if ( inverseCollectionPropertyName != null ) {
-			final org.hibernate.mapping.Collection inverseCollection = configuration().getCollectionMapping(
-					associatedPersistentClass.getEntityName() + '.' + inverseCollectionPropertyName
-			);
-			assertEquals(
-					inverseForeignKeyNameExpected,
-					inverseCollection.getKey().getColumnIterator().next().getText()
-			);
+			final PluralAttributeBinding inverseCollection =
+					(PluralAttributeBinding) associatedEntityBinding.locateAttributeBinding( inverseCollectionPropertyName );
+			final ForeignKey inverseFK = inverseCollection.getPluralAttributeKeyBinding().getForeignKey();
+			assertEquals( inverseForeignKeyNameExpected, inverseFK.getColumns().get( 0 ).getColumnName().getText() );
 		}
-		boolean hasOwnerFK = false;
-		boolean hasInverseFK = false;
-		for ( Iterator it=ownerCollection.getCollectionTable().getForeignKeyIterator(); it.hasNext(); ) {
-			final ForeignKey fk = (ForeignKey) it.next();
-			assertSame( ownerCollection.getCollectionTable(), fk.getTable() );
-			if ( fk.getColumnSpan() > 1 ) {
-				continue;
+		else {
+			boolean hasInverseFK = false;
+			for ( ForeignKey fk :  collectionTable.getForeignKeys() ) {
+				assertSame( collectionTable, fk.getTable() );
+				if ( fk.getColumnSpan() > 1 ) {
+					continue;
+				}
+				if ( fk.getColumns().get( 0 ).getColumnName().getText().equals( inverseForeignKeyNameExpected ) ) {
+					assertSame( associatedEntityBinding.getPrimaryTable(), fk.getTargetTable() );
+					hasInverseFK = true;
+				}
 			}
-			if ( fk.getColumn( 0 ).getText().equals( ownerForeignKeyNameExpected ) ) {
-				assertSame( ownerCollection.getOwner().getTable(), fk.getReferencedTable() );
-				hasOwnerFK = true;
-			}
-			else  if ( fk.getColumn( 0 ).getText().equals( inverseForeignKeyNameExpected ) ) {
-				assertSame( associatedPersistentClass.getTable(), fk.getReferencedTable() );
-				hasInverseFK = true;
-			}
+			assertTrue( hasInverseFK );
 		}
-		assertTrue( hasOwnerFK );
-		assertTrue( hasInverseFK );
 	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Category.class,
+				ContactInfo.class,
 				City.class,
 				Employee.class,
 				Item.class,

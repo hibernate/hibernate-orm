@@ -5,6 +5,71 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.6.Final (2014.07.16)
+------------------------------------------------------------------------------------------------------------------------
+
+** Sub-task
+    * [HHH-9213] - org.hibernate.test.cache.CollectionCacheEvictionTest test fails on SAP/Sybase ase
+    * [HHH-9214] - org.hibernate.test.generated.DefaultGeneratedValueTest test failure on SAP/Sybase ASE
+    * [HHH-9215] - org.hibernate.test.sql.hand.query.NativeSQLQueriesTest failure on SAP/Sybase ASE
+
+** Bug
+    * [HHH-4700] - ClassCastException with parameter as CASE results
+    * [HHH-5811] - Flush causes update query on field of type Byte[]
+    * [HHH-6747] - ClassCastException when rendering SimpleCaseExpression
+    * [HHH-8237] - Type mapping of @ColumnResult is ignored
+    * [HHH-8310] - Lob proxy class loading problem
+    * [HHH-8816] - Unable to instantiate AttributeConverter: root cause of exception hidden
+    * [HHH-8818] - Hibernate 4.3.0.Final can no longer find JNDI DataSource that <=4.2.x and 4.3.0.Beta4 could find
+    * [HHH-8885] - MapJoin.key() produces unusable Path object
+    * [HHH-8908] - Envers: Column of Embedded missing in Audit Table
+    * [HHH-8941] - missing replace function for FirebirdDialect
+    * [HHH-8980] - Instance of super-class not found because of joined subclass reference is an inner join
+    * [HHH-9080] - Can't add attribute node declared in superclass (inheritance) in EntityGraph
+    * [HHH-9093] - Typo in error message when no implicit selection is found in CriteriaQuery
+    * [HHH-9103] - Dialect resolver should use a newer Oracle dialect for Oracle 12
+    * [HHH-9104] - BasicHibernateAnnotationsTest.testFilterOnCollection fails on jdk8
+    * [HHH-9106] - Multiple representations of the same entity cannot be merged using cascade=merge
+    * [HHH-9107] - Loading from 2LC broken by HHH-9028
+    * [HHH-9136] - DatabaseMetadata: NPE hides exception in finally block
+    * [HHH-9138] - CastFunctionTest failing on most databases
+    * [HHH-9150] - Envers test table is too long causing Oracle failure
+    * [HHH-9154] - keywords as parameter names
+    * [HHH-9169] - SQLServer2012Dialect creates sequences starting from Long.MIN_VALUE
+    * [HHH-9170] - StatelessSession is accidentally 2LC enabled in some cases
+    * [HHH-9174] - Increase performance of SqlExceptionHelper#handleAndClearWarnings
+    * [HHH-9194] - Revert HHH-8908 fix
+    * [HHH-9200] - Natural id cache statistics are not cleared
+    * [HHH-9201] - Evict cache instead of remove after transaction completion
+    * [HHH-9202] - NPE in OneToOneLinkTest on oracle12c
+    * [HHH-9203] - ConcurrentNaturalIdCacheStatisticsImpl#getEntries() fails with ClassCastException
+    * [HHH-9204] - Restore AbstractCollectionPersister.doProcessQueuedOps(PersistentCollection, Serializable, SessionImplementor) removed by HHH-9078
+    * [HHH-9231] - Uncommitted data can remain in transactional collection cache after rollback if collection is initialized after flush
+    * [HHH-9234] - Test failure (testNaturalIdChangedWhileAttached) on SAP/SYBASE ASE
+    * [HHH-9280] - Table name generated for @ElementCollection uses owning entity class name instead of mapped entity name
+    * [HHH-9282] - Revert HHH-9222 due to bugs in bulk deleting collection elements that use a property-ref (master and 4.3)
+
+** Deprecation
+    * [HHH-9205] - Deprecate AbstractCollectionPersister.doProcessQueuedOps(PersistentCollection, Serializable, int, SessionImplementor)
+
+** Improvement
+    * [HHH-8683] - Class org.hibernate.engine.spi.EntityEntry consumes lots of memory
+    * [HHH-9100] - Improve CAST function support
+    * [HHH-9145] - Compatibility improvement suggestion for org.hibernate.engine.jdbc.internal.ResultSetReturnImpl
+    * [HHH-9222] - Bulk delete and element collections
+    * [HHH-9258] - Allow for Hibernate extensions discovery via OSGi blueprints
+    * [HHH-9268] - The NoopOptimizer used for default id generation doesn't need synchronization
+    * [HHH-9269] - Limit persister lookups in critical hot paths
+    * [HHH-9285] - Upgrade to Hibernate Commons Annotations version 4.0.5.Final
+
+** New Feature
+    * [HHH-8869] - Create HikariCP connection pool module
+    * [HHH-9190] - Make it customizable how parameters in native queries are detected
+
+** Task
+    * [HHH-8904] - Write documentation for build time bytecode enhancements.
+    * [HHH-9288] - Restore removed method ServiceRegistryBuilder#buildServiceRegistry used by Tools
+
 Changes in version 4.3.5.Final (2014.04.02)
 ------------------------------------------------------------------------------------------------------------------------
 

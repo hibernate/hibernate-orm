@@ -28,7 +28,7 @@
       <id name="id">
          <generator class="increment" />
       </id>
-      <property name="name" not-null="true" />
+      <property name="name" not-null="true" column="item_name" unique="true"/>
       <property name="description" not-null="true" />
       <many-to-one name="owner" column="owner_id" class="Item" />
       <many-to-one name="bagOwner" column="bagowner_id" class="Item" />
@@ -40,9 +40,27 @@
            <key column="bagowner_id" />
            <one-to-many class="Item" />
        </bag>
+       <set name="otherItems" table="items_otheritems">
+           <key property-ref="name" column="item_name"/>
+           <many-to-many class="OtherItem" column="other_item_id"/>
+       </set>
    </class>
 
-   <class name="VersionedItem" table="VersionedItems">
+
+    <class name="OtherItem" table="OtherItems">
+        <id name="id">
+            <generator class="increment" />
+        </id>
+        <many-to-one name="favoriteItem" property-ref="name"/>
+        <property name="name" not-null="true" column="other_item_name" unique="true" />
+        <bag name="bagOfItems" inverse="true" table="items_otheritems">
+            <key column="other_item_id"/>
+            <many-to-many class="Item" property-ref="name" column="item_name" />
+        </bag>
+    </class>
+
+
+    <class name="VersionedItem" table="VersionedItems">
       <id name="id">
          <generator class="increment" />
       </id>

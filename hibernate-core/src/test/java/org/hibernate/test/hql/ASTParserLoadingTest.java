@@ -144,6 +144,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"legacy/Marelo.hbm.xml"
 		};
 	}
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				Department.class,
+				Employee.class,
+				Title.class
+		};
+	}
 
 	@Override
 	public void configure(Configuration cfg) {
@@ -1026,6 +1034,145 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9305")
+	public void testExplicitToOneInnerJoin() {
+		final Employee employee1 = new Employee();
+		employee1.setFirstName( "Jane" );
+		employee1.setLastName( "Doe" );
+		final Title title1 = new Title();
+		title1.setDescription( "Jane's description" );
+		final Department dept1 = new Department();
+		dept1.setDeptName( "Jane's department" );
+		employee1.setTitle( title1 );
+		employee1.setDepartment( dept1 );
+
+		final Employee employee2 = new Employee();
+		employee2.setFirstName( "John" );
+		employee2.setLastName( "Doe" );
+		final Title title2 = new Title();
+		title2.setDescription( "John's title" );
+		employee2.setTitle( title2 );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.persist( title1 );
+		s.persist( dept1 );
+		s.persist( employee1 );
+		s.persist( title2 );
+		s.persist( employee2 );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		Department department = (Department) s.createQuery( "select e.department from Employee e inner join e.department" ).uniqueResult();
+		assertEquals( employee1.getDepartment().getDeptName(), department.getDeptName() );
+		s.delete( employee1 );
+		s.delete( title1 );
+		s.delete( department );
+		s.delete( employee2 );
+		s.delete( title2 );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	public void testExplicitToOneOuterJoin() {
+		final Employee employee1 = new Employee();
+		employee1.setFirstName( "Jane" );
+		employee1.setLastName( "Doe" );
+		final Title title1 = new Title();
+		title1.setDescription( "Jane's description" );
+		final Department dept1 = new Department();
+		dept1.setDeptName( "Jane's department" );
+		employee1.setTitle( title1 );
+		employee1.setDepartment( dept1 );
+
+		final Employee employee2 = new Employee();
+		employee2.setFirstName( "John" );
+		employee2.setLastName( "Doe" );
+		final Title title2 = new Title();
+		title2.setDescription( "John's title" );
+		employee2.setTitle( title2 );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.persist( title1 );
+		s.persist( dept1 );
+		s.persist( employee1 );
+		s.persist( title2 );
+		s.persist( employee2 );
+		s.getTransaction().commit();
+		s.close();
+		s = openSession();
+		s.getTransaction().begin();
+		List list = s.createQuery( "select e.department from Employee e left join e.department" ).list();
+		assertEquals( 2, list.size() );
+		final Department dept;
+		if ( list.get( 0 ) == null ) {
+			dept = (Department) list.get( 1 );
+		}
+		else {
+			dept = (Department) list.get( 0 );
+			assertNull( list.get( 1 ) );
+		}
+		assertEquals( dept1.getDeptName(), dept.getDeptName() );
+		s.delete( employee1 );
+		s.delete( title1 );
+		s.delete( dept );
+		s.delete( employee2 );
+		s.delete( title2 );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	public void testExplicitToOneInnerJoinAndImplicitToOne() {
+		final Employee employee1 = new Employee();
+		employee1.setFirstName( "Jane" );
+		employee1.setLastName( "Doe" );
+		final Title title1 = new Title();
+		title1.setDescription( "Jane's description" );
+		final Department dept1 = new Department();
+		dept1.setDeptName( "Jane's department" );
+		employee1.setTitle( title1 );
+		employee1.setDepartment( dept1 );
+
+		final Employee employee2 = new Employee();
+		employee2.setFirstName( "John" );
+		employee2.setLastName( "Doe" );
+		final Title title2 = new Title();
+		title2.setDescription( "John's title" );
+		employee2.setTitle( title2 );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.persist( title1 );
+		s.persist( dept1 );
+		s.persist( employee1 );
+		s.persist( title2 );
+		s.persist( employee2 );
+		s.getTransaction().commit();
+		s.close();
+		s = openSession();
+		s.getTransaction().begin();
+		Object[] result = (Object[]) s.createQuery(
+				"select e.firstName, e.lastName, e.title.description, e.department from Employee e inner join e.department"
+		).uniqueResult();
+		assertEquals( employee1.getFirstName(), result[0] );
+		assertEquals( employee1.getLastName(), result[1] );
+		assertEquals( employee1.getTitle().getDescription(), result[2] );
+		assertEquals( employee1.getDepartment().getDeptName(), ( (Department) result[3] ).getDeptName() );
+		s.delete( employee1 );
+		s.delete( title1 );
+		s.delete( result[3] );
+		s.delete( employee2 );
+		s.delete( title2 );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
 	public void testNestedComponentIsNull() {
 		// (1) From MapTest originally...
 		// (2) Was then moved into HQLTest...
@@ -1688,6 +1835,134 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		s.delete(plat);
 		s.delete(zoo);
+		t.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9305")
+	@SuppressWarnings( {"unchecked"})
+	public void testSelectClauseImplicitJoinOrderByJoinedProperty() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Zoo zoo = new Zoo();
+		zoo.setName("The Zoo");
+		zoo.setMammals( new HashMap() );
+		zoo.setAnimals( new HashMap() );
+		Mammal plat = new Mammal();
+		plat.setBodyWeight( 11f );
+		plat.setDescription( "Platypus" );
+		plat.setZoo( zoo );
+		plat.setSerialNumber( "plat123" );
+		zoo.getMammals().put( "Platypus", plat );
+		zoo.getAnimals().put("plat123", plat);
+		Zoo otherZoo = new Zoo();
+		otherZoo.setName("The Other Zoo");
+		otherZoo.setMammals( new HashMap() );
+		otherZoo.setAnimals( new HashMap() );
+		Mammal zebra = new Mammal();
+		zebra.setBodyWeight( 110f );
+		zebra.setDescription( "Zebra" );
+		zebra.setZoo( otherZoo );
+		zebra.setSerialNumber( "zebra123" );
+		otherZoo.getMammals().put( "Zebra", zebra );
+		otherZoo.getAnimals().put("zebra123", zebra);
+		Mammal elephant = new Mammal();
+		elephant.setBodyWeight( 550f );
+		elephant.setDescription( "Elephant" );
+		elephant.setZoo( otherZoo );
+		elephant.setSerialNumber( "elephant123" );
+		otherZoo.getMammals().put( "Elephant", elephant );
+		otherZoo.getAnimals().put( "elephant123", elephant );
+		s.persist( plat );
+		s.persist(zoo);
+		s.persist( zebra );
+		s.persist( elephant );
+		s.persist( otherZoo );
+		s.flush();
+		s.clear();
+		Query q = s.createQuery("select a.zoo from Animal a where a.zoo is not null order by a.zoo.name");
+		Type type = q.getReturnTypes()[0];
+		assertTrue( type instanceof ManyToOneType );
+		assertEquals( ( (ManyToOneType) type ).getAssociatedEntityName(), "org.hibernate.test.hql.Zoo" );
+		List<Zoo> zoos = (List<Zoo>) q.list();
+		assertEquals( 3, zoos.size() );
+		assertEquals( otherZoo.getName(), zoos.get( 0 ).getName() );
+		assertEquals( 2, zoos.get( 0 ).getMammals().size() );
+		assertEquals( 2, zoos.get( 0 ).getAnimals().size() );
+		assertSame( zoos.get( 0 ), zoos.get( 1 ) );
+		assertEquals( zoo.getName(), zoos.get( 2 ).getName() );
+		assertEquals( 1, zoos.get( 2 ).getMammals().size() );
+		assertEquals( 1, zoos.get( 2 ).getAnimals().size() );
+		s.clear();
+		s.delete(plat);
+		s.delete( zebra );
+		s.delete( elephant );
+		s.delete(zoo);
+		s.delete( otherZoo );
+		t.commit();
+		s.close();
+	}
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
+	public void testSelectClauseDistinctImplicitJoinOrderByJoinedProperty() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Zoo zoo = new Zoo();
+		zoo.setName("The Zoo");
+		zoo.setMammals( new HashMap() );
+		zoo.setAnimals( new HashMap() );
+		Mammal plat = new Mammal();
+		plat.setBodyWeight( 11f );
+		plat.setDescription( "Platypus" );
+		plat.setZoo( zoo );
+		plat.setSerialNumber( "plat123" );
+		zoo.getMammals().put( "Platypus", plat );
+		zoo.getAnimals().put("plat123", plat);
+		Zoo otherZoo = new Zoo();
+		otherZoo.setName("The Other Zoo");
+		otherZoo.setMammals( new HashMap() );
+		otherZoo.setAnimals( new HashMap() );
+		Mammal zebra = new Mammal();
+		zebra.setBodyWeight( 110f );
+		zebra.setDescription( "Zebra" );
+		zebra.setZoo( otherZoo );
+		zebra.setSerialNumber( "zebra123" );
+		otherZoo.getMammals().put( "Zebra", zebra );
+		otherZoo.getAnimals().put("zebra123", zebra);
+		Mammal elephant = new Mammal();
+		elephant.setBodyWeight( 550f );
+		elephant.setDescription( "Elephant" );
+		elephant.setZoo( otherZoo );
+		elephant.setSerialNumber( "elephant123" );
+		otherZoo.getMammals().put( "Elephant", elephant );
+		otherZoo.getAnimals().put( "elephant123", elephant );
+		s.persist( plat );
+		s.persist(zoo);
+		s.persist( zebra );
+		s.persist( elephant );
+		s.persist( otherZoo );
+		s.flush();
+		s.clear();
+		Query q = s.createQuery("select distinct a.zoo from Animal a where a.zoo is not null order by a.zoo.name");
+		Type type = q.getReturnTypes()[0];
+		assertTrue( type instanceof ManyToOneType );
+		assertEquals( ( (ManyToOneType) type ).getAssociatedEntityName(), "org.hibernate.test.hql.Zoo" );
+		List<Zoo> zoos = (List<Zoo>) q.list();
+		assertEquals( 2, zoos.size() );
+		assertEquals( otherZoo.getName(), zoos.get( 0 ).getName() );
+		assertEquals( 2, zoos.get( 0 ).getMammals().size() );
+		assertEquals( 2, zoos.get( 0 ).getAnimals().size() );
+		assertEquals( zoo.getName(), zoos.get( 1 ).getName() );
+		assertEquals( 1, zoos.get( 1 ).getMammals().size() );
+		assertEquals( 1, zoos.get( 1 ).getAnimals().size() );
+		s.clear();
+		s.delete(plat);
+		s.delete( zebra );
+		s.delete( elephant );
+		s.delete(zoo);
+		s.delete( otherZoo );
 		t.commit();
 		s.close();
 	}
@@ -2807,6 +3082,118 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		destroyTestBaseData();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9305")
+	public void testDynamicInstantiationWithToOneQueries() throws Exception {
+		final Employee employee1 = new Employee();
+		employee1.setFirstName( "Jane" );
+		employee1.setLastName( "Doe" );
+		final Title title1 = new Title();
+		title1.setDescription( "Jane's description" );
+		final Department dept1 = new Department();
+		dept1.setDeptName( "Jane's department" );
+		employee1.setTitle( title1 );
+		employee1.setDepartment( dept1 );
+
+		final Employee employee2 = new Employee();
+		employee2.setFirstName( "John" );
+		employee2.setLastName( "Doe" );
+		final Title title2 = new Title();
+		title2.setDescription( "John's title" );
+		employee2.setTitle( title2 );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.persist( title1 );
+		s.persist( dept1 );
+		s.persist( employee1 );
+		s.persist( title2 );
+		s.persist( employee2 );
+		s.getTransaction().commit();
+		s.close();
+
+		// There are 2 to-one associations: Employee.title and Employee.department.
+		// It appears that adding an explicit join for one of these to-one associations keeps ANSI joins
+		// at the beginning of the FROM clause, avoiding failures on DBs that cannot handle cross joins
+		// interleaved with ANSI joins (e.g., PostgreSql).
+
+		s = openSession();
+		s.getTransaction().begin();
+		List results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.title"
+		).list();
+		assertEquals( "Incorrect result size", 1, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, t.id, t.description, e.department, e.firstName) from Employee e inner join e.title t"
+		).list();
+		assertEquals( "Incorrect result size", 1, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.department"
+		).list();
+		assertEquals( "Incorrect result size", 1, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e inner join e.department d"
+		).list();
+		assertEquals( "Incorrect result size", 1, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e left outer join e.department d"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department inner join e.title"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d inner join e.title t"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department left outer join e.title"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d left outer join e.title t"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department order by e.title.description"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		results = session.createQuery(
+				"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department d order by e.title.description"
+		).list();
+		assertEquals( "Incorrect result size", 2, results.size() );
+		assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
+		s.getTransaction().commit();
+
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		s.delete( employee1 );
+		s.delete( title1 );
+		s.delete( dept1 );
+		s.delete( employee2 );
+		s.delete( title2 );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test

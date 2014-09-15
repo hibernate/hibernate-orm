@@ -45,6 +45,8 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -349,22 +351,36 @@ public class CollectionLoadContext {
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
 		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister.getKeyType(), persister.getRole() );
 
-		try {
-			session.getEventListenerManager().cachePutStart();
-			final boolean put = persister.getCacheAccessStrategy().putFromLoad(
-					cacheKey,
-					persister.getCacheEntryStructure().structure( entry ),
-					session.getTimestamp(),
-					version,
-					factory.getSettings().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
-			);
-
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+		boolean isPutFromLoad = true;
+		if ( persister.getElementType().isAssociationType() ) {
+			for ( Serializable id : entry.getState() ) {
+				EntityPersister entityPersister = ( (QueryableCollection) persister ).getElementPersister();
+				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
+					isPutFromLoad = false;
+					break;
+				}
 			}
 		}
-		finally {
-			session.getEventListenerManager().cachePutEnd();
+
+		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
+		if (isPutFromLoad) {
+			try {
+				session.getEventListenerManager().cachePutStart();
+				final boolean put = persister.getCacheAccessStrategy().putFromLoad(
+						cacheKey,
+						persister.getCacheEntryStructure().structure( entry ),
+						session.getTimestamp(),
+						version,
+						factory.getSettings().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
+				);
+
+				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+					factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+				}
+			}
+			finally {
+				session.getEventListenerManager().cachePutEnd();
+			}
 		}
 	}
 

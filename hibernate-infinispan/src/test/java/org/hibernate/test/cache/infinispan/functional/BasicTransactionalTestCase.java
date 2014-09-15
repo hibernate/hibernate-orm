@@ -37,7 +37,6 @@ import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -46,7 +45,6 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import static junit.framework.Assert.assertEquals;
@@ -130,6 +128,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
          @Override
          public Void call() throws Exception {
             Session s = openSession();
+            s.getTransaction().begin();
             SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
             Item loadedWithCachedCollection = (Item) s.load( Item.class, item.getId() );
             stats.logSummary();
@@ -138,6 +137,12 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             assertEquals( 1, cStats.getHitCount() );
             Map cacheEntries = cStats.getEntries();
             assertEquals( 1, cacheEntries.size() );
+            Item itemElement = loadedWithCachedCollection.getItems().iterator().next();
+            itemElement.setOwner( null );
+            loadedWithCachedCollection.getItems().clear();
+            s.delete( itemElement );
+            s.delete( loadedWithCachedCollection );
+            s.getTransaction().commit();
             s.close();
             return null;
          }
@@ -145,7 +150,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9231")
+	@TestForIssue( jiraKey = "HHH-9231" )
 	public void testAddNewOneToManyElementInitFlushLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -226,7 +231,7 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9231")
+	@TestForIssue( jiraKey = "HHH-9231" )
 	public void testAddNewOneToManyElementNoInitFlushLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -307,7 +312,6 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9231")
 	public void testAddNewOneToManyElementNoInitFlushInitLeaveCacheConsistent() throws Exception {
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -381,6 +385,91 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 			Hibernate.initialize( item.getBagOfItems() );
 			assertTrue( item.getBagOfItems().isEmpty() );
 			s.delete( item );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+	}
+
+	@Test
+	public void testAddNewManyToManyPropertyRefNoInitFlushInitLeaveCacheConsistent() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+		SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
+
+		OtherItem otherItem = null;
+		Transaction txn = null;
+		Session s = null;
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			otherItem = new OtherItem();
+			otherItem.setName( "steve" );
+			s.save( otherItem );
+			txn.commit();
+			s.close();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTx( e );
+		}
+		finally {
+			commitOrRollbackTx();
+		}
+
+		// create an element for otherItem.bagOfItems
+		Item item = new Item();
+		item.setName( "element" );
+		item.setDescription( "element Item" );
+
+		beginTx();
+		try {
+			s = openSession();
+			txn = s.beginTransaction();
+			otherItem = (OtherItem) s.get( OtherItem.class, otherItem.getId() );
+			assertFalse( Hibernate.isInitialized( otherItem.getBagOfItems() ) );
+			// Add an element to otherItem.bagOfItems (a bag); it will not initialize the bag.
+			otherItem.addItemToBag( item );
+			assertFalse( Hibernate.isInitialized( otherItem.getBagOfItems() ) );
+			s.persist( item );
+			s.flush();
+			// Now initialize the collection; it will contain the uncommitted itemElement.
+			// The many-to-many uses a property-ref
+			Hibernate.initialize( otherItem.getBagOfItems() );
+			setRollbackOnlyTx();
+		}
+		catch (Exception e) {
+			setRollbackOnlyTxExpected(e);
+		}
+		finally {
+			commitOrRollbackTx();
+			if ( s != null && s.isOpen() ) {
+				try {
+					s.close();
+				}
+				catch (Throwable ignore) {
+				}
+			}
+		}
+
+		beginTx();
+		try {
+			// cleanup
+			s = openSession();
+			txn = s.beginTransaction();
+			otherItem = (OtherItem) s.get( OtherItem.class, otherItem.getId() );
+			// Because of HHH-9231, the following will fail due to ObjectNotFoundException because the
+			// collection will be read from the cache and it still contains the uncommitted element,
+			// which cannot be found.
+			Hibernate.initialize( otherItem.getBagOfItems() );
+			assertTrue( otherItem.getBagOfItems().isEmpty() );
+			s.delete( otherItem );
 			txn.commit();
 			s.close();
 		}

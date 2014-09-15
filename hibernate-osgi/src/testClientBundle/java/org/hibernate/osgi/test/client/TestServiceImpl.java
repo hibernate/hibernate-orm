@@ -27,6 +27,7 @@ import javax.persistence.spi.PersistenceProvider;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -146,5 +147,12 @@ public class TestServiceImpl implements TestService {
 	
 	public TestTypeContributor getTestTypeContributor() {
 		return testTypeContributor;
+	}
+
+	@Override
+	public boolean isCustomServiceContributorRegistered() {
+		SessionFactoryImplementor implementor = (SessionFactoryImplementor) sf;
+		SomeService service = implementor.getServiceRegistry().getService( SomeService.class );
+		return service != null;
 	}
 }

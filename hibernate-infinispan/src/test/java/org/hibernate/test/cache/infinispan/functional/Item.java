@@ -38,6 +38,7 @@ public class Item {
     private Set<Item> items = new HashSet<Item>(  );
 	private Item bagOwner;
 	private List<Item> bagOfItems = new ArrayList<Item>(  );
+	private Set<OtherItem> otherItems = new HashSet<OtherItem>(  );
 
     public Item() {}
     
@@ -111,4 +112,18 @@ public class Item {
 		item.setBagOwner( this );
 		getBagOfItems().add( item );
 	}
+
+	public Set<OtherItem> getOtherItems() {
+		return otherItems;
+	}
+
+	public void setOtherItems(Set<OtherItem> otherItems) {
+		this.otherItems = otherItems;
+	}
+
+	public void addOtherItem(OtherItem otherItem) {
+		getOtherItems().add( otherItem );
+		otherItem.getBagOfItems().add( this );
+	}
+
 }

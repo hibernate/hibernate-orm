@@ -63,6 +63,10 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 		afterCompletionAction = STANDARD_AFTER_COMPLETION_ACTION;
 	}
 
+	protected final TransactionCoordinator transactionCoordinator() {
+		return transactionCoordinator;
+	}
+
 	private TransactionContext transactionContext() {
 		return transactionCoordinator.getTransactionContext();
 	}

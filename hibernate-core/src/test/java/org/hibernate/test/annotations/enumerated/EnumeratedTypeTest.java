@@ -397,6 +397,8 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 		assertEquals( resultList.size(), 1 );
 		assertEquals( resultList.get(0).getFormula(), Trimmed.A );
 
+		statement.execute( "delete from EntityEnum" );
+
 		s.getTransaction().commit();
 		s.close();
 	}

@@ -494,7 +494,10 @@ public class SimpleValue implements KeyValue {
 		try {
 			String[] columnsNames = new String[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
-				columnsNames[i] = ( (Column) columns.get( i ) ).getName();
+				Selectable column = columns.get(i);
+				if (column instanceof Column){
+					columnsNames[i] = ((Column) column).getName();
+				}
 			}
 
 			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );

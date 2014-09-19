@@ -365,7 +365,7 @@ public class SimpleValue implements KeyValue {
 		try {
 			String[] columnsNames = new String[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
-				Selectable column = columns.get(i);
+				Object column = columns.get(i);
 				if (column instanceof Column){
 					columnsNames[i] = ((Column) column).getName();
 				}

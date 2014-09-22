@@ -53,8 +53,11 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
+import org.hibernate.testing.junit4.CustomRunner;
+
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.infinispan.util.logging.Log;
@@ -66,6 +69,7 @@ import org.jnp.server.NamingServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * This is an example test based on http://community.jboss.org/docs/DOC-14617 that shows how to interact with
@@ -77,6 +81,7 @@ import org.junit.Test;
  * @author Galder Zamarreño
  * @since 3.5
  */
+@RunWith( CustomRunner.class )
 public class JBossStandaloneJtaExampleTest {
    private static final Log log = LogFactory.getLog(JBossStandaloneJtaExampleTest.class);
    private static final JBossStandaloneJTAManagerLookup lookup = new JBossStandaloneJTAManagerLookup();
@@ -108,7 +113,10 @@ public class JBossStandaloneJtaExampleTest {
 		  }
 	  }
    }
+
    @Test
+   @FailureExpectedWithNewMetamodel( message = "ForeignKeyHelper.java:140 fails with org.hibernate.cfg.NotYetImplementedException: " +
+		   "No support yet for referenced join columns unless they correspond with columns bound for an attribute binding." )
    public void testPersistAndLoadUnderJta() throws Exception {
       Item item;
       SessionFactory sessionFactory = buildSessionFactory();

@@ -49,10 +49,12 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +70,7 @@ import org.jboss.util.naming.NonSerializableFactory;
 
 import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -147,6 +150,8 @@ public class JndiRegionFactoryTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel( message = "ForeignKeyHelper.java:140 fails with org.hibernate.cfg.NotYetImplementedException: " +
+			"No support yet for referenced join columns unless they correspond with columns bound for an attribute binding." )
 	public void testRedeployment() throws Exception {
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) buildMetadata().buildSessionFactory();
 		addEntityCheckCache( sf );

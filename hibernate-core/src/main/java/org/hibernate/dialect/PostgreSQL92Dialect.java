@@ -37,6 +37,8 @@ public class PostgreSQL92Dialect extends PostgreSQL9Dialect {
 	 */
 	public PostgreSQL92Dialect() {
 		super();
+        registerKeyword("over");
+        registerKeyword("partition");
 		this.registerColumnType( Types.JAVA_OBJECT, "json" );
-	}
+    }
 }

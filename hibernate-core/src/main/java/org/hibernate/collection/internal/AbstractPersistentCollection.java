@@ -345,8 +345,6 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return null;
 	}
 
-	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
-
 	protected Object readElementByIndex(final Object index) {
 		if ( !initialized ) {
 			class ExtraLazyElementByIndexReader implements LazyInitializationWork {
@@ -378,7 +376,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				return reader.element;
 			}
 		}
-		return UNKNOWN;
+		return MarkerObject.UNKNOWN;
 
 	}
 

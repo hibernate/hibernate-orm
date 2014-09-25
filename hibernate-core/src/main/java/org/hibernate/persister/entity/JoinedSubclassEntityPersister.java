@@ -68,7 +68,6 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -81,8 +80,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private static final Logger log = Logger.getLogger( JoinedSubclassEntityPersister.class );
 
 	private static final String IMPLICIT_DISCRIMINATOR_ALIAS = "clazz_";
-	private static final Object NULL_DISCRIMINATOR = new MarkerObject("<null discriminator>");
-	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
 
 	// the class hierarchy structure
 	private final int tableSpan;
@@ -673,11 +670,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				discriminatorType =
 						(DiscriminatorType) discriminator.getExplicitHibernateTypeDescriptor().getResolvedTypeMapping();
 				if ( entityBinding.isDiscriminatorMatchValueNull() ) {
-					discriminatorValue = NULL_DISCRIMINATOR;
+					discriminatorValue = MarkerObject.NULL_DISCRIMINATOR;
 					discriminatorSQLString = InFragment.NULL;
 				}
 				else if ( entityBinding.isDiscriminatorMatchValueNotNull() ) {
-					discriminatorValue = NOT_NULL_DISCRIMINATOR;
+					discriminatorValue = MarkerObject.NOT_NULL_DISCRIMINATOR;
 					discriminatorSQLString = InFragment.NOT_NULL;
 				}
 				else {

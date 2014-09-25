@@ -24,19 +24,20 @@
  */
 package org.hibernate.internal.util;
 
-import java.io.Serializable;
 
 /**
  * @author Gavin King
  */
-public class MarkerObject implements Serializable {
-	private String name;
+public enum MarkerObject {
 	
-	public MarkerObject(String name) {
-		this.name=name;
-	}
-	@Override
-    public String toString() {
-		return name;
-	}
+	NO_ROW,
+	UNKNOWN,
+	UNSET_PARAMETER,
+	UNSET_TYPE,
+	NULL_DISCRIMINATOR,
+	NOT_NULL_DISCRIMINATOR,
+	INVOKE_IMPLEMENTATION,
+	NOT_NULL_COLLECTION,
+	UNFETCHED_COLLECTION
+	
 }

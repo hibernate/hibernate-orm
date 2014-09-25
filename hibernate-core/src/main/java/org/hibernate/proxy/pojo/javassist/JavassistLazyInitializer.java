@@ -36,6 +36,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
@@ -181,7 +182,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			catch ( Throwable t ) {
 				throw new Exception( t.getCause() );
 			}
-			if ( result == INVOKE_IMPLEMENTATION ) {
+			if ( result == MarkerObject.INVOKE_IMPLEMENTATION ) {
 				Object target = getImplementation();
 				final Object returnValue;
 				try {

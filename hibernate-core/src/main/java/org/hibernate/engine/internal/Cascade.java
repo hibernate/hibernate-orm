@@ -38,6 +38,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -366,7 +367,7 @@ public final class Cascade {
 			final Type elemType,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
+		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != MarkerObject.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();

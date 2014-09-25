@@ -39,8 +39,6 @@ import org.hibernate.type.CompositeType;
  */
 public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
-	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject("INVOKE_IMPLEMENTATION");
-
 	protected final Class persistentClass;
 	protected final Method getIdentifierMethod;
 	protected final Method setIdentifierMethod;
@@ -93,7 +91,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 			else if ( method.equals(setIdentifierMethod) ) {
 				initialize();
 				setIdentifier( (Serializable) args[0] );
-				return INVOKE_IMPLEMENTATION;
+				return MarkerObject.INVOKE_IMPLEMENTATION;
 			}
 		}
 
@@ -103,7 +101,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		}
 
 		// otherwise:
-		return INVOKE_IMPLEMENTATION;
+		return MarkerObject.INVOKE_IMPLEMENTATION;
 
 	}
 

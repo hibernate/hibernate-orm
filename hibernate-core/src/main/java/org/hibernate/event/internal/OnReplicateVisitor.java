@@ -28,6 +28,7 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
@@ -53,7 +54,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 
 	@Override
 	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
-		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+		if ( collection == MarkerObject.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 

@@ -82,9 +82,6 @@ public abstract class AbstractQueryImpl implements Query {
 			AbstractQueryImpl.class.getName()
 	);
 
-	private static final Object UNSET_PARAMETER = new MarkerObject("<unset parameter>");
-	private static final Object UNSET_TYPE = new MarkerObject("<unset type>");
-
 	private final String queryString;
 	protected final SessionImplementor session;
 	protected final ParameterMetadata parameterMetadata;
@@ -404,7 +401,7 @@ public abstract class AbstractQueryImpl implements Query {
 		int positionalValueSpan = 0;
 		for ( int i = 0; i < values.size(); i++ ) {
 			Object object = types.get( i );
-			if( values.get( i ) == UNSET_PARAMETER || object == UNSET_TYPE ) {
+			if( values.get( i ) == MarkerObject.UNSET_PARAMETER || object == MarkerObject.UNSET_TYPE ) {
 				if ( reserveFirstParameter && i==0 ) {
 					continue;
 				}
@@ -452,8 +449,8 @@ public abstract class AbstractQueryImpl implements Query {
 		else {
 			// prepend value and type list with null for any positions before the wanted position.
 			for ( int i = 0; i < position - size; i++ ) {
-				values.add( UNSET_PARAMETER );
-				types.add( UNSET_TYPE );
+				values.add( MarkerObject.UNSET_PARAMETER );
+				types.add( MarkerObject.UNSET_TYPE );
 			}
 			values.add( val );
 			types.add( type );

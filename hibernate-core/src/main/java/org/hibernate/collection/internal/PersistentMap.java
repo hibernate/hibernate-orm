@@ -36,6 +36,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -162,7 +163,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	@Override
 	public Object get(Object key) {
 		final Object result = readElementByIndex( key );
-		return result == UNKNOWN
+		return result == MarkerObject.UNKNOWN
 				? map.get( key )
 				: result;
 	}
@@ -172,7 +173,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	public Object put(Object key, Object value) {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
-			if ( old != UNKNOWN ) {
+			if ( old != MarkerObject.UNKNOWN ) {
 				queueOperation( new Put( key, value, old ) );
 				return old;
 			}
@@ -194,7 +195,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	public Object remove(Object key) {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
-			if ( old != UNKNOWN ) {
+			if ( old != MarkerObject.UNKNOWN ) {
 				queueOperation( new Remove( key, old ) );
 				return old;
 			}

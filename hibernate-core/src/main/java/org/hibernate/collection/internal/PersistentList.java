@@ -34,6 +34,7 @@ import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -286,7 +287,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
 		final Object result = readElementByIndex( index );
-		return result == UNKNOWN ? list.get( index ) : result;
+		return result == MarkerObject.UNKNOWN ? list.get( index ) : result;
 	}
 
 	@Override
@@ -296,9 +297,9 @@ public class PersistentList extends AbstractPersistentCollection implements List
 			throw new ArrayIndexOutOfBoundsException("negative index");
 		}
 
-		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
+		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : MarkerObject.UNKNOWN;
 
-		if ( old==UNKNOWN ) {
+		if ( old==MarkerObject.UNKNOWN ) {
 			write();
 			return list.set( index, value );
 		}
@@ -314,8 +315,8 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
-		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
-		if ( old == UNKNOWN ) {
+		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : MarkerObject.UNKNOWN;
+		if ( old == MarkerObject.UNKNOWN ) {
 			write();
 			return list.remove( index );
 		}

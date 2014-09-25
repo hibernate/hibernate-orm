@@ -76,9 +76,6 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionType.class.getName());
 
-	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
-	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
-
 	private final TypeFactory.TypeScope typeScope;
 	private final String role;
 	private final String foreignKeyPropertyName;
@@ -450,7 +447,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object hydrate(ResultSet rs, String[] name, SessionImplementor session, Object owner) {
 		// can't just return null here, since that would
 		// cause an owning component to become null
-		return NOT_NULL_COLLECTION;
+		return MarkerObject.NOT_NULL_COLLECTION;
 	}
 
 	@Override

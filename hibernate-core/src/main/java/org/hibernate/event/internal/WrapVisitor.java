@@ -31,6 +31,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
@@ -91,7 +92,7 @@ public class WrapVisitor extends ProxyVisitor {
 			//TODO: move into collection type, so we can use polymorphism!
 			if ( collectionType.hasHolder() ) {
 
-				if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+				if ( collection == MarkerObject.UNFETCHED_COLLECTION ) {
 					return null;
 				}
 

@@ -67,6 +67,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -76,7 +77,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -310,11 +310,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityKey key = session.generateEntityKey( id, persister );
 		final Object cached = entitySnapshotsByKey.get( key );
 		if ( cached != null ) {
-			return cached == NO_ROW ? null : (Object[]) cached;
+			return cached == MarkerObject.NO_ROW ? null : (Object[]) cached;
 		}
 		else {
 			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
-			entitySnapshotsByKey.put( key, snapshot == null ? NO_ROW : snapshot );
+			entitySnapshotsByKey.put( key, snapshot == null ? MarkerObject.NO_ROW : snapshot );
 			return snapshot;
 		}
 	}
@@ -349,7 +349,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			// snapshot-cached.
 			final int[] props = persister.getNaturalIdentifierProperties();
 			final Object[] entitySnapshot = getDatabaseSnapshot( id, persister );
-			if ( entitySnapshot == NO_ROW || entitySnapshot == null ) {
+			if ( entitySnapshot == (Object)MarkerObject.NO_ROW || entitySnapshot == null ) {
 				return null;
 			}
 
@@ -373,7 +373,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object[] getCachedDatabaseSnapshot(EntityKey key) {
 		final Object snapshot = entitySnapshotsByKey.get( key );
-		if ( snapshot == NO_ROW ) {
+		if ( snapshot == MarkerObject.NO_ROW ) {
 			throw new IllegalStateException(
 					"persistence context reported no row snapshot for "
 							+ MessageHelper.infoString( key.getEntityName(), key.getIdentifier() )

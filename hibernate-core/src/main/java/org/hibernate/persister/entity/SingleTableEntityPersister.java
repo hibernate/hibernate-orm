@@ -123,9 +123,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	
 	private final Map<String, String> sequentialSelectStringsByEntityName = new HashMap<String, String>();
 
-	private static final Object NULL_DISCRIMINATOR = new MarkerObject("<null discriminator>");
-	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject("<not null discriminator>");
-
 	//INITIALIZATION:
 
 	private void addSubclassByDiscriminatorValue(Object discriminatorValue, String entityName) {
@@ -294,12 +291,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					.getResolvedTypeMapping();
 
 			if ( entityBinding.isDiscriminatorMatchValueNull() ) {
-				discriminatorValue = NULL_DISCRIMINATOR;
+				discriminatorValue = MarkerObject.NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NULL;
 				discriminatorInsertable = false;
 			}
 			else if ( entityBinding.isDiscriminatorMatchValueNotNull() ) {
-				discriminatorValue = NOT_NULL_DISCRIMINATOR;
+				discriminatorValue = MarkerObject.NOT_NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NOT_NULL;
 				discriminatorInsertable = false;
 			}
@@ -398,10 +395,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
 				subclassClosure[k++] = subEntityBinding.getEntityName();
 				if ( subEntityBinding.isDiscriminatorMatchValueNull() ) {
-					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, subEntityBinding.getEntityName() );
+					addSubclassByDiscriminatorValue( MarkerObject.NULL_DISCRIMINATOR, subEntityBinding.getEntityName() );
 				}
 				else if ( subEntityBinding.isDiscriminatorMatchValueNotNull() ) {
-					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntityName() );
+					addSubclassByDiscriminatorValue( MarkerObject.NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntityName() );
 				}
 				else {
 					try {
@@ -478,11 +475,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	public String getSubclassForDiscriminatorValue(Object value) {
 		if (value==null) {
-			return (String) subclassesByDiscriminatorValue.get(NULL_DISCRIMINATOR);
+			return (String) subclassesByDiscriminatorValue.get(MarkerObject.NULL_DISCRIMINATOR);
 		}
 		else {
 			String result = (String) subclassesByDiscriminatorValue.get(value);
-			if (result==null) result = (String) subclassesByDiscriminatorValue.get(NOT_NULL_DISCRIMINATOR);
+			if (result==null) result = (String) subclassesByDiscriminatorValue.get(MarkerObject.NOT_NULL_DISCRIMINATOR);
 			return result;
 		}
 	}

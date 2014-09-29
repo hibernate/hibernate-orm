@@ -139,6 +139,16 @@ public class JpaDescriptorParser {
 					Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
 			);
 		}
+		finally {
+			try {
+				stream.close();
+			}
+			catch ( IOException e ) {
+				context.logMessage(
+						Diagnostic.Kind.WARNING, "Unable to close persistence.xml: " + e.getMessage()
+				);
+			}
+		}
 		return persistence;
 	}
 
@@ -157,6 +167,16 @@ public class JpaDescriptorParser {
 				context.logMessage(
 						Diagnostic.Kind.WARNING, "Unable to parse " + mappingFile + ": " + e.getMessage()
 				);
+			}
+			finally {
+				try {
+					stream.close();
+				}
+				catch ( IOException e ) {
+					context.logMessage(
+							Diagnostic.Kind.WARNING, "Unable to close '" + mappingFile + "': " + e.getMessage()
+					);
+				}
 			}
 			if ( mapping != null ) {
 				entityMappings.add( mapping );

@@ -58,7 +58,7 @@ import org.dom4j.Node;
  */
 public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
-	private final TypeFactory.TypeScope typeScope;
+	private transient final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final boolean[] propertyNullability;

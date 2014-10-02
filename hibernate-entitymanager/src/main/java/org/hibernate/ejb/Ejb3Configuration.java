@@ -72,6 +72,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.ejb.cfg.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
 import org.hibernate.ejb.event.JpaIntegrator;
@@ -1062,6 +1063,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 		Interceptor defaultInterceptor = DEFAULT_CONFIGURATION.getInterceptor();
 		NamingStrategy defaultNamingStrategy = DEFAULT_CONFIGURATION.getNamingStrategy();
+		NamingStrategyDelegator defaultNamingStrategyDelegator = DEFAULT_CONFIGURATION.getNamingStrategyDelegator();
 
 		Iterator propertyIt = preparedProperties.keySet().iterator();
 		while ( propertyIt.hasNext() ) {
@@ -1101,8 +1103,27 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				"naming strategy",
 				NamingStrategy.class
 		);
+
+		final NamingStrategyDelegator namingStrategyDelegator = instantiateCustomClassFromConfiguration(
+				preparedProperties,
+				defaultNamingStrategyDelegator,
+				cfg.getNamingStrategyDelegator(),
+				AvailableSettings.NAMING_STRATEGY_DELEGATOR,
+				"naming strategy delegator",
+				NamingStrategyDelegator.class
+		);
+
+		if ( namingStrategy != null && namingStrategyDelegator != null ) {
+			throw new PersistenceException(
+					getExceptionHeader() + AvailableSettings.NAMING_STRATEGY + " and " + AvailableSettings.NAMING_STRATEGY_DELEGATOR +
+							" properties cannot be used together. To be valid, only one of these properties can be set."
+			);
+		}
 		if ( namingStrategy != null ) {
 			cfg.setNamingStrategy( namingStrategy );
+		}
+		else if ( namingStrategyDelegator != null ) {
+			cfg.setNamingStrategyDelegator( namingStrategyDelegator );
 		}
 
 		final SessionFactoryObserver observer = instantiateCustomClassFromConfiguration(

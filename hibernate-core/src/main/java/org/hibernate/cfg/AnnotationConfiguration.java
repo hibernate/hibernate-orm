@@ -33,6 +33,7 @@ import org.dom4j.Document;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate
@@ -236,6 +237,12 @@ public class AnnotationConfiguration extends Configuration {
 	@Override
 	public AnnotationConfiguration setNamingStrategy(NamingStrategy namingStrategy) {
 		super.setNamingStrategy( namingStrategy );
+		return this;
+	}
+
+	@Override
+	public AnnotationConfiguration setNamingStrategyDelegator(NamingStrategyDelegator namingStrategyDelegator) {
+		super.setNamingStrategyDelegator( namingStrategyDelegator );
 		return this;
 	}
 

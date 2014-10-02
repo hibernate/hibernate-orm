@@ -4,6 +4,8 @@ import java.util.Collection;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
@@ -34,6 +36,7 @@ public class Group {
 	}
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
+	@JoinTable(joinColumns = {@JoinColumn( name="groupId")})
 	@OrderBy("expirationDate")
 	@Where(clause = "1=1")
 	@WhereJoinTable(clause = "2=2")

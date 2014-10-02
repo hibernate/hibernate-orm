@@ -29,6 +29,7 @@ import java.util.Properties;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -92,6 +93,11 @@ public class IdentifierGeneratorResolver {
 		@Override
 		protected NamingStrategy getNamingStrategy() {
 			return namingStrategy;
+		}
+
+		@Override
+		protected NamingStrategyDelegator getNamingStrategyDelegator() {
+			return null;
 		}
 	}
 }

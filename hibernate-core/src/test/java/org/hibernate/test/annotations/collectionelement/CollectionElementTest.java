@@ -38,7 +38,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.test.annotations.Country;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -298,7 +297,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9387")
-	@FailureExpected( jiraKey = "HHH-9387")
 	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -309,7 +307,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9387")
-	@FailureExpected( jiraKey = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -319,7 +316,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		checkDefaultCollectionTableName( Owner.class, "elements", "OWNER_elements" );
 	}
 
-	private void checkDefaultCollectionTableName(
+	protected void checkDefaultCollectionTableName(
 			Class<?> ownerEntityClass,
 			String ownerCollectionPropertyName,
 			String expectedCollectionTableName) {
@@ -352,7 +349,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9389")
-	@FailureExpected( jiraKey = "HHH-9389")
 	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -363,7 +359,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9389")
-	@FailureExpected( jiraKey = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -373,7 +368,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		checkDefaultJoinColumnName( Owner.class, "elements", "OWNER_id" );
 	}
 
-	private void checkDefaultJoinColumnName(
+	protected void checkDefaultJoinColumnName(
 			Class<?> ownerEntityClass,
 			String ownerCollectionPropertyName,
 			String ownerForeignKeyNameExpected) {

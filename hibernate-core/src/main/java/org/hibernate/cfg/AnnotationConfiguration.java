@@ -31,6 +31,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 
 import org.dom4j.Document;
 
@@ -236,6 +237,12 @@ public class AnnotationConfiguration extends Configuration {
 	@Override
 	public AnnotationConfiguration setNamingStrategy(NamingStrategy namingStrategy) {
 		super.setNamingStrategy( namingStrategy );
+		return this;
+	}
+
+	@Override
+	public AnnotationConfiguration setNamingStrategyDelegator(NamingStrategyDelegator namingStrategyDelegator) {
+		super.setNamingStrategyDelegator( namingStrategyDelegator );
 		return this;
 	}
 

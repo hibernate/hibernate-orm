@@ -37,6 +37,8 @@ package org.hibernate.cfg;
  * @see ImprovedNamingStrategy
  * @author Gavin King
  * @author Emmanuel Bernard
+ *
+ * @deprecated
  */
 public interface NamingStrategy {
 	/**

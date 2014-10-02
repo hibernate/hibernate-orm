@@ -913,7 +913,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
             <programlisting><![CDATA[Number revision = (Number) getAuditReader().createQuery()
     .forRevisionsOfEntity(MyEntity.class, false, true)
-    .setProjection(AuditEntity.revisionNumber().min())
+    .addProjection(AuditEntity.revisionNumber().min())
     .add(AuditEntity.id().eq(entityId))
     .add(AuditEntity.revisionNumber().gt(42))
     .getSingleResult();]]></programlisting>
@@ -928,7 +928,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             <programlisting><![CDATA[Number revision = (Number) getAuditReader().createQuery()
     .forRevisionsOfEntity(MyEntity.class, false, true)
     // We are only interested in the first revision
-    .setProjection(AuditEntity.revisionNumber().min())
+    .addProjection(AuditEntity.revisionNumber().min())
     .add(AuditEntity.property("actualDate").minimize()
         .add(AuditEntity.property("actualDate").ge(givenDate))
         .add(AuditEntity.id().eq(givenEntityId)))

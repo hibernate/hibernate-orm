@@ -21,6 +21,7 @@
 package org.hibernate.engine.query.spi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,8 @@ public class EntityGraphQueryHint {
 		}
 
 		return getFromElements(
-				originEntityGraph.getAttributeNodes(),
+				fromClause.getLevel() == FromClause.ROOT_LEVEL ? originEntityGraph.getAttributeNodes():
+					Collections.emptyList(),
 				fromClause.getFromElement(),
 				fromClause,
 				walker,

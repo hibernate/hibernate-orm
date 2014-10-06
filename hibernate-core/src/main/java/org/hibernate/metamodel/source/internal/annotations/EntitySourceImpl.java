@@ -43,6 +43,7 @@ import org.hibernate.metamodel.source.internal.annotations.attribute.PrimaryKeyJ
 import org.hibernate.metamodel.source.internal.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.source.internal.annotations.entity.EntityTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.entity.ManagedTypeMetadata;
+import org.hibernate.metamodel.source.internal.annotations.entity.MappedSuperclassTypeMetadata;
 import org.hibernate.metamodel.source.internal.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.annotations.util.JPADotNames;
 import org.hibernate.metamodel.source.spi.ConstraintSource;
@@ -59,6 +60,7 @@ import org.hibernate.xml.spi.Origin;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 /**
  * Common base class for adapting Entity classes to the metamodel source structure.
@@ -154,10 +156,9 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 	}
 
 	private FilterSource[] buildFilterSources() {
-		AnnotationInstance filtersAnnotation = getEntityClass().getJavaTypeDescriptor().findTypeAnnotation(
-				HibernateDotNames.FILTERS
-		);
+		AnnotationInstance filtersAnnotation = findAnnotationInstance( HibernateDotNames.FILTERS );
 		List<FilterSource> filterSourceList = new ArrayList<FilterSource>();
+
 		if ( filtersAnnotation != null ) {
 			AnnotationInstance[] annotationInstances = filtersAnnotation.value().asNestedArray();
 			for ( AnnotationInstance filterAnnotation : annotationInstances ) {
@@ -167,9 +168,8 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 
 		}
 
-		AnnotationInstance filterAnnotation = getEntityClass().getJavaTypeDescriptor().findTypeAnnotation(
-				HibernateDotNames.FILTER
-		);
+		AnnotationInstance filterAnnotation = findAnnotationInstance( HibernateDotNames.FILTER );
+
 		if ( filterAnnotation != null ) {
 			FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
 			filterSourceList.add( filterSource );
@@ -180,6 +180,25 @@ public abstract class EntitySourceImpl extends IdentifiableTypeSourceAdapter imp
 		else {
 			return filterSourceList.toArray( new FilterSource[filterSourceList.size()] );
 		}
+	}
+
+	/**
+	 * Get the annotation of the named type, if one, defined on this type or any of its MappedSuperclass super-types
+	 * (only walk up MappedSuperclass hierarchy).
+	 */
+	private AnnotationInstance findAnnotationInstance(DotName annotationType) {
+		IdentifiableTypeSourceAdapter superType = this.getSuperType();
+
+		AnnotationInstance result;
+		if ( superType != null && superType.getManagedTypeMetadata() instanceof MappedSuperclassTypeMetadata ) {
+			// walk up super-type hierarchy
+			result = getEntityClass().getJavaTypeDescriptor().findTypeAnnotation( annotationType );
+		}
+		else {
+			// DO NOT walk up super-type hierarchy
+			result = getEntityClass().getJavaTypeDescriptor().findLocalTypeAnnotation( annotationType );
+		}
+		return result;
 	}
 
 	protected boolean isRootEntity() {

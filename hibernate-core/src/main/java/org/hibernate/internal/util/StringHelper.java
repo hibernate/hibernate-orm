@@ -169,8 +169,8 @@ public final class StringHelper {
 		boolean encloseInParens =
 				actuallyReplace &&
 				encloseInParensIfNecessary &&
-				! ( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) &&
-				! ( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );		
+				(! ( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) ||
+				! ( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' ));		
 		StringBuilder buf = new StringBuilder( beforePlaceholder );
 		if ( encloseInParens ) {
 			buf.append( '(' );

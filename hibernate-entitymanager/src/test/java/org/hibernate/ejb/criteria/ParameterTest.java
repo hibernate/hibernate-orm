@@ -23,6 +23,9 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
@@ -31,8 +34,8 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.junit.Test;
-
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Steve Ebersole
@@ -76,5 +79,18 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { MultiTypedBasicAttributesEntity.class };
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-7407" )
+	public void testListAsParameter() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		
+		List<Long> ids = Arrays.asList( 1L, 2L, 3L );
+		em.createQuery( "FROM MultiTypedBasicAttributesEntity m WHERE 1 = 1 OR (1 = 1 AND m.id IN :ids)" ).setParameter( "ids", ids ).getResultList();
+		
+		em.getTransaction().commit();
+		em.close();
 	}
 }

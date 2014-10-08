@@ -33,10 +33,10 @@ import org.junit.Test;
 import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
 import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.jpa.test.MyNamingStrategyDelegator;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.MyNamingStrategy;
-import org.hibernate.jpa.test.MyNamingStrategyDelegator;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

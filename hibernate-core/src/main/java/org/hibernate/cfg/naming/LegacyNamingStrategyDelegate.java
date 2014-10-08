@@ -28,6 +28,7 @@ import org.hibernate.cfg.NamingStrategy;
 /**
  * @author Gail Badner
  */
+@Deprecated
 public interface LegacyNamingStrategyDelegate extends NamingStrategyDelegate {
 	public static interface LegacyNamingStrategyDelegateContext {
 		public NamingStrategy getNamingStrategy();

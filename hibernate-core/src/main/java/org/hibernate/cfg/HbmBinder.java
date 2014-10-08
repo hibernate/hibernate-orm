@@ -889,7 +889,7 @@ public final class HbmBinder {
 		String physicalTableName;
 		if ( tableNameNode == null ) {
 			logicalTableName = StringHelper.unqualify( model.getEntityName() );
-			physicalTableName = getNamingStrategyDelegate( mappings ).determinePrimaryTableLogicalName(
+			physicalTableName = getNamingStrategyDelegate( mappings ).determineImplicitPrimaryTableName(
 					model.getEntityName(),
 					model.getJpaEntityName()
 			);
@@ -1081,7 +1081,7 @@ public final class HbmBinder {
 					column.setTypeIndex( count++ );
 					bindColumn( columnElement, column, isNullable );
 					String columnName = columnElement.attributeValue( "name" );
-					String logicalColumnName = getNamingStrategyDelegate( mappings ).logicalColumnName(
+					String logicalColumnName = getNamingStrategyDelegate( mappings ).determineLogicalColumnName(
 							columnName, propertyPath
 					);
 					columnName = getNamingStrategyDelegate( mappings ).toPhysicalColumnName( columnName );
@@ -1137,7 +1137,7 @@ public final class HbmBinder {
 				( (ManyToOne) simpleValue ).markAsLogicalOneToOne();
 			}
 			String columnName = columnAttribute.getValue();
-			String logicalColumnName = getNamingStrategyDelegate( mappings ).logicalColumnName(
+			String logicalColumnName = getNamingStrategyDelegate( mappings ).determineLogicalColumnName(
 					columnName, propertyPath
 			);
 			columnName = getNamingStrategyDelegate( mappings ).toPhysicalColumnName( columnName );
@@ -1158,10 +1158,10 @@ public final class HbmBinder {
 			Column column = new Column();
 			column.setValue( simpleValue );
 			bindColumn( node, column, isNullable );
-			String columnName = getNamingStrategyDelegate( mappings ).determineAttributeColumnName( propertyPath );
+			String columnName = getNamingStrategyDelegate( mappings ).determineImplicitPropertyColumnName( propertyPath );
 			columnName = quoteIdentifier( columnName, mappings );
 			column.setName( columnName );
-			String logicalName = getNamingStrategyDelegate( mappings ).logicalColumnName( null, propertyPath );
+			String logicalName = getNamingStrategyDelegate( mappings ).determineLogicalColumnName( null, propertyPath );
 			mappings.addColumnBinding( logicalName, column, table );
 			/* TODO: joinKeyColumnName & foreignKeyColumnName should be called either here or at a
 			 * slightly higer level in the stack (to get all the information we need)
@@ -1499,16 +1499,16 @@ public final class HbmBinder {
 				String logicalOwnerTableName = ownerTable.getName();
 				//FIXME we don't have the associated entity table name here, has to be done in a second pass
 				if ( node.element( "element" ) != null || node.element( "composite-element" ) != null ) {
-					tableName = getNamingStrategyDelegate( mappings ).determineElementCollectionTableLogicalName(
+					tableName = getNamingStrategyDelegate( mappings ).determineImplicitElementCollectionTableName(
 							collection.getOwner().getClassName(),
-							collection.getOwner().getEntityName(),
+							collection.getOwner().getJpaEntityName(),
 							logicalOwnerTableName,
 							path
 					);
 				}
 				else {
-					tableName = getNamingStrategyDelegate( mappings ).determineEntityAssociationJoinTableLogicalName(
-							collection.getOwner().getEntityName(),
+					tableName = getNamingStrategyDelegate( mappings ).determineImplicitEntityAssociationJoinTableName(
+							collection.getOwner().getClassName(),
 							collection.getOwner().getJpaEntityName(),
 							logicalOwnerTableName,
 							null,

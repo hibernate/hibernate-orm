@@ -26,24 +26,20 @@ package org.hibernate.test.annotations.collectionelement;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.naming.AbstractLegacyNamingStrategyDelegate;
-import org.hibernate.cfg.naming.LegacyHbmNamingStrategyDelegate;
-import org.hibernate.cfg.naming.LegacyNamingStrategyDelegate;
-import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
-import org.hibernate.cfg.naming.NamingStrategyDelegate;
+import org.hibernate.cfg.naming.HbmNamingStrategyDelegate;
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
+import org.hibernate.cfg.naming.JpaNamingStrategyDelegate;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Gail Badner
  */
-public class CustomNamingCollectionElementTest extends CollectionElementTest {
+public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCollectionElementTest {
 
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setNamingStrategyDelegator( new MyLegacyNamingStrategyDelegator() );
+		cfg.setNamingStrategyDelegator( new MyImprovedNamingStrategyDelegator() );
 	}
 
 	@Test
@@ -114,131 +110,38 @@ public class CustomNamingCollectionElementTest extends CollectionElementTest {
 		checkDefaultCollectionTableName( Boy.class, "hatedNames", "tbl_Boys_hatedNames" );
 	}
 
-	static class MyLegacyNamingStrategyDelegator extends LegacyNamingStrategyDelegator {
-		private final NamingStrategyDelegate hbmNamingStrategyDelegate = new LegacyHbmNamingStrategyDelegate( this );
-		private final NamingStrategyDelegate nonHbmNamingStrategyDelegate = new MyNonHbmNamingStrategyDelegator( this );
-
-		@Override
-		public NamingStrategyDelegate getNamingStrategyDelegate(boolean isHbm) {
-			return isHbm ? hbmNamingStrategyDelegate : nonHbmNamingStrategyDelegate;
+	static class MyImprovedNamingStrategyDelegator extends ImprovedNamingStrategyDelegator {
+		public MyImprovedNamingStrategyDelegator() {
+			super( new HbmNamingStrategyDelegate(), new MyNonHbmNamingStrategyDelegate() );
 		}
 
-		@Override
-		public NamingStrategy getNamingStrategy() {
-			return EJB3NamingStrategy.INSTANCE;
-		}
-
-		private class MyNonHbmNamingStrategyDelegator extends AbstractLegacyNamingStrategyDelegate {
-			MyNonHbmNamingStrategyDelegator(LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext context)  {
-				super( context );
-			}
-
+		private static class MyNonHbmNamingStrategyDelegate extends JpaNamingStrategyDelegate {
 			@Override
-			public String toPhysicalTableName(String tableName) {
-				return getNamingStrategy().tableName( tableName );
-			}
-
-			@Override
-			public String toPhysicalColumnName(String columnName) {
-				return getNamingStrategy().columnName( columnName );
-			}
-
-			@Override
-			public String determineElementCollectionTableLogicalName(
+			public String determineImplicitElementCollectionTableName(
 					String ownerEntityName,
 					String ownerJpaEntityName,
 					String ownerEntityTable,
-					String propertyNamePath) {
-				return getNamingStrategy().collectionTableName(
-						ownerEntityName,
-						ownerEntityTable,
-						null,
-						null,
-						propertyNamePath
-				);
+					String propertyPath) {
+				// This impl uses the owner entity table name instead of the JPA entity name when
+				// generating the implicit name.
+				int loc = propertyPath.lastIndexOf(".");
+				final String unqualifiedPropertyName = loc < 0 ? propertyPath : propertyPath.substring( loc + 1 );
+				return ownerEntityTable
+						+ '_'
+						+ unqualifiedPropertyName;
 			}
 
 			@Override
-			public String determineElementCollectionForeignKeyColumnName(
-					String propertyName,
-					String propertyEntityName,
-					String propertyJpaEntityName,
-					String propertyTableName,
-					String referencedColumnName) {
-				return getNamingStrategy().foreignKeyColumnName(
-						propertyName,
-						propertyEntityName,
-						propertyTableName,
-						referencedColumnName
-				);
-			}
-
-			@Override
-			public String determineEntityAssociationJoinTableLogicalName(
+			public String determineImplicitElementCollectionJoinColumnName(
 					String ownerEntityName,
 					String ownerJpaEntityName,
 					String ownerEntityTable,
-					String associatedEntityName,
-					String associatedJpaEntityName,
-					String associatedEntityTable,
-					String propertyNamePath) {
-				return getNamingStrategy().collectionTableName(
-						ownerEntityName,
-						ownerEntityTable,
-						associatedEntityName,
-						associatedEntityTable,
-						propertyNamePath
-				);
-			}
-
-			@Override
-			public String determineEntityAssociationForeignKeyColumnName(
-					String propertyName,
-					String propertyEntityName,
-					String propertyJpaEntityName,
-					String propertyTableName,
-					String referencedColumnName) {
-				return getNamingStrategy().foreignKeyColumnName(
-						propertyName,
-						propertyEntityName,
-						propertyTableName,
-						referencedColumnName
-				);
-			}
-
-			@Override
-			public String logicalElementCollectionTableName(
-					String tableName,
-					String ownerEntityName,
-					String ownerJpaEntityName,
-					String ownerEntityTable,
-					String propertyName) {
-				return getNamingStrategy().logicalCollectionTableName(
-						tableName,
-						ownerEntityTable,
-						null,
-						propertyName
-				);
-			}
-
-			@Override
-			public String logicalEntityAssociationJoinTableName(
-					String tableName,
-					String ownerEntityName,
-					String ownerJpaEntityName,
-					String ownerEntityTable,
-					String associatedEntityName,
-					String associatedJpaEntityName,
-					String associatedEntityTable,
-					String propertyName) {
-				return getNamingStrategy().logicalCollectionTableName(
-						tableName,
-						ownerEntityTable,
-						associatedEntityTable,
-						propertyName
-				);
+					String referencedColumnName,
+					String propertyPath) {
+				return ownerEntityTable
+						+ '_'
+						+ referencedColumnName;
 			}
 		}
 	}
-
 }

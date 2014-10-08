@@ -38,15 +38,17 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests default names for @JoinTable and @JoinColumn for unidirectional and bidirectional
- * many-to-many associations.
+ * Tests names generated for @JoinTable and @JoinColumn for unidirectional and bidirectional
+ * many-to-many associations when the "default" {@link org.hibernate.cfg.naming.NamingStrategyDelegator}
+ * is used. The current default does not comply with the JPA spec in some cases. See HHH-9390
+ * for more information.
  *
  * NOTE: expected primary table names and join columns are explicit here to ensure that
  * entity names/tables and PK columns are not changed (which would invalidate these test cases).
  *
  * @author Gail Badner
  */
-public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
+public class DefaultNamingManyToManyTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBidirNoOverrides() {
@@ -159,25 +161,6 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9390")
-	public void testUnidirOwnerPrimaryTableAssocEntityNamePKOverride() {
-		// City.stolenItems; associated entity: Item
-		// City has @Entity with no name configured and @Table(name = "tbl_city")
-		// Item has @Entity(name="ITEM") and no @Table
-		// PK column for City.id: id (default)
-		// PK column for Item: iId
-		// unidirectional
-		checkDefaultJoinTablAndJoinColumnNames(
-				City.class,
-				"stolenItems",
-				null,
-				"tbl_city_ITEM",
-				"City_id",
-				"stolenItems_iId"
-		);
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")
@@ -185,12 +168,13 @@ public class ManyToManyDefaultsTest  extends BaseCoreFunctionalTestCase {
 		// PK column for Category.id: id (default)
 		// PK column for KnownClient.id: id (default)
 		// unidirectional
+		// legacy behavior would use the table name in the generated join column.
 		checkDefaultJoinTablAndJoinColumnNames(
 				Category.class,
 				"clients",
 				null,
 				"CATEGORY_TAB_KnownClient",
-				"CATEGORY_id",
+				"CATEGORY_TAB_id",
 				"clients_id"
 
 		);

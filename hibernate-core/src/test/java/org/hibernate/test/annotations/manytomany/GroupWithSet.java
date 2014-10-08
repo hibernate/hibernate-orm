@@ -36,7 +36,6 @@ public class GroupWithSet {
 	}
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(joinColumns = {@JoinColumn( name="groupId")})
 	@OrderBy("expirationDate")
 	@Where(clause = "1=1")
 	@WhereJoinTable(clause = "2=2")

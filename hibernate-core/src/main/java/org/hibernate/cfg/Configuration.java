@@ -80,7 +80,6 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.cfg.naming.DefaultNamingStrategyDelegator;
 import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
 import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -352,7 +351,7 @@ public class Configuration implements Serializable {
 		mappedByResolver = new HashMap<String, String>();
 		propertyRefResolver = new HashMap<String, String>();
 		caches = new ArrayList<CacheHolder>();
-		namingStrategyDelegator = DefaultNamingStrategyDelegator.INSTANCE;
+		namingStrategyDelegator = LegacyNamingStrategyDelegator.DEFAULT_INSTANCE;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
 		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String, PropertyData>>();

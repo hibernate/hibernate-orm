@@ -28,69 +28,68 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Gail Badner
  */
-public class LegacyStandardNamingStrategyDelegate extends AbstractLegacyNamingStrategyDelegate {
+@Deprecated
+public class LegacyJpaNamingStrategyDelegate extends LegacyNamingStrategyDelegateAdapter {
 
-	LegacyStandardNamingStrategyDelegate(LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext context) {
+	LegacyJpaNamingStrategyDelegate(LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext context) {
 		super( context );
 	}
 
 	@Override
-	public String determineElementCollectionTableLogicalName(
+	public String determineImplicitPrimaryTableName(String entityName, String jpaEntityName) {
+		// jpaEntityname is being passed here in order to not cause a regression. See HHH-4312.
+		return getNamingStrategy().classToTableName( jpaEntityName );
+	}
+
+	@Override
+	public String determineImplicitElementCollectionTableName(
 			String ownerEntityName,
 			String ownerJpaEntityName,
 			String ownerEntityTable,
-			String propertyNamePath) {
+			String propertyPath) {
 		return getNamingStrategy().collectionTableName(
 				ownerEntityName,
 				StringHelper.unqualifyEntityName( ownerEntityName ),
 				null,
 				null,
-				propertyNamePath
+				propertyPath
 		);
 	}
 
 	@Override
-	public String determineElementCollectionForeignKeyColumnName(
-			String propertyName,
-			String propertyEntityName,
-			String propertyJpaEntityName,
-			String propertyTableName,
-			String referencedColumnName) {
+	public String determineImplicitElementCollectionJoinColumnName(
+			String ownerEntityName, String ownerJpaEntityName, String ownerEntityTable, String referencedColumnName, String propertyPath) {
 		return getNamingStrategy().foreignKeyColumnName(
-				propertyName,
-				propertyEntityName,
-				StringHelper.unqualifyEntityName( propertyEntityName ),
+				propertyPath,
+				ownerEntityName,
+				StringHelper.unqualifyEntityName( ownerEntityName ),
 				referencedColumnName
 		);
 	}
 
 	@Override
-	public String determineEntityAssociationJoinTableLogicalName(
+	public String determineImplicitEntityAssociationJoinTableName(
 			String ownerEntityName,
 			String ownerJpaEntityName,
 			String ownerEntityTable,
 			String associatedEntityName,
 			String associatedJpaEntityName,
 			String associatedEntityTable,
-			String propertyNamePath) {
+			String propertyPath) {
 		return getNamingStrategy().collectionTableName(
 				ownerEntityName,
 				ownerEntityTable,
 				associatedEntityName,
 				associatedEntityTable,
-				propertyNamePath
+				propertyPath
 		);
 	}
 
 	@Override
-	public String determineEntityAssociationForeignKeyColumnName(
-			String propertyName,
-			String propertyEntityName,
-			String propertyJpaEntityName,
-			String propertyTableName,
-			String referencedColumnName) {
+	public String determineImplicitEntityAssociationJoinColumnName(
+			String propertyEntityName, String propertyJpaEntityName, String propertyTableName, String referencedColumnName, String propertyPath) {
 		return getNamingStrategy().foreignKeyColumnName(
-				propertyName,
+				propertyPath,
 				propertyEntityName,
 				propertyTableName,
 				referencedColumnName
@@ -98,7 +97,7 @@ public class LegacyStandardNamingStrategyDelegate extends AbstractLegacyNamingSt
 	}
 
 	@Override
-	public String logicalElementCollectionTableName(
+	public String determineLogicalElementCollectionTableName(
 			String tableName,
 			String ownerEntityName,
 			String ownerJpaEntityName,
@@ -113,7 +112,7 @@ public class LegacyStandardNamingStrategyDelegate extends AbstractLegacyNamingSt
 	}
 
 	@Override
-	public String logicalEntityAssociationJoinTableName(
+	public String determineLogicalEntityAssociationJoinTableName(
 			String tableName,
 			String ownerEntityName,
 			String ownerJpaEntityName,

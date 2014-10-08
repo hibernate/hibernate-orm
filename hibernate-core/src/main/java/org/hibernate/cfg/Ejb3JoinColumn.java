@@ -455,21 +455,21 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		if ( mappedBySide ) {
 			String unquotedMappedbyTable = StringHelper.unquote( mappedByTableName );
 			if ( JPA2ElementCollection ) {
-				columnName = getNamingStrategyDelegate().determineElementCollectionForeignKeyColumnName(
-						mappedByPropertyName,
+				columnName = getNamingStrategyDelegate().determineImplicitElementCollectionJoinColumnName(
 						mappedByEntityName,
 						mappedByJpaEntityName,
 						unquotedMappedbyTable,
-						unquotedLogicalReferenceColumn
+						unquotedLogicalReferenceColumn,
+						mappedByPropertyName
 				);
 			}
 			else {
-				columnName = getNamingStrategyDelegate().determineEntityAssociationForeignKeyColumnName(
-						mappedByPropertyName,
+				columnName = getNamingStrategyDelegate().determineImplicitEntityAssociationJoinColumnName(
 						mappedByEntityName,
 						mappedByJpaEntityName,
 						unquotedMappedbyTable,
-						unquotedLogicalReferenceColumn
+						unquotedLogicalReferenceColumn,
+						mappedByPropertyName
 				);
 			}
 			//one element was quoted so we quote
@@ -480,12 +480,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		else if ( ownerSide ) {
 			String logicalTableName = getMappings().getLogicalTableName( referencedEntity.getTable() );
 			String unquotedLogicalTableName = StringHelper.unquote( logicalTableName );
-			columnName = getNamingStrategyDelegate().determineEntityAssociationForeignKeyColumnName(
-					getPropertyName(),
+			columnName = getNamingStrategyDelegate().determineImplicitEntityAssociationJoinColumnName(
 					referencedEntity.getEntityName(),
 					referencedEntity.getJpaEntityName(),
 					unquotedLogicalTableName,
-					unquotedLogicalReferenceColumn
+					unquotedLogicalReferenceColumn,
+					getPropertyName()
 			);
 			//one element was quoted so we quote
 			if ( isRefColumnQuoted || StringHelper.isQuoted( logicalTableName ) ) {
@@ -496,7 +496,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			//is an intra-entity hierarchy table join so copy the name by default
 			String logicalTableName = getMappings().getLogicalTableName( referencedEntity.getTable() );
 			String unquotedLogicalTableName = StringHelper.unquote( logicalTableName );
-			columnName = getNamingStrategyDelegate().determineJoinKeyColumnName(
+			columnName = getNamingStrategyDelegate().toPhysicalJoinKeyColumnName(
 					unquotedLogicalReferenceColumn,
 					unquotedLogicalTableName
 			);
@@ -538,7 +538,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			final String referencedColumn = nameNormalizer.normalizeIdentifierQuoting( getReferencedColumn() );
 			final String unquotedLogColName = StringHelper.unquote( logicalColumnName );
 			final String unquotedRefColumn = StringHelper.unquote( referencedColumn );
-			String logicalCollectionColumnName = getNamingStrategyDelegate().logicalCollectionColumnName(
+			String logicalCollectionColumnName = getNamingStrategyDelegate().determineLogicalCollectionColumnName(
 					unquotedLogColName,
 					getPropertyName(),
 					unquotedRefColumn

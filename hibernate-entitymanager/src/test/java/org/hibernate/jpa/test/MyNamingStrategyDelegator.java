@@ -24,6 +24,7 @@
 package org.hibernate.jpa.test;
 
 import org.hibernate.cfg.naming.HbmNamingStrategyDelegate;
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.cfg.naming.JpaNamingStrategyDelegate;
 import org.hibernate.cfg.naming.NamingStrategyDelegate;
 import org.hibernate.cfg.naming.NamingStrategyDelegator;
@@ -31,17 +32,12 @@ import org.hibernate.cfg.naming.NamingStrategyDelegator;
 /**
  * @author Gail Badner
  */
-public class MyNamingStrategyDelegator implements NamingStrategyDelegator {
-	private final NamingStrategyDelegate hbmNamingStrategyDelegate = new HbmNamingStrategyDelegate();
-	private final NamingStrategyDelegate nonHbmNamingStrategyDelegate = new MyNonHbmNamingStrategyDelegate();
-
-	@Override
-	public NamingStrategyDelegate getNamingStrategyDelegate(boolean isHbm) {
-		return isHbm ? hbmNamingStrategyDelegate :nonHbmNamingStrategyDelegate;
+public class MyNamingStrategyDelegator extends ImprovedNamingStrategyDelegator {
+	public MyNamingStrategyDelegator() {
+		super( new HbmNamingStrategyDelegate(), new MyNonHbmNamingStrategyDelegate() );
 	}
 
-	private class MyNonHbmNamingStrategyDelegate extends JpaNamingStrategyDelegate {
-
+	private static class MyNonHbmNamingStrategyDelegate extends JpaNamingStrategyDelegate {
 		@Override
 		public String toPhysicalColumnName(String columnName) {
 			return super.toPhysicalColumnName( "c_" + columnName );

@@ -293,7 +293,7 @@ public class Ejb3Column {
 				if ( propertyName != null ) {
 					mappingColumn.setName(
 							mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
-									getNamingStrategyDelegate().determineAttributeColumnName( propertyName )
+									getNamingStrategyDelegate().determineImplicitPropertyColumnName( propertyName )
 							)
 					);
 				}
@@ -368,7 +368,8 @@ public class Ejb3Column {
 	}
 
 	protected void addColumnBinding(SimpleValue value) {
-		String logicalColumnName = getNamingStrategyDelegate().logicalColumnName( this.logicalColumnName, propertyName );
+		String logicalColumnName =
+				getNamingStrategyDelegate().determineLogicalColumnName( this.logicalColumnName, propertyName );
 		mappings.addColumnBinding( logicalColumnName, getMappingColumn(), value.getTable() );
 	}
 

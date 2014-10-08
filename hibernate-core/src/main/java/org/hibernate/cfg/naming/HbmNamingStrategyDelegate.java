@@ -28,55 +28,51 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Gail Badner
  */
-public class HbmNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
+public class HbmNamingStrategyDelegate extends NamingStrategyDelegateAdapter {
 
 	@Override
-	public String determinePrimaryTableLogicalName(String entityName, String jpaEntityName) {
+	public String determineImplicitPrimaryTableName(String entityName, String jpaEntityName) {
 		return StringHelper.unqualify( entityName );
 	}
 
 	@Override
-	public String determineElementCollectionTableLogicalName(
+	public String determineImplicitElementCollectionTableName(
 			String ownerEntityName,
 			String ownerJpaEntityName,
 			String ownerEntityTable,
-			String propertyNamePath) {
+			String propertyPath) {
 		return ownerEntityTable
 				+ '_'
-				+ StringHelper.unqualify( propertyNamePath );
+				+ StringHelper.unqualify( propertyPath );
 	}
 
 	@Override
-	public String determineElementCollectionForeignKeyColumnName(String propertyName, String propertyEntityName, String propertyJpaEntityName, String propertyTableName, String referencedColumnName) {
+	public String determineImplicitElementCollectionJoinColumnName(String ownerEntityName, String ownerJpaEntityName, String ownerEntityTable, String referencedColumnName, String propertyPath) {
 		throw new UnsupportedOperationException( "Method not supported for Hibernate-specific mappings" );
 	}
 
 	@Override
-	public String determineEntityAssociationJoinTableLogicalName(
+	public String determineImplicitEntityAssociationJoinTableName(
 			String ownerEntityName,
 			String ownerJpaEntityName,
 			String ownerEntityTable,
 			String associatedEntityName,
 			String associatedJpaEntityName,
 			String associatedEntityTable,
-			String propertyNamePath) {
+			String propertyPath) {
 		return ownerEntityTable
 				+ '_'
-				+ StringHelper.unqualify( propertyNamePath );
+				+ StringHelper.unqualify( propertyPath );
 	}
 
 	@Override
-	public String determineEntityAssociationForeignKeyColumnName(
-			String propertyName,
-			String propertyEntityName,
-			String propertyJpaEntityName,
-			String propertyTableName,
-			String referencedColumnName) {
+	public String determineImplicitEntityAssociationJoinColumnName(
+			String propertyEntityName, String propertyJpaEntityName, String propertyTableName, String referencedColumnName, String propertyPath) {
 		throw new UnsupportedOperationException( "Method not supported for Hibernate-specific mappings" );
 	}
 
 	@Override
-	public String logicalElementCollectionTableName(
+	public String determineLogicalElementCollectionTableName(
 			String tableName,
 			String ownerEntityName,
 			String ownerJpaEntityName,
@@ -86,7 +82,7 @@ public class HbmNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 			return tableName;
 		}
 		else {
-			return determineElementCollectionTableLogicalName(
+			return determineImplicitElementCollectionTableName(
 					ownerEntityName,
 					ownerJpaEntityName,
 					ownerEntityTable,
@@ -96,7 +92,7 @@ public class HbmNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 	}
 
 	@Override
-	public String logicalEntityAssociationJoinTableName(
+	public String determineLogicalEntityAssociationJoinTableName(
 			String tableName,
 			String ownerEntityName,
 			String ownerJpaEntityName,
@@ -109,7 +105,7 @@ public class HbmNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 			return tableName;
 		}
 		else {
-			return determineEntityAssociationJoinTableLogicalName(
+			return determineImplicitEntityAssociationJoinTableName(
 					ownerEntityName,
 					ownerJpaEntityName,
 					ownerEntityTable,

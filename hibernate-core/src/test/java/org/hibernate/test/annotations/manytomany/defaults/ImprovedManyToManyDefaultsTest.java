@@ -26,19 +26,22 @@ package org.hibernate.test.annotations.manytomany.defaults;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.testing.TestForIssue;
 
 /**
+ * Tests names generated for @JoinTable and @JoinColumn for unidirectional and bidirectional
+ * many-to-many associations when the "improved" {@link org.hibernate.cfg.naming.NamingStrategyDelegator}
+ * is used. The "improved" {@link org.hibernate.cfg.naming.NamingStrategyDelegator} complies with the JPA
+ * spec.
+ *
  * @author Gail Badner
  */
-public class LegacyManyToManyDefaultsTest extends ManyToManyDefaultsTest {
+public class ImprovedManyToManyDefaultsTest extends DefaultNamingManyToManyTest {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setNamingStrategyDelegator( new LegacyNamingStrategyDelegator( EJB3NamingStrategy.INSTANCE ) );
+		cfg.setNamingStrategyDelegator( ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE );
 	}
 
 	@Test
@@ -50,13 +53,12 @@ public class LegacyManyToManyDefaultsTest extends ManyToManyDefaultsTest {
 		// PK column for City.id: id (default)
 		// PK column for Item: iId
 		// unidirectional
-		// legacy behavior would use the table name in the generated join column.
 		checkDefaultJoinTablAndJoinColumnNames(
 				City.class,
 				"stolenItems",
 				null,
 				"tbl_city_ITEM",
-				"tbl_city_id",
+				"City_id",
 				"stolenItems_iId"
 		);
 	}
@@ -70,13 +72,12 @@ public class LegacyManyToManyDefaultsTest extends ManyToManyDefaultsTest {
 		// PK column for Category.id: id (default)
 		// PK column for KnownClient.id: id (default)
 		// unidirectional
-		// legacy behavior would use the table name in the generated join column.
 		checkDefaultJoinTablAndJoinColumnNames(
 				Category.class,
 				"clients",
 				null,
 				"CATEGORY_TAB_KnownClient",
-				"CATEGORY_TAB_id",
+				"CATEGORY_id",
 				"clients_id"
 
 		);

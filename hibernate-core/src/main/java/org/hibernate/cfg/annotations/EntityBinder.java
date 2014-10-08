@@ -563,7 +563,7 @@ public class EntityBinder {
 
 		@Override
 		public String determineImplicitName(NamingStrategyDelegator strategyDelegator) {
-			return getNamingStrategyDelegate( strategyDelegator ).determinePrimaryTableLogicalName(
+			return getNamingStrategyDelegate( strategyDelegator ).determineImplicitPrimaryTableName(
 					entityName,
 					jpaEntityName
 			);

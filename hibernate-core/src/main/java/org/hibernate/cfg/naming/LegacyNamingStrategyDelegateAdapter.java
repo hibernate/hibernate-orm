@@ -30,21 +30,16 @@ import org.hibernate.cfg.NamingStrategy;
 /**
  * @author Gail Badner
  */
-public abstract class AbstractLegacyNamingStrategyDelegate implements NamingStrategyDelegate, Serializable {
+@Deprecated
+public abstract class LegacyNamingStrategyDelegateAdapter implements NamingStrategyDelegate, Serializable {
 	private final LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext context;
 
-	public AbstractLegacyNamingStrategyDelegate(LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext context) {
+	public LegacyNamingStrategyDelegateAdapter(LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext context) {
 		this.context = context;
 	}
 
 	protected NamingStrategy getNamingStrategy() {
 		return context.getNamingStrategy();
-	}
-
-	@Override
-	public String determinePrimaryTableLogicalName(String entityName, String jpaEntityName) {
-		// jpaEntity name is being passed here in order to not cause a regression. See HHH-4312.
-		return getNamingStrategy().classToTableName( jpaEntityName );
 	}
 
 	@Override
@@ -58,22 +53,22 @@ public abstract class AbstractLegacyNamingStrategyDelegate implements NamingStra
 	}
 
 	@Override
-	public String determineAttributeColumnName(String propertyName) {
-		return getNamingStrategy().propertyToColumnName( propertyName );
+	public String determineImplicitPropertyColumnName(String propertyPath) {
+		return getNamingStrategy().propertyToColumnName( propertyPath );
 	}
 
 	@Override
-	public String determineJoinKeyColumnName(String joinedColumn, String joinedTable) {
+	public String toPhysicalJoinKeyColumnName(String joinedColumn, String joinedTable) {
 		return getNamingStrategy().joinKeyColumnName( joinedColumn, joinedTable );
 	}
 
 	@Override
-	public String logicalColumnName(String columnName, String propertyName) {
+	public String determineLogicalColumnName(String columnName, String propertyName) {
 		return getNamingStrategy().logicalColumnName( columnName, propertyName );
 	}
 
 	@Override
-	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
+	public String determineLogicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
 		return getNamingStrategy().logicalCollectionColumnName( columnName, propertyName, referencedColumn );
 	}
 }

@@ -23,12 +23,13 @@
  */
 package org.hibernate.cfg.naming;
 
-import org.hibernate.cfg.NamingStrategy;
-
 /**
- * Provides access to the appropriate {@link NamingStrategyDelegate}.
+ * Provides access to the appropriate {@link NamingStrategyDelegate}, depending on whether a
+ * mapping is Hibernate-specific (i.e., hbm.xml).
  *
  * @author Gail Badner
+ *
+ * @see org.hibernate.cfg.naming.NamingStrategyDelegate
  */
 public interface NamingStrategyDelegator {
 

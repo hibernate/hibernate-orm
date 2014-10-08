@@ -47,11 +47,16 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Tests @ElementCollection using the default "legacy" NamingStrategyDelegator which does not
+ * comply with JPA spec in some cases. See HHH-9387 and HHH-9389 for more information..
+ *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 @SuppressWarnings("unchecked")
-public class CollectionElementTest extends BaseCoreFunctionalTestCase {
+public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCase {
+
 	@Test
 	public void testSimpleElement() throws Exception {
 		assertEquals(
@@ -274,7 +279,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		assertTrue( "Could not find " + columnName, hasDefault );
 	}
 
-
 	@Test
 	@TestForIssue( jiraKey = "HHH-9387")
 	public void testDefaultTableNameNoOverrides() {
@@ -302,18 +306,19 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
 		// Matrix has @Entity(name="Mtx"); entity table name defaults to "Mtx"; owner PK column is configured as "mId"
-		checkDefaultCollectionTableName( Matrix.class, "mvalues", "Mtx_mvalues" );
+		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated collection table.
+		checkDefaultCollectionTableName( Matrix.class, "mvalues", "Matrix_mvalues" );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9387")
-	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride() {
+	@TestForIssue( jiraKey = "HHH-9389")
+	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
-
 		// Owner has @Entity( name="OWNER") @Table( name="OWNER_TABLE")
-		checkDefaultCollectionTableName( Owner.class, "elements", "OWNER_elements" );
+		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated join column.
+		checkDefaultJoinColumnName( Owner.class, "elements", "Owner_id" );
 	}
 
 	protected void checkDefaultCollectionTableName(
@@ -354,18 +359,19 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
 		// Matrix has @Entity(name="Mtx"); entity table name defaults to "Mtx"; owner PK column is configured as "mId"
-		checkDefaultJoinColumnName( Matrix.class, "mvalues", "Mtx_mId" );
+		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated join column.
+		checkDefaultJoinColumnName( Matrix.class, "mvalues", "Matrix_mId" );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9389")
-	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride() {
+	@TestForIssue( jiraKey = "HHH-9387")
+	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride() {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
-
 		// Owner has @Entity( name="OWNER") @Table( name="OWNER_TABLE")
-		checkDefaultJoinColumnName( Owner.class, "elements", "OWNER_id" );
+		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated collection table.
+		checkDefaultCollectionTableName( Owner.class, "elements", "Owner_elements" );
 	}
 
 	protected void checkDefaultJoinColumnName(

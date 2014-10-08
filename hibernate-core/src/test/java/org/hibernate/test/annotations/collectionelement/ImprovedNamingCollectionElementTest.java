@@ -26,19 +26,21 @@ package org.hibernate.test.annotations.collectionelement;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.testing.TestForIssue;
 
 /**
+ * Tests @ElementCollection using the "improved" NamingStrategyDelegator which complies
+ * with JPA spec.
+ *
  * @author Gail Badner
  */
-public class LegacyNamingCollectionElementTest extends CollectionElementTest {
+public class ImprovedNamingCollectionElementTest extends DefaultNamingCollectionElementTest {
 
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setNamingStrategyDelegator( new LegacyNamingStrategyDelegator( EJB3NamingStrategy.INSTANCE ) );
+		cfg.setNamingStrategyDelegator( ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE );
 	}
 
 	@Test
@@ -48,8 +50,7 @@ public class LegacyNamingCollectionElementTest extends CollectionElementTest {
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
 		// Matrix has @Entity(name="Mtx"); entity table name defaults to "Mtx"; owner PK column is configured as "mId"
-		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated collection table.
-		checkDefaultCollectionTableName( Matrix.class, "mvalues", "Matrix_mvalues" );
+		checkDefaultCollectionTableName( Matrix.class, "mvalues", "Mtx_mvalues" );
 	}
 
 	@Test
@@ -59,10 +60,8 @@ public class LegacyNamingCollectionElementTest extends CollectionElementTest {
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
 		// Owner has @Entity( name="OWNER") @Table( name="OWNER_TABLE")
-		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated collection table.
-		checkDefaultCollectionTableName( Owner.class, "elements", "Owner_elements" );
+		checkDefaultCollectionTableName( Owner.class, "elements", "OWNER_elements" );
 	}
-
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9389")
@@ -71,8 +70,7 @@ public class LegacyNamingCollectionElementTest extends CollectionElementTest {
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
 		// Matrix has @Entity(name="Mtx"); entity table name defaults to "Mtx"; owner PK column is configured as "mId"
-		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated join column.
-		checkDefaultJoinColumnName( Matrix.class, "mvalues", "Matrix_mId" );
+		checkDefaultJoinColumnName( Matrix.class, "mvalues", "Mtx_mId" );
 	}
 
 	@Test
@@ -82,7 +80,6 @@ public class LegacyNamingCollectionElementTest extends CollectionElementTest {
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
 
 		// Owner has @Entity( name="OWNER") @Table( name="OWNER_TABLE")
-		// Legacy behavior used unqualified entity name (instead of JPA entity name) in generated join column.
-		checkDefaultJoinColumnName( Owner.class, "elements", "Owner_id" );
+		checkDefaultJoinColumnName( Owner.class, "elements", "OWNER_id" );
 	}
 }

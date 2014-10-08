@@ -31,7 +31,6 @@ import org.hibernate.cfg.NamingStrategy;
 import static org.hibernate.cfg.naming.LegacyNamingStrategyDelegate.LegacyNamingStrategyDelegateContext;
 
 /**
- *
  * @deprecated Needed as a transitory implementation until the deprecated NamingStrategy contract
  * can be removed.
  *
@@ -40,18 +39,20 @@ import static org.hibernate.cfg.naming.LegacyNamingStrategyDelegate.LegacyNaming
 @Deprecated
 public class LegacyNamingStrategyDelegator
 		implements NamingStrategyDelegator, LegacyNamingStrategyDelegateContext, Serializable {
+	public static final NamingStrategyDelegator DEFAULT_INSTANCE = new LegacyNamingStrategyDelegator();
+
 	private final NamingStrategy namingStrategy;
 	private final NamingStrategyDelegate hbmNamingStrategyDelegate;
 	private final NamingStrategyDelegate jpaNamingStrategyDelegate;
 
-	public LegacyNamingStrategyDelegator() {
+	private LegacyNamingStrategyDelegator() {
 		this( EJB3NamingStrategy.INSTANCE );
 	}
 
 	public LegacyNamingStrategyDelegator(NamingStrategy namingStrategy) {
 		this.namingStrategy = namingStrategy;
 		this.hbmNamingStrategyDelegate = new LegacyHbmNamingStrategyDelegate( this );
-		this.jpaNamingStrategyDelegate = new LegacyStandardNamingStrategyDelegate( this );
+		this.jpaNamingStrategyDelegate = new LegacyJpaNamingStrategyDelegate( this );
 	}
 
 	public NamingStrategy getNamingStrategy() {

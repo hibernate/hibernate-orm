@@ -174,7 +174,7 @@ public class TableBinder {
 				final NamingStrategyDelegate strategyDelegate = getNamingStrategyDelegate( strategyDelegator );
 				final String strategyResult;
 				if ( isJPA2ElementCollection ) {
-					strategyResult = strategyDelegate.determineElementCollectionTableLogicalName(
+					strategyResult = strategyDelegate.determineImplicitElementCollectionTableName(
 							ownerEntity,
 							ownerJpaEntity,
 							unquotedOwnerTable,
@@ -182,7 +182,7 @@ public class TableBinder {
 					);
 				}
 				else {
-					strategyResult =  strategyDelegate.determineEntityAssociationJoinTableLogicalName(
+					strategyResult =  strategyDelegate.determineImplicitEntityAssociationJoinTableName(
 							ownerEntity,
 							ownerJpaEntity,
 							unquotedOwnerTable,
@@ -225,7 +225,7 @@ public class TableBinder {
 		);
 		String logicalName;
 		if ( isJPA2ElementCollection ) {
-			logicalName = strategyDelegate.logicalElementCollectionTableName(
+			logicalName = strategyDelegate.determineLogicalElementCollectionTableName(
 					name,
 					ownerEntity,
 					ownerJpaEntity,
@@ -234,7 +234,7 @@ public class TableBinder {
 			);
 		}
 		else {
-			logicalName =  strategyDelegate.logicalEntityAssociationJoinTableName(
+			logicalName =  strategyDelegate.determineLogicalEntityAssociationJoinTableName(
 					name,
 					ownerEntity,
 					ownerJpaEntity,

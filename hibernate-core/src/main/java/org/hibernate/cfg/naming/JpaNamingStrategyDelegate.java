@@ -29,19 +29,19 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Gail Badner
  */
-public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
+public class JpaNamingStrategyDelegate extends NamingStrategyDelegateAdapter {
 
 	@Override
-	public String determinePrimaryTableLogicalName(String entityName, String jpaEntityName) {
+	public String determineImplicitPrimaryTableName(String entityName, String jpaEntityName) {
 		return StringHelper.unqualify( determineEntityNameToUse( entityName, jpaEntityName ) );
 	}
 
 	@Override
-	public String determineElementCollectionTableLogicalName(
+	public String determineImplicitElementCollectionTableName(
 			String ownerEntityName,
 			String ownerJpaEntityName,
 			String ownerEntityTable,
-			String propertyNamePath) {
+			String propertyPath) {
 		// JPA states we should use the following as default:
 		//      "The concatenation of the name of the containing entity and the name of the
 		//       collection attribute, separated by an underscore.
@@ -50,33 +50,29 @@ public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 		//     otherwise: {OWNER ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}
 		return determineEntityNameToUse( ownerEntityName, ownerJpaEntityName )
 				+ '_'
-				+ StringHelper.unqualify( propertyNamePath );
+				+ StringHelper.unqualify( propertyPath );
 	}
 
 	@Override
-	public String determineElementCollectionForeignKeyColumnName(
-			String propertyName,
-			String propertyEntityName,
-			String propertyJpaEntityName,
-			String propertyTableName,
-			String referencedColumnName) {
+	public String determineImplicitElementCollectionJoinColumnName(
+			String ownerEntityName, String ownerJpaEntityName, String ownerEntityTable, String referencedColumnName, String propertyPath) {
 		// JPA states we should use the following as default:
 		//     "The concatenation of the following: the name of the entity; "_"; the name of the
 		//      referenced primary key column"
-		return determineEntityNameToUse( propertyEntityName, propertyJpaEntityName )
+		return determineEntityNameToUse( ownerEntityName, ownerJpaEntityName )
 				+ '_'
 				+ referencedColumnName;
 	}
 
 	@Override
-	public String determineEntityAssociationJoinTableLogicalName(
+	public String determineImplicitEntityAssociationJoinTableName(
 			String ownerEntityName,
 			String ownerJpaEntityName,
 			String ownerEntityTable,
 			String associatedEntityName,
 			String associatedJpaEntityName,
 			String associatedEntityTable,
-			String propertyNamePath) {
+			String propertyPath) {
 		// JPA states we should use the following as default:
 		//		"The concatenated names of the two associated primary entity tables (owning side
 		//		first), separated by an underscore."
@@ -89,12 +85,8 @@ public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 	}
 
 	@Override
-	public String determineEntityAssociationForeignKeyColumnName(
-			String referencingPropertyName,
-			String propertyEntityName,
-			String propertyJpaEntityName,
-			String propertyTableName,
-			String referencedColumnName) {
+	public String determineImplicitEntityAssociationJoinColumnName(
+			String propertyEntityName, String propertyJpaEntityName, String propertyTableName, String referencedColumnName, String referencingPropertyName) {
 		// JPA states we should use the following as default:
 		//      "The concatenation of the following: the name of the referencing relationship
 		//      property or field of the referencing entity or embeddable class; "_"; the name
@@ -125,7 +117,7 @@ public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 	}
 
 	@Override
-	public String logicalElementCollectionTableName(
+	public String determineLogicalElementCollectionTableName(
 			String tableName,
 			String ownerEntityName,
 			String ownerJpaEntityName,
@@ -135,7 +127,7 @@ public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 			return tableName;
 		}
 		else {
-			return determineElementCollectionTableLogicalName(
+			return determineImplicitElementCollectionTableName(
 					ownerEntityName,
 					ownerJpaEntityName,
 					ownerEntityTable,
@@ -145,7 +137,7 @@ public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 	}
 
 	@Override
-	public String logicalEntityAssociationJoinTableName(
+	public String determineLogicalEntityAssociationJoinTableName(
 			String tableName,
 			String ownerEntityName,
 			String ownerJpaEntityName,
@@ -158,7 +150,7 @@ public class JpaNamingStrategyDelegate extends AbstractNamingStrategyDelegate {
 			return tableName;
 		}
 		else {
-			return determineEntityAssociationJoinTableLogicalName(
+			return determineImplicitEntityAssociationJoinTableName(
 					ownerEntityName,
 					ownerJpaEntityName,
 					ownerEntityTable,

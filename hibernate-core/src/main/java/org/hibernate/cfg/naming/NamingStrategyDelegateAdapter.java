@@ -28,9 +28,16 @@ import java.io.Serializable;
 import org.hibernate.internal.util.StringHelper;
 
 /**
+ * An "adapter" for {@link NamingStrategyDelegate} implementations to extend.
+ *
  * @author Gail Badner
  */
-public abstract class AbstractNamingStrategyDelegate implements NamingStrategyDelegate, Serializable {
+public abstract class NamingStrategyDelegateAdapter implements NamingStrategyDelegate, Serializable {
+
+	@Override
+	public String determineImplicitPropertyColumnName(String propertyPath) {
+		return StringHelper.unqualify( propertyPath );
+	}
 
 	@Override
 	public String toPhysicalTableName(String tableName) {
@@ -43,22 +50,17 @@ public abstract class AbstractNamingStrategyDelegate implements NamingStrategyDe
 	}
 
 	@Override
-	public String determineAttributeColumnName(String propertyName) {
-		return StringHelper.unqualify( propertyName );
-	}
-
-	@Override
-	public String determineJoinKeyColumnName(String joinedColumn, String joinedTable) {
+	public String toPhysicalJoinKeyColumnName(String joinedColumn, String joinedTable) {
 		return toPhysicalColumnName( joinedColumn );
 	}
 
 	@Override
-	public String logicalColumnName(String columnName, String propertyName) {
+	public String determineLogicalColumnName(String columnName, String propertyName) {
 		return StringHelper.isNotEmpty( columnName ) ? columnName : StringHelper.unqualify( propertyName );
 	}
 
 	@Override
-	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
+	public String determineLogicalCollectionColumnName(String columnName, String propertyName, String referencedColumn) {
 		return StringHelper.isNotEmpty( columnName ) ?
 				columnName :
 				StringHelper.unqualify( propertyName ) + "_" + referencedColumn;

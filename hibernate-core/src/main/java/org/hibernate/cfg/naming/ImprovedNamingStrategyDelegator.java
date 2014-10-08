@@ -28,15 +28,24 @@ import java.io.Serializable;
 /**
  * @author Gail Badner
  */
-public class DefaultNamingStrategyDelegator implements NamingStrategyDelegator, Serializable {
-	public static final DefaultNamingStrategyDelegator INSTANCE = new DefaultNamingStrategyDelegator();
+public class ImprovedNamingStrategyDelegator implements NamingStrategyDelegator, Serializable {
+	public static final NamingStrategyDelegator DEFAULT_INSTANCE = new ImprovedNamingStrategyDelegator();
 
 	private final NamingStrategyDelegate hbmNamingStrategyDelegate;
 	private final NamingStrategyDelegate jpaNamingStrategyDelegate;
 
-	private DefaultNamingStrategyDelegator() {
-		this.hbmNamingStrategyDelegate = new HbmNamingStrategyDelegate();
-		this.jpaNamingStrategyDelegate = new JpaNamingStrategyDelegate();
+	private ImprovedNamingStrategyDelegator() {
+		this(
+				new HbmNamingStrategyDelegate(),
+				new JpaNamingStrategyDelegate()
+		);
+	}
+
+	protected ImprovedNamingStrategyDelegator(
+			NamingStrategyDelegate hbmNamingStrategyDelegate,
+			NamingStrategyDelegate jpaNamingStrategyDelegate) {
+		this.hbmNamingStrategyDelegate = hbmNamingStrategyDelegate;
+		this.jpaNamingStrategyDelegate = jpaNamingStrategyDelegate;
 	}
 
 	@Override

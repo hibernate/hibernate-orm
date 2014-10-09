@@ -398,8 +398,7 @@ public final class CollectionMetadataGenerator {
 
 			middleEntityXml = createMiddleEntityXml(
 					auditMiddleTableName,
-					auditMiddleEntityName,
-					pluralAttributeBinding.getWhere()
+					auditMiddleEntityName
 			);
 		}
 		else {
@@ -850,7 +849,7 @@ public final class CollectionMetadataGenerator {
 		}
 	}
 
-	private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName, String where) {
+	private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName) {
 		final String schema = mainGenerator.getSchema(
 				propertyAuditingData.getJoinTable().schema(),
 				pluralAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable()
@@ -865,11 +864,6 @@ public final class CollectionMetadataGenerator {
 				new AuditTableData( auditMiddleEntityName, auditMiddleTableName, schema, catalog ), null, null
 		);
 		final Element middleEntityXmlId = middleEntityXml.addElement( "composite-id" );
-
-		// If there is a where clause on the relation, adding it to the middle entity.
-		if ( where != null ) {
-			middleEntityXml.addAttribute( "where", where );
-		}
 
 		middleEntityXmlId.addAttribute( "name", context.getAuditEntitiesConfiguration().getOriginalIdPropName() );
 

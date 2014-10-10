@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -39,6 +40,7 @@ import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -515,6 +517,18 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 			"http://www.hibernate.org/".equals( favs[3].getUrl() ));
 		tx.commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-3868")
+	public void testTransientMergeComponentParent() {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Book b = new Book();
+		b.setIsbn( UUID.randomUUID().toString() );
+		b.setSummary( new Summary() );
+		b = (Book) session.merge( b );
+		tx.commit();
 	}
 
 	@Override

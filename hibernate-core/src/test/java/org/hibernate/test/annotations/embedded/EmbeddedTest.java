@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Test;
 
@@ -515,6 +516,21 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 			"http://www.hibernate.org/".equals( favs[3].getUrl() ));
 		tx.commit();
 		s.close();
+	}
+
+	/*
+	 * support for merging a Book with a transient component (Summary)
+	 * See HHH-3868
+	 */
+	@Test
+	public void testTransientMergeComponentParent() {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Book b = new Book();
+		b.setIsbn(UUID.randomUUID().toString());
+		b.setSummary(new Summary());
+		b = (Book) session.merge(b);
+		tx.commit();
 	}
 
 	@Override

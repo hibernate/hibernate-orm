@@ -67,6 +67,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	private final FetchMode[] joinedFetch;
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
+	private final boolean createEmptyCompositesEnabled;
 
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
@@ -96,6 +97,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 		this.entityMode = metamodel.getEntityMode();
 		this.componentTuplizer = metamodel.getComponentTuplizer();
+		this.createEmptyCompositesEnabled = metamodel.isCreateEmptyCompositesEnabled();
 	}
 
 	public boolean isKey() {
@@ -668,6 +670,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			setPropertyValues( result, resolvedValues, entityMode );
 			return result;
 		}
+		else if ( isCreateEmptyCompositesEnabled() ) {
+			return instantiate( owner, session );
+		}
 		else {
 			return null;
 		}
@@ -812,5 +817,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
+	}
+
+	private boolean isCreateEmptyCompositesEnabled() {
+		return createEmptyCompositesEnabled;
 	}
 }

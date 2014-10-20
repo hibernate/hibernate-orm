@@ -596,7 +596,7 @@ public abstract class CollectionBinder {
 								"Could not instantiate comparator class [%s] for %s",
 								comparatorClass.getName(),
 								safeCollectionRole()
-						)
+						), e
 				);
 			}
 		}

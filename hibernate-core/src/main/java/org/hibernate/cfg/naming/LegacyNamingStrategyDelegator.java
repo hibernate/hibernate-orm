@@ -45,7 +45,7 @@ public class LegacyNamingStrategyDelegator
 	private final NamingStrategyDelegate hbmNamingStrategyDelegate;
 	private final NamingStrategyDelegate jpaNamingStrategyDelegate;
 
-	private LegacyNamingStrategyDelegator() {
+	public LegacyNamingStrategyDelegator() {
 		this( EJB3NamingStrategy.INSTANCE );
 	}
 

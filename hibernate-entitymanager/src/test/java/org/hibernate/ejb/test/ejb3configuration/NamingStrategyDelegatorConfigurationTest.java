@@ -30,6 +30,7 @@ import javax.persistence.PersistenceException;
 
 import org.junit.Test;
 
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
 import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.ejb.AvailableSettings;
@@ -74,7 +75,49 @@ public class NamingStrategyDelegatorConfigurationTest extends BaseUnitTestCase {
 			);
 		}
 
-		// configure NamingStrategyDelegator
+		// configure ImprovedNamingStrategyDelegator
+		{
+			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
+			Ejb3Configuration cfg = new Ejb3Configuration();
+			cfg.configure(
+					adapter,
+					Collections.singletonMap(
+							AvailableSettings.NAMING_STRATEGY_DELEGATOR,
+							ImprovedNamingStrategyDelegator.class.getName()
+					)
+			);
+			assertEquals( null, cfg.getProperties().get( AvailableSettings.NAMING_STRATEGY ) );
+			assertEquals(
+					ImprovedNamingStrategyDelegator.class.getName(),
+					cfg.getProperties().get( AvailableSettings.NAMING_STRATEGY_DELEGATOR )
+			);
+			final NamingStrategyDelegator namingStrategyDelegator =
+					cfg.getHibernateConfiguration().getNamingStrategyDelegator();
+			assertTrue( ImprovedNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) );
+		}
+
+		// configure LegacyNamingStrategyDelegator
+		{
+			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
+			Ejb3Configuration cfg = new Ejb3Configuration();
+			cfg.configure(
+					adapter,
+					Collections.singletonMap(
+							AvailableSettings.NAMING_STRATEGY_DELEGATOR,
+							LegacyNamingStrategyDelegator.class.getName()
+					)
+			);
+			assertEquals( null, cfg.getProperties().get( AvailableSettings.NAMING_STRATEGY ) );
+			assertEquals(
+					LegacyNamingStrategyDelegator.class.getName(),
+					cfg.getProperties().get( AvailableSettings.NAMING_STRATEGY_DELEGATOR )
+			);
+			final NamingStrategyDelegator namingStrategyDelegator =
+					cfg.getHibernateConfiguration().getNamingStrategyDelegator();
+			assertTrue( LegacyNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) );
+		}
+
+		// configure custom NamingStrategyDelegator
 		{
 			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
 			Ejb3Configuration cfg = new Ejb3Configuration();

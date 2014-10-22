@@ -30,6 +30,7 @@ import javax.persistence.PersistenceException;
 
 import org.junit.Test;
 
+import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
 import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.ejb.AvailableSettings;
@@ -76,7 +77,50 @@ public class NamingStrategyDelegatorConfigurationTest extends BaseUnitTestCase {
 			);
 		}
 
-		// configure NamingStrategyDelegator
+		// configure ImprovedNamingStrategyDelegator
+		{
+			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+					adapter,
+					Collections.singletonMap(
+							AvailableSettings.NAMING_STRATEGY_DELEGATOR,
+							ImprovedNamingStrategyDelegator.class.getName()
+					)
+			);
+			assertEquals( null, builder.getConfigurationValues().get( AvailableSettings.NAMING_STRATEGY ) );
+			builder.build();
+			assertEquals(
+					ImprovedNamingStrategyDelegator.class.getName(),
+					builder.getConfigurationValues().get( AvailableSettings.NAMING_STRATEGY_DELEGATOR )
+			);
+			final NamingStrategyDelegator namingStrategyDelegator =
+					builder.getHibernateConfiguration().getNamingStrategyDelegator();
+			assertTrue( ImprovedNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) );
+		}
+
+		// configure LegacyNamingStrategyDelegator
+		{
+			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
+			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+					adapter,
+					Collections.singletonMap(
+							AvailableSettings.NAMING_STRATEGY_DELEGATOR,
+							LegacyNamingStrategyDelegator.class.getName()
+					)
+			);
+			assertEquals( null, builder.getConfigurationValues().get( AvailableSettings.NAMING_STRATEGY ) );
+			builder.build();
+			assertEquals(
+					LegacyNamingStrategyDelegator.class.getName(),
+					builder.getConfigurationValues().get( AvailableSettings.NAMING_STRATEGY_DELEGATOR )
+			);
+			final NamingStrategyDelegator namingStrategyDelegator =
+					builder.getHibernateConfiguration().getNamingStrategyDelegator();
+			assertTrue( LegacyNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) );
+		}
+
+
+		// configure custom NamingStrategyDelegator
 		{
 			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
 			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(

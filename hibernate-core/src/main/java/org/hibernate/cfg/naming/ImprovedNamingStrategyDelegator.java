@@ -34,7 +34,7 @@ public class ImprovedNamingStrategyDelegator implements NamingStrategyDelegator,
 	private final NamingStrategyDelegate hbmNamingStrategyDelegate;
 	private final NamingStrategyDelegate jpaNamingStrategyDelegate;
 
-	private ImprovedNamingStrategyDelegator() {
+	public ImprovedNamingStrategyDelegator() {
 		this(
 				new HbmNamingStrategyDelegate(),
 				new JpaNamingStrategyDelegate()

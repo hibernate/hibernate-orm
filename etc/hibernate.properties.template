@@ -433,6 +433,13 @@ hibernate.jdbc.use_streams_for_binary true
 
 hibernate.cache.region_prefix hibernate.test
 
+## set cache region name for UpdateTimestampsCache
+
+#hibernate.cache.region.updatetimestamps org.hibernate.cache.spi.UpdateTimestampsCache
+
+## set cache region name for StandardQueryCache
+
+#hibernate.cache.region.standardquery org.hibernate.cache.internal.StandardQueryCache
 
 ## disable the second-level cache
 

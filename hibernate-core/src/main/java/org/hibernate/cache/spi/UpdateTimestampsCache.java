@@ -66,8 +66,17 @@ public class UpdateTimestampsCache {
 	 */
 	public UpdateTimestampsCache(Settings settings, Properties props, final SessionFactoryImplementor factory) {
 		this.factory = factory;
+		String regionName;
+		if ( settings.getUpdateTimestampsCacheRegionName() != null ) {
+			regionName = settings.getUpdateTimestampsCacheRegionName();
+		} else {
+			regionName = REGION_NAME;
+		}
+
 		final String prefix = settings.getCacheRegionPrefix();
-		final String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
+		if ( prefix != null ) {
+			regionName = prefix + "." + regionName;
+		}
 
 		LOG.startingUpdateTimestampsCache( regionName );
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );

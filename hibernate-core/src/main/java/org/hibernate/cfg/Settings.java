@@ -64,6 +64,8 @@ public final class Settings {
 	private boolean secondLevelCacheEnabled;
 	private boolean autoEvictCollectionCache;
 	private String cacheRegionPrefix;
+	private String updateTimestampsCacheRegionName;
+	private String standardQueryCacheRegionName;
 	private boolean minimalPutsEnabled;
 	private boolean commentsEnabled;
 	private boolean statisticsEnabled;
@@ -109,7 +111,14 @@ public final class Settings {
 	}
 
 	// public getters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	public String getStandardQueryCacheRegionName() {
+		return standardQueryCacheRegionName;
+	}
+	
+	public String getUpdateTimestampsCacheRegionName() {
+		return updateTimestampsCacheRegionName;
+	}
+	
 	public String getImportFiles() {
 		return importFiles;
 	}
@@ -287,6 +296,13 @@ public final class Settings {
 	}
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	void setStandardQueryCacheRegionName(String standardQueryCacheRegionName) {
+		this.standardQueryCacheRegionName = standardQueryCacheRegionName;
+	}
+	
+	void setUpdateTimestampsCacheRegionName(String updateTimestampsCacheRegionName) {
+		this.updateTimestampsCacheRegionName = updateTimestampsCacheRegionName;
+	}
 
 	void setDefaultSchemaName(String string) {
 		defaultSchemaName = string;

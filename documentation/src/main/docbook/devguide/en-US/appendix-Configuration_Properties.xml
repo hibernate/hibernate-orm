@@ -258,6 +258,16 @@
             <entry>A prefix for second-level cache region names.</entry>
           </row>
           <row>
+            <entry>hibernate.cache.region.updatetimestamps</entry>
+            <entry>A string</entry>
+            <entry>A cache region name for UpdateTimestampsCache. Default: "org.hibernate.cache.spi.UpdateTimestampsCache"</entry>
+          </row>
+          <row>
+            <entry>hibernate.cache.region.standardquery</entry>
+            <entry>A string</entry>
+            <entry>A cache region name for StandardQueryCache. Default: "org.hibernate.cache.internal.StandardQueryCache"</entry>
+          </row>
+          <row>
             <entry>hibernate.cache.use_structured_entries</entry>
             <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
             <entry>Forces Hibernate to store data in the second-level cache in a more human-readable format.</entry>

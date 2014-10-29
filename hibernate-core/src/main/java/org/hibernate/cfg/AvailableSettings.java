@@ -322,6 +322,14 @@ public interface AvailableSettings {
 	 */
 	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
 	/**
+	 * Cache region name for <tt>UpdateTimestampsCache</tt>. Fallback to "org.hibernate.cache.spi.UpdateTimestampsCache" if none specified
+	 */
+	String UPDATE_TIMESTAMPS_CACHE_REGION_NAME = "hibernate.cache.region.updatetimestamps";
+	/**
+	 * Cache region name for <tt>StandardQueryCache</tt>. Fallback to "org.hibernate.cache.internal.StandardQueryCache" if none specified 
+	 */
+	String STANDARD_QUERY_CACHE_REGION_NAME = "hibernate.cache.region.standardquery";
+	/**
 	 * Enable use of structured second-level cache entries
 	 */
 	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";

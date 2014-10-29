@@ -310,6 +310,24 @@ public class SettingsFactory implements Serializable {
 			LOG.debugf( "Cache region prefix: %s", prefix );
 		}
 		settings.setCacheRegionPrefix( prefix );
+		
+		String updateTimestampsCacheRegionName = properties.getProperty(AvailableSettings.UPDATE_TIMESTAMPS_CACHE_REGION_NAME);
+		if ( StringHelper.isEmpty(updateTimestampsCacheRegionName) ) {
+			updateTimestampsCacheRegionName = null;
+		}
+		if ( updateTimestampsCacheRegionName != null && debugEnabled ) {
+			LOG.debugf( "UpdateTimestampsCache region prefix: %s", updateTimestampsCacheRegionName );
+		}
+		settings.setUpdateTimestampsCacheRegionName(updateTimestampsCacheRegionName);
+		
+		String standardQueryCacheRegionName = properties.getProperty(AvailableSettings.STANDARD_QUERY_CACHE_REGION_NAME);
+		if ( StringHelper.isEmpty(standardQueryCacheRegionName) ) {
+			standardQueryCacheRegionName = null;
+		}
+		if ( standardQueryCacheRegionName != null && debugEnabled ) {
+			LOG.debugf( "StandardQueryCache region prefix: %s", standardQueryCacheRegionName );
+		}
+		settings.setStandardQueryCacheRegionName(standardQueryCacheRegionName);
 
 		boolean useStructuredCacheEntries = ConfigurationHelper.getBoolean( AvailableSettings.USE_STRUCTURED_CACHE, properties, false );
 		if ( debugEnabled ) {

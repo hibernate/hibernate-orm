@@ -81,6 +81,9 @@ public class StandardQueryCache implements QueryCache {
 			final String regionName) {
 		String regionNameToUse = regionName;
 		if ( regionNameToUse == null ) {
+			regionNameToUse = settings.getStandardQueryCacheRegionName();
+		}
+		if ( regionNameToUse == null ) {
 			regionNameToUse = StandardQueryCache.class.getName();
 		}
 		final String prefix = settings.getCacheRegionPrefix();

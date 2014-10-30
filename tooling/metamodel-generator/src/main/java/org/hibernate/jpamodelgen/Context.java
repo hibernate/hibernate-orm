@@ -95,6 +95,7 @@ public final class Context {
 			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
 			ormXmlFiles = new ArrayList<String>();
 			for ( String ormFile : tmp.split( "," ) ) {
+				ormFile = ormFile.replace('\\', '/'); // windows
 				if ( !ormFile.startsWith( Constants.PATH_SEPARATOR ) ) {
 					ormFile = Constants.PATH_SEPARATOR + ormFile;
 				}

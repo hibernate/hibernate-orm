@@ -5,6 +5,37 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.7.Final (2014.10.30)
+------------------------------------------------------------------------------------------------------------------------
+
+** Sub-task
+    [HHH-9387] - Default table name for @ElementCollection uses owning entity class name
+    [HHH-9389] - Default join column name (FK) for @ElementCollection uses owning entity class name
+    [HHH-9390] - Default join column name (FK) for @ManyToMany uses owning entity primary table name
+
+** Bug
+    [HHH-3868] - Merging transient entity with a component property with parent mapping causes NullPointerException
+    [HHH-8839] - Eager Map with entity key causes IllegalStateException: Collection element (many-to-many) table alias cannot be empty
+    [HHH-8895] - Filter for MappedSuperClass stopped to work from 4.1.6.Final
+    [HHH-8949] - @QueryHint( name="javax.persistence.cache.retrieveMode", value="<valid value>") does not work
+    [HHH-9142] - Cannot join multiple EntityMode.MAP entities
+    [HHH-9251] - ORM JavaDoc is not generated correctly
+    [HHH-9290] - On Oracle, not all temporary tables have HT_ prefix
+    [HHH-9305] - HQL FromElement is not reused in some cases resulting in an additional join
+    [HHH-9312] - Database connection leak with JTA transaction tracking and background thread not releasing database connection
+    [HHH-9327] - NamingStrategy regression (reverts HHH-9280)
+    [HHH-9369] - @Formula of enum type results in ClassCastException
+    [HHH-9455] - Hibernate triggers unnecessary select count query that imposes negative effect on performance.
+    [HHH-9461] - Cannot enable NamingStrategyDelegator implementations using entity manager
+
+** Deprecation
+    [HHH-7079] - Deprecate NamingStrategy
+
+** Improvement
+    [HHH-9294] - Reduce throw of NumberFormatException in BaseQueryImpl
+    [HHH-9344] - Favor System.nanoTime rather than System.currentTimeMillis for time interval measurements
+    [HHH-9388] - Create more flexible way to generate table and column names
+
 Changes in version 4.3.6.Final (2014.07.16)
 ------------------------------------------------------------------------------------------------------------------------
 

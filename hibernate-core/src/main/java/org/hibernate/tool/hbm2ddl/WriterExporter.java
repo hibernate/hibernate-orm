@@ -25,14 +25,35 @@ package org.hibernate.tool.hbm2ddl;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 /**
- * @author Steve Ebersole
+ * Export a schema to a Writer
+ * @author m-szalik
  */
-class FileExporter extends WriterExporter {
+class WriterExporter implements Exporter {
+	private final Writer writer;
+    private final boolean acceptsImportScripts;
 
-	public FileExporter(String outputFile) throws IOException {
-		super(new FileWriter(outputFile), false);
+	public WriterExporter(Writer writer, boolean acceptsImportScripts) throws IOException {
+		this.writer = writer;
+        this.acceptsImportScripts = acceptsImportScripts;
+    }
+
+	@Override
+	public boolean acceptsImportScripts() {
+		return acceptsImportScripts;
 	}
 
+	@Override
+	public void export(String string) throws Exception {
+		writer.write(string);
+        writer.append('\n');
+	}
+
+	@Override
+	public void release() throws Exception {
+		writer.flush();
+		writer.close();
+	}
 }

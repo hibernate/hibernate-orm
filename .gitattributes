@@ -1,0 +1,5 @@
+# This file is used by unit tests and data I/O testing the CRLF/LF
+#  mode of the checked out working tree is important to ensure the unit
+#  test passes.
+hibernate-core/src/test/resources/org/hibernate/test/fileimport/multi-line-statements.sql eol=lf text
+

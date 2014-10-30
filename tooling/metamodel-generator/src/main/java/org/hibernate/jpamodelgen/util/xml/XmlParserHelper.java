@@ -84,6 +84,7 @@ public class XmlParserHelper {
 	 * @return an input stream for the specified resource or {@code null} in case resource cannot be loaded
 	 */
 	public InputStream getInputStreamForResource(String resource) {
+		resource = resource.replace('\\', '/'); // windows
 		// METAGEN-75
 		if ( !resource.startsWith( RESOURCE_PATH_SEPARATOR ) ) {
 			resource = RESOURCE_PATH_SEPARATOR + resource;

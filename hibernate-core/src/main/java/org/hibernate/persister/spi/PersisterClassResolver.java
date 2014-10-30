@@ -25,8 +25,6 @@ package org.hibernate.persister.spi;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -55,16 +53,6 @@ public interface PersisterClassResolver extends Service {
 	Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata);
 
 	/**
-	 * Returns the entity persister class for a given entityName or null
-	 * if the entity persister class should be the default.
-	 *
-	 * @param metadata The entity metadata
-	 *
-	 * @return The entity persister class to use
-	 */
-	Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata);
-
-	/**
 	 * Returns the collection persister class for a given collection role or null
 	 * if the collection persister class should be the default.
 	 *
@@ -73,14 +61,4 @@ public interface PersisterClassResolver extends Service {
 	 * @return The collection persister class to use
 	 */
 	Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata);
-
-	/**
-	 * Returns the collection persister class for a given collection role or null
-	 * if the collection persister class should be the default.
-	 *
-	 * @param metadata The collection metadata
-	 *
-	 * @return The collection persister class to use
-	 */
-	Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata);
 }

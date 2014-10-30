@@ -12,6 +12,12 @@ sourceSets.test {
 	runtimeClasspath += sourceSets.testClientBundle.output
 }
 
+
+// temporary for HHH-9466
+test {
+    enabled = false;
+}
+
 dependencies {
 	compile( project( ':hibernate-core' ) )
 	compile( project( ':hibernate-entitymanager' ) )

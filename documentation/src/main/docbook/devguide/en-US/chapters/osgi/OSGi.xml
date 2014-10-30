@@ -314,7 +314,7 @@
 	                <literal>org.hibernate.boot.registry.selector.StrategyRegistrationProvider</literal> (as of 4.3)
 	            </listitem>
 	            <listitem>
-	                <literal>org.hibernate.metamodel.spi.TypeContributor</literal> (as of 4.3)
+	                <literal>org.hibernate.boot.model.TypeContributor</literal> (as of 4.3)
 	            </listitem>
 	            <listitem>
 	                JTA's <literal>javax.transaction.TransactionManager</literal> and

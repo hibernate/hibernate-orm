@@ -23,9 +23,6 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Index;
-import org.hibernate.metamodel.relational.UniqueKey;
 
 /**
  * DB2 does not allow unique constraints on nullable columns.  Rather than
@@ -66,22 +63,6 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 	
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey) {
-		if ( hasNullable( uniqueKey ) ) {
-			return Index.buildSqlCreateIndexString(
-					dialect,
-					uniqueKey.getName(),
-					uniqueKey.getTable(),
-					uniqueKey.getColumns(),
-					true
-			);
-		}
-		else {
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey );
-		}
-	}
-	
-	@Override
 	public String getAlterTableToDropUniqueKeyCommand(
 			org.hibernate.mapping.UniqueKey uniqueKey,
 			String defaultCatalog,
@@ -102,29 +83,10 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 		}
 	}
 	
-	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey) {
-		if ( hasNullable( uniqueKey ) ) {
-			return Index.buildSqlDropIndexString( dialect, uniqueKey.getTable(), uniqueKey.getName() );
-		}
-		else {
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey );
-		}
-	}
-	
 	private boolean hasNullable(org.hibernate.mapping.UniqueKey uniqueKey) {
 		final Iterator<org.hibernate.mapping.Column> iter = uniqueKey.columnIterator();
 		while ( iter.hasNext() ) {
 			if ( iter.next().isNullable() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean hasNullable(UniqueKey uniqueKey) {
-		for ( Column column : uniqueKey.getColumns() ) {
-			if ( column.isNullable() ) {
 				return true;
 			}
 		}

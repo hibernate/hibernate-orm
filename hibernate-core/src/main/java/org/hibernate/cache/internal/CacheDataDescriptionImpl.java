@@ -28,8 +28,6 @@ import java.util.Comparator;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.type.VersionType;
 
 /**
@@ -89,17 +87,6 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	}
 
 	/**
-	 * Builds a CacheDataDescriptionImpl from the mapping model of an entity class (using the new metamodel code).
-	 *
-	 * @param model The mapping model.
-	 *
-	 * @return The constructed CacheDataDescriptionImpl
-	 */
-	public static CacheDataDescriptionImpl decode(EntityBinding model) {
-		return new CacheDataDescriptionImpl( model.isMutable(), model.isVersioned(), getVersionComparator( model ) );
-	}
-
-	/**
 	 * Builds a CacheDataDescriptionImpl from the mapping model of a collection
 	 *
 	 * @param model The mapping model.
@@ -116,31 +103,4 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 		);
 	}
 
-	/**
-	 * Builds a CacheDataDescriptionImpl from the mapping model of a collection (using the new metamodel code).
-	 *
-	 * @param model The mapping model.
-	 *
-	 * @return The constructed CacheDataDescriptionImpl
-	 */
-	public static CacheDataDescriptionImpl decode(PluralAttributeBinding model) {
-		return new CacheDataDescriptionImpl(
-				model.isMutable(),
-				model.getContainer().seekEntityBinding().isVersioned(),
-				getVersionComparator( model.getContainer().seekEntityBinding() )
-		);
-	}
-
-	private static Comparator getVersionComparator(EntityBinding model ) {
-		if ( model.isVersioned() ) {
-			final VersionType versionType = (VersionType) model.getHierarchyDetails()
-					.getVersioningAttributeBinding()
-					.getHibernateTypeDescriptor()
-					.getResolvedTypeMapping();
-
-			return versionType.getComparator();
-		}
-
-		return null;
-	}
 }

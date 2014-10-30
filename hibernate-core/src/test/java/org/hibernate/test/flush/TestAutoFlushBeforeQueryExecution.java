@@ -43,7 +43,6 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.TestForIssue;
@@ -234,14 +233,6 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 					@Override
 					public void integrate(
 							Configuration configuration,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
-					}
-
-					@Override
-					public void integrate(
-							MetadataImplementor metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
 						integrate( serviceRegistry );

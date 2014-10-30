@@ -25,7 +25,6 @@ package org.hibernate.service.internal;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -49,12 +48,4 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 			Configuration configuration) {
 		return new SessionFactoryServiceRegistryImpl( theBasicServiceRegistry, sessionFactory, configuration );
 	}
-
-	@Override
-	public SessionFactoryServiceRegistryImpl buildServiceRegistry(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor metadata) {
-		return new SessionFactoryServiceRegistryImpl( theBasicServiceRegistry, sessionFactory, metadata );
-	}
-
 }

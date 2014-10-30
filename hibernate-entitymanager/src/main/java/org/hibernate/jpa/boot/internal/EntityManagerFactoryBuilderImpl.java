@@ -41,12 +41,14 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Interceptor;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
@@ -96,9 +98,7 @@ import org.hibernate.jpa.internal.schemagen.JpaSchemaGenerator;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccService;
@@ -107,6 +107,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
@@ -366,6 +367,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+	private final DotName CONVERTER_DOT_NAME = DotName.createSimple( Converter.class.getName() );
+
 	@SuppressWarnings("unchecked")
 	private MetadataSources prepareMetadataSources(
 			IndexView jandexIndex,
@@ -385,16 +388,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 
 			// logic here assumes an entity is not also a converter...
-			AnnotationInstance converterAnnotation = JandexHelper.getSingleAnnotation(
+			AnnotationInstance converterAnnotation = getSingleAnnotation(
 					classInfo.annotations(),
-					JPADotNames.CONVERTER
+					CONVERTER_DOT_NAME
 			);
 			if ( converterAnnotation != null ) {
 				metadataSources.converterDescriptors.add(
 						new MetadataSources.ConverterDescriptor(
 								className,
-								JandexHelper.getValue( converterAnnotation, "autoApply", boolean.class,
-										bootstrapServiceRegistry.getService( ClassLoaderService.class ) )
+								asBoolean( converterAnnotation.value( "autoApply" ) )
 						)
 				);
 			}
@@ -422,6 +424,31 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		return metadataSources;
+	}
+
+	private boolean asBoolean(AnnotationValue value) {
+		return value != null && value.asBoolean();
+	}
+
+	public static AnnotationInstance getSingleAnnotation(
+			Map<DotName, List<AnnotationInstance>> annotations,
+			DotName annotationName) throws AssertionFailure {
+		List<AnnotationInstance> annotationList = annotations.get( annotationName );
+		if ( annotationList == null ) {
+			// we found no annotations of the given annotation type
+			return null;
+		}
+		if ( annotationList.size() == 0 ) {
+			return null;
+		}
+		else if ( annotationList.size() == 1 ) {
+			return annotationList.get( 0 );
+		}
+		else {
+			throw new AssertionFailure(
+					"Found more than one instance of the annotation " + annotationName.toString()
+			);
+		}
 	}
 
 	private IndexView locateOrBuildJandexIndex(DeploymentResources deploymentResources) {

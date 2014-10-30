@@ -98,7 +98,7 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 		if ( withMappingFiles != null ) {
 			String packageNameAsPath = TestUtil.fcnToPath( packageName );
 			for ( String mappingFile : withMappingFiles.value() ) {
-				mappingFiles.add( packageNameAsPath + File.separator + mappingFile );
+				mappingFiles.add( packageNameAsPath + TestUtil.RESOURCE_SEPARATOR + mappingFile );
 			}
 		}
 	}

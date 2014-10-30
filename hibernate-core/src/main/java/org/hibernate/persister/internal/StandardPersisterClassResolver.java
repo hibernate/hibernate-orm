@@ -23,17 +23,12 @@
  */
 package org.hibernate.persister.internal;
 
-import java.util.Iterator;
-
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.metamodel.binding.CollectionElementNature;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
@@ -48,36 +43,6 @@ import org.hibernate.persister.spi.UnknownPersisterException;
  * @author Steve Ebersole
  */
 public class StandardPersisterClassResolver implements PersisterClassResolver {
-
-	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
-		if ( metadata.isRoot() ) {
-            Iterator<EntityBinding> subEntityBindingIterator = metadata.getDirectSubEntityBindings().iterator();
-            if ( subEntityBindingIterator.hasNext() ) {
-                //If the class has children, we need to find of which kind
-                metadata = subEntityBindingIterator.next();
-            }
-            else {
-			    return singleTableEntityPersister();
-            }
-		}
-		switch ( metadata.getHierarchyDetails().getInheritanceType() ) {
-			case JOINED: {
-				return joinedSubclassEntityPersister();
-			}
-			case SINGLE_TABLE: {
-				return singleTableEntityPersister();
-			}
-			case TABLE_PER_CLASS: {
-				return unionSubclassEntityPersister();
-			}
-			default: {
-				throw new UnknownPersisterException(
-						"Could not determine persister implementation for entity [" + metadata.getEntity().getName() + "]"
-				);
-			}
-
-		}
-	}
 
 	@Override
 	public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata) {
@@ -122,13 +87,6 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 	@Override
 	public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
 		return metadata.isOneToMany() ? oneToManyPersister() : basicCollectionPersister();
-	}
-
-	@Override
-	public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
-		return metadata.getCollectionElement().getCollectionElementNature() == CollectionElementNature.ONE_TO_MANY
-				? oneToManyPersister()
-				: basicCollectionPersister();
 	}
 
 	private Class<OneToManyPersister> oneToManyPersister() {

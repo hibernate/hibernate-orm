@@ -47,7 +47,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -58,8 +57,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -70,7 +67,6 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.After;
 import org.junit.Before;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -81,11 +77,9 @@ import static org.junit.Assert.fail;
 @SuppressWarnings( {"deprecation"} )
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
-	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
 
 	public static final Dialect DIALECT = Dialect.getDialect();
 
-	private boolean isMetadataUsed;
 	private Configuration configuration;
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
@@ -128,26 +122,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		configuration = constructAndConfigureConfiguration();
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
-		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				USE_NEW_METADATA_MAPPINGS,
-				new ConfigurationService.Converter<Boolean>() {
-					@Override
-					public Boolean convert(Object value) {
-						return Boolean.parseBoolean( ( String ) value );
-					}
-				},
-				false
-		);
-		if ( isMetadataUsed ) {
-			MetadataImplementor metadataImplementor = buildMetadata( bootRegistry, serviceRegistry );
-			afterConstructAndConfigureMetadata( metadataImplementor );
-			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
-		}
-		else {
-			// this is done here because Configuration does not currently support 4.0 xsd
-			afterConstructAndConfigureConfiguration( configuration );
-			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
-		}
+		// this is done here because Configuration does not currently support 4.0 xsd
+		afterConstructAndConfigureConfiguration( configuration );
+		sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
 		afterSessionFactoryBuilt();
 	}
 
@@ -168,20 +145,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		buildSessionFactory();
 	}
 
-
-	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
-
-	}
-
-	private MetadataImplementor buildMetadata(
-			BootstrapServiceRegistry bootRegistry,
-			StandardServiceRegistryImpl serviceRegistry) {
-		MetadataSources sources = new MetadataSources( bootRegistry );
-		addMappings( sources );
-		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
-	}
-
-	// TODO: is this still needed?
 	protected Configuration buildConfiguration() {
 		Configuration cfg = constructAndConfigureConfiguration();
 		afterConstructAndConfigureConfiguration( cfg );
@@ -249,36 +212,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			for ( String xmlFile : xmlFiles ) {
 				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
 				configuration.addInputStream( is );
-			}
-		}
-	}
-
-	protected void addMappings(MetadataSources sources) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				sources.addResource(
-						getBaseForMappings() + mapping
-				);
-			}
-		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				sources.addAnnotatedClass( annotatedClass );
-			}
-		}
-		String[] annotatedPackages = getAnnotatedPackages();
-		if ( annotatedPackages != null ) {
-			for ( String annotatedPackage : annotatedPackages ) {
-				sources.addPackage( annotatedPackage );
-			}
-		}
-		String[] xmlFiles = getXmlFiles();
-		if ( xmlFiles != null ) {
-			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				sources.addInputStream( is );
 			}
 		}
 	}

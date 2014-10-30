@@ -21,17 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.boot.spi;
+package org.hibernate.boot.model;
 
-import java.util.List;
-
-import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.type.BasicType;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
 
 /**
- * @author Brett Meyer
- * 
- * TODO: Not a fan of this name or entry point into EMFBuilderImpl
+ * Defines the target contributing types, whether via dialects or {@link TypeContributor}
+ *
+ * @author Steve Ebersole
  */
-public interface TypeContributorList {
-	public List<TypeContributor> getTypeContributors();
+public interface TypeContributions {
+	public void contributeType(BasicType type);
+
+	public void contributeType(UserType type, String[] keys);
+
+	public void contributeType(CompositeUserType type, String[] keys);
 }

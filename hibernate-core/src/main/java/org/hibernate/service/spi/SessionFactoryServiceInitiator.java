@@ -25,7 +25,6 @@ package org.hibernate.service.spi;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.Service;
 
 /**
@@ -48,19 +47,5 @@ public interface SessionFactoryServiceInitiator<R extends Service> extends Servi
 	 * @return The initiated service.
 	 */
 	public R initiateService(SessionFactoryImplementor sessionFactory, Configuration configuration, ServiceRegistryImplementor registry);
-
-	/**
-	 * Initiates the managed service.
-	 * <p/>
-	 * Note for implementors: signature is guaranteed to change once redesign of SessionFactory building is complete
-	 *
-	 * @param sessionFactory The session factory.  Note the the session factory is still in flux; care needs to be taken
-	 * in regards to what you call.
-	 * @param metadata The configuration.
-	 * @param registry The service registry.  Can be used to locate services needed to fulfill initiation.
-	 *
-	 * @return The initiated service.
-	 */
-	public R initiateService(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata, ServiceRegistryImplementor registry);
 
 }

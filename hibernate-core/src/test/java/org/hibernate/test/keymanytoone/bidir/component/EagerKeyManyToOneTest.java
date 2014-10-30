@@ -36,7 +36,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.TestForIssue;
@@ -74,13 +73,6 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 							SessionFactoryServiceRegistry serviceRegistry) {
                         integrate(serviceRegistry);
 					}
-
-                    @Override
-				    public void integrate( MetadataImplementor metadata,
-				                           SessionFactoryImplementor sessionFactory,
-				                           SessionFactoryServiceRegistry serviceRegistry ) {
-                        integrate(serviceRegistry);
-				    }
 
                     private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
                         serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(EventType.LOAD,

@@ -49,12 +49,12 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationException;
-import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.XsdException;
+import org.hibernate.internal.util.xml.XsdException;
 
 import org.jboss.logging.Logger;
 
@@ -89,7 +89,7 @@ public class JaxbProcessor {
 			}
 		}
 		catch ( XMLStreamException e ) {
-			throw new MappingException( "Unable to create stax reader", e, origin );
+			throw new HibernateException( "Unable to create stax reader", e );
 		}
 	}
 
@@ -119,11 +119,11 @@ public class JaxbProcessor {
 			}
 		}
 		catch ( Exception e ) {
-			throw new MappingException( "Error accessing stax stream", e, origin );
+			throw new HibernateException( "Error accessing stax stream", e );
 		}
 
 		if ( event == null ) {
-			throw new MappingException( "Could not locate root element", origin );
+			throw new HibernateException( "Could not locate root element" );
 		}
 
 		if ( !isNamespaced( event.asStartElement() ) ) {

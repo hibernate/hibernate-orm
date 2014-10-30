@@ -23,9 +23,6 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.relational.UniqueKey;
 
 /**
  * The default UniqueDelegate implementation for most dialects.  Uses
@@ -106,54 +103,5 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 		}
 		return buf.toString();
 	}
-
-
-	// new model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String getColumnDefinitionUniquenessFragment(Column column) {
-		return "";
-	}
-
-	@Override
-	public String getTableCreationUniqueConstraintsFragment(Table table) {
-		return "";
-	}
-	
-
-	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey) {
-		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-		// We need full, simplified control over whether or not it happens.
-		final String tableName = uniqueKey.getTable().getQualifiedName( dialect );
-		final String constraintName = dialect.quote( uniqueKey.getName() );
-
-		return "alter table " + tableName + " add constraint " + constraintName + uniqueConstraintSql( uniqueKey );
-	}
-
-	protected String uniqueConstraintSql( UniqueKey uniqueKey ) {
-		final StringBuilder sb = new StringBuilder( " unique (" );
-		final Iterator columnIterator = uniqueKey.getColumns().iterator();
-		while ( columnIterator.hasNext() ) {
-			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) columnIterator.next();
-			sb.append( column.getQuotedName( dialect ) );
-			if ( columnIterator.hasNext() ) {
-				sb.append( ", " );
-			}
-		}
-
-		return sb.append( ')' ).toString();
-	}
-
-	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey) {
-		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-		// We need full, simplified control over whether or not it happens.
-		final String tableName = uniqueKey.getTable().getQualifiedName( dialect );
-		final String constraintName = dialect.quote( uniqueKey.getName() );
-
-		return "alter table " + tableName + " drop constraint " + constraintName;
-	}
-
 
 }

@@ -49,7 +49,6 @@ import static org.junit.Assert.assertTrue;
 public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
 	}
 
 	@Override

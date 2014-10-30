@@ -33,7 +33,7 @@
   <service ref="strategyRegistrationProvider" interface="org.hibernate.boot.registry.selector.StrategyRegistrationProvider"/>
             
   <bean id="typeContributor" class="org.hibernate.osgitest.TestTypeContributor"/>
-  <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/>
+  <service ref="typeContributor" interface="org.hibernate.boot.model.TypeContributor"/>
   
   <!-- This bundle makes use of Karaf commands to demonstrate core persistence operations.  Feel free to remove it. -->
   <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">

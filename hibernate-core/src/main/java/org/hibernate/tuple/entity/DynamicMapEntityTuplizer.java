@@ -33,8 +33,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -54,10 +52,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DynamicMapEntityTuplizer.class );
 
 	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
-		super(entityMetamodel, mappedEntity);
-	}
-
-	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super(entityMetamodel, mappedEntity);
 	}
 
@@ -107,53 +101,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		}
 		catch ( HibernateException he ) {
 			LOG.unableToCreateProxyFactory( getEntityName(), he );
-			pf = null;
-		}
-		return pf;
-	}
-
-	private PropertyAccessor buildPropertyAccessor(AttributeBinding mappedProperty) {
-		// TODO: fix when backrefs are working in new metamodel
-		//if ( mappedProperty.isBackRef() ) {
-		//	return mappedProperty.getPropertyAccessor( null );
-		//}
-		//else {
-			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
-		//}
-	}
-
-	@Override
-	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		return buildPropertyAccessor( mappedProperty ).getGetter( null, mappedProperty.getAttribute().getName() );
-	}
-
-	@Override
-	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
-		return buildPropertyAccessor( mappedProperty ).getSetter( null, mappedProperty.getAttribute().getName() );
-	}
-
-	@Override
-	protected Instantiator buildInstantiator(EntityBinding mappingInfo) {
-		return new DynamicMapInstantiator( mappingInfo );
-	}
-
-	@Override
-	protected ProxyFactory buildProxyFactory(EntityBinding mappingInfo, Getter idGetter, Setter idSetter) {
-
-		ProxyFactory pf = new MapProxyFactory();
-		try {
-			//TODO: design new lifecycle for ProxyFactory
-			pf.postInstantiate(
-					getEntityName(),
-					null,
-					null,
-					null,
-					null,
-					null
-			);
-		}
-		catch ( HibernateException he ) {
-			LOG.unableToCreateProxyFactory(getEntityName(), he);
 			pf = null;
 		}
 		return pf;

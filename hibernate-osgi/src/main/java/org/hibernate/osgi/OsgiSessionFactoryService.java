@@ -30,7 +30,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 import org.osgi.framework.Bundle;

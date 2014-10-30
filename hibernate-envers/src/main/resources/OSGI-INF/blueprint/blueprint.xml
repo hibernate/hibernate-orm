@@ -8,6 +8,6 @@
   <service ref="integrator" interface="org.hibernate.integrator.spi.Integrator"/>
 
   <bean id="typeContributor" class="org.hibernate.envers.internal.entities.TypeContributorImpl"/>
-  <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/>
+  <service ref="typeContributor" interface="org.hibernate.boot.model.TypeContributor"/>
   
 </blueprint>

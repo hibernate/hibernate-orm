@@ -53,7 +53,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
@@ -241,25 +240,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		
 		postConstruct(mapping);
 
-	}
-
-	public UnionSubclassEntityPersister(
-			final EntityBinding entityBinding,
-			final EntityRegionAccessStrategy cacheAccessStrategy,
-			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			final SessionFactoryImplementor factory,
-			final Mapping mapping) throws HibernateException {
-		super(entityBinding, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
-		// TODO: implement!!! initializing final fields to null to make compiler happy.
-		subquery = null;
-		tableName = null;
-		subclassClosure = null;
-		spaces = null;
-		subclassSpaces = null;
-		discriminatorValue = null;
-		discriminatorSQLValue = null;
-		constraintOrderedTableNames = null;
-		constraintOrderedKeyColumnNames = null;
 	}
 
 	public Serializable[] getQuerySpaces() {

@@ -23,7 +23,7 @@
  */
 package org.hibernate.usertype;
 
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.engine.jdbc.Size;
 
 /**
  * Extends dictated/default column size declarations from {@link org.hibernate.type.Type} to the {@link UserType}

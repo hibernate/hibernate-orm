@@ -35,7 +35,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -96,14 +95,6 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 					@Override
 					public void integrate(
 							Configuration configuration,
-							SessionFactoryImplementor sessionFactory,
-							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate( serviceRegistry );
-					}
-
-					@Override
-					public void integrate(
-							MetadataImplementor metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
 						integrate( serviceRegistry );

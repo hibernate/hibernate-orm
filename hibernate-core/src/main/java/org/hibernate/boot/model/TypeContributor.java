@@ -21,17 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.boot.spi;
+package org.hibernate.boot.model;
 
-import java.util.List;
-
-import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
- * @author Brett Meyer
+ * Contract for contributing types.
+ *
+ * @author Steve Ebersole
  * 
- * TODO: Not a fan of this name or entry point into EMFBuilderImpl
+ * NOTE: Cherry-pick of HHH-7998 from metamodel.  For merging simplicity, just
+ * keep it in the o.h.metamodel.spi package.
  */
-public interface TypeContributorList {
-	public List<TypeContributor> getTypeContributors();
+public interface TypeContributor {
+	/**
+	 * Contribute types
+	 *
+	 * @param typeContributions The callback for adding contributed types
+	 * @param serviceRegistry The service registry
+	 */
+	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
 }

@@ -56,15 +56,12 @@ import org.hibernate.jpa.event.internal.core.JpaPostUpdateEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveEventListener;
 import org.hibernate.jpa.event.internal.core.JpaSaveOrUpdateEventListener;
 import org.hibernate.jpa.event.internal.jpa.CallbackProcessor;
-import org.hibernate.jpa.event.internal.jpa.CallbackProcessorImpl;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
 import org.hibernate.jpa.event.internal.jpa.LegacyCallbackProcessor;
 import org.hibernate.jpa.event.internal.jpa.StandardListenerFactory;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -188,78 +185,6 @@ public class JpaIntegrator implements Integrator {
 		catch (Throwable e) {
 			throw new HibernateException( "Could not access BeanManagerListenerFactory class to handle CDI extensions", e );
 		}
-	}
-
-	@Override
-	public void integrate(
-			MetadataImplementor metadata,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry ) {
-		// first, register the JPA-specific persist cascade style
-		CascadeStyles.registerCascadeStyle(
-				"persist",
-				new PersistCascadeStyle()
-		);
-
-		// then prepare listeners
-        final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-
-        eventListenerRegistry.addDuplicationStrategy( JPA_DUPLICATION_STRATEGY );
-
-        // op listeners
-        eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, JpaAutoFlushEventListener.INSTANCE );
-        eventListenerRegistry.setListeners( EventType.DELETE, new JpaDeleteEventListener() );
-        eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, new JpaFlushEntityEventListener() );
-        eventListenerRegistry.setListeners( EventType.FLUSH, JpaFlushEventListener.INSTANCE );
-        eventListenerRegistry.setListeners( EventType.MERGE, new JpaMergeEventListener() );
-        eventListenerRegistry.setListeners( EventType.PERSIST, new JpaPersistEventListener() );
-        eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, new JpaPersistOnFlushEventListener() );
-        eventListenerRegistry.setListeners( EventType.SAVE, new JpaSaveEventListener() );
-        eventListenerRegistry.setListeners( EventType.SAVE_UPDATE, new JpaSaveOrUpdateEventListener() );
-
-        // post op listeners
-        eventListenerRegistry.prependListeners( EventType.POST_DELETE, new JpaPostDeleteEventListener() );
-        eventListenerRegistry.prependListeners( EventType.POST_INSERT, new JpaPostInsertEventListener() );
-        eventListenerRegistry.prependListeners( EventType.POST_LOAD, new JpaPostLoadEventListener() );
-        eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new JpaPostUpdateEventListener() );
-
-        for ( Map.Entry<?,?> entry : sessionFactory.getProperties().entrySet() ) {
-            if ( ! String.class.isInstance( entry.getKey() ) ) {
-                continue;
-            }
-            final String propertyName = (String) entry.getKey();
-            if ( ! propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-                continue;
-            }
-            final String eventTypeName = propertyName.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
-            final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
-            final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-            for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {
-                eventListenerGroup.appendListener( instantiate( listenerImpl, serviceRegistry ) );
-            }
-        }
-
-		// handle JPA "entity listener classes"...
-
-		this.callbackRegistry = new CallbackRegistryImpl();
-		final Object beanManagerRef = sessionFactory.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
-		this.jpaListenerFactory = beanManagerRef == null
-				? new StandardListenerFactory()
-				: buildBeanManagerListenerFactory( beanManagerRef );
-		this.callbackProcessor = new CallbackProcessorImpl( jpaListenerFactory, metadata, serviceRegistry );
-
-        for ( EntityBinding binding : metadata.getEntityBindings() ) {
-			callbackProcessor.processCallbacksForEntity( binding, callbackRegistry );
-        }
-
-        for ( EventType eventType : EventType.values() ) {
-            final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-            for ( Object listener : eventListenerGroup.listeners() ) {
-                if ( CallbackRegistryConsumer.class.isInstance( listener ) ) {
-                    ( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( callbackRegistry );
-                }
-            }
-        }
 	}
 
 	@Override

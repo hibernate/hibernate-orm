@@ -21,7 +21,6 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.relational.UniqueKey;
 
 /**
  * Informix requires the constraint name to come last on the alter table.
@@ -48,15 +47,4 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 		return "alter table " + tableName + " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;
 	}
 
-	// new model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey) {
-		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-		// We need full, simplified control over whether or not it happens.
-		final String tableName = uniqueKey.getTable().getQualifiedName( dialect );
-		final String constraintName = dialect.quote( uniqueKey.getName() );
-
-		return "alter table " + tableName + " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;
-	}
 }

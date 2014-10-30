@@ -33,7 +33,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
@@ -199,15 +198,6 @@ public class BeanValidationIntegrator implements Integrator {
 		catch (Exception e) {
 			throw new HibernateException( "Unable to load TypeSafeActivator class", e );
 		}
-	}
-
-
-
-	@Override
-	public void integrate(
-			MetadataImplementor metadata,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry ) {
 	}
 
 	@Override

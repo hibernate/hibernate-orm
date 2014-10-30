@@ -34,7 +34,6 @@ import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.junit.Test;
@@ -94,13 +93,6 @@ public class ClearEventListenerTest extends BaseCoreFunctionalTestCase {
 							Configuration configuration,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-						integrate(serviceRegistry);
-					}
-
-					@Override
-					public void integrate( MetadataImplementor metadata,
-										   SessionFactoryImplementor sessionFactory,
-										   SessionFactoryServiceRegistry serviceRegistry ) {
 						integrate(serviceRegistry);
 					}
 

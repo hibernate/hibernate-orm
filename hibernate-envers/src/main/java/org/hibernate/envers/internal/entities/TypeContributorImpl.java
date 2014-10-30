@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import org.hibernate.metamodel.spi.TypeContributions;
-import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
 
 /**

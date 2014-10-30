@@ -25,7 +25,6 @@ package org.hibernate.integrator.spi;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -58,17 +57,6 @@ public interface Integrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry);
-
-	/**
-     * Perform integration.
-     *
-     * @param metadata The metadata used to create the session factory
-     * @param sessionFactory The session factory being created
-     * @param serviceRegistry The session factory's service registry
-     */
-    public void integrate( MetadataImplementor metadata,
-                           SessionFactoryImplementor sessionFactory,
-                           SessionFactoryServiceRegistry serviceRegistry );
 
 	/**
 	 * Tongue-in-cheek name for a shutdown callback.

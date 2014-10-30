@@ -26,7 +26,7 @@ import java.io.InputStream;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.osgi.OsgiPersistenceProviderService;
 import org.hibernate.osgi.OsgiSessionFactoryService;
 import org.hibernate.osgi.test.client.DataPoint;

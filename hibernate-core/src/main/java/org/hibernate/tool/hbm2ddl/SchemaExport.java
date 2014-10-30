@@ -47,7 +47,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -59,7 +58,6 @@ import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.logging.Logger;
@@ -123,27 +121,6 @@ public class SchemaExport {
 		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
 		this.dropSQL = configuration.generateDropSchemaScript( dialect );
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
-	}
-
-	public SchemaExport(MetadataImplementor metadata) {
-		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
-		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				serviceRegistry.getService( ConnectionProvider.class )
-		);
-        JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
-		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
-
-		this.importFiles = ConfigurationHelper.getString(
-				AvailableSettings.HBM2DDL_IMPORT_FILES,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
-				DEFAULT_IMPORT_FILE
-		);
-
-		final Dialect dialect = jdbcServices.getDialect();
-		this.dropSQL = metadata.getDatabase().generateDropSchemaScript( dialect );
-		this.createSQL = metadata.getDatabase().generateSchemaCreationScript( dialect );
 	}
 
 	/**

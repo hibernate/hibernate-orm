@@ -24,7 +24,7 @@ import java.util.Hashtable;
 
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.boot.model.TypeContributor;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 

@@ -56,7 +56,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
@@ -746,51 +745,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					)
 			);
 		}
-	}
-
-	public JoinedSubclassEntityPersister(
-			final EntityBinding entityBinding,
-			final EntityRegionAccessStrategy cacheAccessStrategy,
-			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			final SessionFactoryImplementor factory,
-			final Mapping mapping) throws HibernateException {
-		super( entityBinding, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
-		// TODO: implement!!! initializing final fields to null to make compiler happy
-		tableSpan = -1;
-		tableNames = null;
-		naturalOrderTableNames = null;
-		tableKeyColumns = null;
-		tableKeyColumnReaders = null;
-		tableKeyColumnReaderTemplates = null;
-		naturalOrderTableKeyColumns = null;
-		naturalOrderTableKeyColumnReaders = null;
-		naturalOrderTableKeyColumnReaderTemplates = null;
-		naturalOrderCascadeDeleteEnabled = null;
-		spaces = null;
-		subclassClosure = null;
-		subclassTableNameClosure = null;
-		subclassTableKeyColumnClosure = null;
-		isClassOrSuperclassTable = null;
-		naturalOrderPropertyTableNumbers = null;
-		propertyTableNumbers = null;
-		subclassPropertyTableNumberClosure = null;
-		subclassColumnTableNumberClosure = null;
-		subclassFormulaTableNumberClosure = null;
-		subclassTableSequentialSelect = null;
-		subclassTableIsLazyClosure = null;
-		discriminatorValues = null;
-		notNullColumnNames = null;
-		notNullColumnTableNumbers = null;
-		constraintOrderedTableNames = null;
-		constraintOrderedKeyColumnNames = null;
-		discriminatorValue = null;
-		discriminatorSQLString = null;
-		discriminatorType = StandardBasicTypes.INTEGER;
-		explicitDiscriminatorColumnName = null;
-		discriminatorAlias = IMPLICIT_DISCRIMINATOR_ALIAS;
-		coreTableSpan = -1;
-		isNullableTable = null;
-		subclassNamesBySubclassTable = null;
 	}
 
 	protected boolean isNullableTable(int j) {

@@ -20,10 +20,6 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.relational.UniqueKey;
-
 /**
  * Dialect-level delegate in charge of applying "uniqueness" to a column.  Uniqueness can be defined
  * in 1 of 3 ways:<ol>
@@ -60,18 +56,6 @@ public interface UniqueDelegate {
 	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column);
 
 	/**
-	 * Get the fragment that can be used to make a column unique as part of its column definition.
-	 * <p/>
-	 * This is intended for dialects which do not support unique constraints
-	 *
-	 * @param column The column to which to apply the unique
-	 *
-	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
-	 * different approach
-	 */
-	public String getColumnDefinitionUniquenessFragment(Column column);
-
-	/**
 	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
 	 * should iterate over the {@link org.hibernate.mapping.UniqueKey} instances for the given table (see
 	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for all
@@ -85,21 +69,6 @@ public interface UniqueDelegate {
 	 * comma is important!
 	 */
 	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table);
-	
-	/**
-	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
-	 * should iterate over the {@link org.hibernate.mapping.UniqueKey} instances for the given table (see
-	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for all
-	 * unique keys
-	 * <p/>
-	 * Intended for Dialects which support unique constraint definitions, but just not in separate ALTER statements.
-	 *
-	 * @param table The table for which to generate the unique constraints fragment
-	 *
-	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
-	 * comma is important!
-	 */
-	public String getTableCreationUniqueConstraintsFragment(Table table);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
@@ -116,16 +85,6 @@ public interface UniqueDelegate {
 			String defaultSchema);
 
 	/**
-	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
-	 *
-	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns, as well as
-	 * schema/catalog
-	 *
-	 * @return The ALTER TABLE command
-	 */
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey);
-
-	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
@@ -138,13 +97,4 @@ public interface UniqueDelegate {
 			org.hibernate.mapping.UniqueKey uniqueKey,
 			String defaultCatalog, String defaultSchema);
 
-	/**
-	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
-	 *
-	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns, as well as
-	 * schema/catalog
-	 *
-	 * @return The ALTER TABLE command
-	 */
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey);
 }

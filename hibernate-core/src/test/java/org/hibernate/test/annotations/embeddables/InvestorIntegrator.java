@@ -26,7 +26,6 @@ package org.hibernate.test.annotations.embeddables;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -40,13 +39,6 @@ public class InvestorIntegrator implements Integrator {
 			SessionFactoryServiceRegistry serviceRegistry) {
 		configuration.registerTypeOverride(new DollarValueUserType(), new String[] {DollarValue.class.getName()});
 		configuration.registerTypeOverride(new MyDateUserType(), new String[] {MyDate.class.getName()});
-	}
-
-	@Override
-	public void integrate(MetadataImplementor metadata,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry) {
-		// No-op
 	}
 
 	@Override

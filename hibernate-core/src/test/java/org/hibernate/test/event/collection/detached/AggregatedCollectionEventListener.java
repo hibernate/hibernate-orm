@@ -51,7 +51,6 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -182,15 +181,6 @@ public class AggregatedCollectionEventListener
 			listenerRegistry.appendListeners( EventType.POST_COLLECTION_REMOVE, listener );
 			listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, listener );
 			listenerRegistry.appendListeners( EventType.POST_COLLECTION_UPDATE, listener );
-		}
-
-
-		@Override
-		public void integrate(
-				MetadataImplementor metadata,
-				SessionFactoryImplementor sessionFactory,
-				SessionFactoryServiceRegistry serviceRegistry) {
-			integrate( serviceRegistry );
 		}
 
 		@Override

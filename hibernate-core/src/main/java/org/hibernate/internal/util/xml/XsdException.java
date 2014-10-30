@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,17 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.boot.spi;
 
-import java.util.List;
+package org.hibernate.internal.util.xml;
 
-import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.HibernateException;
 
 /**
- * @author Brett Meyer
+ * Indicates an issue finding or loading an XSD schema.
  * 
- * TODO: Not a fan of this name or entry point into EMFBuilderImpl
+ * @author Steve Ebersole
  */
-public interface TypeContributorList {
-	public List<TypeContributor> getTypeContributors();
+public class XsdException extends HibernateException {
+	private final String xsdName;
+
+	public XsdException(String message, String xsdName) {
+		super( message );
+		this.xsdName = xsdName;
+	}
+
+	public XsdException(String message, Throwable root, String xsdName) {
+		super( message, root );
+		this.xsdName = xsdName;
+	}
+
+	public String getXsdName() {
+		return xsdName;
+	}
 }

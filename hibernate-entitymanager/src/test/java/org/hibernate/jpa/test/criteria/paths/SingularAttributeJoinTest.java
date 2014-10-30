@@ -23,6 +23,22 @@
  */
 package org.hibernate.jpa.test.criteria.paths;
 
+import java.sql.Types;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Path;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
@@ -34,28 +50,22 @@ import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.PathSource;
 import org.hibernate.jpa.criteria.path.SingularAttributeJoin;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.mapping.*;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.tuple.entity.DynamicMapEntityTuplizer;
-import org.hibernate.type.EntityType;
+
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
-
-import java.sql.Types;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 /**
  * @author Brad Koehn
@@ -132,11 +142,6 @@ public class SingularAttributeJoinTest extends AbstractMetamodelSpecificTest {
                 Mappings mappings = configuration.createMappings();
                 addPolicy(mappings);
                 addDistribution(mappings);
-            }
-
-            @Override
-            public void integrate(MetadataImplementor metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-
             }
 
             @Override

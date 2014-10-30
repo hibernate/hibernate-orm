@@ -51,7 +51,8 @@ import static org.junit.Assert.fail;
  */
 public class TestUtil {
 	private static final Logger log = LoggerFactory.getLogger( TestUtil.class );
-	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
+	private static final String PATH_SEPARATOR = File.separator;
+	public static final String RESOURCE_SEPARATOR = "/";
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String META_MODEL_CLASS_POSTFIX = "_";
 	private static final File OUT_BASE_DIR;
@@ -249,7 +250,7 @@ public class TestUtil {
 	}
 
 	public static String fcnToPath(String fcn) {
-		return fcn.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
+		return fcn.replace( PACKAGE_SEPARATOR, RESOURCE_SEPARATOR );
 	}
 
 	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {

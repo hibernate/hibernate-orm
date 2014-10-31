@@ -37,7 +37,10 @@ package org.hibernate.cfg;
  * @see ImprovedNamingStrategy
  * @author Gavin King
  * @author Emmanuel Bernard
+ *
+ * @deprecated A {@link org.hibernate.cfg.naming.NamingStrategyDelegator} should be used instead.
  */
+@Deprecated
 public interface NamingStrategy {
 	/**
 	 * Return a table name for an entity class

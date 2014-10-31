@@ -76,6 +76,11 @@ public class HQLQueryPlan implements Serializable {
 	private final boolean shallow;
 
 	/**
+	* We'll check the trace level only once per instance
+	*/
+	private final boolean TRACE_ENABLED = LOG.isTraceEnabled();
+
+	/**
 	 * Constructs a HQLQueryPlan
 	 *
 	 * @param hql The HQL query
@@ -200,7 +205,7 @@ public class HQLQueryPlan implements Serializable {
 	public List performList(
 			QueryParameters queryParameters,
 			SessionImplementor session) throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
+		if ( TRACE_ENABLED ) {
 			LOG.tracev( "Find: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -298,7 +303,7 @@ public class HQLQueryPlan implements Serializable {
 	public Iterator performIterate(
 			QueryParameters queryParameters,
 			EventSource session) throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
+		if ( TRACE_ENABLED ) {
 			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -336,7 +341,7 @@ public class HQLQueryPlan implements Serializable {
 	public ScrollableResults performScroll(
 			QueryParameters queryParameters,
 			SessionImplementor session) throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
+		if ( TRACE_ENABLED ) {
 			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -362,7 +367,7 @@ public class HQLQueryPlan implements Serializable {
 	 */
 	public int performExecuteUpdate(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
+		if ( TRACE_ENABLED ) {
 			LOG.tracev( "Execute update: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -377,12 +382,12 @@ public class HQLQueryPlan implements Serializable {
 	}
 
 	private ParameterMetadata buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
-		final long start = System.currentTimeMillis();
+		final long start = TRACE_ENABLED ? System.nanoTime() : 0;
 		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
-		final long end = System.currentTimeMillis();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "HQL param location recognition took {0} mills ({1})", ( end - start ), hql );
+		if ( TRACE_ENABLED ) {
+			final long end = System.nanoTime();
+			LOG.tracev( "HQL param location recognition took {0} nanoseconds ({1})", ( end - start ), hql );
 		}
 
 		int ordinalParamCount = parameterTranslations.getOrdinalParameterCount();

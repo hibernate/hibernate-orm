@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
 import javax.persistence.EntityResult;
@@ -52,7 +53,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -62,9 +62,9 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ResultsetMappingSecondPass.class.getName());
 
-	private SqlResultSetMapping ann;
-	private Mappings mappings;
-	private boolean isDefault;
+	private final SqlResultSetMapping ann;
+	private final Mappings mappings;
+	private final boolean isDefault;
 
 	public ResultsetMappingSecondPass(SqlResultSetMapping ann, Mappings mappings, boolean isDefault) {
 		this.ann = ann;
@@ -72,6 +72,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		this.isDefault = isDefault;
 	}
 
+	@Override
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		//TODO add parameters checkings
 		if ( ann == null ) return;
@@ -188,7 +189,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 							mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
 									column.name()
 							),
-							null
+							column.type() != null ? mappings.getTypeResolver().heuristicType( column.type().getName() ) : null
 					)
 			);
 		}
@@ -199,7 +200,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				columnReturns.add(
 						new NativeSQLQueryScalarReturn(
 								mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnResult.name() ),
-								null
+								columnResult.type() != null ? mappings.getTypeResolver().heuristicType( columnResult.type().getName() ) : null
 						)
 				);
 			}

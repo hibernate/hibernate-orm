@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -33,7 +35,10 @@ public class Item {
     private String name;
     private String description;
     private Item owner;
-    private Set<Item> items = new HashSet<Item>();
+    private Set<Item> items = new HashSet<Item>(  );
+	private Item bagOwner;
+	private List<Item> bagOfItems = new ArrayList<Item>(  );
+	private Set<OtherItem> otherItems = new HashSet<OtherItem>(  );
 
     public Item() {}
     
@@ -81,9 +86,44 @@ public class Item {
 	public void setItems( Set<Item> items ) {
 		this.items = items;
 	}
-	
+
 	public void addItem( Item item ) {
 		item.setOwner( this );
 		getItems().add( item );
 	}
+
+	public Item getBagOwner() {
+		return bagOwner;
+	}
+
+	public void setBagOwner( Item bagOwner ) {
+		this.bagOwner = bagOwner;
+	}
+
+	public List<Item> getBagOfItems() {
+		return bagOfItems;
+	}
+
+	public void setBagOfItems( List<Item> bagOfItems ) {
+		this.bagOfItems = bagOfItems;
+	}
+
+	public void addItemToBag( Item item ) {
+		item.setBagOwner( this );
+		getBagOfItems().add( item );
+	}
+
+	public Set<OtherItem> getOtherItems() {
+		return otherItems;
+	}
+
+	public void setOtherItems(Set<OtherItem> otherItems) {
+		this.otherItems = otherItems;
+	}
+
+	public void addOtherItem(OtherItem otherItem) {
+		getOtherItems().add( otherItem );
+		otherItem.getBagOfItems().add( this );
+	}
+
 }

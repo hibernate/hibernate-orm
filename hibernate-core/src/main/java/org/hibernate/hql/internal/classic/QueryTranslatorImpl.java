@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -948,7 +949,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		boolean stats = session.getFactory().getStatistics().isStatisticsEnabled();
 		long startTime = 0;
-		if ( stats ) startTime = System.currentTimeMillis();
+		if ( stats ) startTime = System.nanoTime();
 
 		try {
 			final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
@@ -959,10 +960,12 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			Iterator result = new IteratorImpl( rs, st, session, queryParameters.isReadOnly( session ), returnTypes, getColumnNames(), hi );
 
 			if ( stats ) {
+				final long endTime = System.nanoTime();
+				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 				session.getFactory().getStatisticsImplementor().queryExecuted(
 						"HQL: " + queryString,
 						0,
-						System.currentTimeMillis() - startTime
+						milliseconds
 					);
 			}
 

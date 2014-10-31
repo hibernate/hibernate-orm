@@ -37,6 +37,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -82,6 +83,12 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 			protected NamingStrategy getNamingStrategy() {
 				return cfg.getNamingStrategy();
 			}
+
+			@Override
+			protected NamingStrategyDelegator getNamingStrategyDelegator() {
+				return cfg.getNamingStrategyDelegator();
+			}
+
 		} );
 
 		Dialect dialect = TestingDatabaseInfo.DIALECT;

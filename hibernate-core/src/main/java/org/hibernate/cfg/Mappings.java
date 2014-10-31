@@ -38,6 +38,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -81,15 +82,42 @@ public interface Mappings {
 	 * Get the current naming strategy.
 	 *
 	 * @return The current naming strategy.
+	 *
+	 * @deprecated Use {@link #getNamingStrategyDelegator()} instead.
 	 */
+	@Deprecated
 	public NamingStrategy getNamingStrategy();
 
 	/**
-	 * Set the current naming strategy.
+	 * Set the current naming strategy. An instance of {@link org.hibernate.cfg.naming.LegacyNamingStrategyDelegator}
+	 * will be constructed with the specified naming strategy.
 	 *
-	 * @param namingStrategy The naming strategy to use.
+	 * @param namingStrategy the {@link NamingStrategy} to set; must be non-null.
+	 *
+	 * @deprecated Use {@link #setNamingStrategyDelegator(org.hibernate.cfg.naming.NamingStrategyDelegator)} instead.
+
+	 * @see org.hibernate.cfg.naming.LegacyNamingStrategyDelegator#LegacyNamingStrategyDelegator(NamingStrategy)
 	 */
+	@Deprecated
 	public void setNamingStrategy(NamingStrategy namingStrategy);
+
+	/**
+	 * Get the current naming strategy delegate.
+	 *
+	 * @return The current naming strategy delegate.
+	 */
+	public NamingStrategyDelegator getNamingStrategyDelegator();
+
+	/**
+	 * Set a current naming strategy delegator.
+	 *
+	 * @param namingStrategyDelegator the {@link org.hibernate.cfg.naming.NamingStrategyDelegator} to set;
+	 *                                must be non-null; if {@code namingStrategyDelegator} is an instance
+	 *                                of {@link org.hibernate.cfg.naming.LegacyNamingStrategyDelegator}, then
+	 *                                {@link org.hibernate.cfg.naming.LegacyNamingStrategyDelegator#getNamingStrategy()}
+	 *                                must be non-null.
+	 */
+	public void setNamingStrategyDelegator(NamingStrategyDelegator namingStrategyDelegator);
 
 	/**
 	 * Returns the currently bound default schema name.

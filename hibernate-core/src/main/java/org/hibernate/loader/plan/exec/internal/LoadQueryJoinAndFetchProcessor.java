@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -284,28 +285,43 @@ public class LoadQueryJoinAndFetchProcessor {
 		// For many-to-many, the follow-on join will join to the associated entity element table. For one-to-many,
 		// the collection table is the associated entity table, so the follow-on join will not be rendered..
 
+		// currently we do not explicitly track the joins under the CollectionQuerySpace to know which is
+		// the element join and which is the index join (maybe we should?).
+
+		JoinDefinedByMetadata collectionElementJoin = null;
+		JoinDefinedByMetadata collectionIndexJoin = null;
+		for ( Join collectionJoin : rightHandSide.getJoins() ) {
+			if ( JoinDefinedByMetadata.class.isInstance( collectionJoin ) ) {
+				final JoinDefinedByMetadata collectionJoinDefinedByMetadata = (JoinDefinedByMetadata) collectionJoin;
+				if ( CollectionPropertyNames.COLLECTION_ELEMENTS.equals( collectionJoinDefinedByMetadata.getJoinedPropertyName() ) ) {
+					if ( collectionElementJoin != null ) {
+						throw new AssertionFailure(
+								String.format(
+										"More than one element join defined for: %s",
+										rightHandSide.getCollectionPersister().getRole()
+								)
+						);
+					}
+					collectionElementJoin = collectionJoinDefinedByMetadata;
+				}
+				if ( CollectionPropertyNames.COLLECTION_INDICES.equals( collectionJoinDefinedByMetadata.getJoinedPropertyName() ) ) {
+					if ( collectionIndexJoin != null ) {
+						throw new AssertionFailure(
+								String.format(
+										"More than one index join defined for: %s",
+										rightHandSide.getCollectionPersister().getRole()
+								)
+						);
+					}
+					collectionIndexJoin = collectionJoinDefinedByMetadata;
+				}
+			}
+		}
+
 		if ( rightHandSide.getCollectionPersister().isOneToMany()
 				|| rightHandSide.getCollectionPersister().isManyToMany() ) {
 			// relatedly, for collections with entity elements (one-to-many, many-to-many) we need to register the
 			// sql aliases to use for the entity.
-			//
-			// currently we do not explicitly track the joins under the CollectionQuerySpace to know which is
-			// the element join and which is the index join (maybe we should?).  Another option here is to have the
-			// "collection join" act as the entity element join in this case (much like I do with entity identifiers).
-			// The difficulty there is that collections can theoretically could be multiple joins in that case (one
-			// for element, one for index).  However, that's a bit of future-planning as today Hibernate does not
-			// properly deal with the index anyway in terms of allowing dynamic fetching across a collection index...
-			//
-			// long story short, for now we'll use an assumption that the last join in the CollectionQuerySpace is the
-			// element join (that's how the joins are built as of now..)
-			//
-			// todo : remove this assumption ^^; maybe we make CollectionQuerySpace "special" and rather than have it
-			// hold a list of joins, we have it expose the 2 (index, element) separately.
-
-			Join collectionElementJoin = null;
-			for ( Join collectionJoin : rightHandSide.getJoins() ) {
-				collectionElementJoin = collectionJoin;
-			}
 			if ( collectionElementJoin == null ) {
 				throw new IllegalStateException(
 						String.format(
@@ -329,6 +345,24 @@ public class LoadQueryJoinAndFetchProcessor {
 			);
 		}
 
+		if ( rightHandSide.getCollectionPersister().hasIndex() &&
+				rightHandSide.getCollectionPersister().getIndexType().isEntityType() ) {
+			// for collections with entity index we need to register the
+			// sql aliases to use for the entity.
+			if ( collectionIndexJoin == null ) {
+				throw new IllegalStateException(
+						String.format(
+								"Could not locate collection index join within collection join [%s : %s]",
+								rightHandSide.getUid(),
+								rightHandSide.getCollectionPersister()
+						)
+				);
+			}
+			aliasResolutionContext.generateEntityReferenceAliases(
+					collectionIndexJoin.getRightHandSide().getUid(),
+					rightHandSide.getCollectionPersister().getIndexDefinition().toEntityDefinition().getEntityPersister()
+			);
+		}
 		addJoins(
 				join,
 				joinFragment,

@@ -83,6 +83,8 @@ import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.cfg.naming.NamingStrategyDelegate;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -542,18 +544,39 @@ public class EntityBinder {
 
 	private static class EntityTableNamingStrategyHelper implements ObjectNameNormalizer.NamingStrategyHelper {
 		private final String entityName;
+		private final String jpaEntityName;
 
-		private EntityTableNamingStrategyHelper(String entityName) {
+		private EntityTableNamingStrategyHelper(String entityName, String jpaEntityName) {
 			this.entityName = entityName;
+			this.jpaEntityName = jpaEntityName;
 		}
 
+		@Override
 		public String determineImplicitName(NamingStrategy strategy) {
 			return strategy.classToTableName( entityName );
 		}
 
+		@Override
 		public String handleExplicitName(NamingStrategy strategy, String name) {
 			return strategy.tableName( name );
 		}
+
+		@Override
+		public String determineImplicitName(NamingStrategyDelegator strategyDelegator) {
+			return getNamingStrategyDelegate( strategyDelegator ).determineImplicitPrimaryTableName(
+					entityName,
+					jpaEntityName
+			);
+		}
+
+		@Override
+		public String handleExplicitName(NamingStrategyDelegator strategyDelegator, String name) {
+			return getNamingStrategyDelegate( strategyDelegator ).toPhysicalTableName( name );
+		}
+	}
+
+	private static NamingStrategyDelegate getNamingStrategyDelegate(NamingStrategyDelegator strategyDelegator) {
+		return strategyDelegator.getNamingStrategyDelegate( false );
 	}
 
 	public void bindTable(
@@ -564,7 +587,10 @@ public class EntityBinder {
 			String constraints,
 			Table denormalizedSuperclassTable) {
 		EntityTableObjectNameSource tableNameContext = new EntityTableObjectNameSource( tableName, name );
-		EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper( name );
+		EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper(
+				persistentClass.getEntityName(),
+				name
+		);
 		final Table table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
@@ -757,6 +783,17 @@ public class EntityBinder {
 
 		public String handleExplicitName(NamingStrategy strategy, String name) {
 			return strategy.tableName( name );
+		}
+
+		@Override
+		public String determineImplicitName(NamingStrategyDelegator strategyDelegator) {
+			// todo : throw an error?
+			return null;
+		}
+
+		@Override
+		public String handleExplicitName(NamingStrategyDelegator strategyDelegator, String name) {
+			return getNamingStrategyDelegate( strategyDelegator ).toPhysicalTableName( name );
 		}
 	}
 

@@ -1392,6 +1392,9 @@ public final class AnnotationBinder {
 			if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
 				bindFilters( classToProcess, entityBinder );
 			}
+			else {
+				break;
+			}
 			classToProcess = classToProcess.getSuperclass();
 		}
 

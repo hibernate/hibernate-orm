@@ -80,6 +80,8 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -247,7 +249,7 @@ public class Configuration implements Serializable {
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 
 	protected transient XMLHelper xmlHelper;
-	protected NamingStrategy namingStrategy;
+	private NamingStrategyDelegator namingStrategyDelegator;
 	private SessionFactoryObserver sessionFactoryObserver;
 
 	protected final SettingsFactory settingsFactory;
@@ -349,7 +351,7 @@ public class Configuration implements Serializable {
 		mappedByResolver = new HashMap<String, String>();
 		propertyRefResolver = new HashMap<String, String>();
 		caches = new ArrayList<CacheHolder>();
-		namingStrategy = EJB3NamingStrategy.INSTANCE;
+		namingStrategyDelegator = LegacyNamingStrategyDelegator.DEFAULT_INSTANCE;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
 		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String, PropertyData>>();
@@ -2454,18 +2456,57 @@ public class Configuration implements Serializable {
 	}
 
 	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
+		if ( LegacyNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) ) {
+			return ( (LegacyNamingStrategyDelegator) namingStrategyDelegator ).getNamingStrategy();
+		}
+		return null;
+	}
+
+	public NamingStrategyDelegator getNamingStrategyDelegator() {
+		return namingStrategyDelegator;
 	}
 
 	/**
-	 * Set a custom naming strategy
+	 * Set the current naming strategy. An instance of {@link org.hibernate.cfg.naming.LegacyNamingStrategyDelegator}
+	 * will be constructed with the specified naming strategy.
 	 *
-	 * @param namingStrategy the NamingStrategy to set
+	 * @param namingStrategy the {@link NamingStrategy} to set; must be non-null.
 	 *
-	 * @return this for method chaining
+	 * @return this for method chaining.
+	 *
+	 * @see org.hibernate.cfg.naming.LegacyNamingStrategyDelegator#LegacyNamingStrategyDelegator(NamingStrategy)
 	 */
 	public Configuration setNamingStrategy(NamingStrategy namingStrategy) {
-		this.namingStrategy = namingStrategy;
+		if ( namingStrategy == null ) {
+			throw new MappingException( "namingStrategy must be non-null" );
+		}
+		setNamingStrategyDelegator( new LegacyNamingStrategyDelegator( namingStrategy ) );
+		return this;
+	}
+
+	/**
+	 * Set a current naming strategy delegator.
+	 *
+	 * @param namingStrategyDelegator the {@link org.hibernate.cfg.naming.NamingStrategyDelegator} to set;
+	 *                                must be non-null; if {@code namingStrategyDelegator} is an instance
+	 *                                of {@link LegacyNamingStrategyDelegator}, then
+	 *                                {@link LegacyNamingStrategyDelegator#getNamingStrategy()} must be non-null.
+	 * @return this for method chaining.
+	 *
+	 * @throws org.hibernate.MappingException if {@code namingStrategyDelegator} is null.
+	 * @throws org.hibernate.MappingException if {@code namingStrategyDelegator} is an instance
+	 *         of {@link LegacyNamingStrategyDelegator} and   {@link LegacyNamingStrategyDelegator#getNamingStrategy()}
+	 *         is null.
+	 */
+	public Configuration setNamingStrategyDelegator(NamingStrategyDelegator namingStrategyDelegator) {
+		if ( namingStrategyDelegator == null ) {
+			throw new MappingException( "namingStrategyDelegator and namingStrategyDelegator.getNamingStrategy() must be non-null" );
+		}
+		if ( LegacyNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) &&
+				LegacyNamingStrategyDelegator.class.cast( namingStrategyDelegator ).getNamingStrategy() == null ) {
+			throw new MappingException( "namingStrategyDelegator.getNamingStrategy() must be non-null." );
+		}
+		this.namingStrategyDelegator = namingStrategyDelegator;
 		return this;
 	}
 
@@ -2799,11 +2840,19 @@ public class Configuration implements Serializable {
 
 
 		public NamingStrategy getNamingStrategy() {
-			return namingStrategy;
+			return Configuration.this.getNamingStrategy();
 		}
 
 		public void setNamingStrategy(NamingStrategy namingStrategy) {
-			Configuration.this.namingStrategy = namingStrategy;
+			Configuration.this.setNamingStrategy( namingStrategy );
+		}
+
+		public NamingStrategyDelegator getNamingStrategyDelegator() {
+			return Configuration.this.getNamingStrategyDelegator();
+		}
+
+		public void setNamingStrategyDelegator(NamingStrategyDelegator namingStrategyDelegator) {
+			Configuration.this.setNamingStrategyDelegator( namingStrategyDelegator );
 		}
 
 		public TypeResolver getTypeResolver() {
@@ -3628,7 +3677,15 @@ public class Configuration implements Serializable {
 		}
 
 		public NamingStrategy getNamingStrategy() {
-			return namingStrategy;
+			if ( LegacyNamingStrategyDelegator.class.isInstance( namingStrategyDelegator ) ) {
+				( (LegacyNamingStrategyDelegator) namingStrategyDelegator ).getNamingStrategy();
+			}
+			return null;
+		}
+
+		@Override
+		protected NamingStrategyDelegator getNamingStrategyDelegator() {
+			return namingStrategyDelegator;
 		}
 	}
 

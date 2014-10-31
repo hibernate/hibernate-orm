@@ -53,4 +53,6 @@ public interface TestService {
 	public TestStrategyRegistrationProvider getTestStrategyRegistrationProvider();
 	
 	public TestTypeContributor getTestTypeContributor();
+
+	public boolean isCustomServiceContributorRegistered();
 }

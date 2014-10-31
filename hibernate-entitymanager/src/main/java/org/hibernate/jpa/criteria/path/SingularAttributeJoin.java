@@ -56,7 +56,9 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 		this.model = (Bindable<X>) (
 				Attribute.PersistentAttributeType.EMBEDDED == joinAttribute.getPersistentAttributeType()
 						? joinAttribute
-						: criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
+						: javaType != null
+						? criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
+						: joinAttribute.getType()
 		);
 	}
 

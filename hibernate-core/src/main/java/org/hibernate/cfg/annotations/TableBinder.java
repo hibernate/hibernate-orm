@@ -40,6 +40,8 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.UniqueConstraintHolder;
+import org.hibernate.cfg.naming.NamingStrategyDelegate;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -79,7 +81,9 @@ public class TableBinder {
 	private String associatedEntityTable;
 	private String propertyName;
 	private String ownerEntity;
+	private String ownerJpaEntity;
 	private String associatedEntity;
+	private String associatedJpaEntity;
 	private boolean isJPA2ElementCollection;
 	private List<JPAIndexHolder> jpaIndexHolders;
 
@@ -152,33 +156,56 @@ public class TableBinder {
 		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
 
 		//@ElementCollection use ownerEntity_property instead of the cleaner ownerTableName_property
-		// ownerEntity can be null when the table name is explicitly set
+		// ownerEntity can be null when the table name is explicitly set; <== gb: doesn't seem to be true...
 		final String ownerObjectName = isJPA2ElementCollection && ownerEntity != null ?
 				StringHelper.unqualify( ownerEntity ) : unquotedOwnerTable;
 		final ObjectNameSource nameSource = buildNameContext(
 				ownerObjectName,
-				unquotedAssocTable );
+				unquotedAssocTable
+		);
 
 		final boolean ownerEntityTableQuoted = StringHelper.isQuoted( ownerEntityTable );
 		final boolean associatedEntityTableQuoted = StringHelper.isQuoted( associatedEntityTable );
 		final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper = new ObjectNameNormalizer.NamingStrategyHelper() {
 			public String determineImplicitName(NamingStrategy strategy) {
+				throw new AssertionFailure( "method call should have been replaced by #determineImplicitName(NamingStrategyDelegate strategyDelegate)" );
+			}
 
-				final String strategyResult = strategy.collectionTableName(
-						ownerEntity,
-						ownerObjectName,
-						associatedEntity,
-						unquotedAssocTable,
-						propertyName
+			public String handleExplicitName(NamingStrategy strategy, String name) {
+				return strategy.tableName( name );
+			}
 
-				);
+			@Override
+			public String determineImplicitName(NamingStrategyDelegator strategyDelegator) {
+				final NamingStrategyDelegate strategyDelegate = getNamingStrategyDelegate( strategyDelegator );
+				final String strategyResult;
+				if ( isJPA2ElementCollection ) {
+					strategyResult = strategyDelegate.determineImplicitElementCollectionTableName(
+							ownerEntity,
+							ownerJpaEntity,
+							unquotedOwnerTable,
+							propertyName
+					);
+				}
+				else {
+					strategyResult =  strategyDelegate.determineImplicitEntityAssociationJoinTableName(
+							ownerEntity,
+							ownerJpaEntity,
+							unquotedOwnerTable,
+							associatedEntity,
+							associatedJpaEntity,
+							unquotedAssocTable,
+							propertyName
+					);
+				}
 				return ownerEntityTableQuoted || associatedEntityTableQuoted
 						? StringHelper.quote( strategyResult )
 						: strategyResult;
 			}
 
-			public String handleExplicitName(NamingStrategy strategy, String name) {
-				return strategy.tableName( name );
+			@Override
+			public String handleExplicitName(NamingStrategyDelegator strategyDelegator, String name) {
+				return getNamingStrategyDelegate( strategyDelegator ).toPhysicalTableName( name );
 			}
 		};
 
@@ -197,19 +224,44 @@ public class TableBinder {
 		);
 	}
 
-
-	private ObjectNameSource buildNameContext(String unquotedOwnerTable, String unquotedAssocTable) {
-		String logicalName = mappings.getNamingStrategy().logicalCollectionTableName(
-				name,
-				unquotedOwnerTable,
-				unquotedAssocTable,
-				propertyName
+	private ObjectNameSource buildNameContext(
+			String unquotedOwnerTable,
+			String unquotedAssocTable) {
+		final NamingStrategyDelegate strategyDelegate = getNamingStrategyDelegate(
+				mappings.getNamingStrategyDelegator()
 		);
+		String logicalName;
+		if ( isJPA2ElementCollection ) {
+			logicalName = strategyDelegate.determineLogicalElementCollectionTableName(
+					name,
+					ownerEntity,
+					ownerJpaEntity,
+					unquotedOwnerTable,
+					propertyName
+			);
+		}
+		else {
+			logicalName =  strategyDelegate.determineLogicalEntityAssociationJoinTableName(
+					name,
+					ownerEntity,
+					ownerJpaEntity,
+					unquotedOwnerTable,
+					associatedEntity,
+					associatedJpaEntity,
+					unquotedAssocTable,
+					propertyName
+			);
+		}
 		if ( StringHelper.isQuoted( ownerEntityTable ) || StringHelper.isQuoted( associatedEntityTable ) ) {
 			logicalName = StringHelper.quote( logicalName );
 		}
 
 		return new AssociationTableNameSource( name, logicalName );
+	}
+
+	private NamingStrategyDelegate getNamingStrategyDelegate(
+			NamingStrategyDelegator strategyDelegator) {
+		return strategyDelegator.getNamingStrategyDelegate( false );
 	}
 
 	public static Table buildAndFillTable(
@@ -598,12 +650,19 @@ public class TableBinder {
 	}
 
 	public void setDefaultName(
-			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
+			String ownerEntity,
+			String ownerJpaEntity,
+			String ownerEntityTable,
+			String associatedEntity,
+			String associatedJpaEntity,
+			String associatedEntityTable,
 			String propertyName
 	) {
 		this.ownerEntity = ownerEntity;
+		this.ownerJpaEntity = ownerJpaEntity;
 		this.ownerEntityTable = ownerEntityTable;
 		this.associatedEntity = associatedEntity;
+		this.associatedJpaEntity = associatedJpaEntity;
 		this.associatedEntityTable = associatedEntityTable;
 		this.propertyName = propertyName;
 		this.name = null;

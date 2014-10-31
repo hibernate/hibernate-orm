@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -31,14 +31,18 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
@@ -47,6 +51,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
 
@@ -59,9 +64,11 @@ import org.hibernate.type.TypeHelper;
 public class DefaultMergeEventListener extends AbstractSaveEventListener implements MergeEventListener {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
+	private String entityCopyObserverStrategy;
+
 	@Override
 	protected Map getMergeMap(Object anything) {
-		return ( (EventCache) anything ).invertMap();
+		return ( (MergeContext) anything ).invertMap();
 	}
 
 	/**
@@ -72,9 +79,37 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		EventCache copyCache = new EventCache( event.getSession() );
-		onMerge( event, copyCache );
-		copyCache.clear();
+		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( event.getSession().getFactory() );
+		final MergeContext mergeContext = new MergeContext( event.getSession(), entityCopyObserver );
+		try {
+			onMerge( event, mergeContext );
+			entityCopyObserver.topLevelMergeComplete( event.getSession() );
+		}
+		finally {
+			entityCopyObserver.clear();
+			mergeContext.clear();
+		}
+	}
+
+	private EntityCopyObserver createEntityCopyObserver(SessionFactoryImplementor sessionFactory) {
+		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
+		if ( entityCopyObserverStrategy == null ) {
+			final ConfigurationService configurationService
+					= serviceRegistry.getService( ConfigurationService.class );
+			entityCopyObserverStrategy = configurationService.getSetting(
+					"hibernate.event.merge.entity_copy_observer",
+					new ConfigurationService.Converter<String>() {
+						@Override
+						public String convert(Object value) {
+							return value.toString();
+						}
+					},
+					EntityCopyNotAllowedObserver.SHORT_NAME
+			);
+			LOG.debugf( "EntityCopyObserver strategy: %s", entityCopyObserverStrategy );
+		}
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		return strategySelector.resolveStrategy( EntityCopyObserver.class, entityCopyObserverStrategy );
 	}
 
 	/**
@@ -86,7 +121,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 */
 	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
 
-		final EventCache copyCache = (EventCache) copiedAlready;
+		final MergeContext copyCache = (MergeContext) copiedAlready;
 		final EventSource source = event.getSession();
 		final Object original = event.getOriginal();
 
@@ -178,7 +213,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		( (EventCache) copyCache ).put( entity, entity, true );  //before cascade!
+		( (MergeContext) copyCache ).put( entity, entity, true );  //before cascade!
 
 		cascadeOnMerge( source, persister, entity, copyCache );
 		copyValues( persister, entity, entity, source, copyCache );
@@ -203,7 +238,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			persister.setIdentifier( copyCache.get( entity ), id, source );
 		}
 		else {
-			( (EventCache) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
+			( (MergeContext) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
 		}
 		final Object copy = copyCache.get( entity );
 
@@ -282,7 +317,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			entityIsTransient( event, copyCache );
 		}
 		else {
-			( (EventCache) copyCache ).put( entity, result, true ); //before cascade!
+			( (MergeContext) copyCache ).put( entity, result, true ); //before cascade!
 
 			final Object target = source.getPersistenceContext().unproxy( result );
 			if ( target == entity ) {

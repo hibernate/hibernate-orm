@@ -51,6 +51,7 @@ import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.jpa.internal.util.PessimisticNumberParser;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 
@@ -314,28 +315,14 @@ public abstract class BaseQueryImpl implements Query {
 				applied = applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
 			}
 			else if ( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = (CacheRetrieveMode) value;
-
-				CacheStoreMode storeMode = hints != null
-						? (CacheStoreMode) hints.get( AvailableSettings.SHARED_CACHE_STORE_MODE )
-						: null;
-				if ( storeMode == null ) {
-					storeMode = (CacheStoreMode) entityManager.getProperties().get( AvailableSettings.SHARED_CACHE_STORE_MODE );
-				}
+				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
+				final CacheStoreMode storeMode = getHint( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.class );
 				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
 			}
 			else if ( AvailableSettings.SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = (CacheStoreMode) value;
-
-				CacheRetrieveMode retrieveMode = hints != null
-						? (CacheRetrieveMode) hints.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE )
-						: null;
-				if ( retrieveMode == null ) {
-					retrieveMode = (CacheRetrieveMode) entityManager.getProperties().get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
-				}
-				applied = applyCacheModeHint(
-						CacheModeHelper.interpretCacheMode( storeMode, retrieveMode )
-				);
+				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString () ) : null;
+				final CacheRetrieveMode retrieveMode = getHint( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.class );
+				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
 			}
 			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
 				if ( !isNativeSqlQuery() ) {
@@ -408,6 +395,16 @@ public abstract class BaseQueryImpl implements Query {
 		}
 
 		return this;
+	}
+
+	private <T extends Enum<T>> T getHint(String key, Class<T> hintClass) {
+		Object hint = hints != null ? hints.get( key ) : null;
+
+		if ( hint == null ) {
+			hint = entityManager.getProperties().get( key );
+		}
+
+		return hint != null ? Enum.valueOf( hintClass, hint.toString() ) : null;
 	}
 
 	/**
@@ -485,33 +482,25 @@ public abstract class BaseQueryImpl implements Query {
 
 	@SuppressWarnings("unchecked")
 	protected <X> ParameterRegistration<X> findParameterRegistration(String parameterName) {
-		final Integer jpaPositionalParameter = toNumberOrNull( parameterName );
-
 		if ( parameterRegistrations != null ) {
 			for ( ParameterRegistration<?> param : parameterRegistrations ) {
 				if ( parameterName.equals( param.getName() ) ) {
 					return (ParameterRegistration<X>) param;
 				}
+			}
 
-				// legacy allowance of the application to access the parameter using the position as a String
-				if ( param.isJpaPositionalParameter() && jpaPositionalParameter != null ) {
-					if ( jpaPositionalParameter.equals( param.getPosition() ) ) {
+			// legacy allowance of the application to access the parameter using the position as a String
+			final Integer jpaPositionalParameter = PessimisticNumberParser.toNumberOrNull( parameterName );
+			if ( jpaPositionalParameter != null ) {
+				for ( ParameterRegistration<?> param : parameterRegistrations ) {
+					if ( param.isJpaPositionalParameter() && jpaPositionalParameter.equals( param.getPosition() ) ) {
 						LOG.deprecatedJpaPositionalParameterAccess( jpaPositionalParameter );
+						return (ParameterRegistration<X>) param;
 					}
-					return (ParameterRegistration<X>) param;
 				}
 			}
 		}
 		throw new IllegalArgumentException( "Parameter with that name [" + parameterName + "] did not exist" );
-	}
-
-	private Integer toNumberOrNull(String parameterName) {
-		try {
-			return Integer.valueOf( parameterName );
-		}
-		catch (NumberFormatException e) {
-			return null;
-		}
 	}
 
 	@SuppressWarnings("unchecked")

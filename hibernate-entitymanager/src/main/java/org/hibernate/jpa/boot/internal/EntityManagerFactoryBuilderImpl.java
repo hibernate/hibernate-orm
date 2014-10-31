@@ -64,6 +64,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
@@ -167,6 +168,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final List<JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping> cfgXmlNamedMappings = new ArrayList<JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping>();
 	private Interceptor sessionFactoryInterceptor;
 	private NamingStrategy namingStrategy;
+	private NamingStrategyDelegator namingStrategyDelegator;
 	private SessionFactoryObserver suppliedSessionFactoryObserver;
 
 	private MetadataSources metadataSources;
@@ -912,6 +914,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				else if ( AvailableSettings.NAMING_STRATEGY.equals( keyString ) ) {
 					namingStrategy = strategySelector.resolveStrategy( NamingStrategy.class, entry.getValue() );
 				}
+				else if ( AvailableSettings.NAMING_STRATEGY_DELEGATOR.equals( keyString ) ) {
+					namingStrategyDelegator = strategySelector.resolveStrategy( NamingStrategyDelegator.class, entry.getValue() );
+				}
 				else if ( AvailableSettings.SESSION_FACTORY_OBSERVER.equals( keyString ) ) {
 					suppliedSessionFactoryObserver = strategySelector.resolveStrategy( SessionFactoryObserver.class, entry.getValue() );
 				}
@@ -1028,8 +1033,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		cfg.setEntityNotFoundDelegate( jpaEntityNotFoundDelegate );
 
+		if ( namingStrategy != null && namingStrategyDelegator != null ) {
+			throw persistenceException(
+					AvailableSettings.NAMING_STRATEGY + " and " + AvailableSettings.NAMING_STRATEGY_DELEGATOR +
+							" properties cannot be used together. To be valid, only one of these properties can be set."
+			);
+		}
 		if ( namingStrategy != null ) {
 			cfg.setNamingStrategy( namingStrategy );
+		}
+		else if ( namingStrategyDelegator != null ) {
+			cfg.setNamingStrategyDelegator( namingStrategyDelegator );
 		}
 
 		if ( sessionFactoryInterceptor != null ) {

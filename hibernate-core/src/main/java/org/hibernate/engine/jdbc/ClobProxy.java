@@ -33,7 +33,6 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -211,10 +210,6 @@ public class ClobProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	protected static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = ClobImplementer.class.getClassLoader();
-		}
-		return cl;
+		return ClobImplementer.class.getClassLoader();
 	}
 }

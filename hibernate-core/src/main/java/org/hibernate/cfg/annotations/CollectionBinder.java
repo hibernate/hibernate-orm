@@ -1205,7 +1205,9 @@ public abstract class CollectionBinder {
 				);
 				Table ownerTable = collValue.getOwner().getTable();
 				column.setMappedBy(
-						collValue.getOwner().getEntityName(), mappings.getLogicalTableName( ownerTable ),
+						collValue.getOwner().getEntityName(),
+						collValue.getOwner().getJpaEntityName(),
+						mappings.getLogicalTableName( ownerTable ),
 						mappedByProperty
 				);
 //				String header = ( mappedByProperty == null ) ? mappings.getLogicalTableName( ownerTable ) : mappedByProperty;
@@ -1215,8 +1217,10 @@ public abstract class CollectionBinder {
 				//default value
 				associationTableBinder.setDefaultName(
 						collValue.getOwner().getEntityName(),
+						collValue.getOwner().getJpaEntityName(),
 						mappings.getLogicalTableName( collValue.getOwner().getTable() ),
 						collectionEntity != null ? collectionEntity.getEntityName() : null,
+						collectionEntity != null ? collectionEntity.getJpaEntityName() : null,
 						collectionEntity != null ? mappings.getLogicalTableName( collectionEntity.getTable() ) : null,
 						joinColumns[0].getPropertyName()
 				);

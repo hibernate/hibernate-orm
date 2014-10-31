@@ -30,11 +30,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
+import javax.persistence.*;
 
 import org.junit.Test;
 
@@ -186,6 +182,34 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.remove( em.getReference( Item.class, item2.getName() ) );
 		em.getTransaction().commit();
 
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH_8949" )
+	public void testCacheStoreAndRetrieveModeParameter() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Query query = em.createQuery( "select item from Item item" );
+
+		query.getHints().clear();
+
+		query.setHint( "javax.persistence.cache.retrieveMode", CacheRetrieveMode.USE );
+		query.setHint( "javax.persistence.cache.storeMode", CacheStoreMode.REFRESH );
+
+		assertEquals( CacheRetrieveMode.USE, query.getHints().get( "javax.persistence.cache.retrieveMode" ) );
+		assertEquals( CacheStoreMode.REFRESH, query.getHints().get( "javax.persistence.cache.storeMode" ) );
+
+		query.getHints().clear();
+
+		query.setHint( "javax.persistence.cache.retrieveMode", "USE" );
+		query.setHint( "javax.persistence.cache.storeMode", "REFRESH" );
+
+		assertEquals( "USE", query.getHints().get( "javax.persistence.cache.retrieveMode" ) );
+		assertEquals( "REFRESH", query.getHints().get( "javax.persistence.cache.storeMode" ) );
+
+		em.getTransaction().commit();
 		em.close();
 	}
 

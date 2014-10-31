@@ -23,12 +23,8 @@
  */
 package org.hibernate.jpa.test.transaction;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.transaction.Status;
@@ -40,14 +36,17 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransaction;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Largely a copy of {@link org.hibernate.test.jpa.txn.TransactionJoiningTest}
@@ -189,7 +188,8 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 			em.createQuery( "from Book" ).getResultList();
 		}
 		catch ( PersistenceException e ) {
-			caught = e.getCause().getClass().equals( GenericJDBCException.class );
+			// HHH-9312
+			caught = true;
 		}
 		assertTrue( caught );
 

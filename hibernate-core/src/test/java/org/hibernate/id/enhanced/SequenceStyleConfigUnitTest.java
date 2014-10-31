@@ -31,6 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -77,6 +78,11 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 					}
 
 					protected NamingStrategy getNamingStrategy() {
+						return null;
+					}
+
+					@Override
+					protected NamingStrategyDelegator getNamingStrategyDelegator() {
 						return null;
 					}
 				}

@@ -44,8 +44,7 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 				"ops/Employer.hbm.xml",
 				"ops/OptLockEntity.hbm.xml",
 				"ops/OneToOne.hbm.xml",
-				"ops/Competition.hbm.xml",
-				"ops/Hoarder.hbm.xml"
+				"ops/Competition.hbm.xml"
 		};
 	}
 

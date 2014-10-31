@@ -63,6 +63,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	//table name on the mapped by side if any
 	private String mappedByTableName;
 	private String mappedByEntityName;
+	private String mappedByJpaEntityName;
 	private boolean JPA2ElementCollection;
 
 	public void setJPA2ElementCollection(boolean JPA2ElementCollection) {
@@ -309,7 +310,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			setReferencedColumn( annJoin.referencedColumnName() );
 
 			final String tableName = !BinderHelper.isEmptyAnnotationValue( annJoin.table() )
-					? nameNormalizer.normalizeIdentifierQuoting( getMappings().getNamingStrategy().tableName( annJoin.table() ) ) : "";
+					? nameNormalizer.normalizeIdentifierQuoting( getNamingStrategyDelegate().toPhysicalTableName(
+							annJoin.table()
+					) )
+					: "";
 			setExplicitTableName( tableName );
 		}
 	}
@@ -450,14 +454,24 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 		if ( mappedBySide ) {
 			String unquotedMappedbyTable = StringHelper.unquote( mappedByTableName );
-			final String ownerObjectName = JPA2ElementCollection && mappedByEntityName != null ?
-				StringHelper.unqualify( mappedByEntityName ) : unquotedMappedbyTable;
-			columnName = getMappings().getNamingStrategy().foreignKeyColumnName(
-					mappedByPropertyName,
-					mappedByEntityName,
-					ownerObjectName,
-					unquotedLogicalReferenceColumn
-			);
+			if ( JPA2ElementCollection ) {
+				columnName = getNamingStrategyDelegate().determineImplicitElementCollectionJoinColumnName(
+						mappedByEntityName,
+						mappedByJpaEntityName,
+						unquotedMappedbyTable,
+						unquotedLogicalReferenceColumn,
+						mappedByPropertyName
+				);
+			}
+			else {
+				columnName = getNamingStrategyDelegate().determineImplicitEntityAssociationJoinColumnName(
+						mappedByEntityName,
+						mappedByJpaEntityName,
+						unquotedMappedbyTable,
+						unquotedLogicalReferenceColumn,
+						mappedByPropertyName
+				);
+			}
 			//one element was quoted so we quote
 			if ( isRefColumnQuoted || StringHelper.isQuoted( mappedByTableName ) ) {
 				columnName = StringHelper.quote( columnName );
@@ -466,11 +480,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		else if ( ownerSide ) {
 			String logicalTableName = getMappings().getLogicalTableName( referencedEntity.getTable() );
 			String unquotedLogicalTableName = StringHelper.unquote( logicalTableName );
-			columnName = getMappings().getNamingStrategy().foreignKeyColumnName(
-					getPropertyName(),
+			columnName = getNamingStrategyDelegate().determineImplicitEntityAssociationJoinColumnName(
 					referencedEntity.getEntityName(),
+					referencedEntity.getJpaEntityName(),
 					unquotedLogicalTableName,
-					unquotedLogicalReferenceColumn
+					unquotedLogicalReferenceColumn,
+					getPropertyName()
 			);
 			//one element was quoted so we quote
 			if ( isRefColumnQuoted || StringHelper.isQuoted( logicalTableName ) ) {
@@ -481,7 +496,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			//is an intra-entity hierarchy table join so copy the name by default
 			String logicalTableName = getMappings().getLogicalTableName( referencedEntity.getTable() );
 			String unquotedLogicalTableName = StringHelper.unquote( logicalTableName );
-			columnName = getMappings().getNamingStrategy().joinKeyColumnName(
+			columnName = getNamingStrategyDelegate().toPhysicalJoinKeyColumnName(
 					unquotedLogicalReferenceColumn,
 					unquotedLogicalTableName
 			);
@@ -523,8 +538,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			final String referencedColumn = nameNormalizer.normalizeIdentifierQuoting( getReferencedColumn() );
 			final String unquotedLogColName = StringHelper.unquote( logicalColumnName );
 			final String unquotedRefColumn = StringHelper.unquote( referencedColumn );
-			String logicalCollectionColumnName = getMappings().getNamingStrategy()
-					.logicalCollectionColumnName( unquotedLogColName, getPropertyName(), unquotedRefColumn );
+			String logicalCollectionColumnName = getNamingStrategyDelegate().determineLogicalCollectionColumnName(
+					unquotedLogColName,
+					getPropertyName(),
+					unquotedRefColumn
+			);
 			
 			if ( isLogicalColumnQuoted ) {
 				logicalCollectionColumnName = StringHelper.quote( logicalCollectionColumnName );
@@ -639,7 +657,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		if ( StringHelper.isNotEmpty( columnName ) ) {
 			getMappingColumn().setName(
 					applyNamingStrategy ?
-							getMappings().getNamingStrategy().columnName( columnName ) :
+							getNamingStrategyDelegate().toPhysicalColumnName( columnName ) :
 							columnName
 			);
 		}
@@ -694,8 +712,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		return joinColumns;
 	}
 
-	public void setMappedBy(String entityName, String logicalTableName, String mappedByProperty) {
+	public void setMappedBy(String entityName, String jpaEntityName, String logicalTableName, String mappedByProperty) {
 		this.mappedByEntityName = entityName;
+		this.mappedByJpaEntityName = jpaEntityName;
 		this.mappedByTableName = logicalTableName;
 		this.mappedByPropertyName = mappedByProperty;
 	}

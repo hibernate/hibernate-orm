@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -2546,7 +2547,7 @@ public abstract class Loader {
 
 		final boolean stats = getFactory().getStatistics().isStatisticsEnabled();
 		long startTime = 0;
-		if ( stats ) startTime = System.currentTimeMillis();
+		if ( stats ) startTime = System.nanoTime();
 
 		List result;
 		try {
@@ -2561,10 +2562,12 @@ public abstract class Loader {
 		}
 
 		if ( stats ) {
+			final long endTime = System.nanoTime();
+			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			getFactory().getStatisticsImplementor().queryExecuted(
 					getQueryIdentifier(),
 					result.size(),
-					System.currentTimeMillis() - startTime
+					milliseconds
 				);
 		}
 
@@ -2616,7 +2619,7 @@ public abstract class Loader {
 		final boolean stats = getQueryIdentifier() != null &&
 				getFactory().getStatistics().isStatisticsEnabled();
 		long startTime = 0;
-		if ( stats ) startTime = System.currentTimeMillis();
+		if ( stats ) startTime = System.nanoTime();
 
 		try {
 			// Don't use Collections#emptyList() here -- follow on locking potentially adds AfterLoadActions,
@@ -2626,10 +2629,12 @@ public abstract class Loader {
 			final PreparedStatement st = (PreparedStatement) wrapper.getStatement();
 
 			if ( stats ) {
+				final long endTime = System.nanoTime();
+				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 				getFactory().getStatisticsImplementor().queryExecuted(
 						getQueryIdentifier(),
 						0,
-						System.currentTimeMillis() - startTime
+						milliseconds
 					);
 			}
 

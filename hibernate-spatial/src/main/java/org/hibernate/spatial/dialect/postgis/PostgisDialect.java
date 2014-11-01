@@ -206,7 +206,7 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 		//register Spatial Aggregate function
 		registerFunction(
 				"extent", new StandardSQLFunction(
-				"extent",
+				"st_extent",
 				GeometryType.INSTANCE
 		)
 		);

@@ -23,7 +23,7 @@ apply plugin: 'java'
 apply plugin: 'hibernate-matrix-testing'
 apply plugin: 'maven'
 
-version = '4.3'
+version = '4.3.1-SNAPSHOT'
 
 dependencies {
 
@@ -34,7 +34,9 @@ dependencies {
     compile( [group: 'com.vividsolutions', name: 'jts', version: '1.13'] ) {
         transitive = false
     }
-    compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.2'] )
+  
+    // Postgis temporarily reduced to lower version -- really should publish new versions to HS .
+    compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.3.3'] )
     compile( [group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'] )
 
 

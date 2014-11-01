@@ -23,6 +23,9 @@ package org.hibernate.spatial;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -191,5 +194,34 @@ public class TestCircle {
 		}
 
 	}
+
+    @Test
+    public void testBugIssue112(){
+        List<Coordinate> coordinates = new ArrayList<Coordinate>();
+        coordinates.add(new Coordinate(194691.519, 325504.109));
+        coordinates.add(new Coordinate(194691.514, 325504.089));
+        coordinates.add(new Coordinate(194691.523, 325504.108));
+        Coordinate[] orderedCoordinates = coordinates.toArray(new Coordinate[coordinates.size()]);
+        double tolerance = 0.001;
+        Coordinate[] result = Circle.linearizeArc(
+                orderedCoordinates[0].x, orderedCoordinates[0].y,
+                orderedCoordinates[1].x, orderedCoordinates[1].y,
+                orderedCoordinates[2].x, orderedCoordinates[2].y, tolerance);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testCircleWith2Equalpoints(){
+        List<Coordinate> coordinates = new ArrayList<Coordinate>();
+        coordinates.add(new Coordinate(194691.519, 325504.109));
+        coordinates.add(new Coordinate(194691.514, 325504.089));
+        coordinates.add(new Coordinate(194691.519, 325504.109));;
+        Coordinate[] orderedCoordinates = coordinates.toArray(new Coordinate[coordinates.size()]);
+        double tolerance = 0.001;
+        Coordinate[] result = Circle.linearizeArc(
+                orderedCoordinates[0].x, orderedCoordinates[0].y,
+                orderedCoordinates[1].x, orderedCoordinates[1].y,
+                orderedCoordinates[2].x, orderedCoordinates[2].y, tolerance);
+    }
+
 
 }

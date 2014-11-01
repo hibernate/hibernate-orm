@@ -41,7 +41,7 @@ class SDOPoint {
 			this.x = ((Number) data[0]).doubleValue();
 			this.y = ((Number) data[1]).doubleValue();
 			if (data[2] != null) {
-				this.z = ((Number) data[1]).doubleValue();
+				this.z = ((Number) data[2]).doubleValue();
 			}
 		} catch (SQLException e) {
 			throw new RuntimeException(e);

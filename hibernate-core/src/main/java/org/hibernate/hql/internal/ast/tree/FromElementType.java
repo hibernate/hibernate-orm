@@ -419,7 +419,8 @@ class FromElementType {
 			// already know this is not an overall SELECT):
 			// 1) if this FROM_ELEMENT represents a correlation to the
 			// outer-most query
-			// A) if the outer query represents a multi-table
+			// A) if the outer query represents a multi-table (or subselect
+			// query in insert query)
 			// persister, we need to use the given alias
 			// in anticipation of one of the multi-table
 			// executors being used (as this subquery will
@@ -429,7 +430,8 @@ class FromElementType {
 			// table name as the column qualification
 			// 2) otherwise (not correlated), use the given alias
 			if ( isCorrelation() ) {
-				if ( isMultiTable() ) {
+				if ( isMultiTable()
+						|| isInsertQuery() ) {
 					return propertyMapping.toColumns( tableAlias, path );
 				}
 				return propertyMapping.toColumns( extractTableName(), path );
@@ -468,6 +470,10 @@ class FromElementType {
 	private String extractTableName() {
 		// should be safe to only ever expect EntityPersister references here
 		return fromElement.getQueryable().getTableName();
+	}
+
+	private boolean isInsertQuery() {
+		return fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.INSERT;
 	}
 
 	private boolean isManipulationQuery() {

@@ -29,11 +29,18 @@ import java.sql.Struct;
  *         creation-date: Jul 1, 2010
  */
 class SDOPoint {
+
+	private static final String SQL_TYPE_NAME = "MDSYS.SDO_POINT_TYPE";
+
 	public double x = 0.0;
 
 	public double y = 0.0;
 
 	public double z = Double.NaN;
+
+    public static String getTypeName() {
+        return SQL_TYPE_NAME;
+    }
 
 	public SDOPoint(Struct struct) {
 		try {

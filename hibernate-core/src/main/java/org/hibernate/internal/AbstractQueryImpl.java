@@ -483,8 +483,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setParameter(String name, Object val) throws HibernateException {
 		if (val == null) {
-			Type type = StandardBasicTypes.NULL;
-			setParameter( name, val, type );
+			setParameter( name, val, StandardBasicTypes.NULL );
 		}
 		else {
 			setParameter( name, val, determineType( name, val ) );

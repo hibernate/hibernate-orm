@@ -34,7 +34,7 @@ public class NullTypeDescriptor extends AbstractTypeDescriptor<Object> {
 	public static final NullTypeDescriptor INSTANCE = new NullTypeDescriptor();
 
 	public NullTypeDescriptor() {
-		super( Object.class ); // null might work, but the risk is not worth it 
+		super( Object.class );
 	}
 
 	public String toString(Object value) {

@@ -81,7 +81,15 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 	public void testSum() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List l = em.createQuery("SELECT d.id, SUM((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = c.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
+		List l = em.createQuery(
+				"SELECT d.id, " +
+						"SUM((SELECT COUNT(localized) " +
+						"		FROM Person p " +
+						"			LEFT JOIN p.localized localized " +
+						"		WHERE p.id = c.id)) AS localizedCount " +
+						"FROM Document d " +
+						"	LEFT JOIN d.contacts c " +
+						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
 		assertEquals( 2, l.size() );
@@ -92,7 +100,15 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 	public void testMin() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List l = em.createQuery("SELECT d.id, MIN((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = c.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
+		List l = em.createQuery(
+				"SELECT d.id, " +
+						"MIN((SELECT COUNT(localized) " +
+						"		FROM Person p " +
+						"			LEFT JOIN p.localized localized " +
+						"		WHERE p.id = c.id)) AS localizedCount " +
+						"FROM Document d " +
+						"	LEFT JOIN d.contacts c " +
+						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
 		assertEquals( 2, l.size() );
@@ -103,7 +119,15 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 	public void testMax() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List l = em.createQuery("SELECT d.id, MAX((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = c.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
+		List l = em.createQuery(
+				"SELECT d.id, " +
+						"MAX((SELECT COUNT(localized) " +
+						"		FROM Person p " +
+						"			LEFT JOIN p.localized localized " +
+						"		WHERE p.id = c.id)) AS localizedCount " +
+						"FROM Document d " +
+						"	LEFT JOIN d.contacts c " +
+						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
 		assertEquals( 2, l.size() );
@@ -114,7 +138,15 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 	public void testAvg() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List l = em.createQuery("SELECT d.id, AVG((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = c.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
+		List l = em.createQuery(
+				"SELECT d.id, " +
+						"AVG((SELECT COUNT(localized) " +
+						"		FROM Person p " +
+						"			LEFT JOIN p.localized localized " +
+						"		WHERE p.id = c.id)) AS localizedCount " +
+						"FROM Document d " +
+						"	LEFT JOIN d.contacts c " +
+						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
 		assertEquals( 2, l.size() );
@@ -125,7 +157,15 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 	public void testCount() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List l = em.createQuery("SELECT d.id, COUNT((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = c.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
+		List l = em.createQuery(
+				"SELECT d.id, " +
+						"COUNT((SELECT COUNT(localized) " +
+						"		FROM Person p " +
+						"			LEFT JOIN p.localized localized " +
+						"		WHERE p.id = c.id)) AS localizedCount " +
+						"FROM Document d " +
+						"	LEFT JOIN d.contacts c " +
+						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
 		assertEquals( 2, l.size() );

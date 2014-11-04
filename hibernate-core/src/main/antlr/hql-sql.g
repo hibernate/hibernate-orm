@@ -431,6 +431,7 @@ constructor
 aggregateExpr
 	: expr //p:propertyRef { resolve(#p); }
 	| collectionFunction
+	| selectStatement
 	;
 
 // Establishes the list of aliases being used by this query.

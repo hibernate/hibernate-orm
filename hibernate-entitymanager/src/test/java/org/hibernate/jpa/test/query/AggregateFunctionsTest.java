@@ -92,7 +92,7 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 2, l.size() );
+		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -111,7 +111,7 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 2, l.size() );
+		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -130,7 +130,7 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 2, l.size() );
+		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -149,7 +149,7 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 2, l.size() );
+		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -168,7 +168,7 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"GROUP BY d.id").getResultList();
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 2, l.size() );
+		assertEquals( 1, l.size() );
 	}
 
 }

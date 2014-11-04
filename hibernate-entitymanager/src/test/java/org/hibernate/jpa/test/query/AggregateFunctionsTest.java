@@ -49,6 +49,8 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 		};
 	}
 
+	private Integer documentId;
+
 	@Before
 	public void init() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -61,6 +63,8 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 
 		p1.getLocalized().put(1, "p1.1");
 		p1.getLocalized().put(2, "p1.2");
+		p1.getLocalized().put(3, "p1.3");
+		p1.getLocalized().put(4, "p1.4");
 		p2.getLocalized().put(1, "p2.1");
 		p2.getLocalized().put(2, "p2.2");
 
@@ -70,6 +74,8 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 		em.persist(p1);
 		em.persist(p2);
 		em.persist(d);
+
+		documentId = d.getId();
 
 		em.flush();
 		tx.commit();
@@ -90,9 +96,14 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"FROM Document d " +
 						"	LEFT JOIN d.contacts c " +
 						"GROUP BY d.id").getResultList();
+		assertEquals( 1, l.size() );
+		Object[] result = (Object[])l.iterator().next();
+		Integer findDocumentId = (Integer)result[0];
+		assertEquals( documentId, findDocumentId );
+		Long sum = (Long)result[1];
+		assertEquals( 6L, sum.longValue() );
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -109,9 +120,14 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"FROM Document d " +
 						"	LEFT JOIN d.contacts c " +
 						"GROUP BY d.id").getResultList();
+		assertEquals( 1, l.size() );
+		Object[] result = (Object[])l.iterator().next();
+		Integer findDocumentId = (Integer)result[0];
+		assertEquals( documentId, findDocumentId );
+		Long sum = (Long)result[1];
+		assertEquals( 2L, sum.longValue() );
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -128,9 +144,14 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"FROM Document d " +
 						"	LEFT JOIN d.contacts c " +
 						"GROUP BY d.id").getResultList();
+		assertEquals( 1, l.size() );
+		Object[] result = (Object[])l.iterator().next();
+		Integer findDocumentId = (Integer)result[0];
+		assertEquals( documentId, findDocumentId );
+		Long sum = (Long)result[1];
+		assertEquals( 4L, sum.longValue() );
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 1, l.size() );
 	}
 
 	@Test
@@ -147,9 +168,14 @@ public class AggregateFunctionsTest extends BaseEntityManagerFunctionalTestCase 
 						"FROM Document d " +
 						"	LEFT JOIN d.contacts c " +
 						"GROUP BY d.id").getResultList();
+		assertEquals( 1, l.size() );
+		Object[] result = (Object[])l.iterator().next();
+		Integer findDocumentId = (Integer)result[0];
+		assertEquals( documentId, findDocumentId );
+		Double sum = (Double)result[1];
+		assertEquals( 3.0, sum, 0.0 );
 		em.getTransaction().commit();
 		em.close();
-		assertEquals( 1, l.size() );
 	}
 
 	@Test

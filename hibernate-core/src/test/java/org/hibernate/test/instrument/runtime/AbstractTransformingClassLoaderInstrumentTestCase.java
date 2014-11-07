@@ -32,7 +32,10 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.InstrumentedClassLoader;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLDialect;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;
 import org.junit.Rule;
@@ -87,6 +90,12 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 	@Test
 	public void testDirtyCheck() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestDirtyCheckExecutable" );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9476" )
+	public void testEagerFetchLazyToOne() {
+		executeExecutable( "org.hibernate.test.instrument.cases.TestFetchingLazyToOneExecutable" );
 	}
 
 	@Test

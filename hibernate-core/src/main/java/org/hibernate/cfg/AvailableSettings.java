@@ -28,18 +28,31 @@ package org.hibernate.cfg;
  */
 public interface AvailableSettings {
 	/**
-	 * Defines a name for the {@link org.hibernate.SessionFactory}.  Useful both to<ul>
-	 *     <li>allow serialization and deserialization to work across different jvms</li>
-	 *     <li>optionally allow the SessionFactory to be bound into JNDI</li>
-	 * </ul>
+	 * Setting used to name the Hibernate {@link org.hibernate.SessionFactory}.
+	 *
+	 * Naming the SessionFactory allows for it to be properly serialized across JVMs as
+	 * long as the same name is used on each JVM.
+	 *
+	 * If {@link #SESSION_FACTORY_NAME_IS_JNDI} is set to {@code true}, this is also the
+	 * name under which the SessionFactory is bound into JNDI on startup and from which
+	 * it can be obtained from JNDI.
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
+	 * @see org.hibernate.internal.SessionFactoryRegistry
 	 */
 	 String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
 	/**
-	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a {@literal JNDI} namespace into which
-	 * the {@link org.hibernate.SessionFactory} should be bound?
+	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace into which
+	 * the {@link org.hibernate.SessionFactory} should be bound and made accessible?
+	 *
+	 * Defaults to {@code true} for backwards compatibility.
+	 *
+	 * Set this to {@code false} if naming a SessionFactory is needed for serialization purposes, but
+	 * no writable JNDI context exists in the runtime environment or if the user simply does not want
+	 * JNDI to be used.
+	 *
+	 * @see #SESSION_FACTORY_NAME
 	 */
 	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 

@@ -32,32 +32,36 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.util.Collections;
+import java.util.List;
 
+import org.hibernate.boot.archive.internal.ArchiveHelper;
+import org.hibernate.boot.archive.internal.ExplodedArchiveDescriptor;
+import org.hibernate.boot.archive.internal.JarFileBasedArchiveDescriptor;
+import org.hibernate.boot.archive.internal.JarProtocolArchiveDescriptor;
+import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
+import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
+import org.hibernate.boot.archive.scan.spi.AbstractScannerImpl;
+import org.hibernate.boot.archive.scan.spi.JandexInitializer;
+import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
+import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
+import org.hibernate.boot.archive.scan.spi.ScanParameters;
+import org.hibernate.boot.archive.scan.spi.ScanResult;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
-import org.hibernate.jpa.boot.archive.internal.ExplodedArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.JarFileBasedArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.JarInputStreamBasedArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.JarProtocolArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
-import org.hibernate.jpa.boot.internal.ClassDescriptorImpl;
-import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
-import org.hibernate.jpa.boot.scan.spi.AbstractScannerImpl;
-import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
-import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
 import org.hibernate.jpa.test.pack.explodedpar.Carpet;
 
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -69,7 +73,7 @@ import static org.junit.Assert.fail;
 public class JarVisitorTest extends PackagingTestCase {
 	@Test
 	public void testHttp() throws Exception {
-		URL url = ArchiveHelper.getJarURLFromURLEntry(
+		final URL url = ArchiveHelper.getJarURLFromURLEntry(
 				new URL(
 						"jar:http://www.ibiblio.org/maven/hibernate/jars/hibernate-annotations-3.0beta1.jar!/META-INF/persistence.xml"
 				),
@@ -83,18 +87,55 @@ public class JarVisitorTest extends PackagingTestCase {
 			//fail silently
 			return;
 		}
-		ArchiveDescriptor archiveDescriptor = StandardArchiveDescriptorFactory.INSTANCE.buildArchiveDescriptor( url );
-		AbstractScannerImpl.ResultCollector resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
+
+		ScanResult result = standardScan( url );
+		assertEquals( 0, result.getLocatedClasses().size() );
+		assertEquals( 0, result.getLocatedPackages().size() );
+		assertEquals( 0, result.getLocatedMappingFiles().size() );
+	}
+
+	private ScanResult standardScan(URL url) {
+		ScanEnvironment env = new ScanEnvironmentImpl( url );
+		return new StandardScanner().scan(
+				env,
+				new StandardScanOptions(),
+				new ScanParameters() {
+//					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+//						return jandexInitManager;
+						return null;
+					}
+				}
 		);
-		assertEquals( 0, resultCollector.getClassDescriptorSet().size() );
-		assertEquals( 0, resultCollector.getPackageDescriptorSet().size() );
-		assertEquals( 0, resultCollector.getMappingFileSet().size() );
+	}
+
+	private static class ScanEnvironmentImpl implements ScanEnvironment {
+		private final URL rootUrl;
+
+		private ScanEnvironmentImpl(URL rootUrl) {
+			this.rootUrl = rootUrl;
+		}
+
+		@Override
+		public URL getRootUrl() {
+			return rootUrl;
+		}
+
+		@Override
+		public List<URL> getNonRootUrls() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public List<String> getExplicitlyListedClassNames() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public List<String> getExplicitlyListedMappingFiles() {
+			return Collections.emptyList();
+		}
 	}
 
 	@Test
@@ -102,36 +143,22 @@ public class JarVisitorTest extends PackagingTestCase {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		ArchiveDescriptor archiveDescriptor = new JarInputStreamBasedArchiveDescriptor(
-				StandardArchiveDescriptorFactory.INSTANCE,
-				defaultPar.toURL(),
-				""
-		);
-
-		AbstractScannerImpl.ResultCollector resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
-		);
-
-		validateResults( resultCollector, org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class, Version.class );
+		ScanResult result = standardScan( defaultPar.toURL() );
+		validateResults( result, org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class, Version.class );
 	}
 
-	private void validateResults(AbstractScannerImpl.ResultCollector resultCollector, Class... expectedClasses) throws IOException {
-		assertEquals( 3, resultCollector.getClassDescriptorSet().size() );
+	private void validateResults(ScanResult scanResult, Class... expectedClasses) throws IOException {
+		assertEquals( 3, scanResult.getLocatedClasses().size() );
 		for ( Class expectedClass : expectedClasses ) {
 			assertTrue(
-					resultCollector.getClassDescriptorSet().contains(
+					scanResult.getLocatedClasses().contains(
 							new ClassDescriptorImpl( expectedClass.getName(), null )
 					)
 			);
 		}
 
-		assertEquals( 2, resultCollector.getMappingFileSet().size() );
-		for ( MappingFileDescriptor mappingFileDescriptor : resultCollector.getMappingFileSet() ) {
+		assertEquals( 2, scanResult.getLocatedMappingFiles().size() );
+		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
 			assertNotNull( mappingFileDescriptor.getStreamAccess() );
 			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
 			assertNotNull( stream );
@@ -147,39 +174,68 @@ public class JarVisitorTest extends PackagingTestCase {
 		addPackageToClasspath( nestedEar );
 
 		String jarFileName = nestedEar.toURL().toExternalForm() + "!/defaultpar.par";
+		URL rootUrl = new URL( jarFileName );
 
 		JarProtocolArchiveDescriptor archiveDescriptor = new JarProtocolArchiveDescriptor(
 				StandardArchiveDescriptorFactory.INSTANCE,
-				new URL( jarFileName ),
+				rootUrl,
 				""
 		);
-		AbstractScannerImpl.ResultCollector resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
+
+		ScanEnvironment environment = new ScanEnvironmentImpl( rootUrl );
+		ScanResultCollector collector = new ScanResultCollector(
+				environment,
+				new StandardScanOptions(),
+				new ScanParameters() {
+//					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+//						return jandexInitManager;
+						return null;
+					}
+				}
 		);
 
-		validateResults( resultCollector, org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class, Version.class );
+		archiveDescriptor.visitArchive(
+				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
+		);
+
+		validateResults(
+				collector.toScanResult(),
+				org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class,
+				Version.class
+		);
 
 		jarFileName = nestedEarDir.toURL().toExternalForm() + "!/defaultpar.par";
+		rootUrl = new URL( jarFileName );
 		archiveDescriptor = new JarProtocolArchiveDescriptor(
 				StandardArchiveDescriptorFactory.INSTANCE,
-				new URL( jarFileName ),
+				rootUrl,
 				""
 		);
-		resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
+
+		environment = new ScanEnvironmentImpl( rootUrl );
+		collector = new ScanResultCollector(
+				environment,
+				new StandardScanOptions(),
+				new ScanParameters() {
+//					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+//						return jandexInitManager;
+						return null;
+					}
+				}
 		);
 
-		validateResults( resultCollector, org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class, Version.class );
+		archiveDescriptor.visitArchive(
+				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
+		);
+		validateResults(
+				collector.toScanResult(),
+				org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class,
+				Version.class
+		);
 	}
 
 	@Test
@@ -188,23 +244,34 @@ public class JarVisitorTest extends PackagingTestCase {
 		addPackageToClasspath( war );
 
 		String jarFileName = war.toURL().toExternalForm() + "!/WEB-INF/classes";
+		URL rootUrl = new URL( jarFileName );
+
 		JarProtocolArchiveDescriptor archiveDescriptor = new JarProtocolArchiveDescriptor(
 				StandardArchiveDescriptorFactory.INSTANCE,
-				new URL( jarFileName ),
+				rootUrl,
 				""
 		);
 
-		AbstractScannerImpl.ResultCollector resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
+		final ScanEnvironment environment = new ScanEnvironmentImpl( rootUrl );
+		final ScanResultCollector collector = new ScanResultCollector(
+				environment,
+				new StandardScanOptions(),
+				new ScanParameters() {
+//					private final JandexInitManager jandexInitManager = new JandexInitManager();
+					@Override
+					public JandexInitializer getJandexInitializer() {
+//						return jandexInitManager;
+						return null;
+					}
+				}
+		);
+
 		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
+				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
 		);
 
 		validateResults(
-				resultCollector,
+				collector.toScanResult(),
 				org.hibernate.jpa.test.pack.war.ApplicationServer.class,
 				org.hibernate.jpa.test.pack.war.Version.class
 		);
@@ -215,21 +282,12 @@ public class JarVisitorTest extends PackagingTestCase {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		JarFileBasedArchiveDescriptor archiveDescriptor = new JarFileBasedArchiveDescriptor(
-				StandardArchiveDescriptorFactory.INSTANCE,
-				defaultPar.toURL(),
-				""
+		ScanResult result = standardScan( defaultPar.toURL() );
+		validateResults(
+				result,
+				org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class,
+				Version.class
 		);
-		AbstractScannerImpl.ResultCollector resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
-		);
-
-		validateResults( resultCollector, org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class, Version.class );
 	}
 
 	@Test
@@ -243,59 +301,46 @@ public class JarVisitorTest extends PackagingTestCase {
 			dirPath = dirPath.substring( 0, dirPath.length() - 1 );
 		}
 
-		ExplodedArchiveDescriptor archiveDescriptor = new ExplodedArchiveDescriptor(
-				StandardArchiveDescriptorFactory.INSTANCE,
-				ArchiveHelper.getURLFromPath( dirPath ),
-				""
-		);
-		AbstractScannerImpl.ResultCollector resultCollector = new AbstractScannerImpl.ResultCollector( new StandardScanOptions() );
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl(
-						new PersistenceUnitDescriptorAdapter(),
-						true,
-						resultCollector
-				)
-		);
-
-		assertEquals( 1, resultCollector.getClassDescriptorSet().size() );
-		assertEquals( 1, resultCollector.getPackageDescriptorSet().size() );
-		assertEquals( 1, resultCollector.getMappingFileSet().size() );
+		ScanResult result = standardScan( ArchiveHelper.getURLFromPath( dirPath ) );
+		assertEquals( 1, result.getLocatedClasses().size() );
+		assertEquals( 1, result.getLocatedPackages().size() );
+		assertEquals( 1, result.getLocatedMappingFiles().size() );
 
 		assertTrue(
-				resultCollector.getClassDescriptorSet().contains(
+				result.getLocatedClasses().contains(
 						new ClassDescriptorImpl( Carpet.class.getName(), null )
 				)
 		);
 
-		for ( MappingFileDescriptor mappingFileDescriptor : resultCollector.getMappingFileSet() ) {
+		for ( MappingFileDescriptor mappingFileDescriptor : result.getLocatedMappingFiles() ) {
 			assertNotNull( mappingFileDescriptor.getStreamAccess() );
 			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
 			assertNotNull( stream );
 			stream.close();
 		}
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-6806")
 	public void testJarVisitorFactory() throws Exception {
 		final File explodedPar = buildExplodedPar();
 		final File defaultPar = buildDefaultPar();
 		addPackageToClasspath( explodedPar, defaultPar );
-		
-        //setting URL to accept vfs based protocol
+
+		//setting URL to accept vfs based protocol
 		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
-			public URLStreamHandler createURLStreamHandler(String protocol) {
-				if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
-				return new URLStreamHandler() {
-					protected URLConnection openConnection(URL u)
-							throws IOException {
-						return null;
-					}
-				};
-				return null;
-			}
-		});
-        
+										   public URLStreamHandler createURLStreamHandler(String protocol) {
+											   if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
+												   return new URLStreamHandler() {
+													   protected URLConnection openConnection(URL u)
+															   throws IOException {
+														   return null;
+													   }
+												   };
+											   return null;
+										   }
+									   });
+
 		URL jarUrl = defaultPar.toURL();
 		ArchiveDescriptor descriptor = StandardArchiveDescriptorFactory.INSTANCE.buildArchiveDescriptor( jarUrl );
 		assertEquals( JarFileBasedArchiveDescriptor.class.getName(), descriptor.getClass().getName() );
@@ -358,7 +403,7 @@ public class JarVisitorTest extends PackagingTestCase {
 //		Entry entry = new Entry( Carpet.class.getName(), null );
 //		assertTrue( entries[1].contains( entry ) );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-7835")
 	public void testGetBytesFromInputStream() throws Exception {

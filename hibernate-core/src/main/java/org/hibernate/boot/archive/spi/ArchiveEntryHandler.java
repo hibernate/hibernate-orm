@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.spi;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * Handler for archive entries, based on the classified type of the entry
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public interface ArchiveEntryHandler {
+	/**
+	 * Handle the entry
+	 *
+	 * @param entry The entry to handle
+	 * @param context The visitation context
+	 */
+	public void handleEntry(ArchiveEntry entry, ArchiveContext context);
 }

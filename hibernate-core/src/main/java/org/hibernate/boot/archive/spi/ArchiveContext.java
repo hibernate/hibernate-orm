@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.spi;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * Describes the context for visiting the entries within an archive
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public interface ArchiveContext {
+	/**
+	 * Is the archive described (and being visited) the root url for the persistence-unit?
+	 *
+	 * @return {@code true} if it is the root url
+	 */
+	public boolean isRootUrl();
+
+	/**
+	 * Get the handler for the given entry, which generally is indicated by the entry type (a {@code .class} file, a
+	 * mapping file, etc).
+	 *
+	 * @param entry The archive entry
+	 *
+	 * @return The appropriate handler for the entry
+	 */
+	public ArchiveEntryHandler obtainArchiveEntryHandler(ArchiveEntry entry);
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.scan.internal;
+
+import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.boot.archive.scan.spi.AbstractScannerImpl;
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * Standard implementation of the Scanner contract, supporting typical archive walking support where
+ * the urls we are processing can be treated using normal file handling.
+ *
+ * @author Steve Ebersole
+ * @author Emmanuel Bernard
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public class StandardScanner extends AbstractScannerImpl {
+	public StandardScanner() {
+		this( StandardArchiveDescriptorFactory.INSTANCE );
+	}
+
+	public StandardScanner(ArchiveDescriptorFactory value) {
+		super( value );
+	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.scan.spi;
+
+import java.util.Set;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * Defines the result of scanning
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public interface ScanResult {
+	/**
+	 * Returns descriptors for all packages discovered as part of the scan
+	 *
+	 * @return Descriptors for discovered packages
+	 */
+	public Set<PackageDescriptor> getLocatedPackages();
+
+	/**
+	 * Returns descriptors for all classes discovered as part of the scan
+	 *
+	 * @return Descriptors for discovered classes
+	 */
+	public Set<ClassDescriptor> getLocatedClasses();
+
+	/**
+	 * Returns descriptors for all mapping files discovered as part of the scan
+	 *
+	 * @return Descriptors for discovered mapping files
+	 */
+	public Set<MappingFileDescriptor> getLocatedMappingFiles();
 }

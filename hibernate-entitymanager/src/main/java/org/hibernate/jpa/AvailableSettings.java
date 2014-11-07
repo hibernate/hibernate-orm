@@ -371,8 +371,11 @@ public interface AvailableSettings {
 
 	/**
 	 * JAR autodetection artifacts class, hbm
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#SCANNER_DISCOVERY} instead
 	 */
-	String AUTODETECTION = "hibernate.archive.autodetection";
+	@Deprecated
+	String AUTODETECTION = org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY;
 
 	/**
 	 * cfg.xml configuration file used
@@ -459,11 +462,11 @@ public interface AvailableSettings {
 	String FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
-	 * Pass an implementation of {@link org.hibernate.ejb.packaging.Scanner}:
-	 *  - preferably an actual instance
-	 *  - or a class name with a no-arg constructor 
+	 * @deprecated Prefer {@link org.hibernate.cfg.AvailableSettings#SCANNER} instead
 	 */
-	String SCANNER = "hibernate.ejb.resource_scanner";
+	@Deprecated
+	@SuppressWarnings("UnusedDeclaration")
+	String SCANNER = org.hibernate.cfg.AvailableSettings.SCANNER_DEPRECATED;
 
 	/**
 	 * List of classes names

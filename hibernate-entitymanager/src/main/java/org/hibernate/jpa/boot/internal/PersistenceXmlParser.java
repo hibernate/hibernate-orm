@@ -47,7 +47,7 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
+import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.internal.util.xml.XsdException;

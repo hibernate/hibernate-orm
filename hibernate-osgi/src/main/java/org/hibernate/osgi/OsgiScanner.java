@@ -20,7 +20,7 @@
  */
 package org.hibernate.osgi;
 
-import org.hibernate.jpa.boot.scan.spi.AbstractScannerImpl;
+import org.hibernate.boot.archive.scan.spi.AbstractScannerImpl;
 
 import org.osgi.framework.Bundle;
 

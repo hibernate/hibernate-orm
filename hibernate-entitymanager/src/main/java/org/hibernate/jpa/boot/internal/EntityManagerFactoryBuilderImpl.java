@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +56,14 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
+import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.MappingFileDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.PackageDescriptorImpl;
+import org.hibernate.boot.archive.scan.spi.JandexInitializer;
+import org.hibernate.boot.archive.scan.spi.ScanParameters;
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -76,18 +85,17 @@ import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.boot.scan.internal.StandardScanOptions;
-import org.hibernate.jpa.boot.scan.internal.StandardScanner;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
-import org.hibernate.jpa.boot.scan.spi.ScanResult;
-import org.hibernate.jpa.boot.scan.spi.Scanner;
-import org.hibernate.jpa.boot.spi.ClassDescriptor;
+import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
+import org.hibernate.boot.archive.scan.spi.ScanOptions;
+import org.hibernate.boot.archive.scan.spi.ScanResult;
+import org.hibernate.boot.archive.scan.spi.Scanner;
+import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.jpa.boot.spi.InputStreamAccess;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
-import org.hibernate.jpa.boot.spi.MappingFileDescriptor;
-import org.hibernate.jpa.boot.spi.NamedInputStream;
-import org.hibernate.jpa.boot.spi.PackageDescriptor;
+import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
+import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -114,6 +122,8 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -410,7 +420,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		for ( MappingFileDescriptor mappingFileDescriptor : deploymentResources.getMappingFileDescriptors() ) {
-			metadataSources.namedMappingFileInputStreams.add( mappingFileDescriptor.getStreamAccess().asNamedInputStream() );
+			metadataSources.mappingFileInputStreamAccessList.add( mappingFileDescriptor.getStreamAccess() );
 		}
 
 		final String explicitHbmXmls = (String) configurationValues.remove( AvailableSettings.HBXML_FILES );
@@ -749,51 +759,137 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final Scanner scanner = locateOrBuildScanner( bootstrapServiceRegistry );
 		final ScanOptions scanOptions = determineScanOptions();
 
-		return scanner.scan( persistenceUnit, scanOptions );
+		return scanner.scan(
+				new StandardJpaScanEnvironmentImpl( persistenceUnit ),
+				scanOptions,
+				new ScanParameters() {
+					@Override
+					public JandexInitializer getJandexInitializer() {
+						return null;
+					}
+				}
+		);
 	}
 
 	private ScanOptions determineScanOptions() {
 		return new StandardScanOptions(
-				(String) configurationValues.get( AvailableSettings.AUTODETECTION ),
+				(String) configurationValues.get( org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY ),
 				persistenceUnit.isExcludeUnlistedClasses()
 		);
 	}
 
 	@SuppressWarnings("unchecked")
 	private Scanner locateOrBuildScanner(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final Object value = configurationValues.remove( AvailableSettings.SCANNER );
-		if ( value == null ) {
-			return new StandardScanner();
-		}
-
-		if ( Scanner.class.isInstance( value ) ) {
-			return (Scanner) value;
-		}
-
-		Class<? extends Scanner> scannerClass;
-		if ( Class.class.isInstance( value ) ) {
-			try {
-				scannerClass = (Class<? extends Scanner>) value;
+		Object scannerSetting = configurationValues.remove( org.hibernate.cfg.AvailableSettings.SCANNER );
+		if ( scannerSetting == null ) {
+			scannerSetting = configurationValues.remove( org.hibernate.cfg.AvailableSettings.SCANNER_DEPRECATED );
+			if ( scannerSetting != null ) {
+				DEPRECATION_LOGGER.logDeprecatedScannerSetting();
 			}
-			catch ( ClassCastException e ) {
-				throw persistenceException( "Expecting Scanner implementation, but found " + ((Class) value).getName() );
+		}
+
+		final StrategySelector strategySelector = bootstrapServiceRegistry.getService( StrategySelector.class );
+		ArchiveDescriptorFactory archiveDescriptorFactory = strategySelector.resolveStrategy(
+				ArchiveDescriptorFactory.class,
+				configurationValues.remove( org.hibernate.cfg.AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
+		);
+
+		if ( scannerSetting == null ) {
+			// No custom Scanner specified, use the StandardScanner
+			if ( archiveDescriptorFactory == null ) {
+				return new StandardScanner();
+			}
+			else {
+				return new StandardScanner( archiveDescriptorFactory );
 			}
 		}
 		else {
-			final String scannerClassName = value.toString();
-			try {
-				scannerClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName( scannerClassName );
+			if ( Scanner.class.isInstance( scannerSetting ) ) {
+				if ( archiveDescriptorFactory != null ) {
+					throw new IllegalStateException(
+							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
+									"specify one or the other, or if you need to supply both, name a Scanner class " +
+									"to use (assuming it has a constructor accepting a ArchiveDescriptorFactory).  " +
+									"Alternatively, just pass the ArchiveDescriptorFactory during your own " +
+									"Scanner constructor assuming it is statically known."
+					);
+				}
+				return (Scanner) scannerSetting;
 			}
-			catch ( ClassCastException e ) {
-				throw persistenceException( "Expecting Scanner implementation, but found " + scannerClassName );
-			}
-		}
 
-		try {
-			return scannerClass.newInstance();
-		}
-		catch ( Exception e ) {
-			throw persistenceException( "Unable to instantiate Scanner class: " + scannerClass, e );
+			final Class<? extends  Scanner> scannerImplClass;
+			if ( Class.class.isInstance( scannerSetting ) ) {
+				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
+			}
+			else {
+				final String scannerClassName = scannerSetting.toString();
+				scannerImplClass = bootstrapServiceRegistry.getService( ClassLoaderService.class ).classForName(
+						scannerClassName
+				);
+			}
+
+			final Class[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
+
+			if ( archiveDescriptorFactory != null ) {
+				// find the single-arg constructor - its an error if none exists
+				try {
+					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
+					try {
+						return constructor.newInstance( archiveDescriptorFactory );
+					}
+					catch (Exception e) {
+						throw new IllegalStateException(
+								"Error trying to instantiate custom specified Scanner [" +
+										scannerImplClass.getName() + "]",
+								e
+						);
+					}
+				}
+				catch (NoSuchMethodException e) {
+					throw new IllegalArgumentException(
+							"Configuration named a custom Scanner and a custom ArchiveDescriptorFactory, but " +
+									"Scanner impl did not define a constructor accepting ArchiveDescriptorFactory"
+					);
+				}
+			}
+			else {
+				// could be either ctor form...
+				// find the single-arg constructor - its an error if none exists
+				try {
+					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
+					try {
+						return constructor.newInstance( StandardArchiveDescriptorFactory.INSTANCE );
+					}
+					catch (Exception e) {
+						throw new IllegalStateException(
+								"Error trying to instantiate custom specified Scanner [" +
+										scannerImplClass.getName() + "]",
+								e
+						);
+					}
+				}
+				catch (NoSuchMethodException e) {
+					try {
+						final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor();
+						try {
+							return constructor.newInstance();
+						}
+						catch (Exception e2) {
+							throw new IllegalStateException(
+									"Error trying to instantiate custom specified Scanner [" +
+											scannerImplClass.getName() + "]",
+									e2
+							);
+						}
+					}
+					catch (NoSuchMethodException ignore) {
+						throw new IllegalArgumentException(
+								"Configuration named a custom Scanner, but we were unable to locate " +
+										"an appropriate constructor"
+						);
+					}
+				}
+			}
 		}
 	}
 
@@ -1198,16 +1294,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				LOG.exceptionHeaderNotFound( getExceptionHeader(), META_INF_ORM_XML );
 			}
 		}
-		for ( NamedInputStream namedInputStream : metadataSources.namedMappingFileInputStreams ) {
+
+		for ( InputStreamAccess streamAccess : metadataSources.mappingFileInputStreamAccessList ) {
 			try {
 				//addInputStream has the responsibility to close the stream
-				cfg.addInputStream( new BufferedInputStream( namedInputStream.getStream() ) );
+				cfg.addInputStream( new BufferedInputStream( streamAccess.accessInputStream() ) );
 			}
 			catch ( InvalidMappingException e ) {
 				// try our best to give the file name
-				if ( StringHelper.isNotEmpty( namedInputStream.getName() ) ) {
+				if ( StringHelper.isNotEmpty( streamAccess.getStreamName() ) ) {
 					throw new InvalidMappingException(
-							"Error while parsing file: " + namedInputStream.getName(),
+							"Error while parsing file: " + streamAccess.getStreamName(),
 							e.getType(),
 							e.getPath(),
 							e
@@ -1219,8 +1316,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			catch (MappingException me) {
 				// try our best to give the file name
-				if ( StringHelper.isNotEmpty( namedInputStream.getName() ) ) {
-					throw new MappingException("Error while parsing file: " + namedInputStream.getName(), me );
+				if ( StringHelper.isNotEmpty( streamAccess.getStreamName() ) ) {
+					throw new MappingException("Error while parsing file: " + streamAccess.getStreamName(), me );
 				}
 				else {
 					throw me;
@@ -1312,7 +1409,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	public static class MetadataSources {
 		private final List<String> annotatedMappingClassNames = new ArrayList<String>();
 		private final List<ConverterDescriptor> converterDescriptors = new ArrayList<ConverterDescriptor>();
-		private final List<NamedInputStream> namedMappingFileInputStreams = new ArrayList<NamedInputStream>();
+		private final List<InputStreamAccess> mappingFileInputStreamAccessList = new ArrayList<InputStreamAccess>();
 		private final List<String> mappingFileResources = new ArrayList<String>();
 		private final List<String> packageNames = new ArrayList<String>();
 
@@ -1324,8 +1421,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			return converterDescriptors;
 		}
 
-		public List<NamedInputStream> getNamedMappingFileInputStreams() {
-			return namedMappingFileInputStreams;
+		public List<InputStreamAccess> getMappingFileInputStreamAccessList() {
+			return mappingFileInputStreamAccessList;
 		}
 
 		public List<String> getPackageNames() {

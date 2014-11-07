@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.internal;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * An InputStreamAccess implementation based on a byte array
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public class ByteArrayInputStreamAccess implements InputStreamAccess {
+	private final String name;
+	private final byte[] bytes;
+
+	public ByteArrayInputStreamAccess(String name, byte[] bytes) {
+		this.name = name;
+		this.bytes = bytes;
+	}
+
+	@Override
+	public String getStreamName() {
+		return name;
+	}
+
+	@Override
+	public InputStream accessInputStream() {
+		return new ByteArrayInputStream( bytes );
+	}
 }

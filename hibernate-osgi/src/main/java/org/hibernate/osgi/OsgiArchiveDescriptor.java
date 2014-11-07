@@ -27,11 +27,10 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
-import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
-import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
-import org.hibernate.jpa.boot.spi.InputStreamAccess;
-import org.hibernate.jpa.boot.spi.NamedInputStream;
+import org.hibernate.boot.archive.spi.ArchiveContext;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
+import org.hibernate.boot.archive.spi.ArchiveEntry;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
@@ -76,11 +75,6 @@ public class OsgiArchiveDescriptor implements ArchiveDescriptor {
 						@Override
 						public InputStream accessInputStream() {
 							return openInputStream();
-						}
-	
-						@Override
-						public NamedInputStream asNamedInputStream() {
-							return new NamedInputStream( resource, openInputStream() );
 						}
 						
 						private InputStream openInputStream() {

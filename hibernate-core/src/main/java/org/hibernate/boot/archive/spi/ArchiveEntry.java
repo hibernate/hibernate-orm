@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.spi;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * Represent an entry in the archive.
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public interface ArchiveEntry {
+	/**
+	 * Get the entry's name
+	 *
+	 * @return The name
+	 */
+	public String getName();
+
+	/**
+	 * Get the relative name of the entry within the archive.  Typically what we are looking for here is
+	 * the ClassLoader resource lookup name.
+	 *
+	 * @return The name relative to the archive root
+	 */
+	public String getNameWithinArchive();
+
+	/**
+	 * Get access to the stream for the entry
+	 *
+	 * @return Obtain stream access to the entry
+	 */
+	public InputStreamAccess getStreamAccess();
 }

@@ -724,4 +724,46 @@ public interface AvailableSettings {
 
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
+
+	/**
+	 * The deprecated name.  Use {@link #SCANNER} or {@link #SCANNER_ARCHIVE_INTERPRETER} instead.
+	 */
+	String SCANNER_DEPRECATED = "hibernate.ejb.resource_scanner";
+
+	/**
+	 * Pass an implementation of {@link org.hibernate.boot.archive.scan.spi.Scanner}.
+	 * Accepts either:<ul>
+	 *     <li>an actual instance</li>
+	 *     <li>a reference to a Class that implements Scanner</li>
+	 *     <li>a fully qualified name (String) of a Class that implements Scanner</li>
+	 * </ul>
+	 */
+	String SCANNER = "hibernate.archive.scanner";
+
+	/**
+	 * Pass {@link org.hibernate.boot.archive.spi.ArchiveDescriptorFactory} to use
+	 * in the scanning process.  Accepts either:<ul>
+	 *     <li>an ArchiveDescriptorFactory instance</li>
+	 *     <li>a reference to a Class that implements ArchiveDescriptorFactory</li>
+	 *     <li>a fully qualified name (String) of a Class that implements ArchiveDescriptorFactory</li>
+	 * </ul>
+	 * <p/>
+	 * See information on {@link org.hibernate.boot.archive.scan.spi.Scanner}
+	 * about expected constructor forms.
+	 *
+	 * @see #SCANNER
+	 * @see org.hibernate.boot.archive.scan.spi.Scanner
+	 * @see org.hibernate.boot.archive.scan.spi.AbstractScannerImpl
+	 */
+	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
+
+	/**
+	 * Identifies a comma-separate list of values indicating the types of
+	 * things we should auto-detect during scanning.  Allowable values include:<ul>
+	 *     <li>"class" - discover classes - .class files are discovered as managed classes</li>
+	 *     <li>"hbm" - discover hbm mapping files - hbm.xml files are discovered as mapping files</li>
+	 * </ul>
+	 */
+	String SCANNER_DISCOVERY = "hibernate.archive.autodetection";
+
 }

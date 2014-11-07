@@ -1,10 +1,11 @@
 package org.hibernate.jpa.test.packaging;
 
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.boot.scan.internal.StandardScanner;
-import org.hibernate.jpa.boot.scan.spi.ScanOptions;
-import org.hibernate.jpa.boot.scan.spi.ScanResult;
-import org.hibernate.jpa.boot.scan.spi.Scanner;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
+import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
+import org.hibernate.boot.archive.scan.spi.ScanOptions;
+import org.hibernate.boot.archive.scan.spi.ScanParameters;
+import org.hibernate.boot.archive.scan.spi.ScanResult;
+import org.hibernate.boot.archive.scan.spi.Scanner;
 
 /**
  * @author Emmanuel Bernard
@@ -22,8 +23,12 @@ public class CustomScanner implements Scanner {
 	}
 
 	@Override
-	public ScanResult scan(PersistenceUnitDescriptor persistenceUnit, ScanOptions options) {
+	public ScanResult scan(
+			ScanEnvironment environment,
+			ScanOptions options,
+			ScanParameters parameters) {
 		isUsed = true;
-		return delegate.scan( persistenceUnit, options );
+		return delegate.scan( environment, options, parameters );
 	}
 }
+

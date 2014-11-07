@@ -85,7 +85,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		final Map settings = generateSettings( properties );
 
 		// TODO: This needs tested.
-		settings.put( org.hibernate.jpa.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
+		settings.put( org.hibernate.cfg.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
 		// TODO: This is temporary -- for PersistenceXmlParser's use of
 		// ClassLoaderServiceImpl#fromConfigSettings
 		settings.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
@@ -103,7 +103,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		// OSGi ClassLoaders must implement BundleReference
 		settings.put(
-				org.hibernate.jpa.AvailableSettings.SCANNER,
+				org.hibernate.cfg.AvailableSettings.SCANNER,
 				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() )
 		);
 

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,11 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.packaging;
+package org.hibernate.boot.archive.spi;
+
+import org.hibernate.HibernateException;
 
 /**
- * @deprecated Use {@link org.hibernate.boot.archive.scan.spi.Scanner} instead
+ * Indicates a problem accessing or visiting the archive
+ *
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface Scanner extends org.hibernate.boot.archive.scan.spi.Scanner {
+public class ArchiveException extends HibernateException {
+	/**
+	 * Constructs an ArchiveException
+	 *
+	 * @param message Message explaining the exception condition
+	 */
+	public ArchiveException(String message) {
+		super( message );
+	}
+
+	/**
+	 * Constructs an ArchiveException
+	 *
+	 * @param message Message explaining the exception condition
+	 * @param cause The underlying cause
+	 */
+	public ArchiveException(String message, Throwable cause) {
+		super( message, cause );
+	}
 }

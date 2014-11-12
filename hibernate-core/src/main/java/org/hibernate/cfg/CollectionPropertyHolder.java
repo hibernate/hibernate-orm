@@ -153,27 +153,24 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			// if neither, we should not be here...
 		}
 		else {
-			if ( canElementBeConverted && canKeyBeConverted ) {
-				// specified attributeName needs to have 'key.' or 'value.' prefix
-				if ( info.getAttributeName().startsWith( "key." ) ) {
-					keyAttributeConversionInfoMap.put(
-							info.getAttributeName().substring( 4 ),
-							info
-					);
-				}
-				else if ( info.getAttributeName().startsWith( "value." ) ) {
-					elementAttributeConversionInfoMap.put(
-							info.getAttributeName().substring( 6 ),
-							info
-					);
-				}
-				else {
-					throw new IllegalStateException(
-							"@Convert placed on Map attribute [" + collection.getRole()
-									+ "] must define attributeName of 'key' or 'value'"
-					);
-				}
-			}
+         String path = info.getAttributeName();
+         String key = removePrefix(path, "key");
+         String element = removePrefix(path, "value");
+
+         if ( canElementBeConverted && canKeyBeConverted && key == null && element == null ) {
+            // specified attributeName needs to have 'key.' or 'value.' prefix
+            throw new IllegalStateException(
+                  "@Convert placed on Map attribute [" + collection.getRole()
+                        + "] must define attributeName of 'key' or 'value'"
+            );
+         }
+         
+         if ( key != null ) {
+            keyAttributeConversionInfoMap.put( key, info );
+         }
+         else if ( element != null ) {
+            elementAttributeConversionInfoMap.put( element, info );
+         }
 		}
 	}
 
@@ -214,11 +211,40 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
+      String key = removePrefix(path, "key");
+      if (key != null) {
+         return keyAttributeConversionInfoMap.get(key);
+      }
+
+      String element = removePrefix(path, "element");
+      if (element != null) {
+         return elementAttributeConversionInfoMap.get(element);
+      }
+	   
 		// todo : implement
 		return null;
 	}
 
-	public String getClassName() {
+   /**
+    * Check if path has the given prefix and remove it.
+    * 
+    * @param path Path.
+    * @param prefix Prefix.
+    * @return Path without prefix, or null, if path did not have the prefix.
+    */
+   private String removePrefix(String path, String prefix) {
+      if (path.equals(prefix)) {
+         return "";
+      }
+      
+      if (path.startsWith(prefix + ".")) {
+         return path.substring(prefix.length() + 1);
+      }
+      
+      return null;
+   }
+
+   public String getClassName() {
 		throw new AssertionFailure( "Collection property holder does not have a class name" );
 	}
 

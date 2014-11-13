@@ -29,7 +29,6 @@ import java.util.Properties;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.util.ClassLoaderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.CacheException;
@@ -199,7 +198,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 			url = classLoaderService.locateResource( configurationResourceName );
 		}
 		if ( url == null ) {
-			final ClassLoader standardClassloader = ClassLoaderUtil.getStandardClassLoader();
+			final ClassLoader standardClassloader = Thread.currentThread().getContextClassLoader();
 			if ( standardClassloader != null ) {
 				url = standardClassloader.getResource( configurationResourceName );
 			}

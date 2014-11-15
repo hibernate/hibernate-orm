@@ -38,6 +38,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -214,7 +215,7 @@ public class C3P0ConnectionProvider
 		}
 
 		final String i = (String) props.get( Environment.ISOLATION );
-		if ( i == null ) {
+		if ( StringHelper.isEmpty( i ) ) {
 			isolation = null;
 		}
 		else {

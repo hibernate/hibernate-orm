@@ -667,14 +667,19 @@ public class ActionQueue {
 	 * @throws ClassNotFoundException Generally means we were unable to locate user classes.
 	 */
 	public static ActionQueue deserialize(ObjectInputStream ois, SessionImplementor session) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing action-queue" );
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) {
+			LOG.trace( "Deserializing action-queue" );
+		}
 		ActionQueue rtn = new ActionQueue( session );
 
 		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 
 		for ( ExecutableList<?> l : rtn.executableLists ) {
 			l.readExternal( ois );
-			LOG.tracev( "Deserialized [{0}] entries", l.size() );
+			if ( traceEnabled ) {
+				LOG.tracev( "Deserialized [{0}] entries", l.size() );
+			}
 			l.afterDeserialize( session );
 		}
 

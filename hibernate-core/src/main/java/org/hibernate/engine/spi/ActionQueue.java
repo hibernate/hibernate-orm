@@ -28,7 +28,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -130,18 +129,17 @@ public class ActionQueue {
 		
 		orphanRemovals = new ExecutableList<OrphanRemovalAction>();
 
+		List<ExecutableList<?>> tmp = new ArrayList<ExecutableList<?>>( 8 );
 		// Important: these lists are in execution order
-		List<ExecutableList<?>> tmp = Arrays.asList(
-				orphanRemovals,
-				insertions,
-				updates,
-				// do before actions are handled in the other collection queues
-				collectionQueuedOps,
-				collectionRemovals,
-				collectionUpdates,
-				collectionCreations,
-				deletions
-		);
+		tmp.add( orphanRemovals );
+		tmp.add( insertions );
+		tmp.add( updates );
+		// do before actions are handled in the other collection queues
+		tmp.add( collectionQueuedOps );
+		tmp.add( collectionRemovals );
+		tmp.add( collectionUpdates );
+		tmp.add( collectionCreations );
+		tmp.add( deletions );
 
 		executableLists = Collections.unmodifiableList( tmp );
 

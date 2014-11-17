@@ -131,7 +131,7 @@ public class ActionQueue {
 		orphanRemovals = new ExecutableList<OrphanRemovalAction>();
 
 		// Important: these lists are in execution order
-		List<ExecutableList<?>> tmp = Arrays.asList(
+		List<ExecutableList<?>> tmp = Arrays.<ExecutableList<?>>asList(
 				orphanRemovals,
 				insertions,
 				updates,

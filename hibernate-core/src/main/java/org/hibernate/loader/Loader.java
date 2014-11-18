@@ -95,7 +95,6 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -265,7 +264,7 @@ public abstract class Loader {
 			QueryParameters parameters,
 			Dialect dialect,
 			List<AfterLoadAction> afterLoadActions) {
-		if ( dialect.useFollowOnLocking() ) {
+		if ( dialect.useFollowOnLocking(parameters) ) {
 			// currently only one lock mode is allowed in follow-on locking
 			final LockMode lockMode = determineFollowOnLockMode( parameters.getLockOptions() );
 			final LockOptions lockOptions = new LockOptions( lockMode );

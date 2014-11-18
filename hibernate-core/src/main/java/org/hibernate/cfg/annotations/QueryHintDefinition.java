@@ -16,6 +16,7 @@ import javax.persistence.QueryHint;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.QueryHints;
@@ -66,6 +67,20 @@ public class QueryHintDefinition {
 		}
 		catch ( MappingException e ) {
 			throw new AnnotationException( "Unknown FlushMode in hint: " + query + ":" + hitName, e );
+		}
+	}
+
+	public LockMode getLockMode(String query) {
+		String hitName = QueryHints.NATIVE_LOCKMODE;
+		String value =(String) hintsMap.get( hitName );
+		if ( value == null ) {
+			return null;
+		}
+		try {
+			return LockMode.fromExternalForm( value );
+		}
+		catch ( MappingException e ) {
+			throw new AnnotationException( "Unknown LockMode in hint: " + query + ":" + hitName, e );
 		}
 	}
 
@@ -120,8 +135,15 @@ public class QueryHintDefinition {
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
 		LockModeType lockModeType = namedQueryAnnotation.lockMode();
 		Integer lockTimeoutHint = getInteger( namedQueryAnnotation.name(), "javax.persistence.lock.timeout" );
+		Boolean followOnLocking = getBoolean( namedQueryAnnotation.name(), QueryHints.FOLLOW_ON_LOCKING );
 
-		LockOptions lockOptions = new LockOptions( LockModeConverter.convertToLockMode( lockModeType ) );
+		return determineLockOptions(lockModeType, lockTimeoutHint, followOnLocking);
+	}
+
+	private LockOptions determineLockOptions(LockModeType lockModeType, Integer lockTimeoutHint, Boolean followOnLocking) {
+
+		LockOptions lockOptions = new LockOptions( LockModeConverter.convertToLockMode( lockModeType ) )
+				.setFollowOnLocking( followOnLocking );
 		if ( lockTimeoutHint != null ) {
 			lockOptions.setTimeOut( lockTimeoutHint );
 		}

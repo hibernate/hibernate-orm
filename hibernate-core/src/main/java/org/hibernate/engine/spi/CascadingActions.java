@@ -96,6 +96,7 @@ public class CascadingActions {
 				LockOptions lockOptions = (LockOptions) anything;
 				lr.setTimeOut( lockOptions.getTimeOut() );
 				lr.setScope( lockOptions.getScope() );
+				lr.setFollowOnLocking( lockOptions.getFollowOnLocking() );
 				if ( lockOptions.getScope() ) {
 					lockMode = lockOptions.getLockMode();
 				}

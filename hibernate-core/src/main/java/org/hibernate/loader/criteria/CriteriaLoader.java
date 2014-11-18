@@ -205,9 +205,10 @@ public class CriteriaLoader extends OuterJoinLoader {
 			return sql;
 		}
 
-		if ( dialect.useFollowOnLocking() ) {
-			final LockMode lockMode = determineFollowOnLockMode( lockOptions );
-			if ( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
+		if ( ( parameters.getLockOptions().getFollowOnLocking() == null && dialect.useFollowOnLocking( parameters ) ) ||
+			( parameters.getLockOptions().getFollowOnLocking() != null && parameters.getLockOptions().getFollowOnLocking() ) ) {
+            final LockMode lockMode = determineFollowOnLockMode( lockOptions );
+            if( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
 				// Dialect prefers to perform locking in a separate step
 				LOG.usingFollowOnLocking();
 

@@ -89,6 +89,7 @@ import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
 import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
 import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
@@ -257,6 +258,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		this.lockOptions.setLockMode( lockOptions.getLockMode() );
 		this.lockOptions.setScope( lockOptions.getScope() );
 		this.lockOptions.setTimeOut( lockOptions.getTimeOut() );
+		this.lockOptions.setFollowOnLocking( lockOptions.getFollowOnLocking() );
 		return this;
 	}
 
@@ -988,6 +990,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 				}
 				applied = true;
 			}
+			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
+				applied = applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
+			}
 			else {
 				log.ignoringUnrecognizedQueryHint( hintName );
 			}
@@ -1170,6 +1175,16 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	 */
 	protected void applyEntityGraphQueryHint(EntityGraphQueryHint hint) {
 		this.entityGraphQueryHint = hint;
+	}
+
+	/**
+	 * Apply the follow-on-locking hint.
+	 *
+	 * @param followOnLocking The follow-on-locking strategy.
+	 */
+	protected boolean applyFollowOnLockingHint(Boolean followOnLocking) {
+		getLockOptions().setFollowOnLocking( followOnLocking );
+		return true;
 	}
 
 	/**

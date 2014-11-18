@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.engine.spi.QueryParameters;
+
 /**
  * Consolidation of hints available to Hibernate JPA queries.  Mainly used to define features available on
  * Hibernate queries that have no corollary in JPA queries.
@@ -116,5 +118,14 @@ public class QueryHints {
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
 	 */
 	public static final String LOADGRAPH = "javax.persistence.loadgraph";
+
+	/**
+	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.
+	 * A value of {@code true} enables follow-on-locking, whereas a value of {@code false} disables it.
+	 * If the value is {@code null}, the the {@code Dialect} strategy is going to be used instead.
+	 *
+	 * @since 5.2
+	 */
+	public static final String FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
 
 }

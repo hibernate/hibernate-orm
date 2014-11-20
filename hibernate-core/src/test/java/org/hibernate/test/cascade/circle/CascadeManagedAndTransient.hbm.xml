@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<!--
+~ Hibernate, Relational Persistence for Idiomatic Java
+~
+~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+-->
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.cascade.circle">
+
+    <class name="Route" table="HB_Route">
+
+        <id name="routeID" type="long"><generator class="native"/></id>
+        <version name="version" column="VERS" type="long" />
+
+        <property name="name" type="string" not-null="true"/>
+
+        <set name="nodes" inverse="true" cascade="persist,merge,refresh,save-update">
+            <key column="routeID"/>
+            <one-to-many class="Node"/>
+        </set>
+        <set name="vehicles" inverse="true" cascade="persist,merge,refresh,save-update">
+            <key column="routeID"/>
+            <one-to-many class="Vehicle"/>
+        </set>
+    </class>
+
+    <class name="Tour" table="HB_Tour">
+
+        <id name="tourID" type="long"><generator class="native"/></id>
+        <version name="version" column="VERS" type="long" />
+
+        <property name="name" type="string" not-null="true"/>
+
+        <set name="nodes" inverse="true" lazy="true" cascade="merge,refresh,persist,save-update">
+            <key column="tourID"/>
+            <one-to-many class="Node"/>
+        </set>
+    </class>
+
+    <class name="Transport" table="HB_Transport">
+
+        <id name="transportID" type="long"><generator class="native"/></id>
+        <version name="version" column="VERS" type="long" />
+
+        <property name="name" type="string" not-null="true"/>
+
+        <many-to-one name="pickupNode"
+                     column="pickupNodeID"
+                     unique="true"
+                     not-null="true"
+                     cascade="merge,refresh,persist,save-update"
+                     lazy="false"/>
+
+        <many-to-one name="deliveryNode"
+                     column="deliveryNodeID"
+                     unique="true"
+                     not-null="true"
+                     cascade="merge,refresh,persist,save-update"
+                     lazy="false"/>
+
+        <many-to-one name="vehicle"
+                     column="vehicleID"
+                     unique="false"
+                     not-null="true"
+                     cascade="merge,refresh,persist,save-update"
+                     lazy="false"/>
+    </class>
+
+    <class name="Vehicle" table="HB_Vehicle">
+        <id name="vehicleID" type="long"><generator class="native"/></id>
+        <version name="version" column="VERS" type="long" />
+
+        <property name="name"/>
+        <set name="transports" inverse="false" lazy="true" cascade="merge,refresh,persist,save-update">
+            <key column="vehicleID"/>
+            <one-to-many class="Transport" not-found="exception"/>
+        </set>
+        <many-to-one name="route"
+                     column="routeID"
+                     unique="false"
+                     not-null="false"
+                     cascade="merge,refresh,persist,save-update,save-update"
+                     lazy="false"/>
+    </class>
+
+
+    <class name="Node" table="HB_Node">
+
+        <id name="nodeID" type="long"><generator class="native"/></id>
+        <version name="version" column="VERS" type="long" />
+
+        <property name="name" type="string" not-null="true"/>
+
+        <set name="deliveryTransports" inverse="true" lazy="true" cascade="merge,refresh,persist,save-update">
+            <key column="deliveryNodeID"/>
+            <one-to-many class="Transport"/>
+        </set>
+
+        <set name="pickupTransports" inverse="true" lazy="true" cascade="merge,refresh,persist,save-update">
+            <key column="pickupNodeID"/>
+            <one-to-many class="Transport"/>
+        </set>
+
+        <many-to-one name="route"
+                     column="routeID"
+                     unique="false"
+                     not-null="true"
+                     cascade="merge,refresh,persist,save-update"
+                     lazy="false"/>
+
+        <many-to-one name="tour"
+                     column="tourID"
+                     unique="false"
+                     not-null="true"
+                     cascade="merge,refresh,persist,save-update"
+                     lazy="false"/>
+    </class>
+
+</hibernate-mapping>

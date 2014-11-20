@@ -341,7 +341,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		if ( original == null ) {
 			return null;
 		}
-		Object cached = copyCache.get(original);
+		Object cached = copyCache.get( original );
+		if ( cached == null ) {
+			// Avoid creation of invalid managed -> managed mapping in copyCache when traversing
+			// cascade loop (@OneToMany(cascade=ALL) with associated @ManyToOne(cascade=ALL)) in entity graph
+			if ( copyCache.containsValue( original ) ) {
+				cached = original;
+			}
+		}
 		if ( cached != null ) {
 			return cached;
 		}

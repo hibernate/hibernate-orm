@@ -144,6 +144,7 @@ class MergeContext implements Map {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
+
 		return mergeToManagedEntityXref.containsKey( mergeEntity );
 	}
 
@@ -182,6 +183,7 @@ class MergeContext implements Map {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
+
 		return mergeToManagedEntityXref.get( mergeEntity );
 	}
 
@@ -246,6 +248,16 @@ class MergeContext implements Map {
 	/* package-private */ Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null || managedEntity == null ) {
 			throw new NullPointerException( "null merge and managed entities are not supported by " + getClass().getName() );
+		}
+
+		// Detect invalid 'managed entity' -> 'managed entity' mappings where key != value
+		if ( managedToMergeEntityXref.containsKey( mergeEntity ) ) {
+			if ( managedToMergeEntityXref.get( mergeEntity ) != mergeEntity ) {
+				throw new IllegalStateException(
+						"MergeContext#attempt to create managed -> managed mapping with different entities: "
+								+ printEntity( mergeEntity ) + "; " + printEntity( managedEntity )
+				);
+			}
 		}
 
 		Object oldManagedEntity = mergeToManagedEntityXref.put( mergeEntity, managedEntity );

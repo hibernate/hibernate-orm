@@ -21,29 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.orphan.onetomany;
+package org.hibernate.ejb.test.orphan.onetomany;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="product")
-public class Product {
-	@Id
-	@GeneratedValue(strategy= GenerationType.AUTO)
+@Table(name="feature")
+public class Feature {
+	@Id @GeneratedValue(strategy= GenerationType.AUTO)
 	private Long id;
 
-	@OneToMany(mappedBy = "product", orphanRemoval = true)
-	//, cascade ={CascadeType.PERSIST}
-	private List<Feature> features = new ArrayList<Feature>();
+	@ManyToOne()
+	private Product product;
 
 	private String name;
+
+	public Feature() {
+	}
+
+	public Feature(Product product) {
+		this.product = product;
+	}
 
 	public Long getId() {
 		return id;
@@ -59,11 +62,11 @@ public class Product {
 		this.name = name;
 	}
 
-	public List<Feature> getFeatures() {
-		return features;
+	public Product getProduct() {
+		return product;
 	}
-	public void setFeatures(List<Feature> features) {
-		this.features = features;
+	public void setProduct(Product product) {
+		this.product = product;
 	}
 }
 

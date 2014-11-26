@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.orphan.onetomany;
+package org.hibernate.ejb.test.orphan.onetomany;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;

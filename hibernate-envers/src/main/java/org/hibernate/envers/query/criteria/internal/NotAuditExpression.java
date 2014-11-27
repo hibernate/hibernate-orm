@@ -41,7 +41,7 @@ public class NotAuditExpression implements AuditCriterion {
 
 	public void addToQuery(
 			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
-		criterion.addToQuery( verCfg, versionsReader, entityName, qb, parameters.addNegatedParameters() );
+			String alias, QueryBuilder qb, Parameters parameters) {
+		criterion.addToQuery( verCfg, versionsReader, entityName, alias, qb, parameters.addNegatedParameters() );
 	}
 }

@@ -34,5 +34,5 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
 public interface AuditCriterion {
 	void addToQuery(
 			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters);
+			String alias, QueryBuilder qb, Parameters parameters);
 }

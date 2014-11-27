@@ -45,7 +45,7 @@ public class IdentifierEqAuditExpression implements AuditCriterion {
 
 	public void addToQuery(
 			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			String alias, QueryBuilder qb, Parameters parameters) {
 		verCfg.getEntCfg().get( entityName ).getIdMapper()
 				.addIdEqualsToQuery( parameters, id, verCfg.getAuditEntCfg().getOriginalIdPropName(), equals );
 	}

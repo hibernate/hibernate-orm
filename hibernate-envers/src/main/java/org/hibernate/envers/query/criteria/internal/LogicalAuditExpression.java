@@ -45,10 +45,10 @@ public class LogicalAuditExpression implements AuditCriterion {
 
 	public void addToQuery(
 			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			String alias, QueryBuilder qb, Parameters parameters) {
 		Parameters opParameters = parameters.addSubParameters( op );
 
-		lhs.addToQuery( verCfg, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
-		rhs.addToQuery( verCfg, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
+		lhs.addToQuery( verCfg, versionsReader, entityName, alias, qb, opParameters.addSubParameters( "and" ) );
+		rhs.addToQuery( verCfg, versionsReader, entityName, alias, qb, opParameters.addSubParameters( "and" ) );
 	}
 }

@@ -471,7 +471,10 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	) {
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), CascadePoint.BEFORE_MERGE, source ).cascade(
+			Cascade.cascade(
+					getCascadeAction(),
+					CascadePoint.BEFORE_MERGE,
+					source,
 					persister,
 					entity,
 					copyCache

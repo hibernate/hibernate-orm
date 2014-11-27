@@ -429,7 +429,10 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// cascade-save to many-to-one BEFORE the parent is saved
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), CascadePoint.BEFORE_INSERT_AFTER_DELETE, source ).cascade(
+			Cascade.cascade(
+					getCascadeAction(),
+					CascadePoint.BEFORE_INSERT_AFTER_DELETE,
+					source,
 					persister,
 					entity,
 					anything
@@ -457,7 +460,10 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// cascade-save to collections AFTER the collection owner was saved
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), CascadePoint.AFTER_INSERT_BEFORE_DELETE, source ).cascade(
+			Cascade.cascade(
+					getCascadeAction(),
+					CascadePoint.AFTER_INSERT_BEFORE_DELETE,
+					source,
 					persister,
 					entity,
 					anything

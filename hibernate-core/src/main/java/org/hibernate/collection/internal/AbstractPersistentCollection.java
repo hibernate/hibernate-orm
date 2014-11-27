@@ -55,7 +55,13 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.PostgresUUIDType;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import org.hibernate.type.UUIDBinaryType;
+import org.hibernate.type.UUIDCharType;
 import org.jboss.logging.Logger;
 
 /**
@@ -1117,6 +1123,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 		final EntityPersister entityPersister = session.getFactory().getEntityPersister( entityName );
 		final Type idType = entityPersister.getIdentifierType();
+		final boolean useIdDirect = mayUseIdDirect( idType );
 
 		// create the collection holding the Orphans
 		final Collection res = new ArrayList();
@@ -1136,7 +1143,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 							current,
 							session
 					);
-					currentIds.add( new TypedValue( idType, currentId ) );
+					currentIds.add( useIdDirect ? currentId : new TypedValue( idType, currentId ) );
 				}
 			}
 		}
@@ -1145,13 +1152,22 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		for ( Object old : oldElements ) {
 			if ( !currentSaving.contains( old ) ) {
 				final Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
-				if ( !currentIds.contains( new TypedValue( idType, oldId ) ) ) {
+				if ( !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType, oldId ) ) ) {
 					res.add( old );
 				}
 			}
 		}
 
 		return res;
+	}
+
+	private static boolean mayUseIdDirect(Type idType) {
+		return idType == StringType.INSTANCE
+			|| idType == IntegerType.INSTANCE
+			|| idType == LongType.INSTANCE
+			|| idType == UUIDBinaryType.INSTANCE
+			|| idType == UUIDCharType.INSTANCE
+			|| idType == PostgresUUIDType.INSTANCE;
 	}
 
 	/**

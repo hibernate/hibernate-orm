@@ -49,6 +49,7 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
+			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -68,17 +69,17 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		// Adding all specified conditions both to the main query, as well as to the
 		// aggregated one.
 		for ( AuditCriterion versionsCriteria : criterions ) {
-			versionsCriteria.addToQuery( enversService, versionsReader, entityName, qb, subParams );
-			versionsCriteria.addToQuery( enversService, versionsReader, entityName, subQb, subQb.getRootParameters() );
+			versionsCriteria.addToQuery( enversService, versionsReader, entityName, qb.getAlias(), qb, subParams );
+			versionsCriteria.addToQuery( enversService, versionsReader, entityName, subQb.getAlias(), subQb, subQb.getRootParameters() );
 		}
 
 		// Setting the desired projection of the aggregated query
 		switch ( mode ) {
 			case MIN:
-				subQb.addProjection( "min", propertyName, false );
+				subQb.addProjection( "min", subQb.getAlias(), propertyName, false );
 				break;
 			case MAX:
-				subQb.addProjection( "max", propertyName, false );
+				subQb.addProjection( "max", subQb.getAlias(), propertyName, false );
 		}
 
 		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.

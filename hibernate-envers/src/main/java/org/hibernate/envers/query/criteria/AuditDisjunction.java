@@ -35,6 +35,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
+			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		Parameters orParameters = parameters.addSubParameters( Parameters.OR );
@@ -44,7 +45,7 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 		}
 		else {
 			for ( AuditCriterion criterion : criterions ) {
-				criterion.addToQuery( enversService, versionsReader, entityName, qb, orParameters );
+				criterion.addToQuery( enversService, versionsReader, entityName, alias, qb, orParameters );
 			}
 		}
 	}

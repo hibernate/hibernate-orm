@@ -27,7 +27,7 @@ public class IlikeAuditExpression implements AuditCriterion {
 	public void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			String alias, QueryBuilder qb, Parameters parameters) {
 
 		String propertyName = CriteriaTools.determinePropertyName(
 				enversService,

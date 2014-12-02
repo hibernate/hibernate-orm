@@ -638,7 +638,7 @@ public class Customer {
       to load the customer and their orders together. One way certainly is to
       use "dynamic fetching" strategies via an HQL or criteria queries. But
       another option is to use a fetch profile to achieve that. The following
-      code will load both the customer <emphasis>and</emphasis>their
+      code will load both the customer <emphasis>and</emphasis> their
       orders:</para>
 
       <example>

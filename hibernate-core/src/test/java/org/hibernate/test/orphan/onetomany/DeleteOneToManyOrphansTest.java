@@ -78,7 +78,7 @@ public class DeleteOneToManyOrphansTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, results.size() );
 		Product product = ( Product ) results.get( 0 );
 		assertEquals( 1, product.getFeatures().size() );
-		product.getFeatures().clear();;
+		product.getFeatures().clear();
 		session.getTransaction().commit();
 		session.close();
 
@@ -131,7 +131,6 @@ public class DeleteOneToManyOrphansTest extends BaseCoreFunctionalTestCase {
 
 		cleanupData();
 	}
-
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9330")

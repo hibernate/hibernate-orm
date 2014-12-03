@@ -21,52 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.orphan.onetomany;
+package org.hibernate.test.orphan.one2one.fk.bidirectional.multilevelcascade;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name="feature")
-public class Feature {
-	@Id @GeneratedValue(strategy= GenerationType.AUTO)
-	private Long id;
+public class Tranchenmodell {
 
-	@ManyToOne()
-	private Product product;
+    @Id
+    private Long id;
 
-	private String name;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Tranche> tranchen = new ArrayList<Tranche>();
 
-	public Feature() {
-	}
+    @OneToOne(optional = true, fetch = FetchType.LAZY)
+    private Preisregelung preisregelung;
 
-	public Feature(Product product) {
-		this.product = product;
-	}
 
-	public Long getId() {
-		return id;
-	}
+
+    public Long getId() {
+        return id;
+    }
+
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
+    public List<Tranche> getTranchen() {
+        return tranchen;
+    }
 
-	public Product getProduct() {
-		return product;
-	}
-	public void setProduct(Product product) {
-		this.product = product;
-	}
+    public Preisregelung getPreisregelung() {
+        return preisregelung;
+    }
+
+    public void setPreisregelung(Preisregelung preisregelung) {
+        this.preisregelung = preisregelung;
+    }
+
+
 }
-

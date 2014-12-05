@@ -271,19 +271,12 @@ public class MapBinder extends CollectionBinder {
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
 					elementBinder.setKey(true);
-					MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
-					if ( mapKeyTypeAnnotation != null
-							&& !BinderHelper.isEmptyAnnotationValue( mapKeyTypeAnnotation.value() .type() ) ) {
-						elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
-					}
-					else {
-						elementBinder.setType(
-								property,
-								keyXClass,
-								this.collection.getOwnerEntityName(),
-								holder.keyElementAttributeConverterDefinition( keyXClass )
-						);
-					}
+					elementBinder.setType(
+							property,
+							keyXClass,
+							this.collection.getOwnerEntityName(),
+							holder.keyElementAttributeConverterDefinition( keyXClass )
+					);
 					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 					elementBinder.setAccessType( accessType );
 					mapValue.setIndex( elementBinder.make() );

@@ -1,7 +1,5 @@
 package org.hibernate.test.annotations.enumerated;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -16,16 +14,22 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.annotations.enumerated.EntityEnum.Common;
-import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
-import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
-import org.hibernate.test.annotations.enumerated.EntityEnum.Trimmed;
+import org.hibernate.type.EnumType;
+import org.hibernate.type.Type;
+
+import org.junit.Test;
+
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
-import org.junit.Test;
+import org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType;
+import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
+import org.hibernate.test.annotations.enumerated.enums.Common;
+import org.hibernate.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.test.annotations.enumerated.enums.Trimmed;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test type definition for enum

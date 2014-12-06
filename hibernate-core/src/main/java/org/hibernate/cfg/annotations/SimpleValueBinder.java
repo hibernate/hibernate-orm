@@ -38,6 +38,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -160,7 +161,18 @@ public class SimpleValueBinder {
 		final boolean isNationalized = property.isAnnotationPresent( Nationalized.class )
 				|| mappings.useNationalizedCharacterData();
 
-		Type annType = property.getAnnotation( Type.class );
+		Type annType = null;
+		if ( (!key && property.isAnnotationPresent( Type.class ))
+				|| (key && property.isAnnotationPresent( MapKeyType.class )) ) {
+			if ( key ) {
+				MapKeyType ann = property.getAnnotation( MapKeyType.class );
+				annType = ann.value();
+			}
+			else {
+				annType = property.getAnnotation( Type.class );
+			}
+		}
+
 		if ( annType != null ) {
 			setExplicitType( annType );
 			type = explicitType;

@@ -256,6 +256,14 @@ public class PostgreSQL81Dialect extends Dialect {
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
+	
+	@Override
+	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		/*
+		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
+		 */
+		return getForUpdateString(aliases);
+	}
 
 	@Override
 	public String getIdentitySelectString(String table, String column, int type) {

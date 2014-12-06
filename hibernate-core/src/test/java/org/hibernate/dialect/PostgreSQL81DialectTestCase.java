@@ -23,19 +23,20 @@
  */
 package org.hibernate.dialect;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.SQLException;
+
 import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 
 /**
@@ -64,5 +65,23 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		
 		JDBCException exception = delegate.convert(new SQLException("Lock Not Available", "55P03"), "", "");
 		assertTrue(exception instanceof PessimisticLockException);
+	}
+	
+	/**
+	 * Tests that getForUpdateString(String aliases, LockOptions lockOptions) will return a String
+	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
+	 */
+	@TestForIssue( jiraKey = "HHH-5654" )
+	public void testGetForUpdateStringWithAliasesAndLockOptions() {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		LockOptions lockOptions = new LockOptions();
+		lockOptions.setAliasSpecificLockMode("tableAlias1", LockMode.PESSIMISTIC_WRITE);
+		
+		String forUpdateClause = dialect.getForUpdateString("tableAlias1", lockOptions);
+		assertTrue("for update of tableAlias1".equals(forUpdateClause));
+		
+		lockOptions.setAliasSpecificLockMode("tableAlias2", LockMode.PESSIMISTIC_WRITE);
+		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
+		assertTrue("for update of tableAlias1,tableAlias2".equals(forUpdateClause));
 	}
 }

@@ -23,27 +23,23 @@
  */
 package org.hibernate.osgi;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceUnitInfo;
-
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.jpa.boot.spi.IntegratorProvider;
-import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
-import org.hibernate.jpa.boot.spi.TypeContributorList;
+import org.hibernate.jpa.boot.spi.*;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleReference;
+import org.osgi.framework.wiring.BundleRevision;
+
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.spi.PersistenceUnitInfo;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Acts as the PersistenceProvider service in OSGi environments
@@ -52,7 +48,7 @@ import org.osgi.framework.BundleReference;
  * @author Tim Ward
  */
 public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
-	private OsgiClassLoader osgiClassLoader;
+
 	private OsgiJtaPlatform osgiJtaPlatform;
 	private OsgiServiceUtil osgiServiceUtil;
 	private Bundle requestingBundle;
@@ -60,24 +56,18 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	/**
 	 * Constructs a OsgiPersistenceProvider
 	 *
-	 * @param osgiClassLoader The ClassLoader we built from OSGi Bundles
 	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform impl we built
 	 * @param requestingBundle The OSGi Bundle requesting the PersistenceProvider
-	 * @param context The OSGi context
 	 */
 	public OsgiPersistenceProvider(
-			OsgiClassLoader osgiClassLoader,
 			OsgiJtaPlatform osgiJtaPlatform,
 			OsgiServiceUtil osgiServiceUtil,
 			Bundle requestingBundle) {
-		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.osgiServiceUtil = osgiServiceUtil;
 		this.requestingBundle = requestingBundle;
 	}
 
-	// TODO: Does "hibernate.classloaders" and osgiClassLoader need added to the
-	// EMFBuilder somehow?
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -86,14 +76,15 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		// TODO: This needs tested.
 		settings.put( org.hibernate.jpa.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
-		// TODO: This is temporary -- for PersistenceXmlParser's use of
-		// ClassLoaderServiceImpl#fromConfigSettings
-		settings.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
 
-		osgiClassLoader.addBundle( requestingBundle );
 
-		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, settings, osgiClassLoader );
-		return builder == null ? null : builder.build();
+
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, settings);
+
+
+		BundleRevision bundleRevision = requestingBundle.adapt(BundleRevision.class);
+
+		return builder == null ? null : new EntityManagerFactoryTcclWrapper(builder.build(), bundleRevision.getWiring().getClassLoader());
 	}
 
 	@Override
@@ -107,9 +98,9 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() )
 		);
 
-		osgiClassLoader.addClassLoader( info.getClassLoader() );
+		EntityManagerFactory builder = Bootstrap.getEntityManagerFactoryBuilder(info, settings).build();
 
-		return Bootstrap.getEntityManagerFactoryBuilder( info, settings, osgiClassLoader ).build();
+		return new EntityManagerFactoryTcclWrapper(builder, info.getClassLoader());
 	}
 
 	@SuppressWarnings("unchecked")

@@ -154,7 +154,7 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 		// check the version value in the cache...
 		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
 				.getSecondLevelCacheStatistics( REGION_PREFIX + VersionedItem.class.getName() );
-		assertThat( slcs, CoreMatchers.<Object>notNullValue() );
+		assertThat( slcs, CoreMatchers.notNullValue() );
 		final Map entries = slcs.getEntries();
 		Object entry = entries.get( item.getId() );
 		Long cachedVersionValue;

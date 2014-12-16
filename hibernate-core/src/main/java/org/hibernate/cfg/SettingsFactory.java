@@ -138,6 +138,11 @@ public class SettingsFactory implements Serializable {
 				}
 				catch ( SQLException sqle ) {
 					log.warn( "Could not obtain connection metadata", sqle );
+					// At this location the dialect can still be null in case
+					// DatabaseMetaData meta = conn.getMetaData() throws a java.sql.SQLException
+					if ( dialect == null ) {
+						dialect = DialectFactory.buildDialect( props );
+					}
 				}
 				finally {
 					connections.closeConnection( conn );

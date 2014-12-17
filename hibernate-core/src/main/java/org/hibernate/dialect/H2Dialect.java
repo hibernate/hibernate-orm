@@ -253,7 +253,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+		return "drop sequence if exists " + sequenceName;
 	}
 
 	public String getSelectSequenceNextValString(String sequenceName) {

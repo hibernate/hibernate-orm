@@ -257,7 +257,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIfExistsAfterConstraintName() {
+	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
 	}
 

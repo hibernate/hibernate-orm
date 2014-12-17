@@ -12,12 +12,6 @@ sourceSets.test {
 	runtimeClasspath += sourceSets.testClientBundle.output
 }
 
-
-// temporary for HHH-9466
-test {
-    enabled = false;
-}
-
 dependencies {
 	compile( project( ':hibernate-core' ) )
 	compile( project( ':hibernate-entitymanager' ) )
@@ -33,6 +27,8 @@ dependencies {
 	testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
 	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
 	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
+    testRuntime( libraries.slf4j_api );
+    testRuntime( libraries.slf4j_log4j );
 	testRuntime( "org.jboss.logmanager:jboss-logmanager:1.4.1.Final" )
 	
 	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
@@ -84,6 +80,11 @@ jar {
 			'javax.persistence;version="2.1.0"',
 			'javax.persistence.spi;version="2.1.0"'
 	}
+}
+
+test {
+    systemProperties['java.util.logging.manager'] = "org.jboss.logmanager.LogManager"
+    systemProperties['log4j.configuration'] = "file://$projectDir/src/test/resources/logging.properties"
 }
 
 task copyBnd(type: Copy) {
@@ -146,13 +147,12 @@ task testClientBundleJar(type: Jar) {
 					"Bundle-SymbolicName" : "testClientBundle",
 					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.osgi.framework,"
 							+ "org.hibernate,"
+                            + "org.hibernate.boot.model,"
 							+ "org.hibernate.boot.registry.selector,"
 							+ "org.hibernate.boot.registry.selector.spi,"
 							+ "org.hibernate.cfg,"
 							+ "org.hibernate.engine.spi,"
 							+ "org.hibernate.integrator.spi,"
-							+ "org.hibernate.metamodel.source,"
-							+ "org.hibernate.metamodel.spi,"
 							+ "org.hibernate.proxy,"
 							+ "org.hibernate.service,"
 							+ "org.hibernate.service.spi")

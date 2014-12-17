@@ -61,10 +61,15 @@ public class NoArgSQLFunction implements SQLFunction {
         return returnType;
     }
 
-    public String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
-    	if ( args.size()>0 ) {
-    		throw new QueryException("function takes no arguments: " + name);
-    	}
-    	return hasParenthesesIfNoArguments ? name + "()" : name;
-    }
+	@Override
+	public String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
+		if ( args.size() > 0 ) {
+			throw new QueryException( "function takes no arguments: " + name );
+		}
+		return hasParenthesesIfNoArguments ? name + "()" : name;
+	}
+
+	protected String getName() {
+		return name;
+	}
 }

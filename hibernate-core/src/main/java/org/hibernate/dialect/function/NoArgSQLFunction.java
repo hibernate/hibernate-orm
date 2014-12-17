@@ -85,4 +85,8 @@ public class NoArgSQLFunction implements SQLFunction {
 		}
 		return hasParenthesesIfNoArguments ? name + "()" : name;
 	}
+
+	protected String getName() {
+		return name;
+	}
 }

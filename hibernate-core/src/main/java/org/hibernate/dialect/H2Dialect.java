@@ -278,7 +278,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+		return "drop sequence if exists " + sequenceName;
 	}
 
 	@Override

@@ -103,7 +103,7 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testTimeGeneratedByColumnDefinition() {
+	public void testTimeGeneratedByColumnDefault() {
 		final Entity eOrig = new Entity();
 
 		Session s = openSession();
@@ -112,22 +112,22 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertNotNull( eOrig.tsColumnDefinition );
+		assertNotNull( eOrig.tsColumnDefault );
 
 		s = openSession();
 		s.getTransaction().begin();
 		final Entity eGotten = (Entity) s.get( Entity.class, eOrig.id );
-		final String tsColumnDefinitionOrigFormatted = timestampFormat.format( eOrig.tsColumnDefinition );
-		final String tsColumnDefinitionGottenFormatted = timestampFormat.format( eGotten.tsColumnDefinition );
-		assertEquals( tsColumnDefinitionOrigFormatted , tsColumnDefinitionGottenFormatted );
+		final String tsColumnDefaultOrigFormatted = timestampFormat.format( eOrig.tsColumnDefault );
+		final String tsColumnDefaultGottenFormatted = timestampFormat.format( eGotten.tsColumnDefault );
+		assertEquals( tsColumnDefaultOrigFormatted , tsColumnDefaultGottenFormatted );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithParameter =
-				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefinition=?" )
-						.setParameter( 0, eOrig.tsColumnDefinition );
+				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?" )
+						.setParameter( 0, eOrig.tsColumnDefault );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -136,8 +136,8 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
-				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefinition=?" )
-						.setTimestamp( 0, eOrig.tsColumnDefinition );
+				s.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?" )
+						.setTimestamp( 0, eOrig.tsColumnDefault );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -149,7 +149,6 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -167,7 +166,7 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 
 		@Temporal( value = TemporalType.TIMESTAMP )
 		@Generated( value = GenerationTime.INSERT )
-		@Column( columnDefinition = "datetime(6) default NOW(6)" )
-		private Date tsColumnDefinition;
+		@ColumnDefault( value = "CURRENT_TIMESTAMP" )
+		private Date tsColumnDefault;
 	}
 }

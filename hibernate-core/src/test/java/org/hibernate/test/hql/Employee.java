@@ -41,7 +41,7 @@ import javax.persistence.Table;
 public class Employee implements Serializable  {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue
     @Column(name="id_emp")
     private Integer id;
     

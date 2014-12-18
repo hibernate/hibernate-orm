@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MySQL57InnoDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.envers.configuration.EnversSettings;
@@ -490,8 +491,10 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				Assert.assertNull( revEnd );
 			}
 			else {
-				if ( getDialect() instanceof MySQL5Dialect ) {
+				if ( getDialect() instanceof MySQL5Dialect && !( getDialect() instanceof MySQL57InnoDBDialect) ) {
 					// MySQL5 DATETIME column type does not contain milliseconds.
+					// MySQL 5.7 supports milliseconds and when MySQL57InnoDBDialect is used, it is assumed that
+					// the column is defined as DATETIME(6).
 					Assert.assertEquals(
 							revendTimestamp.getTime(),
 							(revEnd.getTimestamp() - (revEnd.getTimestamp() % 1000))

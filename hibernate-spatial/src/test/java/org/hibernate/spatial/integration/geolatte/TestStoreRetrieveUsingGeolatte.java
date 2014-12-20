@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.geolatte.geom.C3DM;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.GeometryEquality;
 import org.geolatte.geom.GeometryPointEquality;
@@ -66,8 +67,8 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 			for ( GeomEntity storedEntity : stored.values() ) {
 				id = storedEntity.getId();
 				GeomEntity retrievedEntity = (GeomEntity) session.get( GeomEntity.class, id );
-				Geometry retrievedGeometry = retrievedEntity.getGeom();
-				Geometry storedGeometry = storedEntity.getGeom();
+				Geometry<C3DM> retrievedGeometry = retrievedEntity.getGeom();
+				Geometry<C3DM> storedGeometry = storedEntity.getGeom();
 				String msg = createFailureMessage( storedEntity.getId(), storedGeometry, retrievedGeometry );
 				assertTrue( msg, geomEq.equals( storedGeometry, retrievedGeometry ) );
 			}
@@ -87,8 +88,8 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 	}
 
 	private String createFailureMessage(int id, Geometry storedGeometry, Geometry retrievedGeometry) {
-		String expectedText = ( storedGeometry != null ? storedGeometry.asText() : "NULL" );
-		String retrievedText = ( retrievedGeometry != null ? retrievedGeometry.asText() : "NULL" );
+		String expectedText = ( storedGeometry != null ? storedGeometry.toString() : "NULL" );
+		String retrievedText = ( retrievedGeometry != null ? retrievedGeometry.toString() : "NULL" );
 		return String.format(
 				"Equality testsuite-suite failed for %d.%nExpected: %s%nReceived:%s",
 				id,

@@ -25,10 +25,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.geolatte.geom.C3DM;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.geolatte.geom.codec.WktDecoder;
+import org.geolatte.geom.crs.CoordinateReferenceSystem;
+import org.geolatte.geom.crs.CoordinateReferenceSystems;
 
 import org.hibernate.spatial.testing.TestDataElement;
 
@@ -39,13 +42,14 @@ import org.hibernate.spatial.testing.TestDataElement;
 @Table(name = "geomtest")
 public class GeomEntity {
 
+	private final static CoordinateReferenceSystem<C3DM> CRS = CoordinateReferenceSystems.PROJECTED_3DM_METER;
 
 	@Id
 	private Integer id;
 
 	private String type;
 
-	private Geometry geom;
+	private Geometry<C3DM> geom;
 
 	public Integer getId() {
 		return id;
@@ -63,17 +67,17 @@ public class GeomEntity {
 		this.type = type;
 	}
 
-	public Geometry getGeom() {
+	public Geometry<C3DM> getGeom() {
 		return geom;
 	}
 
-	public void setGeom(Geometry geom) {
+	public void setGeom(Geometry<C3DM> geom) {
 		this.geom = geom;
 	}
 
 	public static GeomEntity createFrom(TestDataElement element) throws WktDecodeException {
 		WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
-		Geometry geom = decoder.decode( element.wkt );
+		Geometry<C3DM> geom = decoder.decode( element.wkt, CRS  );
 		GeomEntity result = new GeomEntity();
 		result.setId( element.id );
 		result.setGeom( geom );

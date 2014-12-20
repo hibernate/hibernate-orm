@@ -29,16 +29,16 @@ import java.sql.Blob;
 
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.ByteOrder;
-import org.geolatte.geom.DimensionalFlag;
+import org.geolatte.geom.C2D;
 import org.geolatte.geom.Envelope;
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.PointSequence;
-import org.geolatte.geom.PointSequenceBuilders;
 import org.geolatte.geom.Polygon;
+import org.geolatte.geom.PositionSequence;
+import org.geolatte.geom.PositionSequenceBuilders;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
-import org.geolatte.geom.crs.CrsId;
+import org.geolatte.geom.crs.CoordinateReferenceSystems;
 import org.geolatte.geom.jts.JTS;
 
 import org.hibernate.HibernateException;
@@ -109,13 +109,14 @@ public class GeoDbWkb {
 
 	}
 
-	private static Geometry toPolygon(Envelope env) {
-		final PointSequence ps = PointSequenceBuilders.fixedSized( 4, DimensionalFlag.d2D, CrsId.UNDEFINED )
-				.add( env.getMinX(), env.getMinY() )
-				.add( env.getMinX(), env.getMaxY() )
-				.add( env.getMaxX(), env.getMaxY() )
-				.add( env.getMinX(), env.getMinY() ).toPointSequence();
-		return new Polygon( ps );
+	private static Geometry<C2D> toPolygon(Envelope env) {
+		final PositionSequence<C2D> ps = PositionSequenceBuilders.fixedSized(4, C2D.class)
+				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate(1) )
+				.add( env.lowerLeft().getCoordinate( 0 ), env.upperRight().getCoordinate(1) )
+				.add( env.upperRight().getCoordinate( 0 ), env.upperRight().getCoordinate(1) )
+				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate(1) )
+				.toPositionSequence();
+		return new Polygon<C2D>( ps, CoordinateReferenceSystems.PROJECTED_2D_METER );
 	}
 
 	private static ByteBuffer toByteBuffer(Blob blob) {

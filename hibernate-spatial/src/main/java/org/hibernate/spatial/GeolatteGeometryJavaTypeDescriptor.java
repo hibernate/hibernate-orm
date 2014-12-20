@@ -50,7 +50,7 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 
 	@Override
 	public String toString(Geometry value) {
-		return value.asText();
+		return value.toString();
 	}
 
 	@Override

@@ -138,6 +138,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 		@Override
 		public String render(RenderingContext renderingContext) {
+			original.prepareAlias(renderingContext);
 			return getTreatFragment();
 		}
 

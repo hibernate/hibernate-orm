@@ -129,6 +129,16 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	public void treatRoot() {
+		EntityManager em = getOrCreateEntityManager();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Human> criteria = builder.createQuery( Human.class );
+		Root<Animal> root = criteria.from( Animal.class );
+		criteria.select( builder.treat( root, Human.class ) );
+		em.createQuery( criteria ).getResultList();
+		em.close();
+	}
 
 
 }

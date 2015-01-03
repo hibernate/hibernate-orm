@@ -23,7 +23,10 @@
  */
 package org.hibernate.dialect;
 
+import java.util.ArrayList;
+import java.util.List;
 
+import org.hibernate.internal.util.StringHelper;
 /**
  * Microsoft SQL Server 2012 Dialect
  *
@@ -64,5 +67,30 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select name from sys.sequences";
+	}
+	
+	@Override
+	public String getQueryHintString(String sql, List<String> hints) {
+		final String hint = StringHelper.join(", ", hints.iterator());
+
+		if (StringHelper.isEmpty(hint)) {
+			return sql;
+		}
+
+		final StringBuilder buffer = new StringBuilder(sql.length()
+				+ hint.length() + 12);
+		final int pos = sql.indexOf(";");
+		if (pos > -1) {
+			buffer.append(sql.substring(0, pos));
+		} else {
+			buffer.append(sql);
+		}
+		buffer.append(" OPTION (").append(hint).append(")");
+		if (pos > -1) {
+			buffer.append(";");
+		}
+		sql = buffer.toString();
+
+		return sql;
 	}
 }

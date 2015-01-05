@@ -5,6 +5,19 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.17 (2015.01.05)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-9330] - orphanRemoval=true does not work in bidirectional relationships (without cascading)
+    [HHH-9444] - Rounding of fractional seconds causes test failures on MySQL 5.6.4+
+    [HHH-9467] - Cannot enable NamingStrategyDelegator implementations using standalone schema tools
+    [HHH-9500] - H2: SchemaExport ERROR when using in-memory database - drop constraint issue HHH000389
+
+** Improvement
+    [HHH-6670] - H2Dialect should use "if exists" when dropping sequences
+    [HHH-8401] - Support fractional seconds on MySQL 5.7
+
 Changes in version 4.2.16 (2014.10.30)
 ------------------------------------------------------------------------------------------------------------------------
 

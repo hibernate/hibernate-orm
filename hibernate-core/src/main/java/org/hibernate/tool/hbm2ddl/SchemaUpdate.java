@@ -40,6 +40,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -121,6 +122,9 @@ public class SchemaUpdate {
 			// If true then execute db updates, otherwise just generate and display updates
 			boolean doUpdate = true;
 			String propFile = null;
+			String outFile = null;
+			boolean hasNaming = false;
+			boolean hasNamingDelegator = false;
 
 			for ( int i = 0; i < args.length; i++ ) {
 				if ( args[i].startsWith( "--" ) ) {
@@ -136,9 +140,22 @@ public class SchemaUpdate {
 					else if ( args[i].startsWith( "--text" ) ) {
 						doUpdate = false;
 					}
+					else if ( args[i].startsWith( "--output=" ) ) {
+						 outFile = args[i].substring( 9 );
+					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
+						hasNaming = true;
+						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
 						cfg.setNamingStrategy(
 								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) ).newInstance()
+						);
+					}
+					else if ( args[i].startsWith( "--namingdelegator=" ) ) {
+						hasNamingDelegator = true;
+						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
+						cfg.setNamingStrategyDelegator(
+								(NamingStrategyDelegator) ReflectHelper.classForName( args[i].substring( 18 ) )
+										.newInstance()
 						);
 					}
 				}
@@ -157,7 +174,9 @@ public class SchemaUpdate {
 
 			StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
-				new SchemaUpdate( serviceRegistry, cfg ).execute( script, doUpdate );
+				final SchemaUpdate schemaUpdate = new SchemaUpdate( serviceRegistry, cfg );
+				schemaUpdate.setOutputFile( outFile );
+				schemaUpdate.execute( script, doUpdate );
 			}
 			finally {
 				serviceRegistry.destroy();
@@ -166,6 +185,12 @@ public class SchemaUpdate {
 		catch ( Exception e ) {
             LOG.unableToRunSchemaUpdate(e);
 			e.printStackTrace();
+		}
+	}
+
+	private static void checkNamingAndNamingDelegatorNotBothSpecified(boolean namingSpecified, boolean namingDelegatorSpecified) {
+		if ( namingSpecified && namingDelegatorSpecified ) {
+			throw new HibernateException( "--naming=<naming_strategy> and --namingdelegator=<naming_strategy_delegator> cannot be used together." );
 		}
 	}
 

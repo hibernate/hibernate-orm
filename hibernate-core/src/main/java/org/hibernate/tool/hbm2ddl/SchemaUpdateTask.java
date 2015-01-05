@@ -36,6 +36,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -76,7 +77,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	private boolean haltOnError;
 	private String delimiter;
 	private String namingStrategy;
-	
+	private String namingStrategyDelegator;
 
 	public void addFileset(FileSet set) {
 		fileSets.add(set);
@@ -170,10 +171,19 @@ public class SchemaUpdateTask extends MatchingTask {
 
 	private Configuration getConfiguration() throws Exception {
 		Configuration cfg = new Configuration();
+		if ( namingStrategy != null && namingStrategyDelegator != null ) {
+			throw new HibernateException( "namingStrategy and namingStrategyDelegator cannot be specified together." );
+		}
 		if (namingStrategy!=null) {
 			cfg.setNamingStrategy(
 					(NamingStrategy) ReflectHelper.classForName( namingStrategy ).newInstance()
 				);
+		}
+		else if ( namingStrategyDelegator != null) {
+			cfg.setNamingStrategyDelegator(
+					(NamingStrategyDelegator) ReflectHelper.classForName( namingStrategyDelegator ).newInstance()
+
+			);
 		}
 		if (configurationFile!=null) {
 			cfg.configure( configurationFile );
@@ -211,6 +221,10 @@ public class SchemaUpdateTask extends MatchingTask {
 
 	public void setNamingStrategy(String namingStrategy) {
 		this.namingStrategy = namingStrategy;
+	}
+
+	public void setNamingStrategyDelegator(String namingStrategyDelegator) {
+		this.namingStrategyDelegator =  namingStrategyDelegator;
 	}
 
 	public File getOutputFile() {

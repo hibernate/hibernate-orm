@@ -46,6 +46,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -527,6 +528,8 @@ public class SchemaExport {
 			String propFile = null;
 			boolean format = false;
 			String delim = null;
+			boolean hasNaming = false;
+			boolean hasNamingDelegator = false;
 
 			for ( int i = 0; i < args.length; i++ ) {
 				if ( args[i].startsWith( "--" ) ) {
@@ -564,8 +567,18 @@ public class SchemaExport {
 						cfg.configure( args[i].substring( 9 ) );
 					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
+						hasNaming = true;
+						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
 						cfg.setNamingStrategy(
 								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) )
+										.newInstance()
+						);
+					}
+					else if ( args[i].startsWith( "--namingdelegator=" ) ) {
+						hasNamingDelegator = true;
+						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
+						cfg.setNamingStrategyDelegator(
+								(NamingStrategyDelegator) ReflectHelper.classForName( args[i].substring( 18 ) )
 										.newInstance()
 						);
 					}
@@ -612,6 +625,12 @@ public class SchemaExport {
 		catch ( Exception e ) {
             LOG.unableToCreateSchema(e);
 			e.printStackTrace();
+		}
+	}
+
+	private static void checkNamingAndNamingDelegatorNotBothSpecified(boolean namingSpecified, boolean namingDelegatorSpecified) {
+		if ( namingSpecified && namingDelegatorSpecified ) {
+			throw new HibernateException( "--naming=<naming_strategy> and --namingdelegator=<naming_strategy_delegator> cannot be used together." );
 		}
 	}
 

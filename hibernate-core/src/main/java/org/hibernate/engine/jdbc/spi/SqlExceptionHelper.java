@@ -248,7 +248,7 @@ public class SqlExceptionHelper {
 	public void walkWarnings(
 			SQLWarning warning,
 			WarningHandler handler) {
-		if ( warning == null || handler.doProcess() ) {
+		if ( warning == null || !handler.doProcess() ) {
 			return;
 		}
 		handler.prepare( warning );

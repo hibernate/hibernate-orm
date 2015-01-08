@@ -64,8 +64,8 @@ To execute a task in a specific module you can either:
 * _testClasses_ - Compiles the test classes
 * _jar_ - Generates a jar archive with all the compiled classes
 * _test_ - Runs the tests
-* _uploadArchives_ - Think Maven deploy
-* _install_ - Installs the project jar to your local maven cache (aka ~/.m2/repository)
+* _publish_ - Think Maven deploy
+* _publishToMavenLocal_ - Installs the project jar to your local maven cache (aka ~/.m2/repository)
 * _eclipse_ - Generates an Eclipse project
 * _idea_ - Generates an IntelliJ/IDEA project.
 * _clean_ - Cleans the build directory

@@ -5245,7 +5245,7 @@ public abstract class AbstractEntityPersister
 			return new StandardCacheEntryImpl(
 					state,
 					persister,
-					persister.hasUninitializedLazyProperties( entity ),
+					session.getPersistenceContext().getEntry( entity ).isLoadedWithLazyPropertiesUnfetched(),
 					version,
 					session,
 					entity
@@ -5290,7 +5290,7 @@ public abstract class AbstractEntityPersister
 			return new StandardCacheEntryImpl(
 					state,
 					persister,
-					persister.hasUninitializedLazyProperties( entity ),
+					session.getPersistenceContext().getEntry( entity ).isLoadedWithLazyPropertiesUnfetched(),
 					version,
 					session,
 					entity

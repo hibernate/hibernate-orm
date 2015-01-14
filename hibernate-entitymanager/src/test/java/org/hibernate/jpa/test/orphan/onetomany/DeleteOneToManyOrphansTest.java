@@ -30,6 +30,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -67,7 +68,8 @@ public class DeleteOneToManyOrphansTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9330")
+	@TestForIssue( jiraKey = "HHH-9568")
+	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testOrphanedWhileManaged() {
 		createData();
 
@@ -100,7 +102,8 @@ public class DeleteOneToManyOrphansTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9330")
+	@TestForIssue( jiraKey = "HHH-9568")
+	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testOrphanedWhileManagedMergeOwner() {
 		createData();
 
@@ -134,7 +137,8 @@ public class DeleteOneToManyOrphansTest extends BaseEntityManagerFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9330")
+	@TestForIssue( jiraKey = "HHH-9568")
+	@FailureExpected( jiraKey = "HHH-9568" )
 	public void testReplacedWhileManaged() {
 		createData();
 

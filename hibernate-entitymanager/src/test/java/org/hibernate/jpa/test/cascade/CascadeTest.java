@@ -26,14 +26,9 @@ package org.hibernate.jpa.test.cascade;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Max Rydahl Andersen
@@ -104,37 +99,13 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-9568")
-	@FailureExpected(jiraKey = "HHH-9568")
-	public void testFlushTransientOneToOne() throws Exception {
-			EntityManager em = getOrCreateEntityManager();
-			em.getTransaction().begin();
-
-			B b = new B();
-		    A a = new A();
-
-		    a.setB(b);
-		try {
-			em.persist(a);
-			em.flush();
-			em.getTransaction().commit();
-			fail("should have raised an IllegalStateException");
-		} catch (IllegalStateException ex) {
-			// IllegalStateException caught as expected
-		}
-		em.close();
-	}
-
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Teacher.class,
 				Student.class,
 				Song.class,
-				Author.class,
-				A.class,
-				B.class
+				Author.class
 		};
 	}
 

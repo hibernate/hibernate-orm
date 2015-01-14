@@ -1,18 +1,12 @@
-/**
- * $Id$
- *
- * Copyright (C) 2015 CSBI. All Rights Reserved
- */
 package org.hibernate.test.annotations.collectionelement.recreate;
 
-import java.util.Date;
 import javax.persistence.Embeddable;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import java.util.Date;
 
 /**
  * @author Sergey Astakhov
- * @version $Revision$
  */
 @Embeddable
 public class PoiArrival

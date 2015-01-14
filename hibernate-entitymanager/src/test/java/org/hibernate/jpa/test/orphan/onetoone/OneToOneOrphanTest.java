@@ -49,7 +49,6 @@ public class OneToOneOrphanTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9568")
-	@FailureExpected(jiraKey = "HHH-9568")
 	public void testFlushTransientOneToOneNoCascade() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

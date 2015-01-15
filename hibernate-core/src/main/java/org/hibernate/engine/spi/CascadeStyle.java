@@ -253,9 +253,7 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle DELETE_ORPHAN = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action == CascadingAction.DELETE ||
-					action == CascadingAction.SAVE_UPDATE ||
-					action == CascadingAction.PERSIST_ON_FLUSH;
+			return action == CascadingAction.DELETE || action == CascadingAction.SAVE_UPDATE;
 		}
 
 		public boolean reallyDoCascade(CascadingAction action) {

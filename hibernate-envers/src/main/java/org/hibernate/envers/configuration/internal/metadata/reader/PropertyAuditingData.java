@@ -170,6 +170,10 @@ public class PropertyAuditingData {
 		this.usingModifiedFlag = usingModifiedFlag;
 	}
 
+	public String getModifiedFlagName() {
+		return modifiedFlagName;
+	}
+
 	public void setModifiedFlagName(String modifiedFlagName) {
 		this.modifiedFlagName = modifiedFlagName;
 	}

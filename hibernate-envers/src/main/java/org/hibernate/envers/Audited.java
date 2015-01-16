@@ -73,4 +73,10 @@ public @interface Audited {
 	 * This can be used for example in queries.
 	 */
 	boolean withModifiedFlag() default false;
+
+	/**
+	 * The column name of the modified field. Analogous to the name attribute of the @{@link javax.persistence.Column}
+	 * annotation. Ignored if withModifiedFlag is false.
+	 */
+	String modifiedColumnName() default "";
 }

@@ -141,7 +141,7 @@ public final class AuditMetadataGenerator {
 		revMapping.addAttribute( "name", verEntCfg.getRevisionFieldName() );
 		if ( globalCfg.isCascadeDeleteRevision() ) {
 			revMapping.addAttribute( "on-delete", "cascade" );
-	    } 
+	    }
 
 		MetadataTools.addOrModifyColumn( revMapping, verEntCfg.getRevisionFieldName() );
 
@@ -325,7 +325,8 @@ public final class AuditMetadataGenerator {
 			MetadataTools.addModifiedFlagProperty(
 					parent,
 					propertyAuditingData.getName(),
-					globalCfg.getModifiedFlagSuffix()
+					globalCfg.getModifiedFlagSuffix(),
+					propertyAuditingData.getModifiedFlagName()
 			);
 		}
 	}

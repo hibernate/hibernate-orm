@@ -101,10 +101,10 @@ public final class MetadataTools {
 		return addProperty( parent, name, type, insertable, false, key );
 	}
 
-	public static Element addModifiedFlagProperty(Element parent, String propertyName, String suffix) {
+	public static Element addModifiedFlagProperty(Element parent, String propertyName, String suffix, String modifiedFlagName) {
 		return addProperty(
 				parent,
-				getModifiedFlagPropertyName( propertyName, suffix ),
+				(modifiedFlagName != null) ? modifiedFlagName : getModifiedFlagPropertyName( propertyName, suffix ),
 				"boolean",
 				true,
 				false,

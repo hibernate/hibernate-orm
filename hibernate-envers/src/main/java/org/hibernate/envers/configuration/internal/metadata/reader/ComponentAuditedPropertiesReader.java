@@ -28,6 +28,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 
 /**
  * Reads the audited properties for components.
@@ -52,14 +53,21 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 	@Override
 	protected boolean checkAudited(
 			XProperty property,
-			PropertyAuditingData propertyData,
-			Audited allClassAudited) {
+			PropertyAuditingData propertyData, String propertyName,
+			Audited allClassAudited, String modifiedFlagSuffix) {
 		// Checking if this property is explicitly audited or if all properties are.
 		final Audited aud = property.getAnnotation( Audited.class );
 		if ( aud != null ) {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
+			if(aud.modifiedColumnName() != null && !"".equals(aud.modifiedColumnName())) {
+				propertyData.setModifiedFlagName(aud.modifiedColumnName());
+			} else {
+				propertyData.setModifiedFlagName(
+						MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix )
+				);
+			}
 		}
 		else {
 			propertyData.setStore( ModificationStore.FULL );

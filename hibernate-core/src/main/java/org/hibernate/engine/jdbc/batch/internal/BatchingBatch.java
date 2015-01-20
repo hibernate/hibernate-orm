@@ -47,6 +47,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	private final int batchSize;
 	private int batchPosition;
+	private boolean alreadyExecuteBatch;
 	private int statementPosition;
 
 	public BatchingBatch(
@@ -86,6 +87,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 				notifyObserversImplicitExecution();
 				performExecution();
 				batchPosition = 0;
+				alreadyExecuteBatch = true;
 			}
 			statementPosition = 0;
 		}
@@ -93,16 +95,18 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	@Override
 	protected void doExecuteBatch() {
-		if ( batchPosition == 0 ) {
-			LOG.debug( "No batched statements to execute" );
+		if (batchPosition == 0 ) {
+			if(!alreadyExecuteBatch) {
+				LOG.debug( "No batched statements to execute" );
+			}
 		}
 		else {
-			LOG.debugf( "Executing batch size: %s", batchPosition );
 			performExecution();
 		}
 	}
 
 	private void performExecution() {
+		LOG.debugf( "Executing batch size: %s", batchPosition );
 		try {
 			for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
 				try {

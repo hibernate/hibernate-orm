@@ -50,7 +50,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	private final int batchSize;
 	private int batchPosition;
-	private boolean alreadyExecuteBatch;
+	private boolean batchExecuted;
 	private int statementPosition;
 
 	/**
@@ -97,7 +97,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 				notifyObserversImplicitExecution();
 				performExecution();
 				batchPosition = 0;
-				alreadyExecuteBatch = true;
+                batchExecuted = true;
 			}
 			statementPosition = 0;
 		}
@@ -106,7 +106,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 	@Override
 	protected void doExecuteBatch() {
 		if (batchPosition == 0 ) {
-			if(!alreadyExecuteBatch) {
+			if(! batchExecuted) {
 				LOG.debug( "No batched statements to execute" );
 			}
 		}

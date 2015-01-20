@@ -22,23 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.Types;
-
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
-
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.type.StandardBasicTypes;
-import java.sql.SQLException;
-import org.hibernate.LockOptions;
-import java.util.Map;
 import org.hibernate.sql.ForUpdateFragment;
+import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Map;
 /**
  * A dialect for the Teradata database
  *
@@ -47,7 +44,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	/**
 	 * Constructor
 	 */
-	public Teradata13Dialect() {
+	public Teradata14Dialect() {
 		super();
 		//registerColumnType data types
 		registerColumnType( Types.BIGINT, "BIGINT" );
@@ -216,11 +213,6 @@ public class Teradata14Dialect extends TeradataDialect {
 	@Override
 	public boolean useFollowOnLocking() {
 		return true;
-	}
-
-	@Override
-	public boolean isLockAppended() {
-		return false;
 	}
 
 	@Override

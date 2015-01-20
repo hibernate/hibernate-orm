@@ -11,7 +11,7 @@ import javax.persistence.Id;
 @Entity
 public class Clothes {
 	private Integer id;
-	@Column(name = "type")
+	@Column(name = "`type`")
 	private String type;
 	private String flavor;
 

@@ -23,6 +23,10 @@
  *
  */
 package org.hibernate.sql;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.dialect.Dialect;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,10 +34,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.dialect.Dialect;
 
 /**
  * An SQL <tt>SELECT</tt> statement with no table joins
@@ -187,10 +187,7 @@ public class SimpleSelect {
 		if (orderBy!=null) buf.append(orderBy);
 		
 		if (lockOptions!=null) {
-			if (dialect.isLockAppended())
-				buf.append( dialect.getForUpdateString(lockOptions) );
-			else
-				buf.insert(0,dialect.getForUpdateString(lockOptions));
+			buf.append( dialect.getForUpdateString(lockOptions) );
 		}
 
 		return dialect.transformSelectString( buf.toString() );

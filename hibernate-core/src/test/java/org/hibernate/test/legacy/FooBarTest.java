@@ -619,7 +619,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(bar);
 		s.save(baz);
 		list = s.createQuery(
-				" from Bar bar where bar.baz.count=667 and bar.baz.count<>123 and not bar.baz.name='1-E-1'"
+				" from Bar bar where bar.baz.count=667 and bar.baz.count!=123 and not bar.baz.name='1-E-1'"
 		).list();
 		assertTrue( "query many-to-one", list.size()==1 );
 		list = s.createQuery( " from Bar i where i.baz.name='Bazza'" ).list();

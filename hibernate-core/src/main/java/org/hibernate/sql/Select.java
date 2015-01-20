@@ -91,11 +91,8 @@ public class Select {
 			buf.append(" order by ").append(orderByClause);
 		}
 		
-		if (lockOptions.getLockMode()!=LockMode.NONE) {
-			if (dialect.isLockAppended())
-				buf.append( dialect.getForUpdateString(lockOptions) );
-			else
-				buf.insert(0,dialect.getForUpdateString(lockOptions));
+		if (lockOptions.getLockMode() != LockMode.NONE) {
+			buf.append(dialect.getForUpdateString(lockOptions));
 		}
 		
 		return dialect.transformSelectString( buf.toString() );

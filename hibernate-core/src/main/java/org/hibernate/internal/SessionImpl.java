@@ -903,14 +903,50 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	@Override
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities) throws HibernateException {
-		fireDelete( new DeleteEvent( entityName, object, isCascadeDeleteEnabled, this ), transientEntities );
+		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
+		}
+		fireDelete(
+				new DeleteEvent(
+						entityName,
+						object,
+						isCascadeDeleteEnabled,
+						persistenceContext.isRemovingOrphanBeforeUpates(),
+						this
+				),
+				transientEntities
+		);
+		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
+		}
 	}
 
 	@Override
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 		// ordering is improved.
-		fireDelete( new DeleteEvent( entityName, child, false, true, this ) );
+		if ( TRACE_ENABLED ) {
+			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
+		}
+		persistenceContext.beginRemoveOrphanBeforeUpdates();
+		try {
+			fireDelete( new DeleteEvent( entityName, child, false, true, this ) );
+		}
+		finally {
+			persistenceContext.endRemoveOrphanBeforeUpdates();
+			if ( TRACE_ENABLED ) {
+				logRemoveOrphanBeforeUpdates( "end", entityName, child );
+			}
+		}
+	}
+
+	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
+		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+		LOG.tracef(
+				"%s remove orphan before updates: [%s]",
+				timing,
+				entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
+		);
 	}
 
 	private void fireDelete(DeleteEvent event) {

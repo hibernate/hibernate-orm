@@ -21,24 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.orphan.one2one.fk.bidirectional.multilevelcascade;
+package org.hibernate.jpa.test.orphan.onetoone.multilevelcascade;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 @Entity
-public class Tranche {
-
+public class Preisregelung {
     @Id
 	@GeneratedValue
-	private Long id;
+    private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "preisregelung", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Tranchenmodell tranchenmodell;
 
-	@OneToOne(mappedBy = "tranche", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	private Y y;
 
-	public Long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -53,12 +55,4 @@ public class Tranche {
     public void setTranchenmodell(Tranchenmodell tranchenmodell) {
         this.tranchenmodell = tranchenmodell;
     }
-
-	public Y getY() {
-		return y;
-	}
-
-	public void setY(Y y) {
-		this.y = y;
-	}
 }

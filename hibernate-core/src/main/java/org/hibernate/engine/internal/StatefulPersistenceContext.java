@@ -146,6 +146,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private int cascading = 0;
 	private int loadCounter = 0;
+	private int removeOrphanBeforeUpdatesCounter;
 	private boolean flushing = false;
 
 	private boolean defaultReadOnly = false;
@@ -1206,6 +1207,42 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( afterFlush ) {
 			getNaturalIdHelper().cleanupFromSynchronizations();
 		}
+	}
+
+	public boolean isRemovingOrphanBeforeUpates() {
+		return removeOrphanBeforeUpdatesCounter > 0;
+	}
+
+	public void beginRemoveOrphanBeforeUpdates() {
+		if ( getCascadeLevel() < 1 ) {
+			throw new IllegalStateException( "Attempt to remove orphan when not cascading." );
+		}
+		if ( removeOrphanBeforeUpdatesCounter >= getCascadeLevel() ) {
+			throw new IllegalStateException(
+					String.format(
+							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] before incrementing removeOrphanBeforeUpdatesCounter",
+							getCascadeLevel(),
+							removeOrphanBeforeUpdatesCounter
+					)
+			);
+		}
+		removeOrphanBeforeUpdatesCounter++;
+	}
+
+	public void endRemoveOrphanBeforeUpdates() {
+		if ( getCascadeLevel() < 1 ) {
+			throw new IllegalStateException( "Finished removing orphan when not cascading." );
+		}
+		if ( removeOrphanBeforeUpdatesCounter > getCascadeLevel() ) {
+			throw new IllegalStateException(
+					String.format(
+							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] before decrementing removeOrphanBeforeUpdatesCounter",
+							getCascadeLevel(),
+							removeOrphanBeforeUpdatesCounter
+					)
+			);
+		}
+		removeOrphanBeforeUpdatesCounter--;
 	}
 
 	/**

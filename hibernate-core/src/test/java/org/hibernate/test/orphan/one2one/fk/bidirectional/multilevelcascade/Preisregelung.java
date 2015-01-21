@@ -28,6 +28,7 @@ import javax.persistence.*;
 @Entity
 public class Preisregelung {
     @Id
+	@GeneratedValue
     private Long id;
 
     @OneToOne(mappedBy = "preisregelung", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)

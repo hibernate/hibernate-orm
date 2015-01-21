@@ -21,15 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.orphan.one2one.fk.bidirectional.multilevelcascade;
+package org.hibernate.jpa.test.orphan.onetoone.multilevelcascade;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.junit.Test;
 
-import org.hibernate.Session;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
+public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTestCase {
 
 	private void createData() {
 		Preisregelung preisregelung = new Preisregelung();
@@ -68,21 +69,21 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 		tranche1.setY( y );
 		y.setTranche( tranche1 );
 
-		Session session = openSession();
-		session.beginTransaction();
-		session.save( preisregelung );
-		session.getTransaction().commit();
-		session.close();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( preisregelung );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	private void cleanupData() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.createQuery( "delete Tranche" ).executeUpdate();
-		session.createQuery( "delete Tranchenmodell" ).executeUpdate();
-		session.createQuery( "delete Preisregelung" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete Tranche" ).executeUpdate();
+		em.createQuery( "delete Tranchenmodell" ).executeUpdate();
+		em.createQuery( "delete Preisregelung" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	@Test
@@ -90,41 +91,41 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 	public void testDirectAssociationOrphanedWhileManaged() {
 		createData();
 
-		Session session = openSession();
-		session.beginTransaction();
-		List results = session.createQuery( "from Tranchenmodell" ).list();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		List results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
-		Preisregelung preisregelung = ( Preisregelung ) results.get( 0 );
+		Preisregelung preisregelung = (Preisregelung) results.get( 0 );
 		Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
 		assertNotNull( tranchenmodell );
 		assertNotNull( tranchenmodell.getX() );
 		assertEquals( 2, tranchenmodell.getTranchen().size() );
 		assertNotNull( tranchenmodell.getTranchen().get( 0 ).getY() );
 		preisregelung.setTranchenmodell( null );
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
-		session = openSession();
-		session.beginTransaction();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-		preisregelung = ( Preisregelung ) session.get( Preisregelung.class, preisregelung.getId() );
+		preisregelung = (Preisregelung) em.find( Preisregelung.class, preisregelung.getId() );
 		assertNull( preisregelung.getTranchenmodell() );
-		results = session.createQuery( "from Tranchenmodell" ).list();
+		results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from Tranche" ).list();
+		results = em.createQuery( "from Tranche" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from X" ).list();
+		results = em.createQuery( "from X" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from Y" ).list();
+		results = em.createQuery( "from Y" ).getResultList();
 		assertEquals( 0, results.size() );
 
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
 
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
 		cleanupData();
 	}
@@ -134,13 +135,13 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 	public void testReplacedDirectAssociationWhileManaged() {
 		createData();
 
-		Session session = openSession();
-		session.beginTransaction();
-		List results = session.createQuery( "from Tranchenmodell" ).list();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		List results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
-		Preisregelung preisregelung = ( Preisregelung ) results.get( 0 );
+		Preisregelung preisregelung = (Preisregelung) results.get( 0 );
 		Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
 		assertNotNull( tranchenmodell );
 		assertNotNull( tranchenmodell.getX() );
@@ -163,23 +164,23 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 		preisregelung.setTranchenmodell(tranchenmodellNew );
 		tranchenmodellNew.setPreisregelung( preisregelung );
 
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
-		session = openSession();
-		session.getTransaction().begin();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-		results = session.createQuery( "from Tranche" ).list();
+		results = em.createQuery( "from Tranche" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from Tranchenmodell" ).list();
+		results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from X" ).list();
+		results = em.createQuery( "from X" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from Y" ).list();
+		results = em.createQuery( "from Y" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
-		preisregelung = ( Preisregelung ) results.get( 0 );
+		preisregelung = (Preisregelung) results.get( 0 );
 		tranchenmodell = preisregelung.getTranchenmodell();
 		assertNotNull( tranchenmodell );
 		assertEquals( tranchenmodellNew.getId(), tranchenmodell.getId() );
@@ -193,27 +194,27 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 		tranchenmodellNew = new Tranchenmodell();
 		preisregelung.setTranchenmodell(tranchenmodellNew );
 		tranchenmodellNew.setPreisregelung( preisregelung );
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
-		session = openSession();
-		session.beginTransaction();
-		results = session.createQuery( "from Tranchenmodell" ).list();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
 		tranchenmodell = (Tranchenmodell) results.get( 0 );
 		assertEquals( tranchenmodellNew.getId(), tranchenmodell.getId() );
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
 		preisregelung =  (Preisregelung) results.get( 0 );
 		assertEquals( tranchenmodell, preisregelung.getTranchenmodell() );
-		results = session.createQuery( "from Tranche" ).list();
+		results = em.createQuery( "from Tranche" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from X" ).list();
+		results = em.createQuery( "from X" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from Y" ).list();
+		results = em.createQuery( "from Y" ).getResultList();
 		assertEquals( 0, results.size() );
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
 		cleanupData();
 	}
@@ -223,13 +224,13 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 	public void testDirectAndNestedAssociationsOrphanedWhileManaged() {
 		createData();
 
-		Session session = openSession();
-		session.beginTransaction();
-		List results = session.createQuery( "from Tranchenmodell" ).list();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		List results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
-		Preisregelung preisregelung = ( Preisregelung ) results.get( 0 );
+		Preisregelung preisregelung = (Preisregelung) results.get( 0 );
 		Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
 		assertNotNull( tranchenmodell );
 		assertNotNull( tranchenmodell.getX() );
@@ -238,28 +239,28 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 		preisregelung.setTranchenmodell( null );
 		tranchenmodell.setX( null );
 		tranchenmodell.getTranchen().get( 0 ).setY( null );
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
-		session = openSession();
-		session.beginTransaction();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-		preisregelung = ( Preisregelung ) session.get( Preisregelung.class, preisregelung.getId() );
+		preisregelung = (Preisregelung) em.find( Preisregelung.class, preisregelung.getId() );
 		assertNull( preisregelung.getTranchenmodell() );
-		results = session.createQuery( "from Tranchenmodell" ).list();
+		results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from Tranche" ).list();
+		results = em.createQuery( "from Tranche" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from X" ).list();
+		results = em.createQuery( "from X" ).getResultList();
 		assertEquals( 0, results.size() );
-		results = session.createQuery( "from Y" ).list();
+		results = em.createQuery( "from Y" ).getResultList();
 		assertEquals( 0, results.size() );
 
-		results = session.createQuery( "from Preisregelung" ).list();
+		results = em.createQuery( "from Preisregelung" ).getResultList();
 		assertEquals( 1, results.size() );
 
-		session.getTransaction().commit();
-		session.close();
+		em.getTransaction().commit();
+		em.close();
 
 		cleanupData();
 	}

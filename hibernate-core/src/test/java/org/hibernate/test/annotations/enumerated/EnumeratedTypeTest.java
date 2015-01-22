@@ -341,7 +341,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-4699")
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-8516",
@@ -380,7 +380,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 		final Session s = openSession();
 		final Connection connection = ((SessionImplementor)s).connection();
 		final Statement statement = connection.createStatement();
-		statement.execute("insert into EntityEnum (id) values(1)");
+		statement.execute("insert into EntityEnum (id, trimmed) values(50, 'A')");
 
 		s.getTransaction().begin();
 

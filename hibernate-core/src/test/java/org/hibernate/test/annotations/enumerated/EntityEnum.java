@@ -55,7 +55,7 @@ public class EntityEnum {
 	@Enumerated(EnumType.STRING)
 	private Trimmed trimmed;
 
-	@Formula("(select 'A' from dual)")
+	@Formula("upper('a')")
 	@Enumerated(EnumType.STRING)
 	private Trimmed formula;
 

@@ -131,7 +131,7 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
     private void processClassFile(File javaClassFile)
             throws MojoExecutionException {
 		try {
-			final CtClass ctClass = getClassPool().makeClass( new FileInputStream( javaClassFile ) );
+			final CtClass ctClass = loadClassFile( javaClassFile );
             if(this.isEntityClass(ctClass))
                 processEntityClassFile(javaClassFile, ctClass);
             else if(this.isCompositeClass(ctClass))
@@ -143,6 +143,23 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
                     String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e );
         }
     }
+
+	private CtClass loadClassFile(File javaClassFile) throws IOException {
+		final CtClass ctClass;
+		final FileInputStream inputStream = new FileInputStream( javaClassFile );
+		try {
+			ctClass = getClassPool().makeClass( inputStream );
+		}
+		finally {
+			try {
+				inputStream.close();
+			}
+			catch (IOException e) {
+				getLog().warn( "Error closing input stream for class file [" + javaClassFile.getAbsolutePath() + "]", e );
+			}
+		}
+		return ctClass;
+	}
 
     private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
         try {

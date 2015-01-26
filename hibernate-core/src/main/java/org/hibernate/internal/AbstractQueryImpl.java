@@ -473,7 +473,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setParameter(int position, Object val) throws HibernateException {
 		if (val == null) {
-			setParameter( position, val, StandardBasicTypes.SERIALIZABLE );
+			setParameter( position, val, StandardBasicTypes.NULL );
 		}
 		else {
 			setParameter( position, val, determineType( position, val ) );
@@ -483,11 +483,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setParameter(String name, Object val) throws HibernateException {
 		if (val == null) {
-			Type type = parameterMetadata.getNamedParameterExpectedType( name );
-			if ( type == null ) {
-				type = StandardBasicTypes.SERIALIZABLE;
-			}
-			setParameter( name, val, type );
+			setParameter( name, val, StandardBasicTypes.NULL );
 		}
 		else {
 			setParameter( name, val, determineType( name, val ) );

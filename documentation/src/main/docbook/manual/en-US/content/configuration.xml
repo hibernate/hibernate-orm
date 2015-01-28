@@ -1509,11 +1509,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
     <literal>hibernate.show_sql</literal> enabled.</para>
   </section>
 
-  <section xml:id="configuration-namingstrategy">
-    <title>Implementing a <literal>NamingStrategy</literal></title>
+  <section xml:id="configuration-namingstrategy" revision="1">
+    <title>Implementing a Naming Strategy</title>
 
-    <para>The interface <literal>org.hibernate.cfg.NamingStrategy</literal>
-    allows you to specify a "naming standard" for database objects and schema
+    <para>The interfaces, <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
+    and <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>,
+    allow you to specify a "naming standard" for database objects and schema
     elements.</para>
 
     <para>You can provide rules for automatically generating database
@@ -1523,19 +1524,57 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
     eliminating repetitive noise (<literal>TBL_</literal> prefixes, for
     example). The default strategy used by Hibernate is quite minimal.</para>
 
-    <para>You can specify a different strategy by calling
-    <literal>Configuration.setNamingStrategy()</literal> before adding
-    mappings:</para>
+    <para>When annotations or JPA XML descriptors are used to map an entity, the
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> API may
+    not be flexible enough to properly generate default collection table or
+    join column names that comply with the JPA specification. This is because
+    the API does not provide all the necessary information (e.g., an entity's
+    class name, along with its mapped name and primary table name) to compute
+    the names properly. Due to this limitation,
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> has
+    been deprecated.</para>
+
+    <para><interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>,
+    is a temporary replacement intended to provide more flexibility in a more-or-less
+    compatible way.</para>
+
+    <para>For backward compatibility, the default implementation,
+    <classname>org.hibernate.cfg.naming.LegacyNamingStrategyDelegator</classname>
+    delegates table and column name generation to an instance
+    of <classname>org.hibernate.cfg.EJB3NamingStrategy</classname>.
+    You can specify a different <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
+    by calling <literal>Configuration.setNamingStrategy()</literal> before adding mappings:</para>
+
+      <programlisting role="JAVA">SessionFactory sf = new Configuration()
+          .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)
+          .addFile("Item.hbm.xml")
+          .addFile("Bid.hbm.xml")
+          .buildSessionFactory();</programlisting>
+
+      <para><literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> is a
+          built-in strategy that might be a useful starting point for some
+          applications.</para>
+
+    <para>Hibernate provides <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname>
+    as an alternative that generates default table and column names that comply with the
+    JPA specification when annotations or JPA XML descriptors are used to map an entity;
+    table and column names generated for entities mapped using Hibernate-specific hbm.xml
+    are unaffected. You can specify <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+    by calling <literal>Configuration.setNamingStrategyDelegator()</literal> before adding mappings:</para>
 
     <programlisting role="JAVA">SessionFactory sf = new Configuration()
-    .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)
-    .addFile("Item.hbm.xml")
-    .addFile("Bid.hbm.xml")
-    .buildSessionFactory();</programlisting>
+        .setNamingStrategyDelegator(ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE)
+        .addFile("Item.hbm.xml")
+        .addFile("Bid.hbm.xml")
+        .buildSessionFactory();</programlisting>
 
-    <para><literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> is a
-    built-in strategy that might be a useful starting point for some
-    applications.</para>
+    <note><literal>Configuration.setNamingStrategy()</literal> and
+    <literal>setNamingStrategyDelegator()</literal> should not be used together.</note>
+
+    <para>A more comprehensive solution will be introduced in 5.0 that will replace both
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> and
+    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>.</para>
+
   </section>
 
   <section>

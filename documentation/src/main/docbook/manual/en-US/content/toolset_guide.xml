@@ -279,7 +279,7 @@
 
         </section>
 
-        <section xml:id="toolsetguide-s1-3" revision="2">
+        <section xml:id="toolsetguide-s1-3" revision="3">
             <title>Running the tool</title>
 
             <para>
@@ -330,6 +330,10 @@
                             <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
                             <entry>select a <literal>NamingStrategy</literal></entry>
                         </row>
+                        <row>
+                            <entry><literal>--namingdelegator=eg.MyNamingStrategyDelegator</literal></entry>
+                            <entry>select a <literal>NamingStrategyDelegator</literal></entry>
+                        </row>
                          <row>
                             <entry><literal>--config=hibernate.cfg.xml</literal></entry>
                             <entry>read Hibernate configuration from an XML file</entry>
@@ -349,6 +353,12 @@
                     </tbody>
                 </tgroup>
             </table>
+
+            <note>
+                <para>
+                    The options, <option>--naming</option> and <option>--namingdelegator</option>, should not be used together.
+                </para>
+            </note>
 
             <para>
                 You can even embed <literal>SchemaExport</literal> in your application:
@@ -447,7 +457,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
         </section>
 
-        <section xml:id="toolsetguide-s1-6" revision="2">
+        <section xml:id="toolsetguide-s1-6" revision="3">
             <title>Incremental schema updates</title>
 
             <para>
@@ -486,6 +496,10 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                             <entry>select a <literal>NamingStrategy</literal></entry>
                         </row>
                         <row>
+                            <entry><literal>--namingdelegator=eg.MyNamingStrategyDelegator</literal></entry>
+                            <entry>select a <literal>NamingStrategyDelegator</literal></entry>
+                        </row>
+                        <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
                             <entry>read database properties from a file</entry>
                         </row>
@@ -496,6 +510,12 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                      </tbody>
                 </tgroup>
             </table>
+
+            <note>
+                <para>
+                    The options, <option>--naming</option> and <option>--namingdelegator</option>, should not be used together.
+                </para>
+            </note>
 
             <para>
                 You can embed <literal>SchemaUpdate</literal> in your application:
@@ -529,7 +549,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
         </section>
 
-        <section xml:id="toolsetguide-s1-8" revision="1">
+        <section xml:id="toolsetguide-s1-8" revision="2">
             <title>Schema validation</title>
 
             <para>
@@ -561,6 +581,10 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
                             <entry>select a <literal>NamingStrategy</literal></entry>
                         </row>
                         <row>
+                            <entry><literal>--namingdelegator=eg.MyNamingStrategyDelegator</literal></entry>
+                            <entry>select a <literal>NamingStrategyDelegator</literal></entry>
+                        </row>
+                        <row>
                             <entry><literal>--properties=hibernate.properties</literal></entry>
                             <entry>read database properties from a file</entry>
                         </row>
@@ -571,6 +595,12 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
                      </tbody>
                 </tgroup>
             </table>
+
+            <note>
+                <para>
+                    The options, <option>--naming</option> and <option>--namingdelegator</option>, should not be used together.
+                </para>
+            </note>
 
             <para>
                 You can embed <literal>SchemaValidator</literal> in your application:

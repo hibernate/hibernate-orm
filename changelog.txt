@@ -5,6 +5,18 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.18 (2015.01.28)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-9091] - Collection deleted due to orphan removal fails with constraint violation
+    [HHH-9468] - Add documentation about enabling NamingStrategyDelegator implementations
+    [HHH-9523] - EnumeratedTypeTest - select from dual causes test failures on mssql, postgresql, db2 and sybase
+    [HHH-9568] - EntityManager.flush() does not behave properly with transient one-to-one association and no cascade
+
+** Task
+    [HHH-9573] - Add EntityManager test case illustrating usage of query cache
+
 Changes in version 4.2.17 (2015.01.05)
 ------------------------------------------------------------------------------------------------------------------------
 

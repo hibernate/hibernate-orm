@@ -227,7 +227,7 @@ public class Flight implements Serializable {
 
       <para>The constraint name is optional (generated if left undefined). The
       column names composing the constraint correspond to the column names as
-      defined before the Hibernate <classname>NamingStrategy</classname> is
+      defined before the Hibernate <interfacename>NamingStrategyDelegator</interfacename> is
       applied.</para>
 
       <tip>
@@ -3145,9 +3145,10 @@ public class Country implements Serializable {
       same entity, the column name defaulting will not work as several
       embedded objects would share the same set of columns. In plain JPA, you
       need to override at least one set of columns. Hibernate, however, allows
-      you to enhance the default naming mechanism through the
-      <classname>NamingStrategy</classname> interface. You can write a
-      strategy that prevent name clashing in such a situation.
+      you to enhance the default naming mechanism by configuring a
+      <interfacename>NamingStrategyDelegator</interfacename> or
+      <interfacename>NamingStrategy</interfacename> strategy. You can write a
+      strategy to prevent name clashing in such a situation.
       <classname>DefaultComponentSafeNamingStrategy</classname> is an example
       of this.</para>
 

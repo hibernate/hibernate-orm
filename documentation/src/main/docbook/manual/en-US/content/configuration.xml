@@ -932,6 +932,44 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
             <entry><para>At the moment, <literal>javassist</literal> is the only supported bytecode provider.</para><para> <emphasis
             role="strong">e.g.</emphasis> <literal>javassist</literal></para></entry>
           </row>
+          <row>
+            <entry><literal>hibernate.ejb.naming_strategy</literal></entry>
+
+            <entry>
+              <para>Chooses the <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> implementation
+              when using Hibernate Entity Manager. <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
+              is deprecated and this property is provided for backward-compatibity.
+              See <xref linkend="configuration-namingstrategy" /> </para>
+
+              <para>This property should not be used at the same time as
+              <literal>hibernate.ejb.naming_strategy_delegator</literal></para>
+            </entry>
+          </row>
+          <row>
+            <entry><literal>hibernate.ejb.naming_strategy_delegator</literal></entry>
+
+            <entry>
+              <para>Chooses the <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+              implementation when using Hibernate Entity Manager.
+              See <xref linkend="configuration-namingstrategy" /> </para>
+
+              <para>Hibernate provides 2 implementations</para>:
+
+              <para><classname>org.hibernate.cfg.naming.LegacyNamingStrategyDelegator</classname>:
+              This is the default value. This class is deprecated and is provided for backward compatibility.</para>
+
+              <para><classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname>:
+              This is the preferred value and generates default table and column names that comply with the
+              JPA specification.</para>
+
+              <para>A different class that implements
+              <interfacename>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</interfacename>
+              may be specified.</para>
+
+              <para>This property should not be used at the same time as
+              <literal>hibernate.ejb.naming_strategy_delegator</literal>.</para>
+            </entry>
+          </row>
         </tbody>
       </tgroup>
     </table>
@@ -1522,9 +1560,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
   <section xml:id="configuration-namingstrategy" revision="1">
     <title>Implementing a Naming Strategy</title>
 
-    <para>The interfaces, <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
-    and <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>,
-    allow you to specify a "naming standard" for database objects and schema
+    <para><interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
+    and <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+    interfaces allow you to specify a "naming standard" for database objects and schema
     elements.</para>
 
     <para>You can provide rules for automatically generating database
@@ -1544,16 +1582,61 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
     <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> has
     been deprecated.</para>
 
-    <para><interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>,
-    is a temporary replacement intended to provide more flexibility in a more-or-less
-    compatible way.</para>
+    <important>
+    <para><interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+    is a temporary replacement for <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
+    that addresses limitations and provides more flexibility
+    in a more-or-less compatible way. A more comprehensive solution will be introduced in Hibernate 5.0
+    that will replace both <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> and
+    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>.</para>
+    </important>
 
-    <para>For backward compatibility, the default implementation,
-    <classname>org.hibernate.cfg.naming.LegacyNamingStrategyDelegator</classname>
-    delegates table and column name generation to an instance
-    of <classname>org.hibernate.cfg.EJB3NamingStrategy</classname>.
-    You can specify a different <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>
-    by calling <literal>Configuration.setNamingStrategy()</literal> before adding mappings:</para>
+    <para>For backward compatibility, the default
+    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+    simply delegates table and column name generation to the default
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>.
+    This default <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+    has also been deprecated and should be considered "legacy" code because it has the same
+    limitations as <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>.</para>
+
+    <para>Hibernate provides <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname>
+    as an alternative that generates default table and column names that comply with the
+    JPA specification when annotations or JPA XML descriptors are used to map an entity.
+    Table and column names generated for entities mapped using Hibernate Core hbm.xml
+    are unaffected. This implementation must be explicitly configured in order to override the
+    the default.</para>
+
+    <note><para>Hibernate allows an implementation of either
+    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename> or
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> to be configured.
+    Both should not be configured at the same time.</para></note>
+
+    <para>To configure Hibernate Core to use <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname>,
+    call <literal>Configuration.setNamingStrategyDelegator()</literal> before adding mappings:</para>
+
+      <programlisting role="JAVA">SessionFactory sf = new Configuration()
+          .setNamingStrategyDelegator(ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE)
+          .addFile("Item.hbm.xml")
+          .addFile("Bid.hbm.xml")
+          .buildSessionFactory();</programlisting>
+
+    <para>You can configure a custom implementation of
+    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
+    by replacing <literal>ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE</literal>
+    with the implementation class name.</para>
+
+    <para>To configure Hibernate Entity Manager to use
+    <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname> or a custom
+    implementation, set the Hibernate configuration property <literal>hibernate.ejb.naming_strategy_delegator</literal>
+    to the implementation class name</para>.
+
+    <para>When using the default (legacy) implementation of
+    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>, Hibernate
+    allows you to delegate to a different <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>.</para>
+
+    <para>To configure Hibernate Core to delegate to a different
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>,
+    call <literal>Configuration.setNamingStrategy()</literal> before adding mappings:</para>
 
       <programlisting role="JAVA">SessionFactory sf = new Configuration()
           .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)
@@ -1565,25 +1648,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
           built-in strategy that might be a useful starting point for some
           applications.</para>
 
-    <para>Hibernate provides <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname>
-    as an alternative that generates default table and column names that comply with the
-    JPA specification when annotations or JPA XML descriptors are used to map an entity;
-    table and column names generated for entities mapped using Hibernate-specific hbm.xml
-    are unaffected. You can specify <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
-    by calling <literal>Configuration.setNamingStrategyDelegator()</literal> before adding mappings:</para>
-
-    <programlisting role="JAVA">SessionFactory sf = new Configuration()
-        .setNamingStrategyDelegator(ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE)
-        .addFile("Item.hbm.xml")
-        .addFile("Bid.hbm.xml")
-        .buildSessionFactory();</programlisting>
-
-    <note><literal>Configuration.setNamingStrategy()</literal> and
-    <literal>setNamingStrategyDelegator()</literal> should not be used together.</note>
-
-    <para>A more comprehensive solution will be introduced in 5.0 that will replace both
-    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> and
-    <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>.</para>
+    <para>To configure Hibernate Entity Manager to delegate to a different
+    <interfacename>org.hibernate.cfg.NamingStrategy</interfacename>,
+    set the Hibernate configuration property <literal>hibernate.ejb.naming_strategy</literal>
+    to the implementation class name.</para>
 
   </section>
 

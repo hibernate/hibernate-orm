@@ -910,45 +910,6 @@
           The options, <option>--naming</option> and <option>--namingdelegator</option>, should not be used together.
         </para>
       </note>
-      <para>
-          When annotations or JPA XML descriptors are used to map an entity, the
-          <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> API may not be
-          flexible enough to properly generate default collection table or join column names that comply with the
-          JPA specification. This is because the API does not provide all the necessary information
-          (e.g., an entity's class name, along with its mapped name and primary table name) to compute the names
-          properly. Due to this limitation, <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> has
-          been deprecated.
-      </para>
-      <para>
-          <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>,
-          is a temporary replacement intended to provide more flexibility in a more-or-less compatible way.
-      </para>
-      <para>
-          For backward compatibility, the default implementation,
-          <classname>org.hibernate.cfg.naming.LegacyNamingStrategyDelegator</classname> delegates table and
-          column name generation to an instance of the class specified by the <option>--naming</option>, if provided;
-          otherwise, it delegates to an instance of <classname>org.hibernate.cfg.EJB3NamingStrategy</classname>.
-      </para>
-      <para>
-          Hibernate provides <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname> as
-          an alternative that generates default table and column names that comply with the JPA specification when
-          annotations or JPA XML descriptors are used to map an entity; table and column names generated for entities
-          mapped using Hibernate-specific hbm.xml are unaffected.
-      </para>
-      <para>
-          The option, <option>--namingdelegator</option>, can be set to
-          <classname>org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator</classname> or the name of a
-          custom implementation of <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>.
-      </para>
-      <para>
-          See source code or JavaDoc for <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>
-          and its implementations for details.
-      </para>
-      <para>
-          A more comprehensive solution will be introduced in 5.0 that will replace both
-          <interfacename>org.hibernate.cfg.NamingStrategy</interfacename> and
-          <interfacename>org.hibernate.cfg.naming.NamingStrategyDelegator</interfacename>.
-      </para>
       <example>
         <title>Embedding SchemaExport into your application</title>
         <programlisting language="Java" role="JAVA"><xi:include href="extras/embedding_SchemaExport.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>

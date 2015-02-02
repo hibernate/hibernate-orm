@@ -35,9 +35,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -102,6 +100,7 @@ public class SchemaExport {
 	private ImportSqlCommandExtractor importSqlCommandExtractor = ImportSqlCommandExtractorInitiator.DEFAULT_EXTRACTOR;
 
 	private String outputFile;
+    private Collection<Exporter> customExporters = new LinkedList<Exporter>();
 	private String delimiter;
 	private boolean haltOnError;
 
@@ -216,7 +215,23 @@ public class SchemaExport {
 		return this;
 	}
 
-	/**
+    /**
+     * Add custom exporter to export schema
+     * @param customExporter custom exporter to be added
+     */
+    public void addCustomExporter(Exporter customExporter) {
+        this.customExporters.add(customExporter);
+    }
+
+    /**
+     * Set custom exporters to export schema
+     * @param customExporters custom exporters to use
+     */
+    public void setCustomExporters(Collection<Exporter> customExporters) {
+        this.customExporters = customExporters == null ? Collections.<Exporter>emptySet() : customExporters;
+    }
+
+    /**
 	 * Set the end of statement delimiter
 	 *
 	 * @param delimiter The delimiter
@@ -344,6 +359,7 @@ public class SchemaExport {
 			if ( output.doExport() ) {
 				exporters.add( new DatabaseExporter( connectionHelper, sqlExceptionHelper ) );
 			}
+            exporters.addAll(customExporters);
 
 			// perform exporters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			if ( type.doDrop() ) {

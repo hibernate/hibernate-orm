@@ -112,7 +112,7 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 	/**
 	 * Simple descriptor of an entity.
 	 */
-	protected class EntityInfo {
+	protected static class EntityInfo {
 		private final Class entityClass;
 		private final String entityName;
 		private final boolean audited;

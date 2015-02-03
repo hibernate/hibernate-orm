@@ -274,7 +274,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 
-	class ContainsAttributeTypeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
+	static class ContainsAttributeTypeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 
 		private Context context;
 		private TypeElement type;

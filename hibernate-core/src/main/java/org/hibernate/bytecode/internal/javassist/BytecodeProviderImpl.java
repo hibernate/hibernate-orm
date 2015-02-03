@@ -111,7 +111,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		return new EntityInstrumentationMetadataImpl( entityClass );
 	}
 
-	private class EntityInstrumentationMetadataImpl implements EntityInstrumentationMetadata {
+	private static class EntityInstrumentationMetadataImpl implements EntityInstrumentationMetadata {
 		private final Class entityClass;
 		private final boolean isInstrumented;
 

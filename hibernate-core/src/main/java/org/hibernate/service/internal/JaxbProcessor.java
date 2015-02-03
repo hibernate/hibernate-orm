@@ -231,7 +231,7 @@ public class JaxbProcessor {
 		}
 	}
 
-	public class NamespaceAddingEventReader extends EventReaderDelegate {
+	public static class NamespaceAddingEventReader extends EventReaderDelegate {
 		private final XMLEventFactory xmlEventFactory;
 		private final String namespaceUri;
 

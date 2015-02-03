@@ -386,7 +386,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		session = null;
 	}
 
-	public class RollbackWork implements Work {
+	public static class RollbackWork implements Work {
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}

@@ -579,7 +579,7 @@ public class Order {
 | id           | | id       |
 | number       | |----------| 
 | customer_id  |
-| orders_order |
+| orders_index |
 |--------------|</programlisting>
         </example>
 

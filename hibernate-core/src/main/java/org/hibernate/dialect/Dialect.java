@@ -733,7 +733,27 @@ public abstract class Dialect implements ConversionContext {
 			return SequenceStyleGenerator.class;
 		}
 	}
+    // Materialized view support
 
+    /**
+     * Does the dialect support materialized view. It's needed for schema validation purposes.
+     * @return True if dialect supports materialized views. False otherwise.
+     */
+    public boolean supportsMaterializedView() {
+        return false;
+    }
+
+    /**
+     * Does the dialect support materialized view. It's needed for schema validation purposes.
+     * @return Query string that will be passed as one of  {@code String[] types} parameter
+     * to {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])}. {@code null}
+     * otherwise if dialect is not supported or doesn't need to use explicit type term.
+     */
+    public String getMaterializedViewTypeTerm() {
+        return null;
+    }
+
+    // End of Materialized view support
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

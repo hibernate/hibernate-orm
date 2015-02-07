@@ -71,17 +71,20 @@ public class SmallIntTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getObject( name ), options );
+				final short value = rs.getShort( name );
+				return javaTypeDescriptor.wrap( rs.wasNull() ? null : Short.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( index ), options );
+				final short value = statement.getShort( index );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Short.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( name ), options );
+				final short value = statement.getShort( name );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Short.valueOf( value ), options );
 			}
 		};
 	}

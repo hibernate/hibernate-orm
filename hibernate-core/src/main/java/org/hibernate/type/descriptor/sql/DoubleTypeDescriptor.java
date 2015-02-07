@@ -71,17 +71,20 @@ public class DoubleTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getObject( name ), options );
+				final double value = rs.getDouble( name );
+				return javaTypeDescriptor.wrap( rs.wasNull() ? null : Double.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( index ), options );
+				final double value = statement.getDouble( index );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Double.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( name ), options );
+				final double value = statement.getDouble( name );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Double.valueOf( value ), options );
 			}
 		};
 	}

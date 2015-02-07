@@ -71,17 +71,20 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getObject( name ), options );
+				final long value = rs.getLong( name );
+				return javaTypeDescriptor.wrap( rs.wasNull() ? null : Long.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( index ), options );
+				final long value = statement.getLong( index );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Long.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( name ), options );
+				final long value = statement.getLong( name );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Long.valueOf( value ), options );
 			}
 		};
 	}

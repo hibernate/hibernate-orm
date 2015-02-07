@@ -40,6 +40,7 @@ import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -132,9 +133,22 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public Set<Serializable> getQuerySpaces() {
-		Set<Serializable> result = new HashSet<Serializable>();
+		Set<Serializable> result = new HashSet<>();
 		for ( CriteriaInfoProvider info : criteriaInfoMap.values() ) {
 			result.addAll( Arrays.asList( info.getSpaces() ) );
+		}
+		for ( final Map.Entry<String, Criteria> entry : associationPathCriteriaMap.entrySet() ) {
+			String path = entry.getKey();
+			CriteriaImpl.Subcriteria crit = (CriteriaImpl.Subcriteria) entry.getValue();
+			int index = path.lastIndexOf( '.' );
+			if ( index > 0 ) {
+				path = path.substring( index + 1, path.length() );
+			}
+			CriteriaInfoProvider info = criteriaInfoMap.get( crit.getParent() );
+			CollectionPersister persister = getFactory().getMetamodel().collectionPersisters().get( info.getName() + "." + path );
+			if ( persister != null ) {
+				result.addAll( Arrays.asList( persister.getCollectionSpaces() ) );
+			}
 		}
 		return result;
 	}

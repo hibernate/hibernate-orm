@@ -26,7 +26,9 @@ package org.hibernate.test.annotations.entityGraph;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
+
 import org.hibernate.testing.TestForIssue;
+
 import org.junit.Test;
 
 
@@ -36,7 +38,7 @@ import org.junit.Test;
 public class OrmXmlParseTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9247" )
+	@TestForIssue(jiraKey = "HHH-9247")
 	public void parseNamedAttributeNode() {
 		final Configuration cfg = new Configuration();
 		cfg.addURL( ConfigHelper.findAsResource( "org/hibernate/test/annotations/entityGraph/orm.xml" ) );

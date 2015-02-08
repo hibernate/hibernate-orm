@@ -1949,7 +1949,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<NamedAttributeNode>(  );
 		for(Element namedAttributeNode : namedAttributeNodes){
 			AnnotationDescriptor annNamedAttributeNode = new AnnotationDescriptor( NamedAttributeNode.class );
-			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "value", true );
+			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "value", "name", true );
 			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "subgraph", false );
 			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "key-subgraph", false );
 			annNamedAttributeNodes.add( (NamedAttributeNode) AnnotationFactory.create( annNamedAttributeNode ) );
@@ -2903,12 +2903,42 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		return pkJoinColumns;
 	}
 
+	/**
+	 * Copy a string attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
+	 * computed from the name of the XML attribute by {@link #getJavaAttributeNameFromXMLOne(String)}.
+	 *
+	 * @param annotation annotation descriptor where to copy to the attribute.
+	 * @param element XML element from where to copy the attribute.
+	 * @param attributeName name of the XML attribute to copy.
+	 * @param mandatory whether the attribute is mandatory.
+	 */
 	private static void copyStringAttribute(
-			AnnotationDescriptor annotation, Element element, String attributeName, boolean mandatory
-	) {
+			final AnnotationDescriptor annotation, final Element element,
+			final String attributeName, final boolean mandatory) {
+		copyStringAttribute(
+				annotation,
+				element,
+				getJavaAttributeNameFromXMLOne( attributeName ),
+				attributeName,
+				mandatory
+		);
+	}
+
+	/**
+	 * Copy a string attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
+	 * explicitely given.
+	 *
+	 * @param annotation annotation where to copy to the attribute.
+	 * @param element XML element from where to copy the attribute.
+	 * @param annotationAttributeName name of the annotation attribute where to copy.
+	 * @param attributeName name of the XML attribute to copy.
+	 * @param mandatory whether the attribute is mandatory.
+	 */
+	private static void copyStringAttribute(
+			final AnnotationDescriptor annotation, final Element element,
+			final String annotationAttributeName, final String attributeName, boolean mandatory) {
 		String attribute = element.attributeValue( attributeName );
 		if ( attribute != null ) {
-			String annotationAttributeName = getJavaAttributeNameFromXMLOne( attributeName );
 			annotation.setValue( annotationAttributeName, attribute );
 		}
 		else {

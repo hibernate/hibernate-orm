@@ -68,22 +68,24 @@ public abstract class AbstractScannerImpl implements Scanner {
 		return collector.toScanResult();
 	}
 
-    private ArchiveDescriptor getNonRootArchiveDescriptor(URL url, URL environmentRoot) {
-        try {
-            // Try finding the resource using JVM working directory (4.3.8-FINAL behavior)
-            return buildArchiveDescriptor( url, false );
-        } catch (ArchiveException ae) {
-            // Not there; try finding relative to root, as specified in JSR220 for <jar-file> (HHH-4161)
-            try {
-                URL rootRelativeURL = new URL(environmentRoot, url.getFile());
-                return buildArchiveDescriptor(rootRelativeURL, false);
-            } catch (MalformedURLException mue) {
-                throw new IllegalArgumentException(
-                        String.format("Could not create URL to find file [%s] from root URL [%s].",
-                                url.getFile(), environmentRoot), mue);
-            }
-        }
-    }
+	private ArchiveDescriptor getNonRootArchiveDescriptor(URL url, URL environmentRoot) {
+		try {
+			// Try finding the resource using JVM working directory (4.3.8-FINAL behavior)
+			return buildArchiveDescriptor( url, false );
+		}
+		catch (ArchiveException ae) {
+			// Not there; try finding relative to root, as specified in JSR220 for <jar-file> (HHH-4161)
+			try {
+				final URL rootRelativeURL = new URL(environmentRoot, url.getFile());
+				return buildArchiveDescriptor( rootRelativeURL, false);
+			}
+			catch (MalformedURLException mue) {
+				throw new IllegalArgumentException(
+						String.format( "Could not create URL to find file [%s] from root URL [%s].",
+								url.getFile(), environmentRoot), mue);
+			}
+		}
+	}
 
 	private ArchiveDescriptor buildArchiveDescriptor(URL url, boolean isRootUrl) {
 		final ArchiveDescriptor descriptor;

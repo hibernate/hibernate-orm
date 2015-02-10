@@ -23,6 +23,7 @@
  */
 package org.hibernate.boot.archive.scan.spi;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
+import org.hibernate.boot.archive.spi.ArchiveException;
 
 /**
  * @author Steve Ebersole
@@ -52,7 +54,7 @@ public abstract class AbstractScannerImpl implements Scanner {
 		if ( environment.getNonRootUrls() != null ) {
 			final ArchiveContext context = new ArchiveContextImpl( false, collector );
 			for ( URL url : environment.getNonRootUrls() ) {
-				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, false );
+				final ArchiveDescriptor descriptor = getNonRootArchiveDescriptor( url, environment.getRootUrl() );
 				descriptor.visitArchive( context );
 			}
 		}
@@ -66,6 +68,22 @@ public abstract class AbstractScannerImpl implements Scanner {
 		return collector.toScanResult();
 	}
 
+    private ArchiveDescriptor getNonRootArchiveDescriptor(URL url, URL environmentRoot) {
+        try {
+            // Try finding the resource using JVM working directory (4.3.8-FINAL behavior)
+            return buildArchiveDescriptor( url, false );
+        } catch (ArchiveException ae) {
+            // Not there; try finding relative to root, as specified in JSR220 for <jar-file> (HHH-4161)
+            try {
+                URL rootRelativeURL = new URL(environmentRoot, url.getFile());
+                return buildArchiveDescriptor(rootRelativeURL, false);
+            } catch (MalformedURLException mue) {
+                throw new IllegalArgumentException(
+                        String.format("Could not create URL to find file [%s] from root URL [%s].",
+                                url.getFile(), environmentRoot), mue);
+            }
+        }
+    }
 
 	private ArchiveDescriptor buildArchiveDescriptor(URL url, boolean isRootUrl) {
 		final ArchiveDescriptor descriptor;

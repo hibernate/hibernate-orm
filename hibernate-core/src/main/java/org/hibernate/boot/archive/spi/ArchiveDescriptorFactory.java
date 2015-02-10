@@ -37,6 +37,7 @@ public interface ArchiveDescriptorFactory {
 	 * @param url The url to the archive
 	 *
 	 * @return The descriptor
+     * @throws ArchiveException if building the archive descriptor fails
 	 */
 	public ArchiveDescriptor buildArchiveDescriptor(URL url);
 
@@ -47,6 +48,7 @@ public interface ArchiveDescriptorFactory {
 	 * @param path The path within the given url that refers to the archive
 	 *
 	 * @return The descriptor
+     * @throws ArchiveException if building the archive descriptor fails
 	 */
 	public ArchiveDescriptor buildArchiveDescriptor(URL url, String path);
 

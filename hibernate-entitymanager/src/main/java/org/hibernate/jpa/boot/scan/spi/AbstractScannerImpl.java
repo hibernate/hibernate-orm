@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
+import org.hibernate.jpa.boot.archive.spi.ArchiveException;
 import org.hibernate.jpa.boot.internal.ClassDescriptorImpl;
 import org.hibernate.jpa.boot.internal.MappingFileDescriptorImpl;
 import org.hibernate.jpa.boot.internal.PackageDescriptorImpl;
@@ -60,7 +62,7 @@ public abstract class AbstractScannerImpl implements Scanner {
 
 		if ( persistenceUnit.getJarFileUrls() != null ) {
 			for ( URL url : persistenceUnit.getJarFileUrls() ) {
-				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, false, scanOptions );
+				final ArchiveDescriptor descriptor = getNonRootArchiveDescriptor( url, persistenceUnit.getPersistenceUnitRootUrl(), scanOptions );
 				final ArchiveContext context = buildArchiveContext( persistenceUnit, false, resultCollector );
 				descriptor.visitArchive( context );
 			}
@@ -86,6 +88,25 @@ public abstract class AbstractScannerImpl implements Scanner {
 		public ArchiveEntryHandler getClassFileHandler();
 		public ArchiveEntryHandler getPackageInfoHandler();
 		public ArchiveEntryHandler getFileHandler();
+	}
+
+	private ArchiveDescriptor getNonRootArchiveDescriptor(URL url, URL persistenceUnitRoot, ScanOptions scanOptions) {
+		try {
+			// Try finding the resource using JVM working directory (4.3.8-FINAL behavior)
+			return buildArchiveDescriptor( url, false, scanOptions );
+		}
+		catch (ArchiveException ae) {
+			// Not there; try finding relative to root, as specified in JSR220 for <jar-file> (HHH-4161)
+			try {
+				final URL rootRelativeURL = new URL(persistenceUnitRoot, url.getFile());
+				return buildArchiveDescriptor( rootRelativeURL, false, scanOptions );
+			}
+			catch (MalformedURLException mue) {
+				throw new IllegalArgumentException(
+						String.format( "Could not create URL to find file [%s] from root URL [%s].",
+								url.getFile(), persistenceUnitRoot), mue);
+			}
+		}
 	}
 
 	private ArchiveDescriptor buildArchiveDescriptor(URL url, boolean isRootUrl, ScanOptions scanOptions) {

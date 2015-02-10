@@ -173,6 +173,10 @@ public class TypeHelper {
 				|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
 				copied[i] = target[i];
 			}
+			else if (target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| target[i] == BackrefPropertyAccessor.UNKNOWN) {
+				copied[i] = original[i];
+			}
 			else {
 				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache );
 			}

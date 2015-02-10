@@ -26,6 +26,7 @@ import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.DB2390Dialect;
+import org.hibernate.dialect.DB2390V8Dialect;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -197,6 +198,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, CUBRIDDialect.class );
 		addDialect( strategySelector, DB2Dialect.class );
 		addDialect( strategySelector, DB2390Dialect.class );
+		addDialect( strategySelector, DB2390V8Dialect.class );
 		addDialect( strategySelector, DB2400Dialect.class );
 		addDialect( strategySelector, DerbyTenFiveDialect.class );
 		addDialect( strategySelector, DerbyTenSixDialect.class );

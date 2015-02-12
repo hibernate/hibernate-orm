@@ -23,51 +23,34 @@
  */
 package org.hibernate.test.criteria;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Order {
+public class OrderContact {
 
-	private int orderId;
+  private int contactId = 0;
+  private Set<Order> orders = new HashSet<Order>();
+  
+  private String contact;
 
-	public int getOrderId() {
-    return orderId;
+  
+  public int getContactId() {
+    return contactId;
   }
 
-	private Set<OrderLine> orderLines = new HashSet<OrderLine>();
+  public Set<Order> getOrders() {
+    return orders;
+  }  
 
-	public Set<OrderLine> getLines() {
-    return Collections.unmodifiableSet(orderLines);
+  public String getContact() {
+    return contact;
   }
 
-	public void addLine(OrderLine orderLine){
-		orderLine.setOrder(this);
-		this.orderLines.add(orderLine);
-	}
-
-	private Set<OrderContact> orderContacts = new HashSet<OrderContact>();
-
-	public Set<OrderContact> getContacts() {
-		return Collections.unmodifiableSet(orderContacts);
-	}
-
-	public void addContact(OrderContact orderContact){
-		orderContact.getOrders().add( this );
-		this.orderContacts.add(orderContact);
-	}
-
-	public OrderAddress orderAddress;
-
-	public OrderAddress getOrderAddress() {
-		return orderAddress;
-	}
-
-	public void setOrderAddress(OrderAddress orderAddress) {
-		this.orderAddress = orderAddress;
-	}
-
-	public String toString() {
-    return "" + getOrderId() + " - " + getLines();
+  public void setContact(String contact) {
+    this.contact = contact;
+  }
+  
+  public String toString() {
+    return "[" + getContactId() + ":" + getContact() + "]";
   }
 }

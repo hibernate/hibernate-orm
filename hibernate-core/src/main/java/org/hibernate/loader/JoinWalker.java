@@ -1112,7 +1112,11 @@ public class JoinWalker {
 					buf.append(", ").append(selectFragment);
 				}
 				if ( joinable.consumesEntityAlias() ) entityAliasCount++;
-				if ( joinable.consumesCollectionAlias() && join.getJoinType()==JoinType.LEFT_OUTER_JOIN ) collectionAliasCount++;
+				if ( joinable.consumesCollectionAlias() &&
+						join.getJoinType()==JoinType.LEFT_OUTER_JOIN &&
+						!join.hasRestriction() ) {
+					collectionAliasCount++;
+				}
 			}
 			return buf.toString();
 		}

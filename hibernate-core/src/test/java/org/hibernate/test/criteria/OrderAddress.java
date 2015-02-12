@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,51 +23,38 @@
  */
 package org.hibernate.test.criteria;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Order {
+public class OrderAddress {
 
-	private int orderId;
+	private int orderAddressId;
 
-	public int getOrderId() {
-    return orderId;
-  }
-
-	private Set<OrderLine> orderLines = new HashSet<OrderLine>();
-
-	public Set<OrderLine> getLines() {
-    return Collections.unmodifiableSet(orderLines);
-  }
-
-	public void addLine(OrderLine orderLine){
-		orderLine.setOrder(this);
-		this.orderLines.add(orderLine);
+	public int getOrderAddressId() {
+		return orderAddressId;
 	}
 
-	private Set<OrderContact> orderContacts = new HashSet<OrderContact>();
+	private Address deliveryAddress;
 
-	public Set<OrderContact> getContacts() {
-		return Collections.unmodifiableSet(orderContacts);
+	public Address getDeliveryAddress() {
+		return deliveryAddress;
 	}
 
-	public void addContact(OrderContact orderContact){
-		orderContact.getOrders().add( this );
-		this.orderContacts.add(orderContact);
+	public void setDeliveryAddress(Address deliveryAddress) {
+		this.deliveryAddress = deliveryAddress;
 	}
 
-	public OrderAddress orderAddress;
+	private Set<Address> notifiedAddresses = new HashSet<Address>();
 
-	public OrderAddress getOrderAddress() {
-		return orderAddress;
-	}
+	public Set<Address> getNotifiedAddresses() {
+    	return notifiedAddresses;
+  	}
 
-	public void setOrderAddress(OrderAddress orderAddress) {
-		this.orderAddress = orderAddress;
+	public void setNotifiedAddresses(Set<Address> notifiedAddresses) {
+		this.notifiedAddresses = notifiedAddresses;
 	}
 
 	public String toString() {
-    return "" + getOrderId() + " - " + getLines();
+    return "" + orderAddressId + " - " + getDeliveryAddress() + " - " + getNotifiedAddresses();
   }
 }

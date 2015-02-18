@@ -23,17 +23,21 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -85,4 +89,8 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			Object changed) {
 		elementComponentData.getComponentMapper().mapToMapFromObject( session, idData, data, changed );
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+    }
 }

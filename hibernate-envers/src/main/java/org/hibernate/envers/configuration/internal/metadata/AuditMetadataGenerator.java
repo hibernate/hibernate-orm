@@ -23,10 +23,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
@@ -42,6 +39,7 @@ import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.envers.internal.entities.mappergenerator.CollectionMapperResolver;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.strategy.AuditStrategy;
@@ -59,10 +57,11 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
-import org.dom4j.Element;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -83,7 +82,8 @@ public final class AuditMetadataGenerator {
 	private final GlobalConfiguration globalCfg;
 	private final AuditEntitiesConfiguration verEntCfg;
 	private final AuditStrategy auditStrategy;
-	private final ClassLoaderService classLoaderService;
+    private final CollectionMapperResolver collectionMapperResolver;
+    private final ClassLoaderService classLoaderService;
 	private final Element revisionInfoRelationMapping;
 
 	/*
@@ -105,18 +105,19 @@ public final class AuditMetadataGenerator {
 	// Map entity name -> (join descriptor -> element describing the "versioned" join)
 	private final Map<String, Map<Join, Element>> entitiesJoins;
 
-	public AuditMetadataGenerator(
-			Configuration cfg, GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy, ClassLoaderService classLoaderService,
-			Element revisionInfoRelationMapping,
-			AuditEntityNameRegister auditEntityNameRegister) {
-		this.cfg = cfg;
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
-		this.auditStrategy = auditStrategy;
-		this.classLoaderService = classLoaderService;
-		this.revisionInfoRelationMapping = revisionInfoRelationMapping;
+    public AuditMetadataGenerator(Configuration cfg, GlobalConfiguration globalCfg,
+                                  AuditEntitiesConfiguration verEntCfg,
+                                  AuditStrategy auditStrategy, ClassLoaderService classLoaderService,
+                                  CollectionMapperResolver collectionMapperResolver,
+                                  Element revisionInfoRelationMapping,
+                                  AuditEntityNameRegister auditEntityNameRegister) {
+        this.cfg = cfg;
+        this.globalCfg = globalCfg;
+        this.verEntCfg = verEntCfg;
+        this.auditStrategy = auditStrategy;
+        this.collectionMapperResolver = collectionMapperResolver;
+        this.classLoaderService = classLoaderService;
+        this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
 		this.basicMetadataGenerator = new BasicMetadataGenerator();
 		this.componentMetadataGenerator = new ComponentMetadataGenerator( this );
@@ -201,44 +202,26 @@ public final class AuditMetadataGenerator {
 		}
 	}
 
-	private void addValueInFirstPass(
-			Element parent,
-			Value value,
-			CompositeMapperBuilder currentMapper,
-			String entityName,
-			EntityXmlMappingData xmlMappingData,
-			PropertyAuditingData propertyAuditingData,
-			boolean insertable,
-			boolean processModifiedFlag) {
-		final Type type = value.getType();
-		final boolean isBasic = basicMetadataGenerator.addBasic(
-				parent,
-				propertyAuditingData,
-				value,
-				currentMapper,
-				insertable,
-				false
-		);
+    private void addValueInFirstPass(Element parent, Value value, CompositeMapperBuilder currentMapper, String entityName,
+                                     EntityXmlMappingData xmlMappingData, PropertyAuditingData propertyAuditingData,
+                                     boolean insertable, boolean processModifiedFlag) {
+        Type type = value.getType();
 
-		if ( isBasic ) {
-			// The property was mapped by the basic generator.
-		}
-		else if ( type instanceof ComponentType ) {
-			componentMetadataGenerator.addComponent(
-					parent, propertyAuditingData, value, currentMapper,
-					entityName, xmlMappingData, true
-			);
-		}
-		else {
-			if ( !processedInSecondPass( type ) ) {
-				// If we got here in the first pass, it means the basic mapper didn't map it, and none of the
-				// above branches either.
-				throwUnsupportedTypeException( type, entityName, propertyAuditingData.getName() );
-			}
-			return;
-		}
-		addModifiedFlagIfNeeded( parent, propertyAuditingData, processModifiedFlag );
-	}
+        if (basicMetadataGenerator.addBasic(parent, propertyAuditingData, value, currentMapper, insertable, false)) {
+            // The property was mapped by the basic generator.
+        } else if (type instanceof ComponentType) {
+            componentMetadataGenerator.addComponent(parent, propertyAuditingData, value, currentMapper,
+                    entityName, xmlMappingData, true);
+        } else {
+            if (!processedInSecondPass(type)) {
+                // If we got here in the first pass, it means the basic mapper didn't map it, and none of the
+                // above branches either.
+                throwUnsupportedTypeException(type, entityName, propertyAuditingData.getName());
+            }
+            return;
+        }
+        addModifiedFlagIfNeeded(parent, propertyAuditingData, processModifiedFlag);
+    }
 
 	private boolean processedInSecondPass(Type type) {
 		return type instanceof ComponentType || type instanceof ManyToOneType ||
@@ -725,36 +708,39 @@ public final class AuditMetadataGenerator {
 		return auditEntityNameRegister;
 	}
 
-	void throwUnsupportedTypeException(Type type, String entityName, String propertyName) {
-		final String message = "Type not supported for auditing: " + type.getClass().getName() +
-				", on entity " + entityName + ", property '" + propertyName + "'.";
+    public CollectionMapperResolver getCollectionMapperResolver() {
+        return collectionMapperResolver;
+    }
 
-		throw new MappingException( message );
-	}
+    void throwUnsupportedTypeException(Type type, String entityName, String propertyName) {
+        String message = "Type not supported for auditing: " + type.getClass().getName() +
+                ", on entity " + entityName + ", property '" + propertyName + "'.";
 
-	/**
-	 * Reads the id mapping data of a referenced entity.
-	 *
-	 * @param entityName Name of the entity which is the source of the relation.
-	 * @param referencedEntityName Name of the entity which is the target of the relation.
-	 * @param propertyAuditingData Auditing data of the property that is the source of the relation.
-	 * @param allowNotAuditedTarget Are not-audited target entities allowed.
-	 *
-	 * @return The id mapping data of the related entity.
-	 *
-	 * @throws MappingException If a relation from an audited to a non-audited entity is detected, which is not
-	 * mapped using {@link RelationTargetAuditMode#NOT_AUDITED}.
-	 */
-	IdMappingData getReferencedIdMappingData(
-			String entityName, String referencedEntityName,
-			PropertyAuditingData propertyAuditingData,
-			boolean allowNotAuditedTarget) {
-		EntityConfiguration configuration = getEntitiesConfigurations().get( referencedEntityName );
-		if ( configuration == null ) {
-			final RelationTargetAuditMode relationTargetAuditMode = propertyAuditingData.getRelationTargetAuditMode();
-			configuration = getNotAuditedEntitiesConfigurations().get( referencedEntityName );
+        throw new MappingException(message);
+    }
 
-			if ( configuration == null || !allowNotAuditedTarget || !RelationTargetAuditMode.NOT_AUDITED.equals(
+    /**
+     * Reads the id mapping data of a referenced entity.
+     *
+     * @param entityName Name of the entity which is the source of the relation.
+     * @param referencedEntityName Name of the entity which is the target of the relation.
+     * @param propertyAuditingData Auditing data of the property that is the source of the relation.
+     * @param allowNotAuditedTarget Are not-audited target entities allowed.
+     *
+     * @return The id mapping data of the related entity.
+     *
+     * @throws MappingException If a relation from an audited to a non-audited entity is detected, which is not
+     * mapped using {@link RelationTargetAuditMode#NOT_AUDITED}.
+     */
+    IdMappingData getReferencedIdMappingData(
+            String entityName, String referencedEntityName,
+            PropertyAuditingData propertyAuditingData,
+            boolean allowNotAuditedTarget) {
+        EntityConfiguration configuration = getEntitiesConfigurations().get( referencedEntityName );
+        if ( configuration == null ) {
+            final RelationTargetAuditMode relationTargetAuditMode = propertyAuditingData.getRelationTargetAuditMode();
+            configuration = getNotAuditedEntitiesConfigurations().get( referencedEntityName );
+            if ( configuration == null || !allowNotAuditedTarget || !RelationTargetAuditMode.NOT_AUDITED.equals(
 					relationTargetAuditMode
 			) ) {
 				throw new MappingException(

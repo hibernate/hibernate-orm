@@ -23,17 +23,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import javax.persistence.JoinColumn;
-
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.envers.ModificationStore;
@@ -51,14 +41,9 @@ import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.SinglePropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
-import org.hibernate.envers.internal.entities.mapper.relation.BasicCollectionMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.CommonCollectionMapperData;
-import org.hibernate.envers.internal.entities.mapper.relation.ListCollectionMapper;
-import org.hibernate.envers.internal.entities.mapper.relation.MapCollectionMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.internal.entities.mapper.relation.SortedMapCollectionMapper;
-import org.hibernate.envers.internal.entities.mapper.relation.SortedSetCollectionMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleDummyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleEmbeddableComponentMapper;
@@ -67,11 +52,6 @@ import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMa
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleRelatedComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleSimpleComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleStraightComponentMapper;
-import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.ListProxy;
-import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.MapProxy;
-import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.SetProxy;
-import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.SortedMapProxy;
-import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.SortedSetProxy;
 import org.hibernate.envers.internal.entities.mapper.relation.query.OneAuditEntityQueryGenerator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.tools.MappingTools;
@@ -93,13 +73,11 @@ import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
-import org.hibernate.type.SortedMapType;
-import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
 
-import org.dom4j.Element;
+import javax.persistence.JoinColumn;
+import java.util.Iterator;
 
 /**
  * Generates metadata for a collection-valued property.
@@ -239,12 +217,14 @@ public final class CollectionMetadataGenerator {
 				isEmbeddableElementType()
 		);
 
-		// Creating common mapper data.
-		final CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-				mainGenerator.getVerEntCfg(), referencedEntityName,
-				propertyAuditingData.getPropertyData(),
-				referencingIdData, queryGenerator
-		);
+        EntityConfiguration referencedConfiguration =
+                mainGenerator.getEntitiesConfigurations().get(referencedEntityName);
+        // Creating common mapper data.
+        CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
+                mainGenerator.getVerEntCfg(),
+                referencedConfiguration == null ? referencedEntityName : referencedConfiguration.getVersionsEntityName(),
+                propertyAuditingData.getPropertyData(),
+                referencingIdData, queryGenerator, referencedConfiguration == null);
 
 		PropertyMapper fakeBidirectionalRelationMapper;
 		PropertyMapper fakeBidirectionalRelationIndexMapper;
@@ -473,7 +453,8 @@ public final class CollectionMetadataGenerator {
 				auditMiddleEntityName,
 				propertyAuditingData.getPropertyData(),
 				referencingIdData,
-				queryGenerator
+				queryGenerator,
+                true
 		);
 
 		// Checking the type of the collection and adding an appropriate mapper.
@@ -690,97 +671,21 @@ public final class CollectionMetadataGenerator {
 		}
 	}
 
-	private void addMapper(
-			CommonCollectionMapperData commonCollectionMapperData,
-			MiddleComponentData elementComponentData,
-			MiddleComponentData indexComponentData) {
-		final Type type = propertyValue.getType();
-		final boolean embeddableElementType = isEmbeddableElementType();
-		if ( type instanceof SortedSetType ) {
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new SortedSetCollectionMapper(
-							commonCollectionMapperData,
-							TreeSet.class,
-							SortedSetProxy.class,
-							elementComponentData,
-							propertyValue.getComparator(),
-							embeddableElementType,
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof SetType ) {
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new BasicCollectionMapper<Set>(
-							commonCollectionMapperData,
-							HashSet.class,
-							SetProxy.class,
-							elementComponentData,
-							embeddableElementType,
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof SortedMapType ) {
-			// Indexed collection, so <code>indexComponentData</code> is not null.
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new SortedMapCollectionMapper(
-							commonCollectionMapperData,
-							TreeMap.class,
-							SortedMapProxy.class,
-							elementComponentData,
-							indexComponentData,
-							propertyValue.getComparator(),
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof MapType ) {
-			// Indexed collection, so <code>indexComponentData</code> is not null.
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new MapCollectionMapper<Map>(
-							commonCollectionMapperData,
-							HashMap.class,
-							MapProxy.class,
-							elementComponentData,
-							indexComponentData,
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof BagType ) {
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new BasicCollectionMapper<List>(
-							commonCollectionMapperData,
-							ArrayList.class,
-							ListProxy.class,
-							elementComponentData,
-							embeddableElementType,
-							embeddableElementType
-					)
-			);
-		}
-		else if ( type instanceof ListType ) {
-			// Indexed collection, so <code>indexComponentData</code> is not null.
-			currentMapper.addComposite(
-					propertyAuditingData.getPropertyData(),
-					new ListCollectionMapper(
-							commonCollectionMapperData,
-							elementComponentData,
-							indexComponentData,
-							embeddableElementType
-					)
-			);
-		}
-		else {
-			mainGenerator.throwUnsupportedTypeException( type, referencingEntityName, propertyName );
-		}
-	}
+    private void addMapper(CommonCollectionMapperData commonCollectionMapperData, MiddleComponentData elementComponentData,
+                           MiddleComponentData indexComponentData) {
+        Type type = propertyValue.getType();
+        final boolean embeddableElementType = isEmbeddableElementType();
+        PropertyData propertyData = propertyAuditingData.getPropertyData();
+        PropertyMapper propertyMapper =
+                mainGenerator.getCollectionMapperResolver().resolveCollectionMapper(propertyValue,
+                        commonCollectionMapperData, elementComponentData, indexComponentData,
+                        embeddableElementType, embeddableElementType);
+        if (propertyMapper != null) {
+            currentMapper.addComposite(propertyData, propertyMapper);
+        } else {
+            mainGenerator.throwUnsupportedTypeException(type, referencingEntityName, propertyName);
+        }
+    }
 
 	private void storeMiddleEntityRelationInformation(String mappedBy) {
 		// Only if this is a relation (when there is a referenced entity).

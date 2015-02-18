@@ -23,14 +23,12 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.DOMWriter;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -41,17 +39,19 @@ import org.hibernate.envers.configuration.internal.metadata.EntityXmlMappingData
 import org.hibernate.envers.configuration.internal.metadata.reader.AnnotationsMetadataReader;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
+import org.hibernate.envers.internal.entities.mappergenerator.CollectionMapperResolver;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.graph.GraphTopologicalSort;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.mapping.PersistentClass;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.DOMWriter;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -61,6 +61,7 @@ public class EntitiesConfigurator {
 			Configuration cfg, ReflectionManager reflectionManager,
 			GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
 			AuditStrategy auditStrategy, ClassLoaderService classLoaderService,
+            CollectionMapperResolver collectionMapperResolver,
 			Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
 		// Creating a name register to capture all audit entity names created.
 		final AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
@@ -90,7 +91,7 @@ public class EntitiesConfigurator {
 
 		final AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(
 				cfg, globalCfg, verEntCfg, auditStrategy,
-				classLoaderService, revisionInfoRelationMapping, auditEntityNameRegister
+				classLoaderService, collectionMapperResolver, revisionInfoRelationMapping, auditEntityNameRegister
 		);
 
 		// First pass
@@ -121,11 +122,15 @@ public class EntitiesConfigurator {
 				auditMetaGen.generateSecondPass( pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData );
 				try {
 					cfg.addDocument( writer.write( xmlMappingData.getMainXmlMapping() ) );
-					//writeDocument(xmlMappingData.getMainXmlMapping());
+                    if (verEntCfg.isLogAuditMappings()) {
+                        writeDocument(xmlMappingData.getMainXmlMapping());
+                    }
 
 					for ( Document additionalMapping : xmlMappingData.getAdditionalXmlMappings() ) {
 						cfg.addDocument( writer.write( additionalMapping ) );
-						//writeDocument(additionalMapping);
+                        if (verEntCfg.isLogAuditMappings()) {
+                            writeDocument(additionalMapping);
+                        }
 					}
 				}
 				catch (DocumentException e) {
@@ -138,7 +143,9 @@ public class EntitiesConfigurator {
 		if ( auditMetaGen.getEntitiesConfigurations().size() > 0 ) {
 			try {
 				if ( revisionInfoXmlMapping != null ) {
-					//writeDocument(revisionInfoXmlMapping);
+                    if (verEntCfg.isLogAuditMappings()) {
+                        writeDocument(revisionInfoXmlMapping);
+                    }
 					cfg.addDocument( writer.write( revisionInfoXmlMapping ) );
 				}
 			}

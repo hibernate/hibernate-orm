@@ -23,18 +23,18 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
 
-import java.util.Map;
-
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 
+import java.util.Map;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public final class MiddleRelatedComponentMapper implements MiddleComponentMapper {
-	private final MiddleIdData relatedIdData;
+    private final MiddleIdData relatedIdData;
 
 	public MiddleRelatedComponentMapper(MiddleIdData relatedIdData) {
 		this.relatedIdData = relatedIdData;
@@ -56,13 +56,18 @@ public final class MiddleRelatedComponentMapper implements MiddleComponentMapper
 		relatedIdData.getPrefixedMapper().mapToMapFromEntity( idData, obj );
 	}
 
-	@Override
-	public void addMiddleEqualToQuery(
-			Parameters parameters,
-			String idPrefix1,
-			String prefix1,
-			String idPrefix2,
-			String prefix2) {
-		relatedIdData.getPrefixedMapper().addIdsEqualToQuery( parameters, idPrefix1, idPrefix2 );
-	}
+    @Override
+    public void addMiddleEqualToQuery(
+            Parameters parameters,
+            String idPrefix1,
+            String prefix1,
+            String idPrefix2,
+            String prefix2) {
+        relatedIdData.getPrefixedMapper().addIdsEqualToQuery( parameters, idPrefix1, idPrefix2 );
+    }
+
+
+    public MiddleIdData getRelatedIdData() {
+        return relatedIdData;
+    }
 }

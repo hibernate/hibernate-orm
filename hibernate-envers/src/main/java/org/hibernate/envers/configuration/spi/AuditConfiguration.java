@@ -23,11 +23,6 @@
  */
 package org.hibernate.envers.configuration.spi;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.WeakHashMap;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -39,6 +34,7 @@ import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
 import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationResult;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mappergenerator.CollectionMapperResolver;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
@@ -49,6 +45,11 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.WeakHashMap;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -128,36 +129,35 @@ public class AuditConfiguration {
 				revInfoCfgResult.getRevisionInfoTimestampData()
 		);
 		this.entCfg = new EntitiesConfigurator().configure(
-				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy, classLoaderService,
+				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy, classLoaderService, initializeCollectionMapperResolver(),
 				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
 		);
 
 		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
+    private <T> T initializeClass(String className){
+        try {
+            Class<T> clazz;
+            try {
+                //noinspection unchecked
+                clazz = (Class<T>) this.getClass().getClassLoader().loadClass(className);
+            }
+            catch (Exception e) {
+                clazz = ReflectionTools.loadClass(
+                        className,
+                        classLoaderService
+                );
+            }
+            return ReflectHelper.getDefaultConstructor( clazz ).newInstance();
+        } catch (Exception e) {
+            throw new MappingException(String.format("Unable to create %s instance.", auditEntCfg
+                    .getAuditStrategyName()), e);
+        }
+    }
+
 	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
-		AuditStrategy strategy;
-
-		try {
-			Class<?> auditStrategyClass = null;
-			try {
-				auditStrategyClass = this.getClass().getClassLoader().loadClass( auditEntCfg.getAuditStrategyName() );
-			}
-			catch (Exception e) {
-				auditStrategyClass = ReflectionTools.loadClass(
-						auditEntCfg.getAuditStrategyName(),
-						classLoaderService
-				);
-			}
-			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor( auditStrategyClass ).newInstance();
-		}
-		catch (Exception e) {
-			throw new MappingException(
-					String.format( "Unable to create AuditStrategy[%s] instance.", auditEntCfg.getAuditStrategyName() ),
-					e
-			);
-		}
-
+		AuditStrategy strategy = initializeClass(auditEntCfg.getAuditStrategyName());
 		if ( strategy instanceof ValidityAuditStrategy ) {
 			// further initialization required
 			final Getter revisionTimestampGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoTimestampData );
@@ -165,6 +165,10 @@ public class AuditConfiguration {
 		}
 
 		return strategy;
+	}
+
+    private CollectionMapperResolver initializeCollectionMapperResolver() {
+        return initializeClass(auditEntCfg.getCollectionMapperResolverName());
 	}
 
 	private static final Map<Configuration, AuditConfiguration> CFGS = new WeakHashMap<Configuration, AuditConfiguration>();

@@ -38,16 +38,18 @@ public final class CommonCollectionMapperData {
 	private final PropertyData collectionReferencingPropertyData;
 	private final MiddleIdData referencingIdData;
 	private final RelationQueryGenerator queryGenerator;
+    private boolean withMiddleTable;
 
 	public CommonCollectionMapperData(
 			AuditEntitiesConfiguration verEntCfg, String versionsMiddleEntityName,
 			PropertyData collectionReferencingPropertyData, MiddleIdData referencingIdData,
-			RelationQueryGenerator queryGenerator) {
+			RelationQueryGenerator queryGenerator, boolean withMiddleTable) {
 		this.verEntCfg = verEntCfg;
 		this.versionsMiddleEntityName = versionsMiddleEntityName;
 		this.collectionReferencingPropertyData = collectionReferencingPropertyData;
 		this.referencingIdData = referencingIdData;
 		this.queryGenerator = queryGenerator;
+        this.withMiddleTable = withMiddleTable;
 	}
 
 	public AuditEntitiesConfiguration getVerEntCfg() {
@@ -68,5 +70,9 @@ public final class CommonCollectionMapperData {
 
 	public RelationQueryGenerator getQueryGenerator() {
 		return queryGenerator;
+    }
+
+    public boolean isWithMiddleTable() {
+        return withMiddleTable;
 	}
 }

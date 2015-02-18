@@ -23,8 +23,6 @@
  */
 package org.hibernate.envers.internal.tools;
 
-import java.util.Map;
-
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -38,6 +36,8 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
+
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -23,23 +23,26 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: diff
@@ -143,4 +146,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 		return null;
 	}
 
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator,
+                                         Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+    }
 }

@@ -23,16 +23,16 @@
  */
 package org.hibernate.envers.internal.tools.query;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.tools.Pair;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A class for incrementally building a HQL query.
@@ -244,4 +244,15 @@ public class QueryBuilder {
 
 		return query;
 	}
+
+    public Integer getPositionInSelectFor(String alias){
+        int pos = 0;
+        for (Pair<String, String> from : froms) {
+            if (from.getSecond().equals(alias)) {
+                return pos;
+            }
+            pos++;
+        }
+        return null;
+    }
 }

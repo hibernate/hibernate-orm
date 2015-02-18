@@ -23,20 +23,23 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -175,4 +178,12 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 	public Map<PropertyData, PropertyMapper> getProperties() {
 		return delegate.getProperties();
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes,
+                                         EntityInstantiator entityInstantiator, Session session, Number revision,
+                                         AuditConfiguration verCfg, InitializationContext initializationContext) {
+        delegate.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision,
+                verCfg, initializationContext);
+    }
 }

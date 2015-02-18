@@ -23,13 +23,14 @@
  */
 package org.hibernate.envers.configuration.internal;
 
+import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.internal.entities.mappergenerator.DefaultCollectionMapperResolver;
+import org.hibernate.envers.strategy.DefaultAuditStrategy;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.strategy.DefaultAuditStrategy;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * Configuration of versions entities - names of fields, entities and tables created to store versioning information.
@@ -42,6 +43,7 @@ public class AuditEntitiesConfiguration {
 	private final String auditTableSuffix;
 
 	private final String auditStrategyName;
+    private final String collectionMapperResolverName;
 	private final String originalIdPropName;
 
 	private final String revisionFieldName;
@@ -59,6 +61,7 @@ public class AuditEntitiesConfiguration {
 
 	private final boolean revisionEndTimestampEnabled;
 	private final String revisionEndTimestampFieldName;
+    private final boolean logAuditMappings;
 
 	private final String embeddableSetOrdinalPropertyName;
 
@@ -71,6 +74,10 @@ public class AuditEntitiesConfiguration {
 		auditStrategyName = ConfigurationHelper.getString(
 				EnversSettings.AUDIT_STRATEGY, properties, DefaultAuditStrategy.class.getName()
 		);
+
+        collectionMapperResolverName = ConfigurationHelper.getString(
+                EnversSettings.COLLECTION_MAPPER_RESOLVER, properties, DefaultCollectionMapperResolver.class.getName()
+        );
 
 		originalIdPropName = "originalId";
 
@@ -98,6 +105,8 @@ public class AuditEntitiesConfiguration {
 			revisionEndTimestampFieldName = null;
 		}
 
+        logAuditMappings = ConfigurationHelper.getBoolean(EnversSettings.LOG_AUDIT_MAPPINGS, properties, false);
+
 		customAuditTablesNames = new HashMap<String, String>();
 
 		revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
@@ -123,6 +132,10 @@ public class AuditEntitiesConfiguration {
 	public String getRevisionEndTimestampFieldName() {
 		return revisionEndTimestampFieldName;
 	}
+
+    public boolean isLogAuditMappings() {
+        return logAuditMappings;
+    }
 
 	public String getRevisionNumberPath() {
 		return revisionNumberPath;
@@ -176,5 +189,9 @@ public class AuditEntitiesConfiguration {
 
 	public String getEmbeddableSetOrdinalPropertyName() {
 		return embeddableSetOrdinalPropertyName;
+    }
+
+    public String getCollectionMapperResolverName() {
+        return collectionMapperResolverName;
 	}
 }

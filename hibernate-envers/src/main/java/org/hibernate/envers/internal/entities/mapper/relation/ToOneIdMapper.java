@@ -23,17 +23,21 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -135,4 +139,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 									  String idPrefix2, String prefix2) {
 		delegate.addIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+    }
 }

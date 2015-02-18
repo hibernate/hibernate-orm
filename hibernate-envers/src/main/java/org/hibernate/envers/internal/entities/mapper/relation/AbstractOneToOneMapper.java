@@ -23,16 +23,20 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.Map;
-import javax.persistence.NoResultException;
-
 import org.hibernate.NonUniqueResultException;
+import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
+
+import javax.persistence.NoResultException;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Template class for property mappers that manage one-to-one relation.
@@ -101,4 +105,8 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 			);
 		}
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+    }
 }

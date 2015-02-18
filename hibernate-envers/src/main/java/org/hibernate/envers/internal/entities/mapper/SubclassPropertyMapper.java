@@ -23,16 +23,19 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
+import org.hibernate.Session;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
-import org.hibernate.envers.internal.entities.PropertyData;
-import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -157,4 +160,13 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
 		joinedProperties.putAll( main.getProperties() );
 		return joinedProperties;
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator,
+                                         Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+        parentMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision,
+                verCfg, initializationContext);
+        main.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session, revision, verCfg,
+                initializationContext);
+    }
 }

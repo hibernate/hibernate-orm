@@ -23,14 +23,17 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -85,5 +88,18 @@ public interface PropertyMapper {
 			Object newObj,
 			Object oldObj);
 
-	void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data);
+    void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data);
+
+    /**
+     * The method allows mapper to further initialize properties in query results
+     *
+     * @param entities              List of entities
+     * @param entitiesAttributes    List of maps containing individual attributes of entities. The order in list is the same as for the first parameter
+     * @param entityInstantiator    tool for creating class instances out of properties maps
+     * @param session               Session used for issuing additional queries
+     * @param revision              nullable field for entities at revision-type queries
+     * @param verCfg                AuditConfiguration providing configuration info for audit entities
+     * @param initializationContext class that stores already initialized (or being initialized) instances
+     */
+    void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext);
 }

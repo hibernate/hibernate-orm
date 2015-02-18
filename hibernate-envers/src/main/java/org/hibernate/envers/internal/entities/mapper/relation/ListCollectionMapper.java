@@ -23,21 +23,24 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.ListCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy.ListProxy;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
 import org.hibernate.envers.tools.Pair;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -46,14 +49,13 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	private final MiddleComponentData elementComponentData;
 	private final MiddleComponentData indexComponentData;
 
-	public ListCollectionMapper(
-			CommonCollectionMapperData commonCollectionMapperData,
-			MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
-			boolean revisionTypeInId) {
-		super( commonCollectionMapperData, List.class, ListProxy.class, false, revisionTypeInId );
-		this.elementComponentData = elementComponentData;
-		this.indexComponentData = indexComponentData;
-	}
+    public ListCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
+                                MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+                                boolean revisionTypeInId) {
+        super(commonCollectionMapperData, List.class, ListProxy.class, false, revisionTypeInId);
+        this.elementComponentData = elementComponentData;
+        this.indexComponentData = indexComponentData;
+    }
 
 	@Override
 	protected Initializor<List> getInitializor(
@@ -103,4 +105,9 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 		);
 		indexComponentData.getComponentMapper().mapToMapFromObject( session, idData, data, indexValuePair.getFirst() );
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator,
+                                         Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+    }
 }

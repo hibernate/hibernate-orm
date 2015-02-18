@@ -23,20 +23,23 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.property.Getter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -223,12 +226,20 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		}
 	}
 
-	@Override
-	public Map<PropertyData, PropertyMapper> getProperties() {
-		return properties;
-	}
+    @Override
+    public Map<PropertyData, PropertyMapper> getProperties() {
+        return properties;
+    }
 
-	public Map<String, PropertyData> getPropertyDatas() {
-		return propertyDatas;
-	}
+    public Map<String, PropertyData> getPropertyDatas() {
+        return propertyDatas;
+    }
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+        for (PropertyMapper propertyMapper : properties.values()) {
+            propertyMapper.initializeResultEntities(entities, entitiesAttributes, entityInstantiator, session,
+                    revision, verCfg, initializationContext);
+        }
+    }
 }

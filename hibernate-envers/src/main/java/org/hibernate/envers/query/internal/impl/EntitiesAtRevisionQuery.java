@@ -23,10 +23,6 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
@@ -34,6 +30,12 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
+import org.hibernate.transform.AliasToEntityMapResultTransformer;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS_DEF_AUD_STR;
@@ -126,16 +128,17 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 		if ( params.contains( REVISION_PARAMETER ) ) {
 			query.setParameter( REVISION_PARAMETER, revision );
 		}
-		List queryResult = query.list();
 
-		if ( hasProjection ) {
-			return queryResult;
-		}
-		else {
-			List result = new ArrayList();
-			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
+        if (hasProjection) {
+            return query.list();
+        } else {
+            List queryResult = query.setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE).list();
+            List entities = new ArrayList();
+            List<Map> entitiesData = extractRootEntitiesFromQueryResult(queryResult);
+            entityInstantiator.addInstancesFromVersionsEntities(entityName, entities, entitiesData, revision);
+            initializeResultEntities(entities, entitiesData, entityInstantiator, revision);
+            return entities;
+        }
+    }
 
-			return result;
-		}
-	}
 }

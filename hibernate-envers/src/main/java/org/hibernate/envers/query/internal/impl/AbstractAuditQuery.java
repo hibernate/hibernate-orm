@@ -23,11 +23,6 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -45,6 +40,14 @@ import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Pair;
+
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 
@@ -155,6 +158,36 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 		qb.addOrder( propertyName, orderData.getSecond() );
 		return this;
 	}
+
+    protected void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Number revision) {
+        verCfg.getEntCfg().get(entityName).getPropertyMapper().initializeResultEntities(entities, entitiesAttributes,
+                entityInstantiator, versionsReader.getSession(), revision, verCfg, new InitializationContext());
+    }
+
+    protected String resolveRootEntityKey(){
+        Integer positionOfRoot = qb.getPositionInSelectFor(qb.getRootAlias());
+        return positionOfRoot == null ? "0" : Integer.toString(positionOfRoot);
+    }
+
+    protected String resolveRevisionEntityKey(){
+        Integer positionOfRev = qb.getPositionInSelectFor("r");
+        return positionOfRev == null ? "1" : Integer.toString(positionOfRev);
+    }
+
+    // Each root entity is represented by a map of its attributes
+    protected List<Map> extractRootEntitiesFromQueryResult(List queryResult) {
+        String rootKey = resolveRootEntityKey();
+        Set<Map> filteredQueryResult = new LinkedHashSet<Map>();
+        for (Object queryRow : queryResult) {
+            Map row = (Map) queryRow;
+            if (row.containsKey(rootKey)) {
+                filteredQueryResult.add((Map) row.get(rootKey));
+            } else {
+                filteredQueryResult.add(row);
+            }
+        }
+        return new ArrayList<Map>(filteredQueryResult);
+    }
 
 	// Query properties
 

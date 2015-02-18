@@ -23,12 +23,12 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -143,7 +143,7 @@ public class EntityConfiguration {
 
 	// For use by EntitiesConfigurations
 
-	String getVersionsEntityName() {
+	public String getVersionsEntityName() {
 		return versionsEntityName;
 	}
 

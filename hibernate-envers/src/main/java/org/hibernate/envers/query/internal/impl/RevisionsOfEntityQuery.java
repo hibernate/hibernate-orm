@@ -23,10 +23,7 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
@@ -34,6 +31,11 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.transform.AliasToEntityMapResultTransformer;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -119,45 +121,47 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			);
 		}
 
-		List<Object> queryResult = buildAndExecuteQuery();
-		if ( hasProjection ) {
-			return queryResult;
-		}
-		else {
-			List entities = new ArrayList();
-			String revisionTypePropertyName = verEntCfg.getRevisionTypePropName();
+        Query query = buildQuery();
+        if (hasProjection) {
+            return query.list();
+        } else {
+            List queryResult = query.setResultTransformer(AliasToEntityMapResultTransformer.INSTANCE).list();
+            List results = new ArrayList();
+            List entities = new ArrayList();
+            List<Map> entitiesData = extractRootEntitiesFromQueryResult(queryResult);
+            String revisionTypePropertyName = verEntCfg.getRevisionTypePropName();
+            String rootEntityKey = resolveRootEntityKey();
+            String revEntityKey = "";
+            if (!selectEntitiesOnly) {
+                revEntityKey = resolveRevisionEntityKey();
+            }
 
-			for ( Object resultRow : queryResult ) {
-				Map versionsEntity;
-				Object revisionData;
+            for (Object resultRow : queryResult) {
+                Map versionsEntity;
+                Object revisionData;
 
-				if ( selectEntitiesOnly ) {
-					versionsEntity = (Map) resultRow;
-					revisionData = null;
-				}
-				else {
-					Object[] arrayResultRow = (Object[]) resultRow;
-					versionsEntity = (Map) arrayResultRow[0];
-					revisionData = arrayResultRow[1];
-				}
+                versionsEntity = (Map) ((Map) resultRow).get(rootEntityKey);
 
-				Number revision = getRevisionNumber( versionsEntity );
+                if (selectEntitiesOnly) {
+                    revisionData = null;
+                } else {
+                    revisionData = ((Map) resultRow).get(revEntityKey);
+                }
 
-				Object entity = entityInstantiator.createInstanceFromVersionsEntity(
-						entityName,
-						versionsEntity,
-						revision
-				);
+                Number revision = getRevisionNumber(versionsEntity);
 
-				if ( !selectEntitiesOnly ) {
-					entities.add( new Object[] {entity, revisionData, versionsEntity.get( revisionTypePropertyName )} );
-				}
-				else {
-					entities.add( entity );
-				}
-			}
+                Object entity =
+                        entityInstantiator.createInstanceFromVersionsEntity(entityName, versionsEntity, revision);
 
-			return entities;
-		}
-	}
+                if (!selectEntitiesOnly) {
+                    results.add(new Object[]{entity, revisionData, versionsEntity.get(revisionTypePropertyName)});
+                } else {
+                    results.add(entity);
+                }
+                entities.add(entity);
+            }
+            initializeResultEntities(entities, entitiesData, entityInstantiator, null);
+            return results;
+        }
+    }
 }

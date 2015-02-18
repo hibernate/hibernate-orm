@@ -23,17 +23,21 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.internal.impl.InitializationContext;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -42,15 +46,14 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 	protected final MiddleComponentData elementComponentData;
 	protected final MiddleComponentData indexComponentData;
 
-	public MapCollectionMapper(
-			CommonCollectionMapperData commonCollectionMapperData,
-			Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-			MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
-			boolean revisionTypeInId) {
-		super( commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId );
-		this.elementComponentData = elementComponentData;
-		this.indexComponentData = indexComponentData;
-	}
+    public MapCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
+                               Class<? extends T> collectionClass, Class<? extends T> proxyClass,
+                               MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+                               boolean revisionTypeInId) {
+        super(commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId);
+        this.elementComponentData = elementComponentData;
+        this.indexComponentData = indexComponentData;
+    }
 
 	@Override
 	protected Initializor<T> getInitializor(
@@ -101,4 +104,8 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 				((Map.Entry) changed).getKey()
 		);
 	}
+
+    @Override
+    public void initializeResultEntities(List entities, List<Map> entitiesAttributes, EntityInstantiator entityInstantiator, Session session, Number revision, AuditConfiguration verCfg, InitializationContext initializationContext) {
+    }
 }

@@ -23,13 +23,15 @@
  */
 package org.hibernate.envers.internal.tools.query;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.envers.internal.tools.MutableInteger;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Parameters of a query, built using {@link QueryBuilder}.
@@ -180,19 +182,19 @@ public class Parameters {
 
 		expressions.add( expression.toString() );
 	}
-	
+
 	public void addWhereWithFunction(String left, String leftFunction, String op, Object paramValue){
 		final String paramName = generateQueryParam();
 		localQueryParamValues.put( paramName, paramValue );
-		
+
 		final StringBuilder expression = new StringBuilder();
-		
+
 		expression.append( leftFunction ).append( "(" );
 		expression.append( alias ).append( "." );
 		expression.append( left ).append( ")" );
 		expression.append( " " ).append( op ).append( " " );
 		expression.append( ":" ).append( paramName );
-		
+
 		expressions.add( expression.toString() );
 	}
 
@@ -224,17 +226,37 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
-	public void addWhereWithParams(String left, String opStart, Object[] paramValues, String opEnd) {
-		final StringBuilder expression = new StringBuilder();
+    public void addWhereWithParams(String left, String opStart, Object[] paramValues, String opEnd) {
+        addWhereWithParams(left, opStart, paramValues, opEnd, true);
+    }
 
-		expression.append( alias ).append( "." ).append( left ).append( " " ).append( opStart );
+	public void addWhereWithParams(String left, String opStart, Object[] paramValues, String opEnd, boolean useAlias) {
+		StringBuilder expression = new StringBuilder();
 
-		for ( int i = 0; i < paramValues.length; i++ ) {
-			final Object paramValue = paramValues[i];
-			final String paramName = generateQueryParam();
-			localQueryParamValues.put( paramName, paramValue );
-			expression.append( ":" ).append( paramName );
+        if (useAlias) {
+            expression.append(alias).append(".");
+        }
+        expression.append(left).append(" ").append(opStart);
 
+        for (int i = 0; i < paramValues.length; i++) {
+            Object paramValue = paramValues[i];
+            List paramValueList;
+
+            if (paramValue instanceof List) {
+                paramValueList = (List) paramValue;
+            } else {
+                paramValueList = Collections.singletonList(paramValue);
+            }
+
+            Iterator iterator = paramValueList.iterator();
+            while (iterator.hasNext()) {
+                String paramName = generateQueryParam();
+                localQueryParamValues.put(paramName, iterator.next());
+                expression.append(":").append(paramName);
+                if (iterator.hasNext()) {
+                    expression.append(",");
+                }
+            }
 			if ( i != paramValues.length - 1 ) {
 				expression.append( ", " );
 			}

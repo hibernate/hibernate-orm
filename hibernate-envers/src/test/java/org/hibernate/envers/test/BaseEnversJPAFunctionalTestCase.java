@@ -23,25 +23,20 @@
  */
 package org.hibernate.envers.test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.transaction.SystemException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.event.spi.EnversIntegrator;
+import org.hibernate.envers.internal.synchronization.AuditProcess;
+import org.hibernate.envers.internal.synchronization.AuditProcessManager;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -49,13 +44,20 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
-
-import org.junit.After;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
+import org.jboss.logging.Logger;
+import org.junit.After;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.transaction.SystemException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Strong Liu (stliu@hibernate.org)
@@ -286,6 +288,15 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 		return auditReader = AuditReaderFactory.get( getOrCreateEntityManager() );
 	}
+
+    protected SessionImplementor getCurrentSession() {
+        return em.unwrap(SessionImplementor.class);
+    }
+
+    protected AuditProcess getAuditProcess() {
+        AuditProcessManager processManager = AuditConfiguration.getFor(getCfg()).getSyncManager();
+        return processManager.get((EventSource) getCurrentSession());
+    }
 
 	protected EntityManager createIsolatedEntityManager() {
 		EntityManager isolatedEm = entityManagerFactory.createEntityManager();

@@ -23,11 +23,6 @@
  */
 package org.hibernate.envers.internal.synchronization;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
@@ -37,12 +32,16 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private final RevisionInfoGenerator revisionInfoGenerator;
-	private final SessionImplementor session;
 
 	private final LinkedList<AuditWorkUnit> workUnits;
 	private final Queue<AuditWorkUnit> undoQueue;
@@ -50,10 +49,10 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private final EntityChangeNotifier entityChangeNotifier;
 
 	private Object revisionData;
+    private boolean revisionDataWasSaved;
 
 	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor session) {
 		this.revisionInfoGenerator = revisionInfoGenerator;
-		this.session = session;
 
 		workUnits = new LinkedList<AuditWorkUnit>();
 		undoQueue = new LinkedList<AuditWorkUnit>();
@@ -127,41 +126,58 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 			revisionData = revisionInfoGenerator.generate();
 		}
 
-		// Saving the revision data, if not yet saved and persist is true
-		if ( !session.contains( revisionData ) && persist ) {
-			revisionInfoGenerator.saveRevisionData( session, revisionData );
-		}
+        // Saving the revision data, if not yet saved and persist is true
+        if (!revisionDataWasSaved && persist) {
+            revisionInfoGenerator.saveRevisionData(session, revisionData);
+            revisionDataWasSaved = true;
+        }
 
 		return revisionData;
 	}
 
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		if ( workUnits.size() == 0 && undoQueue.size() == 0 ) {
+		if (hasNoWork()) {
 			return;
 		}
 
-		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if ( FlushMode.isManualFlushMode( session.getFlushMode() ) ) {
-			Session temporarySession = null;
-			try {
-				temporarySession = ((Session) session).sessionWithOptions().transactionContext().autoClose( false )
-						.connectionReleaseMode( ConnectionReleaseMode.AFTER_TRANSACTION )
-						.openSession();
-				executeInSession( temporarySession );
-				temporarySession.flush();
-			}
-			finally {
-				if ( temporarySession != null ) {
-					temporarySession.close();
-				}
-			}
-		}
-		else {
-			executeInSession( (Session) session );
+        // see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
+        if (FlushMode.isManualFlushMode(session.getFlushMode())) {
+            doTransactionCompleteInTemporarySession(session);
+        } else {
+            executeInSession((Session) session);
 
-			// Explicitly flushing the session, as the auto-flush may have already happened.
-			session.flush();
-		}
-	}
+            // Explicitly flushing the session, as the auto-flush may have already happened.
+            session.flush();
+        }
+    }
+
+    public boolean hasNoWork() {
+        return workUnits.size() == 0 && undoQueue.size() == 0;
+    }
+
+    public void flushAudit(SessionImplementor session) {
+        if (hasNoWork()) {
+            return;
+        }
+        doTransactionCompleteInTemporarySession(session);
+    }
+
+    private void doTransactionCompleteInTemporarySession(SessionImplementor session) {
+        // see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
+        Session temporarySession = null;
+        try {
+            temporarySession = ((Session) session).sessionWithOptions().transactionContext().autoClose(false)
+                    .connectionReleaseMode(ConnectionReleaseMode.AFTER_TRANSACTION)
+                    .openSession();
+
+            executeInSession(temporarySession);
+
+            temporarySession.flush();
+        } finally {
+            if (temporarySession != null) {
+                temporarySession.close();
+            }
+        }
+    }
 }

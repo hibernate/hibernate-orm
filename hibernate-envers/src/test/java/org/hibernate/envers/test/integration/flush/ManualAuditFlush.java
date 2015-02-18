@@ -28,6 +28,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -35,11 +36,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
- * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class ManualFlush extends AbstractFlushTest {
+@TestForIssue( jiraKey = "HHH-9622" )
+public class ManualAuditFlush extends AbstractFlushTest {
 	private Integer id;
 
 	public FlushMode getFlushMode() {
@@ -59,48 +63,25 @@ public class ManualFlush extends AbstractFlushTest {
 
 		em.getTransaction().commit();
 
-		// No revision - we change the data, but do not flush the session
-		em.getTransaction().begin();
-
-		fe = em.find( StrTestEntity.class, fe.getId() );
-		fe.setStr( "y" );
-
-		em.getTransaction().commit();
-
-		// Revision 2 - only the first change should be saved
-		em.getTransaction().begin();
-
-		fe = em.find( StrTestEntity.class, fe.getId() );
-		fe.setStr( "z" );
-		em.flush();
-
-		fe = em.find( StrTestEntity.class, fe.getId() );
-		fe.setStr( "z2" );
-
-		em.getTransaction().commit();
-
-		//
 
 		id = fe.getId();
 	}
 
 	@Test
 	public void testRevisionsCounts() {
-		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( StrTestEntity.class, id ) );
+		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, id ) );
 	}
 
 	@Test
 	public void testHistoryOfId() {
 		StrTestEntity ver1 = new StrTestEntity( "x", id );
-		StrTestEntity ver2 = new StrTestEntity( "z", id );
 
 		assertEquals( ver1, getAuditReader().find( StrTestEntity.class, id, 1 ) );
-		assertEquals( ver2, getAuditReader().find( StrTestEntity.class, id, 2 ) );
 	}
 
 	@Test
 	public void testCurrent() {
-		assertEquals( new StrTestEntity( "z", id ), getEntityManager().find( StrTestEntity.class, id ) );
+		assertEquals( new StrTestEntity( "x", id ), getEntityManager().find( StrTestEntity.class, id ) );
 	}
 
 	@Test
@@ -112,6 +93,21 @@ public class ManualFlush extends AbstractFlushTest {
 						.getResultList();
 
 		assertEquals( results.get( 0 )[2], RevisionType.ADD );
-		assertEquals( results.get( 1 )[2], RevisionType.MOD );
 	}
+
+    @Test
+    public void testManualAuditFlush() throws Exception {
+        EntityManager em = getEntityManager();
+        em.getTransaction().begin();
+
+        StrTestEntity fe = em.find( StrTestEntity.class, id );
+        fe.setStr("y");
+
+        em.flush();
+        assertFalse(getAuditProcess().hasNoWork());
+        getAuditProcess().flushAudit(getCurrentSession());
+        assertTrue(getAuditProcess().hasNoWork());
+
+        em.getTransaction().rollback();
+    }
 }

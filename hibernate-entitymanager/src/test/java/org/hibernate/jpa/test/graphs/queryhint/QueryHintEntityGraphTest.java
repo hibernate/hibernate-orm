@@ -38,6 +38,9 @@ import org.hibernate.jpa.test.graphs.Employee;
 import org.hibernate.jpa.test.graphs.Location;
 import org.hibernate.jpa.test.graphs.Manager;
 import org.hibernate.jpa.test.graphs.Market;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -113,7 +116,75 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		}
 		assertTrue(foundManager);
 	}
-	
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9448")
+	@FailureExpected( jiraKey = "HHH-9448")
+	public void testLoadGraphWithRestriction() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
+		entityGraph.addAttributeNodes( "location" );
+		entityGraph.addAttributeNodes( "markets" );
+		Query query = entityManager.createQuery( "from " + Company.class.getName() + " where location.zip = :zip")
+				.setParameter( "zip", 12345 );
+		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		Company company = (Company) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertFalse( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "loadgraph", non-specified attributes use the fetch modes defined in the mappings.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
+		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+		subgraph.addAttributeNodes( "managers" );
+		subgraph.addAttributeNodes( "friends" );
+		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+		subSubgraph.addAttributeNodes( "managers" );
+		subSubgraph.addAttributeNodes( "friends" );
+
+		query = entityManager.createQuery( "from " + Company.class.getName()  + " where location.zip = :zip" )
+				.setParameter( "zip", 12345 );
+		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		company = (Company) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertTrue( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "loadgraph", non-specified attributes use the fetch modes defined in the mappings.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
+		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		boolean foundManager = false;
+		Iterator<Employee> employeeItr = company.employees.iterator();
+		while (employeeItr.hasNext()) {
+			Employee employee = employeeItr.next();
+			assertTrue( Hibernate.isInitialized( employee.managers ) );
+			assertTrue( Hibernate.isInitialized( employee.friends ) );
+			// test 1 more level
+			Iterator<Manager> managerItr =  employee.managers.iterator();
+			while (managerItr.hasNext()) {
+				foundManager = true;
+				Manager manager = managerItr.next();
+				assertTrue( Hibernate.isInitialized( manager.managers ) );
+				assertTrue( Hibernate.isInitialized( manager.friends ) );
+			}
+		}
+		assertTrue(foundManager);
+	}
+
 	@Test
 	public void testEntityGraphWithExplicitFetch() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -139,7 +210,35 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
 		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
 	}
-	
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9448")
+	public void testEntityGraphWithExplicitFetchAndRestriction() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
+		entityGraph.addAttributeNodes( "location" );
+		entityGraph.addAttributeNodes( "markets" );
+		entityGraph.addAttributeNodes( "employees" );
+		// Ensure the EntityGraph and explicit fetches do not conflict.
+		Query query = entityManager.createQuery( "from " + Company.class.getName()
+						+ " as c left join fetch c.location left join fetch c.employees where c.location.zip = :zip")
+				.setParameter( "zip", 12345 );
+		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
+		Company company = (Company) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertTrue( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "loadgraph", non-specified attributes use the fetch modes defined in the mappings.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
+		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
+	}
+
 	@Before
 	public void createData() {
 		EntityManager entityManager = getOrCreateEntityManager();

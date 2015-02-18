@@ -994,10 +994,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			);
 		}
 		LOG.warnf(
-				"[DEPRECATION] Encountered positional parameter near line %s, column %s.  Positional parameter " +
+				"[DEPRECATION] Encountered positional parameter near line %s, column %s in HQL: [%s].  Positional parameter " +
 						"are considered deprecated; use named parameters or JPA-style positional parameters instead.",
 				inputNode.getLine(),
-				inputNode.getColumn()
+				inputNode.getColumn(),
+				queryTranslatorImpl.getQueryString()
 		);
 		ParameterNode parameter = (ParameterNode) astFactory.create( PARAM, "?" );
 		PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(

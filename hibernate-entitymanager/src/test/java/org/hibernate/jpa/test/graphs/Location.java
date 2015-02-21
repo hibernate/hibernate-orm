@@ -35,4 +35,8 @@ public class Location {
 	public String address;
 	
 	public int zip;
+
+	public int getZip() {
+		return zip;
+	}
 }

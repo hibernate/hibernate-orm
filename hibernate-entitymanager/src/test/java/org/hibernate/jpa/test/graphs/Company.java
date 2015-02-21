@@ -51,4 +51,8 @@ public class Company {
 	
 	@ElementCollection(fetch = FetchType.EAGER)
 	public Set<String> phoneNumbers = new HashSet<String>();
+
+	public Location getLocation() {
+		return location;
+	}
 }

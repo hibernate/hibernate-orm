@@ -49,6 +49,11 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	}
 
 	@Override
+	public String getCrossJoinSeparator() {
+		return " cross join ";
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
 		if ( timeout == LockOptions.SKIP_LOCKED ) {
 			return  getForUpdateSkipLockedString();

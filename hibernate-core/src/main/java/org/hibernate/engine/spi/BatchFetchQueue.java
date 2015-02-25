@@ -222,7 +222,7 @@ public class BatchFetchQueue {
 			final CacheKey key = context.getSession().generateCacheKey(
 					entityKey.getIdentifier(),
 					persister.getIdentifierType(),
-					entityKey.getEntityName()
+                    persister.getRootEntityName()
 			);
 			return CacheHelper.fromSharedCache( context.getSession(), key, persister.getCacheAccessStrategy() ) != null;
 		}

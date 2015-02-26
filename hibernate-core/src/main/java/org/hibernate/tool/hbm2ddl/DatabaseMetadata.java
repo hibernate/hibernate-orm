@@ -196,7 +196,10 @@ public class DatabaseMetadata {
 	public boolean isSequence(Object key) {
 		if (key instanceof String){
 			String[] strings = StringHelper.split(".", (String) key);
-			return sequences.contains( StringHelper.toLowerCase(strings[strings.length-1]));
+			String sequenceName = StringHelper.toLowerCase(strings[strings.length-1]);
+			String unquotedSequenceName = sequenceName.replaceAll("`","");
+			unquotedSequenceName = unquotedSequenceName.replaceAll("\"","");
+			return sequences.contains(unquotedSequenceName);
 		}
 		return false;
 	}

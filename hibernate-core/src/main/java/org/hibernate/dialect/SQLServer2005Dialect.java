@@ -80,26 +80,15 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
+		String lockHint = super.appendLockHint(lockOptions, tableName);
+
 		// NOTE : since SQLServer2005 the nowait hint is supported
-		if ( lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT ) {
-			return tableName + " with (updlock, rowlock, nowait)";
+		final boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
+		if ( isNoWait || lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT ) {
+			lockHint = lockHint.replace("rowlock", "rowlock, nowait");
 		}
 
-		final LockMode mode = lockOptions.getLockMode();
-		final boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
-		final String noWaitStr = isNoWait ? ", nowait" : "";
-		switch ( mode ) {
-			case UPGRADE_NOWAIT:
-				return tableName + " with (updlock, rowlock, nowait)";
-			case UPGRADE:
-			case PESSIMISTIC_WRITE:
-			case WRITE:
-				return tableName + " with (updlock, rowlock" + noWaitStr + " )";
-			case PESSIMISTIC_READ:
-				return tableName + " with (holdlock, rowlock" + noWaitStr + " )";
-			default:
-				return tableName;
-		}
+		return lockHint;
 	}
 
 	@Override

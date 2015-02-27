@@ -5,9 +5,15 @@ dependencies {
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )
     compile( libraries.xapool )
+    compile( libraries.log4j )
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }
+}
+
+// resources inherently exclude sources
+sourceSets.test.resources {
+    setSrcDirs( ['src/test/java'] )
 }
 
 // todo : Fold into hibernate-core and publish in separate publications

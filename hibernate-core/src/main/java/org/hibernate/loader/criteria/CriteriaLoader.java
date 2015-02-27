@@ -201,8 +201,12 @@ public class CriteriaLoader extends OuterJoinLoader {
 			Dialect dialect,
 			List<AfterLoadAction> afterLoadActions) throws QueryException {
 		final LockOptions lockOptions = parameters.getLockOptions();
+
 		if ( lockOptions == null ||
-			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
+				(lockOptions.getLockMode() == LockMode.NONE && (lockOptions.getAliasLockCount() == 0
+						|| (lockOptions.getAliasLockCount() == 1 && lockOptions
+						.getAliasSpecificLockMode( "this_" ) == LockMode.NONE)
+				)) ) {
 			return sql;
 		}
 

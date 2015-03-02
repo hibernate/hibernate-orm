@@ -406,7 +406,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 	
 	// TODO: Remove in ORM 5!  See HHH-8818
-	private class TcclSafeAggregatedClassLoader extends ClassLoader {
+	private static class TcclSafeAggregatedClassLoader extends ClassLoader {
 		private final AggregatedClassLoader aggregatedClassLoader;
 		
 		private TcclSafeAggregatedClassLoader(AggregatedClassLoader aggregatedClassLoader, ClassLoader tccl) {

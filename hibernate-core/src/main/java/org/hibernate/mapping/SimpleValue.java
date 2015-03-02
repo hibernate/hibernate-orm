@@ -526,7 +526,7 @@ public class SimpleValue implements KeyValue {
 		}
 	}
 
-	private final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
+	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
 
 		private final Class returnedClass;
 		private final Annotation[] annotationsMethod;

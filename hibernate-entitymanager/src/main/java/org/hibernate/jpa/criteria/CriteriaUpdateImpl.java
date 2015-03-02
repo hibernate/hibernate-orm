@@ -152,7 +152,7 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 		}
 	}
 
-	private class Assignment<A> {
+	private static class Assignment<A> {
 		private final SingularAttributePath<A> attributePath;
 		private final ExpressionImplementor<? extends A> value;
 

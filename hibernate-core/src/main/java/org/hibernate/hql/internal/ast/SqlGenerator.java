@@ -253,7 +253,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 * SQL function processing code redirects generated SQL output to an instance of this class
 	 * which catches function arguments.
 	 */
-	class StandardFunctionArguments implements FunctionArgumentsCollectingWriter {
+	static class StandardFunctionArguments implements FunctionArgumentsCollectingWriter {
 		private int argInd;
 		private final List<String> args = new ArrayList<String>( 3 );
 
@@ -281,7 +281,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 * SQL function processing code redirects generated SQL output to an instance of this class
 	 * which catches function arguments.
 	 */
-	class CastFunctionArguments implements FunctionArgumentsCollectingWriter {
+	static class CastFunctionArguments implements FunctionArgumentsCollectingWriter {
 		private String castExpression;
 		private String castTargetType;
 

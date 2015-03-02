@@ -29,9 +29,11 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.test.TestingUtil;
 import org.junit.Test;
 
 import org.hibernate.cache.CacheException;
@@ -290,18 +292,19 @@ public class InfinispanRegionFactoryTestCase  {
       }
    }
 
-   @Test
+   @Test(expected = CacheException.class)
    public void testTimestampValidation() {
       Properties p = new Properties();
-      final DefaultCacheManager manager = new DefaultCacheManager();
-      InfinispanRegionFactory factory = createRegionFactory(manager, p);
-      ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
-      manager.defineConfiguration("timestamps", builder.build());
+      final DefaultCacheManager manager = new DefaultCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder().build());
       try {
+         InfinispanRegionFactory factory = createRegionFactory(manager, p);
+         ConfigurationBuilder builder = new ConfigurationBuilder();
+         builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
+         manager.defineConfiguration("timestamps", builder.build());
          factory.start(null, p);
          fail("Should have failed saying that invalidation is not allowed for timestamp caches.");
-      } catch(CacheException ce) {
+      } finally {
+         TestingUtil.killCacheManagers(manager);
       }
    }
 

@@ -1,134 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns="urn:infinispan:config:6.0"
-            xsi:schemaLocation="urn:infinispan:config:6.0 http://www.infinispan.org/schemas/infinispan-config-6.0.xsd">
-   <global>
-      <transport
-            transportClass="org.infinispan.remoting.transport.jgroups.JGroupsTransport"
-            clusterName="infinispan-hibernate-cluster"
-            distributedSyncTimeout="50000"
-            strictPeerToPeer="false">
-         <!-- Note that the JGroups transport uses sensible defaults if no configuration property is defined. -->
-         <properties>
-            <!--<property name="configurationFile" value="jgroups-tcp.xml"/>-->
-            <property name="configurationFile"
-                      value="${hibernate.cache.infinispan.jgroups_cfg:jgroups-tcp.xml}"/>
-         </properties>
-         <!-- See the JGroupsTransport javadocs for more flags -->
-      </transport>
-   </global>
+            xmlns="urn:infinispan:config:7.0"
+            xsi:schemaLocation="urn:infinispan:config:7.0 http://www.infinispan.org/schemas/infinispan-config-7.0.xsd">
 
-   <default>
-      <!-- Used to register JMX statistics in any available MBean server -->
-      <jmxStatistics enabled="false"/>
-   </default>
+   <jgroups>
+      <stack-file name="hibernate-jgroups" path="${hibernate.cache.infinispan.jgroups_cfg:jgroups-tcp.xml}"/>
+   </jgroups>
 
-   <!-- Default configuration is appropriate for entity/collection caching. -->
-   <namedCache name="entity">
-      <clustering mode="invalidation">
-         <stateTransfer fetchInMemoryState="false" timeout="20000"/>
-         <sync replTimeout="20000"/>
-      </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false"/>
-      <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
-           0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000" wakeUpInterval="5000"/>
-      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
-                   lockingMode="OPTIMISTIC"/>
-   </namedCache>
+   <cache-container name="SampleCacheManager" statistics="false" default-cache="the-default-cache" shutdown-hook="DEFAULT">
+      <transport stack="hibernate-jgroups" cluster="infinispan-hibernate-cluster"/>
 
-   <!-- Default configuration is appropriate for entity/collection caching. -->
-   <namedCache name="entity-repeatable">
-      <clustering mode="invalidation">
-         <stateTransfer fetchInMemoryState="false" timeout="20000"/>
-         <sync replTimeout="20000"/>
-      </clustering>
-      <!-- Note: REPEATABLE_READ is only useful if the application evicts/clears entities 
-        from the Hibernate Session and then expects to repeatably re-read them in 
-        the same transaction. Otherwise, the Session's internal cache provides a 
-        repeatable-read semantic. Before choosing this config, carefully read the docs
-        and make sure you really need REPEATABLE_READ.
-       -->
-      <locking isolationLevel="REPEATABLE_READ" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false"/>
-      <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
-           0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000" wakeUpInterval="5000"/>
-      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
-                   lockingMode="OPTIMISTIC"/>
-   </namedCache>
+      <local-cache name="the-default-cache" statistics="false" />
 
-   <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
-   <namedCache name="replicated-entity">
-      <clustering mode="replication">
-         <stateTransfer fetchInMemoryState="false" timeout="20000"/>
-         <sync replTimeout="20000"/>
-      </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false"/>
-      <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
-           0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000" wakeUpInterval="5000"/>
-      <lazyDeserialization enabled="true"/>
-      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
-                   lockingMode="OPTIMISTIC"/>
-   </namedCache>
+      <!-- Default configuration is appropriate for entity/collection caching. -->
+      <invalidation-cache name="entity" mode="SYNC" remote-timeout="20000">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+      </invalidation-cache>
 
-   <!-- A config appropriate for query caching. Does not replicate queries. -->
-   <namedCache name="local-query">
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false"/>
-      <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
-         the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000" wakeUpInterval="5000"/>
-      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
-                   lockingMode="OPTIMISTIC"/>
-   </namedCache>
+      <!-- Default configuration is appropriate for entity/collection caching. -->
+      <invalidation-cache name="entity-repeatable" mode="SYNC" remote-timeout="20000">
+         <locking isolation="REPEATABLE_READ" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+      </invalidation-cache>
 
-   <!-- A query cache that replicates queries. Replication is asynchronous. -->
-   <namedCache name="replicated-query">
-      <clustering mode="replication">
-         <async/>
-      </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false"/>
-      <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
-         the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000" wakeUpInterval="5000"/>
-      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
-                   lockingMode="OPTIMISTIC"/>
-      <!-- State transfer forces all replication calls to be synchronous,
-           so for calls to remain async, use a cluster cache loader instead -->
-      <persistence passivation="false">
-         <cluster remoteCallTimeout="20000" />
-      </persistence>
-   </namedCache>
+      <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
+      <replicated-cache name="replicated-entity" mode="SYNC" remote-timeout="20000">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+         <state-transfer enabled="false"/>
+      </replicated-cache>
 
-   <!-- Optimized for timestamp caching. A clustered timestamp cache
-        is required if query caching is used, even if the query cache
-        itself is configured with CacheMode=LOCAL. -->
-   <namedCache name="timestamps">
-      <clustering mode="replication">
-         <async/>
-      </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false"/>
-      <!--  Don't ever evict modification timestamps -->
-      <eviction strategy="NONE"/>
-      <expiration wakeUpInterval="0"/>
-      <!-- Explicitly non transactional -->
-      <transaction transactionMode="NON_TRANSACTIONAL"/>
-      <!-- State transfer forces all replication calls to be synchronous,
-           so for calls to remain async, use a cluster cache loader instead -->
-      <persistence passivation="false">
-         <cluster remoteCallTimeout="20000" />
-      </persistence>
-   </namedCache>
+      <!-- A config appropriate for query caching. Does not replicate queries. -->
+      <local-cache name="local-query">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+      </local-cache>
+
+      <!-- A query cache that replicates queries. Replication is asynchronous. -->
+      <replicated-cache name="replicated-query" mode="ASYNC">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+         <persistence passivation="false">
+            <!-- State transfer forces all replication calls to be synchronous,
+                 so for calls to remain async, use a cluster cache loader instead -->
+            <cluster-loader remote-timeout="20000"/>
+         </persistence>
+      </replicated-cache>
+
+      <!-- Optimized for timestamp caching. A clustered timestamp cache
+           is required if query caching is used, even if the query cache
+           itself is configured with CacheMode=LOCAL. -->
+      <replicated-cache name="timestamps" mode="ASYNC">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <!-- Explicitly non transactional -->
+         <transaction mode="NONE"/>
+         <!--  Don't ever evict modification timestamps -->
+         <eviction strategy="NONE"/>
+         <expiration interval="0"/>
+         <persistence passivation="false">
+            <!-- State transfer forces all replication calls to be synchronous,
+                 so for calls to remain async, use a cluster cache loader instead -->
+            <cluster-loader remote-timeout="20000"/>
+         </persistence>
+         <state-transfer enabled="false"/>
+      </replicated-cache>
+   </cache-container>
 
 </infinispan>

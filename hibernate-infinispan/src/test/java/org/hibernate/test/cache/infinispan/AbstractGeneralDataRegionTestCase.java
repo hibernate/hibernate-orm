@@ -110,6 +110,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
       regionPut(localRegion);
+		sleep( 250 );
       assertEquals( VALUE1, localRegion.get( KEY ) );
 
 		// allow async propagation

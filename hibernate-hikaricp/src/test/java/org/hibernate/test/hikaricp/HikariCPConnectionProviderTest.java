@@ -23,11 +23,6 @@
  */
 package org.hibernate.test.hikaricp;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -38,6 +33,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import javax.sql.DataSource;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Brett Meyer
@@ -87,4 +86,12 @@ public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 			assertTrue( e.getMessage().contains( "shutdown" ) );
 		}
 	}
+
+    @Test
+    public void testUnwrapAsDataSource() {
+        JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
+        ConnectionProvider provider = jdbcServices.getConnectionProvider();
+
+        assertNotNull(provider.unwrap(DataSource.class));
+    }
 }

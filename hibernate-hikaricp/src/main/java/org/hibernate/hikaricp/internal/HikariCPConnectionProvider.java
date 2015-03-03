@@ -35,6 +35,8 @@ import org.jboss.logging.Logger;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import javax.sql.DataSource;
+
 /**
  * HikariCP Connection provider for Hibernate.
  * 
@@ -112,12 +114,16 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( isUnwrappableAs( unwrapType ) ) {
-			return (T) this;
-		}
-		else {
-			throw new UnknownUnwrapTypeException( unwrapType );
-		}
+        if ( ConnectionProvider.class.equals( unwrapType ) ||
+                HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+            return (T) this;
+        }
+        else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+            return (T) hds;
+        }
+        else {
+            throw new UnknownUnwrapTypeException( unwrapType );
+        }
 	}
 
 	// *************************************************************************

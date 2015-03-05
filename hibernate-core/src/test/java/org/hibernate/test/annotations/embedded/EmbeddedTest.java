@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -43,6 +44,7 @@ import org.hibernate.test.util.SchemaUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -406,6 +408,64 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9642")
+	public void testEmbeddedAndOneToManyHql() throws Exception {
+		Session s;
+		s = openSession();
+		Transaction tx = s.beginTransaction();
+		InternetProvider provider = new InternetProvider();
+		provider.setBrandName( "Fido" );
+		LegalStructure structure = new LegalStructure();
+		structure.setCountry( "Canada" );
+		structure.setName( "Rogers" );
+		provider.setOwner( structure );
+		s.persist( provider );
+		Manager manager = new Manager();
+		manager.setName( "Bill" );
+		manager.setEmployer( provider );
+		structure.getTopManagement().add( manager );
+		s.persist( manager );
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		InternetProvider internetProviderQueried =
+				(InternetProvider) s.createQuery( "from InternetProvider" ).uniqueResult();
+		assertFalse( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		internetProviderQueried =
+				(InternetProvider) s.createQuery( "from InternetProvider i join fetch i.owner.topManagement" )
+						.uniqueResult();
+		assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		internetProviderQueried =
+				(InternetProvider) s.createQuery( "from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
+						.uniqueResult();
+		assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		tx = s.beginTransaction();
+		provider = (InternetProvider) s.get( InternetProvider.class, provider.getId() );
+		manager = provider.getOwner().getTopManagement().iterator().next();
+		s.delete( manager );
+		s.delete( provider );
+		tx.commit();
+		s.close();
+	}
+
 
 	@Test
 	public void testDefaultCollectionTable() throws Exception {

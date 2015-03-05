@@ -21,8 +21,13 @@
  */
 package org.hibernate.jpa.test.criteria.components;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 
 /**
  * The name component
@@ -35,6 +40,7 @@ public class Name implements Serializable {
 
     private String firstName;
     private String lastName;
+	private Set<Alias> aliases = new HashSet<Alias>(  );
 
 	public Name() {
 	}
@@ -60,5 +66,14 @@ public class Name implements Serializable {
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+
+	@OneToMany(cascade = CascadeType.ALL)
+	public Set<Alias> getAliases() {
+		return aliases;
+	}
+
+	public void setAliases(Set<Alias> aliases) {
+		this.aliases = aliases;
 	}
 }

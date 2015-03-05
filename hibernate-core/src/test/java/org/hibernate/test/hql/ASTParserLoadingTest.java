@@ -318,6 +318,75 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9642")
+	public void testLazyAssociationInComponent() {
+		Session session = openSession();
+		session.getTransaction().begin();
+
+		Address address = new Address();
+		Zoo zoo = new Zoo( "ZOO 1", address );
+		address.setCity( "City 1" );
+		StateProvince stateProvince = new StateProvince();
+		stateProvince.setName( "Illinois" );
+		session.save( stateProvince );
+		address.setStateProvince( stateProvince );
+		session.save( zoo );
+
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.getTransaction().begin();
+
+		zoo = (Zoo) session.createQuery( "from Zoo z" ).uniqueResult();
+		assertNotNull( zoo );
+		assertNotNull( zoo.getAddress() );
+		assertEquals( "City 1", zoo.getAddress().getCity() );
+		assertFalse( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+		assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
+		assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+
+		session.getTransaction().commit();
+		session.close();
+
+
+		session = openSession();
+		session.getTransaction().begin();
+
+		zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address.stateProvince" ).uniqueResult();
+		assertNotNull( zoo );
+		assertNotNull( zoo.getAddress() );
+		assertEquals( "City 1", zoo.getAddress().getCity() );
+		assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+		assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
+
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.getTransaction().begin();
+
+		zoo = (Zoo) session.createQuery( "from Zoo z join fetch z.address a join fetch a.stateProvince" ).uniqueResult();
+		assertNotNull( zoo );
+		assertNotNull( zoo.getAddress() );
+		assertEquals( "City 1", zoo.getAddress().getCity() );
+		assertTrue( Hibernate.isInitialized( zoo.getAddress().getStateProvince() ) );
+		assertEquals( "Illinois", zoo.getAddress().getStateProvince().getName() );
+
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.getTransaction().begin();
+
+		zoo.getAddress().setStateProvince( null );
+		session.delete( stateProvince );
+		session.delete( zoo );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
 	public void testJPAQLQualifiedIdentificationVariablesControl() {
 		// just checking syntax here...
 		Session s = openSession();

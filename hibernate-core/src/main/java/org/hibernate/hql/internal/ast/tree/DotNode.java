@@ -298,6 +298,17 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		String propName = getPath();
 		FromClause currentFromClause = getWalker().getCurrentFromClause();
 
+		// If the lhs of the join is a "component join", we need to go back to the
+		// first non-component-join as the origin to properly link aliases and
+		// join columns
+		FromElement lhsFromElement = getLhs().getFromElement();
+		while ( lhsFromElement != null && ComponentJoin.class.isInstance( lhsFromElement ) ) {
+			lhsFromElement = lhsFromElement.getOrigin();
+		}
+		if ( lhsFromElement == null ) {
+			throw new QueryException( "Unable to locate appropriate lhs" );
+		}
+
 		// determine whether we should use the table name or table alias to qualify the column names...
 		// we need to use the table-name when:
 		//		1) the top-level statement is not a SELECT
@@ -307,7 +318,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// the alias also, even if the FromElement is the root one...
 		//
 		// in all other cases, we should use the table alias
-		final FromElement lhsFromElement = getLhs().getFromElement();
 		if ( getWalker().getStatementType() != SqlTokenTypes.SELECT ) {
 			if ( isFromElementUpdateOrDeleteRoot( lhsFromElement ) ) {
 				// at this point we know we have the 2 conditions above,
@@ -330,7 +340,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// it makes sense to join twice on the same collection role
 		FromElementFactory factory = new FromElementFactory(
 				currentFromClause,
-				getLhs().getFromElement(),
+				lhsFromElement,
 				propName,
 				classAlias,
 				getColumns(),

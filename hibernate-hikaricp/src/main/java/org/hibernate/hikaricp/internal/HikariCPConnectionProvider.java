@@ -21,10 +21,8 @@
 
 package org.hibernate.hikaricp.internal;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
-
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -32,8 +30,10 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 import org.jboss.logging.Logger;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * HikariCP Connection provider for Hibernate.
@@ -106,18 +106,23 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@SuppressWarnings("rawtypes")
 	public boolean isUnwrappableAs(Class unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType )
-				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType );
+				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
+                || DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( isUnwrappableAs( unwrapType ) ) {
-			return (T) this;
-		}
-		else {
-			throw new UnknownUnwrapTypeException( unwrapType );
-		}
+        if ( ConnectionProvider.class.equals( unwrapType ) ||
+                HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+            return (T) this;
+        }
+        else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+            return (T) hds;
+        }
+        else {
+            throw new UnknownUnwrapTypeException( unwrapType );
+        }
 	}
 
 	// *************************************************************************

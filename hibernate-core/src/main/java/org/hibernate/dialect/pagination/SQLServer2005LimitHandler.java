@@ -23,6 +23,9 @@
  */
 package org.hibernate.dialect.pagination;
 
+import static java.lang.String.format;
+import static java.util.regex.Matcher.quoteReplacement;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -46,6 +49,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	private static final String ORDER_BY = "order by";
 
 	private static final Pattern ALIAS_PATTERN = Pattern.compile( "(?i)\\sas\\s(.)+$" );
+	private static final Pattern MULTI_PART_IDENTIFIER = Pattern.compile("\\b\\w+\\.\\w+\\b");
 
 	// Flag indicating whether TOP(?) expression has been added to the original query.
 	private boolean topAdded;
@@ -96,10 +100,11 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * <pre>
 	 * WITH query AS (
 	 *   SELECT inner_query.*
-	 *        , ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__
-	 *     FROM ( original_query_with_top_if_order_by_present_and_all_aliased_columns ) inner_query
+	 *        , ROW_NUMBER() OVER (ORDER BY orignal_order_by_or_constant) as __hibernate_row_nr__
+	 *     FROM ( original_query_with_top_if_order_by_present_and_single_claused ) inner_query
 	 * )
 	 * SELECT alias_list FROM query WHERE __hibernate_row_nr__ >= offset AND __hibernate_row_nr__ < offset + last
+	 * ORDER BY __hibernate_row_nr__
 	 * </pre>
 	 *
 	 * When offset equals {@literal 0}, only <code>TOP(?)</code> expression is added to the original query.
@@ -113,20 +118,29 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			sb.setLength( sb.length() - 1 );
 		}
 
-		if ( LimitHelper.hasFirstRow( selection ) ) {
+		int orderByIndex = shallowIndexOfWord( sb, ORDER_BY, 0 );
+		String orderByClause = orderByIndex == -1 ? null : sb.substring( orderByIndex, sb.length() );
+
+		if ( LimitHelper.hasFirstRow( selection ) || orderByRequiresRowNumberOver( orderByClause ) ) {
+			if ( orderByRequiresRowNumberOver( orderByClause ) ) {
+				// Remove ORDER BY from the query if it can cause trouble to SQL Server (e.g. repeated columns)
+				sb.delete( orderByIndex, orderByIndex + orderByClause.length() );
+				orderByIndex = -1; // TOP will not be added
+			}
 			final String selectClause = fillAliasInSelectClause( sb );
 
-			final int orderByIndex = shallowIndexOfWord( sb, ORDER_BY, 0 );
+			orderByClause = replaceMultiPartIdentifiersInOrderBy( sb, orderByClause );
+
 			if ( orderByIndex > 0 ) {
 				// ORDER BY requires using TOP.
 				addTopExpression( sb );
 			}
 
-			encloseWithOuterQuery( sb );
+			encloseWithOuterQuery( sb, orderByClause );
 
 			// Wrap the query within a with statement:
 			sb.insert( 0, "WITH query AS (" ).append( ") SELECT " ).append( selectClause ).append( " FROM query " );
-			sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?" );
+			sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ? order by __hibernate_row_nr__" );
 		}
 		else {
 			hasOffset = false;
@@ -134,6 +148,74 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		}
 
 		return sb.toString();
+	}
+
+
+	protected boolean orderByRequiresRowNumberOver(String orderByClause) {
+		if ( orderByClause == null ) {
+			// no ORDER BY
+			return false;
+		}
+		if ( shallowIndexOf( orderByClause, ",", 0 ) != -1 ) {
+			// multiple values
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Replaces "multi-part identifiers" with query aliases, adding new aliases when necessary.
+	 * <p>
+	 * If original {@code ORDER BY} clause references table columns directly (e.g. {@code TABLE.SOMECOLUMN}), such
+	 * reference is no longer valid when used in {@code ROW_NUMBER() OVER (ORDER BY ...)} in an outer query. All such
+	 * references need to be replaced with a query alias. This method reuses query aliases if they were defined in the
+	 * original query and adds new aliases if required.
+	 * 
+	 * @param sb original query; can be modified
+	 * @param orderByClause order by clause extracted from the {@code sb} query
+	 * @return new order by clause to be used in {@code ROW_NUMBER() OVER (ORDER BY ...)}
+	 * @author Piotr Findeisen <piotr.findeisen@gmail.com>
+	 */
+	private String replaceMultiPartIdentifiersInOrderBy(StringBuilder sb, String orderByClause) {
+		if ( orderByClause == null ) {
+			return null;
+		}
+		Matcher multiPartIdentifierMatcher = MULTI_PART_IDENTIFIER.matcher( orderByClause );
+		StringBuffer newOrderBy = new StringBuffer();
+		int unique = 0;
+		boolean multiPartIdentifierFound = false;
+		int newAliasInsertionPoint = -1; // computed lazily
+		while ( multiPartIdentifierMatcher.find() ) {
+			multiPartIdentifierFound = true;
+			String expression = multiPartIdentifierMatcher.group( 0 );
+			Pattern findAliasPattern = Pattern.compile( "\\b" + Pattern.quote( expression ) + "\\b\\s+(?i:as)\\s+(\\w+)" );
+			Matcher findAliasMatcher = findAliasPattern.matcher( sb );
+			String aliasToUse;
+			if ( findAliasMatcher.find() ) {
+				aliasToUse = findAliasMatcher.group( 1 );
+			}
+			else {
+				// Add new alias to the query and use it.
+				String newAlias = StringHelper.generateAlias( "mpialias", unique++ );
+				// final int selectEndIndex = sb.indexOf( "select" ) + "select".length();
+				if ( newAliasInsertionPoint == -1 ) {
+					newAliasInsertionPoint = shallowIndexOfWord( sb, FROM, 0 );
+					if ( newAliasInsertionPoint == -1 ) {
+						throw new IllegalStateException( format( "Cannot find %s in query: %s", FROM, sb ) );
+					}
+				}
+				sb.insert( newAliasInsertionPoint, format( ", %s AS %s ", expression, newAlias ) );
+				aliasToUse = newAlias;
+			}
+			multiPartIdentifierMatcher.appendReplacement( newOrderBy, quoteReplacement( aliasToUse ) );
+		}
+
+		if ( multiPartIdentifierFound ) {
+			multiPartIdentifierMatcher.appendTail( newOrderBy );
+			orderByClause = newOrderBy.toString();
+		}
+
+		return orderByClause;
 	}
 
 	@Override
@@ -250,8 +332,13 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 *
 	 * @param sql SQL query.
 	 */
-	protected void encloseWithOuterQuery(StringBuilder sql) {
-		sql.insert( 0, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " );
+	protected void encloseWithOuterQuery(StringBuilder sql, String orderByClause) {
+		if (orderByClause != null) {
+			orderByClause = orderByClause.substring(ORDER_BY.length() + 1);
+		} else {
+			orderByClause = "current_timestamp";
+		}
+		sql.insert( 0, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY " + orderByClause + ") as __hibernate_row_nr__ FROM ( " );
 		sql.append( " ) inner_query " );
 	}
 
@@ -285,7 +372,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 *
 	 * @return Position of the first match, or {@literal -1} if not found.
 	 */
-	private static int shallowIndexOfWord(final StringBuilder sb, final String search, int fromIndex) {
+	private static int shallowIndexOfWord(final CharSequence sb, final String search, int fromIndex) {
 		final int index = shallowIndexOf( sb, ' ' + search + ' ', fromIndex );
 		// In case of match adding one because of space placed in front of search term.
 		return index != -1 ? ( index + 1 ) : -1;
@@ -300,7 +387,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 *
 	 * @return Position of the first match, or {@literal -1} if not found.
 	 */
-	private static int shallowIndexOf(StringBuilder sb, String search, int fromIndex) {
+	private static int shallowIndexOf(CharSequence sb, String search, int fromIndex) {
 		// case-insensitive match
 		final String lowercase = sb.toString().toLowerCase();
 		final int len = lowercase.length();

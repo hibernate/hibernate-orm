@@ -589,7 +589,7 @@ public class HibernateUtil {
     private static SessionFactory buildSessionFactory() {
         try {
             // Create the SessionFactory from hibernate.cfg.xml
-            new Configuration().configure().buildSessionFactory(
+            return new Configuration().configure().buildSessionFactory(
 			    new StandardServiceRegistryBuilder().build() );
         }
         catch (Throwable ex) {

@@ -29,7 +29,7 @@ dependencies {
 	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
 	testRuntime( libraries.slf4j_api );
 	testRuntime( libraries.slf4j_log4j );
-	testRuntime( "org.jboss.logmanager:jboss-logmanager:1.4.1.Final" )
+	testRuntime( "org.jboss.logmanager:jboss-logmanager:2.0.0.Beta1" )
 	
 	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
 	// ORDER DEPENDENT!!!

@@ -57,6 +57,7 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateCustomerRegisteredTrademarks( cfg );
 		validateCustomerAddresses( cfg );
 		validateCustomerOrders( cfg );
+		validateCustomerIndustries( cfg );
 	}
 
 	protected abstract void applyFixtures(Configuration cfg);
@@ -238,4 +239,23 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 	protected abstract void validateCustomerOrdersKeyColumn(Column column);
 
 	protected abstract void validateCustomerOrdersElementColumn(Column column);
+
+	protected void validateCustomerIndustries(Configuration cfg) {
+		final Collection collectionBinding = cfg.getCollectionMapping( Customer.class.getName() + ".industries" );
+		assertNotNull( collectionBinding );
+
+		validateCustomerIndustriesTableName( collectionBinding.getCollectionTable().getQuotedName() );
+
+		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
+		validateCustomerIndustriesKeyColumn( (Column) collectionBinding.getKey().getColumnIterator().next() );
+
+		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
+		validateCustomerIndustriesElementColumn( (Column) collectionBinding.getElement().getColumnIterator().next() );
+	}
+
+	protected abstract void validateCustomerIndustriesTableName(String name);
+
+	protected abstract void validateCustomerIndustriesKeyColumn(Column column);
+
+	protected abstract void validateCustomerIndustriesElementColumn(Column column);
 }

@@ -31,6 +31,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
 
+import org.hibernate.testing.TestForIssue;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
@@ -40,6 +42,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
+@TestForIssue( jiraKey = "HHH-9633" )
 public class LegacyJpaNamingWithHbmBindingTests extends BaseHbmBindingTests {
 	@Override
 	protected void applyFixtures(Configuration cfg) {
@@ -200,5 +203,20 @@ public class LegacyJpaNamingWithHbmBindingTests extends BaseHbmBindingTests {
 	@Override
 	protected void validateCustomerOrdersElementColumn(Column column) {
 		assertEquals( "id", column.getQuotedName() );
+	}
+
+	@Override
+	protected void validateCustomerIndustriesTableName(String name) {
+		assertEquals( "Customer_industries", name );
+	}
+
+	@Override
+	protected void validateCustomerIndustriesKeyColumn(Column column) {
+		assertEquals( "id", column.getQuotedName() );
+	}
+
+	@Override
+	protected void validateCustomerIndustriesElementColumn(Column column) {
+		assertEquals( "elt", column.getQuotedName() );
 	}
 }

@@ -58,6 +58,18 @@
             <key/>
             <one-to-many class="Order"/>
         </set>
+
+        <set name="industries">
+            <key/>
+            <many-to-many class="Industry"/>
+        </set>
+    </class>
+
+    <class name="Industry">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
     </class>
 
     <class name="Order">

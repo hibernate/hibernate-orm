@@ -27,9 +27,12 @@ import java.util.Iterator;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.EJB3NamingStrategy;
+import org.hibernate.cfg.naming.LegacyNamingStrategyDelegator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
+
+import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
@@ -37,16 +40,17 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@TestForIssue( jiraKey = "HHH-9633" )
 public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBindingTests {
 	@Override
 	protected void applyFixtures(Configuration cfg) {
-		cfg.setNamingStrategy( EJB3NamingStrategy.INSTANCE );
+		cfg.setNamingStrategyDelegator( new LegacyNamingStrategyDelegator( EJB3NamingStrategy.INSTANCE ) );
 		super.applyFixtures( cfg );
 	}
 
 	@Override
 	protected void validateCustomerPrimaryTableName(String name) {
-		assertEquals( "Customer", name );
+		assertEquals( "CuStOmEr", name );
 	}
 
 	@Override
@@ -197,5 +201,20 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 	@Override
 	protected void validateCustomerOrdersElementColumn(Column column) {
 		assertEquals( "id", column.getQuotedName() );
+	}
+
+	@Override
+	protected void validateCustomerIndustriesTableName(String name) {
+		assertEquals( "CuStOmEr_InDuStRy", name );
+	}
+
+	@Override
+	protected void validateCustomerIndustriesKeyColumn(Column column) {
+		assertEquals( "CuStOmEr_id", column.getQuotedName() );
+	}
+
+	@Override
+	protected void validateCustomerIndustriesElementColumn(Column column) {
+		assertEquals( "industries_id", column.getQuotedName() );
 	}
 }

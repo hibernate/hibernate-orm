@@ -31,13 +31,15 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Version;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
+@Entity( name="CuStOmEr" )
 public class Customer {
 	private Integer id;
 	private Integer version;
@@ -48,6 +50,8 @@ public class Customer {
 	private Set<Address> addresses;
 
 	private List<Order> orders;
+
+	private Set<Industry> industries;
 
 	@Id
 	@GeneratedValue
@@ -106,11 +110,21 @@ public class Customer {
 	}
 
 	@OneToMany( mappedBy = "customer" )
+	@OrderColumn
 	public List<Order> getOrders() {
 		return orders;
 	}
 
 	public void setOrders(List<Order> orders) {
 		this.orders = orders;
+	}
+
+	@ManyToMany
+	public Set<Industry> getIndustries() {
+		return industries;
+	}
+
+	public void setIndustries(Set<Industry> industries) {
+		this.industries = industries;
 	}
 }

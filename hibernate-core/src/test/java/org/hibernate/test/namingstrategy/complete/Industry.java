@@ -23,18 +23,35 @@
  */
 package org.hibernate.test.namingstrategy.complete;
 
-import org.hibernate.cfg.Configuration;
+import javax.persistence.Basic;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class BaseAnnotationBindingTests extends BaseNamingTests {
-	@Override
-	protected void applyFixtures(Configuration cfg) {
-		cfg.addAnnotatedClass( Address.class )
-				.addAnnotatedClass( Customer.class )
-				.addAnnotatedClass( Industry.class )
-				.addAnnotatedClass( Order.class )
-				.addAnnotatedClass( ZipCode.class );
+@Entity( name = "InDuStRy" )
+public class Industry {
+	private Integer id;
+	private String name;
+
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Basic
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

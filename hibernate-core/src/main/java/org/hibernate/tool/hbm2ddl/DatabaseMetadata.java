@@ -29,10 +29,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
@@ -90,13 +87,24 @@ public class DatabaseMetadata {
 		meta = connection.getMetaData();
 		this.extras = extras;
 		initSequences( connection, dialect );
-		if ( config != null
-				&& ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, config.getProperties(), false ) ) {
-			types = new String[] { "TABLE", "VIEW", "SYNONYM" };
-		}
-		else {
-			types = new String[] { "TABLE", "VIEW" };
-		}
+
+        final List<String> types = new ArrayList<String>(4);
+        types.add("TABLE");
+        types.add("VIEW");
+
+        boolean synonymsEnabled = config != null && ConfigurationHelper.getBoolean(AvailableSettings.ENABLE_SYNONYMS, config.getProperties(), false);
+        if (synonymsEnabled) {
+            types.add("SYNONYM");
+        }
+
+        boolean materializedViewsEnabled = dialect.supportsMaterializedView();
+        String materializedViewType = dialect.getMaterializedViewTypeTerm();
+        if (materializedViewsEnabled && materializedViewType != null) {
+            types.add(materializedViewType);
+        }
+
+
+        this.types = types.toArray(new String[types.size()]);
 	}
 
 	public TableMetadata getTableMetadata(String name, String schema, String catalog, boolean isQuoted) throws HibernateException {

@@ -44,6 +44,7 @@ dependencies {
 	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" ) { transitive = false }
 	osgiRuntime( libraries.commons_annotations ) { transitive = false }
 	osgiRuntime( libraries.classmate ) { transitive = false }
+    osgiRuntime( "org.apache.logging.log4j:log4j-api:2.0" ) { transitive = false }
 	osgiRuntime( libraries.logging ) { transitive = false }
 	
 	// needed for BND

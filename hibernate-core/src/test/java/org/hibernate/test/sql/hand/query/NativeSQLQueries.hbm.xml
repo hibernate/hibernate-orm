@@ -268,8 +268,6 @@
     
 	<sql-query name="organizationautodetect" resultset-ref="org-description">
 	<!--  equal to "organizationpropertyreturn" but since no {} nor return-property are used hibernate will fallback to use the columns directly from the mapping -->
-		<return alias="org" class="Organization"/>
-		<return-join alias="emp" property="org.employments"/>
         SELECT org.ORGID as orgid,
             org.NAME as name,
             emp.EMPLOYER as employer,

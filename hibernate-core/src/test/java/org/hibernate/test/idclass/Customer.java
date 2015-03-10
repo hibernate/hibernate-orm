@@ -1,91 +1,66 @@
-//$Id: Customer.java 7858 2005-08-11 21:46:58Z epbernard $
-
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.idclass;
 
-
-
-
-
-
 public class Customer {
-
-
-
-	public Customer() {
-
-		super();
-
-	}
-
-
-
-	public Customer(String orgName, String custName, String add) {
-
-		this.orgName = orgName;
-
-		this.customerName = custName;
-
-		this.address = add;
-
-	}
-
-
-
 	private String orgName;
-
 	private String customerName;
-
 	private String address;
 
+	public Customer() {
+		super();
+	}
 
+	public Customer(String orgName, String custName, String add) {
+		this.orgName = orgName;
+		this.customerName = custName;
+		this.address = add;
+	}
 
 	public String getAddress() {
-
 		return address;
-
 	}
-
-
 
 	public void setAddress(String address) {
-
 		this.address = address;
-
 	}
-
-
 
 	public String getCustomerName() {
-
 		return customerName;
-
 	}
-
-
 
 	public void setCustomerName(String customerName) {
-
 		this.customerName = customerName;
-
 	}
-
-
 
 	public String getOrgName() {
-
 		return orgName;
-
 	}
-
-
 
 	public void setOrgName(String orgName) {
-
 		this.orgName = orgName;
-
 	}
-
-
 
 }
 

@@ -27,20 +27,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Sergey Vasilyev
  */
 public class NamingStrategyJoinTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setNamingStrategy( new TestNamingStrategy() );
-	}
-
 
 	@Test
 	public void testJoinToSecondaryTable() throws Exception {
@@ -53,6 +46,12 @@ public class NamingStrategyJoinTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
+	}
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setPhysicalNamingStrategy( new TestNamingStrategy() );
 	}
 
 	@Override

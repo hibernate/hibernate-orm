@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.entities.ids;
 
+import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import java.io.Serializable;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -20,7 +20,7 @@
  */
 package org.hibernate.test.service;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -29,11 +29,12 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Brett Meyer
  */
 public class TestIntegrator implements Integrator {
-
 	@Override
-	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory,
+	public void integrate(
+			Metadata metadata,
+			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		
+
 	}
 
 	@Override

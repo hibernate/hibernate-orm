@@ -6,7 +6,7 @@
 	
 	<class name="org.hibernate.test.legacy.Qux" table="quux" proxy="org.hibernate.test.legacy.Qux"> <!---->
 		<id name="key" column="qux_key" unsaved-value="0">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<many-to-one name="foo" class="org.hibernate.test.legacy.Foo">
 			<column name="foo" length="36"/>

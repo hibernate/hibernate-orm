@@ -25,19 +25,21 @@ package org.hibernate.test.annotations.fetchprofile;
 
 import java.io.InputStream;
 
-import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.MappingException;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -88,13 +90,13 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWrongAssociationName() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer2.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		final MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( Customer2.class )
+				.addAnnotatedClass( Order.class )
+				.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -104,13 +106,13 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWrongClass() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer3.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		final MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( Customer3.class )
+				.addAnnotatedClass( Order.class )
+				.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -120,13 +122,13 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testUnsupportedFetchMode() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer4.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		final MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( Customer4.class )
+				.addAnnotatedClass( Order.class )
+				.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -155,16 +157,17 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		sessionImpl.close();
 
 		// now the same with no xml
-		config = new Configuration();
-		config.addAnnotatedClass( Customer5.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
+		final MetadataSources metadataSources = new MetadataSources()
+				.addAnnotatedClass( Customer5.class )
+				.addAnnotatedClass( Order.class )
+				.addAnnotatedClass( Country.class );
+
 		try {
-			config.buildMappings();
+			metadataSources.buildMetadata();
 			fail();
 		}
 		catch ( MappingException e ) {
-            log.trace("success");
+			log.trace("success");
 		}
 	}
 

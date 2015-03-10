@@ -31,17 +31,21 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
+import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
+import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.NamingStrategyHelper;
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.UniqueConstraintHolder;
-import org.hibernate.cfg.naming.NamingStrategyDelegate;
-import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -68,24 +72,30 @@ public class TableBinder {
 	//TODO move it to a getter/setter strategy
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableBinder.class.getName());
 
+	MetadataBuildingContext buildingContext;
+
 	private String schema;
 	private String catalog;
 	private String name;
 	private boolean isAbstract;
 	private List<UniqueConstraintHolder> uniqueConstraints;
-//	private List<String[]> uniqueConstraints;
+	//	private List<String[]> uniqueConstraints;
 	String constraints;
-	Table denormalizedSuperTable;
-	Mappings mappings;
 	private String ownerEntityTable;
 	private String associatedEntityTable;
 	private String propertyName;
+	private String ownerClassName;
 	private String ownerEntity;
 	private String ownerJpaEntity;
+	private String associatedClassName;
 	private String associatedEntity;
 	private String associatedJpaEntity;
 	private boolean isJPA2ElementCollection;
 	private List<JPAIndexHolder> jpaIndexHolders;
+
+	public void setBuildingContext(MetadataBuildingContext buildingContext) {
+		this.buildingContext = buildingContext;
+	}
 
 	public void setSchema(String schema) {
 		this.schema = schema;
@@ -119,14 +129,6 @@ public class TableBinder {
 		this.constraints = constraints;
 	}
 
-	public void setDenormalizedSuperTable(Table denormalizedSuperTable) {
-		this.denormalizedSuperTable = denormalizedSuperTable;
-	}
-
-	public void setMappings(Mappings mappings) {
-		this.mappings = mappings;
-	}
-
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
 		this.isJPA2ElementCollection = isJPA2ElementCollection;
 	}
@@ -151,14 +153,18 @@ public class TableBinder {
 
 	// only bind association table currently
 	public Table bind() {
+		final Identifier ownerEntityTableNameIdentifier = toIdentifier( ownerEntityTable );
+		final Identifier associatedEntityTableNameIdentifier = toIdentifier( associatedEntityTable );
+
 		//logicalName only accurate for assoc table...
 		final String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
 		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
 
 		//@ElementCollection use ownerEntity_property instead of the cleaner ownerTableName_property
 		// ownerEntity can be null when the table name is explicitly set; <== gb: doesn't seem to be true...
-		final String ownerObjectName = isJPA2ElementCollection && ownerEntity != null ?
-				StringHelper.unqualify( ownerEntity ) : unquotedOwnerTable;
+		final String ownerObjectName = isJPA2ElementCollection && ownerEntity != null
+				? StringHelper.unqualify( ownerEntity )
+				: unquotedOwnerTable;
 		final ObjectNameSource nameSource = buildNameContext(
 				ownerObjectName,
 				unquotedAssocTable
@@ -166,46 +172,143 @@ public class TableBinder {
 
 		final boolean ownerEntityTableQuoted = StringHelper.isQuoted( ownerEntityTable );
 		final boolean associatedEntityTableQuoted = StringHelper.isQuoted( associatedEntityTable );
-		final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper = new ObjectNameNormalizer.NamingStrategyHelper() {
-			public String determineImplicitName(NamingStrategy strategy) {
-				throw new AssertionFailure( "method call should have been replaced by #determineImplicitName(NamingStrategyDelegate strategyDelegate)" );
-			}
-
-			public String handleExplicitName(NamingStrategy strategy, String name) {
-				return strategy.tableName( name );
-			}
-
+		final NamingStrategyHelper namingStrategyHelper = new NamingStrategyHelper() {
 			@Override
-			public String determineImplicitName(NamingStrategyDelegator strategyDelegator) {
-				final NamingStrategyDelegate strategyDelegate = getNamingStrategyDelegate( strategyDelegator );
-				final String strategyResult;
+			public Identifier determineImplicitName(final MetadataBuildingContext buildingContext) {
+				final ImplicitNamingStrategy namingStrategy = buildingContext.getBuildingOptions().getImplicitNamingStrategy();
+
+				Identifier name;
 				if ( isJPA2ElementCollection ) {
-					strategyResult = strategyDelegate.determineImplicitElementCollectionTableName(
-							ownerEntity,
-							ownerJpaEntity,
-							unquotedOwnerTable,
-							propertyName
+					name = namingStrategy.determineCollectionTableName(
+							new ImplicitCollectionTableNameSource() {
+								private final EntityNaming entityNaming = new EntityNaming() {
+									@Override
+									public String getClassName() {
+										return ownerClassName;
+									}
+
+									@Override
+									public String getEntityName() {
+										return ownerEntity;
+									}
+
+									@Override
+									public String getJpaEntityName() {
+										return ownerJpaEntity;
+									}
+								};
+
+								@Override
+								public Identifier getOwningPhysicalTableName() {
+									return ownerEntityTableNameIdentifier;
+								}
+
+								@Override
+								public EntityNaming getOwningEntityNaming() {
+									return entityNaming;
+								}
+
+								@Override
+								public AttributePath getOwningAttributePath() {
+									return AttributePath.parse( propertyName );
+								}
+
+								@Override
+								public MetadataBuildingContext getBuildingContext() {
+									return buildingContext;
+								}
+							}
 					);
 				}
 				else {
-					strategyResult =  strategyDelegate.determineImplicitEntityAssociationJoinTableName(
-							ownerEntity,
-							ownerJpaEntity,
-							unquotedOwnerTable,
-							associatedEntity,
-							associatedJpaEntity,
-							unquotedAssocTable,
-							propertyName
+					name =  namingStrategy.determineJoinTableName(
+							new ImplicitJoinTableNameSource() {
+								private final EntityNaming owningEntityNaming = new EntityNaming() {
+									@Override
+									public String getClassName() {
+										return ownerClassName;
+									}
+
+									@Override
+									public String getEntityName() {
+										return ownerEntity;
+									}
+
+									@Override
+									public String getJpaEntityName() {
+										return ownerJpaEntity;
+									}
+								};
+
+								private final EntityNaming nonOwningEntityNaming = new EntityNaming() {
+									@Override
+									public String getClassName() {
+										return associatedClassName;
+									}
+
+									@Override
+									public String getEntityName() {
+										return associatedEntity;
+									}
+
+									@Override
+									public String getJpaEntityName() {
+										return associatedJpaEntity;
+									}
+								};
+
+								@Override
+								public String getOwningPhysicalTableName() {
+									return unquotedOwnerTable;
+								}
+
+								@Override
+								public EntityNaming getOwningEntityNaming() {
+									return owningEntityNaming;
+								}
+
+								@Override
+								public String getNonOwningPhysicalTableName() {
+									return unquotedAssocTable;
+								}
+
+								@Override
+								public EntityNaming getNonOwningEntityNaming() {
+									return nonOwningEntityNaming;
+								}
+
+								@Override
+								public AttributePath getAssociationOwningAttributePath() {
+									return AttributePath.parse( propertyName );
+								}
+
+								@Override
+								public MetadataBuildingContext getBuildingContext() {
+									return buildingContext;
+								}
+							}
 					);
 				}
-				return ownerEntityTableQuoted || associatedEntityTableQuoted
-						? StringHelper.quote( strategyResult )
-						: strategyResult;
+
+				if ( ownerEntityTableQuoted || associatedEntityTableQuoted ) {
+					name = Identifier.quote( name );
+				}
+
+				return name;
 			}
 
 			@Override
-			public String handleExplicitName(NamingStrategyDelegator strategyDelegator, String name) {
-				return getNamingStrategyDelegate( strategyDelegator ).toPhysicalTableName( name );
+			public Identifier handleExplicitName(
+					String explicitName, MetadataBuildingContext buildingContext) {
+				return buildingContext.getMetadataCollector().getDatabase().toIdentifier( explicitName );
+			}
+
+			@Override
+			public Identifier toPhysicalName(Identifier logicalName, MetadataBuildingContext buildingContext) {
+				return buildingContext.getBuildingOptions().getPhysicalNamingStrategy().toPhysicalTableName(
+						logicalName,
+						buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment()
+				);
 			}
 		};
 
@@ -218,174 +321,239 @@ public class TableBinder {
 				uniqueConstraints,
 				jpaIndexHolders,
 				constraints,
-				denormalizedSuperTable,
-				mappings,
+				buildingContext,
+				null,
 				null
 		);
+	}
+
+	private Identifier toIdentifier(String tableName) {
+		return buildingContext.getMetadataCollector()
+				.getDatabase()
+				.getJdbcEnvironment()
+				.getIdentifierHelper()
+				.toIdentifier( tableName );
 	}
 
 	private ObjectNameSource buildNameContext(
 			String unquotedOwnerTable,
 			String unquotedAssocTable) {
-		final NamingStrategyDelegate strategyDelegate = getNamingStrategyDelegate(
-				mappings.getNamingStrategyDelegator()
-		);
-		String logicalName;
+		if ( name != null ) {
+			return new AssociationTableNameSource( name, null );
+		}
+
+		final Identifier logicalName;
 		if ( isJPA2ElementCollection ) {
-			logicalName = strategyDelegate.determineLogicalElementCollectionTableName(
-					name,
-					ownerEntity,
-					ownerJpaEntity,
-					unquotedOwnerTable,
-					propertyName
+			logicalName	= buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
+					new ImplicitCollectionTableNameSource() {
+						private final EntityNaming owningEntityNaming = new EntityNaming() {
+							@Override
+							public String getClassName() {
+								return ownerClassName;
+							}
+
+							@Override
+							public String getEntityName() {
+								return ownerEntity;
+							}
+
+							@Override
+							public String getJpaEntityName() {
+								return ownerJpaEntity;
+							}
+						};
+
+						@Override
+						public Identifier getOwningPhysicalTableName() {
+							return toIdentifier( ownerEntityTable );
+						}
+
+						@Override
+						public EntityNaming getOwningEntityNaming() {
+							return owningEntityNaming;
+						}
+
+						@Override
+						public AttributePath getOwningAttributePath() {
+							// we don't know path on the annotations side :(
+							return AttributePath.parse( propertyName );
+						}
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return buildingContext;
+						}
+					}
 			);
 		}
 		else {
-			logicalName =  strategyDelegate.determineLogicalEntityAssociationJoinTableName(
-					name,
-					ownerEntity,
-					ownerJpaEntity,
-					unquotedOwnerTable,
-					associatedEntity,
-					associatedJpaEntity,
-					unquotedAssocTable,
-					propertyName
+			logicalName = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineJoinTableName(
+					new ImplicitJoinTableNameSource() {
+						private final EntityNaming owningEntityNaming = new EntityNaming() {
+							@Override
+							public String getClassName() {
+								return ownerClassName;
+							}
+
+							@Override
+							public String getEntityName() {
+								return ownerEntity;
+							}
+
+							@Override
+							public String getJpaEntityName() {
+								return ownerJpaEntity;
+							}
+						};
+
+						private final EntityNaming nonOwningEntityNaming = new EntityNaming() {
+							@Override
+							public String getClassName() {
+								return associatedClassName;
+							}
+
+							@Override
+							public String getEntityName() {
+								return associatedEntity;
+							}
+
+							@Override
+							public String getJpaEntityName() {
+								return associatedJpaEntity;
+							}
+						};
+
+						@Override
+						public String getOwningPhysicalTableName() {
+							return ownerEntityTable;
+						}
+
+						@Override
+						public EntityNaming getOwningEntityNaming() {
+							return owningEntityNaming;
+						}
+
+						@Override
+						public String getNonOwningPhysicalTableName() {
+							return associatedEntityTable;
+						}
+
+						@Override
+						public EntityNaming getNonOwningEntityNaming() {
+							return nonOwningEntityNaming;
+						}
+
+						@Override
+						public AttributePath getAssociationOwningAttributePath() {
+							return AttributePath.parse( propertyName );
+						}
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return buildingContext;
+						}
+					}
 			);
 		}
-		if ( StringHelper.isQuoted( ownerEntityTable ) || StringHelper.isQuoted( associatedEntityTable ) ) {
-			logicalName = StringHelper.quote( logicalName );
-		}
 
-		return new AssociationTableNameSource( name, logicalName );
-	}
-
-	private NamingStrategyDelegate getNamingStrategyDelegate(
-			NamingStrategyDelegator strategyDelegator) {
-		return strategyDelegator.getNamingStrategyDelegate( false );
+		return new AssociationTableNameSource( name, logicalName.render() );
 	}
 
 	public static Table buildAndFillTable(
 			String schema,
 			String catalog,
 			ObjectNameSource nameSource,
-			ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
+			NamingStrategyHelper namingStrategyHelper,
 			boolean isAbstract,
 			List<UniqueConstraintHolder> uniqueConstraints,
 			List<JPAIndexHolder> jpaIndexHolders,
 			String constraints,
-			Table denormalizedSuperTable,
-			Mappings mappings,
-			String subselect){
-		schema = BinderHelper.isEmptyAnnotationValue( schema ) ? mappings.getSchemaName() : schema;
-		catalog = BinderHelper.isEmptyAnnotationValue( catalog ) ? mappings.getCatalogName() : catalog;
+			MetadataBuildingContext buildingContext,
+			String subselect,
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
+		final Identifier logicalName;
+		if ( StringHelper.isNotEmpty( nameSource.getExplicitName() ) ) {
+			logicalName = namingStrategyHelper.handleExplicitName( nameSource.getExplicitName(), buildingContext );
+		}
+		else {
+			logicalName = namingStrategyHelper.determineImplicitName( buildingContext );
+		}
 
-		String realTableName = mappings.getObjectNameNormalizer().normalizeDatabaseIdentifier(
-				nameSource.getExplicitName(),
-				namingStrategyHelper
+		return buildAndFillTable(
+				schema,
+				catalog,
+				logicalName,
+				isAbstract,
+				uniqueConstraints,
+				jpaIndexHolders,
+				constraints,
+				buildingContext,
+				subselect,
+				denormalizedSuperTableXref
 		);
+	}
+
+	public static Table buildAndFillTable(
+			String schema,
+			String catalog,
+			Identifier logicalName,
+			boolean isAbstract,
+			List<UniqueConstraintHolder> uniqueConstraints,
+			List<JPAIndexHolder> jpaIndexHolders,
+			String constraints,
+			MetadataBuildingContext buildingContext,
+			String subselect,
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
+		schema = BinderHelper.isEmptyAnnotationValue( schema )
+				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultSchema().getPhysicalName().getSchema() )
+				: schema;
+		catalog = BinderHelper.isEmptyAnnotationValue( catalog )
+				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultSchema().getPhysicalName().getCatalog() )
+				: catalog;
 
 		final Table table;
-		if ( denormalizedSuperTable != null ) {
-			table = mappings.addDenormalizedTable(
+		if ( denormalizedSuperTableXref != null ) {
+			table = buildingContext.getMetadataCollector().addDenormalizedTable(
 					schema,
 					catalog,
-					realTableName,
+					logicalName.render(),
 					isAbstract,
 					subselect,
-					denormalizedSuperTable
+					denormalizedSuperTableXref.getPrimaryTable()
 			);
 		}
 		else {
-			table = mappings.addTable(
+			table = buildingContext.getMetadataCollector().addTable(
 					schema,
 					catalog,
-					realTableName,
+					logicalName.render(),
 					subselect,
 					isAbstract
 			);
 		}
 
 		if ( CollectionHelper.isNotEmpty( uniqueConstraints ) ) {
-			mappings.addUniqueConstraintHolders( table, uniqueConstraints );
+			buildingContext.getMetadataCollector().addUniqueConstraintHolders( table, uniqueConstraints );
 		}
 
 		if ( CollectionHelper.isNotEmpty( jpaIndexHolders ) ) {
-			mappings.addJpaIndexHolders( table, jpaIndexHolders );
+			buildingContext.getMetadataCollector().addJpaIndexHolders( table, jpaIndexHolders );
 		}
 
-		if ( constraints != null ) table.addCheckConstraint( constraints );
-
-		// logicalName is null if we are in the second pass
-		final String logicalName = nameSource.getLogicalName();
-		if ( logicalName != null ) {
-			mappings.addTableBinding( schema, catalog, logicalName, realTableName, denormalizedSuperTable );
+		if ( constraints != null ) {
+			table.addCheckConstraint( constraints );
 		}
+
+		buildingContext.getMetadataCollector().addTableNameBinding( logicalName, table );
+
 		return table;
 	}
 
-
-
-	public static Table buildAndFillTable(
-			String schema,
-			String catalog,
-			ObjectNameSource nameSource,
-			ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
-			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
-			String constraints,
-			Table denormalizedSuperTable,
-			Mappings mappings,
-			String subselect) {
-		return buildAndFillTable( schema, catalog, nameSource, namingStrategyHelper, isAbstract, uniqueConstraints, null, constraints
-		, denormalizedSuperTable, mappings, subselect);
-	}
-
-	/**
-	 * @deprecated Use {@link #buildAndFillTable} instead.
-	 */
-	@Deprecated
-    @SuppressWarnings({ "JavaDoc" })
-	public static Table fillTable(
-			String schema,
-			String catalog,
-			String realTableName,
-			String logicalName,
-			boolean isAbstract,
-			List uniqueConstraints,
-			String constraints,
-			Table denormalizedSuperTable,
-			Mappings mappings) {
-		schema = BinderHelper.isEmptyAnnotationValue( schema ) ? mappings.getSchemaName() : schema;
-		catalog = BinderHelper.isEmptyAnnotationValue( catalog ) ? mappings.getCatalogName() : catalog;
-		Table table;
-		if ( denormalizedSuperTable != null ) {
-			table = mappings.addDenormalizedTable(
-					schema,
-					catalog,
-					realTableName,
-					isAbstract,
-					null, //subselect
-					denormalizedSuperTable
-			);
+	private static String extract(Identifier identifier) {
+		if ( identifier == null ) {
+			return null;
 		}
-		else {
-			table = mappings.addTable(
-					schema,
-					catalog,
-					realTableName,
-					null, //subselect
-					isAbstract
-			);
-		}
-		if ( uniqueConstraints != null && uniqueConstraints.size() > 0 ) {
-			mappings.addUniqueConstraints( table, uniqueConstraints );
-		}
-		if ( constraints != null ) table.addCheckConstraint( constraints );
-		//logicalName is null if we are in the second pass
-		if ( logicalName != null ) {
-			mappings.addTableBinding( schema, catalog, logicalName, realTableName, denormalizedSuperTable );
-		}
-		return table;
+		return identifier.render();
 	}
 
 	public static void bindFk(
@@ -394,7 +562,7 @@ public class TableBinder {
 			Ejb3JoinColumn[] columns,
 			SimpleValue value,
 			boolean unique,
-			Mappings mappings) {
+			MetadataBuildingContext buildingContext) {
 		PersistentClass associatedClass;
 		if ( destinationEntity != null ) {
 			//overridden destination
@@ -454,7 +622,7 @@ public class TableBinder {
 			}
 		}
 		else {
-			int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, referencedEntity, mappings );
+			int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, referencedEntity, buildingContext );
 
 			if ( Ejb3JoinColumn.NON_PK_REFERENCE == fkEnum ) {
 				String referencedPropertyName;
@@ -527,9 +695,12 @@ public class TableBinder {
 						col = (org.hibernate.mapping.Column) idColItr.next();
 						for (Ejb3JoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
-							referencedColumn = mappings.getPhysicalColumnName( referencedColumn, table );
+							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
+									table,
+									referencedColumn
+							);
 							//In JPA 2 referencedColumnName is case insensitive
-							if ( referencedColumn.equalsIgnoreCase( col.getQuotedName() ) ) {
+							if ( referencedColumn.equalsIgnoreCase( col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() ) ) ) {
 								//proper join column
 								if ( joinCol.isNameDeferred() ) {
 									joinCol.linkValueUsingDefaultColumnNaming(
@@ -587,17 +758,17 @@ public class TableBinder {
 		value.getTable().createUniqueKey( cols );
 	}
 
-	public static void addIndexes(Table hibTable, Index[] indexes, Mappings mappings) {
+	public static void addIndexes(Table hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {
 		for (Index index : indexes) {
 			//no need to handle inSecondPass here since it is only called from EntityBinder
-			mappings.addSecondPass(
-					new IndexOrUniqueKeySecondPass( hibTable, index.name(), index.columnNames(), mappings )
+			buildingContext.getMetadataCollector().addSecondPass(
+					new IndexOrUniqueKeySecondPass( hibTable, index.name(), index.columnNames(), buildingContext )
 			);
 		}
 	}
 
-	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, Mappings mappings) {
-		mappings.addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
+	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, MetadataBuildingContext buildingContext) {
+		buildingContext.getMetadataCollector().addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
 	}
 
 	public static List<JPAIndexHolder> buildJpaIndexHolder(javax.persistence.Index[] indexes){
@@ -650,17 +821,20 @@ public class TableBinder {
 	}
 
 	public void setDefaultName(
+			String ownerClassName,
 			String ownerEntity,
 			String ownerJpaEntity,
 			String ownerEntityTable,
+			String associatedClassName,
 			String associatedEntity,
 			String associatedJpaEntity,
 			String associatedEntityTable,
-			String propertyName
-	) {
+			String propertyName) {
+		this.ownerClassName = ownerClassName;
 		this.ownerEntity = ownerEntity;
 		this.ownerJpaEntity = ownerJpaEntity;
 		this.ownerEntityTable = ownerEntityTable;
+		this.associatedClassName = associatedClassName;
 		this.associatedEntity = associatedEntity;
 		this.associatedJpaEntity = associatedJpaEntity;
 		this.associatedEntityTable = associatedEntityTable;

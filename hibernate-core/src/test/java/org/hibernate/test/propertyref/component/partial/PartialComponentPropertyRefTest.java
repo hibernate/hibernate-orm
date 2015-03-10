@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.propertyref.component.partial;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-public class PartialComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
+public class PartialComponentPropertyRefTest extends BaseNonConfigCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "propertyref/component/partial/Mapping.hbm.xml" };
 	}

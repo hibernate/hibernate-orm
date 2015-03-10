@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -45,10 +46,14 @@ public final class PropertyHolderBuilder {
 			XClass clazzToProcess,
 			PersistentClass persistentClass,
 			EntityBinder entityBinder,
-			Mappings mappings,
+			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		return new ClassPropertyHolder(
-				persistentClass, clazzToProcess, entityBinder, mappings, inheritanceStatePerClass
+				persistentClass,
+				clazzToProcess,
+				entityBinder,
+				context,
+				inheritanceStatePerClass
 		);
 	}
 
@@ -57,7 +62,7 @@ public final class PropertyHolderBuilder {
 	 *
 	 * @param component component to wrap
 	 * @param path	  component path
-	 * @param mappings
+	 * @param context
 	 * @return PropertyHolder
 	 */
 	public static PropertyHolder buildPropertyHolder(
@@ -65,8 +70,8 @@ public final class PropertyHolderBuilder {
 			String path,
 			PropertyData inferredData,
 			PropertyHolder parent,
-			Mappings mappings) {
-		return new ComponentPropertyHolder( component, path, inferredData, parent, mappings );
+			MetadataBuildingContext context) {
+		return new ComponentPropertyHolder( component, path, inferredData, parent, context );
 	}
 
 	/**
@@ -78,9 +83,14 @@ public final class PropertyHolderBuilder {
 			XClass clazzToProcess,
 			XProperty property,
 			PropertyHolder parentPropertyHolder,
-			Mappings mappings) {
+			MetadataBuildingContext context) {
 		return new CollectionPropertyHolder(
-				collection, path, clazzToProcess, property, parentPropertyHolder, mappings
+				collection,
+				path,
+				clazzToProcess,
+				property,
+				parentPropertyHolder,
+				context
 		);
 	}
 
@@ -90,8 +100,8 @@ public final class PropertyHolderBuilder {
 	public static PropertyHolder buildPropertyHolder(
 			PersistentClass persistentClass,
 			Map<String, Join> joins,
-			Mappings mappings,
+			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		return new ClassPropertyHolder( persistentClass, null, joins, mappings, inheritanceStatePerClass );
+		return new ClassPropertyHolder( persistentClass, null, joins, context, inheritanceStatePerClass );
 	}
 }

@@ -25,12 +25,9 @@ package org.hibernate.test.legacy;
 
 import java.util.List;
 
-import org.junit.Before;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.DefaultNamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -38,8 +35,10 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
 
 /**
  * @author Steve Ebersole
@@ -100,7 +99,7 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 					subs += ", true=1, false=0";
 				}
 				cfg.getProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, subs );
-				cfg.setNamingStrategy( DefaultNamingStrategy.INSTANCE );
+//				cfg.setNamingStrategy( DefaultNamingStrategy.INSTANCE );
 			}
 			catch( NumberFormatException nfe ) {
 				// the Integer#parseInt call failed...

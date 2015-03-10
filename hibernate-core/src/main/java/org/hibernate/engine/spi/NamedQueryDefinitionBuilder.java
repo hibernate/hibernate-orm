@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.spi;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
@@ -99,6 +100,14 @@ public class NamedQueryDefinitionBuilder {
 
 	public NamedQueryDefinitionBuilder setComment(String comment) {
 		this.comment = comment;
+		return this;
+	}
+
+	public NamedQueryDefinitionBuilder addParameterType(String name, String typeName) {
+		if ( this.parameterTypes == null ) {
+			this.parameterTypes = new HashMap();
+		}
+		this.parameterTypes.put( name, typeName );
 		return this;
 	}
 

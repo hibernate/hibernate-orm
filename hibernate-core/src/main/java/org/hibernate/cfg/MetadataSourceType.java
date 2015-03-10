@@ -51,7 +51,7 @@ public enum MetadataSourceType {
 		return name;
 	}
 
-	static MetadataSourceType parsePrecedence(String value) {
+	public static MetadataSourceType parsePrecedence(String value) {
 		if ( HBM.name.equalsIgnoreCase( value ) ) {
 			return HBM;
 		}

@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.ColumnResult;
 import javax.persistence.ConstructorResult;
 import javax.persistence.EntityResult;
@@ -39,13 +39,14 @@ import javax.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
@@ -53,22 +54,20 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ResultsetMappingSecondPass implements QuerySecondPass {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       ResultsetMappingSecondPass.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsetMappingSecondPass.class );
 
 	private final SqlResultSetMapping ann;
-	private final Mappings mappings;
+	private final MetadataBuildingContext context;
 	private final boolean isDefault;
 
-	public ResultsetMappingSecondPass(SqlResultSetMapping ann, Mappings mappings, boolean isDefault) {
+	public ResultsetMappingSecondPass(SqlResultSetMapping ann, MetadataBuildingContext context, boolean isDefault) {
 		this.ann = ann;
-		this.mappings = mappings;
+		this.context = context;
 		this.isDefault = isDefault;
 	}
 
@@ -100,22 +99,26 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 					 * 2. list all the properties following the expected one in the parent property
 					 * 3. calculate the lowest index and insert the property
 					 */
-					PersistentClass pc = mappings.getClass( entity.entityClass().getName() );
+					PersistentClass pc = context.getMetadataCollector().getEntityBinding(
+							entity.entityClass().getName()
+					);
 					if ( pc == null ) {
 						throw new MappingException(
-								"Entity not found " + entity.entityClass().getName()
-										+ " in SqlResultsetMapping " + ann.name()
+								String.format(
+										Locale.ENGLISH,
+										"Could not resolve entity [%s] referenced in SqlResultSetMapping [%s]",
+										entity.entityClass().getName(),
+										ann.name()
+								)
 						);
 					}
 					int dotIndex = name.lastIndexOf( '.' );
 					String reducedName = name.substring( 0, dotIndex );
-					Iterator parentPropIter = getSubPropertyIterator( pc, reducedName );
-					List followers = getFollowers( parentPropIter, reducedName, name );
+					Iterator parentPropItr = getSubPropertyIterator( pc, reducedName );
+					List<String> followers = getFollowers( parentPropItr, reducedName, name );
 
 					int index = propertyNames.size();
-					int followersSize = followers.size();
-					for (int loop = 0; loop < followersSize; loop++) {
-						String follower = (String) followers.get( loop );
+					for ( String follower : followers ) {
 						int currentIndex = getIndexOfFirstMatchingProperty( propertyNames, follower );
 						index = currentIndex != -1 && currentIndex < index ? currentIndex : index;
 					}
@@ -143,8 +146,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				}
 				uniqueReturnProperty.add( name );
 
-				final String quotingNormalizedColumnName = mappings.getObjectNameNormalizer()
-						.normalizeIdentifierQuoting( propertyresult.column() );
+				final String quotingNormalizedColumnName = normalizeColumnQuoting( propertyresult.column() );
 
 				String key = StringHelper.root( name );
 				ArrayList<String> intermediateResults = propertyResultsTmp.get( key );
@@ -164,9 +166,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 			}
 
 			if ( !BinderHelper.isEmptyAnnotationValue( entity.discriminatorColumn() ) ) {
-				final String quotingNormalizedName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
-						entity.discriminatorColumn()
-				);
+				final String quotingNormalizedName = normalizeColumnQuoting( entity.discriminatorColumn() );
 				propertyResults.put( "class", new String[] { quotingNormalizedName } );
 			}
 
@@ -186,10 +186,8 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		for ( ColumnResult column : ann.columns() ) {
 			definition.addQueryReturn(
 					new NativeSQLQueryScalarReturn(
-							mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
-									column.name()
-							),
-							column.type() != null ? mappings.getTypeResolver().heuristicType( column.type().getName() ) : null
+							normalizeColumnQuoting( column.name() ),
+							column.type() != null ? context.getMetadataCollector().getTypeResolver().heuristicType( column.type().getName() ) : null
 					)
 			);
 		}
@@ -199,8 +197,8 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 			for ( ColumnResult columnResult : constructorResult.columns() ) {
 				columnReturns.add(
 						new NativeSQLQueryScalarReturn(
-								mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnResult.name() ),
-								columnResult.type() != null ? mappings.getTypeResolver().heuristicType( columnResult.type().getName() ) : null
+								normalizeColumnQuoting( columnResult.name() ),
+								columnResult.type() != null ? context.getMetadataCollector().getTypeResolver().heuristicType( columnResult.type().getName() ) : null
 						)
 				);
 			}
@@ -210,24 +208,29 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 
 		if ( isDefault ) {
-			mappings.addDefaultResultSetMapping( definition );
+			context.getMetadataCollector().addDefaultResultSetMapping( definition );
 		}
 		else {
-			mappings.addResultSetMapping( definition );
+			context.getMetadataCollector().addResultSetMapping( definition );
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	private List getFollowers(Iterator parentPropIter, String reducedName, String name) {
+	private String normalizeColumnQuoting(String name) {
+		return context.getMetadataCollector().getDatabase().toIdentifier( name ).render();
+	}
+
+	private List<String> getFollowers(Iterator parentPropIter, String reducedName, String name) {
 		boolean hasFollowers = false;
-		List followers = new ArrayList();
+		List<String> followers = new ArrayList<String>();
 		while ( parentPropIter.hasNext() ) {
 			String currentPropertyName = ( (Property) parentPropIter.next() ).getName();
 			String currentName = reducedName + '.' + currentPropertyName;
 			if ( hasFollowers ) {
 				followers.add( currentName );
 			}
-			if ( name.equals( currentName ) ) hasFollowers = true;
+			if ( name.equals( currentName ) ) {
+				hasFollowers = true;
+			}
 		}
 		return followers;
 	}
@@ -241,7 +244,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 		else if ( value instanceof ToOne ) {
 			ToOne toOne = (ToOne) value;
-			PersistentClass referencedPc = mappings.getClass( toOne.getReferencedEntityName() );
+			PersistentClass referencedPc = context.getMetadataCollector().getEntityBinding( toOne.getReferencedEntityName() );
 			if ( toOne.getReferencedPropertyName() != null ) {
 				try {
 					parentPropIter = ( (Component) referencedPc.getRecursiveProperty(

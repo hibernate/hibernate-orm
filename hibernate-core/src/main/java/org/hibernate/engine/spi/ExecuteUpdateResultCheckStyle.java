@@ -60,14 +60,18 @@ public enum ExecuteUpdateResultCheckStyle {
 		this.name = name;
 	}
 
+	public String externalName() {
+		return name;
+	}
+
 	public static ExecuteUpdateResultCheckStyle fromExternalName(String name) {
-		if ( name.equals( NONE.name ) ) {
+		if ( name.equalsIgnoreCase( NONE.name ) ) {
 			return NONE;
 		}
-		else if ( name.equals( COUNT.name ) ) {
+		else if ( name.equalsIgnoreCase( COUNT.name ) ) {
 			return COUNT;
 		}
-		else if ( name.equals( PARAM.name ) ) {
+		else if ( name.equalsIgnoreCase( PARAM.name ) ) {
 			return PARAM;
 		}
 		else {

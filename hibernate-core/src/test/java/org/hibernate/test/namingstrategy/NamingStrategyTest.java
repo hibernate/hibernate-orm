@@ -23,13 +23,15 @@
  */
 package org.hibernate.test.namingstrategy;
 
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,11 +39,11 @@ import static org.junit.Assert.assertEquals;
  * @author Emmanuel Bernard
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
+public class NamingStrategyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setNamingStrategy( new TestNamingStrategy() );
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		metadataBuilder.with( (ImplicitNamingStrategy) TestNamingStrategy.INSTANCE );
+		metadataBuilder.with( ( PhysicalNamingStrategy) TestNamingStrategy.INSTANCE );
 	}
 
     @Override
@@ -60,7 +62,7 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDatabaseColumnNames() {
-		PersistentClass classMapping = configuration().getClassMapping( Customers.class.getName() );
+		PersistentClass classMapping = metadata().getEntityBinding( Customers.class.getName() );
 		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getColumnIterator().next();
 		assertEquals( "CN_specified_column", stateColumn.getName() );
 	}
@@ -68,7 +70,7 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
     @Test
     @TestForIssue(jiraKey = "HHH-5848")
     public void testDatabaseTableNames() {
-        PersistentClass classMapping = configuration().getClassMapping( Item.class.getName() );
+        PersistentClass classMapping = metadata().getEntityBinding( Item.class.getName() );
         Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
         assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
         Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();

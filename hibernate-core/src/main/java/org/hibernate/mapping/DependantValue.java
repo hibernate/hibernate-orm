@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -38,8 +39,8 @@ public class DependantValue extends SimpleValue {
 	private boolean nullable;
 	private boolean updateable;
 
-	public DependantValue(Mappings mappings, Table table, KeyValue prototype) {
-		super( mappings, table );
+	public DependantValue(MetadataImplementor metadata, Table table, KeyValue prototype) {
+		super( metadata, table );
 		this.wrappedValue = prototype;
 	}
 

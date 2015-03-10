@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
 
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

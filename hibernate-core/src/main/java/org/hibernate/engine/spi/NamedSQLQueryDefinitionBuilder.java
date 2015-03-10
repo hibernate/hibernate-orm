@@ -71,6 +71,14 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 		return this;
 	}
 
+	public NamedSQLQueryDefinitionBuilder addSynchronizedQuerySpace(String table) {
+		if ( this.querySpaces == null ) {
+			this.querySpaces = new ArrayList<String>();
+		}
+		this.querySpaces.add( table );
+		return this;
+}
+
 	public NamedSQLQueryDefinitionBuilder setResultSetRef(String resultSetRef) {
 		this.resultSetRef = resultSetRef;
 		return this;
@@ -130,6 +138,11 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 	@Override
 	public NamedSQLQueryDefinitionBuilder setComment(String comment) {
 		return (NamedSQLQueryDefinitionBuilder) super.setComment( comment );
+	}
+
+	@Override
+	public NamedSQLQueryDefinitionBuilder addParameterType(String name, String typeName) {
+		return (NamedSQLQueryDefinitionBuilder) super.addParameterType( name, typeName );
 	}
 
 	@Override

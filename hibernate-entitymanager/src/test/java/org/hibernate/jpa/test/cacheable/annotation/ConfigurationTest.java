@@ -23,24 +23,23 @@
  */
 package org.hibernate.jpa.test.cacheable.annotation;
 
-import javax.persistence.SharedCacheMode;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.SharedCacheMode;
 
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
 
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -53,76 +52,76 @@ import static org.junit.Assert.assertNull;
 public class ConfigurationTest extends BaseUnitTestCase {
 	@Test
 	public void testSharedCacheModeNone() {
-		Configuration config = buildConfiguration( SharedCacheMode.NONE );
+		MetadataImplementor metadata = buildMetadata( SharedCacheMode.NONE );
 
-		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
+		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( ExplicitlyNonCacheableEntity.class.getName() );
+		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( NoCacheableAnnotationEntity.class.getName() );
+		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 	}
 
 	@Test
 	public void testSharedCacheModeUnspecified() {
-		Configuration config = buildConfiguration( SharedCacheMode.UNSPECIFIED );
+		MetadataImplementor metadata = buildMetadata( SharedCacheMode.UNSPECIFIED );
 
-		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
+		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( ExplicitlyNonCacheableEntity.class.getName() );
+		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( NoCacheableAnnotationEntity.class.getName() );
+		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 	}
 
 	@Test
 	public void testSharedCacheModeAll() {
-		Configuration config = buildConfiguration( SharedCacheMode.ALL );
+		MetadataImplementor metadata = buildMetadata( SharedCacheMode.ALL );
 
-		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
+		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( ExplicitlyNonCacheableEntity.class.getName() );
+		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( NoCacheableAnnotationEntity.class.getName() );
+		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 	}
 
 	@Test
 	public void testSharedCacheModeEnable() {
-		Configuration config = buildConfiguration( SharedCacheMode.ENABLE_SELECTIVE );
+		MetadataImplementor metadata = buildMetadata( SharedCacheMode.ENABLE_SELECTIVE );
 
-		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
+		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( ExplicitlyNonCacheableEntity.class.getName() );
+		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( NoCacheableAnnotationEntity.class.getName() );
+		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 	}
 
 	@Test
 	public void testSharedCacheModeDisable() {
-		Configuration config = buildConfiguration( SharedCacheMode.DISABLE_SELECTIVE );
+		MetadataImplementor metadata = buildMetadata( SharedCacheMode.DISABLE_SELECTIVE );
 
-		PersistentClass pc = config.getClassMapping( ExplicitlyCacheableEntity.class.getName() );
+		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( ExplicitlyNonCacheableEntity.class.getName() );
+		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
 		assertNull( pc.getCacheConcurrencyStrategy() );
 
-		pc = config.getClassMapping( NoCacheableAnnotationEntity.class.getName() );
+		pc = metadata.getEntityBinding( NoCacheableAnnotationEntity.class.getName() );
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 	}
 
 	@SuppressWarnings("unchecked")
-	private Configuration buildConfiguration(SharedCacheMode mode) {
+	private MetadataImplementor buildMetadata(SharedCacheMode mode) {
 		Map settings = new HashMap();
 		settings.put( AvailableSettings.SHARED_CACHE_MODE, mode );
 		settings.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
@@ -142,9 +141,7 @@ public class ConfigurationTest extends BaseUnitTestCase {
 				settings
 		);
 
-		Configuration hibernateConfiguration = emfb.buildHibernateConfiguration( emfb.buildServiceRegistry() );
-		hibernateConfiguration.buildMappings();
-		return hibernateConfiguration;
+		return emfb.getMetadata();
 	}
 
 	public static class CustomRegionFactory extends NoCachingRegionFactory {

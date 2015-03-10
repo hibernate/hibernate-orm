@@ -23,10 +23,6 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Iterator;
 
 import org.hibernate.EmptyInterceptor;
@@ -39,18 +35,23 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
-public class OneToOneTest extends BaseCoreFunctionalTestCase {
+public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testEagerFetching() throws Exception {
 		Session s;
@@ -309,7 +310,7 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
-		PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
+		PersistentClass pc = metadata().getEntityBinding( Son.class.getName() );
 		Iterator iter = pc.getJoinIterator();
 		Table table = ( ( Join ) iter.next() ).getTable();
 		Iterator columnIter = table.getColumnIterator();

@@ -22,31 +22,31 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.component.basic;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.junit.Test;
+import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.StandardBasicTypes;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -54,31 +54,30 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Gavin King
  */
-public class ComponentTest extends BaseCoreFunctionalTestCase {
+public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "component/basic/User.hbm.xml" };
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	protected void addSettings(Map settings) {
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override
-	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
-		super.afterConfigurationBuilt( mappings, dialect );
+	protected void afterMetadataBuilt(Metadata metadata) {
 		// Oracle and Postgres do not have year() functions, so we need to
 		// redefine the 'User.person.yob' formula
 		//
 		// consider temporary until we add the capability to define
 		// mapping formulas which can use dialect-registered functions...
-		PersistentClass user = mappings.getClass( User.class.getName() );
+		PersistentClass user = metadata.getEntityBinding( User.class.getName() );
 		org.hibernate.mapping.Property personProperty = user.getProperty( "person" );
 		Component component = ( Component ) personProperty.getValue();
 		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getColumnIterator().next();
 
-		SQLFunction yearFunction = dialect.getFunctions().get( "year" );
+		SQLFunction yearFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "year" );
 		if ( yearFunction == null ) {
 			// the dialect not know to support a year() function, so rely on the
 			// ANSI SQL extract function

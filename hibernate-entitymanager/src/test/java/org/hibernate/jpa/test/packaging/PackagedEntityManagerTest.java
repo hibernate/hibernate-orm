@@ -32,10 +32,12 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
-import org.junit.Test;
-
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
@@ -56,11 +58,9 @@ import org.hibernate.jpa.test.pack.explodedpar.Elephant;
 import org.hibernate.jpa.test.pack.externaljar.Scooter;
 import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.stat.Statistics;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -254,7 +254,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "cfgxmlpar", new HashMap() );
 
-		assertTrue( emf.getProperties().containsKey( "test-assertable-setting" ) );
+		assertTrue( emf.getProperties().containsKey( "hibernate.test-assertable-setting" ) );
 
 		EntityManager em = emf.createEntityManager();
 		Item i = new Item();

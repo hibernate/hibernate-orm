@@ -20,9 +20,6 @@
  */
 package org.hibernate.test.locale;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.Collections;
 import java.util.Locale;
 
@@ -30,17 +27,21 @@ import org.hibernate.HibernateException;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * @author Brett Meyer
  */
-public class LocaleTest extends BaseCoreFunctionalTestCase {
+public class LocaleTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	private static final String asciiRegex = "^\\p{ASCII}*$";
 	
@@ -64,7 +65,7 @@ public class LocaleTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8765")
 	public void testMetadataWithLocale() {
-		SchemaValidator sv = new SchemaValidator( configuration() );
+		SchemaValidator sv = new SchemaValidator( metadata() );
 		try {
 			// Rather than building TableMetadata and checking for ascii values in table/column names, simply
 			// attempt to validate.

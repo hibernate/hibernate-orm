@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags;
 
-import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;

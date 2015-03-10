@@ -1,18 +1,18 @@
 //$Id: ExtendsTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.extendshbm;
 
+import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -37,174 +37,93 @@ public class ExtendsTest extends BaseUnitTestCase {
 
 	@Test
 	public void testAllInOne() {
-		Configuration cfg = new Configuration();
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/allinone.hbm.xml" )
+				.buildMetadata();
 
-		cfg.addResource( getBaseForMappings() + "extendshbm/allinone.hbm.xml" );
-		cfg.buildMappings();
-		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
-		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
-		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Customer" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Person" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Employee" ) );
 	}
 
 	@Test
 	public void testOutOfOrder() {
-		Configuration cfg = new Configuration();
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/Customer.hbm.xml" )
+				.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" )
+				.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" )
+				.buildMetadata();
 
-		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/Customer.hbm.xml" );
-			assertNull(
-					"cannot be in the configuration yet!",
-					cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" )
-			);
-			cfg.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" );
-			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
-
-//			cfg.buildSessionFactory( serviceRegistry );
-			cfg.buildMappings();
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );
-
-		}
-		catch ( HibernateException e ) {
-			fail( "should not fail with exception! " + e );
-		}
-
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Customer" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Person" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Employee" ) );
 	}
 
 	@Test
 	public void testNwaitingForSuper() {
-		Configuration cfg = new Configuration();
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/Customer.hbm.xml" )
+				.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" )
+				.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" )
+				.buildMetadata();
 
-		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/Customer.hbm.xml" );
-			assertNull(
-					"cannot be in the configuration yet!",
-					cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" )
-			);
-			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
-			assertNull(
-					"cannot be in the configuration yet!",
-					cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" )
-			);
-			cfg.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" );
-
-			cfg.buildMappings();
-
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
-
-
-		}
-		catch ( HibernateException e ) {
-			e.printStackTrace();
-			fail( "should not fail with exception! " + e );
-
-		}
-
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Customer" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Person" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Employee" ) );
 	}
 
 	@Test
 	public void testMissingSuper() {
-		Configuration cfg = new Configuration();
-
 		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/Customer.hbm.xml" );
-			assertNull(
-					"cannot be in the configuration yet!",
-					cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" )
-			);
-			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
-
-//			cfg.buildSessionFactory( serviceRegistry );
-			cfg.buildMappings();
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addResource( getBaseForMappings() + "extendshbm/Customer.hbm.xml" )
+					.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" )
+					.buildMetadata();
 			fail( "Should not be able to build sessionFactory without a Person" );
 		}
 		catch ( HibernateException e ) {
-
 		}
-
 	}
 
 	@Test
 	public void testAllSeparateInOne() {
-		Configuration cfg = new Configuration();
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/allseparateinone.hbm.xml" )
+				.buildMetadata();
 
-		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/allseparateinone.hbm.xml" );
-
-//			cfg.buildSessionFactory( serviceRegistry );
-
-			cfg.buildMappings();
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );
-
-		}
-		catch ( HibernateException e ) {
-			fail( "should not fail with exception! " + e );
-		}
-
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Customer" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Person" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Employee" ) );
 	}
 
 	@Test
 	public void testJoinedSubclassAndEntityNamesOnly() {
-		Configuration cfg = new Configuration();
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/entitynames.hbm.xml" )
+				.buildMetadata();
 
-		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/entitynames.hbm.xml" );
-
-			cfg.buildMappings();
-
-			assertNotNull( cfg.getClassMapping( "EntityHasName" ) );
-			assertNotNull( cfg.getClassMapping( "EntityCompany" ) );
-
-		}
-		catch ( HibernateException e ) {
-			e.printStackTrace();
-			fail( "should not fail with exception! " + e );
-
-		}
+		assertNotNull( metadata.getEntityBinding( "EntityHasName" ) );
+		assertNotNull( metadata.getEntityBinding( "EntityCompany" ) );
 	}
 
 	@Test
 	public void testEntityNamesWithPackage() {
-		Configuration cfg = new Configuration();
-		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/packageentitynames.hbm.xml" );
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/packageentitynames.hbm.xml" )
+				.buildMetadata();
 
-			cfg.buildMappings();
-
-			assertNotNull( cfg.getClassMapping( "EntityHasName" ) );
-			assertNotNull( cfg.getClassMapping( "EntityCompany" ) );
-
-		}
-		catch ( HibernateException e ) {
-			e.printStackTrace();
-			fail( "should not fail with exception! " + e );
-
-		}
+		assertNotNull( metadata.getEntityBinding( "EntityHasName" ) );
+		assertNotNull( metadata.getEntityBinding( "EntityCompany" ) );
 	}
 
 	@Test
 	public void testUnionSubclass() {
-		Configuration cfg = new Configuration();
+		Metadata metadata = new MetadataSources( serviceRegistry )
+				.addResource( getBaseForMappings() + "extendshbm/unionsubclass.hbm.xml" )
+				.buildMetadata();
 
-		try {
-			cfg.addResource( getBaseForMappings() + "extendshbm/unionsubclass.hbm.xml" );
-
-			cfg.buildMappings();
-
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
-			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
-
-		}
-		catch ( HibernateException e ) {
-			e.printStackTrace();
-			fail( "should not fail with exception! " + e );
-
-		}
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Person" ) );
+		assertNotNull( metadata.getEntityBinding( "org.hibernate.test.extendshbm.Customer" ) );
 	}
 
 }

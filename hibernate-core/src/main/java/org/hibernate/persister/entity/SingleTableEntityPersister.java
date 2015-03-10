@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.persister.entity;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +38,6 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -52,6 +52,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
@@ -134,10 +135,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass, 
 			final EntityRegionAccessStrategy cacheAccessStrategy,
 			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			final SessionFactoryImplementor factory,
-			final Mapping mapping) throws HibernateException {
+			final PersisterCreationContext creationContext) throws HibernateException {
 
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
+
+		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 
 		// CLASS + TABLE
 
@@ -440,9 +442,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		initLockers();
 
-		initSubclassPropertyAliasesMap(persistentClass);
+		initSubclassPropertyAliasesMap( persistentClass );
 		
-		postConstruct(mapping);
+		postConstruct( creationContext.getMetadata() );
 
 	}
 

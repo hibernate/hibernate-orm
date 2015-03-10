@@ -23,20 +23,19 @@
  */
 package org.hibernate.envers.test.integration.jta;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
-import java.util.Map;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.reventity.ExceptionListener}, but in a JTA environment.

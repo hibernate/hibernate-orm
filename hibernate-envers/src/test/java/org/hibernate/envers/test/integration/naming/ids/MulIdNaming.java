@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.test.integration.naming.ids;
 
-import javax.persistence.Column;
 import java.io.Serializable;
+import javax.persistence.Column;
 
 /**
  * @author Adam Warski (adam at warski dot org)

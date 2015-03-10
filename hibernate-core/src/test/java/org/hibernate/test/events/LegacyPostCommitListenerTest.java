@@ -3,8 +3,8 @@ package org.hibernate.test.events;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -45,10 +45,9 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		super.prepareBootstrapRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {
-
 					@Override
 					public void integrate(
-							Configuration configuration,
+							Metadata metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
 						integrate( serviceRegistry );

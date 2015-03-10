@@ -1,13 +1,14 @@
 package org.hibernate.envers.internal.tools;
 
-import junit.framework.Assert;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
-import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.Test;
+import junit.framework.Assert;
 
 public class MapProxyTest {
 

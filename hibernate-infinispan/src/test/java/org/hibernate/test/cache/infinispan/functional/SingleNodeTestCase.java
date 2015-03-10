@@ -23,33 +23,34 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+import java.util.Map;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
+
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
+import org.junit.Before;
 
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
-import org.junit.Before;
-
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
+public abstract class SingleNodeTestCase extends BaseNonConfigCoreFunctionalTestCase {
 	private static final Log log = LogFactory.getLog( SingleNodeTestCase.class );
 	protected TransactionManager tm;
 
@@ -109,18 +110,20 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
-		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		settings.put( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
+		settings.put( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
 
 		if ( getJtaPlatform() != null ) {
-			cfg.getProperties().put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
+			settings.put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
 		}
-		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+		settings.put( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		settings.put( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 	}
 
 	protected void beginTx() throws Exception {

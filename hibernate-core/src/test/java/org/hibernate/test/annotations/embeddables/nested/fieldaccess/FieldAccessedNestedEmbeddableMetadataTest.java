@@ -25,22 +25,22 @@ package org.hibernate.test.annotations.embeddables.nested.fieldaccess;
 
 import java.sql.Types;
 
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.test.annotations.derivedidentities.e4.a.Simple;
+import org.hibernate.type.CustomType;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.type.CustomType;
+import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
 import static org.junit.Assert.assertEquals;
@@ -52,22 +52,30 @@ public class FieldAccessedNestedEmbeddableMetadataTest extends BaseUnitTestCase 
 	@Test
 	@FailureExpected( jiraKey = "HHH-9089" )
 	public void testEnumTypeInterpretation() {
-		Configuration cfg = new Configuration().addAnnotatedClass( Customer.class );
-		cfg.buildMappings();
-		Mapping mapping = cfg.buildMapping();
-		PersistentClass classMetadata = cfg.getClassMapping( Customer.class.getName() );
-		Property investmentsProperty = classMetadata.getProperty( "investments" );
-		Collection investmentsValue = (Collection) investmentsProperty.getValue();
-		Component investmentMetadata = (Component) investmentsValue.getElement();
-		Value descriptionValue = investmentMetadata.getProperty( "description" ).getValue();
-		assertEquals( 1, descriptionValue.getColumnSpan() );
-		Column selectable = (Column) descriptionValue.getColumnIterator().next();
-		assertEquals( 500, selectable.getLength() );
-		Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
-		SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
-		CustomType currencyType = (CustomType) currencyMetadata.getType();
-		int[] currencySqlTypes = currencyType.sqlTypes( mapping );
-		assertEquals( 1, currencySqlTypes.length );
-		assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+
+		try {
+			final Metadata metadata = new MetadataSources( ssr )
+					.addAnnotatedClass( Customer.class )
+					.buildMetadata();
+
+			PersistentClass classMetadata = metadata.getEntityBinding( Customer.class.getName() );
+			Property investmentsProperty = classMetadata.getProperty( "investments" );
+			Collection investmentsValue = (Collection) investmentsProperty.getValue();
+			Component investmentMetadata = (Component) investmentsValue.getElement();
+			Value descriptionValue = investmentMetadata.getProperty( "description" ).getValue();
+			assertEquals( 1, descriptionValue.getColumnSpan() );
+			Column selectable = (Column) descriptionValue.getColumnIterator().next();
+			assertEquals( 500, selectable.getLength() );
+			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
+			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
+			CustomType currencyType = (CustomType) currencyMetadata.getType();
+			int[] currencySqlTypes = currencyType.sqlTypes( metadata );
+			assertEquals( 1, currencySqlTypes.length );
+			assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 }

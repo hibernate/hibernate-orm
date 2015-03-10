@@ -45,7 +45,10 @@ public class SQLFunctionRegistry {
 	 */
 	public SQLFunctionRegistry(Dialect dialect, Map<String, SQLFunction> userFunctions) {
 		this.dialect = dialect;
-		this.userFunctions = new HashMap<String, SQLFunction>( userFunctions );
+		this.userFunctions = new HashMap<String, SQLFunction>();
+		if ( userFunctions != null ) {
+			this.userFunctions.putAll( userFunctions );
+		}
 	}
 
 	/**

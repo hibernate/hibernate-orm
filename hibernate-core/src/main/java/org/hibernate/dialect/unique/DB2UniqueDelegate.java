@@ -22,7 +22,9 @@ package org.hibernate.dialect.unique;
 
 import java.util.Iterator;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.UniqueKey;
 
 /**
  * DB2 does not allow unique constraints on nullable columns.  Rather than
@@ -41,10 +43,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(
-			org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog,
-			String defaultSchema) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
 		if ( hasNullable( uniqueKey ) ) {
 			return org.hibernate.mapping.Index.buildSqlCreateIndexString(
 					dialect,
@@ -53,33 +52,27 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 					uniqueKey.columnIterator(),
 					uniqueKey.getColumnOrderMap(),
 					true,
-					defaultCatalog,
-					defaultSchema
+					metadata
 			);
 		}
 		else {
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, defaultCatalog, defaultSchema );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata );
 		}
 	}
 	
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(
-			org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog,
-			String defaultSchema) {
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
 		if ( hasNullable( uniqueKey ) ) {
 			return org.hibernate.mapping.Index.buildSqlDropIndexString(
-					dialect,
-					uniqueKey.getTable(),
 					uniqueKey.getName(),
-					defaultCatalog,
-					defaultSchema
+					metadata.getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
+							uniqueKey.getTable().getQualifiedTableName(),
+							metadata.getDatabase().getJdbcEnvironment().getDialect()
+					)
 			);
 		}
 		else {
-			return super.getAlterTableToDropUniqueKeyCommand(
-					uniqueKey, defaultCatalog, defaultSchema
-			);
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata );
 		}
 	}
 	

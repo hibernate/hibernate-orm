@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.collection;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

@@ -120,7 +120,7 @@
 	
 		<idbag name="idFooBag" lazy="true" table="baz_id_foo" cascade="all">
 			<collection-id column="pkid" type="long"> 
-				<generator class="hilo"/>
+				<generator class="increment"/>
 			</collection-id>
 			<key column="baz"/>
 			<many-to-many class="org.hibernate.test.legacy.Foo" column="foo" outer-join="true"/>
@@ -128,7 +128,7 @@
 	
 		<idbag name="byteBag" lazy="true" table="baz_byte_bag">
 			<collection-id column="pkid" type="long"> 
-				<generator class="hilo"/>
+				<generator class="increment"/>
 			</collection-id>
 			<key column="baz"/>
 			<element type="binary" column="bytez" not-null="true"/>

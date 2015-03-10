@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 
 /**
@@ -35,8 +36,8 @@ public abstract class IdentifierCollection extends Collection {
 
 	private KeyValue identifier;
 
-	public IdentifierCollection(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public IdentifierCollection(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public KeyValue getIdentifier() {
@@ -65,7 +66,10 @@ public abstract class IdentifierCollection extends Collection {
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate(mapping);
+		super.validate( mapping );
+
+		assert getElement() != null : "IdentifierCollection identifier not bound : " + getRole();
+
 		if ( !getIdentifier().isValid(mapping) ) {
 			throw new MappingException(
 				"collection id mapping has wrong number of columns: " +

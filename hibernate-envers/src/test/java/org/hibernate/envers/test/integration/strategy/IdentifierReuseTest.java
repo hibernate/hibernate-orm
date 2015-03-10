@@ -1,17 +1,16 @@
 package org.hibernate.envers.test.integration.strategy;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import java.util.Arrays;
 import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.IntNoAutoIdTestEntity;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

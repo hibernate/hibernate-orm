@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.flush;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.envers.RevisionType;

@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
@@ -39,8 +40,8 @@ public class Any extends SimpleValue {
 	private String metaTypeName = "string";
 	private Map metaValues;
 
-	public Any(Mappings mappings, Table table) {
-		super( mappings, table );
+	public Any(MetadataImplementor metadata, Table table) {
+		super( metadata, table );
 	}
 
 	public String getIdentifierType() {
@@ -52,11 +53,11 @@ public class Any extends SimpleValue {
 	}
 
 	public Type getType() throws MappingException {
-		final Type metaType = getMappings().getTypeResolver().heuristicType( metaTypeName );
+		final Type metaType = getMetadata().getTypeResolver().heuristicType( metaTypeName );
 
-		return getMappings().getTypeResolver().getTypeFactory().any(
+		return getMetadata().getTypeResolver().getTypeFactory().any(
 				metaValues == null ? metaType : new MetaType( metaValues, metaType ),
-				getMappings().getTypeResolver().heuristicType( identifierTypeName )
+				getMetadata().getTypeResolver().heuristicType( identifierTypeName )
 		);
 	}
 

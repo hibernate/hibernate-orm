@@ -23,28 +23,28 @@ package org.hibernate.test.cache.infinispan.functional.bulk;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-
-import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
-import org.junit.Test;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
+import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +56,7 @@ import static org.junit.Assert.assertNull;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
+public class BulkOperationsTestCase extends BaseNonConfigCoreFunctionalTestCase {
 	private TransactionManager tm;
 
 	@Override
@@ -89,15 +89,17 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
-		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
-		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
-		cfg.getProperties().put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		settings.put( Environment.USE_QUERY_CACHE, "false" );
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		settings.put( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+		settings.put( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		settings.put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
+		settings.put( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 	}
 
 	@Test

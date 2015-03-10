@@ -31,15 +31,16 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Grouping of type definitions.
+ * Plural form of {@link TypeDef}.
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 public @interface TypeDefs {
 	/**
-	 * The grouping of type defs.
+	 * The grouping of type definitions.
 	 */
 	TypeDef[] value();
 }

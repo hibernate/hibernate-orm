@@ -31,15 +31,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,6 +55,12 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("unchecked")
 public class ManyToManyTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+//		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+	}
+
 	@Test
 	public void testDefault() throws Exception {
 		Session s;

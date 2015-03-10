@@ -20,19 +20,20 @@
  */
 package org.hibernate.test.mapping;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.mapping.Table;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Column aliases utilize {@link Table#getUniqueInteger()} for naming.  The
@@ -45,7 +46,7 @@ import org.junit.Test;
  * 
  * @author Brett Meyer
  */
-public class AliasTest extends BaseCoreFunctionalTestCase {
+public class AliasTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	/**
 	 * Column aliases utilize {@link Table#getUniqueInteger()} for naming.  The unique integer used to be statically
@@ -57,7 +58,7 @@ public class AliasTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-2448" )
 	public void testAliasOrdering() {
-		Iterator<Table> tables = configuration().getTableMappings();
+		Iterator<Table> tables = metadata().collectTableMappings().iterator();
 		Table table1 = null;
 		Table table2 = null;
 		while ( tables.hasNext() ) {

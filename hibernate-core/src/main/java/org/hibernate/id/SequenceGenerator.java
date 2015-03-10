@@ -27,15 +27,21 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -50,7 +56,10 @@ import org.jboss.logging.Logger;
  *
  * @see SequenceHiLoGenerator
  * @author Gavin King
+ *
+ * @deprecated Use {@link org.hibernate.id.enhanced.SequenceStyleGenerator} instead
  */
+@Deprecated
 public class SequenceGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
 
@@ -67,6 +76,7 @@ public class SequenceGenerator
 	 */
 	public static final String PARAMETERS = "parameters";
 
+	private QualifiedName qualifiedSequenceName;
 	private String sequenceName;
 	private String parameters;
 	private Type identifierType;
@@ -85,28 +95,20 @@ public class SequenceGenerator
 	}
 
 	@Override
-	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
-		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-		sequenceName = normalizer.normalizeIdentifierQuoting(
-				ConfigurationHelper.getString( SEQUENCE, params, "hibernate_sequence" )
-		);
+	@SuppressWarnings("StatementWithEmptyBody")
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+		identifierType = type;
 		parameters = params.getProperty( PARAMETERS );
 
-		if ( sequenceName.indexOf( '.' ) < 0 ) {
-			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
-			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
-			sequenceName = Table.qualify(
-					dialect.quote( catalogName ),
-					dialect.quote( schemaName ),
-					dialect.quote( sequenceName )
-			);
-		}
-		else {
-			// if already qualified there is not much we can do in a portable manner so we pass it
-			// through and assume the user has set up the name correctly.
-		}
+		final Dialect dialect = jdbcEnv.getDialect();
+		final ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		qualifiedSequenceName = QualifiedNameParser.INSTANCE.parse(
+				ConfigurationHelper.getString( SEQUENCE, params, "hibernate_sequence" ),
+				normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) ),
+				normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
+		);
+		sequenceName = jdbcEnv.getQualifiedObjectNameFormatter().format( qualifiedSequenceName, dialect );
 
-		this.identifierType = type;
 		sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
@@ -172,5 +174,25 @@ public class SequenceGenerator
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
 		return dialect.getSelectSequenceNextValString( getSequenceName() );
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		// we cannot register a proper Sequence object here because of the free-form
+		//'parameters' as opposed to specific initialValue/increment values
+
+		final Schema schema = database.locateSchema(
+				qualifiedSequenceName.getCatalogName(),
+				qualifiedSequenceName.getSchemaName()
+		);
+
+		database.addAuxiliaryDatabaseObject(
+				new SimpleAuxiliaryDatabaseObject(
+						schema,
+						sqlCreateStrings( database.getDialect() ),
+						sqlDropStrings( database.getDialect() ),
+						Collections.<String>emptySet()
+				)
+		);
 	}
 }

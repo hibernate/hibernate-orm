@@ -39,7 +39,6 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -56,12 +55,14 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.type.*;
 import org.hibernate.type.DiscriminatorType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -144,10 +145,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
 			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			final SessionFactoryImplementor factory,
-			final Mapping mapping) throws HibernateException {
+			final PersisterCreationContext creationContext) throws HibernateException {
 
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
+
+		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 
 		// DISCRIMINATOR
 
@@ -589,7 +591,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
-		postConstruct( mapping );
+		postConstruct( creationContext.getMetadata() );
 
 	}
 

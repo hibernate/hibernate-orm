@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.inheritance.single.discriminatorformula;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

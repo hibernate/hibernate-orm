@@ -14,7 +14,7 @@ import org.hibernate.annotations.Index;
  * @author Emmanuel Bernard
  */
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"start.country", "start.city"})})
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"start_country", "start_city"})})
 public class Storm {
 	private Integer id;
 	private Location start;

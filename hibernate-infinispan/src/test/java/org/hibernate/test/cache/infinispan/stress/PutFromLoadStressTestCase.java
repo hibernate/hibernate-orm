@@ -1,25 +1,6 @@
 package org.hibernate.test.cache.infinispan.stress;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.cache.infinispan.functional.Age;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import javax.transaction.TransactionManager;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
@@ -28,9 +9,31 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.transaction.TransactionManager;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Environment;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
+
+import org.hibernate.test.cache.infinispan.functional.Age;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 import static org.infinispan.test.TestingUtil.withTx;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 /**
  * A stress test for putFromLoad operations
@@ -57,76 +60,48 @@ public class PutFromLoadStressTestCase {
 
    @BeforeClass
    public static void beforeClass() {
-      Configuration cfg = new Configuration();
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-      cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-      // TODO: Tweak to have a fully local region factory (no transport, cache mode = local, no marshalling, ...etc)
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY,
-            "org.hibernate.cache.infinispan.InfinispanRegionFactory");
-      cfg.setProperty(Environment.JTA_PLATFORM,
-            "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform");
+      // Extra options located in src/test/resources/hibernate.properties
+      StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
+              .applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" )
+              .applySetting( Environment.USE_QUERY_CACHE, "true" )
+              // TODO: Tweak to have a fully local region factory (no transport, cache mode = local, no marshalling, ...etc)
+              .applySetting(
+                      Environment.CACHE_REGION_FACTORY,
+                      "org.hibernate.cache.infinispan.InfinispanRegionFactory"
+              )
+              .applySetting(
+                      Environment.JTA_PLATFORM,
+                      "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform"
+              )
+              // Force minimal puts off to simplify stressing putFromLoad logic
+              .applySetting( Environment.USE_MINIMAL_PUTS, "false" )
+              .applySetting( Environment.HBM2DDL_AUTO, "create-drop" );
 
-      // Force minimal puts off to simplify stressing putFromLoad logic
-      cfg.setProperty(Environment.USE_MINIMAL_PUTS, "false");
+      StandardServiceRegistry serviceRegistry = ssrb.build();
 
-      // Mappings
-      configureMappings(cfg);
+      MetadataSources metadataSources = new MetadataSources( serviceRegistry )
+              .addResource( "cache/infinispan/functional/Item.hbm.xml" )
+              .addResource( "cache/infinispan/functional/Customer.hbm.xml" )
+              .addResource( "cache/infinispan/functional/Contact.hbm.xml" )
+              .addAnnotatedClass( Age.class );
 
-//      // Database settings
-//      cfg.setProperty(Environment.DRIVER, "org.postgresql.Driver");
-//      cfg.setProperty(Environment.URL, "jdbc:postgresql://localhost/hibernate");
-//      cfg.setProperty(Environment.DIALECT, "org.hibernate.dialect.PostgreSQL82Dialect");
-//      cfg.setProperty(Environment.USER, "hbadmin");
-//      cfg.setProperty(Environment.PASS, "hbadmin");
+      Metadata metadata = metadataSources.buildMetadata();
+      for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+         if ( entityBinding instanceof RootClass ) {
+            ( (RootClass) entityBinding ).setCacheConcurrencyStrategy( "transactional" );
+         }
+      }
+      for ( Collection collectionBinding : metadata.getCollectionBindings() ) {
+         collectionBinding.setCacheConcurrencyStrategy( "transactional" );
+      }
 
-      // Create database schema in each run
-      cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
-
-      StandardServiceRegistryImpl registry =
-            ServiceRegistryBuilder.buildServiceRegistry(cfg.getProperties());
-      sessionFactory =  cfg.buildSessionFactory(registry);
-
+      sessionFactory = metadata.buildSessionFactory();
       tm = com.arjuna.ats.jta.TransactionManager.transactionManager();
-   }
-
-   private static void configureMappings(Configuration cfg) {
-      String[] mappings = {
-            "cache/infinispan/functional/Item.hbm.xml",
-            "cache/infinispan/functional/Customer.hbm.xml",
-            "cache/infinispan/functional/Contact.hbm.xml"};
-      for (String mapping : mappings)
-         cfg.addResource("org/hibernate/test/" + mapping);
-
-      Class<?>[] annotatedClasses = getAnnotatedClasses();
-      if ( annotatedClasses != null ) {
-         for ( Class<?> annotatedClass : annotatedClasses ) {
-            cfg.addAnnotatedClass( annotatedClass );
-         }
-      }
-
-      cfg.buildMappings();
-      Iterator it = cfg.getClassMappings();
-      String cacheStrategy = "transactional";
-      while (it.hasNext()) {
-         PersistentClass clazz = (PersistentClass) it.next();
-         if (!clazz.isInherited()) {
-            cfg.setCacheConcurrencyStrategy(clazz.getEntityName(), cacheStrategy);
-         }
-      }
-      it = cfg.getCollectionMappings();
-      while (it.hasNext()) {
-         Collection coll = (Collection) it.next();
-         cfg.setCollectionCacheConcurrencyStrategy( coll.getRole(), cacheStrategy);
-      }
    }
 
    @AfterClass
    public static void afterClass() {
       sessionFactory.close();
-   }
-
-   public static Class<Object>[] getAnnotatedClasses() {
-      return new Class[] {Age.class};
    }
 
    @Test
@@ -215,21 +190,11 @@ public class PutFromLoadStressTestCase {
 
             long start = System.nanoTime();
             int runs = 0;
-            if (isTrace)
+            if (isTrace) {
                log.tracef("[%s] Start time: %d", title(warmup), start);
+            }
 
-//            while (USE_TIME && PutFromLoadStressTestCase.this.run.get()) {
-//               if (runs % 100000 == 0)
-//                  log.infof("[%s] Query run # %d", title(warmup), runs);
-//
-////               Customer customer = query();
-////               deleteCached(customer);
-
-               queryItems();
-//               deleteCachedItems();
-//
-//               runs++;
-//            }
+            queryItems();
             long end = System.nanoTime();
             long duration = end - start;
             if (isTrace)
@@ -261,73 +226,12 @@ public class PutFromLoadStressTestCase {
             public Void call() throws Exception {
                Session s = sessionFactory.getCurrentSession();
                Query query = s.getNamedQuery(Age.QUERY).setCacheable(true);
-//               Query query = s.createQuery("from Age").setCacheable(true);
                List<Age> result = (List<Age>) query.list();
                assertFalse(result.isEmpty());
                return null;
             }
          });
       }
-
-
-//      private void deleteCachedItems() throws Exception {
-//         withTx(tm, new Callable<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//               sessionFactory.getCache().evictEntityRegion(Item.class);
-//               return null;
-//            }
-//         });
-//      }
-//
-//      private void queryItems() throws Exception {
-//         withTx(tm, new Callable<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//               Session s = sessionFactory.getCurrentSession();
-//               Query query = s.createQuery("from Item").setCacheable(true);
-//               List<Item> result = (List<Item>) query.list();
-//               assertFalse(result.isEmpty());
-//               return null;
-//            }
-//         });
-//      }
-
-//      private Customer query() throws Exception {
-//         return withTx(tm, new Callable<Customer>() {
-//            @Override
-//            public Customer call() throws Exception {
-//               Session s = sessionFactory.getCurrentSession();
-//               Customer customer = (Customer) s.load(Customer.class, customerId);
-//               assertNotNull(customer);
-//               Set<Contact> contacts = customer.getContacts();
-//               Contact contact = contacts.iterator().next();
-//               assertNotNull(contact);
-//               assertEquals("private contact", contact.getName());
-//
-////               Contact found = contacts.isEmpty() ? null : contacts.iterator().next();
-////               Set<Contact> contacts = found.getContacts();
-////               assertTrue(contacts + " not empty", contacts.isEmpty());
-////
-////               if (found != null && found.hashCode() == System.nanoTime()) {
-////                  System.out.print(" ");
-////               } else if (found == null) {
-////                  throw new IllegalStateException("Contact cannot be null");
-////               }
-//               return customer;
-//            }
-//         });
-//      }
-
-//      private void deleteCached(final Customer customer) throws Exception {
-//         withTx(tm, new Callable<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//               sessionFactory.getCache().evictEntity(Customer.class, customer.getId());
-//               return null;  // TODO: Customise this generated block
-//            }
-//         });
-//      }
 
       private String opsPerMS(long nanos, int ops) {
          long totalMillis = TimeUnit.NANOSECONDS.toMillis(nanos);

@@ -34,23 +34,25 @@ import org.hibernate.Cache;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
-import org.hibernate.criterion.Restrictions;
-import org.junit.After;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.infinispan.test.TestingUtil.withTx;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Functional entity transactional tests.
@@ -59,12 +61,6 @@ import static org.junit.Assert.*;
  * @since 3.5
  */
 public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
-
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-	}
-
    @Override
    protected Class<?>[] getAnnotatedClasses() {
       return new Class[] {

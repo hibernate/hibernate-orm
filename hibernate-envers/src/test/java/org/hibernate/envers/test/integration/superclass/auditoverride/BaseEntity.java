@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.superclass.auditoverride;
 
+import java.io.Serializable;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import java.io.Serializable;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;

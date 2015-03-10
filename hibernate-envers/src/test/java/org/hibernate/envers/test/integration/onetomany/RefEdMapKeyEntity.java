@@ -23,13 +23,13 @@
  */
 package org.hibernate.envers.test.integration.onetomany;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.envers.Audited;
 

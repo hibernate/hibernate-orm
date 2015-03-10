@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.integration.query;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
@@ -37,10 +37,9 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.entities;
 
+import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
 
 import org.hibernate.annotations.Proxy;
 import org.hibernate.envers.Audited;

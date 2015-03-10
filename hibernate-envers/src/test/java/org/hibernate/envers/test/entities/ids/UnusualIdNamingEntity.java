@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.entities.ids;
 
+import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.io.Serializable;
 
 import org.hibernate.envers.Audited;
 

@@ -649,6 +649,18 @@ public interface AvailableSettings {
 	 */
 	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
 
+	/**
+	 * Names a {@link org.hibernate.Interceptor} implementation to be applied to the {@link org.hibernate.SessionFactory}
+	 * Can reference<ul>
+	 *     <li>Interceptor instance</li>
+	 *     <li>Interceptor implementation {@link Class} reference</li>
+	 *     <li>Interceptor implementation class name</li>
+	 * </ul>
+	 *
+	 * @since 5.0
+	 */
+	String INTERCEPTOR = "hibernate.session_factory.interceptor";
+
     String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
@@ -689,9 +701,8 @@ public interface AvailableSettings {
 	String JACC_ENABLED = "hibernate.jacc.enabled";
 
 	/**
-	 * If enabled, allows {@link org.hibernate.tool.hbm2ddl.DatabaseMetadata} to
-	 * support synonyms during schema update and validations.  Due to the
-	 * possibility that this would return duplicate tables (especially in
+	 * If enabled, allows schema update and validation to support synonyms.  Due
+	 * to the possibility that this would return duplicate tables (especially in
 	 * Oracle), this is disabled by default.
 	 */
 	String ENABLE_SYNONYMS = "hibernate.synonyms";
@@ -766,4 +777,34 @@ public interface AvailableSettings {
 	 */
 	String SCANNER_DISCOVERY = "hibernate.archive.autodetection";
 
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaManagementTool} to use for performing
+	 * schema management.  The default is to use {@link org.hibernate.tool.schema.internal.HibernateSchemaManagementTool}
+	 *
+	 * @since 5.0
+	 */
+	String SCHEMA_MANAGEMENT_TOOL = "hibernate.schema_management_tool";
+
+	/**
+	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} class to use.
+	 *
+	 * @since 5.0
+	 */
+	String IMPLICIT_NAMING_STRATEGY = "hibernate.implicit_naming_strategy";
+
+	/**
+	 * Used to specify the {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} class to use.
+	 *
+	 * @since 5.0
+	 */
+	String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
+
+	/**
+	 * Used to specify the order in which metadata sources should be processed.  Value
+	 * is a delimited-list whose elements are defined by {@link org.hibernate.cfg.MetadataSourceType}.
+	 * <p/>
+	 * Default is {@code "hbm,class"} which indicates to process {@code hbm.xml} files followed by
+	 * annotations (combined with {@code orm.xml} mappings).
+	 */
+	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
 }

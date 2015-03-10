@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-import org.hibernate.cfg.Mappings;
+
+import org.hibernate.boot.spi.MetadataImplementor;
 
 /**
  * A primitive array has a primary key consisting of the key columns + index column.
  */
 public class PrimitiveArray extends Array {
-
-	public PrimitiveArray(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public PrimitiveArray(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public boolean isPrimitiveArray() {

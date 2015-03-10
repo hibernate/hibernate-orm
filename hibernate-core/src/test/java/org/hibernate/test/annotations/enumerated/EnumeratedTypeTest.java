@@ -1,7 +1,5 @@
 package org.hibernate.test.annotations.enumerated;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,34 +8,35 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.EnumType;
+import org.hibernate.type.Type;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.enumerated.EntityEnum.Common;
 import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
 import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
 import org.hibernate.test.annotations.enumerated.EntityEnum.Trimmed;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test type definition for enum
  * 
  * @author Janario Oliveira
  */
-public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
+public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testTypeDefinition() {
-		Configuration cfg = configuration();
-		PersistentClass pc = cfg.getClassMapping( EntityEnum.class.getName() );
+		PersistentClass pc = metadata().getEntityBinding( EntityEnum.class.getName() );
 
 		// ordinal default of EnumType
 		Type ordinalEnum = pc.getProperty( "ordinal" ).getType();

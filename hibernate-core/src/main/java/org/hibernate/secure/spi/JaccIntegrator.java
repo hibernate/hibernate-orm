@@ -25,9 +25,10 @@ package org.hibernate.secure.spi;
 
 import java.util.Map;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -74,10 +75,17 @@ public class JaccIntegrator implements ServiceContributingIntegrator {
 
 	@Override
 	public void integrate(
-			Configuration configuration,
+			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		doIntegration( configuration.getProperties(), configuration.getJaccPermissionDeclarations(), serviceRegistry );
+		doIntegration(
+				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				// pass no permissions here, because atm actually injecting the
+				// permissions into the JaccService is handled on SessionFactoryImpl via
+				// the org.hibernate.boot.cfgxml.spi.CfgXmlAccessService
+				null,
+				serviceRegistry
+		);
 	}
 
 	private void doIntegration(

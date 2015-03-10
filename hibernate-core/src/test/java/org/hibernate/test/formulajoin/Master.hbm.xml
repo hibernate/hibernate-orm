@@ -36,7 +36,7 @@
 	<class name="Detail" table="t_details">
 	
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		
 		<property name="details" 

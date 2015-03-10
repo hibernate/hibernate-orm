@@ -33,10 +33,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -138,22 +138,33 @@ public class ManyToOneType extends EntityType {
 	}
 
 	public int getColumnSpan(Mapping mapping) throws MappingException {
-		// our column span is the number of columns in the PK
-		return getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
+		return requireIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
+	}
+
+	private Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
+		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
+		if ( fkTargetType == null ) {
+			throw new MappingException(
+					"Unable to determine FK target Type for many-to-one mapping: " +
+							"referenced-entity-name=[" + getAssociatedEntityName() +
+							"], referenced-entity-attribute-name=[" + getLHSPropertyName() + "]"
+			);
+		}
+		return fkTargetType;
 	}
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return getIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
+		return requireIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
 	}
 
 	@Override
 	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return getIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
+		return requireIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
 	}
 
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return getIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
+		return requireIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
 	}
 
 	public void nullSafeSet(
@@ -162,7 +173,7 @@ public class ManyToOneType extends EntityType {
 			int index,
 			boolean[] settable,
 			SessionImplementor session) throws HibernateException, SQLException {
-		getIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 	}
 
@@ -171,12 +182,12 @@ public class ManyToOneType extends EntityType {
 			Object value,
 			int index,
 			SessionImplementor session) throws HibernateException, SQLException {
-		getIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
 	public ForeignKeyDirection getForeignKeyDirection() {
-		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT;
+		return ForeignKeyDirection.FROM_PARENT;
 	}
 
 	public Object hydrate(

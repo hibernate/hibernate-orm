@@ -8,7 +8,7 @@
     <class entity-name="TestMap">
 
         <id name="id" type="long" column="id_">
-            <generator class="hilo"/>
+            <generator class="increment"/>
         </id>
 
         <property name="name" type="string"/>
@@ -30,7 +30,7 @@
 	<class entity-name="ParentMap">
 
 		<id name="parentId" column="ParentId" type="long" unsaved-value="null">
-			<generator class="hilo">
+			<generator class="increment">
 				<param name="sequence">parent_sequence</param>
 			</generator>
 		</id>
@@ -44,7 +44,7 @@
 	<class entity-name="ChildMap">
 
 		<id name="childId" column="ChildId" type="long" unsaved-value="null">
-			<generator class="hilo">
+			<generator class="increment">
 				<param name="sequence">child_sequence</param>
 			</generator>
 		</id>

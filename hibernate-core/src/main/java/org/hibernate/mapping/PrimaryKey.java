@@ -25,6 +25,7 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A primary key constraint
@@ -56,5 +57,10 @@ public class PrimaryKey extends Constraint {
 	
 	public String generatedConstraintNamePrefix() {
 		return "PK_";
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return StringHelper.qualify( getTable().getName(), "PK-" + getName() );
 	}
 }

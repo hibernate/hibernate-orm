@@ -23,9 +23,8 @@
  */
 package org.hibernate.test.collection.set;
 
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpected;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -43,7 +42,7 @@ public class PersistentSetNonLazyTest extends PersistentSetTest {
 	@Test
 	@Override
 	@FailureExpected(
-			jiraKey = "unknown",
+			jiraKey = "HHH-3799",
 			message = "known to fail with non-lazy collection using query cache"
 	)
 	public void testLoadChildCheckParentContainsChildCache() {

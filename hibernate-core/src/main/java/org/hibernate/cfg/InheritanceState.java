@@ -38,6 +38,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.mapping.PersistentClass;
 
@@ -62,14 +63,17 @@ public class InheritanceState {
 	private boolean isEmbeddableSuperclass = false;
 	private Map<XClass, InheritanceState> inheritanceStatePerClass;
 	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<XClass>();
-	private Mappings mappings;
+	private MetadataBuildingContext buildingContext;
 	private AccessType accessType;
 	private ElementsToProcess elementsToProcess;
 	private Boolean hasIdClassOrEmbeddedId;
 
-	public InheritanceState(XClass clazz, Map<XClass, InheritanceState> inheritanceStatePerClass, Mappings mappings) {
+	public InheritanceState(
+			XClass clazz,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			MetadataBuildingContext buildingContext) {
 		this.setClazz( clazz );
-		this.mappings = mappings;
+		this.buildingContext = buildingContext;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
 		extractInheritanceType();
 	}
@@ -224,17 +228,18 @@ public class InheritanceState {
 			accessType = determineDefaultAccessType();
 
 			ArrayList<PropertyData> elements = new ArrayList<PropertyData>();
-			int deep = classesToProcessForMappedSuperclass.size();
 			int idPropertyCount = 0;
 
-			for ( int index = 0; index < deep; index++ ) {
+			for ( XClass classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
 				PropertyContainer propertyContainer = new PropertyContainer(
-						classesToProcessForMappedSuperclass.get(
-								index
-						), clazz
+						classToProcessForMappedSuperclass,
+						clazz
 				);
 				int currentIdPropertyCount = AnnotationBinder.addElementsOfClass(
-						elements, accessType, propertyContainer, mappings
+						elements,
+						accessType,
+						propertyContainer,
+						buildingContext
 				);
 				idPropertyCount += currentIdPropertyCount;
 			}
@@ -290,7 +295,8 @@ public class InheritanceState {
 				superclassState = inheritanceStatePerClass.get( superClass );
 			}
 			while ( superClass != null
-					&& !mappings.getReflectionManager().equals( superClass, Object.class ) && superclassState == null );
+					&& !buildingContext.getBuildingOptions().getReflectionManager().equals( superClass, Object.class )
+					&& superclassState == null );
 
 			currentClassInHierarchy = superClass;
 		}
@@ -305,19 +311,19 @@ public class InheritanceState {
 				InheritanceState.getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
 		PersistentClass superEntity =
 				superEntityState != null ?
-						mappings.getClass( superEntityState.getClazz().getName() ) :
+						buildingContext.getMetadataCollector().getEntityBinding( superEntityState.getClazz().getName() ) :
 						null;
 		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
 		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
 			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
-			final Class<?> type = mappings.getReflectionManager()
+			final Class<?> type = buildingContext.getBuildingOptions().getReflectionManager()
 					.toClass( classesToProcessForMappedSuperclass.get( index ) );
 			//add MAppedSuperclass if not already there
-			mappedSuperclass = mappings.getMappedSuperclass( type );
+			mappedSuperclass = buildingContext.getMetadataCollector().getMappedSuperclass( type );
 			if ( mappedSuperclass == null ) {
 				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity );
 				mappedSuperclass.setMappedClass( type );
-				mappings.addMappedSuperclass( type, mappedSuperclass );
+				buildingContext.getMetadataCollector().addMappedSuperclass( type, mappedSuperclass );
 			}
 		}
 		if ( mappedSuperclass != null ) {

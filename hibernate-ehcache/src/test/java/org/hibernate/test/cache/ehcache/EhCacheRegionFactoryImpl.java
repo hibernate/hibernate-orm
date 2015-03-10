@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 /**
@@ -13,9 +12,12 @@ import org.hibernate.cfg.Environment;
 public class EhCacheRegionFactoryImpl extends EhCacheTest {
 
 	@Override
-	protected void configCache(final Configuration cfg) {
-		cfg.setProperty( Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
-		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
+		settings.put( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
 	}
 
 	@Override

@@ -1,26 +1,60 @@
 package org.hibernate.test.namingstrategy;
-import org.hibernate.cfg.DefaultNamingStrategy;
+
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * @author Emmanuel Bernard
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TestNamingStrategy extends DefaultNamingStrategy {
-	public String propertyToColumnName(String propertyName) {
-		return "PTCN_" + propertyName;
+public class TestNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl implements PhysicalNamingStrategy {
+	/**
+	 * Singleton access
+	 */
+	public static final TestNamingStrategy INSTANCE = new TestNamingStrategy();
+
+	public TestNamingStrategy() {
 	}
 
-	public String columnName(String columnName) {
-		return "CN_" + columnName;
+	@Override
+	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source) {
+		return toIdentifier(
+				"PTCN_" + source.getAttributePath().getProperty(),
+				source.getBuildingContext()
+		);
 	}
 
-	public String logicalColumnName(String columnName, String
-			propertyName) {
-		return "LCN_" + super.logicalColumnName( columnName, propertyName );
+	@Override
+	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment context) {
+		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalCatalogName( name, context );
 	}
 
-    @Override
-    public String tableName(String tableName) {
-        return "TAB_" + tableName;
-    }
+	@Override
+	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalSchemaName( name, jdbcEnvironment );
+	}
+
+	@Override
+	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+		return Identifier.toIdentifier( "TAB_" + name.getText() );
+	}
+
+	@Override
+	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalSequenceName( name, jdbcEnvironment );
+	}
+
+	@Override
+	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+		if ( name.getText().startsWith( "PTCN_" ) ) {
+			return name;
+		}
+		else {
+			return Identifier.toIdentifier( "CN_" + name.getText() );
+		}
+	}
 }

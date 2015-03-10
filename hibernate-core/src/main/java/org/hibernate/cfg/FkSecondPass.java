@@ -74,4 +74,6 @@ public abstract class FkSecondPass implements SecondPass {
 	public abstract String getReferencedEntityName();
 
 	public abstract boolean isInPrimaryKey();
+
+
 }

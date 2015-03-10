@@ -26,7 +26,6 @@ package org.hibernate.envers.test.integration.query;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
 import javax.persistence.EntityManager;
 
 import org.hibernate.criterion.MatchMode;
@@ -41,6 +40,7 @@ import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;

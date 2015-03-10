@@ -53,6 +53,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
@@ -86,11 +87,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass, 
 			final EntityRegionAccessStrategy cacheAccessStrategy,
 			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			final SessionFactoryImplementor factory,
-			final Mapping mapping) throws HibernateException {
+			final PersisterCreationContext creationContext) throws HibernateException {
 
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory );
-		
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
+
+		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
+
 		if ( getIdentifierGenerator() instanceof IdentityGenerator ) {
 			throw new MappingException(
 					"Cannot use identity column key generation with <union-subclass> mapping for: " + 
@@ -197,7 +199,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		subclassSpaces = ArrayHelper.toStringArray(subclassTables);
 
-		subquery = generateSubquery(persistentClass, mapping);
+		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
 
 		if ( isMultiTable() ) {
 			int idColumnSpan = getIdentifierColumnSpan();
@@ -236,9 +238,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		initLockers();
 
-		initSubclassPropertyAliasesMap(persistentClass);
+		initSubclassPropertyAliasesMap( persistentClass );
 		
-		postConstruct(mapping);
+		postConstruct( creationContext.getMetadata() );
 
 	}
 

@@ -23,17 +23,18 @@
  */
 package org.hibernate.test.ops;
 
-import org.junit.Test;
+import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Projections;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,11 +45,11 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
-public class SaveOrUpdateTest extends BaseCoreFunctionalTestCase {
+public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	@Override

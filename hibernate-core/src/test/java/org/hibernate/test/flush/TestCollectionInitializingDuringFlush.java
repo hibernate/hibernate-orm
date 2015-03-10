@@ -23,12 +23,10 @@
  */
 package org.hibernate.test.flush;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -36,8 +34,10 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -91,10 +91,9 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 		super.prepareBootstrapRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {
-
 					@Override
 					public void integrate(
-							Configuration configuration,
+							Metadata metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
 						integrate( serviceRegistry );

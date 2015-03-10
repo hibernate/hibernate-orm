@@ -8,7 +8,7 @@
 	<class name="Person" table="UPerson">
 
 		<id name="id" column="person_id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 
 		<property name="name" unique="true" not-null="true"/>

@@ -23,17 +23,18 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,22 +43,25 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 public abstract class SchemaExportTest extends BaseUnitTestCase {
-    private final String MAPPING = "org/hibernate/test/schemaupdate/mapping.hbm.xml";
 
-    protected abstract SchemaExport createSchemaExport(Configuration cfg);
+    protected abstract SchemaExport createSchemaExport(MetadataImplementor metadata, ServiceRegistry serviceRegistry);
 
     private boolean doesDialectSupportDropTableIfExist() {
         return Dialect.getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect()
                 .supportsIfExistsBeforeTableName();
     }
+
 	protected ServiceRegistry serviceRegistry;
+    protected MetadataImplementor metadata;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-		Configuration cfg = new Configuration();
-		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = createSchemaExport( cfg );
+        metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+                .addResource( "org/hibernate/test/schemaupdate/mapping.hbm.xml" )
+                .buildMetadata();
+
+		SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
 		schemaExport.drop( true, true );
 	}
 
@@ -69,9 +73,8 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 
     @Test
     public void testCreateAndDropOnlyType() {
-        Configuration cfg = new Configuration();
-        cfg.addResource( MAPPING );
-        SchemaExport schemaExport = createSchemaExport( cfg );
+        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+
         // create w/o dropping first; (OK because tables don't exist yet
         schemaExport.execute( false, true, false, true );
 //        if ( doesDialectSupportDropTableIfExist() ) {
@@ -92,9 +95,8 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 
     @Test
     public void testBothType() {
-        Configuration cfg = new Configuration();
-        cfg.addResource( MAPPING );
-        SchemaExport schemaExport = createSchemaExport( cfg );
+        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+
         // drop before create (nothing to drop yeT)
         schemaExport.execute( false, true, false, false );
         if ( doesDialectSupportDropTableIfExist() ) {
@@ -113,9 +115,8 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 
     @Test
     public void testGenerateDdlToFile() {
-        Configuration cfg = new Configuration();
-        cfg.addResource( MAPPING );
-        SchemaExport schemaExport = createSchemaExport( cfg );
+        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+
         java.io.File outFile = new java.io.File("schema.ddl");
         schemaExport.setOutputFile(outFile.getPath());
         // do not script to console or export to database
@@ -132,9 +133,8 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 
     @Test
     public void testCreateAndDrop() {
-        Configuration cfg = new Configuration();
-        cfg.addResource( MAPPING );
-        SchemaExport schemaExport = createSchemaExport( cfg );
+        final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
+
         // should drop before creating, but tables don't exist yet
         schemaExport.create( true, true );
 		if ( doesDialectSupportDropTableIfExist() ) {

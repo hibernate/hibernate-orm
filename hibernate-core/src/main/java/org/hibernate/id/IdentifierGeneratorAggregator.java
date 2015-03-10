@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-import java.util.Map;
+
+import org.hibernate.boot.model.relational.ExportableProducer;
 
 /**
  * Identifies {@link IdentifierGenerator generators} which potentially aggregate other
@@ -32,12 +33,5 @@ import java.util.Map;
  *
  * @author Steve Ebersole
  */
-public interface IdentifierGeneratorAggregator {
-	/**
-	 * Register any sub generators which implement {@link PersistentIdentifierGenerator} by their
-	 * {@link PersistentIdentifierGenerator#generatorKey generatorKey}.
-	 *
-	 * @param generatorMap The map of generators.
-	 */
-	public void registerPersistentGenerators(Map generatorMap);
+public interface IdentifierGeneratorAggregator extends ExportableProducer {
 }

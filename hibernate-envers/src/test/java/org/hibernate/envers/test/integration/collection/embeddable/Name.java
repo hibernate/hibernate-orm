@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.test.integration.collection.embeddable;
 
-import javax.persistence.Embeddable;
 import java.io.Serializable;
+import javax.persistence.Embeddable;
 
 import org.hibernate.envers.Audited;
 

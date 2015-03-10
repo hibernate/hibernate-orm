@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 
 /**
@@ -40,8 +41,8 @@ public abstract class IndexedCollection extends Collection {
 	private Value index;
 	private String indexNodeName;
 
-	public IndexedCollection(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public IndexedCollection(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public Value getIndex() {
@@ -86,7 +87,10 @@ public abstract class IndexedCollection extends Collection {
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate(mapping);
+		super.validate( mapping );
+
+		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
+
 		if ( !getIndex().isValid(mapping) ) {
 			throw new MappingException(
 				"collection index mapping has wrong number of columns: " +

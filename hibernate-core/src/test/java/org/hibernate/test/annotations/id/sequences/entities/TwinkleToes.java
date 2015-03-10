@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -28,6 +29,7 @@ public class TwinkleToes implements Serializable {
 	private BigInteger id;
 
 	@ManyToOne
+	@JoinColumn(name = "bunny_id")
 	Bunny bunny;
 
 	public void setBunny(Bunny bunny) {

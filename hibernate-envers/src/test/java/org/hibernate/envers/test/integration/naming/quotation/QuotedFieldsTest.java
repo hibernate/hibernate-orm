@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.naming.quotation;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Iterator;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

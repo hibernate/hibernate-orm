@@ -26,8 +26,8 @@ package org.hibernate.cache.internal;
 import java.io.Serializable;
 import java.util.Set;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
@@ -54,12 +54,12 @@ import org.jboss.logging.Logger;
  * 
  * @author Andreas Berger
  */
-public class CollectionCacheInvalidator implements Integrator, PostInsertEventListener, PostDeleteEventListener,
-		PostUpdateEventListener {
+public class CollectionCacheInvalidator
+		implements Integrator, PostInsertEventListener, PostDeleteEventListener, PostUpdateEventListener {
 	private static final Logger LOG = Logger.getLogger( CollectionCacheInvalidator.class.getName() );
 
 	@Override
-	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory,
+	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
 		integrate( serviceRegistry, sessionFactory );
 	}

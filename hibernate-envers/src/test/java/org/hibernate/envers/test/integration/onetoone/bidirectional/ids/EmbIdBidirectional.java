@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.test.integration.onetoone.bidirectional.ids;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

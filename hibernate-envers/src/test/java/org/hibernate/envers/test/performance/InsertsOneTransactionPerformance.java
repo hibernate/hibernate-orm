@@ -24,8 +24,8 @@
 
 package org.hibernate.envers.test.performance;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.entities.StrTestEntity;
 

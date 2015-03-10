@@ -22,7 +22,10 @@ package org.hibernate.dialect.unique;
 
 import java.util.Iterator;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.mapping.UniqueKey;
 
 /**
  * The default UniqueDelegate implementation for most dialects.  Uses
@@ -55,18 +58,19 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(
-			org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog,
-			String defaultSchema) {
-		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-		// We need full, simplified control over whether or not it happens.
-		final String tableName = uniqueKey.getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				uniqueKey.getTable().getQualifiedTableName(),
+				dialect
+		);
+
 		final String constraintName = dialect.quote( uniqueKey.getName() );
 		return "alter table " + tableName + " add constraint " + constraintName + " " + uniqueConstraintSql( uniqueKey );
 	}
 
-	protected String uniqueConstraintSql( org.hibernate.mapping.UniqueKey uniqueKey ) {
+	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( " unique (" );
 		final Iterator<org.hibernate.mapping.Column> columnIterator = uniqueKey.columnIterator();
@@ -85,14 +89,16 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(
-			org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog,
-			String defaultSchema) {
-		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-		// We need full, simplified control over whether or not it happens.
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				uniqueKey.getTable().getQualifiedTableName(),
+				dialect
+		);
+
 		final StringBuilder buf = new StringBuilder( "alter table " );
-		buf.append( uniqueKey.getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+		buf.append( tableName );
 		buf.append(" drop constraint " );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );

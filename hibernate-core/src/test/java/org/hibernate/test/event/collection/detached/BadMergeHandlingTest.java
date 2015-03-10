@@ -26,11 +26,12 @@ package org.hibernate.test.event.collection.detached;
 import java.util.List;
 
 import org.hibernate.Session;
-
-import org.junit.Test;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,6 +40,11 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue( jiraKey = "HHH-7928" )
 public class BadMergeHandlingTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

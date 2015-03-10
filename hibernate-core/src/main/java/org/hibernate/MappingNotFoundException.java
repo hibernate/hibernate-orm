@@ -27,7 +27,10 @@ package org.hibernate;
  * Thrown when a resource for a mapping could not be found.
  * 
  * @author Max Rydahl Andersen
+ *
+ * @deprecated Use {@link org.hibernate.boot.MappingNotFoundException} instead.
  */
+@Deprecated
 public class MappingNotFoundException extends MappingException {
 	private final String path;
 	private final String type;

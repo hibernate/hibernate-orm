@@ -414,13 +414,12 @@ public interface AvailableSettings {
 
 	/**
 	 * Naming strategy class name, the class has to have a no-arg constructor
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}
+	 * or {@link org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY} instead
 	 */
+	@Deprecated
 	String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";
-
-	/**
-	 * Naming strategy delegator class name, the class has to have a no-arg constructor that returns a non-null value for {@link }
-	 */
-	public static final String NAMING_STRATEGY_DELEGATOR = "hibernate.ejb.naming_strategy_delegator";
 
 	/**
 	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor

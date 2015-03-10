@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -46,18 +47,18 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
 
-	Mappings mappings;
+	MetadataBuildingContext buildingContext;
 	Collection collection;
 	private Map localInheritedMetas;
 
-	public CollectionSecondPass(Mappings mappings, Collection collection, java.util.Map inheritedMetas) {
+	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection, java.util.Map inheritedMetas) {
 		this.collection = collection;
-		this.mappings = mappings;
+		this.buildingContext = buildingContext;
 		this.localInheritedMetas = inheritedMetas;
 	}
 
-	public CollectionSecondPass(Mappings mappings, Collection collection) {
-		this(mappings, collection, Collections.EMPTY_MAP);
+	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection) {
+		this( buildingContext, collection, Collections.EMPTY_MAP );
 	}
 
 	public void doSecondPass(java.util.Map persistentClasses)

@@ -23,10 +23,10 @@
  */
 package org.hibernate.test.util.dtd;
 
-import org.junit.Test;
+import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -38,8 +38,8 @@ public class EntityResolverTest extends BaseUnitTestCase {
 		//		<!ENTITY child SYSTEM "classpath://org/hibernate/test/util/dtd/child.xml">
 		// which we are expecting the Hibernate custom entity resolver to be able to resolve
 		// locally via classpath lookup.
-		Configuration cfg = new Configuration();
-		cfg.addResource( "org/hibernate/test/util/dtd/Parent.hbm.xml" );
-		cfg.buildMappings();
+		new MetadataSources()
+				.addResource( "org/hibernate/test/util/dtd/Parent.hbm.xml" )
+				.buildMetadata();
 	}
 }

@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A foreign key constraint
@@ -38,32 +39,66 @@ public class ForeignKey extends Constraint {
 	private Table referencedTable;
 	private String referencedEntityName;
 	private boolean cascadeDeleteEnabled;
-	private List referencedColumns = new ArrayList();    
-    
+	private List referencedColumns = new ArrayList();
+	private boolean creationEnabled = true;
+
+	public ForeignKey() {
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		// NOt sure name is always set.  Might need some implicit naming
+		return StringHelper.qualify( getTable().getName(), "FK-" + getName() );
+	}
+
+	public void disableCreation() {
+		creationEnabled = false;
+	}
+
+	public boolean isCreationEnabled() {
+		return creationEnabled;
+	}
+
+	@Override
+	public void setName(String name) {
+		super.setName( name );
+		// the FK name "none" is a magic value in the hbm.xml binding that indicated to
+		// not create a FK.
+		if ( "none".equals( name ) ) {
+			disableCreation();
+		}
+	}
+
 	public String sqlConstraintString(Dialect dialect, String constraintName, String defaultCatalog, String defaultSchema) {
-		String[] cols = new String[ getColumnSpan() ];
-		String[] refcols = new String[ getColumnSpan() ];
-		int i=0;
-		Iterator refiter = null;
-		if(isReferenceToPrimaryKey() ) {
-			refiter = referencedTable.getPrimaryKey().getColumnIterator();
+		String[] columnNames = new String[ getColumnSpan() ];
+		String[] referencedColumnNames = new String[ getColumnSpan() ];
+
+		final Iterator referencedColumnItr;
+		if ( isReferenceToPrimaryKey() ) {
+			referencedColumnItr = referencedTable.getPrimaryKey().getColumnIterator();
 		} 
 		else {
-			refiter = referencedColumns.iterator();
+			referencedColumnItr = referencedColumns.iterator();
 		}
 		
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			cols[i] = ( (Column) iter.next() ).getQuotedName(dialect);
-			refcols[i] = ( (Column) refiter.next() ).getQuotedName(dialect);
+		Iterator columnItr = getColumnIterator();
+		int i=0;
+		while ( columnItr.hasNext() ) {
+			columnNames[i] = ( (Column) columnItr.next() ).getQuotedName(dialect);
+			referencedColumnNames[i] = ( (Column) referencedColumnItr.next() ).getQuotedName(dialect);
 			i++;
 		}
-		String result = dialect.getAddForeignKeyConstraintString(
-			constraintName, cols, referencedTable.getQualifiedName(dialect, defaultCatalog, defaultSchema), refcols, isReferenceToPrimaryKey()
+
+		final String result = dialect.getAddForeignKeyConstraintString(
+			constraintName,
+			columnNames,
+			referencedTable.getQualifiedName(dialect, defaultCatalog, defaultSchema),
+			referencedColumnNames,
+			isReferenceToPrimaryKey()
 		);
-		return cascadeDeleteEnabled && dialect.supportsCascadeDelete() ? 
-			result + " on delete cascade" : 
-			result;
+		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
+				? result + " on delete cascade"
+				: result;
 	}
 
 	public Table getReferencedTable() {
@@ -94,10 +129,10 @@ public class ForeignKey extends Constraint {
 	}
 	
 	private void alignColumns(Table referencedTable) {
-		if ( referencedTable.getPrimaryKey().getColumnSpan()!=getColumnSpan() ) {
+		final int referencedPkColumnSpan = referencedTable.getPrimaryKey().getColumnSpan();
+		if ( referencedPkColumnSpan != getColumnSpan() ) {
 			StringBuilder sb = new StringBuilder();
-			sb.append("Foreign key (")
-                .append( getName() + ":")
+			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
 				.append( getTable().getName() )
 				.append(" [");
 			appendColumns( sb, getColumnIterator() );
@@ -149,9 +184,9 @@ public class ForeignKey extends Constraint {
 	}
 	
 	public boolean isPhysicalConstraint() {
-		return referencedTable.isPhysicalTable() && 
-				getTable().isPhysicalTable() && 
-				!referencedTable.hasDenormalizedTables();
+		return referencedTable.isPhysicalTable()
+				&& getTable().isPhysicalTable()
+				&& !referencedTable.hasDenormalizedTables();
 	}
 
 	/** Returns the referenced columns if the foreignkey does not refer to the primary key */
@@ -172,7 +207,9 @@ public class ForeignKey extends Constraint {
 	}
 
 	private void addReferencedColumn(Column column) {
-		if ( !referencedColumns.contains(column) ) referencedColumns.add(column);		
+		if ( !referencedColumns.contains(column) ) {
+			referencedColumns.add( column );
+		}
 	}
 	
 	public String toString() {

@@ -1,12 +1,5 @@
 package org.hibernate.test.sql.hand.query;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -30,6 +23,18 @@ import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TimestampType;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Group;
@@ -41,18 +46,14 @@ import org.hibernate.test.sql.hand.Product;
 import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.TextHolder;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TimestampType;
 import org.junit.Test;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests of various features of native SQL queries.
@@ -312,6 +313,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		Iterator iter = s.getNamedQuery( "orgNamesAndOrgs" ).list().iterator();
 		Object[] o = ( Object[] ) iter.next();
+		assertEquals( "expecting 2 values", 2, o.length );
 		assertEquals( o[0], "IFA" );
 		assertEquals( ( ( Organization ) o[1] ).getName(), "IFA" );
 		o = ( Object[] ) iter.next();
@@ -327,6 +329,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		// test that the ordering of the results is truly based on the order in which they were defined
 		iter = s.getNamedQuery( "orgsAndOrgNames" ).list().iterator();
 		Object[] row = ( Object[] ) iter.next();
+		assertEquals( "expecting 2 values", 2, row.length );
 		assertEquals( "expecting non-scalar result first", Organization.class, row[0].getClass() );
 		assertEquals( "expecting scalar result second", String.class, row[1].getClass() );
 		assertEquals( ( ( Organization ) row[0] ).getName(), "IFA" );
@@ -637,6 +640,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		enterprise.setDimensions( d );
 		s.save( enterprise );
 		Object[] result = (Object[]) s.getNamedQuery( "spaceship" ).uniqueResult();
+		assertEquals( "expecting 3 result values", 3, result.length );
 		enterprise = ( SpaceShip ) result[0];
 		assertTrue(50d == enterprise.getSpeed() );
 		assertTrue( 450d == extractDoubleValue( result[1] ) );

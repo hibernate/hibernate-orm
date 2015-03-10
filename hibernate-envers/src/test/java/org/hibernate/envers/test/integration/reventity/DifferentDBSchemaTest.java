@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.reventity;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Map;
+import javax.persistence.EntityManager;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -12,9 +12,8 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.mapping.Table;
 
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
+import org.junit.Test;
 
 /**
  * Tests simple auditing process (read and write operations) when <i>REVINFO</i> and audit tables

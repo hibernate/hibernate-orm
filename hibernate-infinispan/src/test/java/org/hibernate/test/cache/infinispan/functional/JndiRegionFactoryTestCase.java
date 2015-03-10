@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+import java.util.Map;
 import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -31,27 +32,28 @@ import javax.naming.NameNotFoundException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
+import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.stat.Statistics;
+
+import org.junit.Test;
+
 import org.infinispan.Cache;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
 import org.jboss.util.naming.NonSerializableFactory;
+
 import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.stat.Statistics;
 
 import static org.junit.Assert.assertEquals;
 
@@ -85,7 +87,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	}
 
 	@Override
-	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
+	protected void afterStandardServiceRegistryBuilt(StandardServiceRegistry ssr) {
 		if ( bindToJndi ) {
 			try {
 				// Create an in-memory jndi
@@ -109,11 +111,13 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( JndiInfinispanRegionFactory.CACHE_MANAGER_RESOURCE_PROP, JNDI_NAME );
-		cfg.setProperty( Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory" );
-		cfg.setProperty( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( JndiInfinispanRegionFactory.CACHE_MANAGER_RESOURCE_PROP, JNDI_NAME );
+		settings.put( Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory" );
+		settings.put( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
 	}
 
 	@Test

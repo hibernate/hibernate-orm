@@ -139,6 +139,7 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutor;
@@ -545,8 +546,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public String onPrepareStatement(String sql) {
 		errorIfClosed();
+		if ( StringHelper.isEmpty( sql ) ) {
+			throw new AssertionFailure( "SQL to prepare was null." );
+		}
+
 		sql = interceptor.onPrepareStatement( sql );
-		if ( sql == null || sql.length() == 0 ) {
+
+		if ( StringHelper.isEmpty( sql ) ) {
 			throw new AssertionFailure( "Interceptor.onPrepareStatement() returned null or empty string." );
 		}
 		return sql;

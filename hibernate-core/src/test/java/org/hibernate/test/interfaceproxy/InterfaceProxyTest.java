@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.interfaceproxy;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -43,11 +43,6 @@ public class InterfaceProxyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "interfaceproxy/Item.hbm.xml" };
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	@Test

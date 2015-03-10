@@ -30,9 +30,10 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
@@ -42,7 +43,7 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 @RequiresDialect( Oracle9iDialect.class )
-public class SynonymValidationTest extends BaseCoreFunctionalTestCase {
+public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -61,7 +62,7 @@ public class SynonymValidationTest extends BaseCoreFunctionalTestCase {
 		cfg.addAnnotatedClass( TestEntityWithSynonym.class );
 		cfg.setProperty( AvailableSettings.ENABLE_SYNONYMS, "true" );
 		
-		SchemaValidator schemaValidator = new SchemaValidator( cfg );
+		SchemaValidator schemaValidator = new SchemaValidator( metadata() );
 		schemaValidator.validate();
 		
 		s = openSession();

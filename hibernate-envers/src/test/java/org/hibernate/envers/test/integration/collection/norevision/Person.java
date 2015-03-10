@@ -1,14 +1,14 @@
 package org.hibernate.envers.test.integration.collection.norevision;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;

@@ -23,20 +23,23 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+import java.util.Map;
 import javax.transaction.TransactionManager;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cfg.Environment;
+
+import org.hibernate.test.cache.infinispan.functional.classloader.Account;
+import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
+import org.junit.Test;
 
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.test.TestingUtil;
-import org.jboss.logging.Logger;
-import org.junit.Test;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.test.cache.infinispan.functional.classloader.Account;
-import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -54,15 +57,15 @@ public class SessionRefreshTestCase extends DualNodeTestCase {
 	private Cache localCache;
 
 	@Override
-	protected void configureSecondNode(Configuration cfg) {
-		super.configureSecondNode( cfg );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
+	protected void configureSecondNode(StandardServiceRegistryBuilder ssrb) {
+		super.configureSecondNode( ssrb );
+		ssrb.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Override
-	protected void standardConfigure(Configuration cfg) {
-		super.standardConfigure( cfg );
-		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getEntityCacheConfigName() );
+	protected void applyStandardSettings(Map settings) {
+		super.applyStandardSettings( settings );
+		settings.put( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getEntityCacheConfigName() );
 	}
 
 	protected String getEntityCacheConfigName() {

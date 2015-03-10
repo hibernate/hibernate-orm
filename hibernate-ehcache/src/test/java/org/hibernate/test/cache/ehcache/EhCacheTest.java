@@ -25,16 +25,15 @@ package org.hibernate.test.cache.ehcache;
 
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,7 +43,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Alex Snaps
  */
-public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
+public abstract class EhCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public String getBaseForMappings() {
 		return "org/hibernate/test/cache/ehcache/";
@@ -61,17 +60,14 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_STRUCTURED_CACHE, "true" );
-		configCache( cfg );
-		cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( Environment.CACHE_REGION_PREFIX, "" );
+		settings.put( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		settings.put( Environment.USE_STRUCTURED_CACHE, "true" );
+		settings.put( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 	}
-
-	protected abstract void configCache(final Configuration cfg);
 
 	@Test
 	public void testQueryCacheInvalidation() {

@@ -23,12 +23,13 @@
  *
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.Type;
 
@@ -57,8 +58,9 @@ public class Assigned implements IdentifierGenerator, Configurable {
 		return id;
 	}
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
-		entityName = params.getProperty(ENTITY_NAME);
+	@Override
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+		entityName = params.getProperty( ENTITY_NAME );
 		if ( entityName == null ) {
 			throw new MappingException("no entity name");
 		}

@@ -28,6 +28,7 @@ import java.util.Iterator;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
@@ -46,8 +47,8 @@ import org.hibernate.mapping.ToOne;
  * @author Emmanuel Bernard
  */
 public class ToOneFkSecondPass extends FkSecondPass {
+	private MetadataBuildingContext buildingContext;
 	private boolean unique;
-	private Mappings mappings;
 	private String path;
 	private String entityClassName;
 
@@ -57,9 +58,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			boolean unique,
 			String entityClassName,
 			String path,
-			Mappings mappings) {
+			MetadataBuildingContext buildingContext) {
 		super( value, columns );
-		this.mappings = mappings;
+		this.buildingContext = buildingContext;
 		this.unique = unique;
 		this.entityClassName = entityClassName;
 		this.path = entityClassName != null ? path.substring( entityClassName.length() + 1 ) : path;
@@ -73,7 +74,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	@Override
     public boolean isInPrimaryKey() {
 		if ( entityClassName == null ) return false;
-		final PersistentClass persistentClass = mappings.getClass( entityClassName );
+		final PersistentClass persistentClass = buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
 		Property property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
@@ -113,8 +114,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 								+ manyToOne.getReferencedEntityName()
 				);
 			}
-			BinderHelper.createSyntheticPropertyReference( columns, ref, null, manyToOne, false, mappings );
-			TableBinder.bindFk( ref, null, columns, manyToOne, unique, mappings );
+			BinderHelper.createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );
+			TableBinder.bindFk( ref, null, columns, manyToOne, unique, buildingContext );
 			/*
 			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */

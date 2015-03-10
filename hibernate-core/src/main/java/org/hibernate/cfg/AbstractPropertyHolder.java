@@ -41,6 +41,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
@@ -63,17 +64,17 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Map<String, JoinTable> holderJoinTableOverride;
 	private Map<String, JoinTable> currentPropertyJoinTableOverride;
 	private String path;
-	private Mappings mappings;
+	private MetadataBuildingContext context;
 	private Boolean isInIdClass;
 
 	AbstractPropertyHolder(
 			String path,
 			PropertyHolder parent,
 			XClass clazzToProcess,
-			Mappings mappings) {
+			MetadataBuildingContext context) {
 		this.path = path;
 		this.parent = (AbstractPropertyHolder) parent;
-		this.mappings = mappings;
+		this.context = context;
 		buildHierarchyColumnOverride( clazzToProcess );
 	}
 
@@ -105,8 +106,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 		log.debugf( "Attempting to locate auto-apply AttributeConverter for property [%s:%s]", path, property.getName() );
 
-		final Class propertyType = mappings.getReflectionManager().toClass( property.getType() );
-		for ( AttributeConverterDefinition attributeConverterDefinition : mappings.getAttributeConverters() ) {
+		final Class propertyType = context.getBuildingOptions().getReflectionManager().toClass( property.getType() );
+		for ( AttributeConverterDefinition attributeConverterDefinition : context.getMetadataCollector().getAttributeConverters() ) {
 			if ( ! attributeConverterDefinition.isAutoApply() ) {
 				continue;
 			}
@@ -165,8 +166,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 *
 	 * @return The mappings
 	 */
-	protected Mappings getMappings() {
-		return mappings;
+	protected MetadataBuildingContext getContext() {
+		return context;
 	}
 
 	/**
@@ -361,7 +362,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		Map<String, Column[]> columnOverride = new HashMap<String, Column[]>();
 		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<String, JoinColumn[]>();
 		Map<String, JoinTable> joinTableOverride = new HashMap<String, JoinTable>();
-		while ( current != null && !mappings.getReflectionManager().toXClass( Object.class ).equals( current ) ) {
+		while ( current != null && !context.getBuildingOptions().getReflectionManager().toXClass( Object.class ).equals( current ) ) {
 			if ( current.isAnnotationPresent( Entity.class ) || current.isAnnotationPresent( MappedSuperclass.class )
 					|| current.isAnnotationPresent( Embeddable.class ) ) {
 				//FIXME is embeddable override?

@@ -27,9 +27,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -42,51 +39,38 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface PersisterFactory extends Service {
-
-	// TODO: is it really necessary to provide Configuration to CollectionPersisters ?
-	// Should it not be enough with associated class ? or why does EntityPersister's not get access to configuration ?
-	//
-	// The only reason I could see that Configuration gets passed to collection persisters
-	// is so that they can look up the dom4j node name of the entity element in case
-	// no explicit node name was applied at the collection element level.  Are you kidding me?
-	// Trivial to fix then.  Just store and expose the node name on the entity persister
-	// (which the collection persister looks up anyway via other means...).
-
 	/**
 	 * Create an entity persister instance.
 	 *
-	 * @param model The O/R mapping metamodel definition for the entity
-	 * @param cacheAccessStrategy The caching strategy for this entity
-	 * @param factory The session factory
-	 * @param cfg The overall mapping
+	 * @param entityBinding The mapping information describing the entity
+	 * @param entityCacheAccessStrategy The cache access strategy for the entity region
+	 * @param naturalIdCacheAccessStrategy The cache access strategy for the entity's natural-id cross-ref region
+	 * @param creationContext Access to additional information needed to create an EntityPersister
 	 *
 	 * @return An appropriate entity persister instance.
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	public EntityPersister createEntityPersister(
-			PersistentClass model,
-			EntityRegionAccessStrategy cacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdAccessStrategy,
-			SessionFactoryImplementor factory,
-			Mapping cfg) throws HibernateException;
+			PersistentClass entityBinding,
+			EntityRegionAccessStrategy entityCacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			PersisterCreationContext creationContext) throws HibernateException;
 
 	/**
 	 * Create a collection persister instance.
 	 *
-	 * @param cfg The configuration
-	 * @param model The O/R mapping metamodel definition for the collection
-	 * @param cacheAccessStrategy The caching strategy for this collection
-	 * @param factory The session factory
+	 * @param collectionBinding The mapping information describing the collection
+	 * @param cacheAccessStrategy The cache access strategy for the collection region
+	 * @param creationContext Access to additional information needed to create an EntityPersister
 	 *
 	 * @return An appropriate collection persister instance.
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	public CollectionPersister createCollectionPersister(
-			Configuration cfg,
-			Collection model,
+			Collection collectionBinding,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			SessionFactoryImplementor factory) throws HibernateException;
+			PersisterCreationContext creationContext) throws HibernateException;
 
 }

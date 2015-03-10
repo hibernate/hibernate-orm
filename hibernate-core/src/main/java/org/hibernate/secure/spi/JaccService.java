@@ -31,6 +31,14 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface JaccService extends Service {
+	/**
+	 * Obtain the JACC context-id in effect for this service.  {@code null} indicates no
+	 * context is in effect (service is disabled).
+	 *
+	 * @return The effective JACC context-id
+	 */
+	public String getContextId();
+
 	public void addPermission(GrantedPermission permissionDeclaration);
 	public void checkPermission(PermissionCheckEntityInformation entityInformation, PermissibleAction action);
 }

@@ -1,18 +1,17 @@
 package org.hibernate.envers.test.integration.notupdatable;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 import junit.framework.Assert;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

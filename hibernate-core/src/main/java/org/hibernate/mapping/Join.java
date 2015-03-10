@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -32,7 +33,7 @@ import org.hibernate.sql.Alias;
 /**
  * @author Gavin King
  */
-public class Join implements Serializable {
+public class Join implements AttributeContainer, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
@@ -56,11 +57,13 @@ public class Join implements Serializable {
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
+	@Override
 	public void addProperty(Property prop) {
 		properties.add(prop);
 		declaredProperties.add(prop);
 		prop.setPersistentClass( getPersistentClass() );
 	}
+
 	public void addMappedsuperclassProperty(Property prop) {
 		properties.add(prop);
 		prop.setPersistentClass( getPersistentClass() );

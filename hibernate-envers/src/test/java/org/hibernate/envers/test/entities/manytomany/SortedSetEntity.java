@@ -23,15 +23,15 @@
  */
 package org.hibernate.envers.test.entities.manytomany;
 
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyJoinColumn;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;

@@ -25,12 +25,12 @@ package org.hibernate.test.annotations.derivedidentities.e1.a;
 
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -39,11 +39,11 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentitySimpleParentIdClassDepTest extends BaseCoreFunctionalTestCase {
+public class DerivedIdentitySimpleParentIdClassDepTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "emp", metadata() ) );
 
 		Session s = openSession();
 		s.getTransaction().begin();

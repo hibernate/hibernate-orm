@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ import org.hibernate.sql.Alias;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements Serializable, Filterable, MetaAttributable {
+public abstract class PersistentClass implements AttributeContainer, Serializable, Filterable, MetaAttributable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
@@ -238,6 +239,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 		return subclasses.iterator();
 	}
 
+	@Override
 	public void addProperty(Property p) {
 		properties.add(p);
 		declaredProperties.add(p);
@@ -533,7 +535,9 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	}
 
 	public MetaAttribute getMetaAttribute(String name) {
-		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(name);
+		return metaAttributes == null
+				? null
+				: (MetaAttribute) metaAttributes.get( name );
 	}
 
 	@Override

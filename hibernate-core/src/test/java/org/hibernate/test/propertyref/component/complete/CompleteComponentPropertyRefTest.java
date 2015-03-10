@@ -24,11 +24,11 @@
 package org.hibernate.test.propertyref.component.complete;
 
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-public class CompleteComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
+public class CompleteComponentPropertyRefTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "propertyref/component/complete/Mapping.hbm.xml" };

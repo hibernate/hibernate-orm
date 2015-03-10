@@ -23,21 +23,24 @@
  */
 package org.hibernate.test.namingstrategy.components;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.DefaultComponentSafeNamingStrategy;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
  * @author Steve Ebersole
@@ -45,31 +48,52 @@ import static org.junit.Assert.assertFalse;
 public class ComponentNamingStrategyTest extends BaseUnitTestCase {
 	@Test
 	public void testDefaultNamingStrategy() {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
-		cfg.buildMappings();
-		PersistentClass pc = cfg.getClassMapping( Container.class.getName() );
-		Property p = pc.getProperty( "items" );
-		Bag value = assertTyping( Bag.class, p.getValue() );
-		SimpleValue elementValue = assertTyping( SimpleValue.class, value.getElement() );
-		assertEquals( 1, elementValue.getColumnSpan() );
-		Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
-		assertFalse( column.getName().contains( "&&" ) );
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+
+		try {
+			final MetadataSources ms = new MetadataSources( ssr );
+			ms.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
+
+			final Metadata metadata = ms.getMetadataBuilder()
+					.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+					.build();
+
+			final PersistentClass pc = metadata.getEntityBinding( Container.class.getName() );
+			Property p = pc.getProperty( "items" );
+			Bag value = assertTyping( Bag.class, p.getValue() );
+			SimpleValue elementValue = assertTyping( SimpleValue.class, value.getElement() );
+			assertEquals( 1, elementValue.getColumnSpan() );
+			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
+			assertEquals( column.getName(), "name" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6005" )
+	@TestForIssue( jiraKey = "HHH-6005" )
 	public void testComponentSafeNamingStrategy() {
-		Configuration cfg = new Configuration();
-		cfg.setNamingStrategy( DefaultComponentSafeNamingStrategy.INSTANCE );
-		cfg.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
-		cfg.buildMappings();
-		PersistentClass pc = cfg.getClassMapping( Container.class.getName() );
-		Property p = pc.getProperty( "items" );
-		Bag value = assertTyping( Bag.class, p.getValue() );
-		SimpleValue elementValue = assertTyping(  SimpleValue.class, value.getElement() );
-		assertEquals( 1, elementValue.getColumnSpan() );
-		Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
-		assertFalse( column.getName().contains( "&&" ) );
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+
+		try {
+			final MetadataSources ms = new MetadataSources( ssr );
+			ms.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
+
+			final Metadata metadata = ms.getMetadataBuilder()
+					.with( ImplicitNamingStrategyComponentPathImpl.INSTANCE )
+					.build();
+
+			final PersistentClass pc = metadata.getEntityBinding( Container.class.getName() );
+			Property p = pc.getProperty( "items" );
+			Bag value = assertTyping( Bag.class, p.getValue() );
+			SimpleValue elementValue = assertTyping(  SimpleValue.class, value.getElement() );
+			assertEquals( 1, elementValue.getColumnSpan() );
+			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
+			assertEquals( column.getName(), "items_name" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 }

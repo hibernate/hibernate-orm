@@ -56,6 +56,21 @@ import org.hibernate.type.Type;
  * elements.<br>
  * <br>
  * May be considered an immutable view of the mapping object
+ * <p/>
+ * Unless a customer {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
+ * that implementations of CollectionDefinition define a constructor accepting the following arguments:<ol>
+ *     <li>
+ *         {@link org.hibernate.mapping.Collection} - The metadata about the collection to be handled
+ *         by the persister
+ *     </li>
+ *     <li>
+ *         {@link CollectionRegionAccessStrategy} - the second level caching strategy for this collection
+ *     </li>
+ *     <li>
+ *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
+ *         information useful while constructing the persister.
+ *     </li>
+ * </ol>
  *
  * @see QueryableCollection
  * @see org.hibernate.collection.spi.PersistentCollection

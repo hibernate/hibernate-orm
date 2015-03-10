@@ -23,35 +23,39 @@
  */
 package org.hibernate.id;
 
-import static org.junit.Assert.assertEquals;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Properties;
 
 import org.hibernate.Session;
-import org.hibernate.testing.env.TestingDatabaseInfo;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.cfg.naming.NamingStrategyDelegator;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
-import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.StandardBasicTypes;
+
+import org.hibernate.testing.env.TestingDatabaseInfo;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
+import org.hibernate.test.common.MetadataBuildingContextTestingImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -63,14 +67,26 @@ import org.junit.Test;
 public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
-	private Configuration cfg;
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
     private SessionImplementor session;
 
 	@Before
 	public void setUp() throws Exception {
+		BasicTestingJdbcServiceImpl jdbcServices = new BasicTestingJdbcServiceImpl();
+		jdbcServices.prepare( false );
+
+		serviceRegistry = new StandardServiceRegistryBuilder()
+				.enableAutoClose()
+				.addService( JdbcEnvironment.class, jdbcServices.getJdbcEnvironment() )
+				.addService( JdbcServices.class, jdbcServices )
+				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+				.build();
+
+		generator = new SequenceHiLoGenerator();
+
+		// Build the properties used to configure the id generator
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
 		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
@@ -78,38 +94,25 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 				new ObjectNameNormalizer() {
 					@Override
-					protected boolean isUseQuotedIdentifiersGlobally() {
-						return false;
-					}
-
-					@Override
-					protected NamingStrategy getNamingStrategy() {
-						return cfg.getNamingStrategy();
-					}
-
-					@Override
-					protected NamingStrategyDelegator getNamingStrategyDelegator() {
-						return cfg.getNamingStrategyDelegator();
+					protected MetadataBuildingContext getBuildingContext() {
+						return new MetadataBuildingContextTestingImpl( serviceRegistry );
 					}
 				}
 		);
+		generator.configure( StandardBasicTypes.LONG, properties, jdbcServices.getJdbcEnvironment() );
 
-		Dialect dialect = TestingDatabaseInfo.DIALECT;
-
-		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, dialect );
-
-		cfg = TestingDatabaseInfo.buildBaseConfiguration()
-				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.addAuxiliaryDatabaseObject(
+		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
+		metadata.getDatabase().addAuxiliaryDatabaseObject(
 				new SimpleAuxiliaryDatabaseObject(
-						generator.sqlCreateStrings( dialect )[0],
-						generator.sqlDropStrings( dialect )[0]
+						Collections.<String>emptySet(),
+						null,
+						null,
+						generator.sqlCreateStrings( TestingDatabaseInfo.DIALECT ),
+						generator.sqlDropStrings( TestingDatabaseInfo.DIALECT )
 				)
 		);
 
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 	}
 
 	@After
@@ -121,7 +124,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 			sessionFactory.close();
 		}
 		if ( serviceRegistry != null ) {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 

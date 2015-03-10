@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
-import java.io.Serializable;
 
-import org.junit.Test;
+import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -125,7 +126,7 @@ public class OneToOneCacheTest extends LegacyTestCase {
 
 		Serializable id = generatedId;
 
-		MainObject mo = ( MainObject ) session.load( MainObject.class, id );
+		MainObject mo = ( MainObject ) session.get( MainObject.class, id );
 
 		tx.commit();
 		session.close();

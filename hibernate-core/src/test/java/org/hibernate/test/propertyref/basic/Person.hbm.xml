@@ -22,7 +22,7 @@
 
     <class name="Person" table="PROPREF_PERS">
         <id name="id">
-            <generator class="hilo"/>
+            <generator class="increment"/>
         </id>
         <property name="name" length="100"/>
         <property name="userId" column="person_userid" length="8" unique="true" not-null="true"/>
@@ -39,7 +39,7 @@
 
     <class name="Address" table="PROPREF_ADDR">
         <id name="id">
-            <generator class="hilo"/>
+            <generator class="increment"/>
         </id>
         <property name="address" length="300"/>
         <property name="zip" length="5"/>

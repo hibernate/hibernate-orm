@@ -42,7 +42,7 @@ import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -75,7 +75,7 @@ public class SettingsFactory implements Serializable {
 	public SettingsFactory() {
 	}
 
-	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) {
+	public Settings buildSettings(Map props, ServiceRegistry serviceRegistry) {
 		final boolean debugEnabled =  LOG.isDebugEnabled();
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
@@ -84,7 +84,7 @@ public class SettingsFactory implements Serializable {
 
 		//SessionFactory name:
 
-		String sessionFactoryName = props.getProperty( AvailableSettings.SESSION_FACTORY_NAME );
+		String sessionFactoryName = (String) props.get( AvailableSettings.SESSION_FACTORY_NAME );
 		settings.setSessionFactoryName( sessionFactoryName );
 		settings.setSessionFactoryNameAlsoJndiName(
 				ConfigurationHelper.getBoolean( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, props, true )

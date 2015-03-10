@@ -29,10 +29,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import org.jboss.logging.Logger;
-import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -41,8 +39,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
@@ -51,9 +48,13 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -66,7 +67,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
-public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
+public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( DynamicFilterTest.class );
 
 	@Override
@@ -88,10 +89,10 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "1" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+	public void addSettings(Map settings) {
+		settings.put( AvailableSettings.MAX_FETCH_DEPTH, "1" );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
 	}
 
 	@Test

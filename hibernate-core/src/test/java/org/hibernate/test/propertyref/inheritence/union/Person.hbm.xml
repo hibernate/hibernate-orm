@@ -7,7 +7,7 @@
 
 	<class name="Person" table="U_SBCLS_PROPREF_PERS">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name" length="100"/>
 		<property name="personId" length="8" unique="true" not-null="true"/>

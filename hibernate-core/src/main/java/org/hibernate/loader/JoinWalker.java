@@ -792,7 +792,7 @@ public class JoinWalker {
 	protected boolean isDuplicateAssociation(final String lhsTable, final String[] lhsColumnNames, final AssociationType type) {
 		final String foreignKeyTable;
 		final String[] foreignKeyColumns;
-		if ( type.getForeignKeyDirection()==ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT ) {
+		if ( type.getForeignKeyDirection()==ForeignKeyDirection.FROM_PARENT ) {
 			foreignKeyTable = lhsTable;
 			foreignKeyColumns = lhsColumnNames;
 		}

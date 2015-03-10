@@ -1,18 +1,17 @@
 package org.hibernate.envers.test.integration.basic;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
+import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 
-import org.junit.Test;
-import junit.framework.Assert;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -155,9 +155,9 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	/**
 	 * Get the connection provider
 	 *
-	 * @deprecated Access to connections via {@link org.hibernate.engine.jdbc.spi.JdbcConnectionAccess} should
+	 * @deprecated Access to connections via {@link org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess} should
 	 * be preferred over access via {@link ConnectionProvider}, whenever possible.
-	 * {@link org.hibernate.engine.jdbc.spi.JdbcConnectionAccess} is tied to the Hibernate Session to
+	 * {@link org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess} is tied to the Hibernate Session to
 	 * properly account for contextual information.  See {@link SessionImplementor#getJdbcConnectionAccess()}
 	 */
 	@Deprecated

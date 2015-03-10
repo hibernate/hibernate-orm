@@ -4,15 +4,18 @@
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         version="2.1">
 
-    <jaxb:bindings schemaLocation="../resources/org/hibernate/hibernate-configuration-4.0.xsd" node="/xsd:schema">
-        <jaxb:schemaBindings>
-            <jaxb:nameXmlTransform>
-                <jaxb:typeName prefix="Jaxb"/>
-                <jaxb:elementName prefix="Jaxb"/>
-                <jaxb:modelGroupName prefix="Jaxb"/>
-                <jaxb:anonymousTypeName prefix="Jaxb"/>
-            </jaxb:nameXmlTransform>
-        </jaxb:schemaBindings>
+    <jaxb:bindings schemaLocation="../resources/org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd" node="/xsd:schema">
+
+		<jaxb:schemaBindings>
+			<jaxb:package name="org.hibernate.boot.jaxb.cfg.spi" />
+			<jaxb:nameXmlTransform>
+				<jaxb:typeName prefix="JaxbCfg"/>
+				<jaxb:elementName prefix="JaxbCfg"/>
+				<jaxb:modelGroupName prefix="JaxbCfg"/>
+				<jaxb:anonymousTypeName prefix="JaxbCfg"/>
+			</jaxb:nameXmlTransform>
+		</jaxb:schemaBindings>
+
     </jaxb:bindings>
 
 </jaxb:bindings>

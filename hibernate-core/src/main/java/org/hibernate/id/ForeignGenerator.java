@@ -23,14 +23,15 @@
  *
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.EntityPersister;
@@ -79,8 +80,9 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		return getEntityName() + '.' + getPropertyName();
 	}
 
+
 	@Override
-	public void configure(Type type, Properties params, Dialect d) {
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
 		propertyName = params.getProperty( "property" );
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {

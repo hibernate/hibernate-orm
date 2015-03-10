@@ -29,7 +29,7 @@ import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreMessageLogger;
@@ -72,7 +72,8 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 		return generator;
 	}
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
+	@Override
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
 		// check first for the strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
 		if ( strategy == null ) {

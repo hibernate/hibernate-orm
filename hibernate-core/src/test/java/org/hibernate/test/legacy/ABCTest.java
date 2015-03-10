@@ -23,19 +23,24 @@
  */
 package org.hibernate.test.legacy;
 
+import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Table;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class ABCTest extends LegacyTestCase {
+public class ABCTest extends BaseNonConfigCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };
 	}
@@ -75,16 +80,17 @@ public class ABCTest extends LegacyTestCase {
 
 	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
-		String[] commands = configuration().generateSchemaCreationScript( getDialect() );
-		int max = commands.length;
+		Table table = metadata().getDatabase().getDefaultSchema().locateTable( Identifier.toIdentifier( "TA" ) );
+		Iterator<Index> indexItr = table.getIndexIterator();
 		boolean found = false;
-		for (int indx = 0; indx < max; indx++) {
-			System.out.println("Checking command : " + commands[indx]);
-			found = commands[indx].indexOf("create index indx_a_name") >= 0;
-			if (found)
+		while ( indexItr.hasNext() ) {
+			final Index index = indexItr.next();
+			if ( "indx_a_name".equals( index.getName() ) ) {
+				found = true;
 				break;
+			}
 		}
-		assertTrue("Unable to locate indx_a_name index creation", found);
+		assertTrue("Unable to locate indx_a_name index", found);
 	}
 
 	@Test

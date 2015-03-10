@@ -21,7 +21,7 @@
 
 	<class name="Person">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name" length="100"/>
         <one-to-one name="address" property-ref="person" cascade="all" fetch="join"/>
@@ -41,7 +41,7 @@
 
 	<class name="Address">
 	    <id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="address" length="300"/>
 		<property name="zip" length="5"/>

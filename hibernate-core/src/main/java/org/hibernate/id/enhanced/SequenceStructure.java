@@ -28,7 +28,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -47,6 +52,7 @@ public class SequenceStructure implements DatabaseStructure {
 			SequenceStructure.class.getName()
 	);
 
+	private QualifiedName qualifiedSequenceName;
 	private final String sequenceName;
 	private final int initialValue;
 	private final int incrementSize;
@@ -56,16 +62,20 @@ public class SequenceStructure implements DatabaseStructure {
 	private int accessCounter;
 
 	public SequenceStructure(
-			Dialect dialect,
-			String sequenceName,
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
 			Class numberType) {
-		this.sequenceName = sequenceName;
+		this.qualifiedSequenceName = qualifiedSequenceName;
+		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				qualifiedSequenceName,
+				jdbcEnvironment.getDialect()
+		);
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.numberType = numberType;
-		sql = dialect.getSequenceNextValString( sequenceName );
+		sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
 	}
 
 	@Override
@@ -140,6 +150,22 @@ public class SequenceStructure implements DatabaseStructure {
 	@Override
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
+		final Schema schema = database.locateSchema(
+				qualifiedSequenceName.getCatalogName(),
+				qualifiedSequenceName.getSchemaName()
+		);
+		Sequence sequence = schema.locateSequence( qualifiedSequenceName.getObjectName() );
+		if ( sequence != null ) {
+			sequence.validate( initialValue, sourceIncrementSize );
+		}
+		else {
+			schema.createSequence( qualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
+		}
 	}
 
 	@Override

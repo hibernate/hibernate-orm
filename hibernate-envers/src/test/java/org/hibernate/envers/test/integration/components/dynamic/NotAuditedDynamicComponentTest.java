@@ -2,13 +2,13 @@ package org.hibernate.envers.test.integration.components.dynamic;
 
 import java.util.Arrays;
 
-import junit.framework.Assert;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

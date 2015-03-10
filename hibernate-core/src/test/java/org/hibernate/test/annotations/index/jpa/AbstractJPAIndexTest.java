@@ -25,8 +25,8 @@ package org.hibernate.test.annotations.index.jpa;
 
 import java.util.Iterator;
 
-import org.junit.Test;
-
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
@@ -37,7 +37,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,10 +49,16 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
+public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTestCase {
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+	}
+
 	@Test
 	public void testTableIndex() {
-		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );
+		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
 		Iterator itr = entity.getTable().getUniqueKeyIterator();
 		assertTrue( itr.hasNext() );
 		UniqueKey uk = (UniqueKey) itr.next();
@@ -77,7 +85,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSecondaryTableIndex(){
-		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );
+		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
 
 		Join join = (Join)entity.getJoinIterator().next();
 		Iterator<Index> itr = join.getTable().getIndexIterator();
@@ -97,7 +105,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCollectionTableIndex(){
-		PersistentClass entity = configuration().getClassMapping( Car.class.getName() );
+		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
 		Property property = entity.getProperty( "otherDealers" );
 		Set set = (Set)property.getValue();
 		Table collectionTable = set.getCollectionTable();
@@ -117,7 +125,7 @@ public abstract class AbstractJPAIndexTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testJoinTableIndex(){
-		PersistentClass entity = configuration().getClassMapping( Importer.class.getName() );
+		PersistentClass entity = metadata().getEntityBinding( Importer.class.getName() );
 		Property property = entity.getProperty( "cars" );
 		Bag set = (Bag)property.getValue();
 		Table collectionTable = set.getCollectionTable();

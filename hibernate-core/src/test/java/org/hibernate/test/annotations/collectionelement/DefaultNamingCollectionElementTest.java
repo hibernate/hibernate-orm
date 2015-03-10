@@ -28,18 +28,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-import org.junit.Test;
-
 import org.hibernate.Filter;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.test.annotations.Country;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.test.annotations.Country;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -55,13 +57,13 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 @SuppressWarnings("unchecked")
-public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCase {
+public class DefaultNamingCollectionElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testSimpleElement() throws Exception {
 		assertEquals(
 				"BoyFavoriteNumbers",
-				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+				metadata().getCollectionBinding( Boy.class.getName() + '.' + "favoriteNumbers" )
 						.getCollectionTable().getName()
 		);
 		Session s = openSession();
@@ -171,7 +173,7 @@ public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCa
 	public void testLazyCollectionofElements() throws Exception {
 		assertEquals(
 				"BoyFavoriteNumbers",
-				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+				metadata().getCollectionBinding( Boy.class.getName() + '.' + "favoriteNumbers" )
 						.getCollectionTable().getName()
 		);
 		Session s = openSession();
@@ -269,7 +271,7 @@ public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCa
 	}
 
 	private void isCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
-		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
+		final Collection collection = metadata().getCollectionBinding( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
@@ -325,7 +327,7 @@ public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCa
 			Class<?> ownerEntityClass,
 			String ownerCollectionPropertyName,
 			String expectedCollectionTableName) {
-		final org.hibernate.mapping.Collection collection = configuration().getCollectionMapping(
+		final org.hibernate.mapping.Collection collection = metadata().getCollectionBinding(
 				ownerEntityClass.getName() + '.' + ownerCollectionPropertyName
 		);
 		final org.hibernate.mapping.Table table = collection.getCollectionTable();
@@ -378,7 +380,7 @@ public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCa
 			Class<?> ownerEntityClass,
 			String ownerCollectionPropertyName,
 			String ownerForeignKeyNameExpected) {
-		final org.hibernate.mapping.Collection ownerCollection = configuration().getCollectionMapping(
+		final org.hibernate.mapping.Collection ownerCollection = metadata().getCollectionBinding(
 				ownerEntityClass.getName() + '.' + ownerCollectionPropertyName
 		);
 		// The default owner join column can only be computed if it has a PK with 1 column.
@@ -398,6 +400,11 @@ public class DefaultNamingCollectionElementTest extends BaseCoreFunctionalTestCa
 			}
 		}
 		assertTrue( hasOwnerFK );
+	}
+
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		metadataBuilder.with( ImplicitNamingStrategyLegacyHbmImpl.INSTANCE );
 	}
 
 	@Override

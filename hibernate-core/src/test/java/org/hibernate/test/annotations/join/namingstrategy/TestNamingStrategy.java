@@ -23,14 +23,16 @@
  */
 package org.hibernate.test.annotations.join.namingstrategy;
 
-import org.hibernate.cfg.DefaultNamingStrategy;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * @author Sergey Vasilyev
  */
-public class TestNamingStrategy extends DefaultNamingStrategy {
+public class TestNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	@Override
-	public String tableName(String tableName) {
-		return "TAB_" + tableName;
+	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+		return Identifier.toIdentifier( "TAB_" + name.getText() );
 	}
 }

@@ -33,10 +33,12 @@ import javax.persistence.AttributeConverter;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AttributeConverterDefinition;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
@@ -64,7 +66,7 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private final Mappings mappings;
+	private final MetadataImplementor metadata;
 
 	private final List<Selectable> columns = new ArrayList<Selectable>();
 
@@ -81,17 +83,17 @@ public class SimpleValue implements KeyValue {
 	private AttributeConverterDefinition attributeConverterDefinition;
 	private Type type;
 
-	public SimpleValue(Mappings mappings) {
-		this.mappings = mappings;
+	public SimpleValue(MetadataImplementor metadata) {
+		this.metadata = metadata;
 	}
 
-	public SimpleValue(Mappings mappings, Table table) {
-		this( mappings );
+	public SimpleValue(MetadataImplementor metadata, Table table) {
+		this( metadata );
 		this.table = table;
 	}
 
-	public Mappings getMappings() {
-		return mappings;
+	public MetadataImplementor getMetadata() {
+		return metadata;
 	}
 
 	public boolean isCascadeDeleteEnabled() {
@@ -204,14 +206,16 @@ public class SimpleValue implements KeyValue {
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
+		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
+				.getService( ConfigurationService.class );
+
 		params.put(
-				Environment.PREFER_POOLED_VALUES_LO,
-				mappings.getConfigurationProperties().getProperty( Environment.PREFER_POOLED_VALUES_LO, "false" )
+				AvailableSettings.PREFER_POOLED_VALUES_LO,
+				cs.getSetting( AvailableSettings.PREFER_POOLED_VALUES_LO, StandardConverters.BOOLEAN, false )
 		);
 
 		identifierGeneratorFactory.setDialect( dialect );
 		return identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );
-		
 	}
 
 	public boolean isUpdateable() {
@@ -290,16 +294,22 @@ public class SimpleValue implements KeyValue {
 	}
 
 	public boolean isNullable() {
-		if ( hasFormula() ) return true;
-		boolean nullable = true;
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			if ( !( (Column) iter.next() ).isNullable() ) {
-				nullable = false;
-				return nullable; //shortcut
+		Iterator itr = getColumnIterator();
+		while ( itr.hasNext() ) {
+			final Object selectable = itr.next();
+			if ( selectable instanceof Formula ) {
+				// if there are *any* formulas, then the Value overall is
+				// considered nullable
+				return true;
+			}
+			else if ( !( (Column) selectable ).isNullable() ) {
+				// if there is a single non-nullable column, the Value
+				// overall is considered non-nullable.
+				return false;
 			}
 		}
-		return nullable;
+		// nullable by default
+		return true;
 	}
 
 	public boolean isSimpleValue() {
@@ -324,7 +334,7 @@ public class SimpleValue implements KeyValue {
 			createParameterImpl();
 		}
 
-		Type result = mappings.getTypeResolver().heuristicType( typeName, typeParameters );
+		Type result = metadata.getTypeResolver().heuristicType( typeName, typeParameters );
 		if ( result == null ) {
 			String msg = "Could not determine type for: " + typeName;
 			if ( table != null ) {
@@ -357,7 +367,7 @@ public class SimpleValue implements KeyValue {
 			// look for SqlTypeDescriptor and JavaTypeDescriptor individually and create the BasicType (well, really
 			// keep a registry of [SqlTypeDescriptor,JavaTypeDescriptor] -> BasicType...)
 			if ( className == null ) {
-				throw new MappingException( "you must specify types for a dynamic entity: " + propertyName );
+				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 			}
 			typeName = ReflectHelper.reflectedPropertyClass( className, propertyName ).getName();
 			return;

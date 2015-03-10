@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -18,7 +20,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-public class AssociationOverrideTest extends BaseCoreFunctionalTestCase {
+public class AssociationOverrideTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testOverriding() throws Exception {
 		Location paris = new Location();
@@ -48,15 +50,15 @@ public class AssociationOverrideTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDottedNotation() throws Exception {
-		assertTrue( SchemaUtil.isTablePresent( "Employee", configuration() ) );
+		assertTrue( SchemaUtil.isTablePresent( "Employee", metadata() ) );
 		assertTrue( "Overridden @JoinColumn fails",
-				SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", configuration() ) );
+				SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", metadata() ) );
 
-		assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", configuration() ) );
+		assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", metadata() ) );
 		assertTrue( "Overridden @JoinTable with default @JoinColumn fails",
-				SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", configuration() ) );
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", metadata() ) );
 		assertTrue( "Overridden @JoinTable.inverseJoinColumn fails",
-				SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", configuration() ) );
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", metadata() ) );
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -94,6 +96,12 @@ public class AssociationOverrideTest extends BaseCoreFunctionalTestCase {
 		e = (Employee) s.get(Employee.class,e.getId());
 		tx.commit();
 		s.close();
+	}
+
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 
 	@Override

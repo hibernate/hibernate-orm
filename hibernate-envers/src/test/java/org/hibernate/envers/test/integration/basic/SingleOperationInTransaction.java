@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.test.integration.basic;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

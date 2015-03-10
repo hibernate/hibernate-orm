@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.entities.manytomany;
 
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.List;
 
 import org.hibernate.envers.Audited;
 

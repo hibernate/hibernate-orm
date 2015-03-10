@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.manytomany.sametable;
 
-import javax.persistence.EntityManager;
 import java.sql.Types;
 import java.util.Arrays;
+import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

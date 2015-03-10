@@ -25,6 +25,7 @@ package org.hibernate.exception.internal;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.hibernate.JDBCException;
 import org.hibernate.exception.GenericJDBCException;
@@ -36,6 +37,15 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
  */
 public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 	private ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<SQLExceptionConversionDelegate>();
+
+	public StandardSQLExceptionConverter() {
+	}
+
+	public StandardSQLExceptionConverter(SQLExceptionConversionDelegate... delegates) {
+		if ( delegates != null ) {
+			this.delegates.addAll( Arrays.asList( delegates ) );
+		}
+	}
 
 	public void addDelegate(SQLExceptionConversionDelegate delegate) {
 		if ( delegate != null ) {

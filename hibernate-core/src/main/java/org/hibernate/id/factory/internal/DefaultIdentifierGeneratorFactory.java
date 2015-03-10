@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
@@ -41,31 +41,29 @@ import org.hibernate.id.SelectGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.SequenceIdentityGenerator;
-import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
 /**
  * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
  *
  * @author Steve Ebersole
  */
-public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
+public class DefaultIdentifierGeneratorFactory
+		implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultIdentifierGeneratorFactory.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultIdentifierGeneratorFactory.class );
 
-	private transient Dialect dialect;
+	private JdbcEnvironment jdbcEnvironment;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
 
 	/**
@@ -76,7 +74,6 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
 		register( "uuid", UUIDHexGenerator.class );			// "deprecated" for new use
 		register( "uuid.hex", UUIDHexGenerator.class ); 	// uuid.hex is deprecated
-		register( "hilo", TableHiLoGenerator.class );
 		register( "assigned", Assigned.class );
 		register( "identity", IdentityGenerator.class );
 		register( "select", SelectGenerator.class );
@@ -99,13 +96,26 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 
 	@Override
 	public Dialect getDialect() {
-		return dialect;
+		return jdbcEnvironment.getDialect();
 	}
 
 	@Override
 	public void setDialect(Dialect dialect) {
-		LOG.debugf( "Setting dialect [%s]", dialect );
-		this.dialect = dialect;
+//		LOG.debugf( "Setting dialect [%s]", dialect );
+//		this.dialect = dialect;
+//
+//		if ( dialect == jdbcEnvironment.getDialect() ) {
+//			LOG.debugf(
+//					"Call to unsupported method IdentifierGeneratorFactory#setDialect; " +
+//							"ignoring as passed Dialect matches internal Dialect"
+//			);
+//		}
+//		else {
+//			throw new UnsupportedOperationException(
+//					"Call to unsupported method IdentifierGeneratorFactory#setDialect attempting to" +
+//							"set a non-matching Dialect : " + dialect.getClass().getName()
+//			);
+//		}
 	}
 
 	@Override
@@ -114,7 +124,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 			Class clazz = getIdentifierGeneratorClass( strategy );
 			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, dialect );
+				( ( Configurable ) identifierGenerator ).configure( type, config, jdbcEnvironment );
 			}
 			return identifierGenerator;
 		}
@@ -127,7 +137,11 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 	@Override
 	public Class getIdentifierGeneratorClass(String strategy) {
 		if ( "native".equals( strategy ) ) {
-			return dialect.getNativeIdentifierGeneratorClass();
+			return getDialect().getNativeIdentifierGeneratorClass();
+		}
+
+		if ( "hilo".equals( strategy ) ) {
+			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
 		}
 
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
@@ -144,6 +158,6 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 	}
 }

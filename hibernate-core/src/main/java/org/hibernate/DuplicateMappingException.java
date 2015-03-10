@@ -37,19 +37,49 @@ public class DuplicateMappingException extends MappingException {
 		/**
 		 * A duplicate entity definition was encountered.
 		 */
-		ENTITY,
+		ENTITY( "entity" ),
+		/**
+		 * A duplicate collection role was encountered
+		 */
+		COLLECTION( "collection" ),
 		/**
 		 * A duplicate table definition was encountered.
 		 */
-		TABLE,
+		TABLE( "table" ),
 		/**
 		 * A duplicate property/attribute definition was encountered.
 		 */
-		PROPERTY,
+		PROPERTY( "property" ),
 		/**
 		 * A duplicate column definition was encountered.
 		 */
-		COLUMN
+		COLUMN( "column" ),
+		/**
+		 * A duplicate column definition was encountered.
+		 */
+		COLUMN_BINDING( "column-binding" ),
+		/**
+		 * A duplicate named entity graph was encountered
+		 */
+		NAMED_ENTITY_GRAPH( "NamedEntityGraph" ),
+		/**
+		 * A duplicate named query (ql or native) was encountered
+		 */
+		QUERY( "query" ),
+		/**
+		 * A duplicate ResultSetMapping was encountered
+		 */
+		RESULT_SET_MAPPING( "ResultSetMapping" ),
+		/**
+		 * A duplicate NamedStoredProcedureQuery was encountered
+		 */
+		PROCEDURE( "NamedStoredProcedureQuery" );
+
+		private final String text;
+
+		Type(String text) {
+			this.text = text;
+		}
 	}
 
 	private final String name;
@@ -62,7 +92,7 @@ public class DuplicateMappingException extends MappingException {
 	 * @param name The name of the duplicated thing.
 	 */
 	public DuplicateMappingException(Type type, String name) {
-		this( type.name(), name );
+		this( type.text, name );
 	}
 
 	/**

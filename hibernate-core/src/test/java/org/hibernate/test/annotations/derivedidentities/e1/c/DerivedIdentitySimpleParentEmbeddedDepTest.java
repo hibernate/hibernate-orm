@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.derivedidentities.e1.c;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,11 +35,11 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentitySimpleParentEmbeddedDepTest extends BaseCoreFunctionalTestCase {
+public class DerivedIdentitySimpleParentEmbeddedDepTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "empPK", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "empPK", metadata() ) );
 		Employee e = new Employee();
 		e.empId = 1;
 		e.empName = "Emmanuel";

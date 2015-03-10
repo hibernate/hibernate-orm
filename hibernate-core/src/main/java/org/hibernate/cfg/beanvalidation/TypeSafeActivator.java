@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import javax.validation.Validation;
@@ -47,13 +46,14 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -91,10 +91,10 @@ class TypeSafeActivator {
 
 	@SuppressWarnings("UnusedDeclaration")
 	public static void activate(ActivationContext activationContext) {
-		final Properties properties = activationContext.getConfiguration().getProperties();
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
 		final ValidatorFactory factory;
 		try {
-			factory = getValidatorFactory( properties );
+			factory = getValidatorFactory( cfgService.getSettings() );
 		}
 		catch (IntegrationException e) {
 			if ( activationContext.getValidationModes().contains( ValidationMode.CALLBACK ) ) {
@@ -120,15 +120,17 @@ class TypeSafeActivator {
 			return;
 		}
 
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
+
 		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
 		// asks for it
-		if ( activationContext.getConfiguration().getProperty( Environment.CHECK_NULLABILITY ) == null ) {
+		if ( cfgService.getSettings().get( Environment.CHECK_NULLABILITY ) == null ) {
 			activationContext.getSessionFactory().getSettings().setCheckNullability( false );
 		}
 
 		final BeanValidationEventListener listener = new BeanValidationEventListener(
 				validatorFactory,
-				activationContext.getConfiguration().getProperties()
+				cfgService.getSettings()
 		);
 
 		final EventListenerRegistry listenerRegistry = activationContext.getServiceRegistry()
@@ -140,13 +142,13 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 
-		listener.initialize( activationContext.getConfiguration() );
+		listener.initialize( cfgService.getSettings() );
 	}
 
 	@SuppressWarnings({"unchecked", "UnusedParameters"})
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext activationContext) {
-		final Properties properties = activationContext.getConfiguration().getProperties();
-		if ( ! ConfigurationHelper.getBoolean( BeanValidationIntegrator.APPLY_CONSTRAINTS, properties, true ) ){
+		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
+		if ( !cfgService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true  ) ) {
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
 		}
@@ -158,8 +160,8 @@ class TypeSafeActivator {
 
 		applyRelationalConstraints(
 				factory,
-				activationContext.getConfiguration().createMappings().getClasses().values(),
-				properties,
+				activationContext.getMetadata().getEntityBindings(),
+				cfgService.getSettings(),
 				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect()
 		);
 	}
@@ -168,9 +170,9 @@ class TypeSafeActivator {
 	public static void applyRelationalConstraints(
 			ValidatorFactory factory,
 			Collection<PersistentClass> persistentClasses,
-			Properties properties,
+			Map settings,
 			Dialect dialect) {
-		Class<?>[] groupsArray = new GroupsPerOperation( properties ).get( GroupsPerOperation.Operation.DDL );
+		Class<?>[] groupsArray = new GroupsPerOperation( settings ).get( GroupsPerOperation.Operation.DDL );
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
 
 		for ( PersistentClass persistentClass : persistentClasses ) {

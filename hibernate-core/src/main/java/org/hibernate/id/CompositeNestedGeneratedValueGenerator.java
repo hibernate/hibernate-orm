@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
@@ -82,7 +83,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	 * Contract for performing the actual sub-value generation, usually injecting it into the
 	 * determined {@link GenerationContextLocator#locateGenerationContext context}
 	 */
-	public static interface GenerationPlan {
+	public static interface GenerationPlan extends ExportableProducer {
 		/**
 		 * Execute the value generation.
 		 *
@@ -91,18 +92,10 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		 * @param injectionContext The context into which the generated value can be injected
 		 */
 		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext);
-
-		/**
-		 * Register any sub generators which implement {@link PersistentIdentifierGenerator} by their
-		 * {@link PersistentIdentifierGenerator#generatorKey generatorKey}.
-		 *
-		 * @param generatorMap The map of generators.
-		 */
-		public void registerPersistentGenerators(Map generatorMap);
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List generationPlans = new ArrayList();
+	private List<GenerationPlan> generationPlans = new ArrayList<GenerationPlan>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -125,10 +118,9 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	}
 
 	@Override
-	public void registerPersistentGenerators(Map generatorMap) {
-		for ( Object generationPlan : generationPlans ) {
-			final GenerationPlan plan = (GenerationPlan) generationPlan;
-			plan.registerPersistentGenerators( generatorMap );
+	public void registerExportables(Database database) {
+		for (GenerationPlan plan : generationPlans) {
+			plan.registerExportables( database );
 		}
 	}
 }

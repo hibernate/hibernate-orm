@@ -14,7 +14,7 @@
     <class name="Person" table="t_person" abstract="false">
         <!-- <class name="Person" table="t_person" discriminator-value="person"> -->
 		<id name="id">
-            <generator class="native"/>
+            <generator class="increment"/>
         </id>
         <discriminator column="t_person_dis" force="false"/>
 		<property name="name"/>
@@ -34,14 +34,14 @@
     <!-- Company interface mapping -->
 	<class name="Company" table="t_company" abstract="false">
 		<id name="id">
-            <generator class="native"/>
+            <generator class="increment"/>
         </id>
 		<property name="name"/>
 	</class>
 
     <class name="Address" table="t_address" abstract="false">
         <id name="id">
-            <generator class="native"/>
+            <generator class="increment"/>
         </id>
         <property name="street"/>
         <property name="city"/>

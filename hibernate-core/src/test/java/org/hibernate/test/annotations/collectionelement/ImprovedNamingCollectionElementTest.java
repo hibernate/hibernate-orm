@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.collectionelement;
 
-import org.junit.Test;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * Tests @ElementCollection using the "improved" NamingStrategyDelegator which complies
@@ -36,11 +36,9 @@ import org.hibernate.testing.TestForIssue;
  * @author Gail Badner
  */
 public class ImprovedNamingCollectionElementTest extends DefaultNamingCollectionElementTest {
-
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setNamingStrategyDelegator( ImprovedNamingStrategyDelegator.DEFAULT_INSTANCE );
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		metadataBuilder.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 
 	@Test

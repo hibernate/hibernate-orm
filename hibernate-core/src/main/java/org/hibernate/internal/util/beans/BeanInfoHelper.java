@@ -37,6 +37,10 @@ public class BeanInfoHelper {
 		public void processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
+	public static interface ReturningBeanInfoDelegate<T> {
+		public T processBeanInfo(BeanInfo beanInfo) throws Exception;
+	}
+
 	private final Class beanClass;
 	private final Class stopClass;
 
@@ -66,6 +70,34 @@ public class BeanInfoHelper {
 			BeanInfo info = Introspector.getBeanInfo( beanClass, stopClass );
 			try {
 				delegate.processBeanInfo( info );
+			}
+			catch ( RuntimeException e ) {
+				throw e;
+			}
+			catch ( InvocationTargetException e ) {
+				throw new BeanIntrospectionException( "Error delegating bean info use", e.getTargetException() );
+			}
+			catch ( Exception e ) {
+				throw new BeanIntrospectionException( "Error delegating bean info use", e );
+			}
+			finally {
+				Introspector.flushFromCaches( beanClass );
+			}
+		}
+		catch ( IntrospectionException e ) {
+			throw new BeanIntrospectionException( "Unable to determine bean info from class [" + beanClass.getName() + "]", e );
+		}
+	}
+
+	public static <T> T visitBeanInfo(Class beanClass, ReturningBeanInfoDelegate<T> delegate) {
+		return visitBeanInfo( beanClass, null, delegate );
+	}
+
+	public static <T> T visitBeanInfo(Class beanClass, Class stopClass, ReturningBeanInfoDelegate<T> delegate) {
+		try {
+			BeanInfo info = Introspector.getBeanInfo( beanClass, stopClass );
+			try {
+				return delegate.processBeanInfo( info );
 			}
 			catch ( RuntimeException e ) {
 				throw e;

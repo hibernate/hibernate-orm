@@ -137,6 +137,7 @@ subprojects { subProject ->
 	dependencies {
 		compile( libraries.logging )
 		compile( libraries.logging_annotations )
+		compile( libraries.logging_processor )
 
 		testCompile( libraries.junit )
 		testCompile( libraries.byteman )
@@ -154,6 +155,8 @@ subprojects { subProject ->
 		}
 		jaxb( libraries.jaxb2_basics )
 		jaxb( libraries.jaxb2_ant )
+		jaxb( libraries.jaxb2_jaxb )
+		jaxb( libraries.jaxb2_jaxb_xjc )
 
 		animalSniffer ( libraries.animal_sniffer )
 		javaApiSignature ( libraries.java16_signature )
@@ -181,14 +184,11 @@ subprojects { subProject ->
 	tasks.withType( JavaCompile.class ).all { task->
 		task.options.compilerArgs += [
 				"-nowarn",
-				"-proc:none",
 				"-encoding", "UTF-8",
 				"-source", rootProject.javaLanguageLevel,
 				"-target", rootProject.javaLanguageLevel
 		]
 	}
-
-	addLoggingProcessor( sourceSets.main )
 
 	jar {
 		manifest = osgiManifest {

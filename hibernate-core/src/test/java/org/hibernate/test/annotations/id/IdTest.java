@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.annotations.id;
 
-import org.hibernate.test.annotations.id.entities.Hotel;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Column;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.entities.Ball;
 import org.hibernate.test.annotations.id.entities.BreakDance;
 import org.hibernate.test.annotations.id.entities.Computer;
@@ -40,13 +39,14 @@ import org.hibernate.test.annotations.id.entities.FootballerPk;
 import org.hibernate.test.annotations.id.entities.Furniture;
 import org.hibernate.test.annotations.id.entities.GoalKeeper;
 import org.hibernate.test.annotations.id.entities.Home;
+import org.hibernate.test.annotations.id.entities.Hotel;
 import org.hibernate.test.annotations.id.entities.Monkey;
 import org.hibernate.test.annotations.id.entities.Phone;
 import org.hibernate.test.annotations.id.entities.Shoe;
 import org.hibernate.test.annotations.id.entities.SoundSystem;
 import org.hibernate.test.annotations.id.entities.Store;
 import org.hibernate.test.annotations.id.entities.Tree;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +56,7 @@ import static org.junit.Assert.assertNull;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class IdTest extends BaseCoreFunctionalTestCase {
+public class IdTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testNoGenerator() throws Exception {
@@ -327,8 +327,11 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		Column idCol = (Column) configuration().getClassMapping(Ball.class.getName())
-				.getIdentifierProperty().getValue().getColumnIterator().next();
+		Column idCol = (Column) metadata().getEntityBinding( Ball.class.getName() )
+				.getIdentifierProperty()
+				.getValue()
+				.getColumnIterator()
+				.next();
 		assertEquals( "ball_id", idCol.getName() );
 	}
 

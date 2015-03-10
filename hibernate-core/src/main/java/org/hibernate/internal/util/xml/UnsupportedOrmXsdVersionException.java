@@ -27,7 +27,11 @@ import org.hibernate.HibernateException;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Migrating to boot package; all usages will eventually be replaced by
+ * {@link org.hibernate.boot.UnsupportedOrmXsdVersionException}
  */
+@Deprecated
 public class UnsupportedOrmXsdVersionException extends HibernateException {
 	public UnsupportedOrmXsdVersionException(String requestedVersion, Origin origin) {
 		super(

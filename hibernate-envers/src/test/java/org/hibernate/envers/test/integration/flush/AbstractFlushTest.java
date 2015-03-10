@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.test.integration.flush;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
+import javax.persistence.EntityManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;

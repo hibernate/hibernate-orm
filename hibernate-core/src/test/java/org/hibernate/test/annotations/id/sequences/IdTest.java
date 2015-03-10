@@ -23,11 +23,14 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Column;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity1;
 import org.hibernate.test.annotations.id.generationmappings.DedicatedSequenceEntity2;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
@@ -47,10 +50,7 @@ import org.hibernate.test.annotations.id.sequences.entities.Shoe;
 import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -61,7 +61,7 @@ import static junit.framework.Assert.assertNotNull;
  */
 @SuppressWarnings("unchecked")
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class IdTest extends BaseCoreFunctionalTestCase {
+public class IdTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testGenericGenerator() throws Exception {
 		Session s = openSession();
@@ -314,7 +314,7 @@ public class IdTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testColumnDefinition() {
-		Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
+		Column idCol = ( Column ) metadata().getEntityBinding( Ball.class.getName() )
 				.getIdentifierProperty().getValue().getColumnIterator().next();
 		assertEquals( "ball_id", idCol.getName() );
 	}

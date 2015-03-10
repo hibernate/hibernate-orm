@@ -1,16 +1,16 @@
 package org.hibernate.test.annotations.lob;
 
-import static org.junit.Assert.assertEquals;
-
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test type definition for SerializableToBlobType
@@ -18,11 +18,10 @@ import org.junit.Test;
  * @author Janario Oliveira
  */
 @RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-public class SerializableToBlobTypeTest extends BaseCoreFunctionalTestCase {
+public class SerializableToBlobTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testTypeDefinition() {
-		Configuration cfg = configuration();
-		PersistentClass pc = cfg.getClassMapping( EntitySerialize.class.getName() );
+		PersistentClass pc = metadata().getEntityBinding( EntitySerialize.class.getName() );
 
 		// explicitLob of SerializableToBlobType
 		Type explicitLobType = pc.getProperty( "explicitLob" ).getType();

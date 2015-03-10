@@ -14,11 +14,10 @@ import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.service.ServiceRegistry;
 
-import org.junit.Before;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.junit.Before;
 
 /**
  * Base class for testing envers with Session when the same session and

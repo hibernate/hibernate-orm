@@ -9,10 +9,9 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Strong Liu (stliu@hibernate.org)

@@ -17,14 +17,14 @@
 	</class>
 	<class name="org.hibernate.test.legacy.Y">
 		<id name="id" column="yid">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="x"/>
 		<one-to-one name="theX" cascade="save-update"/>
 	</class>
 	<class name="org.hibernate.test.legacy.X$XX" table="xxx">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<many-to-one name="x" not-null="true"/>
 	</class>

@@ -23,12 +23,8 @@
  */
 package org.hibernate.test.quote;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.Iterator;
-
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,27 +33,38 @@ import javax.persistence.Id;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.Target;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.test.common.JdbcConnectionAccessImpl;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
-public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
+public class QuoteGlobalTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-7890")
 	public void testQuotedUniqueConstraint() {
-		Iterator<UniqueKey> itr = configuration().getClassMapping( Person.class.getName() )
+		Iterator<UniqueKey> itr = metadata().getEntityBinding( Person.class.getName() )
 				.getTable().getUniqueKeyIterator();
 		while ( itr.hasNext() ) {
 			UniqueKey uk = itr.next();
@@ -83,7 +90,7 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
 		String role = User.class.getName() + ".roles";
-		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+		assertEquals( "User_Role", metadata().getCollectionBinding( role ).getCollectionTable().getName() );
 		s.close();
 	}
 	
@@ -93,23 +100,9 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		doTestHbmQuoting( DataPoint.class );
 		doTestHbmQuoting( AssociatedDataPoint.class );
 	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-7927")
-	public void testTableGeneratorQuoting() {
-		Configuration configuration = constructAndConfigureConfiguration();
-		configuration.addAnnotatedClass(TestEntity.class);
-		new SchemaExport(configuration).execute( false, true, false, true );
-		try {
-			new SchemaValidator(configuration).validate();
-		}
-		catch (HibernateException e) {
-			fail( "The identifier generator table should have validated.  " + e.getMessage() );
-		}
-	}
 	
 	private void doTestHbmQuoting(Class clazz) {
-		Table table = configuration().getClassMapping( clazz.getName() ).getTable();
+		Table table = metadata().getEntityBinding( clazz.getName() ).getTable();
 		assertTrue( table.isQuoted() );
 		Iterator itr = table.getColumnIterator();
 		while(itr.hasNext()) {
@@ -119,9 +112,8 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
 	}
 
 	@Override
@@ -138,6 +130,33 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
 		return new String[] { "quote/DataPoint.hbm.xml" };
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// this really should be in a different test class
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7927")
+	public void testTableGeneratorQuoting() {
+		final Metadata metadata = new MetadataSources( serviceRegistry() ).addAnnotatedClass( TestEntity.class ).buildMetadata();
+
+		final ConnectionProvider connectionProvider = serviceRegistry().getService( ConnectionProvider.class );
+		final Target target = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( connectionProvider ) );
+		final SchemaManagementTool tool = serviceRegistry().getService( SchemaManagementTool.class );
+
+		tool.getSchemaDropper( null ).doDrop( metadata, false, target );
+		tool.getSchemaCreator( null ).doCreation( metadata, false, target );
+
+		try {
+			new SchemaValidator( serviceRegistry(), (MetadataImplementor) metadata ).validate();
+		}
+		catch (HibernateException e) {
+			fail( "The identifier generator table should have validated.  " + e.getMessage() );
+		}
+		finally {
+			tool.getSchemaDropper( null ).doDrop( metadata, false, target );
+		}
 	}
 	
 	@Entity

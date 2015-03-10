@@ -37,6 +37,7 @@ import javax.persistence.JoinTable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
@@ -89,8 +90,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			String path,
 			PropertyData inferredData,
 			PropertyHolder parent,
-			Mappings mappings) {
-		super( path, parent, inferredData.getPropertyClass(), mappings );
+			MetadataBuildingContext context) {
+		super( path, parent, inferredData.getPropertyClass(), context );
 		final XProperty embeddedXProperty = inferredData.getProperty();
 		setCurrentProperty( embeddedXProperty );
 		this.component = component;

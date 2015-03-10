@@ -6,9 +6,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.Assert;
-import org.junit.Test;
-
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -18,8 +15,11 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+import junit.framework.Assert;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

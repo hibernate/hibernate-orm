@@ -23,7 +23,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.internal.util.xml.XmlDocument;
 
 /**
@@ -94,7 +94,7 @@ public class InvalidMappingException extends MappingException {
 	 * @param origin The origin of the invalid mapping document
 	 */
 	public InvalidMappingException(String customMessage, Origin origin) {
-		this( customMessage, origin.getType().toString(), origin.getName() );
+		this( customMessage, origin.getType().getLegacyTypeText(), origin.getName() );
 	}
 
 	/**

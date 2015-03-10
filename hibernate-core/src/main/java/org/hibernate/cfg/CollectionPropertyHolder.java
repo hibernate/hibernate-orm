@@ -42,6 +42,7 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -75,13 +76,17 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			XClass clazzToProcess,
 			XProperty property,
 			PropertyHolder parentPropertyHolder,
-			Mappings mappings) {
-		super( path, parentPropertyHolder, clazzToProcess, mappings );
+			MetadataBuildingContext context) {
+		super( path, parentPropertyHolder, clazzToProcess, context );
 		this.collection = collection;
 		setCurrentProperty( property );
 
 		this.elementAttributeConversionInfoMap = new HashMap<String, AttributeConversionInfo>();
 		this.keyAttributeConversionInfoMap = new HashMap<String, AttributeConversionInfo>();
+	}
+
+	public Collection getCollectionBinding() {
+		return collection;
 	}
 
 	private void buildAttributeConversionInfoMaps(
@@ -356,7 +361,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 		final Class elementClass = determineElementClass( elementXClass );
 		if ( elementClass != null ) {
-			for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : getContext().getMetadataCollector().getAttributeConverters() ) {
 				if ( ! attributeConverterDefinition.isAutoApply() ) {
 					continue;
 				}
@@ -378,7 +383,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private Class determineElementClass(XClass elementXClass) {
 		if ( elementXClass != null ) {
 			try {
-				return getMappings().getReflectionManager().toClass( elementXClass );
+				return getContext().getBuildingOptions().getReflectionManager().toClass( elementXClass );
 			}
 			catch (Exception e) {
 				log.debugf(
@@ -430,7 +435,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 		final Class elementClass = determineKeyClass( keyXClass );
 		if ( elementClass != null ) {
-			for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : getContext().getMetadataCollector().getAttributeConverters() ) {
 				if ( ! attributeConverterDefinition.isAutoApply() ) {
 					continue;
 				}
@@ -452,7 +457,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private Class determineKeyClass(XClass keyXClass) {
 		if ( keyXClass != null ) {
 			try {
-				return getMappings().getReflectionManager().toClass( keyXClass );
+				return getContext().getBuildingOptions().getReflectionManager().toClass( keyXClass );
 			}
 			catch (Exception e) {
 				log.debugf(

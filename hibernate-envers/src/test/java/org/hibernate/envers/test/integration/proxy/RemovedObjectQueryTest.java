@@ -1,11 +1,11 @@
 package org.hibernate.envers.test.integration.proxy;
 
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityManager;
 
 import org.hibernate.Hibernate;
 import org.hibernate.envers.RevisionType;
@@ -30,10 +30,9 @@ import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 import org.hibernate.envers.test.integration.manytomany.ternary.TernaryMapEntity;
 import org.hibernate.envers.test.tools.TestTools;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

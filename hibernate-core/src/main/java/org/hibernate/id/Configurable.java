@@ -23,10 +23,11 @@
  *
  */
 package org.hibernate.id;
+
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.type.Type;
 
 /**
@@ -36,7 +37,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public interface Configurable {
-
 	/**
 	 * Configure this instance, given the value of parameters
 	 * specified by the user as <tt>&lt;param&gt;</tt> elements.
@@ -44,6 +44,6 @@ public interface Configurable {
 	 *
 	 * @param params param values, keyed by parameter name
 	 */
-	public void configure(Type type, Properties params, Dialect d) throws MappingException;
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnvironment) throws MappingException;
 
 }

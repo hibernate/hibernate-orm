@@ -33,6 +33,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
@@ -49,10 +50,10 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class SelectGenerator extends AbstractPostInsertGenerator implements Configurable {
-	
 	private String uniqueKeyPropertyName;
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
+	@Override
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnvironment) throws MappingException {
 		uniqueKeyPropertyName = params.getProperty( "key" );
 	}
 

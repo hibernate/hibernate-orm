@@ -37,13 +37,14 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
-import org.junit.Assert;
-import org.junit.Test;
-
+import org.hibernate.AnnotationException;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.pack.defaultpar.Lighter;
 import org.hibernate.jpa.test.pack.defaultpar_1_0.Lighter1;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * "smoke" tests for JEE bootstrapping of HEM via a {@link PersistenceUnitInfo}
@@ -80,6 +81,9 @@ public class OrmVersionTest {
 			// expected condition
 		}
 		catch ( PersistenceException expected ) {
+			// expected condition
+		}
+		catch (AnnotationException expected) {
 			// expected condition
 		}
 	}

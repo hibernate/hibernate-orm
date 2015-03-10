@@ -23,36 +23,40 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.Writer;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.naming.NamingStrategyDelegator;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.internal.FormatStyle;
-import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
-
-import org.jboss.logging.Logger;
+import org.hibernate.tool.schema.extract.internal.legacy.DatabaseInformationImpl;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
+import org.hibernate.tool.schema.internal.TargetFileImpl;
+import org.hibernate.tool.schema.internal.TargetStdoutImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.SchemaMigrator;
 
 /**
  * A commandline tool to update a database schema. May also be called from inside an application.
@@ -61,137 +65,45 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SchemaUpdate {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SchemaUpdate.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
 
-	private final Configuration configuration;
-	private final ConnectionHelper connectionHelper;
-	private final SqlStatementLogger sqlStatementLogger;
-	private final SqlExceptionHelper sqlExceptionHelper;
-	private final Dialect dialect;
+	private final MetadataImplementor metadata;
+	private final ServiceRegistry serviceRegistry;
 
+	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final List<Exception> exceptions = new ArrayList<Exception>();
-
-	private Formatter formatter;
-
-	private boolean haltOnError;
-	private boolean format = true;
 	private String outputFile;
-	private String delimiter;
 
-	public SchemaUpdate(Configuration cfg) throws HibernateException {
-		this( cfg, cfg.getProperties() );
+	/**
+	 * Creates a SchemaUpdate object.  This form is intended for use from tooling
+	 *
+	 * @param metadata The metadata defining the schema as it should be after update
+	 *
+	 * @throws HibernateException
+	 */
+	public SchemaUpdate(MetadataImplementor metadata) {
+		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata );
 	}
 
-	public SchemaUpdate(Configuration configuration, Properties properties) throws HibernateException {
-		this.configuration = configuration;
-		this.dialect = Dialect.getDialect( properties );
-
-		Properties props = new Properties();
-		props.putAll( dialect.getDefaultProperties() );
-		props.putAll( properties );
-		this.connectionHelper = new ManagedProviderConnectionHelper( props );
-
-		this.sqlExceptionHelper = new SqlExceptionHelper();
-		this.sqlStatementLogger = new SqlStatementLogger( false, true );
-		this.formatter = FormatStyle.DDL.getFormatter();
-	}
-
-	public SchemaUpdate(ServiceRegistry serviceRegistry, Configuration cfg) throws HibernateException {
-		this.configuration = cfg;
-
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		this.dialect = jdbcServices.getDialect();
-		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper( jdbcServices.getConnectionProvider() );
-
-		this.sqlExceptionHelper = new SqlExceptionHelper();
-		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
-		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-	}
-
-	private static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
-		Environment.verifyProperties( properties );
-		ConfigurationHelper.resolvePlaceHolders( properties );
-		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().applySettings( properties ).build();
-	}
-
-	public static void main(String[] args) {
-		try {
-			Configuration cfg = new Configuration();
-
-			boolean script = true;
-			// If true then execute db updates, otherwise just generate and display updates
-			boolean doUpdate = true;
-			String propFile = null;
-			String outFile = null;
-			boolean hasNaming = false;
-			boolean hasNamingDelegator = false;
-
-			for ( int i = 0; i < args.length; i++ ) {
-				if ( args[i].startsWith( "--" ) ) {
-					if ( args[i].equals( "--quiet" ) ) {
-						script = false;
-					}
-					else if ( args[i].startsWith( "--properties=" ) ) {
-						propFile = args[i].substring( 13 );
-					}
-					else if ( args[i].startsWith( "--config=" ) ) {
-						cfg.configure( args[i].substring( 9 ) );
-					}
-					else if ( args[i].startsWith( "--text" ) ) {
-						doUpdate = false;
-					}
-					else if ( args[i].startsWith( "--output=" ) ) {
-						 outFile = args[i].substring( 9 );
-					}
-					else if ( args[i].startsWith( "--naming=" ) ) {
-						hasNaming = true;
-						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
-						cfg.setNamingStrategy(
-								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) ).newInstance()
-						);
-					}
-					else if ( args[i].startsWith( "--namingdelegator=" ) ) {
-						hasNamingDelegator = true;
-						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
-						cfg.setNamingStrategyDelegator(
-								(NamingStrategyDelegator) ReflectHelper.classForName( args[i].substring( 18 ) )
-										.newInstance()
-						);
-					}
-				}
-				else {
-					cfg.addFile( args[i] );
-				}
-
-			}
-
-			if ( propFile != null ) {
-				Properties props = new Properties();
-				props.putAll( cfg.getProperties() );
-				props.load( new FileInputStream( propFile ) );
-				cfg.setProperties( props );
-			}
-
-			StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
-			try {
-				final SchemaUpdate schemaUpdate = new SchemaUpdate( serviceRegistry, cfg );
-				schemaUpdate.setOutputFile( outFile );
-				schemaUpdate.execute( script, doUpdate );
-			}
-			finally {
-				serviceRegistry.destroy();
-			}
-		}
-		catch ( Exception e ) {
-            LOG.unableToRunSchemaUpdate(e);
-			e.printStackTrace();
-		}
-	}
-
-	private static void checkNamingAndNamingDelegatorNotBothSpecified(boolean namingSpecified, boolean namingDelegatorSpecified) {
-		if ( namingSpecified && namingDelegatorSpecified ) {
-			throw new HibernateException( "--naming=<naming_strategy> and --namingdelegator=<naming_strategy_delegator> cannot be used together." );
-		}
+	/**
+	 * Creates a SchemaUpdate object.  This form is intended for use from
+	 * {@code hibernate.hbm2ddl.auto} handling, generally from within the SessionFactory
+	 * ctor.
+	 * <p/>
+	 * Note that the passed ServiceRegistry is expected to be of type
+	 * {@link org.hibernate.service.spi.SessionFactoryServiceRegistry}, although
+	 * any ServiceRegistry type will work as long as it has access to the
+	 * {@link org.hibernate.engine.jdbc.spi.JdbcServices} service.
+	 *
+	 * @param serviceRegistry The ServiceRegistry to use.
+	 * @param metadata The metadata defining the schema as it should be after update
+	 *
+	 * @throws HibernateException
+	 */
+	public SchemaUpdate(ServiceRegistry serviceRegistry, MetadataImplementor metadata) throws HibernateException {
+		this.metadata = metadata;
+		this.serviceRegistry = serviceRegistry;
+		this.jdbcConnectionAccess = serviceRegistry.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 	}
 
 	/**
@@ -206,93 +118,52 @@ public class SchemaUpdate {
 	public void execute(Target target) {
         LOG.runningHbm2ddlSchemaUpdate();
 
-		Connection connection = null;
-		Statement stmt = null;
-		Writer outputFileWriter = null;
-
 		exceptions.clear();
 
+		List<org.hibernate.tool.schema.spi.Target> toolTargets = buildToolTargets( target );
+
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final SchemaMigrator schemaMigrator = serviceRegistry.getService( SchemaManagementTool.class )
+				.getSchemaMigrator( cfgService.getSettings() );
+
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		final DatabaseInformation databaseInformation;
 		try {
-			DatabaseMetadata meta;
-			try {
-                LOG.fetchingDatabaseMetadata();
-				connectionHelper.prepare( true );
-				connection = connectionHelper.getConnection();
-				meta = new DatabaseMetadata( connection, dialect, configuration );
-				stmt = connection.createStatement();
-			}
-			catch ( SQLException sqle ) {
-				exceptions.add( sqle );
-                LOG.unableToGetDatabaseMetadata(sqle);
-				throw sqle;
-			}
-
-            LOG.updatingSchema();
-
-			if ( outputFile != null ) {
-                LOG.writingGeneratedSchemaToFile( outputFile );
-				outputFileWriter = new FileWriter( outputFile );
-			}
-
-			List<SchemaUpdateScript> scripts = configuration.generateSchemaUpdateScriptList( dialect, meta );
-			for ( SchemaUpdateScript script : scripts ) {
-				String formatted = formatter.format( script.getScript() );
-				try {
-					if ( delimiter != null ) {
-						formatted += delimiter;
-					}
-					if ( target.doScript() ) {
-						System.out.println( formatted );
-					}
-					if ( outputFile != null ) {
-						outputFileWriter.write( formatted + "\n" );
-					}
-					if ( target.doExport() ) {
-                        LOG.debug( script.getScript() );
-						stmt.executeUpdate( formatted );
-					}
-				}
-				catch ( SQLException e ) {
-					if (!script.isQuiet()) {
-						if ( haltOnError ) {
-							throw new JDBCException( "Error during DDL export", e );
-						}
-						exceptions.add( e );
-	                    LOG.unsuccessful(script.getScript());
-	                    LOG.error(e.getMessage());
-					}
-				}
-			}
-
-            LOG.schemaUpdateComplete();
-
+			databaseInformation = new DatabaseInformationImpl(
+					serviceRegistry,
+					serviceRegistry.getService( JdbcEnvironment.class ),
+					jdbcConnectionAccess,
+					metadata.getDatabase().getDefaultSchema().getPhysicalName().getCatalog(),
+					metadata.getDatabase().getDefaultSchema().getPhysicalName().getSchema()
+			);
 		}
-		catch ( Exception e ) {
-			exceptions.add( e );
-            LOG.unableToCompleteSchemaUpdate(e);
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert(
+					e,
+					"Error creating DatabaseInformation for schema migration"
+			);
 		}
-		finally {
 
-			try {
-				if ( stmt != null ) {
-					stmt.close();
-				}
-				connectionHelper.release();
-			}
-			catch ( Exception e ) {
-				exceptions.add( e );
-                LOG.unableToCloseConnection(e);
-			}
-			try {
-				if( outputFileWriter != null ) {
-					outputFileWriter.close();
-				}
-			}
-			catch(Exception e) {
-				exceptions.add(e);
-                LOG.unableToCloseConnection(e);
-			}
+		schemaMigrator.doMigration( metadata, databaseInformation, true, toolTargets );
+	}
+
+	private List<org.hibernate.tool.schema.spi.Target> buildToolTargets(Target target) {
+		List<org.hibernate.tool.schema.spi.Target> toolTargets = new ArrayList<org.hibernate.tool.schema.spi.Target>();
+
+		if ( target.doScript() ) {
+			toolTargets.add( new TargetStdoutImpl() );
 		}
+
+		if ( target.doExport() ) {
+			toolTargets.add( new TargetDatabaseImpl( jdbcConnectionAccess ) );
+		}
+
+		if ( outputFile != null ) {
+			LOG.writingGeneratedSchemaToFile( outputFile );
+			toolTargets.add( new TargetFileImpl( outputFile ) );
+		}
+
+		return toolTargets;
 	}
 
 	/**
@@ -305,11 +176,9 @@ public class SchemaUpdate {
 	}
 
 	public void setHaltOnError(boolean haltOnError) {
-		this.haltOnError = haltOnError;
 	}
 
 	public void setFormat(boolean format) {
-		this.formatter = ( format ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
 	public void setOutputFile(String outputFile) {
@@ -317,6 +186,153 @@ public class SchemaUpdate {
 	}
 
 	public void setDelimiter(String delimiter) {
-		this.delimiter = delimiter;
+	}
+
+	public static void main(String[] args) {
+		try {
+			final CommandLineArgs parsedArgs = CommandLineArgs.parseCommandLineArgs( args );
+			final StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( parsedArgs );
+
+			try {
+				final MetadataImplementor metadata = buildMetadata( parsedArgs, serviceRegistry );
+
+				final SchemaUpdate schemaUpdate = new SchemaUpdate( metadata );
+				schemaUpdate.setOutputFile( parsedArgs.outFile );
+				schemaUpdate.execute( parsedArgs.script, parsedArgs.doUpdate );
+			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( serviceRegistry );
+			}
+		}
+		catch ( Exception e ) {
+			LOG.unableToRunSchemaUpdate(e);
+			e.printStackTrace();
+		}
+	}
+
+	private static StandardServiceRegistry buildStandardServiceRegistry(CommandLineArgs parsedArgs) throws Exception {
+		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+
+		if ( parsedArgs.cfgXmlFile != null ) {
+			ssrBuilder.configure( parsedArgs.cfgXmlFile );
+		}
+
+		if ( parsedArgs.propertiesFile != null ) {
+			Properties props = new Properties();
+			props.load( new FileInputStream( parsedArgs.propertiesFile ) );
+			ssrBuilder.applySettings( props );
+		}
+
+		return ssrBuilder.build();
+	}
+
+	private static MetadataImplementor buildMetadata(CommandLineArgs parsedArgs, ServiceRegistry serviceRegistry)
+			throws Exception {
+		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+
+		for ( String filename : parsedArgs.hbmXmlFiles ) {
+			metadataSources.addFile( filename );
+		}
+
+		for ( String filename : parsedArgs.jarFiles ) {
+			metadataSources.addJar( new File( filename ) );
+		}
+
+
+		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		if ( parsedArgs.implicitNamingStrategyImplName != null ) {
+			metadataBuilder.with(
+					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategyImplName )
+			);
+		}
+		if ( parsedArgs.physicalNamingStrategyImplName != null ) {
+			metadataBuilder.with(
+					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, parsedArgs.physicalNamingStrategyImplName )
+			);
+		}
+
+		return (MetadataImplementor) metadataBuilder.build();
+	}
+
+	private static class CommandLineArgs {
+		boolean script = true;
+		// If true then execute db updates, otherwise just generate and display updates
+		boolean doUpdate = true;
+
+		String propertiesFile = null;
+		String cfgXmlFile = null;
+		String outFile = null;
+
+		String implicitNamingStrategyImplName = null;
+		String physicalNamingStrategyImplName = null;
+
+		List<String> hbmXmlFiles = new ArrayList<String>();
+		List<String> jarFiles = new ArrayList<String>();
+
+		public static CommandLineArgs parseCommandLineArgs(String[] args) {
+			final CommandLineArgs parsedArgs = new CommandLineArgs();
+
+			for ( String arg : args ) {
+				if ( arg.startsWith( "--" ) ) {
+					if ( arg.equals( "--quiet" ) ) {
+						parsedArgs.script = false;
+					}
+					else if ( arg.startsWith( "--properties=" ) ) {
+						parsedArgs.propertiesFile = arg.substring( 13 );
+					}
+					else if ( arg.startsWith( "--config=" ) ) {
+						parsedArgs.cfgXmlFile = arg.substring( 9 );
+					}
+					else if ( arg.startsWith( "--text" ) ) {
+						parsedArgs.doUpdate = false;
+					}
+					else if ( arg.startsWith( "--output=" ) ) {
+						parsedArgs.outFile = arg.substring( 9 );
+					}
+					else if ( arg.startsWith( "--naming=" ) ) {
+						DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyArgument();
+					}
+					else if ( arg.startsWith( "--implicit-naming=" ) ) {
+						parsedArgs.implicitNamingStrategyImplName = arg.substring( 18 );
+					}
+					else if ( arg.startsWith( "--physical-naming=" ) ) {
+						parsedArgs.physicalNamingStrategyImplName = arg.substring( 18 );
+					}
+				}
+				else {
+					if ( arg.endsWith( ".jar" ) ) {
+						parsedArgs.jarFiles.add( arg );
+					}
+					else {
+						parsedArgs.hbmXmlFiles.add( arg );
+					}
+				}
+			}
+
+			return parsedArgs;
+		}
+	}
+
+	/**
+	 * Intended for test usage only.  Builds a Metadata using the same algorithm  as
+	 * {@link #main}
+	 *
+	 * @param args The "command line args"
+	 *
+	 * @return The built Metadata
+	 *
+	 * @throws Exception Problems building the Metadata
+	 */
+	public static MetadataImplementor buildMetadataFromMainArgs(String[] args) throws Exception {
+		final CommandLineArgs commandLineArgs = CommandLineArgs.parseCommandLineArgs( args );
+		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
+		try {
+			return buildMetadata( commandLineArgs, serviceRegistry );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 	}
 }

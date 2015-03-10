@@ -23,18 +23,18 @@
  */
 package org.hibernate.test.annotations.strategy;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.DefaultComponentSafeNamingStrategy;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-public class StrategyTest extends BaseCoreFunctionalTestCase {
+public class StrategyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testComponentSafeStrategy() throws Exception {
 		Session s = openSession();
@@ -55,8 +55,9 @@ public class StrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
-		cfg.setNamingStrategy( DefaultComponentSafeNamingStrategy.INSTANCE );
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with( ImplicitNamingStrategyComponentPathImpl.INSTANCE );
 	}
 
 	@Override

@@ -23,14 +23,14 @@
  */
 package org.hibernate.test.ops;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -51,11 +51,6 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "ops/Node.hbm.xml", "ops/Employer.hbm.xml" };
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	@Test

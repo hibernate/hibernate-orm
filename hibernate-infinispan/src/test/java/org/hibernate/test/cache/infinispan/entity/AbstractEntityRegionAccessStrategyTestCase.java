@@ -28,27 +28,29 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.AssertionFailedError;
-import org.hibernate.cache.infinispan.util.Caches;
-import org.infinispan.Cache;
-import org.infinispan.test.TestingUtil;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
-import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.compare.ComparableComparator;
+
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
+import org.infinispan.Cache;
+import org.infinispan.test.TestingUtil;
+import org.infinispan.transaction.tm.BatchModeTransactionManager;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -91,8 +93,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    @Before
    public void prepareResources() throws Exception {
       // to mimic exactly the old code results, both environments here are exactly the same...
-      Configuration cfg = createConfiguration(getConfigurationName());
-      localEnvironment = new NodeEnvironment(cfg);
+      StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder( getConfigurationName() );
+      localEnvironment = new NodeEnvironment( ssrb );
       localEnvironment.prepare();
 
       localEntityRegion = localEnvironment.getEntityRegion(REGION_NAME, getCacheDataDescription());
@@ -104,7 +106,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
 
-      remoteEnvironment = new NodeEnvironment(cfg);
+      remoteEnvironment = new NodeEnvironment( ssrb );
       remoteEnvironment.prepare();
 
       remoteEntityRegion = remoteEnvironment.getEntityRegion(REGION_NAME, getCacheDataDescription());
@@ -120,15 +122,15 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
    protected abstract String getConfigurationName();
 
-   protected static Configuration createConfiguration(String configName) {
-      Configuration cfg = CacheTestUtil.buildConfiguration(
+   protected static StandardServiceRegistryBuilder createStandardServiceRegistryBuilder(String configName) {
+      StandardServiceRegistryBuilder ssrb = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
             REGION_PREFIX,
             InfinispanRegionFactory.class,
             true,
             false
       );
-      cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, configName);
-      return cfg;
+      ssrb.applySetting( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, configName );
+      return ssrb;
    }
 
    protected CacheDataDescription getCacheDataDescription() {

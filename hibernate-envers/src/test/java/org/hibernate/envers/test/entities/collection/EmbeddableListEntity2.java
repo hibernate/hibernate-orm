@@ -23,6 +23,8 @@
  */
 package org.hibernate.envers.test.entities.collection;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -30,8 +32,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.components.relations.ManyToOneEagerComponent;

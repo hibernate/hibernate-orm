@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
 /**
  * A meta attribute is a named value or values.
+ *
  * @author Gavin King
  */
 public class MetaAttribute implements Serializable {

@@ -6,7 +6,7 @@
 
     <class name="org.hibernate.test.legacy.Broken" table="BROKE">
         <!--id name="id" type="long" column="id_">
-            <generator class="hilo"/>
+            <generator class="increment"/>
         </id-->
         <composite-id>
         	<key-property name="id"/>

@@ -33,6 +33,7 @@ package org.hibernate;
  * levels.
  *
  * @author Gavin King
+ *
  * @see Session#lock(Object, LockMode)
  */
 public enum LockMode {
@@ -44,13 +45,13 @@ public enum LockMode {
 	 * <br>
 	 * This is the "default" lock mode.
 	 */
-	NONE( 0 ),
+	NONE( 0, "none" ),
 	/**
 	 * A shared lock. Objects in this lock mode were read from
 	 * the database in the current transaction, rather than being
 	 * pulled from a cache.
 	 */
-	READ( 5 ),
+	READ( 5, "read" ),
 	/**
 	 * An upgrade lock. Objects loaded in this lock mode are
 	 * materialized using an SQL <tt>select ... for update</tt>.
@@ -58,14 +59,14 @@ public enum LockMode {
 	 * @deprecated instead use PESSIMISTIC_WRITE
 	 */
 	@Deprecated
-	UPGRADE( 10 ),
+	UPGRADE( 10, "upgrade" ),
 	/**
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
 	 * <tt>select for update nowait</tt>. The semantics of
 	 * this lock mode, once obtained, are the same as
 	 * <tt>UPGRADE</tt>.
 	 */
-	UPGRADE_NOWAIT( 10 ),
+	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
 
 	/**
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
@@ -73,7 +74,7 @@ public enum LockMode {
 	 * this lock mode, once obtained, are the same as
 	 * <tt>UPGRADE</tt>.
 	 */
-	UPGRADE_SKIPLOCKED( 10 ),
+	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
 
 	/**
 	 * A <tt>WRITE</tt> lock is obtained when an object is updated
@@ -81,7 +82,7 @@ public enum LockMode {
 	 * not a valid mode for <tt>load()</tt> or <tt>lock()</tt> (both
 	 * of which throw exceptions if WRITE is specified).
 	 */
-	WRITE( 10 ),
+	WRITE( 10, "write" ),
 
 	/**
 	 * Similar to {@link #UPGRADE} except that, for versioned entities,
@@ -90,7 +91,7 @@ public enum LockMode {
 	 * @deprecated instead use PESSIMISTIC_FORCE_INCREMENT
 	 */
 	@Deprecated
-	FORCE( 15 ),
+	FORCE( 15, "force" ),
 
 	/**
 	 *  start of javax.persistence.LockModeType equivalent modes
@@ -100,34 +101,37 @@ public enum LockMode {
 	 * Optimistically assume that transaction will not experience contention for
 	 * entities.  The entity version will be verified near the transaction end.
 	 */
-	OPTIMISTIC( 6 ),
+	OPTIMISTIC( 6, "optimistic" ),
 
 	/**
 	 * Optimistically assume that transaction will not experience contention for
 	 * entities.  The entity version will be verified and incremented near the transaction end.
 	 */
-	OPTIMISTIC_FORCE_INCREMENT( 7 ),
+	OPTIMISTIC_FORCE_INCREMENT( 7, "optimistic_force_increment" ),
 
 	/**
 	 * Implemented as PESSIMISTIC_WRITE.
 	 * TODO:  introduce separate support for PESSIMISTIC_READ
 	 */
-	PESSIMISTIC_READ( 12 ),
+	PESSIMISTIC_READ( 12, "pessimistic_read" ),
 
 	/**
 	 * Transaction will obtain a database lock immediately.
 	 * TODO:  add PESSIMISTIC_WRITE_NOWAIT
 	 */
-	PESSIMISTIC_WRITE( 13 ),
+	PESSIMISTIC_WRITE( 13, "pessimistic_write" ),
 
 	/**
 	 * Transaction will immediately increment the entity version.
 	 */
-	PESSIMISTIC_FORCE_INCREMENT( 17 );
-	private final int level;
+	PESSIMISTIC_FORCE_INCREMENT( 17, "pessimistic_force_increment" );
 
-	private LockMode(int level) {
+	private final int level;
+	private final String externalForm;
+
+	private LockMode(int level, String externalForm) {
 		this.level = level;
+		this.externalForm = externalForm;
 	}
 
 	/**
@@ -150,5 +154,23 @@ public enum LockMode {
 	 */
 	public boolean lessThan(LockMode mode) {
 		return level < mode.level;
+	}
+
+	public String toExternalForm() {
+		return externalForm;
+	}
+
+	public static LockMode fromExternalForm(String externalForm) {
+		if ( externalForm == null ) {
+			return NONE;
+		}
+
+		for ( LockMode lockMode : LockMode.values() ) {
+			if ( lockMode.externalForm.equalsIgnoreCase( externalForm ) ) {
+				return lockMode;
+			}
+		}
+
+		throw new IllegalArgumentException( "Unable to interpret LockMode reference from incoming external form : " + externalForm );
 	}
 }

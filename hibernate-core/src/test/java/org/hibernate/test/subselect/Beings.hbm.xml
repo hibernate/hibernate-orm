@@ -24,10 +24,8 @@
 	default-access="field">
 	
 	<class name="Human" table="humans">
-		
-		<id name="id" unsaved-value="0" 
-		        column="bid">
-			<generator class="hilo"/>
+		<id name="id" unsaved-value="0" column="bid">
+			<generator class="enhanced-sequence"/>
 		</id>
 		
 		<property name="name" 
@@ -46,10 +44,8 @@
 	</class>
 	
 	<class name="Alien" table="aliens">
-		
-		<id name="id" unsaved-value="0" 
-		        column="bid">
-			<generator class="hilo"/>
+		<id name="id" unsaved-value="0" column="bid">
+			<generator class="enhanced-sequence"/>
 		</id>
 		
 		<property name="identity" 
@@ -81,9 +77,8 @@
 		<synchronize table="humans"/>
 		<synchronize table="aliens"/>
 		
-		<id name="id" unsaved-value="0" 
-		        column="bid">
-			<generator class="native"/>
+		<id name="id" unsaved-value="0" column="bid">
+			<generator class="enhanced-sequence"/>
 		</id>
 		
 		<property name="identity" column="ident"/>

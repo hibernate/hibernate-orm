@@ -25,11 +25,10 @@ package org.hibernate.test.events;
 
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -39,7 +38,9 @@ import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -68,16 +69,15 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		super.prepareBootstrapRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {
-
-				    @Override
+					@Override
 					public void integrate(
-							Configuration configuration,
+							Metadata metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-                        integrate(serviceRegistry);
+						integrate( serviceRegistry );
 					}
 
-                    private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
+					private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
                         serviceRegistry.getService( EventListenerRegistry.class ).setListeners(EventType.DELETE, listener);
                         listener.initialize();
                     }

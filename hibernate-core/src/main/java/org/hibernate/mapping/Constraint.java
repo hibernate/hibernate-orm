@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 
@@ -43,7 +44,7 @@ import org.hibernate.engine.spi.Mapping;
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements RelationalModel, Serializable {
+public abstract class Constraint implements RelationalModel, Exportable, Serializable {
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<Column>();

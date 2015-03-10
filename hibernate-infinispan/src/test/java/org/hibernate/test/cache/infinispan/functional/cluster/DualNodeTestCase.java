@@ -23,24 +23,29 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
+import java.util.Map;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
+public abstract class DualNodeTestCase extends BaseNonConfigCoreFunctionalTestCase {
 	private static final Log log = LogFactory.getLog( DualNodeTestCase.class );
 
 	public static final String NODE_ID_PROP = "hibernate.test.cluster.node.id";
@@ -63,10 +68,14 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		standardConfigure( cfg );
-		cfg.setProperty( NODE_ID_PROP, LOCAL );
-		cfg.setProperty( NODE_ID_FIELD, LOCAL );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		applyStandardSettings( settings );
+
+		settings.put( NODE_ID_PROP, LOCAL );
+		settings.put( NODE_ID_FIELD, LOCAL );
 	}
 
 	@Override
@@ -124,44 +133,42 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 		return true;
 	}
 
-	protected void configureSecondNode(Configuration cfg) {
-
+	protected void configureSecondNode(StandardServiceRegistryBuilder ssrb) {
 	}
 
-	protected void standardConfigure(Configuration cfg) {
-		super.configure( cfg );
-
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
-		cfg.setProperty( AvailableSettings.JTA_PLATFORM, getJtaPlatformClass().getName() );
-		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
-		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
+	@SuppressWarnings("unchecked")
+	protected void applyStandardSettings(Map settings) {
+		settings.put( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+		settings.put( AvailableSettings.JTA_PLATFORM, getJtaPlatformClass().getName() );
+		settings.put( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		settings.put( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+		settings.put( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
 	}
 
 	public class SecondNodeEnvironment {
-		private Configuration configuration;
-		private StandardServiceRegistryImpl serviceRegistry;
+		private StandardServiceRegistry serviceRegistry;
 		private SessionFactoryImplementor sessionFactory;
 
 		public SecondNodeEnvironment() {
-			configuration = constructConfiguration();
-			standardConfigure( configuration );
-			configuration.setProperty( NODE_ID_PROP, REMOTE );
-			configuration.setProperty( NODE_ID_FIELD, REMOTE );
-			configureSecondNode( configuration );
-			addMappings(configuration);
-			configuration.buildMappings();
-			applyCacheSettings( configuration );
-			afterConfigurationBuilt( configuration );
-			serviceRegistry = buildServiceRegistry( buildBootstrapServiceRegistry(), configuration );
-			sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+			StandardServiceRegistryBuilder ssrb = constructStandardServiceRegistryBuilder();
+			applyStandardSettings( ssrb.getSettings() );
+			ssrb.applySetting( NODE_ID_PROP, REMOTE );
+			ssrb.applySetting( NODE_ID_FIELD, REMOTE );
+			configureSecondNode( ssrb );
+
+			serviceRegistry = ssrb.build();
+
+			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+			applyMetadataSources( metadataSources );
+
+			Metadata metadata = metadataSources.buildMetadata();
+			applyCacheSettings( metadata );
+			afterMetadataBuilt( metadata );
+
+			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		}
 
-		public Configuration getConfiguration() {
-			return configuration;
-		}
-
-		public StandardServiceRegistryImpl getServiceRegistry() {
+		public StandardServiceRegistry getServiceRegistry() {
 			return serviceRegistry;
 		}
 
@@ -179,7 +186,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 			}
 			if ( serviceRegistry != null ) {
 				try {
-					serviceRegistry.destroy();
+					StandardServiceRegistryBuilder.destroy( serviceRegistry );
 				}
 				catch (Exception ignore) {
 				}

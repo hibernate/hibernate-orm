@@ -23,12 +23,12 @@
  */
 package org.hibernate.envers.test.integration.collection.embeddable;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 import org.hibernate.envers.Audited;
 

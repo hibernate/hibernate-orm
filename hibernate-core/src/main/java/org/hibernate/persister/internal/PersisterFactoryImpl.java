@@ -31,14 +31,12 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -51,30 +49,25 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegistryAwareService {
 
+	// todo : carry the notion of the creational parameters (parameter object) over to the persister constructors?
+
 	/**
 	 * The constructor signature for {@link EntityPersister} implementations
-	 *
-	 * @todo make EntityPersister *not* depend on {@link SessionFactoryImplementor} if possible.
 	 */
 	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			PersistentClass.class,
 			EntityRegionAccessStrategy.class,
 			NaturalIdRegionAccessStrategy.class,
-			SessionFactoryImplementor.class,
-			Mapping.class
+			PersisterCreationContext.class
 	};
 
 	/**
 	 * The constructor signature for {@link CollectionPersister} implementations
-	 *
-	 * @todo still need to make collection persisters EntityMode-aware
-	 * @todo make EntityPersister *not* depend on {@link SessionFactoryImplementor} if possible.
 	 */
-	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
+	public static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
 			CollectionRegionAccessStrategy.class,
-			Configuration.class,
-			SessionFactoryImplementor.class
+			PersisterCreationContext.class
 	};
 
 	private ServiceRegistryImplementor serviceRegistry;
@@ -87,30 +80,42 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public EntityPersister createEntityPersister(
-			PersistentClass metadata,
-			EntityRegionAccessStrategy cacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			SessionFactoryImplementor factory,
-			Mapping cfg) {
-		Class<? extends EntityPersister> persisterClass = metadata.getEntityPersisterClass();
+			PersistentClass entityBinding,
+			EntityRegionAccessStrategy entityCacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			PersisterCreationContext creationContext) throws HibernateException {
+		// If the metadata for the entity specified an explicit persister class, use it...
+		Class<? extends EntityPersister> persisterClass = entityBinding.getEntityPersisterClass();
 		if ( persisterClass == null ) {
-			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );
+			// Otherwise, use the persister class indicated by the PersisterClassResolver service
+			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( entityBinding );
 		}
-		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS, metadata, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory, cfg );
+
+		return createEntityPersister(
+				persisterClass,
+				entityBinding,
+				entityCacheAccessStrategy,
+				naturalIdCacheAccessStrategy,
+				creationContext
+		);
 	}
 
-	private static EntityPersister create(
+	@SuppressWarnings( {"unchecked"})
+	private EntityPersister createEntityPersister(
 			Class<? extends EntityPersister> persisterClass,
-			Class[] persisterConstructorArgs,
-			Object metadata,
-			EntityRegionAccessStrategy cacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			SessionFactoryImplementor factory,
-			Mapping cfg) throws HibernateException {
+			PersistentClass entityBinding,
+			EntityRegionAccessStrategy entityCacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			PersisterCreationContext creationContext) {
 		try {
-			Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( persisterConstructorArgs );
+			final Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
 			try {
-				return constructor.newInstance( metadata, cacheAccessStrategy, naturalIdRegionAccessStrategy, factory, cfg );
+				return constructor.newInstance(
+						entityBinding,
+						entityCacheAccessStrategy,
+						naturalIdCacheAccessStrategy,
+						creationContext
+				);
 			}
 			catch (MappingException e) {
 				throw e;
@@ -139,29 +144,33 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(
-			Configuration cfg,
-			Collection collectionMetadata,
+			Collection collectionBinding,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			SessionFactoryImplementor factory) throws HibernateException {
-		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getCollectionPersisterClass();
+			PersisterCreationContext creationContext) throws HibernateException {
+		// If the metadata for the collection specified an explicit persister class, use it
+		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
 		if ( persisterClass == null ) {
-			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
+			// Otherwise, use the persister class indicated by the PersisterClassResolver service
+			persisterClass = serviceRegistry.getService( PersisterClassResolver.class )
+					.getCollectionPersisterClass( collectionBinding );
 		}
-
-		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS, cfg, collectionMetadata, cacheAccessStrategy, factory );
+		return createCollectionPersister( persisterClass, collectionBinding, cacheAccessStrategy, creationContext );
 	}
 
-	private static CollectionPersister create(
+	@SuppressWarnings( {"unchecked"})
+	private CollectionPersister createCollectionPersister(
 			Class<? extends CollectionPersister> persisterClass,
-			Class[] persisterConstructorArgs,
-			Object cfg,
-			Object collectionMetadata,
+			Collection collectionBinding,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			SessionFactoryImplementor factory) throws HibernateException {
+			PersisterCreationContext creationContext) {
 		try {
-			Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( persisterConstructorArgs );
+			Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( COLLECTION_PERSISTER_CONSTRUCTOR_ARGS );
 			try {
-				return constructor.newInstance( collectionMetadata, cacheAccessStrategy, cfg, factory );
+				return constructor.newInstance(
+						collectionBinding,
+						cacheAccessStrategy,
+						creationContext
+				);
 			}
 			catch (MappingException e) {
 				throw e;

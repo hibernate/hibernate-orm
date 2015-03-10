@@ -46,6 +46,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
@@ -64,6 +67,8 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
+import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -72,14 +77,17 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceGenerator;
-import org.hibernate.id.TableHiLoGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
-import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.mapping.Constraint;
+import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -89,6 +97,17 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
+import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.internal.StandardIndexExporter;
+import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.tool.schema.internal.TemporaryTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -735,7 +754,7 @@ public abstract class Dialect implements ConversionContext {
 			return SequenceGenerator.class;
 		}
 		else {
-			return TableHiLoGenerator.class;
+			return SequenceStyleGenerator.class;
 		}
 	}
 
@@ -1002,6 +1021,15 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getQuerySequencesString() {
 		return null;
+	}
+
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		if ( getQuerySequencesString() == null ) {
+			return SequenceInformationExtractorNoOpImpl.INSTANCE;
+		}
+		else {
+			return SequenceInformationExtractorLegacyImpl.INSTANCE;
+		}
 	}
 
 
@@ -1965,6 +1993,42 @@ public abstract class Dialect implements ConversionContext {
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private StandardTableExporter tableExporter = new StandardTableExporter( this );
+	private StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
+	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
+	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
+	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
+	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
+	private TemporaryTableExporter temporaryTableExporter = new TemporaryTableExporter( this );
+
+	public Exporter<Table> getTableExporter() {
+		return tableExporter;
+	}
+
+	public Exporter<Table> getTemporaryTableExporter() {
+		return temporaryTableExporter;
+	}
+
+	public Exporter<Sequence> getSequenceExporter() {
+		return sequenceExporter;
+	}
+
+	public Exporter<Index> getIndexExporter() {
+		return indexExporter;
+	}
+
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		return foreignKeyExporter;
+	}
+
+	public Exporter<Constraint> getUniqueKeyExporter() {
+		return uniqueKeyExporter;
+	}
+
+	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
+		return auxiliaryObjectExporter;
+	}
+
 	/**
 	 * Get the SQL command used to create the named schema
 	 *
@@ -1985,6 +2049,27 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getDropSchemaCommand(String schemaName) {
 		return "drop schema " + schemaName;
+	}
+
+	/**
+	 * Get the SQL command used to retrieve the current schema name.  Works in conjunction
+	 * with {@link #getSchemaNameResolver()}, unless the return from there does not need this
+	 * information.  E.g., a custom impl might make use of the Java 1.7 addition of
+	 * the {@link java.sql.Connection#getSchema()} method
+	 *
+	 * @return The current schema retrieval SQL
+	 */
+	public String getCurrentSchemaCommand() {
+		return null;
+	}
+
+	/**
+	 * Get the strategy for determining the schema name of a Connection
+	 *
+	 * @return The schema name resolver strategy
+	 */
+	public SchemaNameResolver getSchemaNameResolver() {
+		return DefaultSchemaNameResolver.INSTANCE;
 	}
 
 	/**
@@ -2722,5 +2807,4 @@ public abstract class Dialect implements ConversionContext {
 		// most databases do not support returning cursors (ref_cursor)...
 		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
 	}
-
 }

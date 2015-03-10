@@ -1,0 +1,47 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.boot.model.naming;
+
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+
+/**
+ * Pluggable strategy contract for applying physical naming rules for database object names.
+ *
+ * NOTE: Ideally we'd pass "extra" things in here like Dialect, etc to better handle identifier
+ * length constraints or auto quoting of identifiers.  However, the pre-metamodel model does not
+ * necessarily know this information at the time the strategy is called.
+ *
+ * @author Steve Ebersole
+ */
+public interface PhysicalNamingStrategy {
+	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment jdbcEnvironment);
+
+	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment);
+
+	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment);
+
+	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment);
+
+	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment);
+}

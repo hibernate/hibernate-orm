@@ -440,7 +440,7 @@ public final class Settings {
 		this.namedQueryStartupCheckingEnabled = namedQueryStartupCheckingEnabled;
 	}
 
-	void setEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
+	public void setEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
 		this.entityTuplizerFactory = entityTuplizerFactory;
 	}
 

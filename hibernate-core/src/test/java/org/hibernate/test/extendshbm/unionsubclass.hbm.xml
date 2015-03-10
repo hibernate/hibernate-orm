@@ -28,6 +28,12 @@
 			length="80"/>
 	
 	</class>
+
+	<union-subclass name="Employee" extends="Person">
+		<property name="title" length="20"/>
+		<property name="salary" length="0"/>
+		<many-to-one name="manager"/>
+	</union-subclass>
 	
 	
 	<union-subclass name="Customer" extends="Person">
@@ -35,12 +41,4 @@
 				<many-to-one name="salesperson"/>
 	</union-subclass>
 
-        <subclass name="Employee" extends="Person">
-				<property name="title"
-					length="20"/>
-				<property name="salary"
-					length="0"/>
-				<many-to-one name="manager"/>
-		</subclass>
-		
 </hibernate-mapping>

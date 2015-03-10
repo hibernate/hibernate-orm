@@ -28,28 +28,23 @@ import org.jboss.logging.Logger;
  * support for finding existing constraints is extremely inconsistent. Further,
  * non-explicitly-named unique constraints use randomly generated characters.
  * 
- * Therefore, allow users to select from these strategies.
- * {@link #RECREATE_QUIETLY} (DEFAULT): attempt to (re-)create all unique constraints,
- * 			ignoring exceptions throw if the constraint already existed
- * {@link #SKIP}: do not attempt to create unique constraints on a schema update
- * 
  * @author Brett Meyer
  */
 public enum UniqueConstraintSchemaUpdateStrategy {
 	
 	/**
-	 * Attempt to drop, then (re-)create each unique constraint.
-	 * Ignore any exceptions thrown.  Note
-	 * that this will require unique keys/constraints to be explicitly named.
-	 * If Hibernate generates the names (randomly), the drop will not work.
+	 * Attempt to drop, then (re-)create each unique constraint.  Ignore any
+	 * exceptions thrown.  Note that this will require unique keys/constraints
+	 * to be explicitly named.  If Hibernate generates the names (randomly),
+	 * the drop will not work.
 	 * 
 	 * DEFAULT
 	 */
 	DROP_RECREATE_QUIETLY,
 	
 	/**
-	 * Attempt to (re-)create unique constraints,
-	 * ignoring exceptions thrown if the constraint already existed
+	 * Attempt to (re-)create unique constraints, ignoring exceptions thrown
+	 * (e.g., if the constraint already existed)
 	 */
 	RECREATE_QUIETLY,
 

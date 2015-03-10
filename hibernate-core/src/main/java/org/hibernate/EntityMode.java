@@ -23,6 +23,8 @@
  */
 package org.hibernate;
 
+import java.util.Locale;
+
 /**
  * Defines the representation modes available for entities.
  *
@@ -40,18 +42,20 @@ public enum EntityMode {
 	 */
 	MAP( "dynamic-map" );
 
-	private final String name;
+	private final String externalName;
 
-	private EntityMode(String name) {
-		this.name = name;
+	private EntityMode(String externalName) {
+		this.externalName = externalName;
+	}
+
+	public String getExternalName() {
+		return externalName;
 	}
 
 	@Override
 	public String toString() {
-		return name;
+		return externalName;
 	}
-
-	private static final String DYNAMIC_MAP_NAME = MAP.name.toUpperCase();
 
 	/**
 	 * Legacy-style entity-mode name parsing.  <b>Case insensitive</b>
@@ -65,11 +69,10 @@ public enum EntityMode {
 		if ( entityMode == null ) {
 			return POJO;
 		}
-		entityMode = entityMode.toUpperCase();
-		if ( DYNAMIC_MAP_NAME.equals( entityMode ) ) {
+		if ( MAP.externalName.equalsIgnoreCase( entityMode ) ) {
 			return MAP;
 		}
-		return valueOf( entityMode );
+		return valueOf( entityMode.toUpperCase( Locale.ENGLISH ) );
 	}
 
 }

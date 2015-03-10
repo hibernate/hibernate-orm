@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -39,12 +40,12 @@ public class List extends IndexedCollection {
 		return true;
 	}
 
-	public List(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public List(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMappings().getTypeResolver()
+		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.list( getRole(), getReferencedPropertyName() );
 	}

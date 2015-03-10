@@ -1,48 +1,57 @@
 package org.hibernate.test.cache;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.hamcrest.CoreMatchers;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.domain.Event;
 import org.hibernate.test.domain.EventManager;
 import org.hibernate.test.domain.Item;
 import org.hibernate.test.domain.Person;
 import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import org.hamcrest.CoreMatchers;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Chris Dennis
  * @author Brett Meyer
  */
-public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
+public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final String REGION_PREFIX = "hibernate.test.";
 
-	@Override
-	protected void configure(Configuration config) {
+	public HibernateCacheTest() {
 		System.setProperty( "derby.system.home", "target/derby" );
-		config.configure( "hibernate-config/hibernate.cfg.xml" );
 	}
-	
+
 	@Override
-	protected void afterSessionFactoryBuilt() {
-		sessionFactory().getStatistics().setStatisticsEnabled( true );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		super.configureStandardServiceRegistryBuilder( ssrb );
+		ssrb.configure( "hibernate-config/hibernate.cfg.xml" );
 	}
 
 	@Test

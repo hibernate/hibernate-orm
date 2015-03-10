@@ -24,19 +24,18 @@
 package org.hibernate.testing.junit4;
 
 import java.io.InputStream;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -44,7 +43,6 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -53,10 +51,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -159,14 +153,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	private void afterConstructAndConfigureConfiguration(Configuration cfg) {
 		addMappings( cfg );
-		cfg.buildMappings();
 		applyCacheSettings( cfg );
 		afterConfigurationBuilt( cfg );
 	}
 
 	protected Configuration constructConfiguration() {
-		Configuration configuration = new Configuration()
-				.setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName()  );
+		Configuration configuration = new Configuration();
+		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -178,6 +171,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				Helper.createH2Schema( secondSchemaName, configuration );
 			}
 		}
+		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
 		return configuration;
 	}
@@ -243,37 +237,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void applyCacheSettings(Configuration configuration) {
 		if ( getCacheConcurrencyStrategy() != null ) {
-			Iterator itr = configuration.getClassMappings();
-			while ( itr.hasNext() ) {
-				PersistentClass clazz = (PersistentClass) itr.next();
-				Iterator props = clazz.getPropertyClosureIterator();
-				boolean hasLob = false;
-				while ( props.hasNext() ) {
-					Property prop = (Property) props.next();
-					if ( prop.getValue().isSimpleValue() ) {
-						String type = ( (SimpleValue) prop.getValue() ).getTypeName();
-						if ( "blob".equals(type) || "clob".equals(type) ) {
-							hasLob = true;
-						}
-						if ( Blob.class.getName().equals(type) || Clob.class.getName().equals(type) ) {
-							hasLob = true;
-						}
-					}
-				}
-				if ( !hasLob && !clazz.isInherited() && overrideCacheStrategy() ) {
-					configuration.setCacheConcurrencyStrategy( clazz.getEntityName(), getCacheConcurrencyStrategy() );
-				}
-			}
-			itr = configuration.getCollectionMappings();
-			while ( itr.hasNext() ) {
-				Collection coll = (Collection) itr.next();
-				configuration.setCollectionCacheConcurrencyStrategy( coll.getRole(), getCacheConcurrencyStrategy() );
-			}
+			configuration.setProperty( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, getCacheConcurrencyStrategy() );
+			configuration.setSharedCacheMode( SharedCacheMode.ALL );
 		}
-	}
-
-	protected boolean overrideCacheStrategy() {
-		return true;
 	}
 
 	protected String getCacheConcurrencyStrategy() {
@@ -281,10 +247,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void afterConfigurationBuilt(Configuration configuration) {
-		afterConfigurationBuilt( configuration.createMappings(), getDialect() );
-	}
-
-	protected void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 	}
 
 	protected BootstrapServiceRegistry buildBootstrapServiceRegistry() {
@@ -302,7 +264,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry ).applySettings( properties );
+		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
+
+		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
+				.applySettings( properties );
+
 		prepareBasicRegistryBuilder( registryBuilder );
 		return (StandardServiceRegistryImpl) registryBuilder.build();
 	}

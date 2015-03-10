@@ -22,15 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
@@ -39,10 +42,9 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Gavin King
  */
-public class Index implements RelationalModel, Serializable {
-
+public class Index implements RelationalModel, Exportable, Serializable {
 	private Table table;
-	private List<Column> columns = new ArrayList<Column>();
+	private java.util.List<Column> columns = new ArrayList<Column>();
 	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
 	private String name;
 
@@ -65,13 +67,14 @@ public class Index implements RelationalModel, Serializable {
 			Table table,
 			String name,
 			String defaultCatalog,
-			String defaultSchema
-	) {
-		return "drop index " +
-				StringHelper.qualify(
-						table.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
-						name
-				);
+			String defaultSchema) {
+		return buildSqlDropIndexString( name, table.getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+	}
+
+	public static String buildSqlDropIndexString(
+			String name,
+			String tableName) {
+		return "drop index " + StringHelper.qualify( tableName, name );
 	}
 
 	public static String buildSqlCreateIndexString(
@@ -82,18 +85,30 @@ public class Index implements RelationalModel, Serializable {
 			java.util.Map<Column, String> columnOrderMap,
 			boolean unique,
 			String defaultCatalog,
-			String defaultSchema
-	) {
+			String defaultSchema) {
+		return buildSqlCreateIndexString(
+				dialect,
+				name,
+				table.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
+				columns,
+				columnOrderMap,
+				unique
+		);
+	}
+
+	public static String buildSqlCreateIndexString(
+			Dialect dialect,
+			String name,
+			String tableName,
+			Iterator<Column> columns,
+			java.util.Map<Column, String> columnOrderMap,
+			boolean unique) {
 		StringBuilder buf = new StringBuilder( "create" )
-				.append( unique ?
-						" unique" :
-						"" )
+				.append( unique ? " unique" : "" )
 				.append( " index " )
-				.append( dialect.qualifyIndexName() ?
-						name :
-						StringHelper.unqualify( name ) )
+				.append( dialect.qualifyIndexName() ? name : StringHelper.unqualify( name ) )
 				.append( " on " )
-				.append( table.getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+				.append( tableName )
 				.append( " (" );
 		while ( columns.hasNext() ) {
 			Column column = columns.next();
@@ -114,9 +129,42 @@ public class Index implements RelationalModel, Serializable {
 			Iterator<Column> columns,
 			boolean unique,
 			String defaultCatalog,
-			String defaultSchema
-	) {
-		return buildSqlCreateIndexString( dialect, name, table, columns, Collections.EMPTY_MAP, unique, defaultCatalog, defaultSchema );
+			String defaultSchema) {
+		return buildSqlCreateIndexString(
+				dialect,
+				name,
+				table,
+				columns,
+				Collections.EMPTY_MAP,
+				unique,
+				defaultCatalog,
+				defaultSchema
+		);
+	}
+
+	public static String buildSqlCreateIndexString(
+			Dialect dialect,
+			String name,
+			Table table,
+			Iterator<Column> columns,
+			java.util.Map<Column, String> columnOrderMap,
+			boolean unique,
+			Metadata metadata) {
+		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				table.getQualifiedTableName(),
+				dialect
+		);
+
+		return buildSqlCreateIndexString(
+				dialect,
+				name,
+				tableName,
+				columns,
+				columnOrderMap,
+				unique
+		);
 	}
 
 
@@ -188,5 +236,10 @@ public class Index implements RelationalModel, Serializable {
 
 	public String toString() {
 		return getClass().getName() + "(" + getName() + ")";
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return StringHelper.qualify( getTable().getName(), "IDX-" + getName() );
 	}
 }

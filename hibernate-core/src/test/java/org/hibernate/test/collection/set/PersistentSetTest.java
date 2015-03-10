@@ -24,18 +24,18 @@
 package org.hibernate.test.collection.set;
 
 import java.util.HashSet;
-
-import org.junit.Test;
+import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.CollectionStatistics;
+
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,16 +44,18 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-public class PersistentSetTest extends BaseCoreFunctionalTestCase {
+public class PersistentSetTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/set/Mappings.hbm.xml" };
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
 	}
 
 	@Test

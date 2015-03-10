@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.sql.autodiscovery;
 
-import static org.junit.Assert.assertEquals;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,12 +31,17 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -49,6 +52,12 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 					"from t_membership m " +
 					"        inner join t_user u on m.member_id = u.id " +
 					"        inner join t_group g on m.group_id = g.id";
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

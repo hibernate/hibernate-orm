@@ -1,10 +1,10 @@
 package org.hibernate.envers.test.integration.ids.embeddedid;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import java.io.Serializable;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -43,8 +44,8 @@ public class OneToOne extends ToOne {
 	private String propertyName;
 	private String entityName;
 
-	public OneToOne(Mappings mappings, Table table, PersistentClass owner) throws MappingException {
-		super( mappings, table );
+	public OneToOne(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
+		super( metadata, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
 	}
@@ -67,7 +68,7 @@ public class OneToOne extends ToOne {
 	
 	public Type getType() throws MappingException {
 		if ( getColumnIterator().hasNext() ) {
-			return getMappings().getTypeResolver().getTypeFactory().specialOneToOne(
+			return getMetadata().getTypeResolver().getTypeFactory().specialOneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 
@@ -79,7 +80,7 @@ public class OneToOne extends ToOne {
 			);
 		}
 		else {
-			return getMappings().getTypeResolver().getTypeFactory().oneToOne(
+			return getMetadata().getTypeResolver().getTypeFactory().oneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 

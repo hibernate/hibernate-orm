@@ -24,7 +24,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
@@ -35,11 +35,10 @@ import org.hibernate.type.PrimitiveType;
  * @author Gavin King
  */
 public class Array extends List {
-
 	private String elementClassName;
 
-	public Array(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public Array(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public Class getElementClass() throws MappingException {
@@ -61,7 +60,7 @@ public class Array extends List {
 
 	@Override
     public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMappings().getTypeResolver()
+		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.array( getRole(), getReferencedPropertyName(), getElementClass() );
 	}

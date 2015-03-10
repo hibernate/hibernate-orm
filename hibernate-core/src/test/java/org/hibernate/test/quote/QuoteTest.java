@@ -23,12 +23,8 @@
  */
 package org.hibernate.test.quote;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,15 +39,19 @@ import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
-public class QuoteTest extends BaseCoreFunctionalTestCase {
+public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Test
 	public void testQuoteManytoMany() {
@@ -68,7 +68,7 @@ public class QuoteTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
 		String role = User.class.getName() + ".roles";
-		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+		assertEquals( "User_Role", metadata().getCollectionBinding( role ).getCollectionTable().getName() );
 		s.close();
 	}
 	

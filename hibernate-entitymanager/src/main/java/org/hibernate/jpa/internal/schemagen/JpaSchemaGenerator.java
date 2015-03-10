@@ -33,21 +33,21 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
-import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -55,11 +55,14 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.SchemaGenAction;
 import org.hibernate.jpa.SchemaGenSource;
-import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
+import static org.hibernate.jpa.AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET;
+import static org.hibernate.jpa.AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET;
 
 /**
  * Class responsible for the JPA-defined schema generation behavior.
@@ -72,14 +75,17 @@ public class JpaSchemaGenerator {
 	private JpaSchemaGenerator() {
 	}
 
-	public static void performGeneration(Configuration hibernateConfiguration, ServiceRegistry serviceRegistry) {
-		new Generation( serviceRegistry ).execute( hibernateConfiguration );
+	public static void performGeneration(
+			MetadataImplementor metadata,
+			Map configurationValues,
+			StandardServiceRegistry serviceRegistry) {
+		new GenerationProcess( serviceRegistry ).execute( metadata, configurationValues );
 	}
 
 	/**
 	 * Defines the process of performing a schema generation
 	 */
-	public static class Generation {
+	public static class GenerationProcess {
 		private final ServiceRegistry serviceRegistry;
 		private final ImportSqlCommandExtractor scriptCommandExtractor;
 		private final ClassLoaderService classLoaderService;
@@ -89,25 +95,27 @@ public class JpaSchemaGenerator {
 		 *
 		 * @param serviceRegistry The Hibernate service registry to use
 		 */
-		public Generation(ServiceRegistry serviceRegistry) {
+		public GenerationProcess(ServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 			this.scriptCommandExtractor = serviceRegistry.getService( ImportSqlCommandExtractor.class );
 			this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		}
 
+
 		/**
-		 * Perform the generation, as indicated by the settings
+		 * Perform the generation, as indicated by the configuration settings
 		 *
-		 * @param hibernateConfiguration The hibernate configuration
+		 * @param metadata The metadata representing the schema to generate.
+		 * @param configurationValues The configuration settings
 		 */
-		public void execute(Configuration hibernateConfiguration) {
+		public void execute(MetadataImplementor metadata, Map configurationValues) {
 			// First, determine the actions (if any) to be performed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			final SchemaGenAction databaseAction = SchemaGenAction.interpret(
-					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION )
+					configurationValues.get( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION )
 			);
 			final SchemaGenAction scriptsAction = SchemaGenAction.interpret(
-					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_SCRIPTS_ACTION )
+					configurationValues.get( AvailableSettings.SCHEMA_GEN_SCRIPTS_ACTION )
 			);
 
 			if ( databaseAction == SchemaGenAction.NONE && scriptsAction == SchemaGenAction.NONE ) {
@@ -120,22 +128,22 @@ public class JpaSchemaGenerator {
 			// Figure out the JDBC Connection context, if any ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			final JdbcConnectionContext jdbcConnectionContext = determineAppropriateJdbcConnectionContext(
-					hibernateConfiguration,
+					configurationValues,
 					serviceRegistry
 			);
 
 			try {
-				final Dialect dialect = determineDialect( jdbcConnectionContext, hibernateConfiguration, serviceRegistry );
+				final Dialect dialect = determineDialect( jdbcConnectionContext, configurationValues, serviceRegistry );
 
 
 				// determine sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 				final List<GenerationSource> createSourceList = databaseAction.includesCreate() || scriptsAction.includesCreate()
-						? buildCreateSourceList( hibernateConfiguration, dialect )
+						? buildCreateSourceList( metadata, configurationValues, dialect )
 						: Collections.<GenerationSource>emptyList();
 
 				final List<GenerationSource> dropSourceList = databaseAction.includesDrop() || scriptsAction.includesDrop()
-						? buildDropSourceList( hibernateConfiguration, dialect )
+						? buildDropSourceList( metadata, configurationValues, dialect )
 						: Collections.<GenerationSource>emptyList();
 
 
@@ -143,22 +151,18 @@ public class JpaSchemaGenerator {
 
 				final GenerationTarget databaseTarget = new GenerationTargetToDatabase( jdbcConnectionContext, databaseAction );
 
-				final Object createScriptTargetSetting = hibernateConfiguration.getProperties().get(
-						AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET
-				);
-				final Object dropScriptTargetSetting = hibernateConfiguration.getProperties().get(
-						AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET
-				);
+				final Object createScriptTargetSetting = configurationValues.get( SCHEMA_GEN_SCRIPTS_CREATE_TARGET );
+				final Object dropScriptTargetSetting = configurationValues.get( SCHEMA_GEN_SCRIPTS_DROP_TARGET );
 				final GenerationTarget scriptsTarget = new GenerationTargetToScript(
 						interpretScriptTargetSetting(
 								createScriptTargetSetting,
 								scriptsAction.includesCreate(),
-								AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET
+								SCHEMA_GEN_SCRIPTS_CREATE_TARGET
 						),
 						interpretScriptTargetSetting(
 								dropScriptTargetSetting,
 								scriptsAction.includesDrop(),
-								AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET
+								SCHEMA_GEN_SCRIPTS_DROP_TARGET
 						),
 						scriptsAction
 				);
@@ -168,7 +172,7 @@ public class JpaSchemaGenerator {
 
 				// See if native Hibernate schema generation has also been requested and warn the user if so...
 
-				final String hbm2ddl = hibernateConfiguration.getProperty( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO );
+				final String hbm2ddl = (String) configurationValues.get( HBM2DDL_AUTO );
 				if ( StringHelper.isNotEmpty( hbm2ddl ) ) {
 					log.warnf(
 							"Hibernate hbm2ddl-auto setting was specified [%s] in combination with JPA schema-generation; " +
@@ -192,6 +196,7 @@ public class JpaSchemaGenerator {
 			finally {
 				releaseJdbcConnectionContext( jdbcConnectionContext );
 			}
+
 		}
 
 		private ScriptTargetOutput interpretScriptTargetSetting(
@@ -245,28 +250,28 @@ public class JpaSchemaGenerator {
 			}
 		}
 
-		private List<GenerationSource> buildCreateSourceList(Configuration hibernateConfiguration, Dialect dialect) {
+		private List<GenerationSource> buildCreateSourceList(
+				MetadataImplementor metadata,
+				Map configurationValues,
+				Dialect dialect) {
 			final List<GenerationSource> generationSourceList = new ArrayList<GenerationSource>();
 
 			// If we are asked to perform CREATE SCHEMA commands do them first ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			final boolean createSchemas = ConfigurationHelper.getBoolean(
 					AvailableSettings.SCHEMA_GEN_CREATE_SCHEMAS,
-					hibernateConfiguration.getProperties(),
+					configurationValues,
 					false
 			);
-			if ( createSchemas ) {
-				generationSourceList.add( new CreateSchemaCommandSource( hibernateConfiguration, dialect ) );
-			}
 
 
 			// Next figure out the intended sources of generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			SchemaGenSource sourceType = SchemaGenSource.interpret(
-					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_CREATE_SOURCE )
+					configurationValues.get( AvailableSettings.SCHEMA_GEN_CREATE_SOURCE )
 			);
 
-			final Object createScriptSourceSetting = hibernateConfiguration.getProperties().get(
+			final Object createScriptSourceSetting = configurationValues.get(
 					AvailableSettings.SCHEMA_GEN_CREATE_SCRIPT_SOURCE
 			);
 
@@ -290,26 +295,24 @@ public class JpaSchemaGenerator {
 					: null;
 
 			if ( sourceType == SchemaGenSource.METADATA ) {
-				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( metadata, dialect, createSchemas, true ) );
 			}
 			else if ( sourceType == SchemaGenSource.SCRIPT ) {
 				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
 			}
 			else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
-				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( metadata, dialect, createSchemas, true ) );
 				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
 			}
 			else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
 				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
-				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( metadata, dialect, createSchemas, true ) );
 			}
 
 
 			// finally, see if there is an import script specified ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			final Object importScriptSetting = hibernateConfiguration.getProperties().get(
-					AvailableSettings.SCHEMA_GEN_LOAD_SCRIPT_SOURCE
-			);
+			final Object importScriptSetting = configurationValues.get( AvailableSettings.SCHEMA_GEN_LOAD_SCRIPT_SOURCE );
 			if ( importScriptSetting != null ) {
 				final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting );
 				generationSourceList.add( new ImportScriptSource( importScriptInput, scriptCommandExtractor ) );
@@ -344,14 +347,17 @@ public class JpaSchemaGenerator {
 			}
 		}
 
-		private List<GenerationSource> buildDropSourceList(Configuration hibernateConfiguration, Dialect dialect) {
+		private List<GenerationSource> buildDropSourceList(
+				MetadataImplementor metadata,
+				Map configurationValues,
+				Dialect dialect) {
 			final List<GenerationSource> generationSourceList = new ArrayList<GenerationSource>();
 
 			SchemaGenSource sourceType = SchemaGenSource.interpret(
-					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DROP_SOURCE )
+					configurationValues.get( AvailableSettings.SCHEMA_GEN_DROP_SOURCE )
 			);
 
-			final Object dropScriptSourceSetting = hibernateConfiguration.getProperties().get(
+			final Object dropScriptSourceSetting = configurationValues.get(
 					AvailableSettings.SCHEMA_GEN_DROP_SCRIPT_SOURCE
 			);
 
@@ -376,18 +382,18 @@ public class JpaSchemaGenerator {
 					: null;
 
 			if ( sourceType == SchemaGenSource.METADATA ) {
-				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( metadata, dialect, false, false ) );
 			}
 			else if ( sourceType == SchemaGenSource.SCRIPT ) {
 				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
 			}
 			else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
-				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( metadata, dialect, false, false ) );
 				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
 			}
 			else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
 				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
-				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( metadata, dialect, false, false ) );
 			}
 
 			return generationSourceList;
@@ -395,12 +401,12 @@ public class JpaSchemaGenerator {
 	}
 
 	private static JdbcConnectionContext determineAppropriateJdbcConnectionContext(
-			Configuration hibernateConfiguration,
+			Map configurationValues,
 			ServiceRegistry serviceRegistry) {
 		final SqlStatementLogger sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
 
 		// see if a specific connection has been provided:
-		final Connection providedConnection = (Connection) hibernateConfiguration.getProperties().get(
+		final Connection providedConnection = (Connection) configurationValues.get(
 				AvailableSettings.SCHEMA_GEN_CONNECTION
 		);
 
@@ -424,20 +430,20 @@ public class JpaSchemaGenerator {
 
 	private static Dialect determineDialect(
 			final JdbcConnectionContext jdbcConnectionContext,
-			final Configuration hibernateConfiguration,
+			final Map configurationValues,
 			ServiceRegistry serviceRegistry) {
 
 		return serviceRegistry.getService( DialectFactory.class ).buildDialect(
-				hibernateConfiguration.getProperties(),
+				configurationValues,
 				new DialectResolutionInfoSource() {
 					@Override
 					public DialectResolutionInfo getDialectResolutionInfo() {
 
 						// if the application supplied database name/version info, use that
-						final String explicitDbName = hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DB_NAME );
+						final String explicitDbName = (String) configurationValues.get( AvailableSettings.SCHEMA_GEN_DB_NAME );
 						if ( StringHelper.isNotEmpty( explicitDbName ) ) {
-							final String explicitDbMajor = hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DB_MAJOR_VERSION );
-							final String explicitDbMinor = hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DB_MINOR_VERSION );
+							final String explicitDbMajor = (String) configurationValues.get( AvailableSettings.SCHEMA_GEN_DB_MAJOR_VERSION );
+							final String explicitDbMinor = (String) configurationValues.get( AvailableSettings.SCHEMA_GEN_DB_MINOR_VERSION );
 
 							return new DialectResolutionInfo() {
 								@Override
@@ -483,7 +489,7 @@ public class JpaSchemaGenerator {
 									jdbcConnectionContext.getJdbcConnection().getMetaData()
 							);
 						}
-						catch ( SQLException sqlException ) {
+						catch (SQLException sqlException) {
 							throw new HibernateException(
 									"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
 									sqlException
@@ -537,61 +543,6 @@ public class JpaSchemaGenerator {
 		}
 		catch (Exception e) {
 			log.debug( "Unable to release JDBC connection after generation" );
-		}
-	}
-
-
-	private static class CreateSchemaCommandSource implements GenerationSource {
-		private final List<String> commands;
-
-		private CreateSchemaCommandSource(Configuration hibernateConfiguration, Dialect dialect) {
-			// NOTES:
-			//		1) catalogs are currently not handled here at all
-			//		2) schemas for sequences are not handled here at all
-			//	Both of these are handle-able on the metamodel codebase
-
-			final HashSet<String> schemas = new HashSet<String>();
-//			final HashSet<String> catalogs = new HashSet<String>();
-
-			final Iterator<Table> tables = hibernateConfiguration.getTableMappings();
-			while ( tables.hasNext() ) {
-				final Table table = tables.next();
-//				catalogs.add( table.getCatalog() );
-				schemas.add( table.getSchema() );
-			}
-
-//			final Iterator<IdentifierGenerator> generators = hibernateConfiguration.iterateGenerators( dialect );
-//			while ( generators.hasNext() ) {
-//				final IdentifierGenerator generator = generators.next();
-//				if ( PersistentIdentifierGenerator.class.isInstance( generator ) ) {
-////					catalogs.add( ( (PersistentIdentifierGenerator) generator ).getCatalog() );
-//					schemas.add( ( (PersistentIdentifierGenerator) generator ).getSchema() );
-//				}
-//			}
-
-//			if ( schemas.isEmpty() && catalogs.isEmpty() ) {
-			if ( schemas.isEmpty() ) {
-				commands = Collections.emptyList();
-				return;
-			}
-
-			commands = new ArrayList<String>();
-
-			for ( String schema : schemas ) {
-				commands.add( dialect.getCreateSchemaCommand( schema ) );
-			}
-
-			// generate "create catalog" commands
-		}
-
-		@Override
-		public Iterable<String> getCommands() {
-			return commands;
-		}
-
-		@Override
-		public void release() {
-			// nothing to do
 		}
 	}
 

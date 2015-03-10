@@ -23,10 +23,10 @@
  */
 package org.hibernate.test.keymanytoone.bidir.component;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,10 +36,11 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -65,16 +66,15 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 		super.prepareBootstrapRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {
-
-				    @Override
+					@Override
 					public void integrate(
-							Configuration configuration,
+							Metadata metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-                        integrate(serviceRegistry);
+						integrate( serviceRegistry );
 					}
 
-                    private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
+					private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
                         serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(EventType.LOAD,
                                                                                                    new CustomLoadListener());
                     }

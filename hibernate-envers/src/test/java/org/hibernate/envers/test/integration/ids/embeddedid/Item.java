@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.ids.embeddedid;
 
+import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import java.io.Serializable;
 
 import org.hibernate.envers.Audited;
 

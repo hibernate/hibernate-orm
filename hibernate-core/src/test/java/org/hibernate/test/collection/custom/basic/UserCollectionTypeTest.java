@@ -23,12 +23,12 @@
  */
 package org.hibernate.test.collection.custom.basic;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Max Rydahl Andersen
  */
-public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase {
+public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected String getCacheConcurrencyStrategy() {

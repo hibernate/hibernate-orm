@@ -23,14 +23,14 @@
  */
 package org.hibernate.test.mixed;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
+
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -43,11 +43,6 @@ public class MixedTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[]{"mixed/Item.hbm.xml"};
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	@Test

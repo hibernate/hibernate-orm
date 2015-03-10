@@ -9,9 +9,8 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.norevision.Name;
 import org.hibernate.envers.test.integration.collection.norevision.Person;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -23,13 +23,13 @@
  */
 package org.hibernate.envers.test.entities.collection;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.envers.Audited;
 

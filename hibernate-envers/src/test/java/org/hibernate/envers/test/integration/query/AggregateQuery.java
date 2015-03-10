@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.query;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -34,10 +34,9 @@ import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.envers.test.entities.ids.UnusualIdNamingEntity;
 import org.hibernate.envers.test.tools.TestTools;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Adam Warski (adam at warski dot org)

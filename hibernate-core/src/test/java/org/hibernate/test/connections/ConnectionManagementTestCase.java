@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.connections;
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -48,7 +47,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 
-public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTestCase {
+public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public final String[] getMappings() {
 		return new String[] { "connections/Silly.hbm.xml" };

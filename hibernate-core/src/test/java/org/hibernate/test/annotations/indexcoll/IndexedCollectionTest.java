@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -39,8 +37,10 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,7 +53,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Emmanuel Bernard
  */
-public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
+public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testJPA2DefaultMapColumns() throws Exception {
 		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDef", "_KEY" );
@@ -72,7 +72,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
-		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
+		final Collection collection = metadata().getCollectionBinding( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {

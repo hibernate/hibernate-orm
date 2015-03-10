@@ -23,7 +23,7 @@
  */
 package org.hibernate.engine.query.spi;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -41,7 +41,7 @@ public class NativeQueryInterpreterInitiator implements SessionFactoryServiceIni
 	@Override
 	public NativeQueryInterpreter initiateService(
 			SessionFactoryImplementor sessionFactory,
-			Configuration configuration,
+			SessionFactory.SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry) {
 		return NativeQueryInterpreterStandardImpl.INSTANCE;
 	}

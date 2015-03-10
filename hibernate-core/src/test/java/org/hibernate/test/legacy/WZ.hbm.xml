@@ -6,7 +6,7 @@
 
 	<class name="org.hibernate.test.legacy.Z">
 		<id name="id" unsaved-value="0" column="zid">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<many-to-one name="w" 
 			cascade="save-update"
@@ -21,7 +21,7 @@
 		proxy="org.hibernate.test.legacy.W">
 		
 		<id name="id" unsaved-value="0" column="wid">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<!--<set name="zeds" lazy="true">
 			<key column="w"/>

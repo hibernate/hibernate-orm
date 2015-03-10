@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.util;
+
 import java.util.Iterator;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 
@@ -34,10 +35,9 @@ import org.hibernate.mapping.Table;
  * @author Emmanuel Bernard
  */
 public abstract class SchemaUtil {
-	public static boolean isColumnPresent(String tableName, String columnName, Configuration cfg) {
-		final Iterator<Table> tables = cfg.getTableMappings();
-		while (tables.hasNext()) {
-			Table table = tables.next();
+	@SuppressWarnings("unchecked")
+	public static boolean isColumnPresent(String tableName, String columnName, Metadata metadata) {
+		for ( Table table : metadata.collectTableMappings() ) {
 			if (tableName.equals( table.getName() ) ) {
 				Iterator<Column> columns = (Iterator<Column>) table.getColumnIterator();
 				while ( columns.hasNext() ) {
@@ -48,17 +48,17 @@ public abstract class SchemaUtil {
 				}
 			}
 		}
+
 		return false;
 	}
 
-	public static boolean isTablePresent(String tableName, Configuration cfg) {
-		final Iterator<Table> tables = cfg.getTableMappings();
-		while (tables.hasNext()) {
-			Table table = tables.next();
-			if (tableName.equals( table.getName() ) ) {
+	public static boolean isTablePresent(String tableName, Metadata metadata) {
+		for ( Table table : metadata.collectTableMappings() ) {
+			if ( tableName.equals( table.getName() ) ) {
 				return true;
 			}
 		}
+
 		return false;
 	}
 }

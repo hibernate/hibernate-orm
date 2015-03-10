@@ -23,24 +23,26 @@
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
 
+import java.util.Map;
 import javax.transaction.TransactionManager;
 
-import org.infinispan.Cache;
-import org.infinispan.manager.CacheContainer;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.jboss.logging.Logger;
+import org.hibernate.SessionFactory;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.internal.StandardQueryCache;
+
+import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.internal.StandardQueryCache;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
+import org.infinispan.Cache;
+import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.EmbeddedCacheManager;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -67,24 +69,24 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	private Cache remoteQueryCache;
 	private CacheAccessListener remoteQueryListener;
 
-   private static ClassLoader originalTCCL;
+	private static ClassLoader originalTCCL;
 
 //   private static ClassLoader visibleClassesCl;
 
 	@BeforeClass
 	public static void prepareClassLoader() {
-      final String packageName = IsolatedClassLoaderTest.class.getPackage().getName();
-      final String[] classes = new String[] { packageName + ".Account", packageName + ".AccountHolder" };
-      originalTCCL = Thread.currentThread().getContextClassLoader();
-      // Most likely, it will point to system classloader
-      ClassLoader parent = originalTCCL == null ? IsolatedClassLoaderTest.class.getClassLoader() : originalTCCL;
+		final String packageName = IsolatedClassLoaderTest.class.getPackage().getName();
+		final String[] classes = new String[] {packageName + ".Account", packageName + ".AccountHolder"};
+		originalTCCL = Thread.currentThread().getContextClassLoader();
+		// Most likely, it will point to system classloader
+		ClassLoader parent = originalTCCL == null ? IsolatedClassLoaderTest.class.getClassLoader() : originalTCCL;
 
-      // First, create a classloader where classes won't be found
-      ClassLoader selectedTCCL = new SelectedClassnameClassLoader(null, null, classes, parent);
+		// First, create a classloader where classes won't be found
+		ClassLoader selectedTCCL = new SelectedClassnameClassLoader( null, null, classes, parent );
 
-      // Now, make the class visible to the test driver
-      SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(classes, null, null, selectedTCCL);
-      Thread.currentThread().setContextClassLoader(visible);
+		// Now, make the class visible to the test driver
+		SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader( classes, null, null, selectedTCCL );
+		Thread.currentThread().setContextClassLoader( visible );
 //      visibleClassesCl = new SelectedClassnameClassLoader(classes, null, null, selectedTCCL);
 //      Thread.currentThread().setContextClassLoader(selectedTCCL);
 	}
@@ -103,10 +105,12 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	}
 
 	@Override
-	protected void standardConfigure(Configuration cfg) {
-		super.standardConfigure( cfg );
-		cfg.setProperty( InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query" );
-		cfg.setProperty( "hibernate.cache.infinispan.AccountRegion.cfg", "replicated-query" );
+	@SuppressWarnings("unchecked")
+	protected void applyStandardSettings(Map settings) {
+		super.applyStandardSettings( settings );
+
+		settings.put( InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query" );
+		settings.put( "hibernate.cache.infinispan.AccountRegion.cfg", "replicated-query" );
 	}
 
 	@Override
@@ -119,8 +123,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	@Override
 	protected void cleanupTest() throws Exception {
 		try {
-         // Clear the local account cache
-         sessionFactory().getCache().evictEntityRegion(Account.class.getName());
+			// Clear the local account cache
+			sessionFactory().getCache().evictEntityRegion( Account.class.getName() );
 			if ( localQueryCache != null && localQueryListener != null ) {
 				localQueryCache.removeListener( localQueryListener );
 			}
@@ -133,8 +137,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		}
 	}
 
-   @Ignore("Infinispan caches now use whichever classloader is associated on " +
-           "construction, i.e. deployment JPA app, so does not rely on TCCL.")
+	@Ignore("Infinispan caches now use whichever classloader is associated on " +
+			"construction, i.e. deployment JPA app, so does not rely on TCCL.")
 	@Test
 	public void testIsolatedSetup() throws Exception {
 		// Bind a listener to the "local" cache
@@ -174,19 +178,19 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( acct.getClass().getName(), remoteReplicatedCache.get( "isolated2" ).getClass().getName() );
 	}
 
-   @Ignore("Infinispan caches now use whichever classloader is associated on " +
-           "construction, i.e. deployment JPA app, so does not rely on TCCL.")
+	@Ignore("Infinispan caches now use whichever classloader is associated on " +
+			"construction, i.e. deployment JPA app, so does not rely on TCCL.")
 	@Test
 	public void testClassLoaderHandlingNamedQueryRegion() throws Exception {
-      rebuildSessionFactory();
+		rebuildSessionFactory();
 		queryTest( true );
 	}
 
-   @Ignore("Infinispan caches now use whichever classloader is associated on " +
-           "construction, i.e. deployment JPA app, so does not rely on TCCL.")
+	@Ignore("Infinispan caches now use whichever classloader is associated on " +
+			"construction, i.e. deployment JPA app, so does not rely on TCCL.")
 	@Test
 	public void testClassLoaderHandlingStandardQueryCache() throws Exception {
-      rebuildSessionFactory();
+		rebuildSessionFactory();
 		queryTest( false );
 	}
 
@@ -200,10 +204,14 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		if ( useNamedRegion ) {
 			cacheName = "AccountRegion"; // As defined by ClassLoaderTestDAO via calls to query.setCacheRegion
 			// Define cache configurations for region early to avoid ending up with local caches for this region
-         localManager.defineConfiguration(cacheName,
-               localManager.getCacheConfiguration("replicated-query"));
-         remoteManager.defineConfiguration(cacheName,
-               remoteManager.getCacheConfiguration("replicated-query"));
+			localManager.defineConfiguration(
+					cacheName,
+					localManager.getCacheConfiguration( "replicated-query" )
+			);
+			remoteManager.defineConfiguration(
+					cacheName,
+					remoteManager.getCacheConfiguration( "replicated-query" )
+			);
 		}
 		else {
 			cacheName = "replicated-query";

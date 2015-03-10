@@ -3,8 +3,8 @@ package org.hibernate.test.events;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -21,11 +21,10 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Test to ensure that the existing post commit behavior when using plain PostXEventListeners fire on both success and failure.
@@ -52,10 +51,9 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		super.prepareBootstrapRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {
-
 					@Override
 					public void integrate(
-							Configuration configuration,
+							Metadata metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
 						integrate( serviceRegistry );

@@ -23,11 +23,13 @@
  */
 package org.hibernate.test.connections;
 
+import java.util.Map;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.RequiresDialect;
 
 /**
@@ -47,8 +49,9 @@ public class BasicConnectionProviderTest extends ConnectionManagementTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.ON_CLOSE.toString() );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.ON_CLOSE.toString() );
 	}
 }

@@ -30,9 +30,8 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetoone.BidirectionalEagerAnnotationRefEdOneToOne;
 import org.hibernate.envers.test.entities.onetoone.BidirectionalEagerAnnotationRefIngOneToOne;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 

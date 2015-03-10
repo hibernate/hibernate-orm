@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.strategy;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

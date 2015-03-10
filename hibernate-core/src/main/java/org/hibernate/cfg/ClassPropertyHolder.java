@@ -32,6 +32,7 @@ import javax.persistence.JoinTable;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
@@ -59,9 +60,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			PersistentClass persistentClass,
 			XClass entityXClass,
 			Map<String, Join> joins,
-			Mappings mappings,
+			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		super( persistentClass.getEntityName(), null, entityXClass, mappings );
+		super( persistentClass.getEntityName(), null, entityXClass, context );
 		this.persistentClass = persistentClass;
 		this.joins = joins;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
@@ -73,9 +74,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			PersistentClass persistentClass,
 			XClass entityXClass,
 			EntityBinder entityBinder,
-			Mappings mappings,
+			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		this( persistentClass, entityXClass, entityBinder.getSecondaryTables(), mappings, inheritanceStatePerClass );
+		this( persistentClass, entityXClass, entityBinder.getSecondaryTables(), context, inheritanceStatePerClass );
 		this.entityBinder = entityBinder;
 	}
 
@@ -247,9 +248,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
-		final Mappings mappings = getMappings();
-		final Class type = mappings.getReflectionManager().toClass( declaringClass );
-		MappedSuperclass superclass = mappings.getMappedSuperclass( type );
+		final Class type = getContext().getBuildingOptions().getReflectionManager().toClass( declaringClass );
+		MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
 		superclass.addDeclaredProperty( prop );
 	}
 
@@ -331,7 +331,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 //					convertAnnotation.converter().getName(),
 //					property.getName()
 //			);
-//			attributeConverterDefinition = getMappings().locateAttributeConverter( convertAnnotation.converter() );
+//			attributeConverterDefinition = getMetadata().locateAttributeConverter( convertAnnotation.converter() );
 //		}
 //		else {
 //			attributeConverterDefinition = locateAutoApplyAttributeConverter( property );

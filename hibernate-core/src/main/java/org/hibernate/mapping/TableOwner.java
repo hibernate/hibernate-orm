@@ -23,13 +23,13 @@
  */
 package org.hibernate.mapping;
 
-
 /**
- * Interface allowing to differenciate SubClasses
- * from Classes, JoinedSubClasses and UnionSubClasses
- * The first one has not its own table while the others have
+ * Additional, optional contract as part pf the {@link org.hibernate.mapping.PersistentClass}
+ * hierarchy used to differentiate entity bindings for entities that map to their own table
+ * (root, union-subclass, joined-subclass) versus those that do not (discriminator-subclass).
  * 
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 public interface TableOwner {
 	void setTable(Table table);

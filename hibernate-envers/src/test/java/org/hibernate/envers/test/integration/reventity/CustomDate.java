@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.reventity;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Date;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;

@@ -30,6 +30,7 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -47,17 +48,17 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 
 	private final String referencedEntityName;
 	private final Component component;
-	private final Mappings mappings;
+	private final MetadataBuildingContext buildingContext;
 	private final Ejb3JoinColumn[] joinColumns;
 
 	public CopyIdentifierComponentSecondPass(
 			Component comp,
 			String referencedEntityName,
 			Ejb3JoinColumn[] joinColumns,
-			Mappings mappings) {
+			MetadataBuildingContext buildingContext) {
 		this.component = comp;
 		this.referencedEntityName = referencedEntityName;
-		this.mappings = mappings;
+		this.buildingContext = buildingContext;
 		this.joinColumns = joinColumns;
 	}
 
@@ -114,7 +115,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				//property.setOptional( property.isOptional() );
 				property.setPersistentClass( component.getOwner() );
 				property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-				SimpleValue value = new SimpleValue( mappings, component.getTable() );
+				SimpleValue value = new SimpleValue( buildingContext.getMetadataCollector(), component.getTable() );
 				property.setValue( value );
 				final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
 				value.setTypeName( referencedValue.getTypeName() );
@@ -140,7 +141,10 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 						String logicalColumnName = null;
 						if ( isExplicitReference ) {
 							final String columnName = column.getName();
-							logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
+							logicalColumnName = buildingContext.getMetadataCollector().getLogicalColumnName(
+									referencedPersistentClass.getTable(),
+									columnName
+							);
 							//JPA 2 requires referencedColumnNames to be case insensitive
 							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase() );
 						}

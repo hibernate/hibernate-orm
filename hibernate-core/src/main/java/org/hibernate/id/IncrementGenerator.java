@@ -31,8 +31,8 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -71,7 +71,8 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		return previousValueHolder.makeValueThenIncrement();
 	}
 
-	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
+	@Override
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
 		returnClass = type.getReturnedClass();
 
 		ObjectNameNormalizer normalizer =
@@ -81,7 +82,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		if ( column == null ) {
 			column = params.getProperty( PersistentIdentifierGenerator.PK );
 		}
-		column = dialect.quote( normalizer.normalizeIdentifierQuoting( column ) );
+		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnv.getDialect() );
 
 		String tableList = params.getProperty( "tables" );
 		if ( tableList == null ) {
@@ -89,20 +90,16 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		}
 		String[] tables = StringHelper.split( ", ", tableList );
 
-		final String schema = dialect.quote(
-				normalizer.normalizeIdentifierQuoting(
-						params.getProperty( PersistentIdentifierGenerator.SCHEMA )
-				)
+		final String schema = normalizer.toDatabaseIdentifierText(
+				params.getProperty( PersistentIdentifierGenerator.SCHEMA )
 		);
-		final String catalog = dialect.quote(
-				normalizer.normalizeIdentifierQuoting(
-						params.getProperty( PersistentIdentifierGenerator.CATALOG )
-				)
+		final String catalog = normalizer.toDatabaseIdentifierText(
+				params.getProperty( PersistentIdentifierGenerator.CATALOG )
 		);
 
 		StringBuilder buf = new StringBuilder();
 		for ( int i=0; i < tables.length; i++ ) {
-			final String tableName = dialect.quote( normalizer.normalizeIdentifierQuoting( tables[i] ) );
+			final String tableName = normalizer.toDatabaseIdentifierText( tables[i] );
 			if ( tables.length > 1 ) {
 				buf.append( "select max(" ).append( column ).append( ") as mx from " );
 			}

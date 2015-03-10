@@ -25,19 +25,23 @@
 package org.hibernate.tool.hbm2ddl;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.naming.NamingStrategyDelegator;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.apache.tools.ant.BuildException;
@@ -71,8 +75,7 @@ import org.apache.tools.ant.types.FileSet;
  * @author Rong C Ou
  */
 public class SchemaExportTask extends MatchingTask {
-
-	private List fileSets = new LinkedList();
+	private List<FileSet> fileSets = new LinkedList<FileSet>();
 	private File propertiesFile;
 	private File configurationFile;
 	private File outputFile;
@@ -82,9 +85,10 @@ public class SchemaExportTask extends MatchingTask {
 	private boolean create;
 	private boolean haltOnError;
 	private String delimiter;
-	private String namingStrategy;
-	private String namingStrategyDelegator;
+	private String implicitNamingStrategy;
+	private String physicalNamingStrategy;
 
+	@SuppressWarnings("UnusedDeclaration")
 	public void addFileset(FileSet set) {
 		fileSets.add(set);
 	}
@@ -116,6 +120,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * written to standard out.
 	 * @param quiet true to enable quiet mode
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public void setQuiet(boolean quiet) {
 		this.quiet = quiet;
 	}
@@ -151,6 +156,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * Set the end of statement delimiter for the generated script
 	 * @param delimiter the delimiter
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public void setDelimiter(String delimiter) {
 		this.delimiter = delimiter;
 	}
@@ -164,12 +170,36 @@ public class SchemaExportTask extends MatchingTask {
 	}
 
 	/**
+	 * @deprecated Use {@link #setImplicitNamingStrategy} or {@link #setPhysicalNamingStrategy}
+	 * instead
+	 */
+	@Deprecated
+	public void setNamingStrategy(String namingStrategy) {
+		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
+		this.implicitNamingStrategy = implicitNamingStrategy;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
+		this.physicalNamingStrategy = physicalNamingStrategy;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void setHaltonerror(boolean haltOnError) {
+		this.haltOnError = haltOnError;
+	}
+
+	/**
 	 * Execute the task
 	 */
 	@Override
     public void execute() throws BuildException {
 		try {
-			getSchemaExport( getConfiguration() ).execute(!quiet, !text, drop, create);
+			buildSchemaExport().execute( !quiet, !text, drop, create );
 		}
 		catch (HibernateException e) {
 			throw new BuildException("Schema text failed: " + e.getMessage(), e);
@@ -186,18 +216,14 @@ public class SchemaExportTask extends MatchingTask {
 	}
 
 	private String[] getFiles() {
-
-		List files = new LinkedList();
-		for ( Iterator i = fileSets.iterator(); i.hasNext(); ) {
-
-			FileSet fs = (FileSet) i.next();
-			DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
-
-			String[] dsFiles = ds.getIncludedFiles();
-			for (int j = 0; j < dsFiles.length; j++) {
-				File f = new File(dsFiles[j]);
+		List<String> files = new LinkedList<String>();
+		for ( FileSet fileSet : fileSets ) {
+			final DirectoryScanner ds = fileSet.getDirectoryScanner( getProject() );
+			final String[] dsFiles = ds.getIncludedFiles();
+			for ( String dsFileName : dsFiles ) {
+				File f = new File( dsFileName );
 				if ( !f.isFile() ) {
-					f = new File( ds.getBasedir(), dsFiles[j] );
+					f = new File( ds.getBasedir(), dsFileName );
 				}
 
 				files.add( f.getAbsolutePath() );
@@ -207,65 +233,49 @@ public class SchemaExportTask extends MatchingTask {
 		return ArrayHelper.toStringArray(files);
 	}
 
-	private Configuration getConfiguration() throws Exception {
-		Configuration cfg = new Configuration();
-		if ( namingStrategy != null && namingStrategyDelegator != null ) {
-			throw new HibernateException( "namingStrategy and namingStrategyDelegator cannot be specified together." );
-		}
-		if (namingStrategy!=null) {
-			cfg.setNamingStrategy(
-					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
-				);
-		}
-		else if ( namingStrategyDelegator != null) {
-			cfg.setNamingStrategyDelegator(
-					( NamingStrategyDelegator) ReflectHelper.classForName( namingStrategyDelegator ).newInstance()
+	private SchemaExport buildSchemaExport() throws Exception {
+		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
-			);
-		}
-		if (configurationFile != null) {
-			cfg.configure( configurationFile );
-		}
+		final MetadataSources metadataSources = new MetadataSources( bsr );
+		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
 
-		String[] files = getFiles();
-		for (int i = 0; i < files.length; i++) {
-			String filename = files[i];
-			if ( filename.endsWith(".jar") ) {
-				cfg.addJar( new File(filename) );
+		if ( configurationFile != null ) {
+			ssrBuilder.configure( configurationFile );
+		}
+		if ( propertiesFile != null ) {
+			ssrBuilder.loadProperties( propertiesFile );
+		}
+		ssrBuilder.applySettings( getProject().getProperties() );
+
+		for ( String fileName : getFiles() ) {
+			if ( fileName.endsWith(".jar") ) {
+				metadataSources.addJar( new File( fileName ) );
 			}
 			else {
-				cfg.addFile(filename);
+				metadataSources.addFile( fileName );
 			}
 		}
-		return cfg;
-	}
 
-	private SchemaExport getSchemaExport(Configuration cfg) throws HibernateException, IOException {
-		Properties properties = new Properties();
-		properties.putAll( cfg.getProperties() );
-		if (propertiesFile == null) {
-			properties.putAll( getProject().getProperties() );
+
+		final StandardServiceRegistryImpl ssr = (StandardServiceRegistryImpl) ssrBuilder.build();
+		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
+
+		ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
+		if ( implicitNamingStrategy != null ) {
+			metadataBuilder.with(
+					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
+			);
 		}
-		else {
-			properties.load( new FileInputStream(propertiesFile) );
+		if ( physicalNamingStrategy != null ) {
+			metadataBuilder.with(
+					(PhysicalNamingStrategy) classLoaderService.classForName( physicalNamingStrategy ).newInstance()
+			);
 		}
-		cfg.setProperties(properties);
-		return new SchemaExport(cfg)
-				.setHaltOnError(haltOnError)
+
+		return new SchemaExport( (MetadataImplementor) metadataBuilder.build() )
+				.setHaltOnError( haltOnError )
 				.setOutputFile( outputFile.getPath() )
-				.setDelimiter(delimiter);
-	}
-
-	public void setNamingStrategy(String namingStrategy) {
-		this.namingStrategy = namingStrategy;
-	}
-
-	public void setNamingStrategyDelegator(String namingStrategyDelegator) {
-		this.namingStrategyDelegator =  namingStrategyDelegator;
-	}
-
-	public void setHaltonerror(boolean haltOnError) {
-		this.haltOnError = haltOnError;
+				.setDelimiter( delimiter );
 	}
 
 }

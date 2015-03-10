@@ -2,17 +2,16 @@ package org.hibernate.envers.test.integration.naming;
 
 import javax.persistence.EntityManager;
 
-import ee.estonia.entities.Child;
-import ee.estonia.entities.Parent;
-
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import ee.estonia.entities.Child;
+import ee.estonia.entities.Parent;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

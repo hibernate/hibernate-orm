@@ -23,18 +23,17 @@
  */
 package org.hibernate.envers.test.integration.data;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Map;
+import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
-import org.junit.Test;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)

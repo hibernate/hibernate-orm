@@ -8,7 +8,7 @@
 	<class name="Person" discriminator-value="0" table="SPerson">
 
 		<id name="id" column="person_id">
-			<generator class="native"/>
+			<generator class="increment"/>
 		</id>
 
 		<discriminator type="int"

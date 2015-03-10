@@ -25,19 +25,19 @@ package org.hibernate.test.propertyref.basic;
 
 import java.util.Iterator;
 import java.util.List;
-
-import org.junit.Test;
+import java.util.Map;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,16 +49,16 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-public class PropertyRefTest extends BaseCoreFunctionalTestCase {
+public class PropertyRefTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "propertyref/basic/Person.hbm.xml" };
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "1");
-		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "1" );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true");
 	}
 
 	@Override
@@ -271,7 +271,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testForeignKeyCreation() {
-		PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
+		PersistentClass classMapping = metadata().getEntityBinding( Account.class.getName() );
 		
 		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
 		boolean found = false;

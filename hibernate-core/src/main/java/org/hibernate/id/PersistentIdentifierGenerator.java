@@ -23,6 +23,7 @@
  */
 package org.hibernate.id;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -33,9 +34,11 @@ import org.hibernate.dialect.Dialect;
  *
  * @see IdentifierGenerator
  * @see Configurable
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface PersistentIdentifierGenerator extends IdentifierGenerator {
+public interface PersistentIdentifierGenerator extends IdentifierGenerator, ExportableProducer {
 
 	/**
 	 * The configuration parameter holding the schema name
@@ -66,7 +69,7 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
     public static final String CATALOG = "catalog";
 
 	/**
-	 * The key under whcih to find the {@link org.hibernate.cfg.ObjectNameNormalizer} in the config param map.
+	 * The key under whcih to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
 	 */
 	public static final String IDENTIFIER_NORMALIZER = "identifier_normalizer";
 
@@ -76,7 +79,10 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	 * @param dialect The dialect against which to generate the create command(s)
 	 * @return The create command(s)
 	 * @throws HibernateException problem creating the create command(s)
+	 *
+	 * @deprecated Utilize the ExportableProducer contract instead
 	 */
+	@Deprecated
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException;
 
 	/**
@@ -85,7 +91,10 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	 * @param dialect The dialect against which to generate the drop command(s)
 	 * @return The drop command(s)
 	 * @throws HibernateException problem creating the drop command(s)
+	 *
+	 * @deprecated Utilize the ExportableProducer contract instead
 	 */
+	@Deprecated
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException;
 
 	/**

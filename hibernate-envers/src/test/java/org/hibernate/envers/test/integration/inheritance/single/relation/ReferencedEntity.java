@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.integration.inheritance.single.relation;
 
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.Set;
 
 import org.hibernate.envers.Audited;
 

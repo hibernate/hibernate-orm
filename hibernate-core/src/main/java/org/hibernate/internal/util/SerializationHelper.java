@@ -181,7 +181,7 @@ public final class SerializationHelper {
 	 * @throws IllegalArgumentException if <code>inputStream</code> is <code>null</code>
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
-	public static Object deserialize(InputStream inputStream) throws SerializationException {
+	public static <T> T deserialize(InputStream inputStream) throws SerializationException {
 		return doDeserialize( inputStream, defaultClassLoader(), hibernateClassLoader(), null );
 	}
 
@@ -222,7 +222,8 @@ public final class SerializationHelper {
 		return doDeserialize( inputStream, loader, defaultClassLoader(), hibernateClassLoader() );
 	}
 
-	public static Object doDeserialize(
+	@SuppressWarnings("unchecked")
+	public static <T> T doDeserialize(
 			InputStream inputStream,
 			ClassLoader loader,
 			ClassLoader fallbackLoader1,
@@ -241,7 +242,7 @@ public final class SerializationHelper {
 					fallbackLoader2
 			);
 			try {
-				return in.readObject();
+				return (T) in.readObject();
 			}
 			catch ( ClassNotFoundException e ) {
 				throw new SerializationException( "could not deserialize", e );

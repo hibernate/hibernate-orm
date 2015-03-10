@@ -8,7 +8,7 @@
 
 	<class name="I">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name" unique="true" not-null="true"/>
 		<property name="type" column="type_"/>
@@ -20,7 +20,7 @@
 	
 	<class name="K">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<set name="is" inverse="true">
 			<key column="parent"/>

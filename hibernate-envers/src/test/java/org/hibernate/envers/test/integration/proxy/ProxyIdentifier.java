@@ -25,9 +25,6 @@ package org.hibernate.envers.test.integration.proxy;
 
 import javax.persistence.EntityManager;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
@@ -38,7 +35,10 @@ import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAudi
 import org.hibernate.envers.test.entities.onetomany.OneToManyNotAuditedNullEntity;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
 import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Eugene Goroschenya

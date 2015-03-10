@@ -23,6 +23,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -32,7 +33,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  *
  * @author Steve Ebersole
  */
-public interface DatabaseStructure {
+public interface DatabaseStructure extends ExportableProducer {
 	/**
 	 * The name of the database structure (table or sequence).
 	 * @return The structure name.

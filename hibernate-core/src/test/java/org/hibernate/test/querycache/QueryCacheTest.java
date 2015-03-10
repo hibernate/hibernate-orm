@@ -23,10 +23,6 @@
  */
 package org.hibernate.test.querycache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,23 +33,27 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
+import org.hibernate.transform.Transformers;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.transform.Transformers;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  * @author Brett Meyer
  */
-public class QueryCacheTest extends BaseCoreFunctionalTestCase {
+public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final CompositeKey PK = new CompositeKey(1, 2);
 	
@@ -73,12 +73,11 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
-		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "foo" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	protected void addSettings(Map settings) {
+		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
+		settings.put( AvailableSettings.CACHE_REGION_PREFIX, "foo" );
+		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
+		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override

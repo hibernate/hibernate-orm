@@ -24,8 +24,8 @@
 
 package org.hibernate.envers.test.integration.modifiedflags;
 
-import javax.persistence.EntityManager;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.childrelation.ChildIngEntity;

@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.internal;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceBinding;
@@ -37,19 +37,18 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryImpl implements SessionFactoryServiceRegistry  {
 
-	// for now we need to hold on to the Configuration... :(
-	private final Configuration configuration;
+	private final SessionFactory.SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
 			SessionFactoryImplementor sessionFactory,
-			Configuration configuration) {
+			SessionFactory.SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;
-		this.configuration = configuration;
+		this.sessionFactoryOptions = sessionFactoryOptions;
 
 		// for now, just use the standard initiator list
 		for ( SessionFactoryServiceInitiator initiator : StandardSessionFactoryServiceInitiators.LIST ) {
@@ -60,15 +59,8 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		// todo : add check/error for unexpected initiator types?
-		SessionFactoryServiceInitiator<R> sessionFactoryServiceInitiator =
-				(SessionFactoryServiceInitiator<R>) serviceInitiator;
-		if ( configuration != null ) {
-			return sessionFactoryServiceInitiator.initiateService( sessionFactory, configuration, this );
-		}
-		else {
-			throw new IllegalStateException( "Configuration was null." );
-		}
+		SessionFactoryServiceInitiator<R> sessionFactoryServiceInitiator = (SessionFactoryServiceInitiator<R>) serviceInitiator;
+		return sessionFactoryServiceInitiator.initiateService( sessionFactory, sessionFactoryOptions, this );
 	}
 
 	@Override

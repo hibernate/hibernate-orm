@@ -8,10 +8,9 @@ import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

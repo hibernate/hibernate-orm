@@ -23,19 +23,18 @@
  */
 package org.hibernate.envers.test.integration.components.collections;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.ComponentSetTestEntity;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

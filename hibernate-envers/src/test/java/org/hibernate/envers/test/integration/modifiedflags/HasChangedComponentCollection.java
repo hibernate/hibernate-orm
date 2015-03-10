@@ -1,16 +1,15 @@
 package org.hibernate.envers.test.integration.modifiedflags;
 
-import javax.persistence.EntityManager;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EmbeddableListEntity1;
 import org.hibernate.envers.test.entities.components.Component3;
 import org.hibernate.envers.test.entities.components.Component4;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
 import static org.hibernate.envers.test.tools.TestTools.makeList;

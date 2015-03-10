@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-import org.hibernate.cfg.Mappings;
+
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -30,13 +31,12 @@ import org.hibernate.type.CollectionType;
  * just the identifier column
  */
 public class IdentifierBag extends IdentifierCollection {
-
-	public IdentifierBag(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public IdentifierBag(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public CollectionType getDefaultCollectionType() {
-		return getMappings().getTypeResolver()
+		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.idbag( getRole(), getReferencedPropertyName() );
 	}

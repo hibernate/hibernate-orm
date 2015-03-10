@@ -28,6 +28,7 @@ import javax.persistence.OneToOne;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * Work in progress
@@ -37,8 +38,8 @@ import org.hibernate.annotations.common.reflection.XProperty;
  * @author Emmanuel Bernard
  */
 public class ToOneBinder {
-	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, Mappings mappings) {
-		if ( AnnotationBinder.isDefault( targetEntity, mappings ) ) {
+	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, MetadataBuildingContext buildingContext) {
+		if ( AnnotationBinder.isDefault( targetEntity, buildingContext ) ) {
 			return propertyData.getClassOrElementName();
 		}
 		else {
@@ -46,9 +47,9 @@ public class ToOneBinder {
 		}
 	}
 
-	public static String getReferenceEntityName(PropertyData propertyData, Mappings mappings) {
-		XClass targetEntity = getTargetEntity( propertyData, mappings );
-		if ( AnnotationBinder.isDefault( targetEntity, mappings ) ) {
+	public static String getReferenceEntityName(PropertyData propertyData, MetadataBuildingContext buildingContext) {
+		XClass targetEntity = getTargetEntity( propertyData, buildingContext );
+		if ( AnnotationBinder.isDefault( targetEntity, buildingContext ) ) {
 			return propertyData.getClassOrElementName();
 		}
 		else {
@@ -56,9 +57,9 @@ public class ToOneBinder {
 		}
 	}
 
-	public static XClass getTargetEntity(PropertyData propertyData, Mappings mappings) {
+	public static XClass getTargetEntity(PropertyData propertyData, MetadataBuildingContext buildingContext) {
 		XProperty property = propertyData.getProperty();
-		return mappings.getReflectionManager().toXClass( getTargetEntityClass( property ) );
+		return buildingContext.getBuildingOptions().getReflectionManager().toXClass( getTargetEntityClass( property ) );
 	}
 
 	private static Class<?> getTargetEntityClass(XProperty property) {

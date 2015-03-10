@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -32,8 +33,8 @@ import org.hibernate.type.CollectionType;
  */
 public class Map extends IndexedCollection {
 
-	public Map(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public Map(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 	
 	public boolean isMap() {
@@ -42,17 +43,17 @@ public class Map extends IndexedCollection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMappings().getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.sortedMap( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return getMappings().getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.orderedMap( getRole(), getReferencedPropertyName() );
 		}
 		else {
-			return getMappings().getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.map( getRole(), getReferencedPropertyName() );
 		}
@@ -61,7 +62,9 @@ public class Map extends IndexedCollection {
 
 	public void createAllKeys() throws MappingException {
 		super.createAllKeys();
-		if ( !isInverse() ) getIndex().createForeignKey();
+		if ( !isInverse() ) {
+			getIndex().createForeignKey();
+		}
 	}
 
 	public Object accept(ValueVisitor visitor) {

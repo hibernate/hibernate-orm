@@ -24,14 +24,15 @@
 package org.hibernate.test.annotations.idmanytoone;
 
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.criterion.Restrictions;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -113,5 +114,11 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 				BasketItems.class,
 				BasketItemsPK.class
 		};
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 }

@@ -39,6 +39,7 @@ public final class StringHelper {
 
 	private static final int ALIAS_TRUNCATE_LENGTH = 10;
 	public static final String WHITESPACE = " \n\r\f\t";
+	public static final String[] EMPTY_STRINGS = new String[0];
 
 	private StringHelper() { /* static methods only - hide constructor */
 	}
@@ -454,6 +455,10 @@ public final class StringHelper {
 		return string == null || string.length() == 0;
 	}
 
+	public static boolean isEmptyOrWhiteSpace(String string){
+		return isEmpty( string ) || isEmpty( string.trim() );
+	}
+
 	public static String qualify(String prefix, String name) {
 		if ( name == null || prefix == null ) {
 			throw new NullPointerException( "prefix or name were null attempting to build qualified name" );
@@ -777,5 +782,9 @@ public final class StringHelper {
 	 */
 	public static String[] toArrayElement(String s) {
 		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] { s };
+	}
+
+	public static String nullIfEmpty(String value) {
+		return isEmpty( value ) ? null : value;
 	}
 }

@@ -23,10 +23,8 @@
  */
 package org.hibernate.envers.test.integration.components;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
-
-import org.jboss.logging.Logger;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -35,6 +33,8 @@ import org.hibernate.envers.test.entities.components.DefaultValueComponent2;
 import org.hibernate.envers.test.entities.components.DefaultValueComponentTestEntity;
 
 import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 /**
  * Test class for components with default values.

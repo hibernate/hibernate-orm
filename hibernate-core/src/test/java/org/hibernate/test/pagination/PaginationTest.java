@@ -26,16 +26,16 @@ package org.hibernate.test.pagination;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-public class PaginationTest extends BaseCoreFunctionalTestCase {
+public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 	public static final int NUMBER_OF_TEST_ROWS = 100;
 
 	@Override

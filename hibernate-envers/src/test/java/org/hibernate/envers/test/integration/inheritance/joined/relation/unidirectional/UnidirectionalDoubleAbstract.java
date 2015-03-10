@@ -24,9 +24,9 @@
 
 package org.hibernate.envers.test.integration.inheritance.joined.relation.unidirectional;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Set;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

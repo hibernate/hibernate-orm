@@ -49,13 +49,13 @@
         <bag name="anotherSet">
 			 <key column="attrb2_id"/> 			 
 			 <composite-element class="org.hibernate.test.legacy.Employee">
-  		     <meta attribute="globalmutated">monetaryamount anotherSet composite level</meta>
-  		      <property name="emp" type="string">
-    		      <meta attribute="globalmutated">monetaryamount anotherSet composite property emp level</meta>
-  		      </property>
-  		      <many-to-one name="empinone" class="org.hibernate.test.legacy.Employee">
-  		          <meta attribute="globalmutated">monetaryamount anotherSet composite property empinone level</meta>
-  		      </many-to-one>
+				 <meta attribute="globalmutated">monetaryamount anotherSet composite level</meta>
+				  <property name="emp" type="string">
+					  <meta attribute="globalmutated">monetaryamount anotherSet composite property emp level</meta>
+				  </property>
+				  <many-to-one name="empinone" class="org.hibernate.test.legacy.Employee">
+					  <meta attribute="globalmutated">monetaryamount anotherSet composite property empinone level</meta>
+				  </many-to-one>
 			 </composite-element>
         </bag>	
 

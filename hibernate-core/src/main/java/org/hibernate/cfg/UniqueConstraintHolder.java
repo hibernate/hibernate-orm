@@ -30,6 +30,8 @@ package org.hibernate.cfg;
  * needed to create the unique constraint.  The ability to name it is new, and so the code used to
  * simply keep this as a String array (the column names).
  *
+ * Isn't this ultimately the same as org.hibernate.cfg.IndexOrUniqueKeySecondPass?
+ *
  * @author Steve Ebersole
  */
 public class UniqueConstraintHolder {

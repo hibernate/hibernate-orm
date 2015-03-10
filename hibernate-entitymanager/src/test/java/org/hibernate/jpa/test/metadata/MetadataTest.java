@@ -40,13 +40,14 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.MappedSuperclass;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -105,12 +106,16 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testBuildingMetamodelWithParameterizedCollection() {
-		Configuration cfg = new Configuration( );
-//		configure( cfg );
-		cfg.addAnnotatedClass( WithGenericCollection.class );
-		cfg.buildMappings();
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry() );
-		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), Collections.<MappedSuperclass>emptySet(), sfi, true );
+		Metadata metadata = new MetadataSources()
+				.addAnnotatedClass( WithGenericCollection.class )
+				.buildMetadata();
+		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		MetamodelImpl.buildMetamodel(
+				metadata.getEntityBindings().iterator(),
+				Collections.<MappedSuperclass>emptySet(),
+				sfi,
+				true
+		);
 		sfi.close();
 	}
 

@@ -23,12 +23,9 @@
  */
 package org.hibernate.hql.spi;
 
-import java.util.Map;
-
-import org.hibernate.cfg.Mappings;
-import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -49,11 +46,9 @@ public interface MultiTableBulkIdStrategy {
 	 *
 	 * @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
-	 * @param mappings The Hibernate Mappings object, for access to O/RM mapping information
-	 * @param mapping The Hibernate Mapping contract, mainly for use in DDL generation
-	 * @param settings Configuration settings
+	 * @param metadata Access to the O/RM mapping information
 	 */
-	public void prepare(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess, Mappings mappings, Mapping mapping, Map settings);
+	public void prepare(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess, MetadataImplementor metadata);
 
 	/**
 	 * Release the strategy.   Called as the SessionFactory is being shut down.

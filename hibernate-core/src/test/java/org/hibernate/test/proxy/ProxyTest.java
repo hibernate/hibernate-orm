@@ -26,8 +26,6 @@ package org.hibernate.test.proxy;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
@@ -41,8 +39,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -63,11 +63,6 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" ); // problem on HSQLDB (go figure)
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	@Test

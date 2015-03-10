@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.test.integration.query;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;

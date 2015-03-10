@@ -1,13 +1,13 @@
 package org.hibernate.envers.test.integration.hashcode;
 
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.envers.Audited;
 

@@ -23,14 +23,10 @@
  */
 package org.hibernate.jpa.test.graphs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.*;
-
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-
 import javax.persistence.Entity;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -43,8 +39,13 @@ import javax.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Christian Bauer
@@ -295,7 +296,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@GeneratedValue
         public Integer id;
 
-        @OneToMany(mappedBy = "bar")
+        @OneToMany(mappedBy = "baz")
         public Set<Foo> foos = new HashSet<Foo>();
 
 	}

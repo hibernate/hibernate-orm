@@ -23,14 +23,19 @@
  */
 package org.hibernate.test.cache.infinispan.util;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.SettingsFactory;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 
 /**
@@ -39,61 +44,103 @@ import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public class CacheTestUtil {
+   @SuppressWarnings("unchecked")
+   public static Map buildBaselineSettings(
+           String regionPrefix,
+           Class regionFactory,
+           boolean use2ndLevel,
+           boolean useQueries) {
+      Map settings = new HashMap();
 
-   public static Configuration buildConfiguration(String regionPrefix,
-         Class regionFactory, boolean use2ndLevel, boolean useQueries) {
-      Configuration cfg = new Configuration();
-      cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-      cfg.setProperty(Environment.USE_STRUCTURED_CACHE, "true");
-      cfg.setProperty( AvailableSettings.JTA_PLATFORM, BatchModeJtaPlatform.class.getName() );
+      settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+      settings.put( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
+      settings.put( AvailableSettings.JTA_PLATFORM, BatchModeJtaPlatform.class.getName() );
 
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY, regionFactory.getName());
-      cfg.setProperty(Environment.CACHE_REGION_PREFIX, regionPrefix);
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, String.valueOf(use2ndLevel));
-      cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(useQueries));
+      settings.put( AvailableSettings.CACHE_REGION_FACTORY, regionFactory.getName() );
+      settings.put( AvailableSettings.CACHE_REGION_PREFIX, regionPrefix );
+      settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, String.valueOf( use2ndLevel ) );
+      settings.put( AvailableSettings.USE_QUERY_CACHE, String.valueOf( useQueries ) );
 
-      return cfg;
+      return settings;
    }
 
-   public static Configuration buildCustomQueryCacheConfiguration(String regionPrefix, String queryCacheName) {
-      Configuration cfg = buildConfiguration(regionPrefix, InfinispanRegionFactory.class, true, true);
-      cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, queryCacheName);
-      return cfg;
+   public static StandardServiceRegistryBuilder buildBaselineStandardServiceRegistryBuilder(
+           String regionPrefix,
+           Class regionFactory,
+           boolean use2ndLevel,
+           boolean useQueries) {
+      StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+
+      ssrb.applySettings(
+              buildBaselineSettings( regionPrefix, regionFactory, use2ndLevel, useQueries )
+      );
+
+      return ssrb;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
-         Configuration cfg){
+   public static StandardServiceRegistryBuilder buildCustomQueryCacheStandardServiceRegistryBuilder(
+           String regionPrefix,
+           String queryCacheName) {
+      final StandardServiceRegistryBuilder ssrb = buildBaselineStandardServiceRegistryBuilder(
+              regionPrefix, InfinispanRegionFactory.class, true, true
+      );
+      ssrb.applySetting( InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, queryCacheName );
+      return ssrb;
+   }
+
+   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry) {
       try {
-         Settings settings = cfg.buildSettings(reg);
-         Properties properties = cfg.getProperties();
+         final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+         final Properties properties = toProperties( cfgService.getSettings() );
+         final Settings settings = new SettingsFactory().buildSettings( properties, serviceRegistry );
 
-         String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
-         Class clazz = Thread.currentThread()
-               .getContextClassLoader().loadClass(factoryType);
+         String factoryType = cfgService.getSetting( AvailableSettings.CACHE_REGION_FACTORY, StandardConverters.STRING );
+         Class clazz = Thread.currentThread().getContextClassLoader().loadClass( factoryType );
          InfinispanRegionFactory regionFactory;
          if (clazz == InfinispanRegionFactory.class) {
             regionFactory = new SingleNodeTestCase.TestInfinispanRegionFactory();
-         } else {
+         }
+         else {
             regionFactory = (InfinispanRegionFactory) clazz.newInstance();
          }
-         regionFactory.start(settings, properties);
+         regionFactory.start( settings, properties );
          return regionFactory;
-      } catch (Exception e) {
+      }
+      catch (RuntimeException e) {
+         throw e;
+      }
+      catch (Exception e) {
          throw new RuntimeException(e);
       }
    }
 
-   public static InfinispanRegionFactory startRegionFactory(ServiceRegistry reg,
-         Configuration cfg, CacheTestSupport testSupport) {
-      InfinispanRegionFactory factory = startRegionFactory(reg, cfg);
-      testSupport.registerFactory(factory);
+   public static InfinispanRegionFactory startRegionFactory(
+           ServiceRegistry serviceRegistry,
+           CacheTestSupport testSupport) {
+      InfinispanRegionFactory factory = startRegionFactory( serviceRegistry );
+      testSupport.registerFactory( factory );
       return factory;
    }
 
-   public static void stopRegionFactory(InfinispanRegionFactory factory,
-         CacheTestSupport testSupport) {
+   public static void stopRegionFactory(
+           InfinispanRegionFactory factory,
+           CacheTestSupport testSupport) {
+      testSupport.unregisterFactory( factory );
       factory.stop();
-      testSupport.unregisterFactory(factory);
+   }
+
+   public static Properties toProperties(Map map) {
+      if ( map == null ) {
+         return null;
+      }
+
+      if ( map instanceof Properties ) {
+         return (Properties) map;
+      }
+
+      Properties properties = new Properties();
+      properties.putAll( map );
+      return properties;
    }
 
    /**

@@ -26,7 +26,8 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.hibernate.dialect.Dialect;
+import org.hibernate.MappingException;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -60,8 +61,9 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 		}
 	}
 
+
 	@Override
-	public void configure(Type type, Properties params, Dialect d) {
+	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
 		sep = ConfigurationHelper.getString( "separator", params, "" );
 	}
 

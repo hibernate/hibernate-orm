@@ -32,7 +32,6 @@ import javax.persistence.Index;
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class JPAIndexHolder {
-
 	private final String name;
 	private final String[] columns;
 	private final String[] ordering;

@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.test.performance;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
+import javax.persistence.EntityManager;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
@@ -43,10 +43,9 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
-import org.junit.Before;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.junit.Before;
 
 /**
  * @author Adam Warski (adam at warski dot org)

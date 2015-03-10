@@ -8,7 +8,7 @@
 	
 	<class name="Eye" lazy="true">
 		<id name="id" unsaved-value="0">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name"/>
 		<set name="jays" inverse="true" outer-join="true" cascade="all">
@@ -20,7 +20,7 @@
 	
 	<class name="Jay" lazy="true">
 		<id name="id" unsaved-value="0">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<many-to-one name="eye" outer-join="true"/>
 	</class>

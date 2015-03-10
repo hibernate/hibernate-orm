@@ -28,11 +28,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.cfg.Configuration;
-
-import org.junit.Test;
+import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -42,14 +41,13 @@ import static org.junit.Assert.fail;
 public class InvalidEnumeratedJavaTypeTest extends BaseUnitTestCase {
 	@Test
 	public void testInvalidMapping() {
-		final Configuration cfg = new Configuration();
 		try {
-			cfg.addAnnotatedClass( TheEntity.class );
-			cfg.buildMappings();
+			new MetadataSources( )
+					.addAnnotatedClass( TheEntity.class )
+					.buildMetadata();
 			fail( "Was expecting failure" );
 		}
-		catch (AnnotationException expected) {
-			System.out.println( expected );
+		catch (AnnotationException ignore) {
 		}
 	}
 

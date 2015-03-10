@@ -7,7 +7,7 @@
 
 	<class name="Person" discriminator-value="null" table="D_SBCLS_PROPREF_PERS">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<discriminator formula="customerId"/>
 		<property name="name" length="100"/>

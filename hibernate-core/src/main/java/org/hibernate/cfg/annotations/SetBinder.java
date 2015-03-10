@@ -39,7 +39,7 @@ public class SetBinder extends CollectionBinder {
 
 	@Override
     protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Set( getMappings(), persistentClass );
+		return new org.hibernate.mapping.Set( getBuildingContext().getMetadataCollector(), persistentClass );
 	}
 
 	@Override

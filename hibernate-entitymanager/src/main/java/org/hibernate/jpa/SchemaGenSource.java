@@ -81,8 +81,17 @@ public enum SchemaGenSource {
 	 *
 	 * @throws IllegalArgumentException If the incoming value is unrecognized
 	 */
-	public static SchemaGenSource interpret(String value) {
-		if ( StringHelper.isEmpty( value ) ) {
+	public static SchemaGenSource interpret(Object value) {
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( SchemaGenSource.class.isInstance( value ) ) {
+			return (SchemaGenSource) value;
+		}
+
+		final String name = value.toString();
+		if ( StringHelper.isEmpty( name ) ) {
 			// empty is in fact valid as means to interpret default value based on other settings
 			return null;
 		}

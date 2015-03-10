@@ -4,7 +4,7 @@
 <hibernate-mapping package="org.hibernate.test.cascade">
     <class name="Child" table="Child">
         <id name="id" column="id" type="java.lang.Long">
-            <generator class="native"/>
+            <generator class="increment"/>
         </id>
         <many-to-one name="parent" class="Parent" not-null="false" cascade="all"/>
     </class>

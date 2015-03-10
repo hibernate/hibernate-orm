@@ -30,20 +30,22 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.type.StandardBasicTypes;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,13 +55,19 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-public class EntityTest extends BaseCoreFunctionalTestCase {
+public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with ( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+	}
 
 	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		assertEquals( "Flight", configuration().getClassMapping( Flight.class.getName() ).getTable().getName() );
+		assertEquals( "Flight", metadata().getEntityBinding( Flight.class.getName() ).getTable().getName() );
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -228,9 +236,11 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (HibernateException e) {
 			//success
+			if ( tx != null ) {
+				tx.rollback();
+			}
 		}
 		finally {
-			if ( tx != null ) tx.rollback();
 			s.close();
 		}
 	}
@@ -314,7 +324,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEntityName() throws Exception {
-		assertEquals( "Corporation", configuration().getClassMapping( Company.class.getName() ).getTable().getName() );
+		assertEquals( "Corporation", metadata().getEntityBinding( Company.class.getName() ).getTable().getName() );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Company comp = new Company();
@@ -436,7 +446,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private SchemaExport schemaExport() {
-		return new SchemaExport( serviceRegistry(), configuration() );
+		return new SchemaExport( serviceRegistry(), metadata() );
 	}
 
 	@After

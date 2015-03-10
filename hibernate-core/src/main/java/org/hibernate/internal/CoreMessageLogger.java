@@ -867,6 +867,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void tableNotFound(String name);
 
 	@LogMessage(level = INFO)
+	@Message(value = "More than one table found: %s", id = 263)
+	void multipleTablesFound(String name);
+
+	@LogMessage(level = INFO)
 	@Message(value = "Transactions: %s", id = 266)
 	void transactions(long transactionCount);
 
@@ -1603,6 +1607,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
 
+	/**
+	 * @see org.hibernate.internal.log.DeprecationLogger#logDeprecationOfEmbedXmlSupport()
+	 */
 	@LogMessage(level = WARN)
 	@Message(
 			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +
@@ -1653,10 +1660,18 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 453)
 	void unableToDiscoverOsgiService(String service, @Cause Exception e);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.internal.log.DeprecationLogger#deprecatedManyToManyOuterJoin} instead
+	 */
+	@Deprecated
 	@LogMessage(level = WARN)
 	@Message(value = "The outer-join attribute on <many-to-many> has been deprecated. Instead of outer-join=\"false\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 454)
 	void deprecatedManyToManyOuterJoin();
 
+	/**
+	 * @deprecated Use {@link org.hibernate.internal.log.DeprecationLogger#deprecatedManyToManyFetch} instead
+	 */
+	@Deprecated
 	@LogMessage(level = WARN)
 	@Message(value = "The fetch attribute on <many-to-many> has been deprecated. Instead of fetch=\"select\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 455)
 	void deprecatedManyToManyFetch();

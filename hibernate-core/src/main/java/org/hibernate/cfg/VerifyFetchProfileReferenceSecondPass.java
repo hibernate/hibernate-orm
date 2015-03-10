@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchProfile;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 
@@ -35,27 +36,32 @@ import org.hibernate.mapping.PersistentClass;
 public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 	private String fetchProfileName;
 	private FetchProfile.FetchOverride fetch;
-	private Mappings mappings;
+	private MetadataBuildingContext buildingContext;
 
 	public VerifyFetchProfileReferenceSecondPass(
 			String fetchProfileName,
 			FetchProfile.FetchOverride fetch,
-			Mappings mappings) {
+			MetadataBuildingContext buildingContext) {
 		this.fetchProfileName = fetchProfileName;
 		this.fetch = fetch;
-		this.mappings = mappings;
+		this.buildingContext = buildingContext;
 	}
 
 	public void doSecondPass(Map persistentClasses) throws MappingException {
-		org.hibernate.mapping.FetchProfile profile = mappings.findOrCreateFetchProfile(
-				fetchProfileName,
-				MetadataSource.ANNOTATIONS
+		org.hibernate.mapping.FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile(
+				fetchProfileName
 		);
-		if ( MetadataSource.ANNOTATIONS != profile.getSource() ) {
-			return;
+		if ( profile != null ) {
+			if ( profile.getSource() != MetadataSource.ANNOTATIONS ) {
+				return;
+			}
+		}
+		else {
+			profile = new org.hibernate.mapping.FetchProfile( fetchProfileName, MetadataSource.ANNOTATIONS );
+			buildingContext.getMetadataCollector().addFetchProfile( profile );
 		}
 
-		PersistentClass clazz = mappings.getClass( fetch.entity().getName() );
+		PersistentClass clazz = buildingContext.getMetadataCollector().getEntityBinding( fetch.entity().getName() );
 		// throws MappingException in case the property does not exist
 		clazz.getProperty( fetch.association() );
 

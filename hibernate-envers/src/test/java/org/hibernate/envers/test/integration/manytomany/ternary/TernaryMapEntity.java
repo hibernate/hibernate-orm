@@ -23,12 +23,12 @@
  */
 package org.hibernate.envers.test.integration.manytomany.ternary;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntTestPrivSeqEntity;

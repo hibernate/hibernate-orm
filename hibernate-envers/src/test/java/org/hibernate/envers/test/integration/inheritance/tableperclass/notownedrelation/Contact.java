@@ -24,13 +24,13 @@
 
 package org.hibernate.envers.test.integration.inheritance.tableperclass.notownedrelation;
 
+import java.io.Serializable;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
-import java.io.Serializable;
-import java.util.Set;
 
 import org.hibernate.envers.Audited;
 

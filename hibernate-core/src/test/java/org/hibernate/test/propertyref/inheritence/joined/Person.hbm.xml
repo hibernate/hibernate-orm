@@ -22,7 +22,7 @@
 
 	<class name="Person" table="J_SBCLS_PROPREF_PERS">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="name" length="100"/>
 		<many-to-one name="bankAccount" property-ref="bsbAccountNumber" cascade="all">

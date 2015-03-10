@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.derivedidentities.e5.a;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,15 +35,15 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentityIdClassParentSameIdTypeIdClassDepTest extends BaseCoreFunctionalTestCase {
+public class DerivedIdentityIdClassParentSameIdTypeIdClassDepTest extends BaseNonConfigCoreFunctionalTestCase {
 	private static final String FIRST_NAME = "Emmanuel";
 	private static final String LAST_NAME = "Bernard";
 
 	@Test
 	public void testOneToOneExplicitJoinColumn() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
 
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -71,9 +71,9 @@ public class DerivedIdentityIdClassParentSameIdTypeIdClassDepTest extends BaseCo
 
 	@Test
 	public void testTckLikeBehavior() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", metadata() ) );
 
 		Session s = openSession();
 		s.getTransaction().begin();

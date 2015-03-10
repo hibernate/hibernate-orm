@@ -23,13 +23,14 @@
  */
 package org.hibernate.test.annotations.collectionelement;
 
-import org.junit.Test;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.naming.HbmNamingStrategyDelegate;
-import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
-import org.hibernate.cfg.naming.JpaNamingStrategyDelegate;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -37,9 +38,9 @@ import org.hibernate.testing.TestForIssue;
 public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCollectionElementTest {
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setNamingStrategyDelegator( new MyImprovedNamingStrategyDelegator() );
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with( new MyImprovedNamingStrategy() );
 	}
 
 	@Test
@@ -110,38 +111,22 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 		checkDefaultCollectionTableName( Boy.class, "hatedNames", "tbl_Boys_hatedNames" );
 	}
 
-	static class MyImprovedNamingStrategyDelegator extends ImprovedNamingStrategyDelegator {
-		public MyImprovedNamingStrategyDelegator() {
-			super( new HbmNamingStrategyDelegate(), new MyNonHbmNamingStrategyDelegate() );
+	static class MyImprovedNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
+		@Override
+		public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source) {
+			// This impl uses the owner entity table name instead of the JPA entity name when
+			// generating the implicit name.
+			final String name = source.getOwningPhysicalTableName().getText()
+					+ '_'
+					+ transformAttributePath( source.getOwningAttributePath() );
+
+			return toIdentifier( name, source.getBuildingContext() );
 		}
 
-		private static class MyNonHbmNamingStrategyDelegate extends JpaNamingStrategyDelegate {
-			@Override
-			public String determineImplicitElementCollectionTableName(
-					String ownerEntityName,
-					String ownerJpaEntityName,
-					String ownerEntityTable,
-					String propertyPath) {
-				// This impl uses the owner entity table name instead of the JPA entity name when
-				// generating the implicit name.
-				int loc = propertyPath.lastIndexOf(".");
-				final String unqualifiedPropertyName = loc < 0 ? propertyPath : propertyPath.substring( loc + 1 );
-				return ownerEntityTable
-						+ '_'
-						+ unqualifiedPropertyName;
-			}
-
-			@Override
-			public String determineImplicitElementCollectionJoinColumnName(
-					String ownerEntityName,
-					String ownerJpaEntityName,
-					String ownerEntityTable,
-					String referencedColumnName,
-					String propertyPath) {
-				return ownerEntityTable
-						+ '_'
-						+ referencedColumnName;
-			}
+		@Override
+		public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
+			final String name = source.getReferencedTableName() + "_" + source.getReferencedColumnName();
+			return toIdentifier( name, source.getBuildingContext() );
 		}
 	}
 }

@@ -25,16 +25,19 @@ package org.hibernate.test.stateless.fetching;
 
 import java.util.Date;
 
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.DefaultNamingStrategy;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -53,10 +56,10 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setNamingStrategy( new TestingNamingStrategy() );
+		cfg.setPhysicalNamingStrategy( new TestingNamingStrategy() );
 	}
 
-	private class TestingNamingStrategy extends DefaultNamingStrategy {
+	private class TestingNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 		private final String prefix = determineUniquePrefix();
 
 		protected String applyPrefix(String baseTableName) {
@@ -66,32 +69,8 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public String classToTableName(String className) {
-			return applyPrefix( super.classToTableName( className ) );
-		}
-
-		@Override
-		public String tableName(String tableName) {
-			if ( tableName.startsWith( "`" ) && tableName.endsWith( "`" ) ) {
-				return tableName;
-			}
-			if ( tableName.startsWith( prefix + '_' ) ) {
-				return tableName;
-			}
-			return applyPrefix( tableName );
-		}
-
-		@Override
-		public String collectionTableName(String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable, String propertyName) {
-			String tableName = super.collectionTableName( ownerEntity, ownerEntityTable, associatedEntity, associatedEntityTable, propertyName );
-			return applyPrefix( tableName );
-		}
-
-		@Override
-		public String logicalCollectionTableName(String tableName, String ownerEntityTable, String associatedEntityTable, String propertyName) {
-			String resolvedTableName = prefix + '_' + super.logicalCollectionTableName( tableName, ownerEntityTable, associatedEntityTable, propertyName );
-			System.out.println( "Logical collection table name : " + tableName + " -> " + resolvedTableName );
-			return resolvedTableName;
+		public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+			return jdbcEnvironment.getIdentifierHelper().toIdentifier( applyPrefix( name.getText() ) );
 		}
 
 		private String determineUniquePrefix() {

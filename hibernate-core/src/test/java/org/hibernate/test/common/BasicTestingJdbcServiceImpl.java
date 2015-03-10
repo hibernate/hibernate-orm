@@ -23,22 +23,24 @@
  */
 package org.hibernate.test.common;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
-import org.hibernate.engine.jdbc.spi.TypeInfo;
-import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
+
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 
@@ -49,12 +51,12 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
  * @author Steve Ebersole
  */
 public class BasicTestingJdbcServiceImpl implements JdbcServices {
+	private JdbcEnvironment jdbcEnvironment;
 	private ConnectionProvider connectionProvider;
 	private Dialect dialect;
 	private SqlStatementLogger sqlStatementLogger;
-	private SqlExceptionHelper exceptionHelper;
-	private final ExtractedDatabaseMetaData metaDataSupport = new MetaDataSupportImpl();
-	private final ResultSetWrapper resultSetWrapper = ResultSetWrapperImpl.INSTANCE;
+
+	private JdbcConnectionAccess jdbcConnectionAccess;
 
 	public void start() {
 	}
@@ -63,12 +65,24 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 		release();
 	}
 
-	public void prepare(boolean allowAggressiveRelease) {
-		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
+	public void prepare(boolean allowAggressiveRelease) throws SQLException {
 		dialect = ConnectionProviderBuilder.getCorrespondingDialect();
+		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
 		sqlStatementLogger = new SqlStatementLogger( true, false );
-		exceptionHelper = new SqlExceptionHelper();
 
+		Connection jdbcConnection = connectionProvider.getConnection();
+		try {
+			jdbcEnvironment = new JdbcEnvironmentImpl( jdbcConnection.getMetaData(), dialect );
+		}
+		finally {
+			try {
+				connectionProvider.closeConnection( jdbcConnection );
+			}
+			catch (SQLException ignore) {
+			}
+		}
+
+		this.jdbcConnectionAccess = new JdbcConnectionAccessImpl( connectionProvider );
 	}
 
 	public void release() {
@@ -77,8 +91,18 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 		}
 	}
 
+	@Override
+	public JdbcEnvironment getJdbcEnvironment() {
+		return jdbcEnvironment;
+	}
+
 	public ConnectionProvider getConnectionProvider() {
 		return connectionProvider;
+	}
+
+	@Override
+	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess() {
+		return jdbcConnectionAccess;
 	}
 
 	public Dialect getDialect() {
@@ -86,11 +110,11 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
-		return null;
+		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
 	}
 
 	public ResultSetWrapper getResultSetWrapper() {
-		return null;
+		return ResultSetWrapperImpl.INSTANCE;
 	}
 
 	public SqlStatementLogger getSqlStatementLogger() {
@@ -98,66 +122,10 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	public SqlExceptionHelper getSqlExceptionHelper() {
-		return exceptionHelper;
+		return jdbcEnvironment.getSqlExceptionHelper();
 	}
 
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
-		return metaDataSupport;
-	}
-
-	private static class MetaDataSupportImpl implements ExtractedDatabaseMetaData {
-		@Override
-		public boolean supportsRefCursors() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsNamedParameters() {
-			return false;
-		}
-
-		public boolean supportsScrollableResults() {
-			return false;
-		}
-
-		public boolean supportsGetGeneratedKeys() {
-			return false;
-		}
-
-		public boolean supportsBatchUpdates() {
-			return false;
-		}
-
-		public boolean supportsDataDefinitionInTransaction() {
-			return false;
-		}
-
-		public boolean doesDataDefinitionCauseTransactionCommit() {
-			return false;
-		}
-
-		public Set<String> getExtraKeywords() {
-			return Collections.emptySet();
-		}
-
-		public SQLStateType getSqlStateType() {
-			return SQLStateType.UNKOWN;
-		}
-
-		public boolean doesLobLocatorUpdateCopy() {
-			return false;
-		}
-
-		public String getConnectionSchemaName() {
-			return null;
-		}
-
-		public String getConnectionCatalogName() {
-			return null;
-		}
-
-		public LinkedHashSet<TypeInfo> getTypeInfoSet() {
-			return null;
-		}
+		return jdbcEnvironment.getExtractedDatabaseMetaData();
 	}
 }

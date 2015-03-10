@@ -67,6 +67,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private int nextSubclassId;
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
+	private boolean cachingExplicitlyRequested;
 
 	@Override
     int nextSubclassId() {
@@ -284,12 +285,20 @@ public class RootClass extends PersistentClass implements TableOwner {
 			Component id = (Component) getIdentifier();
 			if ( !id.isDynamic() ) {
 				final Class idClass = id.getComponentClass();
-				final String idComponendClassName = idClass.getName();
-                if (idClass != null && !ReflectHelper.overridesEquals(idClass)) LOG.compositeIdClassDoesNotOverrideEquals( idComponendClassName );
-                if (!ReflectHelper.overridesHashCode(idClass)) LOG.compositeIdClassDoesNotOverrideHashCode( idComponendClassName );
-                if (!Serializable.class.isAssignableFrom(idClass)) throw new MappingException(
-                                                                                              "Composite-id class must implement Serializable: "
-                                                                                              + idComponendClassName);
+				if ( idClass != null ) {
+					final String idComponentClassName = idClass.getName();
+					if ( !ReflectHelper.overridesEquals( idClass ) ) {
+						LOG.compositeIdClassDoesNotOverrideEquals( idComponentClassName );
+					}
+					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
+						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
+					}
+					if ( !Serializable.class.isAssignableFrom( idClass ) ) {
+						throw new MappingException(
+								"Composite-id class must implement Serializable: " + idComponentClassName
+						);
+					}
+				}
 			}
 		}
 	}
@@ -350,5 +359,13 @@ public class RootClass extends PersistentClass implements TableOwner {
 	@Override
     public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
+	}
+
+	public void setCachingExplicitlyRequested(boolean explicitlyRequested) {
+		this.cachingExplicitlyRequested = explicitlyRequested;
+	}
+
+	public boolean isCachingExplicitlyRequested() {
+		return cachingExplicitlyRequested;
 	}
 }

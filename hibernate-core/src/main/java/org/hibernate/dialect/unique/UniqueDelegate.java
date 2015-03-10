@@ -20,6 +20,9 @@
  */
 package org.hibernate.dialect.unique;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.mapping.UniqueKey;
+
 /**
  * Dialect-level delegate in charge of applying "uniqueness" to a column.  Uniqueness can be defined
  * in 1 of 3 ways:<ol>
@@ -74,27 +77,20 @@ public interface UniqueDelegate {
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param defaultCatalog The default catalog
-	 * @param defaultSchema The default schema
+	 * @param metadata Access to the bootstrap mapping information
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToAddUniqueKeyCommand(
-			org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog,
-			String defaultSchema);
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param defaultCatalog The default catalog
-	 * @param defaultSchema The default schema
+	 * @param metadata Access to the bootstrap mapping information
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToDropUniqueKeyCommand(
-			org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog, String defaultSchema);
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
 
 }

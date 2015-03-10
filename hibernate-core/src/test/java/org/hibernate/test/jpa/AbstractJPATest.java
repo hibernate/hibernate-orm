@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.IdentityHashMap;
 import javax.persistence.EntityNotFoundException;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -46,6 +47,7 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -74,7 +76,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 
 					@Override
 					public void integrate(
-							Configuration configuration,
+							Metadata metadata,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
 						integrate( serviceRegistry );
@@ -98,13 +100,6 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 				}
 		);
 	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		// no second level caching
-		return null;
-	}
-
 
 	// mimic specific exception aspects of the JPA environment ~~~~~~~~~~~~~~~~
 

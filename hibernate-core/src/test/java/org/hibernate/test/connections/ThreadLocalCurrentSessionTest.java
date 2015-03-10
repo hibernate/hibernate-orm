@@ -23,17 +23,18 @@
  */
 package org.hibernate.test.connections;
 
-import org.junit.Test;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.LocalStatus;
+
 import org.hibernate.testing.RequiresDialect;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,10 +47,12 @@ import static org.junit.Assert.fail;
 @RequiresDialect(H2Dialect.class)
 public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase {
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS, TestableThreadLocalContext.class.getName() );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	@SuppressWarnings("unchecked")
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( Environment.CURRENT_SESSION_CONTEXT_CLASS, TestableThreadLocalContext.class.getName() );
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override

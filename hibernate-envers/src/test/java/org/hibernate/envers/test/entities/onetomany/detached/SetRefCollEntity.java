@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.test.entities.onetomany.detached;
 
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.Set;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;

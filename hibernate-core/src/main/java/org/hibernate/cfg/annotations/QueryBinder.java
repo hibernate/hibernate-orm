@@ -40,8 +40,8 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
@@ -61,7 +61,10 @@ import org.jboss.logging.Logger;
 public abstract class QueryBinder {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryBinder.class.getName());
 
-	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
+	public static void bindQuery(
+			NamedQuery queryAnn,
+			MetadataBuildingContext context,
+			boolean isDefault) {
 		if ( queryAnn == null ) return;
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
@@ -84,11 +87,12 @@ public abstract class QueryBinder {
 				.createNamedQueryDefinition();
 
 		if ( isDefault ) {
-			mappings.addDefaultQuery( queryDefinition.getName(), queryDefinition );
+			context.getMetadataCollector().addDefaultQuery( queryDefinition );
 		}
 		else {
-			mappings.addQuery( queryDefinition.getName(), queryDefinition );
+			context.getMetadataCollector().addNamedQuery( queryDefinition );
 		}
+
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named query: %s => %s", queryDefinition.getName(), queryDefinition.getQueryString() );
 		}
@@ -96,7 +100,10 @@ public abstract class QueryBinder {
 
 
 
-	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
+	public static void bindNativeQuery(
+			NamedNativeQuery queryAnn,
+			MetadataBuildingContext context,
+			boolean isDefault) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
@@ -139,22 +146,28 @@ public abstract class QueryBinder {
 		NamedSQLQueryDefinition query = builder.createNamedQueryDefinition();
 		
 		if ( isDefault ) {
-			mappings.addDefaultSQLQuery( query.getName(), query );
+			context.getMetadataCollector().addDefaultNamedNativeQuery( query );
 		}
 		else {
-			mappings.addSQLQuery( query.getName(), query );
+			context.getMetadataCollector().addNamedNativeQuery( query );
 		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
 		}
 	}
 
-	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
-		if ( queryAnn == null ) return;
+	public static void bindNativeQuery(
+			org.hibernate.annotations.NamedNativeQuery queryAnn,
+			MetadataBuildingContext context) {
+		if ( queryAnn == null ) {
+			return;
+		}
+
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
+
 		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
@@ -207,40 +220,58 @@ public abstract class QueryBinder {
 		else {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
-		mappings.addSQLQuery( query.getName(), query );
+		context.getMetadataCollector().addNamedNativeQuery( query );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named native query: %s => %s", query.getName(), queryAnn.query() );
 		}
 	}
 
-	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
-		if ( queriesAnn == null ) return;
-		for (NamedQuery q : queriesAnn.value()) {
-			bindQuery( q, mappings, isDefault );
+	public static void bindQueries(NamedQueries queriesAnn, MetadataBuildingContext context, boolean isDefault) {
+		if ( queriesAnn == null ) {
+			return;
 		}
-	}
 
-	public static void bindNativeQueries(NamedNativeQueries queriesAnn, Mappings mappings, boolean isDefault) {
-		if ( queriesAnn == null ) return;
-		for (NamedNativeQuery q : queriesAnn.value()) {
-			bindNativeQuery( q, mappings, isDefault );
+		for (NamedQuery q : queriesAnn.value()) {
+			bindQuery( q, context, isDefault );
 		}
 	}
 
 	public static void bindNativeQueries(
-			org.hibernate.annotations.NamedNativeQueries queriesAnn, Mappings mappings
-	) {
-		if ( queriesAnn == null ) return;
-		for (org.hibernate.annotations.NamedNativeQuery q : queriesAnn.value()) {
-			bindNativeQuery( q, mappings );
+			NamedNativeQueries queriesAnn,
+			MetadataBuildingContext context,
+			boolean isDefault) {
+		if ( queriesAnn == null ) {
+			return;
+		}
+
+		for (NamedNativeQuery q : queriesAnn.value()) {
+			bindNativeQuery( q, context, isDefault );
 		}
 	}
 
-	public static void bindQuery(org.hibernate.annotations.NamedQuery queryAnn, Mappings mappings) {
-		if ( queryAnn == null ) return;
+	public static void bindNativeQueries(
+			org.hibernate.annotations.NamedNativeQueries queriesAnn,
+			MetadataBuildingContext context) {
+		if ( queriesAnn == null ) {
+			return;
+		}
+
+		for (org.hibernate.annotations.NamedNativeQuery q : queriesAnn.value()) {
+			bindNativeQuery( q, context );
+		}
+	}
+
+	public static void bindQuery(
+			org.hibernate.annotations.NamedQuery queryAnn,
+			MetadataBuildingContext context) {
+		if ( queryAnn == null ) {
+			return;
+		}
+
 		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
+
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
@@ -261,7 +292,7 @@ public abstract class QueryBinder {
 				.setParameterTypes( null )
 				.createNamedQueryDefinition();
 
-		mappings.addQuery( query.getName(), query );
+		context.getMetadataCollector().addNamedQuery( query );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
 		}
@@ -312,14 +343,22 @@ public abstract class QueryBinder {
 	}
 
 
-	public static void bindQueries(org.hibernate.annotations.NamedQueries queriesAnn, Mappings mappings) {
-		if ( queriesAnn == null ) return;
+	public static void bindQueries(
+			org.hibernate.annotations.NamedQueries queriesAnn,
+			MetadataBuildingContext context) {
+		if ( queriesAnn == null ) {
+			return;
+		}
+
 		for (org.hibernate.annotations.NamedQuery q : queriesAnn.value()) {
-			bindQuery( q, mappings );
+			bindQuery( q, context );
 		}
 	}
 
-	public static void bindNamedStoredProcedureQuery(NamedStoredProcedureQuery annotation, Mappings mappings, boolean isDefault) {
+	public static void bindNamedStoredProcedureQuery(
+			NamedStoredProcedureQuery annotation,
+			MetadataBuildingContext context,
+			boolean isDefault) {
 		if ( annotation == null ) {
 			return;
 		}
@@ -330,25 +369,35 @@ public abstract class QueryBinder {
 
 		final NamedProcedureCallDefinition def = new NamedProcedureCallDefinition( annotation );
 
-		if(isDefault){
-			mappings.addDefaultNamedProcedureCallDefinition( def );
-		} else{
-			mappings.addNamedProcedureCallDefinition( def );
+		if (isDefault) {
+			context.getMetadataCollector().addDefaultNamedProcedureCallDefinition( def );
+		}
+		else {
+			context.getMetadataCollector().addNamedProcedureCallDefinition( def );
 		}
 		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegisteredName(), def.getProcedureName() );
 	}
 
-	public static void bindSqlResultsetMappings(SqlResultSetMappings ann, Mappings mappings, boolean isDefault) {
-		if ( ann == null ) return;
+	public static void bindSqlResultSetMappings(
+			SqlResultSetMappings ann,
+			MetadataBuildingContext context,
+			boolean isDefault) {
+		if ( ann == null ) {
+			return;
+		}
+
 		for (SqlResultSetMapping rs : ann.value()) {
 			//no need to handle inSecondPass
-			mappings.addSecondPass( new ResultsetMappingSecondPass( rs, mappings, true ) );
+			context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( rs, context, true ) );
 		}
 	}
 
-	public static void bindSqlResultsetMapping(SqlResultSetMapping ann, Mappings mappings, boolean isDefault) {
+	public static void bindSqlResultSetMapping(
+			SqlResultSetMapping ann,
+			MetadataBuildingContext context,
+			boolean isDefault) {
 		//no need to handle inSecondPass
-		mappings.addSecondPass( new ResultsetMappingSecondPass( ann, mappings, isDefault ) );
+		context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( ann, context, isDefault ) );
 	}
 
 

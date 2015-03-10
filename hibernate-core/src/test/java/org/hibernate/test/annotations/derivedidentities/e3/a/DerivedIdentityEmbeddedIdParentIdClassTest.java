@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.derivedidentities.e3.a;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,14 +36,15 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentityEmbeddedIdParentIdClassTest  extends BaseCoreFunctionalTestCase {
+public class DerivedIdentityEmbeddedIdParentIdClassTest  extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", configuration() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "dep_name", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", configuration() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", metadata() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "dep_name", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", metadata() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", metadata() ) );
+
 		Employee e = new Employee();
 		e.empId = new EmployeeId();
 		e.empId.firstName = "Emmanuel";

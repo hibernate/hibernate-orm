@@ -32,8 +32,15 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.Nullability;
-import org.hibernate.cfg.naming.NamingStrategyDelegate;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -54,13 +61,14 @@ public class Ejb3Column {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
 
+	private MetadataBuildingContext context;
+
 	private Column mappingColumn;
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String explicitTableName;
 	protected Map<String, Join> joins;
 	protected PropertyHolder propertyHolder;
-	private Mappings mappings;
 	private boolean isImplicit;
 	public static final int DEFAULT_COLUMN_LENGTH = 255;
 	public String sqlType;
@@ -111,32 +119,14 @@ public class Ejb3Column {
 		return StringHelper.isNotEmpty( formulaString );
 	}
 
+	@SuppressWarnings("UnusedDeclaration")
 	public String getFormulaString() {
 		return formulaString;
 	}
 
-	/**
-	 * Deprecated as this is badly named for its use.
-	 *
-	 * @deprecated Use {@link #getExplicitTableName} instead
-	 */
-	@Deprecated
-	public String getSecondaryTableName() {
-		return explicitTableName;
-	}
-
+	@SuppressWarnings("UnusedDeclaration")
 	public String getExplicitTableName() {
 		return explicitTableName;
-	}
-
-	/**
-	 * Deprecated as this is badly named for its use.
-	 *
-	 * @deprecated Use {@link #setExplicitTableName} instead
-	 */
-	@Deprecated
-	public void setSecondaryTableName(String explicitTableName) {
-		setExplicitTableName( explicitTableName );
 	}
 
 	public void setExplicitTableName(String explicitTableName) {
@@ -164,12 +154,12 @@ public class Ejb3Column {
 		this.updatable = updatable;
 	}
 
-	protected Mappings getMappings() {
-		return mappings;
+	protected MetadataBuildingContext getBuildingContext() {
+		return context;
 	}
 
-	public void setMappings(Mappings mappings) {
-		this.mappings = mappings;
+	public void setBuildingContext(MetadataBuildingContext context) {
+		this.context = context;
 	}
 
 	public void setImplicit(boolean implicit) {
@@ -288,27 +278,58 @@ public class Ejb3Column {
 	}
 
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
+		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
+		final Database database = context.getMetadataCollector().getDatabase();
+		final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
+		final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
+
 		if ( applyNamingStrategy ) {
 			if ( StringHelper.isEmpty( columnName ) ) {
 				if ( propertyName != null ) {
-					mappingColumn.setName(
-							mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
-									getNamingStrategyDelegate().determineImplicitPropertyColumnName( propertyName )
+					/// HHH-6005 magic
+					if ( propertyName.contains( ".collection&&element." ) ) {
+						propertyName = propertyName.replace( "collection&&element.", "" );
+					}
+					final AttributePath attributePath = AttributePath.parse( propertyName );
+
+					final Identifier implicitName = normalizer.normalizeIdentifierQuoting(
+							implicitNamingStrategy.determineBasicColumnName(
+									new ImplicitBasicColumnNameSource() {
+										@Override
+										public AttributePath getAttributePath() {
+											return attributePath;
+										}
+
+										@Override
+										public boolean isCollectionElement() {
+											// if the propertyHolder is a collection, assume the
+											// @Column refers to the element column
+											return !propertyHolder.isComponent()
+													&& !propertyHolder.isEntity();
+										}
+
+										@Override
+										public MetadataBuildingContext getBuildingContext() {
+											return context;
+										}
+									}
 							)
 					);
+
+					final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() );
+					mappingColumn.setName( physicalName.render( database.getDialect() ) );
 				}
 				//Do nothing otherwise
 			}
 			else {
-				columnName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnName );
-				columnName = getNamingStrategyDelegate().toPhysicalColumnName( columnName );
-				columnName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnName );
-				mappingColumn.setName( columnName );
+				final Identifier explicitName = database.toIdentifier( columnName );
+				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
+				mappingColumn.setName( physicalName.render( database.getDialect() ) );
 			}
 		}
 		else {
 			if ( StringHelper.isNotEmpty( columnName ) ) {
-				mappingColumn.setName( mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnName ) );
+				mappingColumn.setName( normalizer.toDatabaseIdentifierText( columnName ) );
 			}
 		}
 	}
@@ -368,17 +389,39 @@ public class Ejb3Column {
 	}
 
 	protected void addColumnBinding(SimpleValue value) {
-		String logicalColumnName =
-				getNamingStrategyDelegate().determineLogicalColumnName( this.logicalColumnName, propertyName );
-		mappings.addColumnBinding( logicalColumnName, getMappingColumn(), value.getTable() );
-	}
+		final String logicalColumnName;
+		if ( StringHelper.isNotEmpty( this.logicalColumnName ) ) {
+			logicalColumnName = this.logicalColumnName;
+		}
+		else {
+			final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
+			final Database database = context.getMetadataCollector().getDatabase();
+			final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions()
+					.getImplicitNamingStrategy();
 
-	protected NamingStrategyDelegate getNamingStrategyDelegate() {
-		return getNamingStrategyDelegate( mappings );
-	}
+			final Identifier implicitName = normalizer.normalizeIdentifierQuoting(
+					implicitNamingStrategy.determineBasicColumnName(
+							new ImplicitBasicColumnNameSource() {
+								@Override
+								public AttributePath getAttributePath() {
+									return AttributePath.parse( propertyName );
+								}
 
-	protected static NamingStrategyDelegate getNamingStrategyDelegate(Mappings mappings) {
-		return mappings.getNamingStrategyDelegator().getNamingStrategyDelegate( false );
+								@Override
+								public boolean isCollectionElement() {
+									return false;
+								}
+
+								@Override
+								public MetadataBuildingContext getBuildingContext() {
+									return context;
+								}
+							}
+					)
+			);
+			logicalColumnName = implicitName.render( database.getDialect() );
+		}
+		context.getMetadataCollector().addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
 	}
 
 	/**
@@ -413,14 +456,21 @@ public class Ejb3Column {
 	public Join getJoin() {
 		Join join = joins.get( explicitTableName );
 		if ( join == null ) {
+			// annotation binding seems to use logical and physical naming somewhat inconsistently...
+			final String physicalTableName = getBuildingContext().getMetadataCollector().getPhysicalTableName( explicitTableName );
+			if ( physicalTableName != null ) {
+				join = joins.get( physicalTableName );
+			}
+		}
+
+		if ( join == null ) {
 			throw new AnnotationException(
 					"Cannot find the expected secondary table: no "
 							+ explicitTableName + " available for " + propertyHolder.getClassName()
 			);
 		}
-		else {
-			return join;
-		}
+
+		return join;
 	}
 
 	public void forceNotNull() {
@@ -434,9 +484,16 @@ public class Ejb3Column {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
-			Mappings mappings){
+			MetadataBuildingContext context) {
 		return buildColumnFromAnnotation(
-				anns, formulaAnn, nullability, propertyHolder, inferredData, null, secondaryTables, mappings
+				anns,
+				formulaAnn,
+				nullability,
+				propertyHolder,
+				inferredData,
+				null,
+				secondaryTables,
+				context
 		);
 	}
 	public static Ejb3Column[] buildColumnFromAnnotation(
@@ -447,13 +504,13 @@ public class Ejb3Column {
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
-			Mappings mappings) {
+			MetadataBuildingContext context) {
 		Ejb3Column[] columns;
 		if ( formulaAnn != null ) {
 			Ejb3Column formulaColumn = new Ejb3Column();
 			formulaColumn.setFormula( formulaAnn.value() );
 			formulaColumn.setImplicit( false );
-			formulaColumn.setMappings( mappings );
+			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
 			formulaColumn.bind();
 			columns = new Ejb3Column[] { formulaColumn };
@@ -478,25 +535,57 @@ public class Ejb3Column {
 						secondaryTables,
 						propertyHolder,
 						nullability,
-						mappings
+						context
 				);
 			}
 			else {
 				final int length = actualCols.length;
 				columns = new Ejb3Column[length];
 				for (int index = 0; index < length; index++) {
-					final ObjectNameNormalizer nameNormalizer = mappings.getObjectNameNormalizer();
+
+					final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
+					final Database database = context.getMetadataCollector().getDatabase();
+					final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
+					final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
+
 					javax.persistence.Column col = actualCols[index];
-					final String sqlType = col.columnDefinition().equals( "" )
-							? null
-							: nameNormalizer.normalizeIdentifierQuoting( col.columnDefinition() );
-					final String tableName =
-							! StringHelper.isEmpty(col.table())
-									? nameNormalizer.normalizeIdentifierQuoting( getNamingStrategyDelegate( mappings ).toPhysicalTableName(
-											col.table()
-									) )
-									: "";
-					final String columnName = nameNormalizer.normalizeIdentifierQuoting( col.name() );
+
+					final String sqlType;
+					if ( col.columnDefinition().equals( "" ) ) {
+						sqlType = null;
+					}
+					else {
+						sqlType = normalizer.toDatabaseIdentifierText( col.columnDefinition() );
+					}
+
+					final String tableName;
+					if ( StringHelper.isEmpty( col.table() ) ) {
+						tableName = "";
+					}
+					else {
+						tableName = database.getJdbcEnvironment()
+								.getIdentifierHelper()
+								.toIdentifier( col.table() )
+								.render();
+//						final Identifier logicalName = database.getJdbcEnvironment()
+//								.getIdentifierHelper()
+//								.toIdentifier( col.table() );
+//						final Identifier physicalName = physicalNamingStrategy.toPhysicalTableName( logicalName );
+//						tableName = physicalName.render( database.getDialect() );
+					}
+
+					final String columnName;
+					if ( "".equals( col.name() ) ) {
+						columnName = null;
+					}
+					else {
+						// NOTE : this is the logical column name, not the physical!
+						columnName = database.getJdbcEnvironment()
+								.getIdentifierHelper()
+								.toIdentifier( col.name() )
+								.render();
+					}
+
 					Ejb3Column column = new Ejb3Column();
 
 					if ( length == 1 ) {
@@ -527,7 +616,7 @@ public class Ejb3Column {
 					column.setExplicitTableName( tableName );
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
-					column.setMappings( mappings );
+					column.setBuildingContext( context );
 					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
@@ -590,7 +679,7 @@ public class Ejb3Column {
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			Nullability nullability,
-			Mappings mappings) {
+			MetadataBuildingContext context) {
 		Ejb3Column column = new Ejb3Column();
 		Ejb3Column[] columns = new Ejb3Column[1];
 		columns[0] = column;
@@ -608,7 +697,7 @@ public class Ejb3Column {
 		);
 		column.setPropertyHolder( propertyHolder );
 		column.setJoins( secondaryTables );
-		column.setMappings( mappings );
+		column.setBuildingContext( context );
 
 		// property name + suffix is an "explicit" column name
 		if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
@@ -666,39 +755,31 @@ public class Ejb3Column {
 	}
 
 	void addIndex(String indexName, boolean inSecondPass) {
-		IndexOrUniqueKeySecondPass secondPass = new IndexOrUniqueKeySecondPass( indexName, this, mappings, false );
+		IndexOrUniqueKeySecondPass secondPass = new IndexOrUniqueKeySecondPass( indexName, this, context, false );
 		if ( inSecondPass ) {
-			secondPass.doSecondPass( mappings.getClasses() );
+			secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
 		}
 		else {
-			mappings.addSecondPass(
-					secondPass
-			);
+			context.getMetadataCollector().addSecondPass( secondPass );
 		}
 	}
 
 	void addUniqueKey(String uniqueKeyName, boolean inSecondPass) {
-		IndexOrUniqueKeySecondPass secondPass = new IndexOrUniqueKeySecondPass( uniqueKeyName, this, mappings, true );
+		IndexOrUniqueKeySecondPass secondPass = new IndexOrUniqueKeySecondPass( uniqueKeyName, this, context, true );
 		if ( inSecondPass ) {
-			secondPass.doSecondPass( mappings.getClasses() );
+			secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
 		}
 		else {
-			mappings.addSecondPass(
-					secondPass
-			);
+			context.getMetadataCollector().addSecondPass( secondPass );
 		}
 	}
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "Ejb3Column" );
-		sb.append( "{table=" ).append( getTable() );
-		sb.append( ", mappingColumn=" ).append( mappingColumn.getName() );
-		sb.append( ", insertable=" ).append( insertable );
-		sb.append( ", updatable=" ).append( updatable );
-		sb.append( ", unique=" ).append( unique );
-		sb.append( '}' );
-		return sb.toString();
+		return "Ejb3Column" + "{table=" + getTable()
+				+ ", mappingColumn=" + mappingColumn.getName()
+				+ ", insertable=" + insertable
+				+ ", updatable=" + updatable
+				+ ", unique=" + unique + '}';
 	}
 }

@@ -34,6 +34,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * A type definition.  Much like {@link Type}, but here we can centralize the definition under a name and
  * refer to that name elsewhere.
  *
+ * The plural form is {@link TypeDefs}.
+ *
  * @see org.hibernate.type.Type
  * @see org.hibernate.usertype.UserType
  * @see org.hibernate.usertype.CompositeUserType

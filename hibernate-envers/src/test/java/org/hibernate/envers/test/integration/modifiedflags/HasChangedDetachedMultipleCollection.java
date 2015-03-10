@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.modifiedflags;
 
-import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.Priority;
@@ -10,10 +10,9 @@ import org.hibernate.envers.test.entities.collection.MultipleCollectionEntity;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity2;
 
-import org.junit.Test;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
 import static org.hibernate.envers.test.tools.TestTools.makeList;

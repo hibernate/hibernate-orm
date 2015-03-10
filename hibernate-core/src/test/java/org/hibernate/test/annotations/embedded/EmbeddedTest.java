@@ -23,23 +23,24 @@
  */
 package org.hibernate.test.annotations.embedded;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.junit.Test;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -48,7 +49,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class EmbeddedTest extends BaseCoreFunctionalTestCase {
+public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testSimple() throws Exception {
 		Session s;
@@ -409,9 +410,9 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", configuration() ) );
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", metadata() ) );
+		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", metadata() ) );
 
 		//just to make sure, use the mapping
 		Session s;
@@ -527,8 +528,9 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 		Book b = new Book();
 		b.setIsbn( UUID.randomUUID().toString() );
 		b.setSummary( new Summary() );
-		b = (Book) session.merge( b );
+		b = (Book) s.merge( b );
 		tx.commit();
+		s.close();
 	}
 
 	@Override
@@ -547,5 +549,11 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 				Manager.class,
 				FavoriteThings.class
 		};
+	}
+
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 }

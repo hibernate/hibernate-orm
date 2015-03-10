@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
 
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
-import java.util.Map;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;

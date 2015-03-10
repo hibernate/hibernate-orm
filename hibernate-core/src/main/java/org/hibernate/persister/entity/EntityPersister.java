@@ -56,6 +56,25 @@ import org.hibernate.type.VersionType;
  * persister instance corresponds to a given mapped entity class.
  * <p/>
  * Implementations must be thread-safe (preferably immutable).
+ * <p/>
+ * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
+ * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
+ *     <li>
+ *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
+ *         to be handled by the persister
+ *     </li>
+ *     <li>
+ *         {@link EntityRegionAccessStrategy} - the second level caching strategy for this entity
+ *     </li>
+ *     <li>
+ *         {@link NaturalIdRegionAccessStrategy} - the second level caching strategy for the natural-id
+ *         defined for this entity, if one
+ *     </li>
+ *     <li>
+ *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
+ *         information useful while constructing the persister.
+ *     </li>
+ * </ol>
  *
  * @author Gavin King
  * @author Steve Ebersole

@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-import org.hibernate.cfg.Mappings;
+
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -31,13 +32,12 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Bag extends Collection {
-
-	public Bag(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
+	public Bag(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
 	}
 
 	public CollectionType getDefaultCollectionType() {
-		return getMappings().getTypeResolver()
+		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.bag( getRole(), getReferencedPropertyName() );
 	}

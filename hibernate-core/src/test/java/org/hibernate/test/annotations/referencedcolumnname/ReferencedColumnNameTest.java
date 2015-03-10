@@ -26,12 +26,14 @@ package org.hibernate.test.annotations.referencedcolumnname;
 import java.math.BigDecimal;
 import java.util.Iterator;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -267,6 +269,12 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 				.add( Restrictions.eq( "neighbourPlaces.livingRoom.owner", "his" ) ).uniqueResult() );
 
 		tx.rollback();
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 
 	@Override

@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.CollectionType;
 
@@ -35,6 +36,9 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Set extends Collection {
+	public Set(MetadataImplementor metadata, PersistentClass owner) {
+		super( metadata, owner );
+	}
 
 	public void validate(Mapping mapping) throws MappingException {
 		super.validate( mapping );
@@ -49,27 +53,23 @@ public class Set extends Collection {
 		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
-	public Set(Mappings mappings, PersistentClass owner) {
-		super( mappings, owner );
-	}
-
 	public boolean isSet() {
 		return true;
 	}
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMappings().getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.sortedSet( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return getMappings().getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.orderedSet( getRole(), getReferencedPropertyName() );
 		}
 		else {
-			return getMappings().getTypeResolver()
+			return getMetadata().getTypeResolver()
 					.getTypeFactory()
 					.set( getRole(), getReferencedPropertyName() );
 		}

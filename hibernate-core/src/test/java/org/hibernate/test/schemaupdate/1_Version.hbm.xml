@@ -7,10 +7,7 @@
 
 	<class name="Version">
 		<id name="id">
-			<generator class="org.hibernate.id.TableHiLoGenerator">
-                <param name="table">uid_table</param>
-                <param name="column">next_hi_value_column</param>
-        	</generator>
+			<generator class="sequence"/>
 		</id>
 		<property name="description"/>	
 	</class>

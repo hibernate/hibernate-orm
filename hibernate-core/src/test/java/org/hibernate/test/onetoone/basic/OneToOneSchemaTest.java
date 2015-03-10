@@ -23,13 +23,15 @@
  */
 package org.hibernate.test.onetoone.basic;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
 
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 
@@ -40,18 +42,18 @@ public class OneToOneSchemaTest extends BaseUnitTestCase {
 
 	@Test
 	public void testUniqueKeyNotGeneratedViaAnnotations() throws Exception {
-		Configuration cfg = new Configuration()
-				.addAnnotatedClass( Parent.class )
-				.addAnnotatedClass( Child.class )
-				.setProperty( Environment.HBM2DDL_AUTO, "create" );
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		try {
+			Metadata metadata = new MetadataSources( ssr )
+					.addAnnotatedClass( Parent.class )
+					.addAnnotatedClass( Child.class )
+					.buildMetadata();
 
-		probeForUniqueKey( cfg );
-	}
-
-	private void probeForUniqueKey(Configuration cfg) {
-		cfg.buildMappings();
-
-		Table childTable = cfg.createMappings().getTable( null, null, "CHILD" );
-		assertFalse( "UniqueKey was generated when it should not", childTable.getUniqueKeyIterator().hasNext() );
+			Table childTable = metadata.getDatabase().getDefaultSchema().locateTable( Identifier.toIdentifier( "CHILD" ) );
+			assertFalse( "UniqueKey was generated when it should not", childTable.getUniqueKeyIterator().hasNext() );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 }

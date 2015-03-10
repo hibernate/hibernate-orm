@@ -26,16 +26,16 @@ package org.hibernate.test.annotations.immutable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.boot.MetadataSources;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -152,15 +152,12 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMiscplacedImmutableAnnotation() {
+	public void testMisplacedImmutableAnnotation() {
 		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass(Foobar.class);
-			config.buildMappings(  );
-			fail();
+			new MetadataSources().addAnnotatedClass( Foobar.class ).buildMetadata();
+			fail( "Expecting exception due to misplaced @Immutable annotation");
 		}
-		catch (AnnotationException ae) {
-            log.debug("succes");
+		catch (AnnotationException ignore) {
 		}
 	}
 

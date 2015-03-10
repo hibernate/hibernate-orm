@@ -82,6 +82,8 @@ import org.hibernate.type.Type;
 public class SQLQueryReturnProcessor {
     private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SQLQueryReturnProcessor.class );
 
+	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
+
 	private NativeSQLQueryReturn[] queryReturns;
 
 //	private final List persisters = new ArrayList();
@@ -113,7 +115,7 @@ public class SQLQueryReturnProcessor {
 
 
 	public SQLQueryReturnProcessor(NativeSQLQueryReturn[] queryReturns, SessionFactoryImplementor factory) {
-		this.queryReturns = queryReturns;
+		this.queryReturns = queryReturns == null ? NO_RETURNS : queryReturns;
 		this.factory = factory;
 	}
 

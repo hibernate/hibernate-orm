@@ -39,12 +39,12 @@ import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.internal.CoreMessageLogger;
@@ -70,13 +70,14 @@ import org.jboss.logging.Logger;
 public class PropertyBinder {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyBinder.class.getName());
 
+	private MetadataBuildingContext buildingContext;
+
 	private String name;
 	private String returnedClassName;
 	private boolean lazy;
 	private AccessType accessType;
 	private Ejb3Column[] columns;
 	private PropertyHolder holder;
-	private Mappings mappings;
 	private Value value;
 	private boolean insertable = true;
 	private boolean updatable = true;
@@ -154,8 +155,8 @@ public class PropertyBinder {
 		this.cascade = cascadeStrategy;
 	}
 
-	public void setMappings(Mappings mappings) {
-		this.mappings = mappings;
+	public void setBuildingContext(MetadataBuildingContext buildingContext) {
+		this.buildingContext = buildingContext;
 	}
 
 	public void setDeclaringClass(XClass declaringClass) {
@@ -187,7 +188,7 @@ public class PropertyBinder {
 		holder.startingProperty( property );
 
 		simpleValueBinder = new SimpleValueBinder();
-		simpleValueBinder.setMappings( mappings );
+		simpleValueBinder.setBuildingContext( buildingContext );
 		simpleValueBinder.setPropertyName( name );
 		simpleValueBinder.setReturnedClassName( returnedClassName );
 		simpleValueBinder.setColumns( columns );
@@ -198,7 +199,6 @@ public class PropertyBinder {
 				containerClassName,
 				holder.resolveAttributeConverterDefinition( property )
 		);
-		simpleValueBinder.setMappings( mappings );
 		simpleValueBinder.setReferencedEntityName( referencedEntityName );
 		simpleValueBinder.setAccessType( accessType );
 		SimpleValue propertyValue = simpleValueBinder.make();
@@ -228,7 +228,13 @@ public class PropertyBinder {
 			if ( isXToMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
 				Component identifier = (Component) rootClass.getIdentifier();
 				if (identifier == null) {
-					identifier = AnnotationBinder.createComponent( holder, new PropertyPreloadedData(null, null, null), true, false, mappings );
+					identifier = AnnotationBinder.createComponent(
+							holder,
+							new PropertyPreloadedData(null, null, null),
+							true,
+							false,
+							buildingContext
+					);
 					rootClass.setIdentifier( identifier );
 					identifier.setNullValue( "undefined" );
 					rootClass.setEmbeddedIdentifier( true );
@@ -247,7 +253,7 @@ public class PropertyBinder {
 					final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
 							declaringClass,
 							inheritanceStatePerClass,
-							mappings
+							buildingContext
 					);
 					if (superclass != null) {
 						superclass.setDeclaredIdentifierProperty(prop);
@@ -424,7 +430,10 @@ public class PropertyBinder {
 			// check this explicitly; If required, this could be done e.g. using ClassMate
 			@SuppressWarnings( "unchecked" )
 			AnnotationValueGeneration<A> valueGeneration = (AnnotationValueGeneration<A>) generationType.newInstance();
-			valueGeneration.initialize( annotation, mappings.getReflectionManager().toClass(property.getType() ) );
+			valueGeneration.initialize(
+					annotation,
+					buildingContext.getBuildingOptions().getReflectionManager().toClass( property.getType() )
+			);
 
 			return valueGeneration;
 		}

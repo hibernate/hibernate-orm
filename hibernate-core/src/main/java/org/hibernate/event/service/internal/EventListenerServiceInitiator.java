@@ -23,7 +23,7 @@
  */
 package org.hibernate.event.service.internal;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -45,7 +45,7 @@ public class EventListenerServiceInitiator implements SessionFactoryServiceIniti
 	@Override
 	public EventListenerRegistry initiateService(
 			SessionFactoryImplementor sessionFactory,
-			Configuration configuration,
+			SessionFactory.SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry) {
 		return new EventListenerRegistryImpl();
 	}

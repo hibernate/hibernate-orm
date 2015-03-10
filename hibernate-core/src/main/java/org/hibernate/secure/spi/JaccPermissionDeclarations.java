@@ -24,6 +24,7 @@
 package org.hibernate.secure.spi;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -37,6 +38,10 @@ public class JaccPermissionDeclarations {
 		this.contextId = contextId;
 	}
 
+	public String getContextId() {
+		return contextId;
+	}
+
 	public void addPermissionDeclaration(GrantedPermission permissionDeclaration) {
 		if ( permissionDeclarations == null ) {
 			permissionDeclarations = new ArrayList<GrantedPermission>();
@@ -44,7 +49,14 @@ public class JaccPermissionDeclarations {
 		permissionDeclarations.add( permissionDeclaration );
 	}
 
-	public Iterable<GrantedPermission> getPermissionDeclarations() {
+	public void addPermissionDeclarations(Collection<GrantedPermission> permissionDeclarations) {
+		if ( this.permissionDeclarations == null ) {
+			this.permissionDeclarations = new ArrayList<GrantedPermission>();
+		}
+		this.permissionDeclarations.addAll( permissionDeclarations );
+	}
+
+	public Collection<GrantedPermission> getPermissionDeclarations() {
 		return permissionDeclarations;
 	}
 }

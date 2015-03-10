@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.test.entities.onetomany;
 
+import java.io.Serializable;
+import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.io.Serializable;
-import java.util.Collection;
 
 import org.hibernate.envers.Audited;
 

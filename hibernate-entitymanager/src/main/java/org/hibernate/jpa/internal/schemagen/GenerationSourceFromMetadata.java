@@ -23,10 +23,10 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import java.util.Arrays;
-
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 
 /**
  * Handle schema generation source from (annotation/xml) metadata.
@@ -34,21 +34,31 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class GenerationSourceFromMetadata implements GenerationSource {
-	private final Configuration hibernateConfiguration;
+	private final MetadataImplementor metadata;
 	private final Dialect dialect;
+	private final boolean createAndDropSchemas;
 	private final boolean creation;
 
-	public GenerationSourceFromMetadata(Configuration hibernateConfiguration, Dialect dialect, boolean creation) {
-		this.hibernateConfiguration = hibernateConfiguration;
+	public GenerationSourceFromMetadata(
+			MetadataImplementor metadata,
+			Dialect dialect,
+			boolean createAndDropSchemas,
+			boolean creation) {
+		this.metadata = metadata;
 		this.dialect = dialect;
+		this.createAndDropSchemas = createAndDropSchemas;
 		this.creation = creation;
 	}
 
 	@Override
 	public Iterable<String> getCommands() {
-		return creation
-				? Arrays.asList( hibernateConfiguration.generateSchemaCreationScript( dialect ) )
-				: Arrays.asList( hibernateConfiguration.generateDropSchemaScript( dialect ) );
+		if ( creation ) {
+			// for now...
+			return new SchemaCreatorImpl().generateCreationCommands( metadata, createAndDropSchemas, dialect );
+		}
+		else {
+			return new SchemaDropperImpl().generateDropCommands( metadata, createAndDropSchemas, dialect );
+		}
 	}
 
 	@Override

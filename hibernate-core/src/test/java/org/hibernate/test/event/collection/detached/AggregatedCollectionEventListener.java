@@ -27,11 +27,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AbstractCollectionEvent;
@@ -52,6 +49,8 @@ import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -161,7 +160,7 @@ public class AggregatedCollectionEventListener
 
 		@Override
 		public void integrate(
-				Configuration configuration,
+				Metadata metadata,
 				SessionFactoryImplementor sessionFactory,
 				SessionFactoryServiceRegistry serviceRegistry) {
 			integrate( serviceRegistry );

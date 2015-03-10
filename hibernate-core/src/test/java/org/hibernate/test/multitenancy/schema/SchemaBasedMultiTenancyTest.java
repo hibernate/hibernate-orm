@@ -23,33 +23,36 @@
  */
 package org.hibernate.test.multitenancy.schema;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.RootClass;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.internal.TargetDatabaseImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
+
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.tool.hbm2ddl.ConnectionHelper;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.test.common.JdbcConnectionAccessImpl;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -66,84 +69,47 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		AbstractMultiTenantConnectionProvider multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
-		Configuration cfg = buildConfiguration();
+
+		Map settings = new HashMap();
+		settings.put( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA );
+		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
 
 		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-				.applySettings( cfg.getProperties() )
+				.applySettings( settings )
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
 				.build();
 
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		MetadataSources ms = new MetadataSources( serviceRegistry );
+		ms.addAnnotatedClass( Customer.class );
+		ms.addAnnotatedClass( Invoice.class );
+
+		Metadata metadata = ms.buildMetadata();
+		( (RootClass) metadata.getEntityBinding( Customer.class.getName() ) ).setCacheConcurrencyStrategy( "read-write" );
+
+		final TargetDatabaseImpl acmeTarget = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( acmeProvider ) );
+		final TargetDatabaseImpl jbossTarget = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( jbossProvider ) );
+
+		serviceRegistry.getService( SchemaManagementTool.class ).getSchemaDropper( settings ).doDrop(
+				metadata,
+				true,
+				acmeTarget,
+				jbossTarget
+		);
+
+		serviceRegistry.getService( SchemaManagementTool.class ).getSchemaCreator( settings ).doCreation(
+				metadata,
+				true,
+				acmeTarget,
+				jbossTarget
+		);
+
+		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
+		configure( sfb );
+		sessionFactory = (SessionFactoryImplementor) sfb.build();
 	}
 
-	protected Configuration buildConfiguration() {
-		Configuration cfg = new Configuration();
-		cfg.getProperties().put( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA );
-		cfg.setProperty( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.addAnnotatedClass( Customer.class );
-		cfg.addAnnotatedClass( Invoice.class );
-
-		cfg.buildMappings();
-		RootClass meta = (RootClass) cfg.getClassMapping( Customer.class.getName() );
-		meta.setCacheConcurrencyStrategy( "read-write" );
-
-		// do the acme export
-		new SchemaExport(
-				new ConnectionHelper() {
-					private Connection connection;
-					@Override
-					public void prepare(boolean needsAutoCommit) throws SQLException {
-						connection = acmeProvider.getConnection();
-					}
-
-					@Override
-					public Connection getConnection() throws SQLException {
-						return connection;
-					}
-
-					@Override
-					public void release() throws SQLException {
-						acmeProvider.closeConnection( connection );
-					}
-				},
-				cfg.generateDropSchemaScript( ConnectionProviderBuilder.getCorrespondingDialect() ),
-				cfg.generateSchemaCreationScript( ConnectionProviderBuilder.getCorrespondingDialect() )
-		).execute(		 // so stupid...
-						   false,	 // do not script the export (write it to file)
-						   true,	 // do run it against the database
-						   false,	 // do not *just* perform the drop
-						   false	// do not *just* perform the create
-		);
-
-		// do the jboss export
-		new SchemaExport(
-				new ConnectionHelper() {
-					private Connection connection;
-					@Override
-					public void prepare(boolean needsAutoCommit) throws SQLException {
-						connection = jbossProvider.getConnection();
-					}
-
-					@Override
-					public Connection getConnection() throws SQLException {
-						return connection;
-					}
-
-					@Override
-					public void release() throws SQLException {
-						jbossProvider.closeConnection( connection );
-					}
-				},
-				cfg.generateDropSchemaScript( ConnectionProviderBuilder.getCorrespondingDialect() ),
-				cfg.generateSchemaCreationScript( ConnectionProviderBuilder.getCorrespondingDialect() )
-		).execute( 		// so stupid...
-						   false, 	// do not script the export (write it to file)
-						   true, 	// do run it against the database
-						   false, 	// do not *just* perform the drop
-						   false	// do not *just* perform the create
-		);
-		return cfg;
+	protected void configure(SessionFactoryBuilder sfb) {
 	}
 
 	private AbstractMultiTenantConnectionProvider buildMultiTenantConnectionProvider() {

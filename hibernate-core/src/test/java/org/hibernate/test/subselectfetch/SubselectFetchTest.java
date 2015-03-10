@@ -25,17 +25,17 @@ package org.hibernate.test.subselectfetch;
 
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,12 +52,8 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
+		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Test

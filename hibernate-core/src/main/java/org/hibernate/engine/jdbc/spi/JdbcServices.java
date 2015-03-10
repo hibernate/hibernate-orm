@@ -27,6 +27,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.Service;
 
 /**
@@ -35,6 +38,13 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface JdbcServices extends Service {
+	/**
+	 * Obtain the JdbcEnvironment backing this JdbcServices instance.
+	 *
+	 * @return
+	 */
+	public JdbcEnvironment getJdbcEnvironment();
+
 	/**
 	 * Obtain service for providing JDBC connections.
 	 *
@@ -45,6 +55,8 @@ public interface JdbcServices extends Service {
 	 */
 	@Deprecated
 	public ConnectionProvider getConnectionProvider();
+
+	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess();
 
 	/**
 	 * Obtain the dialect of the database.

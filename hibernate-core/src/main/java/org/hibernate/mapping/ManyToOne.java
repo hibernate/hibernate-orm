@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.Mappings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -39,12 +40,12 @@ public class ManyToOne extends ToOne {
 	private boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 	
-	public ManyToOne(Mappings mappings, Table table) {
-		super( mappings, table );
+	public ManyToOne(MetadataImplementor metadata, Table table) {
+		super( metadata, table );
 	}
 
 	public Type getType() throws MappingException {
-		return getMappings().getTypeResolver().getTypeFactory().manyToOne(
+		return getMetadata().getTypeResolver().getTypeFactory().manyToOne(
 				getReferencedEntityName(),
 				referenceToPrimaryKey, 
 				getReferencedPropertyName(),
@@ -77,6 +78,7 @@ public class ManyToOne extends ToOne {
 					);
 			} 
 			else {
+				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
 					java.util.List refColumns = new ArrayList();
 					Iterator iter = property.getColumnIterator();
@@ -89,8 +91,8 @@ public class ManyToOne extends ToOne {
 							getForeignKeyName(), 
 							getConstraintColumns(), 
 							( (EntityType) getType() ).getAssociatedEntityName(), 
-							refColumns 
-						);
+							refColumns
+					);
 					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );
 				}
 			}

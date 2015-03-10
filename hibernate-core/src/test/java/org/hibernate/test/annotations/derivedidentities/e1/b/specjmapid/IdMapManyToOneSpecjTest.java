@@ -26,11 +26,13 @@ package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 /**
@@ -38,10 +40,12 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
-public class IdMapManyToOneSpecjTest extends BaseCoreFunctionalTestCase {
+public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	public IdMapManyToOneSpecjTest() {
-		System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		( ( MetadataBuilderImpl) metadataBuilder ).allowSpecjSyntax();
 	}
 
 	@Test

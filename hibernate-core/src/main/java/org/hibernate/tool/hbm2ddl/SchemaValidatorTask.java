@@ -28,15 +28,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.naming.NamingStrategyDelegator;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -66,15 +72,18 @@ import org.apache.tools.ant.types.FileSet;
  * @author Gavin King
  */
 public class SchemaValidatorTask extends MatchingTask {
+	private List<FileSet> fileSets = new LinkedList<FileSet>();
 
-	private List fileSets = new LinkedList();
 	private File propertiesFile;
 	private File configurationFile;
-	private String namingStrategy;
-	private String namingStrategyDelegator;
 
-	public void addFileset(FileSet set) {
-		fileSets.add(set);
+	private String implicitNamingStrategy = null;
+	private String physicalNamingStrategy = null;
+
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void addFileset(FileSet fileSet) {
+		fileSets.add( fileSet );
 	}
 
 	/**
@@ -83,10 +92,10 @@ public class SchemaValidatorTask extends MatchingTask {
 	 */
 	public void setProperties(File propertiesFile) {
 		if ( !propertiesFile.exists() ) {
-			throw new BuildException("Properties file: " + propertiesFile + " does not exist.");
+			throw new BuildException("Properties file [" + propertiesFile + "] does not exist.");
 		}
 
-		log("Using properties file " + propertiesFile, Project.MSG_DEBUG);
+		log( "Using properties file " + propertiesFile, Project.MSG_DEBUG );
 		this.propertiesFile = propertiesFile;
 	}
 
@@ -95,7 +104,27 @@ public class SchemaValidatorTask extends MatchingTask {
 	 * @param configurationFile the file name
 	 */
 	public void setConfig(File configurationFile) {
+		if ( !configurationFile.exists() ) {
+			throw new BuildException("Configuration file [" + configurationFile + "] does not exist.");
+		}
+
+		log( "Using configuration file " + propertiesFile, Project.MSG_DEBUG );
 		this.configurationFile = configurationFile;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void setNamingStrategy(String namingStrategy) {
+		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
+		this.implicitNamingStrategy = implicitNamingStrategy;
+	}
+
+	@SuppressWarnings("UnusedDeclaration")
+	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
+		this.physicalNamingStrategy = physicalNamingStrategy;
 	}
 
 	/**
@@ -104,8 +133,25 @@ public class SchemaValidatorTask extends MatchingTask {
 	@Override
     public void execute() throws BuildException {
 		try {
-			Configuration cfg = getConfiguration();
-			getSchemaValidator(cfg).validate();
+			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder();
+			configure( ssrBuilder );
+
+			final StandardServiceRegistry ssr = ssrBuilder.build();
+
+			try {
+				final MetadataSources metadataSources = new MetadataSources( ssrBuilder.build() );
+				configure( metadataSources );
+
+				final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
+				configure( metadataBuilder, ssr );
+
+				final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+
+				new SchemaValidator( ssr, metadata ).validate();
+			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( ssr );
+			}
 		}
 		catch (HibernateException e) {
 			throw new BuildException("Schema text failed: " + e.getMessage(), e);
@@ -116,26 +162,52 @@ public class SchemaValidatorTask extends MatchingTask {
 		catch (IOException e) {
 			throw new BuildException("IOException : " + e.getMessage(), e);
 		}
+		catch (BuildException e) {
+			throw e;
+		}
 		catch (Exception e) {
 			throw new BuildException(e);
 		}
 	}
+	private void configure(StandardServiceRegistryBuilder registryBuilder) throws IOException {
+		if ( configurationFile != null ) {
+			registryBuilder.configure( configurationFile );
+		}
 
-	private String[] getFiles() {
+		Properties properties = new Properties();
+		if ( propertiesFile == null ) {
+			properties.putAll( getProject().getProperties() );
+		}
+		else {
+			properties.load( new FileInputStream( propertiesFile ) );
+		}
 
-		List files = new LinkedList();
-		for ( Iterator i = fileSets.iterator(); i.hasNext(); ) {
+		registryBuilder.applySettings( properties );
+	}
 
-			FileSet fs = (FileSet) i.next();
-			DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
+	private void configure(MetadataSources metadataSources) {
+		for ( String filename : collectFiles() ) {
+			if ( filename.endsWith(".jar") ) {
+				metadataSources.addJar( new File( filename ) );
+			}
+			else {
+				metadataSources.addFile( filename );
+			}
+		}
+	}
 
-			String[] dsFiles = ds.getIncludedFiles();
-			for (int j = 0; j < dsFiles.length; j++) {
-				File f = new File(dsFiles[j]);
+	private String[] collectFiles() {
+		List<String> files = new ArrayList<String>();
+
+		for ( Object fileSet : fileSets ) {
+			final FileSet fs = (FileSet) fileSet;
+			final DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
+
+			for ( String dsFile : ds.getIncludedFiles() ) {
+				File f = new File( dsFile );
 				if ( !f.isFile() ) {
-					f = new File( ds.getBasedir(), dsFiles[j] );
+					f = new File( ds.getBasedir(), dsFile );
 				}
-
 				files.add( f.getAbsolutePath() );
 			}
 		}
@@ -143,57 +215,18 @@ public class SchemaValidatorTask extends MatchingTask {
 		return ArrayHelper.toStringArray( files );
 	}
 
-	private Configuration getConfiguration() throws Exception {
-		Configuration cfg = new Configuration();
-		if ( namingStrategy != null && namingStrategyDelegator != null ) {
-			throw new HibernateException( "namingStrategy and namingStrategyDelegator cannot be specified together." );
-		}
-		if (namingStrategy!=null) {
-			cfg.setNamingStrategy(
-					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
-				);
-		}
-		else if ( namingStrategyDelegator != null) {
-			cfg.setNamingStrategyDelegator(
-					(NamingStrategyDelegator) ReflectHelper.classForName( namingStrategyDelegator ).newInstance()
-
+	@SuppressWarnings("deprecation")
+	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		if ( implicitNamingStrategy != null ) {
+			metadataBuilder.with(
+					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, implicitNamingStrategy )
 			);
 		}
-		if (configurationFile!=null) {
-			cfg.configure( configurationFile );
+		if ( physicalNamingStrategy != null ) {
+			metadataBuilder.with(
+					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, physicalNamingStrategy )
+			);
 		}
-
-		String[] files = getFiles();
-		for (int i = 0; i < files.length; i++) {
-			String filename = files[i];
-			if ( filename.endsWith(".jar") ) {
-				cfg.addJar( new File(filename) );
-			}
-			else {
-				cfg.addFile(filename);
-			}
-		}
-		return cfg;
-	}
-
-	private SchemaValidator getSchemaValidator(Configuration cfg) throws HibernateException, IOException {
-		Properties properties = new Properties();
-		properties.putAll( cfg.getProperties() );
-		if (propertiesFile == null) {
-			properties.putAll( getProject().getProperties() );
-		}
-		else {
-			properties.load( new FileInputStream(propertiesFile) );
-		}
-		cfg.setProperties(properties);
-		return new SchemaValidator(cfg);
-	}
-
-	public void setNamingStrategy(String namingStrategy) {
-		this.namingStrategy = namingStrategy;
-	}
-
-	public void setNamingStrategyDelegator(String namingStrategyDelegator) {
-		this.namingStrategyDelegator =  namingStrategyDelegator;
 	}
 }

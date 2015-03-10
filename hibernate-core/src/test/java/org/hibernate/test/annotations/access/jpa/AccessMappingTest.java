@@ -23,21 +23,21 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.entity.EntityTuplizer;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.tuple.entity.EntityTuplizer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -66,7 +66,7 @@ public class AccessMappingTest {
 
     @Test
     public void testInconsistentAnnotationPlacement() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         cfg.addAnnotatedClass( Course1.class );
         cfg.addAnnotatedClass( Student.class );
 		SessionFactory sf = null;
@@ -85,7 +85,7 @@ public class AccessMappingTest {
 
     @Test
     public void testFieldAnnotationPlacement() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         Class<?> classUnderTest = Course6.class;
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
@@ -102,7 +102,7 @@ public class AccessMappingTest {
 
     @Test
     public void testPropertyAnnotationPlacement() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         Class<?> classUnderTest = Course7.class;
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
@@ -119,7 +119,7 @@ public class AccessMappingTest {
 
     @Test
     public void testExplicitPropertyAccessAnnotationsOnProperty() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         Class<?> classUnderTest = Course2.class;
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
@@ -136,7 +136,7 @@ public class AccessMappingTest {
 
     @Test
     public void testExplicitPropertyAccessAnnotationsOnField() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         cfg.addAnnotatedClass( Course4.class );
         cfg.addAnnotatedClass( Student.class );
 		SessionFactory sf= null;
@@ -155,7 +155,7 @@ public class AccessMappingTest {
 
     @Test
     public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         Class<?> classUnderTest = Course3.class;
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
@@ -177,7 +177,7 @@ public class AccessMappingTest {
 
     @Test
     public void testExplicitPropertyAccessAnnotationsWithJpaStyleOverride() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         Class<?> classUnderTest = Course5.class;
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Student.class );
@@ -199,7 +199,7 @@ public class AccessMappingTest {
 
     @Test
     public void testDefaultFieldAccessIsInherited() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         Class<?> classUnderTest = User.class;
         cfg.addAnnotatedClass( classUnderTest );
         cfg.addAnnotatedClass( Person.class );
@@ -217,7 +217,7 @@ public class AccessMappingTest {
 
     @Test
     public void testDefaultPropertyAccessIsInherited() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         cfg.addAnnotatedClass( Horse.class );
         cfg.addAnnotatedClass( Animal.class );
 
@@ -243,7 +243,7 @@ public class AccessMappingTest {
     @TestForIssue(jiraKey = "HHH-5004")
     @Test
     public void testAccessOnClassAndId() throws Exception {
-        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Configuration cfg = new Configuration();
         cfg.addAnnotatedClass( Course8.class );
         cfg.addAnnotatedClass( Student.class );
         cfg.buildSessionFactory( serviceRegistry ).close();

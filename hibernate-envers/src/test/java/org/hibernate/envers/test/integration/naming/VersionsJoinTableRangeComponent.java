@@ -1,12 +1,12 @@
 package org.hibernate.envers.test.integration.naming;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.annotations.FetchMode;
 

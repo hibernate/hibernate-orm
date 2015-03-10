@@ -29,10 +29,10 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.engine.jdbc.Size;
 
 import org.dom4j.Element;
 import org.dom4j.Node;
@@ -173,7 +173,7 @@ public abstract class AbstractType implements Type {
 			include = atype.getForeignKeyDirection()==foreignKeyDirection;
 		}
 		else {
-			include = ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT==foreignKeyDirection;
+			include = ForeignKeyDirection.FROM_PARENT ==foreignKeyDirection;
 		}
 		return include ? replace(original, target, session, owner, copyCache) : target;
 	}

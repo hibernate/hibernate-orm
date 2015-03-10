@@ -34,11 +34,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -52,6 +50,7 @@ import org.hibernate.loader.entity.CollectionElementLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 
@@ -82,15 +81,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	public OneToManyPersister(
-			Collection collection,
+			Collection collectionBinding,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			Configuration cfg,
-			SessionFactoryImplementor factory) throws MappingException, CacheException {
-		super( collection, cacheAccessStrategy, cfg, factory );
-		cascadeDeleteEnabled = collection.getKey().isCascadeDeleteEnabled() &&
-				factory.getDialect().supportsCascadeDelete();
-		keyIsNullable = collection.getKey().isNullable();
-		keyIsUpdateable = collection.getKey().isUpdateable();
+			PersisterCreationContext creationContext) throws MappingException, CacheException {
+		super( collectionBinding, cacheAccessStrategy, creationContext );
+		cascadeDeleteEnabled = collectionBinding.getKey().isCascadeDeleteEnabled()
+				&& creationContext.getSessionFactory().getDialect().supportsCascadeDelete();
+		keyIsNullable = collectionBinding.getKey().isNullable();
+		keyIsUpdateable = collectionBinding.getKey().isUpdateable();
 	}
 
 	/**

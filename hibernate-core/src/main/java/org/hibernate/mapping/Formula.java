@@ -43,6 +43,11 @@ public class Formula implements Selectable, Serializable {
 		uniqueInteger = formulaUniqueInteger++;
 	}
 
+	public Formula(String formula) {
+		this();
+		this.formula = formula;
+	}
+
 	@Override
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		return Template.renderWhereStringTemplate(formula, dialect, functionRegistry);

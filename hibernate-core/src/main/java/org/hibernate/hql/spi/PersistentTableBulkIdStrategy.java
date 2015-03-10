@@ -31,21 +31,20 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.AbstractSessionImpl;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -79,32 +78,36 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	public void prepare(
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
-			Mappings mappings,
-			Mapping mapping,
-			Map settings) {
-		this.catalog = ConfigurationHelper.getString(
+			MetadataImplementor metadata) {
+		final ConfigurationService configService = metadata.getMetadataBuildingOptions()
+				.getServiceRegistry()
+				.getService( ConfigurationService.class );
+		this.catalog = configService.getSetting(
 				CATALOG,
-				settings,
-				ConfigurationHelper.getString( AvailableSettings.DEFAULT_CATALOG, settings )
+				StandardConverters.STRING,
+				configService.getSetting( AvailableSettings.DEFAULT_CATALOG, StandardConverters.STRING )
 		);
-		this.schema = ConfigurationHelper.getString(
+		this.schema = configService.getSetting(
 				SCHEMA,
-				settings,
-				ConfigurationHelper.getString( AvailableSettings.DEFAULT_SCHEMA, settings )
+				StandardConverters.STRING,
+				configService.getSetting( AvailableSettings.DEFAULT_SCHEMA, StandardConverters.STRING )
 		);
-		this.cleanUpTables = ConfigurationHelper.getBoolean( CLEAN_UP_ID_TABLES, settings, false );
+		this.cleanUpTables = configService.getSetting(
+				CLEAN_UP_ID_TABLES,
+				StandardConverters.BOOLEAN,
+				false
+		);
 
-		final Iterator<PersistentClass> entityMappings = mappings.iterateClasses();
 		final List<Table> idTableDefinitions = new ArrayList<Table>();
-		while ( entityMappings.hasNext() ) {
-			final PersistentClass entityMapping = entityMappings.next();
-			final Table idTableDefinition = generateIdTableDefinition( entityMapping );
+
+		for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+			final Table idTableDefinition = generateIdTableDefinition( entityBinding, metadata );
 			idTableDefinitions.add( idTableDefinition );
 		}
-		exportTableDefinitions( idTableDefinitions, jdbcServices, connectionAccess, mappings, mapping );
+		exportTableDefinitions( idTableDefinitions, jdbcServices, connectionAccess, metadata );
 	}
 
-	protected Table generateIdTableDefinition(PersistentClass entityMapping) {
+	protected Table generateIdTableDefinition(PersistentClass entityMapping, MetadataImplementor metadata) {
 		Table idTable = new Table( entityMapping.getTemporaryIdTableName() );
 		if ( catalog != null ) {
 			idTable.setCatalog( catalog );
@@ -130,8 +133,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			List<Table> idTableDefinitions,
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
-			Mappings mappings,
-			Mapping mapping) {
+			MetadataImplementor metadata) {
 		try {
 			Connection connection;
 			try {
@@ -154,7 +156,7 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 						tableCleanUpDdl.add( idTableDefinition.sqlDropString( jdbcServices.getDialect(), null, null  ) );
 					}
 					try {
-						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), mapping, null, null );
+						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), metadata, null, null );
 						jdbcServices.getSqlStatementLogger().logStatement( sql );
 						// TODO: ResultSetExtractor
 						statement.execute( sql );

@@ -37,9 +37,5 @@ public enum FetchTiming {
 	/**
 	 * Performing fetching later, when needed.  Also called lazy fetching.
 	 */
-	DELAYED,
-	/**
-	 * Take extra care to ensure laziness.  <b>Only available in regards to collections</b>
-	 */
-	EXTRA_LAZY
+	DELAYED
 }

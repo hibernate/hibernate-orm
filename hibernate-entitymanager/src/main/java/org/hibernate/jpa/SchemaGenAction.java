@@ -67,19 +67,28 @@ public enum SchemaGenAction {
 	 *
 	 * @throws IllegalArgumentException If the incoming value is unrecognized
 	 */
-	public static SchemaGenAction interpret(String value) {
-		if ( StringHelper.isEmpty( value ) || NONE.externalName.equals( value ) ) {
+	public static SchemaGenAction interpret(Object value) {
+		if ( value == null ) {
+			return NONE;
+		}
+
+		if ( SchemaGenAction.class.isInstance( value ) ) {
+			return (SchemaGenAction) value;
+		}
+
+		final String name = value.toString();
+		if ( StringHelper.isEmpty( name ) || NONE.externalName.equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}
 
-		if ( CREATE.externalName.equals( value ) ) {
+		if ( CREATE.externalName.equals( name ) ) {
 			return CREATE;
 		}
-		else if ( DROP.externalName.equals( value ) ) {
+		else if ( DROP.externalName.equals( name ) ) {
 			return DROP;
 		}
-		else if ( BOTH.externalName.equals( value ) ) {
+		else if ( BOTH.externalName.equals( name ) ) {
 			return BOTH;
 		}
 

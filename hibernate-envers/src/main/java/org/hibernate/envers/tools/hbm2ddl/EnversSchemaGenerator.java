@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.service.ServiceRegistry;
@@ -38,9 +39,12 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 public class EnversSchemaGenerator {
 	private final SchemaExport export;
 
-	public EnversSchemaGenerator(ServiceRegistry serviceRegistry, Configuration configuration) {
-		configuration = configureAuditing( configuration );
-		export = new SchemaExport( serviceRegistry, configuration );
+	public EnversSchemaGenerator(MetadataImplementor metadata) {
+		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata );
+	}
+
+	public EnversSchemaGenerator(ServiceRegistry serviceRegistry, MetadataImplementor metadata) {
+		this.export = new SchemaExport( serviceRegistry, metadata );
 	}
 
 	public EnversSchemaGenerator(Configuration configuration) {

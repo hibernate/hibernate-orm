@@ -1,5 +1,8 @@
 package org.hibernate.envers.test.integration.multiplerelations;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -7,9 +10,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.envers.Audited;
 

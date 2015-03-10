@@ -1,73 +1,39 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.hibernate.boot.MetadataSources;
 
-import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.jboss.logging.Logger;
 
 /**
  * Test case for ANN-722 and ANN-730.
  *
  * @author Hardy Ferentschik
  */
-public class FkCircularityTest {
+public class FkCircularityTest extends BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( FkCircularityTest.class );
 
 
     @Test
 	public void testJoinedSublcassesInPK() {
-		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass(A.class);
-			config.addAnnotatedClass(B.class);
-			config.addAnnotatedClass(C.class);
-			config.addAnnotatedClass(D.class);
-			config.buildMappings(  );
-			String[] schema = config
-					.generateSchemaCreationScript(new SQLServerDialect());
-			for (String s : schema) {
-                log.debug(s);
-			}
-            log.debug("success");
-		} catch (Exception e) {
-			StringWriter writer = new StringWriter();
-			e.printStackTrace(new PrintWriter(writer));
-            log.debug(writer.toString());
-            Assert.fail( e.getMessage() );
-		}
+		new MetadataSources()
+				.addAnnotatedClass(A.class)
+				.addAnnotatedClass(B.class)
+				.addAnnotatedClass(C.class)
+				.addAnnotatedClass(D.class)
+				.buildMetadata();
 	}
+
     @Test
 	public void testDeepJoinedSuclassesHierachy() {
-		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass(ClassA.class);
-			config.addAnnotatedClass(ClassB.class);
-			config.addAnnotatedClass(ClassC.class);
-			config.addAnnotatedClass(ClassD.class);
-			config.buildMappings(  );
-			String[] schema = config
-					.generateSchemaCreationScript(new HSQLDialect());
-			for (String s : schema) {
-                log.debug(s);
-			}
-            log.debug("success");
-		} catch (Exception e) {
-			StringWriter writer = new StringWriter();
-			e.printStackTrace(new PrintWriter(writer));
-            log.debug(writer.toString());
-			Assert.fail(e.getMessage());
-		}
+		new MetadataSources()
+				.addAnnotatedClass(ClassA.class)
+				.addAnnotatedClass(ClassB.class)
+				.addAnnotatedClass(ClassC.class)
+				.addAnnotatedClass(ClassD.class)
+				.buildMetadata();
 	}
 }

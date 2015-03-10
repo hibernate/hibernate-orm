@@ -28,8 +28,9 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -99,11 +100,12 @@ public class BeanValidationIntegrator implements Integrator {
 
 	@Override
 	public void integrate(
-			final Configuration configuration,
+			final Metadata metadata,
 			final SessionFactoryImplementor sessionFactory,
 			final SessionFactoryServiceRegistry serviceRegistry) {
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
-		final Set<ValidationMode> modes = ValidationMode.getModes( configuration.getProperties().get( MODE_PROPERTY ) );
+		final Set<ValidationMode> modes = ValidationMode.getModes( cfgService.getSettings().get( MODE_PROPERTY ) );
 		if ( modes.size() > 1 ) {
 			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
 		}
@@ -128,8 +130,8 @@ public class BeanValidationIntegrator implements Integrator {
 					}
 
 					@Override
-					public Configuration getConfiguration() {
-						return configuration;
+					public Metadata getMetadata() {
+						return metadata;
 					}
 
 					@Override

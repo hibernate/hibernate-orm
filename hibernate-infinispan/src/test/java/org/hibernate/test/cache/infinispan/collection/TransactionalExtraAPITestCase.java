@@ -21,18 +21,18 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Configuration;
+
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
 
@@ -54,7 +54,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Before
 	public final void prepareLocalAccessStrategy() throws Exception {
-		environment = new NodeEnvironment( createConfiguration() );
+		environment = new NodeEnvironment( createStandardServiceRegistryBuilder() );
 		environment.prepare();
 
 		// Sleep a bit to avoid concurrent FLUSH problem
@@ -63,12 +63,12 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 		accessStrategy = environment.getCollectionRegion( REGION_NAME, null ).buildAccessStrategy( getAccessType() );
 	}
 
-	protected Configuration createConfiguration() {
-		Configuration cfg = CacheTestUtil.buildConfiguration(
+	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
+		StandardServiceRegistryBuilder ssrb = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
 				REGION_PREFIX, InfinispanRegionFactory.class, true, false
 		);
-		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName() );
-		return cfg;
+		ssrb.applySetting( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName() );
+		return ssrb;
 	}
 
 	protected String getCacheConfigName() {

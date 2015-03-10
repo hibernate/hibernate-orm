@@ -25,12 +25,14 @@ package org.hibernate.jpa.event.spi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
@@ -77,12 +79,18 @@ public class JpaIntegrator implements Integrator {
 
 	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new JPADuplicationStrategy();
 
-	@Override
-	@SuppressWarnings( {"unchecked"})
+	/**
+	 * Perform integration.
+	 *
+	 * @param metadata The "compiled" representation of the mapping information
+	 * @param sessionFactory The session factory being created
+	 * @param serviceRegistry The session factory's service registry
+	 */
 	public void integrate(
-			Configuration configuration,
+			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
+
 		// first, register the JPA-specific persist cascade style
 		CascadeStyles.registerCascadeStyle(
 				"persist",
@@ -112,7 +120,9 @@ public class JpaIntegrator implements Integrator {
 		eventListenerRegistry.prependListeners( EventType.POST_LOAD, new JpaPostLoadEventListener() );
 		eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new JpaPostUpdateEventListener() );
 
-		for ( Map.Entry<?,?> entry : configuration.getProperties().entrySet() ) {
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+
+		for ( Map.Entry entry : ( (Map<?,?>) cfgService.getSettings() ).entrySet() ) {
 			if ( ! String.class.isInstance( entry.getKey() ) ) {
 				continue;
 			}
@@ -129,22 +139,21 @@ public class JpaIntegrator implements Integrator {
 		}
 
 		// handle JPA "entity listener classes"...
+		final ReflectionManager reflectionManager = ( (MetadataImpl) metadata ).getMetadataBuildingOptions().getReflectionManager();
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		final Object beanManagerRef = configuration.getProperties().get( AvailableSettings.CDI_BEAN_MANAGER );
+		final Object beanManagerRef = sessionFactory.getSessionFactoryOptions().getBeanManagerReference();
 		this.jpaListenerFactory = beanManagerRef == null
 				? new StandardListenerFactory()
 				: buildBeanManagerListenerFactory( beanManagerRef );
-		this.callbackProcessor = new LegacyCallbackProcessor( jpaListenerFactory, configuration.getReflectionManager() );
+		this.callbackProcessor = new LegacyCallbackProcessor( jpaListenerFactory, reflectionManager );
 
-		Iterator classes = configuration.getClassMappings();
-		while ( classes.hasNext() ) {
-			final PersistentClass clazz = (PersistentClass) classes.next();
-			if ( clazz.getClassName() == null ) {
+		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
+			if ( persistentClass.getClassName() == null ) {
 				// we can have non java class persisted by hibernate
 				continue;
 			}
-			callbackProcessor.processCallbacksForEntity( clazz.getClassName(), callbackRegistry );
+			callbackProcessor.processCallbacksForEntity( persistentClass.getClassName(), callbackRegistry );
 		}
 
 		for ( EventType eventType : EventType.values() ) {

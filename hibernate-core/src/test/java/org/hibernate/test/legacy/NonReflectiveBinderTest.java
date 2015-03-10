@@ -22,22 +22,26 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+
 import java.util.Iterator;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,7 +50,8 @@ import static org.junit.Assert.assertTrue;
 
 
 public class NonReflectiveBinderTest extends BaseUnitTestCase {
-	private Configuration cfg;
+	private StandardServiceRegistry ssr;
+	private Metadata metadata;
 
 	public String[] getMappings() {
 		return new String[] { "legacy/Wicked.hbm.xml"};
@@ -54,20 +59,24 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		cfg = new Configuration()
+		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( "javax.persistence.validation.mode", "none" )
+				.build();
+		metadata = new MetadataSources( ssr )
 				.addResource( "org/hibernate/test/legacy/Wicked.hbm.xml" )
-				.setProperty( "javax.persistence.validation.mode", "none" );
-		cfg.buildMappings();
+				.buildMetadata();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		cfg = null;
+		if ( ssr != null ) {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 
 	@Test
 	public void testMetaInheritance() {
-		PersistentClass cm = cfg.getClassMapping("org.hibernate.test.legacy.Wicked");
+		PersistentClass cm = metadata.getEntityBinding( "org.hibernate.test.legacy.Wicked" );
 		Map m = cm.getMetaAttributes();
 		assertNotNull(m);
 		assertNotNull(cm.getMetaAttribute("global"));
@@ -121,7 +130,7 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HBX-718" )
 	public void testNonMutatedInheritance() {
-		PersistentClass cm = cfg.getClassMapping("org.hibernate.test.legacy.Wicked");
+		PersistentClass cm = metadata.getEntityBinding( "org.hibernate.test.legacy.Wicked" );
 		MetaAttribute metaAttribute = cm.getMetaAttribute( "globalmutated" );
 		
 		assertNotNull(metaAttribute);
@@ -203,7 +212,7 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testComparator() {
-		PersistentClass cm = cfg.getClassMapping("org.hibernate.test.legacy.Wicked");
+		PersistentClass cm = metadata.getEntityBinding( "org.hibernate.test.legacy.Wicked" );
 		
 		Property property = cm.getProperty("sortedEmployee");
 		Collection col = (Collection) property.getValue();

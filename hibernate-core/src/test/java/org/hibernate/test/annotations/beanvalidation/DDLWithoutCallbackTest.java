@@ -24,18 +24,18 @@
 package org.hibernate.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import javax.validation.ConstraintViolationException;
-
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -44,7 +44,7 @@ import static org.junit.Assert.fail;
  * @author Vladimir Klyushnikov
  * @author Hardy Ferentschik
  */
-public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
+public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testListeners() {
@@ -91,15 +91,14 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDDLEnabled() {
-		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
+		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
 		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( "javax.persistence.validation.mode", "ddl" );
+	protected void addSettings(Map settings) {
+		settings.put( "javax.persistence.validation.mode", "ddl" );
 	}
 
 	@Override

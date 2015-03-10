@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.batch;
-import java.math.BigDecimal;
 
-import org.junit.Test;
+import java.math.BigDecimal;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
@@ -33,8 +32,9 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * This is how to do batch processing in Hibernate. Remember to enable JDBC batch updates, or this test will take a
@@ -46,11 +46,6 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "batch/DataPoint.hbm.xml" };
-	}
-
-	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	@Override

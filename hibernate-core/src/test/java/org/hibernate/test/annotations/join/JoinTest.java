@@ -26,16 +26,18 @@ package org.hibernate.test.annotations.join;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Join;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -45,10 +47,10 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-public class JoinTest extends BaseCoreFunctionalTestCase {
+public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValue() throws Exception {
-		Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
+		Join join = (Join) metadata().getEntityBinding( Life.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "ExtendedLife", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "LIFE_ID" );
@@ -73,7 +75,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCompositePK() throws Exception {
-		Join join = (Join) configuration().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
+		Join join = (Join) metadata().getEntityBinding( Dog.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "DogThoroughbred", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "OWNER_NAME" );
@@ -178,9 +180,9 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (HibernateException e) {
 			//success
+			tx.rollback();
 		}
 		finally {
-			if ( tx != null ) tx.rollback();
 			s.close();
 		}
 	}
@@ -238,6 +240,12 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( c.getName() );
 		s.getTransaction().rollback();
 		s.close();
+	}
+
+	@Override
+	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.configureMetadataBuilder( metadataBuilder );
+		metadataBuilder.with( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 
 	@Override

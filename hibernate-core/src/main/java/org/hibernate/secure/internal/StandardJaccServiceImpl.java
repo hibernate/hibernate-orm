@@ -64,6 +64,11 @@ public class StandardJaccServiceImpl implements JaccService, Configurable {
 	}
 
 	@Override
+	public String getContextId() {
+		return contextId;
+	}
+
+	@Override
 	public void addPermission(GrantedPermission permissionDeclaration) {
 		// todo : do we need to wrap these PolicyConfiguration calls in privileged actions like we do during permission checks?
 

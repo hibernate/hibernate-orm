@@ -126,9 +126,17 @@ public final class TypeFactory implements Serializable {
 		}
 	}
 
+	// todo : can a Properties be wrapped in unmodifiable in any way?
+	private final static Properties EMPTY_PROPERTIES = new Properties();
+
 	public static void injectParameters(Object type, Properties parameters) {
 		if ( ParameterizedType.class.isInstance( type ) ) {
-			( (ParameterizedType) type ).setParameterValues(parameters);
+			if ( parameters == null ) {
+				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
+			}
+			else {
+				( (ParameterizedType) type ).setParameterValues(parameters);
+			}
 		}
 		else if ( parameters!=null && !parameters.isEmpty() ) {
 			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );

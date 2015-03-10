@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg;
 
-
 /**
  * Source for database object names (identifiers).
  *
@@ -39,7 +38,7 @@ public interface ObjectNameSource {
 
 	/**
 	 * Retrieve the logical name for this object.  Usually this is the name under which
-	 * the "thing" is registered with the {@link Mappings}.
+	 * the "thing" is registered.
 	 * 
 	 * @return The logical name.
 	 */

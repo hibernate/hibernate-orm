@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.test.entities.components.relations;
 
-import javax.persistence.Embeddable;
-import javax.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Embeddable;
+import javax.persistence.OneToMany;
 
 import org.hibernate.envers.test.entities.StrTestEntity;
 

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
@@ -36,6 +37,7 @@ import org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProvi
 import org.hibernate.engine.jdbc.cursor.internal.RefCursorSupportInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
@@ -47,6 +49,7 @@ import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
+import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
@@ -62,9 +65,13 @@ public final class StandardServiceInitiators {
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
 		final List<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
 
+		serviceInitiators.add( CfgXmlAccessServiceInitiator.INSTANCE );
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
-		serviceInitiators.add( ImportSqlCommandExtractorInitiator.INSTANCE );
 
+		serviceInitiators.add( ImportSqlCommandExtractorInitiator.INSTANCE );
+		serviceInitiators.add( SchemaManagementToolInitiator.INSTANCE );
+
+		serviceInitiators.add( JdbcEnvironmentInitiator.INSTANCE );
 		serviceInitiators.add( JndiServiceInitiator.INSTANCE );
 		serviceInitiators.add( JmxServiceInitiator.INSTANCE );
 

@@ -41,7 +41,6 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -54,6 +53,7 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
@@ -81,11 +81,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 	public static class NoopEntityPersister implements EntityPersister {
 
-		public NoopEntityPersister(org.hibernate.mapping.PersistentClass persistentClass,
-								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
-								   NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-								   SessionFactoryImplementor sf,
-								   Mapping mapping) {
+		public NoopEntityPersister(
+				final PersistentClass persistentClass,
+				final EntityRegionAccessStrategy cacheAccessStrategy,
+				final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				final PersisterCreationContext creationContext) {
 			throw new GoofyException(NoopEntityPersister.class);
 		}
 
@@ -606,10 +606,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 	public static class NoopCollectionPersister implements CollectionPersister {
 
-		public NoopCollectionPersister(org.hibernate.mapping.Collection collection,
-									   org.hibernate.cache.spi.access.CollectionRegionAccessStrategy strategy,
-									   org.hibernate.cfg.Configuration configuration,
-									   SessionFactoryImplementor sf) {
+		public NoopCollectionPersister(
+				Collection collectionBinding,
+				CollectionRegionAccessStrategy cacheAccessStrategy,
+				PersisterCreationContext creationContext) {
 			throw new GoofyException(NoopCollectionPersister.class);
 		}
 

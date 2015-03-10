@@ -33,7 +33,6 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AttributeConverterDefinition;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -251,9 +250,9 @@ public class XMLContext implements Serializable {
 
 	private List<AttributeConverterDefinition> attributeConverterDefinitions = new ArrayList<AttributeConverterDefinition>();
 
-	public void applyDiscoveredAttributeConverters(Configuration configuration) {
+	public void applyDiscoveredAttributeConverters(AttributeConverterDefinitionCollector collector) {
 		for ( AttributeConverterDefinition definition : attributeConverterDefinitions ) {
-			configuration.addAttributeConverter( definition );
+			collector.addAttributeConverter( definition );
 		}
 		attributeConverterDefinitions.clear();
 	}

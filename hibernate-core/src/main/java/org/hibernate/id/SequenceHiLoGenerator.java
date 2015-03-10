@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
@@ -43,7 +44,10 @@ import org.hibernate.type.Type;
  * Mapping parameters supported: sequence, max_lo, parameters.
  *
  * @author Gavin King
+ *
+ * @deprecated See deprecation discussion on {@link SequenceGenerator}
  */
+@Deprecated
 public class SequenceHiLoGenerator extends SequenceGenerator {
 	public static final String MAX_LO = "max_lo";
 
@@ -51,7 +55,8 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 
 	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
+	@Override
+	public void configure(Type type, Properties params, JdbcEnvironment d) throws MappingException {
 		super.configure(type, params, d);
 
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, 9 );
@@ -64,6 +69,7 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 		}
 	}
 
+	@Override
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
 		// maxLo < 1 indicates a hilo generator with no hilo :?
 		if ( maxLo < 1 ) {
@@ -77,6 +83,7 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 
 		return hiloOptimizer.generate(
 				new AccessCallback() {
+					@Override
 					public IntegralDataTypeHolder getNextValue() {
 						return generateHolder( session );
 					}

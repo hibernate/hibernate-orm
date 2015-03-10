@@ -36,6 +36,6 @@ public class BagBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Bag( getMappings(), persistentClass );
+		return new org.hibernate.mapping.Bag( getBuildingContext().getMetadataCollector(), persistentClass );
 	}
 }

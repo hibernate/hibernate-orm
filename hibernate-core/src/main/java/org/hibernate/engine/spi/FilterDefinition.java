@@ -49,7 +49,9 @@ public class FilterDefinition implements Serializable {
 	public FilterDefinition(String name, String defaultCondition, Map<String, Type> parameterTypes) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
-		this.parameterTypes.putAll( parameterTypes );
+		if ( parameterTypes != null ) {
+			this.parameterTypes.putAll( parameterTypes );
+		}
 	}
 
 	/**

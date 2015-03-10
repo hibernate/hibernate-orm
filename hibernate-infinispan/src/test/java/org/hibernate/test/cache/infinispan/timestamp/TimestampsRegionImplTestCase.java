@@ -25,7 +25,22 @@ package org.hibernate.test.cache.infinispan.timestamp;
 
 import java.util.Properties;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.UpdateTimestampsCache;
+
+import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+import org.hibernate.test.cache.infinispan.functional.classloader.Account;
+import org.hibernate.test.cache.infinispan.functional.classloader.AccountHolder;
+import org.hibernate.test.cache.infinispan.functional.classloader.SelectedClassnameClassLoader;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.hibernate.test.cache.infinispan.util.ClassLoaderAwareCache;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
@@ -39,21 +54,6 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryPassivate
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.Event;
-
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.test.cache.infinispan.util.ClassLoaderAwareCache;
-import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
-import org.hibernate.test.cache.infinispan.functional.classloader.Account;
-import org.hibernate.test.cache.infinispan.functional.classloader.AccountHolder;
-import org.hibernate.test.cache.infinispan.functional.classloader.SelectedClassnameClassLoader;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
 /**
  * Tests of TimestampsRegionImpl.
@@ -79,61 +79,60 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
    }
 
    public void testClearTimestampsRegionInIsolated() throws Exception {
-      Configuration cfg = createConfiguration();
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
-			  cfg,
-			  getCacheTestSupport()
-	  );
-      // Sleep a bit to avoid concurrent FLUSH problem
-      avoidConcurrentFlush();
+      StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
+      final StandardServiceRegistry registry = ssrb.build();
+      final StandardServiceRegistry registry2 = ssrb.build();
 
-      Configuration cfg2 = createConfiguration();
-      InfinispanRegionFactory regionFactory2 = CacheTestUtil.startRegionFactory(
-			  new StandardServiceRegistryBuilder().applySettings( cfg.getProperties() ).build(),
-			  cfg2,
-			  getCacheTestSupport()
-	  );
-      // Sleep a bit to avoid concurrent FLUSH problem
-      avoidConcurrentFlush();
+      try {
+         final Properties properties = CacheTestUtil.toProperties( ssrb.getSettings() );
 
-      TimestampsRegionImpl region = (TimestampsRegionImpl) regionFactory.buildTimestampsRegion(getStandardRegionName(REGION_PREFIX), cfg.getProperties());
-      TimestampsRegionImpl region2 = (TimestampsRegionImpl) regionFactory2.buildTimestampsRegion(getStandardRegionName(REGION_PREFIX), cfg2.getProperties());
-//      QueryResultsRegion region2 = regionFactory2.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX), cfg2.getProperties());
+         InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+                 registry,
+                 getCacheTestSupport()
+         );
+         // Sleep a bit to avoid concurrent FLUSH problem
+         avoidConcurrentFlush();
 
-//      ClassLoader cl = Thread.currentThread().getContextClassLoader();
-//      Thread.currentThread().setContextClassLoader(cl.getParent());
-//      log.info("TCCL is " + cl.getParent());
+         InfinispanRegionFactory regionFactory2 = CacheTestUtil.startRegionFactory(
+                 registry2,
+                 getCacheTestSupport()
+         );
+         // Sleep a bit to avoid concurrent FLUSH problem
+         avoidConcurrentFlush();
 
-      Account acct = new Account();
-      acct.setAccountHolder(new AccountHolder());
-      region.getCache().withFlags(Flag.FORCE_SYNCHRONOUS).put(acct, "boo");
+         TimestampsRegionImpl region = (TimestampsRegionImpl) regionFactory.buildTimestampsRegion(
+                 getStandardRegionName(REGION_PREFIX),
+                 properties
+         );
+         TimestampsRegionImpl region2 = (TimestampsRegionImpl) regionFactory2.buildTimestampsRegion(
+                 getStandardRegionName(REGION_PREFIX),
+                 properties
+         );
 
-//      region.put(acct, "boo");
-//
-//      region.evictAll();
-
-//      Account acct = new Account();
-//      acct.setAccountHolder(new AccountHolder());
-
-
-
+         Account acct = new Account();
+         acct.setAccountHolder(new AccountHolder());
+         region.getCache().withFlags(Flag.FORCE_SYNCHRONOUS).put(acct, "boo");
+      }
+      finally {
+         StandardServiceRegistryBuilder.destroy( registry );
+         StandardServiceRegistryBuilder.destroy( registry2 );
+      }
    }
 
    @Override
-   protected Configuration createConfiguration() {
-      return CacheTestUtil.buildConfiguration("test", MockInfinispanRegionFactory.class, false, true);
+   protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
+      return CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
+              "test",
+              MockInfinispanRegionFactory.class,
+              false,
+              true
+      );
    }
 
    public static class MockInfinispanRegionFactory extends SingleNodeTestCase.TestInfinispanRegionFactory {
 
       public MockInfinispanRegionFactory() {
       }
-
-//      @Override
-//      protected TimestampsRegionImpl createTimestampsRegion(CacheAdapter cacheAdapter, String regionName) {
-//         return new MockTimestampsRegionImpl(cacheAdapter, regionName, getTransactionManager(), this);
-//      }
 
       @Override
       protected AdvancedCache createCacheWrapper(AdvancedCache cache) {
@@ -171,24 +170,5 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
          }
       }
    }
-
-//   @Listener
-//   public static class MockTimestampsRegionImpl extends TimestampsRegionImpl {
-//
-//      public MockTimestampsRegionImpl(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager, RegionFactory factory) {
-//         super(cacheAdapter, name, transactionManager, factory);
-//      }
-//
-//      @CacheEntryModified
-//      public void nodeModified(CacheEntryModifiedEvent event) {
-////         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-////         String notFoundPackage = "org.hibernate.test.cache.infinispan.functional.classloader";
-////         String[] notFoundClasses = { notFoundPackage + ".Account", notFoundPackage + ".AccountHolder" };
-////         SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(null, null, notFoundClasses, cl);
-////         Thread.currentThread().setContextClassLoader(visible);
-//         super.nodeModified(event);
-////         Thread.currentThread().setContextClassLoader(cl);
-//      }
-//   }
 
 }

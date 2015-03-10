@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.test.integration.query;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.EntityManager;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.EnversSettings;
@@ -38,10 +38,9 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 import junit.framework.Assert;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * A test which checks if the data of a deleted entity is stored when the setting is on.

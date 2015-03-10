@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.sql.storedproc;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ParameterMode;
@@ -30,30 +32,24 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.ResultSetOutput;
 
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialects;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 
@@ -64,7 +60,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 @FailureExpected( jiraKey = "HHH-8445", message = "Waiting on EG clarification" )
 public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
 
-	public static class ProcedureDefinitions implements AuxiliaryDatabaseObject {
+	public static class ProcedureDefinitions implements AuxiliaryDatabaseObject, AuxiliaryDatabaseObject.Expandable {
 		/**
 		 * Singleton access
 		 */
@@ -82,18 +78,32 @@ public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-			return "create function all_items() return refcursor as \n" +
-					"	'declare someCursor refcursor;\n" +
-					"   begin\n" +
-					"   	open someCursor for select * from ITEM;\n" +
-					"       return someCursor;\n" +
-					"   end;' language plpgsql;";
+		public boolean beforeTablesOnCreation() {
+			return true;
 		}
 
 		@Override
-		public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-			return "drop function FIND_ITEMS()";
+		public String getExportIdentifier() {
+			return "function:all_items";
+		}
+
+		@Override
+		public String[] sqlCreateStrings(Dialect dialect) {
+			return new String[] {
+					"create function all_items() return refcursor as \n" +
+							"	'declare someCursor refcursor;\n" +
+							"   begin\n" +
+							"   	open someCursor for select * from ITEM;\n" +
+							"       return someCursor;\n" +
+							"   end;' language plpgsql;"
+			};
+		}
+
+		@Override
+		public String[] sqlDropStrings(Dialect dialect) {
+			return new String[] {
+					"drop function all_items()"
+			};
 		}
 	}
 

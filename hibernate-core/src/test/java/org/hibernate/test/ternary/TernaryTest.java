@@ -30,12 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,8 +54,9 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	public String getCacheConcurrencyStrategy() {
-		return null;
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Test

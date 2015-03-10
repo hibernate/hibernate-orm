@@ -8,10 +8,9 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.ListRefCollEntity;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 import junit.framework.Assert;
-
-import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

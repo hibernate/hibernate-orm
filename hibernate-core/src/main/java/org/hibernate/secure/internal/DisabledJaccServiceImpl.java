@@ -37,6 +37,11 @@ public class DisabledJaccServiceImpl implements JaccService {
 	private static final Logger log = Logger.getLogger( DisabledJaccServiceImpl.class );
 
 	@Override
+	public String getContextId() {
+		return null;
+	}
+
+	@Override
 	public void addPermission(GrantedPermission permissionDeclaration) {
 		log.debug( "Ignoring call to addPermission on disabled JACC service" );
 	}

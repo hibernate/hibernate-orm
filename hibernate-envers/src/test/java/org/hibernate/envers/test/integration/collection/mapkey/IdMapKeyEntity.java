@@ -23,14 +23,14 @@
  */
 package org.hibernate.envers.test.integration.collection.mapkey;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.Table;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;

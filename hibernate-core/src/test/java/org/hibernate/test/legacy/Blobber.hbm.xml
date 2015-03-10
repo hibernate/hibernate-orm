@@ -5,7 +5,7 @@
 <hibernate-mapping default-lazy="false">
 	<class name="org.hibernate.test.legacy.Blobber" dynamic-update="true">
 		<id name="id">
-			<generator class="hilo"/>
+			<generator class="increment"/>
 		</id>
 		<property name="blob" column="blob_"/>
 		<property name="clob" column="clob_"/>

@@ -23,13 +23,13 @@
  */
 package org.hibernate.envers.test.entities.manytomany;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.envers.Audited;
 

@@ -25,12 +25,14 @@ package org.hibernate.test.annotations.manytoone.referencedcolumnname;
 
 import java.math.BigDecimal;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -60,6 +62,12 @@ public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCas
 		s.flush();
 		s.getTransaction().rollback();
 		s.close();
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 
 	@Override

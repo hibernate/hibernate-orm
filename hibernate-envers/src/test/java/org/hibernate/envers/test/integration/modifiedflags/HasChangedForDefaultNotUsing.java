@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags;
 
-import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 import org.hibernate.QueryException;
 import org.hibernate.envers.test.Priority;

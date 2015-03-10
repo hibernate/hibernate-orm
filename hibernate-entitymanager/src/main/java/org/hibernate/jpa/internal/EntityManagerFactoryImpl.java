@@ -55,8 +55,8 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -82,7 +82,6 @@ import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -112,42 +111,25 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final transient PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 	private final transient Map<String,EntityGraphImpl> entityGraphs = new ConcurrentHashMap<String, EntityGraphImpl>();
 
-	@SuppressWarnings( "unchecked" )
-	public EntityManagerFactoryImpl(
-			PersistenceUnitTransactionType transactionType,
-			boolean discardOnClose,
-			Class sessionInterceptorClass,
-			Configuration cfg,
-			ServiceRegistry serviceRegistry,
-			String persistenceUnitName) {
-		this(
-				persistenceUnitName,
-				(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry ),
-				new SettingsImpl().setReleaseResourcesOnCloseEnabled( discardOnClose ).setSessionInterceptorClass( sessionInterceptorClass ).setTransactionType( transactionType ),
-				cfg.getProperties(),
-				cfg
-		);
-	}
-
 	public EntityManagerFactoryImpl(
 			String persistenceUnitName,
 			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor metadata,
 			SettingsImpl settings,
-			Map<?, ?> configurationValues,
-			Configuration cfg) {
+			Map<?, ?> configurationValues) {
 		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
 		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
 
-		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( configurationValues );
 		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
 			this.metamodel = null;
 		}
 		else {
 			this.metamodel = MetamodelImpl.buildMetamodel(
-					cfg.getClassMappings(),
-					cfg.getMappedSuperclassMappingsCopy(),
+					metadata.getEntityBindings().iterator(),
+					metadata.getMappedSuperclassMappingsCopy(),
 					sessionFactory,
 					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
 			);
@@ -157,7 +139,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 		HashMap<String,Object> props = new HashMap<String, Object>();
 		addAll( props, sessionFactory.getProperties() );
-		addAll( props, cfg.getProperties() );
 		addAll( props, configurationValues );
 		maskOutSensitiveInformation( props );
 		this.properties = Collections.unmodifiableMap( props );
@@ -170,7 +151,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
 
-		applyNamedEntityGraphs( cfg.getNamedEntityGraphs() );
+		applyNamedEntityGraphs( metadata.getNamedEntityGraphs().values() );
 
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory( entityManagerFactoryName, this );
 	}
@@ -193,14 +174,14 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 	}
 	
-	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Configuration cfg) {
+	protected JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
 		String setting = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
-				cfg.getProperties(),
+				configurationValues,
 				null
 		);
 		if ( setting == null ) {
-			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, cfg.getProperties(), null );
+			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, configurationValues, null );
 			if ( setting != null ) {
 				log.infof( 
 						"Encountered deprecated setting [%s], use [%s] instead",

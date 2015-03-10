@@ -52,17 +52,19 @@ public class UniqueKey extends Constraint {
 	@Override
     public String sqlCreateString(Dialect dialect, Mapping p,
     		String defaultCatalog, String defaultSchema) {
-		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
-				this, defaultCatalog, defaultSchema
-		);
+		return null;
+//		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
+//				this, defaultCatalog, defaultSchema
+//		);
 	}
 
 	@Override
     public String sqlDropString(Dialect dialect, String defaultCatalog,
     		String defaultSchema) {
-		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
-				this, defaultCatalog, defaultSchema
-		);
+		return null;
+//		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
+//				this, defaultCatalog, defaultSchema
+//		);
 	}
 
 	public void addColumn(Column column, String order) {
@@ -78,5 +80,10 @@ public class UniqueKey extends Constraint {
 	
 	public String generatedConstraintNamePrefix() {
 		return "UK_";
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return StringHelper.qualify( getTable().getName(), "UK-" + getName() );
 	}
 }

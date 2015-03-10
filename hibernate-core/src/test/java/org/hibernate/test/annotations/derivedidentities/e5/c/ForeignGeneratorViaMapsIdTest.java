@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.annotations.derivedidentities.e5.c;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,10 +35,11 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-public class ForeignGeneratorViaMapsIdTest extends BaseCoreFunctionalTestCase {
+public class ForeignGeneratorViaMapsIdTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testForeignGenerator() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", configuration() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", metadata() ) );
+
 		Person e = new Person();
 		Session s = openSession(  );
 		s.getTransaction().begin();

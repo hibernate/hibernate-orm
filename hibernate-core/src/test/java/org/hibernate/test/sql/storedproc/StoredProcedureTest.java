@@ -23,30 +23,27 @@
  */
 package org.hibernate.test.sql.storedproc;
 
-import javax.persistence.ParameterMode;
 import java.util.List;
+import javax.persistence.ParameterMode;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.Output;
-import org.hibernate.dialect.H2Dialect;
-
-import org.junit.Test;
+import org.hibernate.result.ResultSetOutput;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -60,7 +57,8 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		configuration.addAuxiliaryDatabaseObject(
 				new AuxiliaryDatabaseObject() {
 					@Override
-					public void addDialectScope(String dialectName) {
+					public String getExportIdentifier() {
+						return "function:findOneUser";
 					}
 
 					@Override
@@ -69,24 +67,33 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 					}
 
 					@Override
-					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-						return "CREATE ALIAS findOneUser AS $$\n" +
-								"import org.h2.tools.SimpleResultSet;\n" +
-								"import java.sql.*;\n" +
-								"@CODE\n" +
-								"ResultSet findOneUser() {\n" +
-								"    SimpleResultSet rs = new SimpleResultSet();\n" +
-								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-								"    rs.addRow(1, \"Steve\");\n" +
-								"    return rs;\n" +
-								"}\n" +
-								"$$";
+					public boolean beforeTablesOnCreation() {
+						return false;
 					}
 
 					@Override
-					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-						return "DROP ALIAS findUser IF EXISTS";
+					public String[] sqlCreateStrings(Dialect dialect) {
+						return new String[] {
+								"CREATE ALIAS findOneUser AS $$\n" +
+										"import org.h2.tools.SimpleResultSet;\n" +
+										"import java.sql.*;\n" +
+										"@CODE\n" +
+										"ResultSet findOneUser() {\n" +
+										"    SimpleResultSet rs = new SimpleResultSet();\n" +
+										"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+										"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+										"    rs.addRow(1, \"Steve\");\n" +
+										"    return rs;\n" +
+										"}\n" +
+										"$$"
+						};
+					}
+
+					@Override
+					public String[] sqlDropStrings(Dialect dialect) {
+						return new String[] {
+								"DROP ALIAS findUser IF EXISTS"
+						};
 					}
 				}
 		);
@@ -94,7 +101,8 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		configuration.addAuxiliaryDatabaseObject(
 				new AuxiliaryDatabaseObject() {
 					@Override
-					public void addDialectScope(String dialectName) {
+					public String getExportIdentifier() {
+						return "function:findUsers";
 					}
 
 					@Override
@@ -103,26 +111,33 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 					}
 
 					@Override
-					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-						return "CREATE ALIAS findUsers AS $$\n" +
-								"import org.h2.tools.SimpleResultSet;\n" +
-								"import java.sql.*;\n" +
-								"@CODE\n" +
-								"ResultSet findUsers() {\n" +
-								"    SimpleResultSet rs = new SimpleResultSet();\n" +
-								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-								"    rs.addRow(1, \"Steve\");\n" +
-								"    rs.addRow(2, \"John\");\n" +
-								"    rs.addRow(3, \"Jane\");\n" +
-								"    return rs;\n" +
-								"}\n" +
-								"$$";
+					public boolean beforeTablesOnCreation() {
+						return false;
 					}
 
 					@Override
-					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-						return "DROP ALIAS findUser IF EXISTS";
+					public String[] sqlCreateStrings(Dialect dialect) {
+						return new String[] {
+								"CREATE ALIAS findUsers AS $$\n" +
+										"import org.h2.tools.SimpleResultSet;\n" +
+										"import java.sql.*;\n" +
+										"@CODE\n" +
+										"ResultSet findUsers() {\n" +
+										"    SimpleResultSet rs = new SimpleResultSet();\n" +
+										"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+										"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+										"    rs.addRow(1, \"Steve\");\n" +
+										"    rs.addRow(2, \"John\");\n" +
+										"    rs.addRow(3, \"Jane\");\n" +
+										"    return rs;\n" +
+										"}\n" +
+										"$$"
+						};
+					}
+
+					@Override
+					public String[] sqlDropStrings(Dialect dialect) {
+						return new String[] {"DROP ALIAS findUser IF EXISTS"};
 					}
 				}
 		);
@@ -130,7 +145,8 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		configuration.addAuxiliaryDatabaseObject(
 				new AuxiliaryDatabaseObject() {
 					@Override
-					public void addDialectScope(String dialectName) {
+					public String getExportIdentifier() {
+						return "function:findUserRange";
 					}
 
 					@Override
@@ -139,26 +155,33 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 					}
 
 					@Override
-					public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-						return "CREATE ALIAS findUserRange AS $$\n" +
-								"import org.h2.tools.SimpleResultSet;\n" +
-								"import java.sql.*;\n" +
-								"@CODE\n" +
-								"ResultSet findUserRange(int start, int end) {\n" +
-								"    SimpleResultSet rs = new SimpleResultSet();\n" +
-								"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
-								"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
-								"    for ( int i = start; i < end; i++ ) {\n" +
-								"        rs.addRow(1, \"User \" + i );\n" +
-								"    }\n" +
-								"    return rs;\n" +
-								"}\n" +
-								"$$";
+					public boolean beforeTablesOnCreation() {
+						return false;
 					}
 
 					@Override
-					public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-						return "DROP ALIAS findUser IF EXISTS";
+					public String[] sqlCreateStrings(Dialect dialect) {
+						return new String[] {
+								"CREATE ALIAS findUserRange AS $$\n" +
+										"import org.h2.tools.SimpleResultSet;\n" +
+										"import java.sql.*;\n" +
+										"@CODE\n" +
+										"ResultSet findUserRange(int start, int end) {\n" +
+										"    SimpleResultSet rs = new SimpleResultSet();\n" +
+										"    rs.addColumn(\"ID\", Types.INTEGER, 10, 0);\n" +
+										"    rs.addColumn(\"NAME\", Types.VARCHAR, 255, 0);\n" +
+										"    for ( int i = start; i < end; i++ ) {\n" +
+										"        rs.addRow(1, \"User \" + i );\n" +
+										"    }\n" +
+										"    return rs;\n" +
+										"}\n" +
+										"$$"
+						};
+					}
+
+					@Override
+					public String[] sqlDropStrings(Dialect dialect) {
+						return new String[] {"DROP ALIAS findUserRange IF EXISTS"};
 					}
 				}
 		);

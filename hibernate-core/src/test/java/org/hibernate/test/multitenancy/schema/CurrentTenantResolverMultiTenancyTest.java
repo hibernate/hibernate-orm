@@ -23,16 +23,15 @@
  */
 package org.hibernate.test.multitenancy.schema;
 
-import org.junit.Assert;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.junit.Assert;
 
 /**
  * SessionFactory has to use the {@link CurrentTenantIdentifierResolver} when
@@ -47,12 +46,9 @@ public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenan
 
 	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
 
-
 	@Override
-	protected Configuration buildConfiguration() {
-		Configuration cfg = super.buildConfiguration();
-		cfg.setCurrentTenantIdentifierResolver( currentTenantResolver );
-		return cfg;
+	protected void configure(SessionFactoryBuilder sfb) {
+		sfb.with( currentTenantResolver );
 	}
 
 	@Override

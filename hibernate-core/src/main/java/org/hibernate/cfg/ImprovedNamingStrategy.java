@@ -57,15 +57,17 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	}
 	/**
 	 * Convert mixed case to underscores
+	 * This Method called if you specify name in @Table
 	 */
 	public String tableName(String tableName) {
-		return addUnderscores(tableName);
+		return tableName;
 	}
 	/**
 	 * Convert mixed case to underscores
+	 * This Method called if you specify name in @Column
 	 */
 	public String columnName(String columnName) {
-		return addUnderscores(columnName);
+		return columnName;
 	}
 
 	protected static String addUnderscores(String name) {

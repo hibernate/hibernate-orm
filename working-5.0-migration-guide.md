@@ -51,3 +51,5 @@ reason the validation failed (non-unique many-to-one marked for orphan delete) b
 Simply returning false from `ManyToOne#isValid` would instead lead to a misleading exception message, which
 would at least have the proper context to know the property name/path.
 * Should `org.hibernate.boot.MetadataBuilder` be folded into `org.hibernate.boot.MetadataSources`?
+* Consider an additional "naming strategy contract" specifically for logical naming.  This would be non-pluggable, and
+would be the thing that generates the names we use to cross-reference and locate tables, columns, etc.

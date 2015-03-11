@@ -12,10 +12,13 @@ import org.junit.Test;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -37,6 +40,8 @@ public class DuplicatedDiscriminatorValueTest extends BaseUnitTestCase {
 			Assert.assertTrue( errorMsg.contains( Building2.class.getName() ) );
 			Assert.assertTrue( errorMsg.contains( "discriminator value '" + DISCRIMINATOR_VALUE + "'." ) );
 		}
+
+		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
 	}
 
 	@Test

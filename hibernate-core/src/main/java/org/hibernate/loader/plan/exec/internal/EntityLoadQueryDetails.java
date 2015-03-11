@@ -32,11 +32,11 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.EntityReturnReader;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorHelper;
-import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
@@ -52,6 +52,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -242,7 +243,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				processingState.registerEntityKey( entityKey );
 				final EntityPersister entityPersister = processingState.getEntityReference().getEntityPersister();
 				if ( entityPersister.getIdentifierType().isComponentType()  ) {
-					final ComponentType identifierType = (ComponentType) entityPersister.getIdentifierType();
+					final CompositeType identifierType = (CompositeType) entityPersister.getIdentifierType();
 					if ( !identifierType.isEmbedded() ) {
 						addKeyManyToOnesToSession(
 								context,
@@ -255,7 +256,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 			return super.readRow( resultSet, context );
 		}
 
-		private void addKeyManyToOnesToSession(ResultSetProcessingContextImpl context, ComponentType componentType, Object component ) {
+		private void addKeyManyToOnesToSession(ResultSetProcessingContextImpl context, CompositeType componentType, Object component ) {
 			for ( int i = 0 ; i < componentType.getSubtypes().length ; i++ ) {
 				final Type subType = componentType.getSubtypes()[ i ];
 				final Object subValue = componentType.getPropertyValue( component, i, context.getSession() );

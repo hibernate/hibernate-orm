@@ -103,7 +103,10 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( CascadingActions.LOCK, CascadePoint.AFTER_LOCK, source).cascade(
+			Cascade.cascade(
+					CascadingActions.LOCK,
+					CascadePoint.AFTER_LOCK,
+					source,
 					persister,
 					entity,
 					event.getLockOptions()

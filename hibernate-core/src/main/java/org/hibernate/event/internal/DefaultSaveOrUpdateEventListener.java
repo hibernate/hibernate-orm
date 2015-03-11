@@ -372,7 +372,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		final EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( CascadingActions.SAVE_UPDATE, CascadePoint.AFTER_UPDATE, source ).cascade( persister, entity );
+			Cascade.cascade( CascadingActions.SAVE_UPDATE, CascadePoint.AFTER_UPDATE, source, persister, entity );
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

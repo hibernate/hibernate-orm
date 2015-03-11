@@ -20,18 +20,19 @@
  */
 package org.hibernate.test.cfg.persister;
 
-import org.junit.Test;
-
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -72,6 +73,8 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
+
+		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
 
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
@@ -117,5 +120,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
+
+		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
 	}
 }

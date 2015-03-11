@@ -241,13 +241,6 @@ public final class SessionFactoryImpl
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
-		SessionFactoryRegistry.INSTANCE.addSessionFactory(
-				uuid,
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				this,
-				serviceRegistry.getService( JndiService.class )
-		);
 
 		this.properties = new Properties();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
@@ -522,6 +515,14 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				uuid,
+				name,
+				settings.isSessionFactoryNameAlsoJndiName(),
+				this,
+				serviceRegistry.getService( JndiService.class )
+		);
 	}
 
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {

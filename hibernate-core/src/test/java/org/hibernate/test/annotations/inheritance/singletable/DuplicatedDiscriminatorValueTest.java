@@ -6,16 +6,20 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.hibernate.MappingException;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.internal.SessionFactoryRegistry;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -37,6 +41,8 @@ public class DuplicatedDiscriminatorValueTest extends BaseUnitTestCase {
 			Assert.assertTrue( errorMsg.contains( Building2.class.getName() ) );
 			Assert.assertTrue( errorMsg.contains( "discriminator value '" + DISCRIMINATOR_VALUE + "'." ) );
 		}
+
+		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
 	}
 
 	@Test
@@ -45,23 +51,19 @@ public class DuplicatedDiscriminatorValueTest extends BaseUnitTestCase {
 	}
 
 	private void tryBuildingSessionFactory(Class... annotatedClasses) {
-		Configuration cfg = new Configuration();
-		for ( Class annotatedClass : annotatedClasses ) {
-			cfg.addAnnotatedClass( annotatedClass );
-		}
-		ServiceRegistry serviceRegistry = null;
-		SessionFactory sessionFactory = null;
+		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
 		try {
-			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
+			final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+			for ( Class annotatedClass : annotatedClasses ) {
+				metadataSources.addAnnotatedClass( annotatedClass );
+			}
+
+			final Metadata metadata = metadataSources.buildMetadata();
+			final SessionFactory sessionFactory = metadata.buildSessionFactory();
+			sessionFactory.close();
 		}
 		finally {
-			if ( sessionFactory != null ) {
-				sessionFactory.close();
-			}
-			if ( serviceRegistry != null ) {
-				ServiceRegistryBuilder.destroy( serviceRegistry );
-			}
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 

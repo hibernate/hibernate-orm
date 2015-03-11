@@ -29,10 +29,14 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.hibernate.internal.SessionFactoryRegistry;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
+
+import org.jboss.logging.Logger;
 
 /**
  * Metadata about various types of callback methods on a given test class.
@@ -40,7 +44,10 @@ import org.hibernate.testing.OnFailure;
  * @author Steve Ebersole
  */
 public class TestClassMetadata {
+	private static final Logger log = Logger.getLogger( TestClassMetadata.class );
+
 	private static final Object[] NO_ARGS = new Object[0];
+	private final Class testClass;
 
 	private LinkedHashSet<Method> beforeClassOnceMethods;
 	private LinkedHashSet<Method> afterClassOnceMethods;
@@ -48,6 +55,8 @@ public class TestClassMetadata {
 	private LinkedHashSet<Method> onExpectedFailureCallbacks;
 
 	public TestClassMetadata(Class testClass) {
+		this.testClass = testClass;
+
 		processClassHierarchy( testClass );
 	}
 
@@ -174,6 +183,9 @@ public class TestClassMetadata {
 
 
 	public void performBeforeClassCallbacks(Object target) {
+		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
+			log.warnf( "Open SessionFactory instances found prior to start of test class [%s]", testClass.getName() );
+		}
 		performCallbacks( beforeClassOnceMethods, target );
 	}
 
@@ -214,6 +226,10 @@ public class TestClassMetadata {
 
 	public void performAfterClassCallbacks(Object target) {
 		performCallbacks( afterClassOnceMethods, target );
+		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
+			log.warnf( "Open SessionFactory instances found after completion of test class [%s]; closing them", testClass.getName() );
+			SessionFactoryRegistry.INSTANCE.clearRegistrations();
+		}
 	}
 
 	public void performOnFailureCallback(Object target) {

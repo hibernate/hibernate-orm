@@ -26,20 +26,23 @@ package org.hibernate.test.criteria;
 import org.jboss.byteman.contrib.bmunit.BMRule;
 import org.jboss.byteman.contrib.bmunit.BMRules;
 import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
-
+import org.jboss.logging.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.loader.Loader;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.byteman.BytemanHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Sanne Grinovero
@@ -48,6 +51,11 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue(jiraKey = "HHH-8788")
 @RunWith(BMUnitRunner.class)
 public class CriteriaLockingTest extends BaseCoreFunctionalTestCase {
+
+	@Rule
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
+			Logger.getMessageLogger(CoreMessageLogger.class, Loader.class.getName())
+		);
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -59,15 +67,12 @@ public class CriteriaLockingTest extends BaseCoreFunctionalTestCase {
 			@BMRule(targetClass = "org.hibernate.dialect.Dialect",
 					targetMethod = "useFollowOnLocking",
 					action = "return true",
-					name = "H2DialectUseFollowOnLocking"),
-			@BMRule(targetClass = "org.hibernate.internal.CoreMessageLogger_$logger",
-					targetMethod = "usingFollowOnLocking",
-					helper = "org.hibernate.testing.byteman.BytemanHelper",
-					action = "countInvocation()",
-					name = "countWarnings")
+					name = "H2DialectUseFollowOnLocking")
 	})
 	public void testSetLockModeNONEDoNotLogAWarnMessageWhenTheDialectUseFollowOnLockingIsTrue() {
 		buildSessionFactory();
+		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000444" );
+
 		final Session s = openSession();
 		final Transaction tx = s.beginTransaction();
 
@@ -87,7 +92,7 @@ public class CriteriaLockingTest extends BaseCoreFunctionalTestCase {
 
 		releaseSessionFactory();
 
-		assertEquals( "HHH000444 should not be called", 0, BytemanHelper.getAndResetInvocationCount() );
+		assertFalse( triggerable.wasTriggered() );
 	}
 
 	@Test
@@ -95,15 +100,12 @@ public class CriteriaLockingTest extends BaseCoreFunctionalTestCase {
 			@BMRule(targetClass = "org.hibernate.dialect.Dialect",
 					targetMethod = "useFollowOnLocking",
 					action = "return true",
-					name = "H2DialectUseFollowOnLocking"),
-			@BMRule(targetClass = "org.hibernate.internal.CoreMessageLogger_$logger",
-					targetMethod = "usingFollowOnLocking",
-					helper = "org.hibernate.testing.byteman.BytemanHelper",
-					action = "countInvocation()",
-					name = "countWarnings")
+					name = "H2DialectUseFollowOnLocking")
 	})
 	public void testSetLockModeDifferentFromNONELogAWarnMessageWhenTheDialectUseFollowOnLockingIsTrue() {
 		buildSessionFactory();
+		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000444" );
+
 		final Session s = openSession();
 		final Transaction tx = s.beginTransaction();
 
@@ -122,6 +124,6 @@ public class CriteriaLockingTest extends BaseCoreFunctionalTestCase {
 		s.close();
 		releaseSessionFactory();
 
-		assertEquals( "HHH000444 should not be called", 1, BytemanHelper.getAndResetInvocationCount() );
+		assertTrue( triggerable.wasTriggered() );
 	}
 }

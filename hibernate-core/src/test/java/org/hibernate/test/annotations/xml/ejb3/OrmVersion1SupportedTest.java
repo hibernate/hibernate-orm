@@ -23,37 +23,36 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
-import org.jboss.byteman.contrib.bmunit.BMRule;
-import org.jboss.byteman.contrib.bmunit.BMRules;
-import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
+import org.jboss.logging.Logger;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.byteman.BytemanHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 
 @TestForIssue(jiraKey = "HHH-6271")
-@RunWith(BMUnitRunner.class)
 public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
+
+	@Rule
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
+			Logger.getMessageLogger(
+					CoreMessageLogger.class,
+					ErrorLogger.class.getName()
+			)
+		);
+
 	@Test
-	@BMRules(rules = {
-			@BMRule(targetClass = "org.hibernate.internal.CoreMessageLogger_$logger",
-					targetMethod = "parsingXmlError",
-					helper = "org.hibernate.testing.byteman.BytemanHelper",
-					action = "countInvocation()",
-					name = "testOrm1Support"),
-			@BMRule(targetClass = "org.hibernate.internal.CoreMessageLogger_$logger",
-					targetMethod = "parsingXmlErrorForFile",
-					helper = "org.hibernate.testing.byteman.BytemanHelper",
-					action = "countInvocation()",
-					name = "testOrm1Support")
-	})
 	public void testOrm1Support() {
+		Triggerable triggerable = logInspection.watchForLogMessages( "HHH00196" );
+
 		// need to call buildSessionFactory, because this test is not using org.hibernate.testing.junit4.CustomRunner
 		buildSessionFactory();
 
@@ -69,7 +68,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 
-		assertEquals( "HHH00196 should not be called", 0, BytemanHelper.getAndResetInvocationCount() );
+		assertFalse( triggerable.wasTriggered() );
 
 		// which means we also need to close it manually
 		releaseSessionFactory();

@@ -26,6 +26,10 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.CaseFragment;
 
@@ -37,6 +41,61 @@ import org.hibernate.sql.CaseFragment;
  * @author Steve Ebersole
  */
 public class Oracle9iDialect extends Oracle8iDialect {
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			sql = sql.trim();
+			String forUpdateClause = null;
+			boolean isForUpdate = false;
+			final int forUpdateIndex = sql.toLowerCase().lastIndexOf( "for update" );
+			if (forUpdateIndex > -1) {
+				// save 'for update ...' and then remove it
+				forUpdateClause = sql.substring( forUpdateIndex );
+				sql = sql.substring( 0, forUpdateIndex - 1 );
+				isForUpdate = true;
+			}
+
+			final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
+			if (hasOffset) {
+				pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
+			}
+			else {
+				pagingSelect.append( "select * from ( " );
+			}
+			pagingSelect.append( sql );
+			if (hasOffset) {
+				pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
+			}
+			else {
+				pagingSelect.append( " ) where rownum <= ?" );
+			}
+
+			if (isForUpdate) {
+				pagingSelect.append( " " );
+				pagingSelect.append( forUpdateClause );
+			}
+
+			return pagingSelect.toString();
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean bindLimitParametersInReverseOrder() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+	};
+
 	@Override
 	protected void registerCharacterTypeMappings() {
 		registerColumnType( Types.CHAR, "char(1 char)" );
@@ -55,6 +114,11 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	public CaseFragment createCaseFragment() {
 		// Oracle did add support for ANSI CASE statements in 9i
 		return new ANSICaseFragment();
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 
 	@Override

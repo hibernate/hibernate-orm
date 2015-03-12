@@ -375,7 +375,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-		return new CUBRIDLimitHandler( this, sql, selection );
+	public LimitHandler getLimitHandler() {
+		return CUBRIDLimitHandler.INSTANCE;
 	}
 }

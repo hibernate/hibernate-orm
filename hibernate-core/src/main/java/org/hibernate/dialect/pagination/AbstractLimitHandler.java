@@ -11,18 +11,9 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
-	protected final String sql;
-	protected final RowSelection selection;
 
-	/**
-	 * Default constructor. SQL query and selection criteria required to allow LIMIT clause pre-processing.
-	 *
-	 * @param sql SQL query.
-	 * @param selection Selection criteria. {@code null} in case of unlimited number of rows.
-	 */
-	public AbstractLimitHandler(String sql, RowSelection selection) {
-		this.sql = sql;
-		this.selection = selection;
+	protected AbstractLimitHandler() {
+		// NOP
 	}
 
 	@Override
@@ -99,9 +90,9 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * Hibernate APIs explicitly state that setFirstResult() should be a zero-based offset. Here we allow the
 	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
 	 * <p/>
-	 * NOTE: what gets passed into {@link #AbstractLimitHandler(String, RowSelection)} is the zero-based offset.
-	 * Dialects which do not {@link #supportsVariableLimit} should take care to perform any needed first-row-conversion
-	 * calls prior to injecting the limit values into the SQL string.
+	 * NOTE: what gets passed into {@link AbstractLimitHandler#processSql(String, org.hibernate.engine.spi.RowSelection)}
+     * is the zero-based offset. Dialects which do not {@link #supportsVariableLimit} should take care to perform
+     * any needed first-row-conversion calls prior to injecting the limit values into the SQL string.
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 *
@@ -115,41 +106,42 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	}
 
 	@Override
-	public String getProcessedSql() {
+	public String processSql(String sql, RowSelection selection) {
 		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName() );
 	}
 
 	@Override
-	public int bindLimitParametersAtStartOfQuery(PreparedStatement statement, int index)
+	public int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		return bindLimitParametersFirst() ? bindLimitParameters( statement, index ) : 0;
+		return bindLimitParametersFirst() ? bindLimitParameters( selection, statement, index ) : 0;
 	}
 
 	@Override
-	public int bindLimitParametersAtEndOfQuery(PreparedStatement statement, int index)
+	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		return !bindLimitParametersFirst() ? bindLimitParameters( statement, index ) : 0;
+		return !bindLimitParametersFirst() ? bindLimitParameters( selection, statement, index ) : 0;
 	}
 
 	@Override
-	public void setMaxRows(PreparedStatement statement) throws SQLException {
+	public void setMaxRows(RowSelection selection, PreparedStatement statement) throws SQLException {
 	}
 
 	/**
 	 * Default implementation of binding parameter values needed by the LIMIT clause.
 	 *
+     * @param selection the selection criteria for rows.
 	 * @param statement Statement to which to bind limit parameter values.
 	 * @param index Index from which to start binding.
 	 * @return The number of parameter values bound.
 	 * @throws SQLException Indicates problems binding parameter values.
 	 */
-	protected int bindLimitParameters(PreparedStatement statement, int index)
+	protected final int bindLimitParameters(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
 		if ( !supportsVariableLimit() || !LimitHelper.hasMaxRows( selection ) ) {
 			return 0;
 		}
 		final int firstRow = convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
-		final int lastRow = getMaxOrLimit();
+		final int lastRow = getMaxOrLimit( selection );
 		final boolean hasFirstRow = supportsLimitOffset() && ( firstRow > 0 || forceLimitUsage() );
 		final boolean reverse = bindLimitParametersInReverseOrder();
 		if ( hasFirstRow ) {
@@ -164,9 +156,11 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * (aka, first_row_number + total_row_count), while others require the maximum
 	 * returned row count (the total maximum number of rows to return).
 	 *
+	 * @param selection the selection criteria for rows.
+	 *
 	 * @return The appropriate value to bind into the limit clause.
 	 */
-	protected int getMaxOrLimit() {
+	protected final int getMaxOrLimit(RowSelection selection) {
 		final int firstRow = convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
 		final int lastRow = selection.getMaxRows();
 		return useMaxForLimit() ? lastRow + firstRow : lastRow;

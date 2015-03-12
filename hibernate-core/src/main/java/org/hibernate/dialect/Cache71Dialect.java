@@ -46,6 +46,8 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -208,6 +210,8 @@ import org.hibernate.type.StandardBasicTypes;
 
 public class Cache71Dialect extends Dialect {
 
+	private final TopLimitHandler limitHandler;
+
 	/**
 	 * Creates new <code>Cache71Dialect</code> instance. Sets up the JDBC /
 	 * Cach&eacute; type mappings.
@@ -216,6 +220,7 @@ public class Cache71Dialect extends Dialect {
 		super();
 		commonRegistration();
 		register71Functions();
+		this.limitHandler = new TopLimitHandler(true, true);
 	}
 
 	protected final void commonRegistration() {
@@ -581,6 +586,11 @@ public class Cache71Dialect extends Dialect {
 	}
 
 	// LIMIT support (ala TOP) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limitHandler;
+	}
 
 	@Override
 	@SuppressWarnings("deprecation")

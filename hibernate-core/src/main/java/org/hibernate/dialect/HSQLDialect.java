@@ -44,6 +44,10 @@ import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
@@ -74,10 +78,40 @@ public class HSQLDialect extends Dialect {
 			HSQLDialect.class.getName()
 	);
 
+	private final class HSQLLimitHandler extends AbstractLimitHandler {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			if (hsqldbVersion < 20) {
+				return new StringBuilder( sql.length() + 10 )
+						.append( sql )
+						.insert(
+								sql.toLowerCase().indexOf( "select" ) + 6,
+								hasOffset ? " limit ? ?" : " top ?"
+						)
+						.toString();
+			}
+			else {
+				return sql + (hasOffset ? " offset ? limit ?" : " limit ?");
+			}
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean bindLimitParametersFirst() {
+			return hsqldbVersion < 20;
+		}
+	}
+
 	/**
 	 * version is 18 for 1.8 or 20 for 2.0
 	 */
 	private int hsqldbVersion = 18;
+	private final LimitHandler limitHandler;
 
 
 	/**
@@ -224,6 +258,8 @@ public class HSQLDialect extends Dialect {
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+
+		limitHandler = new HSQLLimitHandler();
 	}
 
 	@Override
@@ -265,6 +301,11 @@ public class HSQLDialect extends Dialect {
 		else {
 			return "";
 		}
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limitHandler;
 	}
 
 	@Override

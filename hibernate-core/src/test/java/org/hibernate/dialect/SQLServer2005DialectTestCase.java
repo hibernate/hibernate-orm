@@ -57,11 +57,10 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		String input = "select distinct f1 as f53245 from table849752 order by f234, f67 desc";
 
 		assertEquals(
-				"with query as (select inner_query.*, row_number() over (order by current_timestamp) as __hibernate_row_nr__ from ( " +
-						"select distinct top(?) f1 as f53245 from table849752 order by f234, f67 desc ) inner_query )" +
-						" select f53245 from query where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( input, toRowSelection( 10, 15 ) ).getProcessedSql().toLowerCase()
-		);
+			"with query as (select inner_query.*, row_number() over (order by current_timestamp) as __hibernate_row_nr__ from ( " +
+				"select distinct top(?) f1 as f53245 from table849752 order by f234, f67 desc ) inner_query )" +
+				" select f53245 from query where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?",
+			dialect.getLimitHandler().processSql( input, toRowSelection( 10, 15 ) ).toLowerCase() );
 	}
 
 	@Test
@@ -77,7 +76,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						fromColumnNameSQL + " ) inner_query ) " +
 						"SELECT rid1688_, deviati16_1688_, sortindex1688_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( fromColumnNameSQL, toRowSelection( 1, 10 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( fromColumnNameSQL, toRowSelection( 1, 10 ) )
 		);
 	}
 
@@ -90,7 +89,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						"select column1 as page0_, column2 as page1_, column3 as page2_, column4 as page3_ from table1 ) inner_query ) " +
 						"SELECT page0_, page1_, page2_, page3_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( notAliasedSQL, toRowSelection( 3, 5 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( notAliasedSQL, toRowSelection( 3, 5 ) )
 		);
 	}
 
@@ -108,7 +107,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						subselectInSelectClauseSQL + " ) inner_query ) " +
 						"SELECT col_0_0_, col_1_0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( subselectInSelectClauseSQL, toRowSelection( 2, 5 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( subselectInSelectClauseSQL, toRowSelection( 2, 5 ) )
 		);
 	}
 
@@ -127,7 +126,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						"(select case when persistent0_.name = 'Smith' then 'Neo' else persistent0_.id end) as page1_ " +
 						"from C_Customer persistent0_ where persistent0_.type='Va' order by persistent0_.Order ) " +
 						"inner_query ) SELECT page0_, tmp1, page1_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( caseSensitiveSQL, toRowSelection( 1, 2 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( caseSensitiveSQL, toRowSelection( 1, 2 ) )
 		);
 	}
 
@@ -140,7 +139,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						"select TOP(?) aggregate_function(distinct p.n) as f1 from table849752 p order by f1 ) inner_query ) " +
 						"SELECT f1 FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( distinctInAggregateSQL, toRowSelection( 2, 5 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( distinctInAggregateSQL, toRowSelection( 2, 5 ) )
 		);
 	}
 
@@ -153,7 +152,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"select TOP(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id",
-				dialect.buildLimitHandler( query, toRowSelection( 0, 1 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( query, toRowSelection( 0, 1 ) )
 		);
 
 		final String distinctQuery = "select distinct product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
@@ -162,7 +161,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		assertEquals(
 				"select distinct TOP(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id",
-				dialect.buildLimitHandler( distinctQuery, toRowSelection( 0, 5 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( distinctQuery, toRowSelection( 0, 5 ) )
 		);
 	}
 
@@ -177,7 +176,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 					"select TOP(?) cast(lc302_doku6_.redniBrojStavke as varchar(255)) as col_0_0_, lc302_doku6_.dokumentiID as col_1_0_ " +
 					"from LC302_Dokumenti lc302_doku6_ order by lc302_doku6_.dokumentiID DESC ) inner_query ) " +
 					"SELECT col_0_0_, col_1_0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( query, toRowSelection( 1, 3 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -190,7 +189,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						"select TOP(?) t1.*, t2.* from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc ) inner_query ) " +
 						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( query, toRowSelection( 1, 3 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
 		);
 	}
 
@@ -203,7 +202,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
 						"select TOP(?) * from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc ) inner_query ) " +
 						"SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( query, toRowSelection( 1, 3 ) ).getProcessedSql()
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 3 ) )
 		);
 	}
 

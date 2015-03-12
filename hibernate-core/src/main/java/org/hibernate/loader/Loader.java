@@ -1805,13 +1805,12 @@ public abstract class Loader {
 	 * Build LIMIT clause handler applicable for given selection criteria. Returns {@link NoopLimitHandler} delegate
 	 * if dialect does not support LIMIT expression or processed query does not use pagination.
 	 *
-	 * @param sql Query string.
 	 * @param selection Selection criteria.
 	 * @return LIMIT clause delegate.
 	 */
-	protected LimitHandler getLimitHandler(String sql, RowSelection selection) {
-		final LimitHandler limitHandler = getFactory().getDialect().buildLimitHandler( sql, selection );
-		return LimitHelper.useLimit( limitHandler, selection ) ? limitHandler : new NoopLimitHandler( sql, selection );
+	protected LimitHandler getLimitHandler(RowSelection selection) {
+		final LimitHandler limitHandler = getFactory().getDialect().getLimitHandler();
+		return LimitHelper.useLimit( limitHandler, selection ) ? limitHandler : NoopLimitHandler.INSTANCE;
 	}
 
 	private ScrollMode getScrollMode(boolean scroll, boolean hasFirstRow, boolean useLimitOffSet, QueryParameters queryParameters) {
@@ -1851,10 +1850,9 @@ public abstract class Loader {
 
 		// Applying LIMIT clause.
 		final LimitHandler limitHandler = getLimitHandler(
-				queryParameters.getFilteredSQL(),
 				queryParameters.getRowSelection()
 		);
-		String sql = limitHandler.getProcessedSql();
+		String sql = limitHandler.processSql( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
 
 		// Adding locks and comments.
 		sql = preprocessSQL( sql, queryParameters, getFactory().getDialect(), afterLoadActions );
@@ -1892,7 +1890,7 @@ public abstract class Loader {
 
 			int col = 1;
 			//TODO: can we limit stored procedures ?!
-			col += limitHandler.bindLimitParametersAtStartOfQuery( st, col );
+			col += limitHandler.bindLimitParametersAtStartOfQuery( selection, st, col );
 
 			if (callable) {
 				col = dialect.registerResultSetOutParameter( (CallableStatement)st, col );
@@ -1900,9 +1898,9 @@ public abstract class Loader {
 
 			col += bindParameterValues( st, queryParameters, col, session );
 
-			col += limitHandler.bindLimitParametersAtEndOfQuery( st, col );
+			col += limitHandler.bindLimitParametersAtEndOfQuery( selection, st, col );
 
-			limitHandler.setMaxRows( st );
+			limitHandler.setMaxRows( selection, st );
 
 			if ( selection != null ) {
 				if ( selection.getTimeout() != null ) {

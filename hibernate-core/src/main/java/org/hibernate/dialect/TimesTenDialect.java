@@ -37,6 +37,8 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
@@ -166,6 +168,11 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public boolean supportsTableCheck() {
 		return false;
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return FirstLimitHandler.INSTANCE;
 	}
 
 	@Override

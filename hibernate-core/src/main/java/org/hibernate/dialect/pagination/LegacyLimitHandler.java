@@ -39,11 +39,8 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 	 * Constructs a LegacyLimitHandler
 	 *
 	 * @param dialect The dialect
-	 * @param sql The sql
-	 * @param selection The row selection
 	 */
-	public LegacyLimitHandler(Dialect dialect, String sql, RowSelection selection) {
-		super( sql, selection );
+	public LegacyLimitHandler(Dialect dialect) {
 		this.dialect = dialect;
 	}
 
@@ -88,7 +85,7 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String getProcessedSql() {
+	public String processSql(String sql, RowSelection selection) {
 		final boolean useLimitOffset = supportsLimit()
 				&& supportsLimitOffset()
 				&& LimitHelper.hasFirstRow( selection )
@@ -96,7 +93,7 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 		return dialect.getLimitString(
 				sql,
 				useLimitOffset ? LimitHelper.getFirstRow( selection ) : 0,
-				getMaxOrLimit()
+				getMaxOrLimit( selection )
 		);
 	}
 }

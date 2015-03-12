@@ -60,9 +60,9 @@ public class Oracle12cDialect extends Oracle10gDialect {
     		return "generated as identity";
     	}
 
-        @Override
-        public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-                return new SQL2008StandardLimitHandler(sql, selection);
-        }
+		@Override
+		public LimitHandler getLimitHandler() {
+			return SQL2008StandardLimitHandler.INSTANCE;
+		}
 
 }

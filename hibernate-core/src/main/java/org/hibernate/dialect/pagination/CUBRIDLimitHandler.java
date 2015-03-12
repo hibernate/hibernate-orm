@@ -23,7 +23,6 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
@@ -32,19 +31,11 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Esen Sagynov (kadishmal at gmail dot com)
  */
 public class CUBRIDLimitHandler extends AbstractLimitHandler {
-	@SuppressWarnings("FieldCanBeLocal")
-	private final Dialect dialect;
 
-	/**
-	 * Constructs a CUBRIDLimitHandler
-	 *
-	 * @param dialect Currently not used
-	 * @param sql The SQL
-	 * @param selection The row selection options
-	 */
-	public CUBRIDLimitHandler(Dialect dialect, String sql, RowSelection selection) {
-		super( sql, selection );
-		this.dialect = dialect;
+	public static final CUBRIDLimitHandler INSTANCE = new CUBRIDLimitHandler();
+
+	private CUBRIDLimitHandler() {
+		// NOP
 	}
 
 	@Override
@@ -53,7 +44,7 @@ public class CUBRIDLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String getProcessedSql() {
+	public String processSql(String sql, RowSelection selection) {
 		if ( LimitHelper.useLimit( this, selection ) ) {
 			// useLimitOffset: whether "offset" is set or not;
 			// if set, use "LIMIT offset, row_count" syntax;

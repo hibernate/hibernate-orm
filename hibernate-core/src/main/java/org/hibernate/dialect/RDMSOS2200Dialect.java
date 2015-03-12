@@ -37,6 +37,10 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
@@ -63,6 +67,32 @@ public class RDMSOS2200Dialect extends Dialect {
 			CoreMessageLogger.class,
 			RDMSOS2200Dialect.class.getName()
 	);
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			if (hasOffset) {
+				throw new UnsupportedOperationException( "query result offset is not supported" );
+			}
+			return sql + " fetch first ? rows only ";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsLimitOffset() {
+			return false;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
 
 	/**
 	 * Constructs a RDMSOS2200Dialect
@@ -326,6 +356,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 
 	@Override

@@ -27,6 +27,10 @@ import java.sql.Types;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -36,6 +40,19 @@ import org.hibernate.type.StandardBasicTypes;
  */
 @SuppressWarnings("deprecation")
 public class InterbaseDialect extends Dialect {
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+	};
 
 	/**
 	 * Constructs a InterbaseDialect
@@ -109,6 +126,11 @@ public class InterbaseDialect extends Dialect {
 	@Override
 	public boolean supportsSequences() {
 		return true;
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 
 	@Override

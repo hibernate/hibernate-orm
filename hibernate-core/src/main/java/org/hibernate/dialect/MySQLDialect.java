@@ -33,6 +33,10 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -47,6 +51,19 @@ import org.hibernate.type.StandardBasicTypes;
  */
 @SuppressWarnings("deprecation")
 public class MySQLDialect extends Dialect {
+
+	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
+			return sql + (hasOffset ? " limit ?, ?" : " limit ?");
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+	};
 
 	/**
 	 * Constructs a MySQLDialect
@@ -249,6 +266,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getDropForeignKeyString() {
 		return " drop foreign key ";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 
 	@Override

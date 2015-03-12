@@ -32,16 +32,13 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class SQL2008StandardLimitHandler extends AbstractLimitHandler {
 
+	public static final SQL2008StandardLimitHandler INSTANCE = new SQL2008StandardLimitHandler();
+
 	/**
 	 * Constructs a SQL2008StandardLimitHandler
-	 * 
-	 * @param sql
-	 *            The SQL
-	 * @param selection
-	 *            The row selection options
 	 */
-	public SQL2008StandardLimitHandler(String sql, RowSelection selection) {
-		super(sql, selection);
+	private SQL2008StandardLimitHandler() {
+		// NOP
 	}
 
 	@Override
@@ -50,12 +47,12 @@ public class SQL2008StandardLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String getProcessedSql() {
-		if (LimitHelper.useLimit(this, selection)) {
-			return sql
-					+ (LimitHelper.hasFirstRow(selection) ? " offset ? rows fetch next ? rows only"
-							: " fetch first ? rows only");
-		} else {
+	public String processSql(String sql, RowSelection selection) {
+		if (LimitHelper.useLimit( this, selection )) {
+			return sql + (LimitHelper.hasFirstRow( selection ) ?
+					" offset ? rows fetch next ? rows only" : " fetch first ? rows only");
+		}
+		else {
 			// or return unaltered SQL
 			return sql;
 		}

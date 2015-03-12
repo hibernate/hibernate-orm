@@ -23,6 +23,11 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
+
 
 /**
  * An SQL dialect for DB2/390. This class provides support for
@@ -31,6 +36,32 @@ package org.hibernate.dialect;
  * @author Kristoffer Dyrkorn
  */
 public class DB2390Dialect extends DB2Dialect {
+
+	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			if (LimitHelper.hasFirstRow( selection )) {
+				throw new UnsupportedOperationException( "query result offset is not supported" );
+			}
+			return sql + " fetch first ? rows only";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
 	@Override
 	public boolean supportsSequences() {
 		return false;
@@ -71,6 +102,11 @@ public class DB2390Dialect extends DB2Dialect {
 			return sql;
 		}
 		return sql + " fetch first " + limit + " rows only ";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return LIMIT_HANDLER;
 	}
 
 }

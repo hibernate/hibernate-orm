@@ -28,6 +28,8 @@ import java.sql.Types;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -188,6 +190,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select tabname from informix.systables where tabtype='Q'";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return FirstLimitHandler.INSTANCE;
 	}
 
 	@Override

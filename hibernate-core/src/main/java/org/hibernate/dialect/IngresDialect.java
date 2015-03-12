@@ -30,6 +30,8 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -227,6 +229,11 @@ public class IngresDialect extends Dialect {
 	@Override
 	public String getLowercaseFunction() {
 		return "lowercase";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return FirstLimitHandler.INSTANCE;
 	}
 
 	@Override

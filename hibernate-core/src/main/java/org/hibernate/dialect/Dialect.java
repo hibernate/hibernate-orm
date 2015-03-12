@@ -1050,11 +1050,20 @@ public abstract class Dialect implements ConversionContext {
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Returns the delegate managing LIMIT clause.
+	 *
+	 * @return LIMIT clause delegate.
+	 */
+	public LimitHandler getLimitHandler() {
+		return new LegacyLimitHandler( this );
+	}
+
+	/**
 	 * Does this dialect support some form of limiting query results
 	 * via a SQL clause?
 	 *
 	 * @return True if this dialect supports some form of LIMIT.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean supportsLimit() {
@@ -1066,7 +1075,7 @@ public abstract class Dialect implements ConversionContext {
 	 * support specifying an offset?
 	 *
 	 * @return True if the dialect supports an offset within the limit support.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean supportsLimitOffset() {
@@ -1078,7 +1087,7 @@ public abstract class Dialect implements ConversionContext {
 	 * parameters) for its limit/offset?
 	 *
 	 * @return True if bind variables can be used; false otherwise.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean supportsVariableLimit() {
@@ -1090,7 +1099,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect require us to bind the parameters in reverse order?
 	 *
 	 * @return true if the correct order is limit, offset
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean bindLimitParametersInReverseOrder() {
@@ -1102,7 +1111,7 @@ public abstract class Dialect implements ConversionContext {
 	 * <tt>SELECT</tt> statement, rather than at the end?
 	 *
 	 * @return true if limit parameters should come before other parameters
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean bindLimitParametersFirst() {
@@ -1124,7 +1133,7 @@ public abstract class Dialect implements ConversionContext {
 	 * So essentially, is limit relative from offset?  Or is limit absolute?
 	 *
 	 * @return True if limit is relative from offset; false otherwise.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean useMaxForLimit() {
@@ -1136,7 +1145,7 @@ public abstract class Dialect implements ConversionContext {
 	 * to the SQL query.  This option forces that the limit be written to the SQL query.
 	 *
 	 * @return True to force limit into SQL query even if none specified in Hibernate query; false otherwise.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public boolean forceLimitUsage() {
@@ -1150,7 +1159,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param offset The offset of the limit
 	 * @param limit The limit of the limit ;)
 	 * @return The modified query statement with the limit applied.
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public String getLimitString(String query, int offset, int limit) {
@@ -1173,7 +1182,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param query The query to which to apply the limit.
 	 * @param hasOffset Is the query requesting an offset?
 	 * @return the modified SQL
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	protected String getLimitString(String query, boolean hasOffset) {
@@ -1192,22 +1201,11 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The corresponding db/dialect specific offset.
 	 * @see org.hibernate.Query#setFirstResult
 	 * @see org.hibernate.Criteria#setFirstResult
-	 * @deprecated {@link #buildLimitHandler(String, RowSelection)} should be overridden instead.
+	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return zeroBasedFirstResult;
-	}
-
-	/**
-	 * Build delegate managing LIMIT clause.
-	 *
-	 * @param sql SQL query.
-	 * @param selection Selection criteria. {@code null} in case of unlimited number of rows.
-	 * @return LIMIT clause delegate.
-	 */
-	public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-		return new LegacyLimitHandler( this, sql, selection );
 	}
 
 

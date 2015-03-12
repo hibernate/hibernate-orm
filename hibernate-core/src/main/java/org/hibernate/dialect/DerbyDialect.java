@@ -29,6 +29,10 @@ import java.sql.Types;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
@@ -56,6 +60,7 @@ public class DerbyDialect extends DB2Dialect {
 
 	private int driverVersionMajor;
 	private int driverVersionMinor;
+	private final LimitHandler limitHandler;
 
 	/**
 	 * Constructs a DerbyDialect
@@ -75,6 +80,8 @@ public class DerbyDialect extends DB2Dialect {
 		if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
 			registerColumnType( Types.BOOLEAN, "boolean" );
 		}
+
+		this.limitHandler = new DerbyLimitHandler();
 	}
 
 	private void determineDriverVersion() {
@@ -170,6 +177,11 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limitHandler;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * <p/>
@@ -257,4 +269,71 @@ public class DerbyDialect extends DB2Dialect {
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
 	}
+
+	private final class DerbyLimitHandler extends AbstractLimitHandler {
+		/**
+		 * {@inheritDoc}
+		 * <p/>
+		 * From Derby 10.5 Docs:
+		 * <pre>
+		 * Query
+		 * [ORDER BY clause]
+		 * [result offset clause]
+		 * [fetch first clause]
+		 * [FOR UPDATE clause]
+		 * [WITH {RR|RS|CS|UR}]
+		 * </pre>
+		 */
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			final StringBuilder sb = new StringBuilder( sql.length() + 50 );
+			final String normalizedSelect = sql.toLowerCase().trim();
+			final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update" );
+
+			if (hasForUpdateClause( forUpdateIndex )) {
+				sb.append( sql.substring( 0, forUpdateIndex - 1 ) );
+			}
+			else if (hasWithClause( normalizedSelect )) {
+				sb.append( sql.substring( 0, getWithIndex( sql ) - 1 ) );
+			}
+			else {
+				sb.append( sql );
+			}
+
+			if (LimitHelper.hasFirstRow( selection )) {
+				sb.append( " offset ? rows fetch next " );
+			}
+			else {
+				sb.append( " fetch first " );
+			}
+
+			sb.append( "? rows only" );
+
+			if (hasForUpdateClause( forUpdateIndex )) {
+				sb.append( ' ' );
+				sb.append( sql.substring( forUpdateIndex ) );
+			}
+			else if (hasWithClause( normalizedSelect )) {
+				sb.append( ' ' ).append( sql.substring( getWithIndex( sql ) ) );
+			}
+			return sb.toString();
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return isTenPointFiveReleaseOrNewer();
+		}
+
+		@Override
+		@SuppressWarnings("deprecation")
+		public boolean supportsLimitOffset() {
+			return isTenPointFiveReleaseOrNewer();
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	}
+
 }

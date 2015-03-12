@@ -30,6 +30,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -42,6 +44,8 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 @SuppressWarnings("deprecation")
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+
+	private final LimitHandler limitHandler;
 
 	/**
 	 * Constructs a SQLServerDialect
@@ -65,6 +69,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerFunction( "trim", new AnsiTrimEmulationFunction() );
 
 		registerKeyword( "top" );
+
+		this.limitHandler = new TopLimitHandler( false, false );
 	}
 
 	@Override
@@ -97,6 +103,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String appendIdentitySelectToInsert(String insertSQL) {
 		return insertSQL + " select scope_identity()";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limitHandler;
 	}
 
 	@Override

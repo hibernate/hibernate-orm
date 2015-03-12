@@ -253,7 +253,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		for ( XClass clazz : orderedClasses ) {
 			if ( processedEntityNames.contains( clazz.getName() ) ) {
-				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed" );
+				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
 				continue;
 			}
 

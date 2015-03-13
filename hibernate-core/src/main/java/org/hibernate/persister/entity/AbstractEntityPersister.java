@@ -4641,7 +4641,8 @@ public abstract class AbstractEntityPersister
 						return null;
 					}
 
-					return (Serializable) getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
+					final Object hydratedId = getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
+					return (Serializable) getIdentifierType().resolve( hydratedId, session, null );
 				}
 				finally {
 					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );

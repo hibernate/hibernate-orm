@@ -39,6 +39,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -248,7 +249,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
-		source.getPersistenceContext().addEntry(
+		EntityEntry original = source.getPersistenceContext().addEntry(
 				entity,
 				Status.SAVING,
 				null,
@@ -305,6 +306,15 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		}
 
 		markInterceptorDirty( entity, persister, source );
+
+		EntityEntry newEntry = source.getPersistenceContext().getEntry( entity );
+
+		if ( newEntry != original ) {
+			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
+			if ( extraState == null ) {
+				newEntry.addExtraState( original.getExtraState( EntityEntryExtraState.class ) );
+			}
+		}
 
 		return id;
 	}

@@ -34,6 +34,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity_;
+import org.hibernate.testing.TestForIssue;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Animal.class, Human.class, Thing.class, ThingWithQuantity.class };
+		return new Class[] { Animal.class, Elephant.class, Human.class, Thing.class, ThingWithQuantity.class };
 	}
 
 	@Test
@@ -94,6 +95,10 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		human.setId(200L);
 		human.setName("2");
 		em.persist(human);
+		Elephant elephant = new Elephant();
+		elephant.setId( 300L );
+		elephant.setName( "2" );
+		em.persist( elephant );
 		em.getTransaction().commit();
 
 		CriteriaBuilder builder = em.getCriteriaBuilder();
@@ -102,9 +107,23 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		EntityType<Animal> Animal_ = em.getMetamodel().entity(Animal.class);
 		criteria.select(root.get(Animal_.getSingularAttribute("name", String.class)));
 
-		criteria.where(builder.like(builder.treat(root, Human.class).get(org.hibernate.jpa.test.criteria.Human_.name), "2%"));
+		criteria.where(builder.like(builder.treat(root, Human.class).get( org.hibernate.jpa.test.criteria.Human_.name ), "2%"));
 		List<String> animalList = em.createQuery( criteria ).getResultList();
 		Assert.assertEquals("treat(Animal as Human) was ignored",1, animalList.size());
+
+		CriteriaQuery<Long> idCriteria = builder.createQuery( Long.class );
+		Root<Animal> idRoot = idCriteria.from( Animal.class );
+		idCriteria.select( idRoot.get( Animal_.getSingularAttribute( "id", Long.class ) ) );
+
+		idCriteria.where(
+				builder.like(
+						builder.treat( idRoot, Human.class )
+								.get( org.hibernate.jpa.test.criteria.Human_.name ), "2%"
+				)
+		);
+		List<Long> animalIdList = em.createQuery( idCriteria ).getResultList();
+		Assert.assertEquals( "treat(Animal as Human) was ignored", 1, animalIdList.size() );
+		Assert.assertEquals( 200L, animalIdList.get( 0 ).longValue() );
 
 		em.close();
 	}
@@ -116,29 +135,88 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		Animal animal = new Animal();
 		animal.setId(100L);
 		animal.setName("2");
-		em.persist(animal);
+		em.persist( animal );
 		Human human = new Human();
 		human.setId(200L);
 		human.setName("2");
 		em.persist(human);
+		Elephant elephant = new Elephant();
+		elephant.setId( 300L );
+		elephant.setName( "2" );
+		em.persist( elephant );
 		em.getTransaction().commit();
 
 		List<String> animalList = em.createQuery( "select a.name from Animal a where treat (a as Human).name like '2%'" ).getResultList();
+		Assert.assertEquals( "treat(Animal as Human) was ignored", 1, animalList.size() );
+
+		List<Long> animalIdList = em.createQuery( "select a.id from Animal a where treat (a as Human).name like '2%'" ).getResultList();
 		Assert.assertEquals("treat(Animal as Human) was ignored",1, animalList.size());
+		Assert.assertEquals( 200L, animalIdList.get( 0 ).longValue() );
 
 		em.close();
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9549" )
 	public void treatRoot() {
 		EntityManager em = getOrCreateEntityManager();
+
+		em.getTransaction().begin();
+		Animal animal = new Animal();
+		animal.setId(100L);
+		animal.setName("2");
+		em.persist(animal);
+		Human human = new Human();
+		human.setId(200L);
+		human.setName("2");
+		em.persist(human);
+		Elephant elephant = new Elephant();
+		elephant.setId( 300L );
+		elephant.setName( "2" );
+		em.persist( elephant );
+		em.getTransaction().commit();
+
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 		CriteriaQuery<Human> criteria = builder.createQuery( Human.class );
 		Root<Animal> root = criteria.from( Animal.class );
 		criteria.select( builder.treat( root, Human.class ) );
-		em.createQuery( criteria ).getResultList();
+		List<Human> humans = em.createQuery( criteria ).getResultList();
+		Assert.assertEquals( 1, humans.size() );
+
 		em.close();
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9549" )
+	public void treatRootReturnSuperclass() {
+		EntityManager em = getOrCreateEntityManager();
+
+		em.getTransaction().begin();
+		Animal animal = new Animal();
+		animal.setId(100L);
+		animal.setName("2");
+		em.persist(animal);
+		Human human = new Human();
+		human.setId(200L);
+		human.setName("2");
+		em.persist(human);
+		Elephant elephant = new Elephant();
+		elephant.setId( 300L );
+		elephant.setName( "2" );
+		em.persist( elephant );
+		em.getTransaction().commit();
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Animal> criteria = builder.createQuery( Animal.class );
+		Root<Animal> root = criteria.from( Animal.class );
+		criteria.select( builder.treat( root, Human.class ) );
+		List<Animal> animalsThatAreHuman = em.createQuery( criteria ).getResultList();
+		Assert.assertEquals( 1, animalsThatAreHuman.size() );
+		Assert.assertTrue( Human.class.isInstance( animalsThatAreHuman.get( 0 ) ) );
+
+		em.close();
+	}
+
 
 
 }

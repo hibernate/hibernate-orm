@@ -124,6 +124,11 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 	}
 
 	@Test
+	public void testLazyBasicPropertyUpdate() {
+		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyBasicPropertyUpdateExecutable" );
+	}
+
+	@Test
 	public void testSharedPKOneToOne() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable" );
 	}

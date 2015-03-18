@@ -38,9 +38,9 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.envers.test.AbstractEnversTest;
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.AfterClassOnce;
@@ -56,7 +56,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 
 	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
 	private StandardServiceRegistryImpl serviceRegistry;
-	private EntityManagerFactoryImpl emf;
+	private HibernateEntityManagerFactory emf;
 	private EntityManager entityManager;
 	private AuditReader auditReader;
 	private boolean audited;
@@ -117,7 +117,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 				configurationProperties
 		);
 
-		emf = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.build();
+		emf = entityManagerFactoryBuilder.build().unwrap( HibernateEntityManagerFactory.class );
 
 		serviceRegistry = (StandardServiceRegistryImpl) emf.getSessionFactory()
 				.getServiceRegistry()

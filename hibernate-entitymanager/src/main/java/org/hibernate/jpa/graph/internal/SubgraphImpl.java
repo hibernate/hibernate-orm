@@ -30,7 +30,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.graph.spi.GraphNodeImplementor;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 
 /**
  * @author Steve Ebersole
@@ -40,7 +40,7 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 	private final Class<T> subclass;
 
 	public SubgraphImpl(
-			HibernateEntityManagerFactory entityManagerFactory,
+			EntityManagerFactoryImpl entityManagerFactory,
 			ManagedType managedType,
 			Class<T> subclass) {
 		super( entityManagerFactory, true );

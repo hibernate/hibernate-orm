@@ -115,7 +115,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) ( (EntityManagerFactoryImpl) entityManagerFactory() ).getSessionFactory()
+		int updates = ( int ) entityManagerFactory().getSessionFactory()
 				.getStatistics()
 				.getEntityUpdateCount();
 		Assert.assertEquals( count, updates );

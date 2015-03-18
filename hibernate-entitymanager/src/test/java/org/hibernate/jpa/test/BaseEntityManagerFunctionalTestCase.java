@@ -24,7 +24,6 @@
 package org.hibernate.jpa.test;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
@@ -41,7 +40,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -68,7 +67,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	private static final Dialect dialect = Dialect.getDialect();
 
 	private StandardServiceRegistryImpl serviceRegistry;
-	private EntityManagerFactoryImpl entityManagerFactory;
+	private HibernateEntityManagerFactory entityManagerFactory;
 
 	private EntityManager em;
 	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
@@ -77,7 +76,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return dialect;
 	}
 
-	protected EntityManagerFactory entityManagerFactory() {
+	protected HibernateEntityManagerFactory entityManagerFactory() {
 		return entityManagerFactory;
 	}
 
@@ -90,10 +89,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	public void buildEntityManagerFactory() throws Exception {
 		log.trace( "Building EntityManagerFactory" );
 
-		entityManagerFactory = (EntityManagerFactoryImpl) Bootstrap.getEntityManagerFactoryBuilder(
+		entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
-		).build();
+		).build().unwrap( HibernateEntityManagerFactory.class );
 
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
 				.getServiceRegistry()

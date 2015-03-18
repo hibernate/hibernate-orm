@@ -36,6 +36,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.metamodel.Helper;
 import org.hibernate.jpa.internal.metamodel.PluralAttributeImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
@@ -51,13 +52,13 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T>, HibernateEntityManagerFactoryAware {
-	private final HibernateEntityManagerFactory entityManagerFactory;
+	private final EntityManagerFactoryImpl entityManagerFactory;
 	private final Attribute<?,T> attribute;
 
 	private Map<Class, Subgraph> subgraphMap;
 	private Map<Class, Subgraph> keySubgraphMap;
 
-	public <X> AttributeNodeImpl(HibernateEntityManagerFactory entityManagerFactory, Attribute<X,T> attribute) {
+	public <X> AttributeNodeImpl(EntityManagerFactoryImpl entityManagerFactory, Attribute<X,T> attribute) {
 		this.entityManagerFactory = entityManagerFactory;
 		this.attribute = attribute;
 	}
@@ -66,7 +67,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	 * Intended only for use from {@link #makeImmutableCopy()}
 	 */
 	private AttributeNodeImpl(
-			HibernateEntityManagerFactory entityManagerFactory,
+			EntityManagerFactoryImpl entityManagerFactory,
 			Attribute<?,T> attribute,
 			Map<Class, Subgraph> subgraphMap,
 			Map<Class, Subgraph> keySubgraphMap) {

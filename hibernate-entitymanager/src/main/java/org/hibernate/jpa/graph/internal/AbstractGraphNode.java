@@ -35,7 +35,7 @@ import javax.persistence.metamodel.Attribute;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 import org.jboss.logging.Logger;
 
@@ -47,12 +47,12 @@ import org.jboss.logging.Logger;
 public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, HibernateEntityManagerFactoryAware {
 	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
 
-	private final HibernateEntityManagerFactory entityManagerFactory;
+	private final EntityManagerFactoryImpl entityManagerFactory;
 	private final boolean mutable;
 
 	private Map<String, AttributeNodeImplementor<?>> attributeNodeMap;
 
-	protected AbstractGraphNode(HibernateEntityManagerFactory entityManagerFactory, boolean mutable) {
+	protected AbstractGraphNode(EntityManagerFactoryImpl entityManagerFactory, boolean mutable) {
 		this.entityManagerFactory = entityManagerFactory;
 		this.mutable = mutable;
 	}
@@ -80,7 +80,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 	}
 
 	@Override
-	public HibernateEntityManagerFactory getFactory() {
+	public EntityManagerFactoryImpl getFactory() {
 		return entityManagerFactory;
 	}
 

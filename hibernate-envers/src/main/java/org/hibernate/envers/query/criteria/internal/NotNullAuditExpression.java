@@ -43,7 +43,7 @@ public class NotNullAuditExpression implements AuditCriterion {
 
 	public void addToQuery(
 			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			String alias, QueryBuilder qb, Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
 				auditCfg,
 				versionsReader,

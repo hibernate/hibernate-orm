@@ -44,6 +44,8 @@ public interface AuditQuery {
 
 	Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException;
 
+	AuditAssociationQuery<? extends AuditQuery> createCriteria(final String associationName);
+
 	AuditQuery add(AuditCriterion criterion);
 
 	AuditQuery addProjection(AuditProjection projection);

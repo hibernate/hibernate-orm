@@ -23,7 +23,6 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +31,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 
@@ -65,7 +65,6 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 		this.includeDeletions = includeDeletions;
 	}
 
-	@SuppressWarnings({"unchecked"})
 	public List list() {
 		/*
          * The query that we need to create:
@@ -117,25 +116,20 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
 		// all specified conditions
 		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery( verCfg, versionsReader, entityName, qb, qb.getRootParameters() );
+			criterion.addToQuery( verCfg, versionsReader, entityName, QueryConstants.REFERENCED_ENTITY_ALIAS, qb, qb.getRootParameters() );
+		}
+
+		for (final AuditAssociationQueryImplementor<?> associationQuery : associationQueries) {
+			associationQuery.addCriterionsToQuery( versionsReader );
 		}
 
 		Query query = buildQuery();
-		// add named parameter (only used for ValidAuditTimeStrategy)
+		// add named parameter (used for ValidityAuditStrategy and association queries)
 		List<String> params = Arrays.asList( query.getNamedParameters() );
 		if ( params.contains( REVISION_PARAMETER ) ) {
 			query.setParameter( REVISION_PARAMETER, revision );
 		}
 		List queryResult = query.list();
-
-		if ( hasProjection ) {
-			return queryResult;
-		}
-		else {
-			List result = new ArrayList();
-			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
-
-			return result;
-		}
+		return applyProjections( queryResult, revision );
 	}
 }

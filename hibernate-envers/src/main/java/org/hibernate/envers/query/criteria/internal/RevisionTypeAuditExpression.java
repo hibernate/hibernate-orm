@@ -44,7 +44,7 @@ public class RevisionTypeAuditExpression implements AuditCriterion {
 	@Override
 	public void addToQuery(
 			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			String alias, QueryBuilder qb, Parameters parameters) {
 		parameters.addWhereWithParam( verCfg.getAuditEntCfg().getRevisionTypePropName(), op, value );
 	}
 }

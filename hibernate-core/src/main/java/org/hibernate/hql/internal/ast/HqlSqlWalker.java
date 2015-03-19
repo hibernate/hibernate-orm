@@ -151,6 +151,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	private JoinType impliedJoinType = JoinType.INNER_JOIN;
 
+	private boolean inEntityGraph;
+
 	/**
 	 * Create a new tree transformer.
 	 *
@@ -280,6 +282,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	public String getCollectionFilterRole() {
 		return collectionFilterRole;
+	}
+
+	public boolean isInEntityGraph() {
+		return inEntityGraph;
 	}
 
 	public SessionFactoryHelper getSessionFactoryHelper() {
@@ -673,9 +679,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 			// Add in the EntityGraph attribute nodes.
 			if ( queryTranslatorImpl.getEntityGraphQueryHint() != null ) {
-				qn.getFromClause().getFromElements().addAll(
-						queryTranslatorImpl.getEntityGraphQueryHint().toFromElements( qn.getFromClause(), this )
-				);
+				final boolean oldInEntityGraph = inEntityGraph;
+				try {
+					inEntityGraph = true;
+					qn.getFromClause().getFromElements().addAll(
+							queryTranslatorImpl.getEntityGraphQueryHint().toFromElements( qn.getFromClause(), this )
+					);
+				}
+				finally {
+					inEntityGraph = oldInEntityGraph;
+				}
 			}
 
 			if ( !explicitSelect ) {

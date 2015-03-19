@@ -42,6 +42,7 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 
 import org.junit.Test;
 
@@ -58,6 +59,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9392")
 	public void fetchSubGraphFromSubgraph() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -107,6 +109,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-9392")
 	public void fetchAttributeNodeFromSubgraph() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -134,20 +137,62 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 		em.getTransaction().begin();
 
 		final EntityGraph<CustomerOrder> entityGraph = em.createEntityGraph( CustomerOrder.class );
-		//entityGraph.addAttributeNodes( "shippingAddress", "orderDate" );
+		entityGraph.addAttributeNodes( "shippingAddress", "orderDate" );
 		entityGraph.addAttributeNodes( "shippingAddress" );
 
 		final Subgraph<OrderPosition> orderProductsSubgraph = entityGraph.addSubgraph( "orderPosition" );
-		//orderProductsSubgraph.addAttributeNodes( "amount" );
+		orderProductsSubgraph.addAttributeNodes( "amount" );
 		orderProductsSubgraph.addAttributeNodes( "product" );
 
-		//final Subgraph<Product> productSubgraph = orderProductsSubgraph.addSubgraph( "product" );
-		//productSubgraph.addAttributeNodes( "productName" );
+		final Subgraph<Product> productSubgraph = orderProductsSubgraph.addSubgraph( "product" );
+		productSubgraph.addAttributeNodes( "productName" );
 
 		TypedQuery<CustomerOrder> query = em.createQuery(
 				"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
 		);
 		query.setHint( "javax.persistence.loadgraph", entityGraph );
+		final List<CustomerOrder> results = query.getResultList();
+
+		assertTrue( Hibernate.isInitialized( results ) );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9392")
+	public void fetchUsingHql() {
+		// This test is here only for comparison with results from fetchAttributeNodeFromSubgraph.
+		// At the time this was written, the generated SQL from the HQL is the same as that generated with the
+		// query hint in fetchAttributeNodeFromSubgraph. I am leaving this here for future debugging purposes.
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Address address = new Address();
+		address.city = "TestCity";
+
+		CustomerOrder customerOrder = new CustomerOrder();
+		customerOrder.shippingAddress = address;
+
+		Product product = new Product();
+
+		OrderPosition orderPosition = new OrderPosition();
+		orderPosition.product = product;
+
+		customerOrder.orderPosition = orderPosition;
+		em.persist( address );
+		em.persist( orderPosition );
+		em.persist( product );
+		em.persist( customerOrder );
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+
+		TypedQuery<CustomerOrder> query = em.createQuery(
+				"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o left join fetch o.orderPosition pos left join fetch pos.product left join fetch o.shippingAddress", CustomerOrder.class
+		);
 		final List<CustomerOrder> results = query.getResultList();
 
 		assertTrue( Hibernate.isInitialized( results ) );

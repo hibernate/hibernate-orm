@@ -27,12 +27,10 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.event.spi.EnversListener;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.reader.AuditReaderImpl;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -60,25 +58,10 @@ public class AuditReaderFactory {
 			sessionImpl = (SessionImplementor) session;
 		}
 
-		// todo : I wonder if there is a better means to do this via "named lookup" based on the session factory name/uuid
-		final EventListenerRegistry listenerRegistry = sessionImpl
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		final ServiceRegistry serviceRegistry = sessionImpl.getFactory().getServiceRegistry();
+		final EnversService enversService = serviceRegistry.getService( EnversService.class );
 
-		for ( PostInsertEventListener listener : listenerRegistry.getEventListenerGroup( EventType.POST_INSERT )
-				.listeners() ) {
-			if ( listener instanceof EnversListener ) {
-				// todo : slightly different from original code in that I am not checking the other listener groups...
-				return new AuditReaderImpl(
-						((EnversListener) listener).getAuditConfiguration(),
-						session,
-						sessionImpl
-				);
-			}
-		}
-
-		throw new AuditException( "Envers listeners were not properly registered" );
+		return new AuditReaderImpl( enversService, session, sessionImpl );
 	}
 
 	/**

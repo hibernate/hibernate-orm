@@ -1,7 +1,8 @@
 package org.hibernate.envers.test.integration.basic;
 
+import java.util.Map;
+
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
@@ -23,9 +24,11 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( EnversSettings.STORE_DATA_AT_DELETE, "true" );
-		configuration.setProperty( EnversSettings.REVISION_ON_COLLECTION_CHANGE, "true" );
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( EnversSettings.STORE_DATA_AT_DELETE, "true" );
+		settings.put( EnversSettings.REVISION_ON_COLLECTION_CHANGE, "true" );
 	}
 
 	@Test(expected = AuditException.class)

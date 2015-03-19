@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.BasicCollectionInitializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
@@ -43,19 +43,31 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 
 	public BasicCollectionMapper(
 			CommonCollectionMapperData commonCollectionMapperData,
-			Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-			MiddleComponentData elementComponentData, boolean ordinalInId, boolean revisionTypeInId) {
+			Class<? extends T> collectionClass,
+			Class<? extends T> proxyClass,
+			MiddleComponentData elementComponentData,
+			boolean ordinalInId,
+			boolean revisionTypeInId) {
 		super( commonCollectionMapperData, collectionClass, proxyClass, ordinalInId, revisionTypeInId );
 		this.elementComponentData = elementComponentData;
 	}
 
 	@Override
 	protected Initializor<T> getInitializor(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-			Object primaryKey, Number revision, boolean removed) {
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Object primaryKey,
+			Number revision,
+			boolean removed) {
 		return new BasicCollectionInitializor<T>(
-				verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-				primaryKey, revision, removed, collectionClass, elementComponentData
+				enversService,
+				versionsReader,
+				commonCollectionMapperData.getQueryGenerator(),
+				primaryKey,
+				revision,
+				removed,
+				collectionClass,
+				elementComponentData
 		);
 	}
 

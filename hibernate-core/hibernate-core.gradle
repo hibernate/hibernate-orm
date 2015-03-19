@@ -16,6 +16,8 @@ dependencies {
     compile( libraries.antlr )
     compile( libraries.jandex )
 
+    compile( "org.codehaus.woodstox:woodstox-core-asl:4.3.0")
+
     antlr( libraries.antlr )
 
     provided( libraries.ant )

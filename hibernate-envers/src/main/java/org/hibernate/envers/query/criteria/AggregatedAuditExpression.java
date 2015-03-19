@@ -26,7 +26,7 @@ package org.hibernate.envers.query.criteria;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -63,16 +63,19 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 
 	@Override
 	public void addToQuery(
-			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			QueryBuilder qb,
+			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
-				auditCfg,
+				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
 
-		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
 
 		// Make sure our conditions are ANDed together even if the parent Parameters have a different connective
 		Parameters subParams = parameters.addSubParameters( Parameters.AND );
@@ -82,8 +85,8 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		// Adding all specified conditions both to the main query, as well as to the
 		// aggregated one.
 		for ( AuditCriterion versionsCriteria : criterions ) {
-			versionsCriteria.addToQuery( auditCfg, versionsReader, entityName, qb, subParams );
-			versionsCriteria.addToQuery( auditCfg, versionsReader, entityName, subQb, subQb.getRootParameters() );
+			versionsCriteria.addToQuery( enversService, versionsReader, entityName, qb, subParams );
+			versionsCriteria.addToQuery( enversService, versionsReader, entityName, subQb, subQb.getRootParameters() );
 		}
 
 		// Setting the desired projection of the aggregated query
@@ -97,8 +100,8 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 
 		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.
 		if ( correlate ) {
-			final String originalIdPropertyName = auditCfg.getAuditEntCfg().getOriginalIdPropName();
-			auditCfg.getEntCfg().get( entityName ).getIdMapper().addIdsEqualToQuery(
+			final String originalIdPropertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName();
+			enversService.getEntitiesConfigurations().get( entityName ).getIdMapper().addIdsEqualToQuery(
 					subQb.getRootParameters(),
 					subQb.getRootAlias() + "." + originalIdPropertyName,
 					qb.getRootAlias() + "." + originalIdPropertyName

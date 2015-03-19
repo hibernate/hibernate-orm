@@ -44,6 +44,7 @@ import org.dom4j.Element;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class BasicMetadataGenerator {
+
 	@SuppressWarnings({"unchecked"})
 	boolean addBasic(
 			Element parent, PropertyAuditingData propertyAuditingData,

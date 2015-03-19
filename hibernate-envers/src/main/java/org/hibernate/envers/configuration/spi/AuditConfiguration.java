@@ -23,18 +23,17 @@
  */
 package org.hibernate.envers.configuration.spi;
 
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Properties;
-import java.util.WeakHashMap;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
 import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationResult;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
@@ -46,15 +45,18 @@ import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Stephanie Pau at Markit Group Plc
+ * @author Steve Ebersole
  */
 public class AuditConfiguration {
+	private final ServiceRegistry serviceRegistry;
+
 	private final GlobalConfiguration globalCfg;
 	private final AuditEntitiesConfiguration auditEntCfg;
 	private final AuditProcessManager auditProcessManager;
@@ -63,7 +65,47 @@ public class AuditConfiguration {
 	private final RevisionInfoQueryCreator revisionInfoQueryCreator;
 	private final RevisionInfoNumberReader revisionInfoNumberReader;
 	private final ModifiedEntityNamesReader modifiedEntityNamesReader;
-	private ClassLoaderService classLoaderService;
+
+	public AuditConfiguration(MetadataImplementor metadata, MappingCollector mappingCollector) {
+		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
+
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final Properties properties = new Properties();
+		properties.putAll( cfgService.getSettings() );
+
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		this.globalCfg = new GlobalConfiguration( properties, classLoaderService );
+
+		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions().getReflectionManager();
+		final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
+		final RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure( metadata, reflectionManager );
+
+		this.auditEntCfg = new AuditEntitiesConfiguration( properties, revInfoCfgResult.getRevisionInfoEntityName() );
+		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
+		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
+		this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
+		this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
+		this.auditStrategy = initializeAuditStrategy(
+				auditEntCfg.getAuditStrategyName(),
+				revInfoCfgResult.getRevisionInfoClass(),
+				revInfoCfgResult.getRevisionInfoTimestampData(),
+				classLoaderService
+		);
+		this.entCfg = new EntitiesConfigurator().configure(
+				metadata,
+				serviceRegistry,
+				reflectionManager,
+				mappingCollector,
+				globalCfg,
+				auditEntCfg,
+				auditStrategy,
+				revInfoCfgResult.getRevisionInfoXmlMapping(),
+				revInfoCfgResult.getRevisionInfoRelationMapping()
+		);
+
+	}
+
 
 	public AuditEntitiesConfiguration getAuditEntCfg() {
 		return auditEntCfg;
@@ -97,63 +139,20 @@ public class AuditConfiguration {
 		return auditStrategy;
 	}
 
-	public ClassLoaderService getClassLoaderService() {
-		return classLoaderService;
-	}
-
-	public AuditConfiguration(Configuration cfg) {
-		this( cfg, null );
-	}
-
-	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
-		// TODO: Temporarily allow Envers to continuing using
-		// hibernate-commons-annotations' for reflection and class loading.
-		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
-
-		final Properties properties = cfg.getProperties();
-
-		final ReflectionManager reflectionManager = cfg.getReflectionManager();
-		this.globalCfg = new GlobalConfiguration( properties, classLoaderService );
-		final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
-		final RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure( cfg, reflectionManager );
-		this.auditEntCfg = new AuditEntitiesConfiguration( properties, revInfoCfgResult.getRevisionInfoEntityName() );
-		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
-		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
-		this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-		this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
-		this.classLoaderService = classLoaderService;
-		this.auditStrategy = initializeAuditStrategy(
-				revInfoCfgResult.getRevisionInfoClass(),
-				revInfoCfgResult.getRevisionInfoTimestampData()
-		);
-		this.entCfg = new EntitiesConfigurator().configure(
-				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy, classLoaderService,
-				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
-		);
-
-		Thread.currentThread().setContextClassLoader( tccl );
-	}
-
-	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
+	private static AuditStrategy initializeAuditStrategy(
+			String auditStrategyName,
+			Class<?> revisionInfoClass,
+			PropertyData revisionInfoTimestampData,
+			ClassLoaderService classLoaderService) {
 		AuditStrategy strategy;
 
 		try {
-			Class<?> auditStrategyClass = null;
-			try {
-				auditStrategyClass = this.getClass().getClassLoader().loadClass( auditEntCfg.getAuditStrategyName() );
-			}
-			catch (Exception e) {
-				auditStrategyClass = ReflectionTools.loadClass(
-						auditEntCfg.getAuditStrategyName(),
-						classLoaderService
-				);
-			}
+			Class<?> auditStrategyClass = loadClass( auditStrategyName, classLoaderService );
 			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor( auditStrategyClass ).newInstance();
 		}
 		catch (Exception e) {
 			throw new MappingException(
-					String.format( "Unable to create AuditStrategy[%s] instance.", auditEntCfg.getAuditStrategyName() ),
+					String.format( "Unable to create AuditStrategy [%s] instance.", auditStrategyName ),
 					e
 			);
 		}
@@ -167,34 +166,24 @@ public class AuditConfiguration {
 		return strategy;
 	}
 
-	private static final Map<Configuration, AuditConfiguration> CFGS = new WeakHashMap<Configuration, AuditConfiguration>();
-
-	public synchronized static AuditConfiguration getFor(Configuration cfg) {
-		return getFor( cfg, null );
-	}
-
-	public synchronized static AuditConfiguration getFor(Configuration cfg, ClassLoaderService classLoaderService) {
-		AuditConfiguration verCfg = CFGS.get( cfg );
-
-		if ( verCfg == null ) {
-			verCfg = new AuditConfiguration( cfg, classLoaderService );
-			CFGS.put( cfg, verCfg );
-
-			cfg.buildMappings();
+	/**
+	 * Load a class by name, preferring our ClassLoader and then the ClassLoaderService.
+	 *
+	 * @param auditStrategyName The name of the class to load
+	 * @param classLoaderService The ClassLoaderService
+	 *
+	 * @return The loaded class.
+	 */
+	private static Class<?> loadClass(String auditStrategyName, ClassLoaderService classLoaderService) {
+		try {
+			return AuditConfiguration.class.getClassLoader().loadClass( auditStrategyName );
 		}
-
-		return verCfg;
+		catch (Exception e) {
+			return ReflectionTools.loadClass( auditStrategyName, classLoaderService );
+		}
 	}
 
 	public void destroy() {
-		synchronized (AuditConfiguration.class) {
-			for ( Map.Entry<Configuration, AuditConfiguration> c : new HashSet<Map.Entry<Configuration, AuditConfiguration>>(
-					CFGS.entrySet() ) ) {
-				if ( c.getValue() == this ) { // this is nasty cleanup fix, whole static CFGS should be reworked
-					CFGS.remove( c.getKey() );
-				}
-			}
-		}
-		classLoaderService = null;
+		// Anything we need to release in here?
 	}
 }

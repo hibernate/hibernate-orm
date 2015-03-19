@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
@@ -52,7 +52,7 @@ public interface PropertyMapper {
 	/**
 	 * Maps properties from the given map to the given object.
 	 *
-	 * @param verCfg Versions configuration.
+	 * @param enversService The EnversService.
 	 * @param obj Object to map to.
 	 * @param data Data to map from.
 	 * @param primaryKey Primary key of the object to which we map (for relations)
@@ -60,8 +60,12 @@ public interface PropertyMapper {
 	 * @param revision Revision at which the object is read, for reading relations
 	 */
 	void mapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision);
+			EnversService enversService,
+			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision);
 
 	/**
 	 * Maps collection changes.

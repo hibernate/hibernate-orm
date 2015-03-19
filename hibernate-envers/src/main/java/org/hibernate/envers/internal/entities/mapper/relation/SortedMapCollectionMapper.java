@@ -26,7 +26,7 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 import java.util.Comparator;
 import java.util.SortedMap;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.SortedMapCollectionInitializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -55,11 +55,22 @@ public final class SortedMapCollectionMapper extends MapCollectionMapper<SortedM
 
 	@Override
 	protected Initializor<SortedMap> getInitializor(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-			Object primaryKey, Number revision, boolean removed) {
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Object primaryKey,
+			Number revision,
+			boolean removed) {
 		return new SortedMapCollectionInitializor(
-				verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-				primaryKey, revision, removed, collectionClass, elementComponentData, indexComponentData, comparator
+				enversService,
+				versionsReader,
+				commonCollectionMapperData.getQueryGenerator(),
+				primaryKey,
+				revision,
+				removed,
+				collectionClass,
+				elementComponentData,
+				indexComponentData,
+				comparator
 		);
 	}
 

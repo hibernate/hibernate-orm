@@ -2,14 +2,14 @@ package org.hibernate.envers.test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -17,7 +17,7 @@ import org.junit.runners.Parameterized;
  * @author Strong Liu (stliu@hibernate.org)
  */
 @RunWith(EnversRunner.class)
-public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTestCase {
+public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunctionalTestCase {
 	private String auditStrategy;
 
 	@Parameterized.Parameters
@@ -36,7 +36,9 @@ public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTes
 		return auditStrategy;
 	}
 
+	@Override
 	protected Session getSession() {
+		Session session = super.getSession();
 		if ( session == null || !session.isOpen() ) {
 			return openSession();
 		}
@@ -48,10 +50,10 @@ public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTes
 	}
 
 	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
-		configuration.setProperty( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
-		return configuration;
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
 	}
 
 	@Override

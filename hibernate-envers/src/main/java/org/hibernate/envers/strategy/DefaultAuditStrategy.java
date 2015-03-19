@@ -3,8 +3,8 @@ package org.hibernate.envers.strategy;
 import java.io.Serializable;
 
 import org.hibernate.Session;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -28,16 +28,26 @@ public class DefaultAuditStrategy implements AuditStrategy {
 		sessionCacheCleaner = new SessionCacheCleaner();
 	}
 
+	@Override
 	public void perform(
-			Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
+			Session session,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			Object data,
 			Object revision) {
-		session.save( auditCfg.getAuditEntCfg().getAuditEntityName( entityName ), data );
+		session.save( enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName ), data );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 	}
 
+	@Override
 	public void performCollectionChange(
-			Session session, String entityName, String propertyName, AuditConfiguration auditCfg,
-			PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
+			Session session,
+			String entityName,
+			String propertyName,
+			EnversService enversService,
+			PersistentCollectionChangeData persistentCollectionChangeData,
+			Object revision) {
 		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
 	}

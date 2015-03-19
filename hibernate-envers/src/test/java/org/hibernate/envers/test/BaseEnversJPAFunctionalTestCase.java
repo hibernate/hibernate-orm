@@ -32,14 +32,14 @@ import javax.persistence.EntityManagerFactory;
 import javax.transaction.SystemException;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.event.spi.EnversIntegrator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -84,8 +84,8 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		return serviceRegistry;
 	}
 
-	protected Configuration getCfg() {
-		return entityManagerFactoryBuilder.getHibernateConfiguration();
+	protected MetadataImplementor metadata() {
+		return entityManagerFactoryBuilder.getMetadata();
 	}
 
 	@BeforeClassOnce

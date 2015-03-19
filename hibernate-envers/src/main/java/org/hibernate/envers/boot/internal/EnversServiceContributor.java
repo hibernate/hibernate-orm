@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,24 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.internal.entities;
+package org.hibernate.envers.boot.internal;
 
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.service.spi.ServiceContributor;
 
 /**
- * Envers specific TypeContributor
+ * ServiceContributor implementation pushing the EnversService into
+ * the registry
  *
- * @author Brett Meyer
+ * @author Steve Ebersole
  */
-public class TypeContributorImpl implements TypeContributor {
+public class EnversServiceContributor implements ServiceContributor {
 	@Override
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType(
-				new RevisionTypeType(),
-				new String[] { RevisionTypeType.class.getName() }
-		);
+	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.addInitiator( EnversServiceInitiator.INSTANCE );
 	}
-
 }

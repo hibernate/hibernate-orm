@@ -37,7 +37,7 @@ import java.util.Set;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
@@ -246,14 +246,20 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 	}
 
 	protected abstract Initializor<T> getInitializor(
-			AuditConfiguration verCfg,
-			AuditReaderImplementor versionsReader, Object primaryKey,
-			Number revision, boolean removed);
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Object primaryKey,
+			Number revision,
+			boolean removed);
 
 	@Override
 	public void mapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision) {
+			EnversService enversService,
+			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		final Setter setter = ReflectionTools.getSetter(
 				obj.getClass(),
 				commonCollectionMapperData.getCollectionReferencingPropertyData()
@@ -263,11 +269,13 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 					obj,
 					proxyConstructor.newInstance(
 							getInitializor(
-									verCfg, versionsReader, primaryKey, revision,
+									enversService,
+									versionsReader,
+									primaryKey,
+									revision,
 									RevisionType.DEL.equals(
 											data.get(
-													verCfg.getAuditEntCfg()
-															.getRevisionTypePropName()
+													enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
 											)
 									)
 							)

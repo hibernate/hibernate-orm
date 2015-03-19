@@ -26,7 +26,7 @@ package org.hibernate.envers.query.criteria;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -41,14 +41,19 @@ public class AuditConjunction implements AuditCriterion, ExtendableCriterion {
 		criterions = new ArrayList<AuditCriterion>();
 	}
 
+	@Override
 	public AuditConjunction add(AuditCriterion criterion) {
 		criterions.add( criterion );
 		return this;
 	}
 
+	@Override
 	public void addToQuery(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			QueryBuilder qb,
+			Parameters parameters) {
 		Parameters andParameters = parameters.addSubParameters( Parameters.AND );
 
 		if ( criterions.size() == 0 ) {
@@ -56,7 +61,7 @@ public class AuditConjunction implements AuditCriterion, ExtendableCriterion {
 		}
 		else {
 			for ( AuditCriterion criterion : criterions ) {
-				criterion.addToQuery( verCfg, versionsReader, entityName, qb, andParameters );
+				criterion.addToQuery( enversService, versionsReader, entityName, qb, andParameters );
 			}
 		}
 	}

@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -44,17 +44,25 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	private final Object[] newState;
 
 	public ModWorkUnit(
-			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-			Serializable id, EntityPersister entityPersister, Object[] newState, Object[] oldState) {
-		super( sessionImplementor, entityName, verCfg, id, RevisionType.MOD );
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			EntityPersister entityPersister,
+			Object[] newState,
+			Object[] oldState) {
+		super( sessionImplementor, entityName, enversService, id, RevisionType.MOD );
 
 		this.entityPersister = entityPersister;
 		this.oldState = oldState;
 		this.newState = newState;
-		data = new HashMap<String, Object>();
-		changes = verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper().map(
-				sessionImplementor, data,
-				entityPersister.getPropertyNames(), newState, oldState
+		this.data = new HashMap<String, Object>();
+		this.changes = enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
+				sessionImplementor,
+				data,
+				entityPersister.getPropertyNames(),
+				newState,
+				oldState
 		);
 	}
 
@@ -84,8 +92,13 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		// In case of multiple subsequent flushes within single transaction, modification flags need to be
 		// recalculated against initial and final state of the given entity.
 		return new ModWorkUnit(
-				second.sessionImplementor, second.getEntityName(), second.verCfg, second.id,
-				second.entityPersister, second.newState, this.oldState
+				second.sessionImplementor,
+				second.getEntityName(),
+				second.enversService,
+				second.id,
+				second.entityPersister,
+				second.newState,
+				this.oldState
 		);
 	}
 

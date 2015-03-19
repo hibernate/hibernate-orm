@@ -6,7 +6,6 @@ import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -24,17 +23,9 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 		return new Class[] {StrTestEntity.class};
 	}
 
-	protected boolean createSchema() {
-		// Disable schema auto generation.
-		return false;
-	}
-
 	@Test
 	@Priority(10)
 	public void testSchemaCreation() {
-		// Generate complete schema.
-		new EnversSchemaGenerator( configuration() ).export().create( true, true );
-
 		// Populate database with test data.
 		Session session = getSession();
 		session.getTransaction().begin();
@@ -50,11 +41,5 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 	public void testAuditDataRetrieval() {
 		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, id ) );
 		Assert.assertEquals( new StrTestEntity( "data", id ), getAuditReader().find( StrTestEntity.class, id, 1 ) );
-	}
-
-	@Test
-	@Priority(8)
-	public void testSchemaDrop() {
-		new EnversSchemaGenerator( configuration() ).export().drop( true, true );
 	}
 }

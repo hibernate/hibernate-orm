@@ -25,7 +25,7 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -48,8 +48,8 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed,
-			AuditConfiguration verCfg) {
-		if ( verCfg.getEntCfg().getNotVersionEntityConfiguration( entityName ) == null ) {
+			EnversService enversService) {
+		if ( enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName ) == null ) {
 			// Audited relation, look up entity with Envers.
 			// When user traverses removed entities graph, do not restrict revision type of referencing objects
 			// to ADD or MOD (DEL possible). See HHH-5845.
@@ -71,13 +71,13 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed,
-			AuditConfiguration verCfg) {
+			EnversService enversService) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getEntityPersister( entityName );
 		return persister.createProxy(
 				(Serializable) entityId,
-				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, verCfg )
+				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService )
 		);
 	}
 
@@ -92,13 +92,13 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed,
-			AuditConfiguration verCfg) {
+			EnversService enversService) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getEntityPersister( entityName );
 		if ( persister.hasProxy() ) {
-			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, verCfg );
+			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
 		}
-		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, verCfg );
+		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
 	}
 }

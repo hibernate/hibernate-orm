@@ -31,7 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -99,8 +99,12 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 
 	@Override
 	public void mapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision) {
+			EnversService enversService,
+			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		if ( data == null || obj == null ) {
 			return;
 		}

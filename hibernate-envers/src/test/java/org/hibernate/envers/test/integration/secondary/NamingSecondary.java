@@ -90,7 +90,7 @@ public class NamingSecondary extends BaseEnversJPAFunctionalTestCase {
 	public void testTableNames() {
 		assert "sec_versions".equals(
 				((Iterator<Join>)
-						getCfg().getClassMapping(
+						metadata().getEntityBinding(
 								"org.hibernate.envers.test.integration.secondary.SecondaryNamingTestEntity_AUD"
 						)
 								.getJoinIterator())

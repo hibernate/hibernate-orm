@@ -24,7 +24,9 @@
 package org.hibernate.boot.internal;
 
 import java.lang.reflect.Constructor;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.persistence.Converter;
 
@@ -40,15 +42,22 @@ import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.DeploymentResourcesInterpreter.DeploymentResources;
+import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
+import org.hibernate.boot.model.source.internal.hbm.EntityHierarchySourceImpl;
 import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorImpl;
+import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
+import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -281,27 +290,37 @@ public class MetadataBuildingProcess {
 
 		processor.finishUp();
 
-//		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
-//			contributor.contribute( metadataCollector, jandexView );
-//		}
+		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
+			log.tracef( "Calling MetadataContributor : %s", contributor );
+			contributor.contribute( metadataCollector, jandexView );
+		}
 
-//		final List<BindResult> bindResults = new ArrayList<BindResult>();
-//		final AdditionalJaxbRootProducerContext jaxbRootProducerContext = new AdditionalJaxbRootProducerContext() {
-//			@Override
-//			public IndexView getJandexIndex() {
-//				return jandexView;
-//			}
-//
-//			@Override
-//			public StandardServiceRegistry getServiceRegistry() {
-//				return options.getServiceRegistry();
-//			}
-//		};
-//		for ( AdditionalJaxbRootProducer producer : classLoaderService.loadJavaServices( AdditionalJaxbRootProducer.class ) ) {
-//			bindResults.addAll( producer.produceRoots( metadataCollector, jaxbRootProducerContext ) );
-//		}
+		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
-//		secondPass( rootMetadataBuildingContext );
+		LinkedHashSet<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+		if ( producers != null && !producers.isEmpty() ) {
+			final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+//			final MappingBinder mappingBinder = new MappingBinder( true );
+			// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
+			final MappingBinder mappingBinder = new MappingBinder( false );
+			for ( AdditionalJaxbMappingProducer producer : producers ) {
+				log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
+				Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
+						metadataCollector,
+						jandexView,
+						mappingBinder,
+						rootMetadataBuildingContext
+				);
+				for ( MappingDocument mappingDocument : additionalMappings ) {
+					hierarchyBuilder.indexMappingDocument( mappingDocument );
+				}
+			}
+
+			ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
+			for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
+				binder.bindEntityHierarchy( entityHierarchySource );
+			}
+		}
 
 		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
@@ -503,62 +522,5 @@ public class MetadataBuildingProcess {
 
 		return basicTypeRegistry;
 	}
-//
-//	private static void secondPass(MetadataBuildingContextRootImpl bindingContext) {
-//		// This must be done outside of Table, rather than statically, to ensure
-//		// deterministic alias names.  See HHH-2448.
-//		int uniqueInteger = 0;
-//		for ( Schema schema : bindingContext.getMetadataCollector().getDatabase().getSchemas() ) {
-//			for ( Table table : schema.getTables() ) {
-//				table.setTableNumber( uniqueInteger++ );
-//			}
-//		}
-//
-//
-//		if ( bindingContext.getBuildingOptions().getCacheRegionDefinitions() == null
-//				|| bindingContext.getBuildingOptions().getCacheRegionDefinitions().isEmpty() ) {
-//			return;
-//		}
-//
-//		for ( CacheRegionDefinition override : bindingContext.getBuildingOptions().getCacheRegionDefinitions() ) {
-//			final String role = override.getRole();
-//
-//			// NOTE : entity region overrides are already handled when building the
-//			if ( override.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-////				final EntityBinding entityBinding = bindingContext.getMetadataCollector().getEntityBinding( role );
-////				if ( entityBinding != null ) {
-////					entityBinding.getHierarchyDetails().getCaching().setRegion( override.getRegion() );
-////					entityBinding.getHierarchyDetails().getCaching().setAccessType( AccessType.fromExternalName( override.getUsage() ) );
-////					entityBinding.getHierarchyDetails().getCaching().setCacheLazyProperties( override.isCacheLazy() );
-////				}
-////				else {
-////					//logging?
-////					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
-////				}
-//
-//			}
-//			else if ( override.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
-//				String collectionRole = role;
-//				if ( !role.contains( "#" ) ) {
-//					final int pivotPosition = role.lastIndexOf( '.' );
-//					if ( pivotPosition > 0 ) {
-//						collectionRole = role.substring( 0, pivotPosition ) + '#' + role.substring( pivotPosition + 1 );
-//					}
-//				}
-//				final PluralAttributeBinding pluralAttributeBinding = bindingContext.getMetadataCollector().getCollection(
-//						collectionRole
-//				);
-//				if ( pluralAttributeBinding != null ) {
-//					pluralAttributeBinding.getCaching().overlay( override );
-//				}
-//				else {
-//					//logging?
-//					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
-//				}
-//			}
-//		}
-//
-//	}
-
 
 }

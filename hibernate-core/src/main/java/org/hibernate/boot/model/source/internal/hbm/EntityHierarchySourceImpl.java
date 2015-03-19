@@ -211,7 +211,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 							}
 							else {
 								if ( jaxbDiscriminatorMapping.getFormula() != null ) {
-									columnOrFormulas = Collections.singletonList( jaxbDiscriminatorMapping.getColumn() );
+									columnOrFormulas = Collections.singletonList( jaxbDiscriminatorMapping.getFormula() );
 								}
 								else {
 									columnOrFormulas = Collections.emptyList();

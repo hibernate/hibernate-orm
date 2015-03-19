@@ -37,7 +37,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Adam Warski (adam at warski dot org)
  * @author Stephanie Pau at Markit Group Plc
  */
-public class AuditEntitiesConfiguration {
+public class  AuditEntitiesConfiguration {
 	private final String auditTablePrefix;
 	private final String auditTableSuffix;
 

@@ -139,7 +139,7 @@ public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
 		assertEquals(
 				TestTools.makeSet( "comp1_MOD" ),
 				TestTools.extractModProperties(
-						getCfg().getClassMapping(
+						metadata().getEntityBinding(
 								"org.hibernate.envers.test.entities.components.ComponentTestEntity_AUD"
 						)
 				)

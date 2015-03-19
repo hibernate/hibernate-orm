@@ -38,9 +38,9 @@ public class ColumnScalePrecisionTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 
 		id = entity.getId();
-		auditTable = getCfg().getClassMapping( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity_AUD" )
+		auditTable = metadata().getEntityBinding( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity_AUD" )
 				.getTable();
-		originalTable = getCfg().getClassMapping( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity" )
+		originalTable = metadata().getEntityBinding( "org.hibernate.envers.test.integration.basic.ScalePrecisionEntity" )
 				.getTable();
 	}
 

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
@@ -24,13 +25,17 @@ public interface AuditStrategy {
 	 *
 	 * @param session Session, which can be used to persist the data.
 	 * @param entityName Name of the entity, in which the audited change happens
-	 * @param auditCfg Audit configuration
+	 * @param enversService The EnversService
 	 * @param id Id of the entity.
 	 * @param data Audit data to persist
 	 * @param revision Current revision data
 	 */
 	void perform(
-			Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
+			Session session,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			Object data,
 			Object revision);
 
 	/**
@@ -39,13 +44,17 @@ public interface AuditStrategy {
 	 * @param session Session, which can be used to persist the data.
 	 * @param entityName Name of the entity, in which the audited change happens.
 	 * @param propertyName The name of the property holding the {@link PersistentCollection}.
-	 * @param auditCfg Audit configuration
+	 * @param enversService The EnversService
 	 * @param persistentCollectionChangeData Collection change data to be persisted.
 	 * @param revision Current revision data
 	 */
 	void performCollectionChange(
-			Session session, String entityName, String propertyName, AuditConfiguration auditCfg,
-			PersistentCollectionChangeData persistentCollectionChangeData, Object revision);
+			Session session,
+			String entityName,
+			String propertyName,
+			EnversService enversService,
+			PersistentCollectionChangeData persistentCollectionChangeData,
+			Object revision);
 
 
 	/**
@@ -114,8 +123,17 @@ public interface AuditStrategy {
 	 * @param componentDatas information about the middle-entity relation
 	 */
 	void addAssociationAtRevisionRestriction(
-			QueryBuilder rootQueryBuilder, Parameters parameters, String revisionProperty,
-			String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData,
-			String versionsMiddleEntityName, String eeOriginalIdPropertyPath, String revisionPropertyPath,
-			String originalIdPropertyName, String alias1, boolean inclusive, MiddleComponentData... componentDatas);
+			QueryBuilder rootQueryBuilder,
+			Parameters parameters,
+			String revisionProperty,
+			String revisionEndProperty,
+			boolean addAlias,
+			MiddleIdData referencingIdData,
+			String versionsMiddleEntityName,
+			String eeOriginalIdPropertyPath,
+			String revisionPropertyPath,
+			String originalIdPropertyName,
+			String alias1,
+			boolean inclusive,
+			MiddleComponentData... componentDatas);
 }

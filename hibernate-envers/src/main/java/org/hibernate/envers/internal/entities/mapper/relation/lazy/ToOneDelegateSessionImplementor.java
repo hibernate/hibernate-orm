@@ -24,7 +24,7 @@
 package org.hibernate.envers.internal.entities.mapper.relation.lazy;
 
 import org.hibernate.HibernateException;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneEntityLoader;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
@@ -41,19 +41,22 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 	private final Object entityId;
 	private final Number revision;
 	private final boolean removed;
-	private final AuditConfiguration verCfg;
+	private final EnversService enversService;
 
 	public ToOneDelegateSessionImplementor(
 			AuditReaderImplementor versionsReader,
-			Class<?> entityClass, Object entityId, Number revision, boolean removed,
-			AuditConfiguration verCfg) {
+			Class<?> entityClass,
+			Object entityId,
+			Number revision,
+			boolean removed,
+			EnversService enversService) {
 		super( versionsReader.getSessionImplementor() );
 		this.versionsReader = versionsReader;
 		this.entityClass = entityClass;
 		this.entityId = entityId;
 		this.revision = revision;
 		this.removed = removed;
-		this.verCfg = verCfg;
+		this.enversService = enversService;
 	}
 
 	@Override
@@ -65,7 +68,7 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 				entityId,
 				revision,
 				removed,
-				verCfg
+				enversService
 		);
 	}
 }

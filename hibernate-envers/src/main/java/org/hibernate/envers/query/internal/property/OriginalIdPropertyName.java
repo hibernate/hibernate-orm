@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.query.criteria.AuditId;
 
 /**
@@ -40,7 +40,7 @@ public class OriginalIdPropertyName implements PropertyNameGetter {
 	}
 
 	@Override
-	public String get(AuditConfiguration auditCfg) {
-		return auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + idPropertyName;
+	public String get(EnversService enversService) {
+		return enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() + "." + idPropertyName;
 	}
 }

@@ -128,9 +128,9 @@ public class JoinNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnName() {
-		Iterator<Column> columns =
-				getCfg().getClassMapping( "org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD" )
-						.getProperty( "reference_id" ).getColumnIterator();
+		Iterator<Column> columns = metadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD"
+		).getProperty( "reference_id" ).getColumnIterator();
 		assertTrue( columns.hasNext() );
 		assertEquals( "jnree_column_reference", columns.next().getName() );
 		assertFalse( columns.hasNext() );

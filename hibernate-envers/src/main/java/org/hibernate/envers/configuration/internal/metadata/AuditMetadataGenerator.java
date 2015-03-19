@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
@@ -53,6 +53,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
@@ -79,12 +80,14 @@ public final class AuditMetadataGenerator {
 			AuditMetadataGenerator.class.getName()
 	);
 
-	private final Configuration cfg;
+	private final MetadataImplementor metadata;
+	private final ServiceRegistry serviceRegistry;
 	private final GlobalConfiguration globalCfg;
 	private final AuditEntitiesConfiguration verEntCfg;
 	private final AuditStrategy auditStrategy;
-	private final ClassLoaderService classLoaderService;
 	private final Element revisionInfoRelationMapping;
+
+	private final ClassLoaderService classLoaderService;
 
 	/*
 	 * Generators for different kinds of property values/types.
@@ -106,16 +109,18 @@ public final class AuditMetadataGenerator {
 	private final Map<String, Map<Join, Element>> entitiesJoins;
 
 	public AuditMetadataGenerator(
-			Configuration cfg, GlobalConfiguration globalCfg,
+			MetadataImplementor metadata,
+			ServiceRegistry serviceRegistry,
+			GlobalConfiguration globalCfg,
 			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy, ClassLoaderService classLoaderService,
+			AuditStrategy auditStrategy,
 			Element revisionInfoRelationMapping,
 			AuditEntityNameRegister auditEntityNameRegister) {
-		this.cfg = cfg;
+		this.metadata = metadata;
+		this.serviceRegistry = serviceRegistry;
 		this.globalCfg = globalCfg;
 		this.verEntCfg = verEntCfg;
 		this.auditStrategy = auditStrategy;
-		this.classLoaderService = classLoaderService;
 		this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
 		this.basicMetadataGenerator = new BasicMetadataGenerator();
@@ -128,6 +133,20 @@ public final class AuditMetadataGenerator {
 		entitiesConfigurations = new HashMap<String, EntityConfiguration>();
 		notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
 		entitiesJoins = new HashMap<String, Map<Join, Element>>();
+
+		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+	}
+
+	public MetadataImplementor getMetadata() {
+		return metadata;
+	}
+
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
+	}
+
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
 	}
 
 	/**
@@ -153,12 +172,16 @@ public final class AuditMetadataGenerator {
 	}
 
 	void addRevisionType(Element anyMapping, Element anyMappingEnd) {
+		addRevisionType( anyMapping, anyMappingEnd, false );
+	}
+
+	void addRevisionType(Element anyMapping, Element anyMappingEnd, boolean isKey) {
 		final Element revTypeProperty = MetadataTools.addProperty(
 				anyMapping,
 				verEntCfg.getRevisionTypePropName(),
 				verEntCfg.getRevisionTypePropType(),
 				true,
-				false
+				isKey
 		);
 		revTypeProperty.addAttribute( "type", "org.hibernate.envers.internal.entities.RevisionTypeType" );
 
@@ -701,10 +724,6 @@ public final class AuditMetadataGenerator {
 		return basicMetadataGenerator;
 	}
 
-	Configuration getCfg() {
-		return cfg;
-	}
-
 	GlobalConfiguration getGlobalCfg() {
 		return globalCfg;
 	}
@@ -715,10 +734,6 @@ public final class AuditMetadataGenerator {
 
 	AuditStrategy getAuditStrategy() {
 		return auditStrategy;
-	}
-
-	ClassLoaderService getClassLoaderService() {
-		return classLoaderService;
 	}
 
 	AuditEntityNameRegister getAuditEntityNameRegister() {

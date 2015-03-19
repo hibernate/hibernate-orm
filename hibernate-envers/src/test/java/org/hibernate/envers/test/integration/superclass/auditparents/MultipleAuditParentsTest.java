@@ -62,7 +62,7 @@ public class MultipleAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 		Set<String> expectedColumns = TestTools.makeSet( "child", "parent", "relation_id", "grandparent", "id" );
 		Set<String> unexpectedColumns = TestTools.makeSet( "notAudited" );
 
-		Table table = getCfg().getClassMapping(
+		Table table = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.ChildMultipleParentsEntity_AUD"
 		).getTable();
 

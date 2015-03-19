@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.ArraysTools;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -42,22 +42,30 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	private final Map<String, Object> data;
 
 	public AddWorkUnit(
-			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
 			Serializable id, EntityPersister entityPersister, Object[] state) {
-		super( sessionImplementor, entityName, verCfg, id, RevisionType.ADD );
+		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = new HashMap<String, Object>();
 		this.state = state;
-		this.verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper().map(
-				sessionImplementor, data,
-				entityPersister.getPropertyNames(), state, null
+		this.enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
+				sessionImplementor,
+				data,
+				entityPersister.getPropertyNames(),
+				state,
+				null
 		);
 	}
 
 	public AddWorkUnit(
-			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-			Serializable id, Map<String, Object> data) {
-		super( sessionImplementor, entityName, verCfg, id, RevisionType.ADD );
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			Map<String, Object> data) {
+		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = data;
 		final String[] propertyNames = sessionImplementor.getFactory()
@@ -88,7 +96,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
 	@Override
 	public AuditWorkUnit merge(ModWorkUnit second) {
-		return new AddWorkUnit( sessionImplementor, entityName, verCfg, id, second.getData() );
+		return new AddWorkUnit( sessionImplementor, entityName, enversService, id, second.getData() );
 	}
 
 	@Override

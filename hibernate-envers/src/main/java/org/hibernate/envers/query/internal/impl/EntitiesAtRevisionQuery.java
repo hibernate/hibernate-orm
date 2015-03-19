@@ -29,8 +29,8 @@ import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
@@ -48,19 +48,21 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 	private final boolean includeDeletions;
 
 	public EntitiesAtRevisionQuery(
-			AuditConfiguration verCfg,
-			AuditReaderImplementor versionsReader, Class<?> cls,
-			Number revision, boolean includeDeletions) {
-		super( verCfg, versionsReader, cls );
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Class<?> cls,
+			Number revision,
+			boolean includeDeletions) {
+		super( enversService, versionsReader, cls );
 		this.revision = revision;
 		this.includeDeletions = includeDeletions;
 	}
 
 	public EntitiesAtRevisionQuery(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			AuditReaderImplementor versionsReader, Class<?> cls,
 			String entityName, Number revision, boolean includeDeletions) {
-		super( verCfg, versionsReader, cls, entityName );
+		super( enversService, versionsReader, cls, entityName );
 		this.revision = revision;
 		this.includeDeletions = includeDeletions;
 	}
@@ -84,19 +86,22 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
          * (only non-deleted entities)
          *     e.revision_type != DEL
          */
-		AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
+		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
 		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
 		MiddleIdData referencedIdData = new MiddleIdData(
-				verEntCfg, verCfg.getEntCfg().get( entityName ).getIdMappingData(),
-				null, entityName, verCfg.getEntCfg().isVersioned( entityName )
+				verEntCfg,
+				enversService.getEntitiesConfigurations().get( entityName ).getIdMappingData(),
+				null,
+				entityName,
+				enversService.getEntitiesConfigurations().isVersioned( entityName )
 		);
 
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
-		verCfg.getAuditStrategy().addEntityAtRevisionRestriction(
-				verCfg.getGlobalCfg(),
+		enversService.getAuditStrategy().addEntityAtRevisionRestriction(
+				enversService.getGlobalConfiguration(),
 				qb,
 				qb.getRootParameters(),
 				revisionPropertyPath,
@@ -117,7 +122,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
 		// all specified conditions
 		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery( verCfg, versionsReader, entityName, qb, qb.getRootParameters() );
+			criterion.addToQuery( enversService, versionsReader, entityName, qb, qb.getRootParameters() );
 		}
 
 		Query query = buildQuery();

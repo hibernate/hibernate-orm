@@ -29,7 +29,7 @@ import javax.persistence.NoResultException;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -51,9 +51,13 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 
 	@Override
 	public void nullSafeMapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision) {
-		final EntityInfo referencedEntity = getEntityInfo( verCfg, referencedEntityName );
+			EnversService enversService,
+			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
 
 		Object value;
 		try {

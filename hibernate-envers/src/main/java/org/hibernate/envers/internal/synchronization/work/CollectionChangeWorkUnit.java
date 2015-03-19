@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -41,9 +41,13 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 	private final Map<String, Object> data = new HashMap<String, Object>();
 
 	public CollectionChangeWorkUnit(
-			SessionImplementor session, String entityName, String collectionPropertyName,
-			AuditConfiguration verCfg, Serializable id, Object entity) {
-		super( session, entityName, verCfg, id, RevisionType.MOD );
+			SessionImplementor session,
+			String entityName,
+			String collectionPropertyName,
+			EnversService enversService,
+			Serializable id,
+			Object entity) {
+		super( session, entityName, enversService, id, RevisionType.MOD );
 
 		this.entity = entity;
 		this.collectionPropertyName = collectionPropertyName;
@@ -58,18 +62,28 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 	public Map<String, Object> generateData(Object revisionData) {
 		fillDataWithId( data, revisionData );
 		final Map<String, Object> preGenerateData = new HashMap<String, Object>( data );
-		verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper()
-				.mapToMapFromEntity( sessionImplementor, data, entity, null );
-		verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper()
-				.mapModifiedFlagsToMapFromEntity( sessionImplementor, data, entity, entity );
-		verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper()
-				.mapModifiedFlagsToMapForCollectionChange( collectionPropertyName, data );
+		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapToMapFromEntity(
+				sessionImplementor,
+				data,
+				entity,
+				null
+		);
+		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapModifiedFlagsToMapFromEntity(
+				sessionImplementor,
+				data,
+				entity,
+				entity
+		);
+		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapModifiedFlagsToMapForCollectionChange(
+				collectionPropertyName,
+				data
+		);
 		data.putAll( preGenerateData );
 		return data;
 	}
 
 	public void mergeCollectionModifiedData(Map<String, Object> data) {
-		verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper().mapModifiedFlagsToMapForCollectionChange(
+		enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().mapModifiedFlagsToMapForCollectionChange(
 				collectionPropertyName,
 				data
 		);

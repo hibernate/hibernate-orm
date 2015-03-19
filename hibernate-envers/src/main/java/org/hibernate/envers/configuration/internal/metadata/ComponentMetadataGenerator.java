@@ -60,7 +60,8 @@ public final class ComponentMetadataGenerator {
         if (propComponent.isDynamic()) {
             componentClass = ReflectionTools.loadClass(
                     Map.class.getCanonicalName(),
-                    mainGenerator.getClassLoaderService());
+                    mainGenerator.getClassLoaderService()
+            );
 
         } else {
             componentClass = ReflectionTools.loadClass(

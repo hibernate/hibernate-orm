@@ -360,20 +360,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	/**
-	 * Hack around continued (temporary) need to sometimes set the TCCL for code we call that expects it.
-	 *
-	 * @param <T> The result type
-	 */
-	public static interface Work<T> {
-		/**
-		 * The work to be performed with the TCCL set
-		 *
-		 * @return The result of the work
-		 */
-		public T perform();
-	}
-
-	/**
 	 * Perform some discrete work with with the TCCL set to our aggregated ClassLoader
 	 *
 	 * @param work The discrete work to be done
@@ -381,6 +367,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 *
 	 * @return The work result.
 	 */
+	@Override
 	public <T> T withTccl(Work<T> work) {
 		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 

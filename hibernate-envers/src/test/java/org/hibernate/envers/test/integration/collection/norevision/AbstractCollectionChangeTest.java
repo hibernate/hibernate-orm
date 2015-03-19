@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.collection.norevision;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -14,8 +14,10 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 	protected Integer personId;
 
 	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( EnversSettings.REVISION_ON_COLLECTION_CHANGE, getCollectionChangeValue() );
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( EnversSettings.REVISION_ON_COLLECTION_CHANGE, getCollectionChangeValue() );
 	}
 
 	@Override

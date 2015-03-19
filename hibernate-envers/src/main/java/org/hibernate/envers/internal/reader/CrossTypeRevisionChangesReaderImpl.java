@@ -36,7 +36,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.query.criteria.internal.RevisionTypeAuditExpression;
 import org.hibernate.envers.tools.Pair;
@@ -49,13 +49,13 @@ import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
  */
 public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChangesReader {
 	private final AuditReaderImplementor auditReaderImplementor;
-	private final AuditConfiguration verCfg;
+	private final EnversService enversService;
 
 	public CrossTypeRevisionChangesReaderImpl(
 			AuditReaderImplementor auditReaderImplementor,
-			AuditConfiguration verCfg) {
+			EnversService enversService) {
 		this.auditReaderImplementor = auditReaderImplementor;
-		this.verCfg = verCfg;
+		this.enversService = enversService;
 	}
 
 	@Override
@@ -127,12 +127,12 @@ public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChan
 
 		final Set<Number> revisions = new HashSet<Number>( 1 );
 		revisions.add( revision );
-		final Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
+		final Criteria query = enversService.getRevisionInfoQueryCreator().getRevisionsQuery( session, revisions );
 		final Object revisionInfo = query.uniqueResult();
 
 		if ( revisionInfo != null ) {
 			// If revision exists.
-			final Set<String> entityNames = verCfg.getModifiedEntityNamesReader().getModifiedEntityNames( revisionInfo );
+			final Set<String> entityNames = enversService.getModifiedEntityNamesReader().getModifiedEntityNames( revisionInfo );
 			if ( entityNames != null ) {
 				// Generate result that contains entity names and corresponding Java classes.
 				final Set<Pair<String, Class>> result = new HashSet<Pair<String, Class>>();

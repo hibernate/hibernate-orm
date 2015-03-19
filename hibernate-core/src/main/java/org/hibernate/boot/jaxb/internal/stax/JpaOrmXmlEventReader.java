@@ -101,7 +101,9 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		List<Attribute> newElementAttributeList = mapAttributes( startElement );
 		List<Namespace> newNamespaceList = mapNamespaces( startElement );
 
-		// create the new element
+		// Transfer the location info from the incoming event to the event factory
+		// so that the event we ask it to generate for us has the same location info
+		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
 				new QName( LocalSchema.ORM.getNamespaceUri(), startElement.getName().getLocalPart() ),
 				newElementAttributeList.iterator(),
@@ -194,6 +196,9 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	private XMLEvent wrap(EndElement endElement) {
 		final List<Namespace> targetNamespaces = mapNamespaces( existingXmlNamespacesIterator( endElement ) );
 
+		// Transfer the location info from the incoming event to the event factory
+		// so that the event we ask it to generate for us has the same location info
+		xmlEventFactory.setLocation( endElement.getLocation() );
 		return xmlEventFactory.createEndElement(
 				new QName( LocalSchema.ORM.getNamespaceUri(), endElement.getName().getLocalPart() ),
 				targetNamespaces.iterator()

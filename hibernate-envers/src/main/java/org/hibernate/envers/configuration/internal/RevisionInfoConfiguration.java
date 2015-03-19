@@ -24,7 +24,6 @@
 package org.hibernate.envers.configuration.internal;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Set;
 import javax.persistence.Column;
 
@@ -32,7 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
@@ -311,17 +310,15 @@ public class RevisionInfoConfiguration {
 		);
 	}
 
-	public RevisionInfoConfigurationResult configure(Configuration cfg, ReflectionManager reflectionManager) {
+	public RevisionInfoConfigurationResult configure(MetadataImplementor metadata, ReflectionManager reflectionManager) {
 		boolean revisionEntityFound = false;
 		RevisionInfoGenerator revisionInfoGenerator = null;
 		Class<?> revisionInfoClass = null;
 
-		final Iterator<PersistentClass> classes = cfg.getClassMappings();
-		while ( classes.hasNext() ) {
-			PersistentClass pc = classes.next();
+		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			XClass clazz;
 			try {
-				clazz = reflectionManager.classForName( pc.getClassName(), this.getClass() );
+				clazz = reflectionManager.classForName( persistentClass.getClassName(), this.getClass() );
 			}
 			catch (ClassNotFoundException e) {
 				throw new MappingException( e );
@@ -366,10 +363,10 @@ public class RevisionInfoConfiguration {
 					);
 				}
 
-				revisionInfoEntityName = pc.getEntityName();
-				revisionInfoClass = pc.getMappedClass();
+				revisionInfoEntityName = persistentClass.getEntityName();
+				revisionInfoClass = persistentClass.getMappedClass();
 				final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
-				revisionInfoTimestampType = pc.getProperty( revisionInfoTimestampData.getName() ).getType();
+				revisionInfoTimestampType = persistentClass.getProperty( revisionInfoTimestampData.getName() ).getType();
 				if ( globalCfg.isTrackEntitiesChangedInRevision()
 						|| (globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class
 						.isAssignableFrom( revisionInfoClass ))

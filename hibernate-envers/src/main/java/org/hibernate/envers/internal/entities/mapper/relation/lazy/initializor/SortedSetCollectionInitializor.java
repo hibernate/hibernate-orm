@@ -27,7 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.SortedSet;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
@@ -42,12 +42,17 @@ public class SortedSetCollectionInitializor extends BasicCollectionInitializor<S
 	private final Comparator comparator;
 
 	public SortedSetCollectionInitializor(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-			RelationQueryGenerator queryGenerator, Object primaryKey, Number revision, boolean removed,
-			Class<? extends SortedSet> collectionClass, MiddleComponentData elementComponentData,
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			RelationQueryGenerator queryGenerator,
+			Object primaryKey,
+			Number revision,
+			boolean removed,
+			Class<? extends SortedSet> collectionClass,
+			MiddleComponentData elementComponentData,
 			Comparator comparator) {
 		super(
-				verCfg,
+				enversService,
 				versionsReader,
 				queryGenerator,
 				primaryKey,

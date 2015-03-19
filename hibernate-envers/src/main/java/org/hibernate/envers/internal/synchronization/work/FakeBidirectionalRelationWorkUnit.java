@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.RelationDescription;
 
 /**
@@ -49,13 +49,17 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 	private final AuditWorkUnit nestedWorkUnit;
 
 	public FakeBidirectionalRelationWorkUnit(
-			SessionImplementor sessionImplementor, String entityName,
-			AuditConfiguration verCfg, Serializable id,
-			String referencingPropertyName, Object owningEntity,
-			RelationDescription rd, RevisionType revisionType,
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			String referencingPropertyName,
+			Object owningEntity,
+			RelationDescription rd,
+			RevisionType revisionType,
 			Object index,
 			AuditWorkUnit nestedWorkUnit) {
-		super( sessionImplementor, entityName, verCfg, id, revisionType );
+		super( sessionImplementor, entityName, enversService, id, revisionType );
 		this.nestedWorkUnit = nestedWorkUnit;
 
 		// Adding the change for the relation.
@@ -74,14 +78,14 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 			FakeBidirectionalRelationWorkUnit original,
 			Map<String, FakeRelationChange> fakeRelationChanges,
 			AuditWorkUnit nestedWorkUnit) {
-		super( original.sessionImplementor, original.entityName, original.verCfg, original.id, original.revisionType );
+		super( original.sessionImplementor, original.entityName, original.enversService, original.id, original.revisionType );
 
 		this.fakeRelationChanges = fakeRelationChanges;
 		this.nestedWorkUnit = nestedWorkUnit;
 	}
 
 	public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original, AuditWorkUnit nestedWorkUnit) {
-		super( original.sessionImplementor, original.entityName, original.verCfg, original.id, original.revisionType );
+		super( original.sessionImplementor, original.entityName, original.enversService, original.id, original.revisionType );
 
 		this.nestedWorkUnit = nestedWorkUnit;
 

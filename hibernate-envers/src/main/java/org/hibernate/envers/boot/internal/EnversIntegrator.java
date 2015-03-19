@@ -21,99 +21,79 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.envers.boot.internal;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.event.spi.EnversListenerDuplicationStrategy;
+import org.hibernate.envers.event.spi.EnversPostCollectionRecreateEventListenerImpl;
+import org.hibernate.envers.event.spi.EnversPostDeleteEventListenerImpl;
+import org.hibernate.envers.event.spi.EnversPostInsertEventListenerImpl;
+import org.hibernate.envers.event.spi.EnversPostUpdateEventListenerImpl;
+import org.hibernate.envers.event.spi.EnversPreCollectionRemoveEventListenerImpl;
+import org.hibernate.envers.event.spi.EnversPreCollectionUpdateEventListenerImpl;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.jboss.logging.Logger;
-
 /**
- * Provides integration for Envers into Hibernate, which mainly means registering the proper event listeners.
+ * Hooks up Envers event listeners.
  *
  * @author Steve Ebersole
  */
 public class EnversIntegrator implements Integrator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			EnversIntegrator.class.getName()
-	);
+	public static final String AUTO_REGISTER = EnversService.LEGACY_AUTO_REGISTER;
 
-	/**
-	 * The name of a configuration setting that can be used to control whether auto registration of envers listeners
-	 * should happen or not.  Default is true
-	 */
-	public static final String AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
-    private AuditConfiguration enversConfiguration;
-
-	@Override
 	public void integrate(
-			Configuration configuration,
+			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		final boolean autoRegister = ConfigurationHelper.getBoolean(
-				AUTO_REGISTER,
-				configuration.getProperties(),
-				true
-		);
-		if ( !autoRegister ) {
-			LOG.debug( "Skipping Envers listener auto registration" );
+		final EnversService enversService = serviceRegistry.getService( EnversService.class );
+		if ( !enversService.isEnabled() ) {
 			return;
+		}
+
+		if ( !enversService.isInitialized() ) {
+			throw new HibernateException(
+					"Expecting EnversService to have been initialized prior to call to EnversIntegrator#integrate"
+			);
 		}
 
 		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-        enversConfiguration = AuditConfiguration.getFor(
-				configuration,
-				serviceRegistry.getService(
-						ClassLoaderService.class
-				)
-		);
-
-		if ( enversConfiguration.getEntCfg().hasAuditedEntities() ) {
+		if ( enversService.getEntitiesConfigurations().hasAuditedEntities() ) {
 			listenerRegistry.appendListeners(
-					EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl(
-					enversConfiguration
-			)
+					EventType.POST_DELETE,
+					new EnversPostDeleteEventListenerImpl( enversService )
 			);
 			listenerRegistry.appendListeners(
-					EventType.POST_INSERT, new EnversPostInsertEventListenerImpl(
-					enversConfiguration
-			)
+					EventType.POST_INSERT,
+					new EnversPostInsertEventListenerImpl( enversService )
 			);
 			listenerRegistry.appendListeners(
-					EventType.POST_UPDATE, new EnversPostUpdateEventListenerImpl(
-					enversConfiguration
-			)
+					EventType.POST_UPDATE,
+					new EnversPostUpdateEventListenerImpl( enversService )
 			);
 			listenerRegistry.appendListeners(
 					EventType.POST_COLLECTION_RECREATE,
-					new EnversPostCollectionRecreateEventListenerImpl( enversConfiguration )
+					new EnversPostCollectionRecreateEventListenerImpl( enversService )
 			);
 			listenerRegistry.appendListeners(
 					EventType.PRE_COLLECTION_REMOVE,
-					new EnversPreCollectionRemoveEventListenerImpl( enversConfiguration )
+					new EnversPreCollectionRemoveEventListenerImpl( enversService )
 			);
 			listenerRegistry.appendListeners(
 					EventType.PRE_COLLECTION_UPDATE,
-					new EnversPreCollectionUpdateEventListenerImpl( enversConfiguration )
+					new EnversPreCollectionUpdateEventListenerImpl( enversService )
 			);
 		}
 	}
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		if ( enversConfiguration != null ) {
-			enversConfiguration.destroy();
-		}
+		// nothing to do
 	}
 }

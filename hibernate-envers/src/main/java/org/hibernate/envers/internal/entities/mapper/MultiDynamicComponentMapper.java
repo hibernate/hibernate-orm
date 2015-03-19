@@ -3,7 +3,7 @@ package org.hibernate.envers.internal.entities.mapper;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.MapProxyTool;
@@ -86,18 +86,23 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void mapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision) {
+			EnversService enversService,
+			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		Object mapProxy = MapProxyTool.newInstanceOfBeanProxyForMap(
-				generateClassName(
-						data,
-						dynamicComponentData.getBeanName()
-				), (Map) obj, properties.keySet(), verCfg.getClassLoaderService()
+				generateClassName( data, dynamicComponentData.getBeanName() ),
+				(Map) obj,
+				properties.keySet(),
+				enversService.getClassLoaderService()
 		);
 		for ( PropertyData propertyData : properties.keySet() ) {
 			PropertyMapper mapper = properties.get( propertyData );
-			mapper.mapToEntityFromMap( verCfg, mapProxy, data, primaryKey, versionsReader, revision );
+			mapper.mapToEntityFromMap( enversService, mapProxy, data, primaryKey, versionsReader, revision );
 		}
 	}
 

@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 
 /**
  * Used for specifying restrictions on the revision number, corresponding to an audit entity.
@@ -32,7 +32,7 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
  */
 public class RevisionTypePropertyName implements PropertyNameGetter {
 	@Override
-	public String get(AuditConfiguration auditCfg) {
-		return auditCfg.getAuditEntCfg().getRevisionTypePropName();
+	public String get(EnversService enversService) {
+		return enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
 	}
 }

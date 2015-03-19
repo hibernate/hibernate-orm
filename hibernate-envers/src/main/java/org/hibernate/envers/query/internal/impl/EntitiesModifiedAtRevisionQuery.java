@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Query;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 
@@ -20,16 +20,21 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 	private final Number revision;
 
 	public EntitiesModifiedAtRevisionQuery(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-			Class<?> cls, Number revision) {
-		super( verCfg, versionsReader, cls );
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Class<?> cls,
+			Number revision) {
+		super( enversService, versionsReader, cls );
 		this.revision = revision;
 	}
 
 	public EntitiesModifiedAtRevisionQuery(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-			Class<?> cls, String entityName, Number revision) {
-		super( verCfg, versionsReader, cls, entityName );
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Class<?> cls,
+			String entityName,
+			Number revision) {
+		super( enversService, versionsReader, cls, entityName );
 		this.revision = revision;
 	}
 
@@ -43,13 +48,13 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
          * (all specified conditions, transformed, on the "e" entity) AND
          * e.revision = :revision
          */
-		AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
+		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
 		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
 
 		// all specified conditions
 		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery( verCfg, versionsReader, entityName, qb, qb.getRootParameters() );
+			criterion.addToQuery( enversService, versionsReader, entityName, qb, qb.getRootParameters() );
 		}
 
 		Query query = buildQuery();

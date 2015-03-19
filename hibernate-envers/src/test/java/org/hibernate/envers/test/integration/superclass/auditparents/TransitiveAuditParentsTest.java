@@ -67,7 +67,7 @@ public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase 
 
 	@Test
 	public void testCreatedAuditTables() {
-		Table explicitTransChildTable = getCfg().getClassMapping(
+		Table explicitTransChildTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.ExplicitTransitiveChildEntity_AUD"
 		).getTable();
 		checkTableColumns(
@@ -76,7 +76,7 @@ public class TransitiveAuditParentsTest extends BaseEnversJPAFunctionalTestCase 
 				explicitTransChildTable
 		);
 
-		Table implicitTransChildTable = getCfg().getClassMapping(
+		Table implicitTransChildTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.ImplicitTransitiveChildEntity_AUD"
 		).getTable();
 		checkTableColumns(

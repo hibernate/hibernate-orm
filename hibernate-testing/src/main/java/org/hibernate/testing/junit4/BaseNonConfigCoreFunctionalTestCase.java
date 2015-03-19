@@ -121,6 +121,10 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		return session;
 	}
 
+	protected Session getSession() {
+		return session;
+	}
+
 	protected void rebuildSessionFactory() {
 		releaseResources();
 		buildResources();

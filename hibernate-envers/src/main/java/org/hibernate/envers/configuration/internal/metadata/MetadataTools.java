@@ -84,11 +84,11 @@ public final class MetadataTools {
 		}
 		else {
 			propMapping = parent.addElement( "property" );
+			propMapping.addAttribute( "insert", Boolean.toString( insertable ) );
+			propMapping.addAttribute( "update", Boolean.toString( updateable ) );
 		}
 
 		propMapping.addAttribute( "name", name );
-		propMapping.addAttribute( "insert", Boolean.toString( insertable ) );
-		propMapping.addAttribute( "update", Boolean.toString( updateable ) );
 
 		if ( type != null ) {
 			propMapping.addAttribute( "type", type );

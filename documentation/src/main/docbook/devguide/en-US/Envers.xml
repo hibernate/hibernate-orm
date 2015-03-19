@@ -1113,7 +1113,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
                 <listitem>
                     <para>
                         Create your own implementation of <literal>org.hibernate.integrator.spi.Integrator</literal>,
-                        similar to <literal>org.hibernate.envers.event.spi.EnversIntegrator</literal>. Use your event
+                        similar to <literal>org.hibernate.envers.boot.internal.EnversIntegrator</literal>. Use your event
                         listener classes instead of the default ones.
                     </para>
                 </listitem>

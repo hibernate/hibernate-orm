@@ -2,8 +2,8 @@ package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -24,8 +24,10 @@ public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" );
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" );
 	}
 
 	@Test

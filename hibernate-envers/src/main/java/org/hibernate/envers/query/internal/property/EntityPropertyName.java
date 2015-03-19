@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 
 /**
  * Used for specifying restrictions on a property of an audited entity.
@@ -37,7 +37,7 @@ public class EntityPropertyName implements PropertyNameGetter {
 		this.propertyName = propertyName;
 	}
 
-	public String get(AuditConfiguration auditCfg) {
+	public String get(EnversService enversService) {
 		return propertyName;
 	}
 }

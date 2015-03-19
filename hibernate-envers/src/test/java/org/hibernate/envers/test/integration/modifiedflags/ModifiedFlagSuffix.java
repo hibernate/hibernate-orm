@@ -78,7 +78,7 @@ public class ModifiedFlagSuffix extends AbstractModifiedFlagsEntityTest {
 		assertEquals(
 				TestTools.makeSet( "str1_CHANGED", "long1_CHANGED" ),
 				TestTools.extractModProperties(
-						getCfg().getClassMapping(
+						metadata().getEntityBinding(
 								"org.hibernate.envers.test.integration.basic.BasicTestEntity1_AUD"
 						),
 						"_CHANGED"

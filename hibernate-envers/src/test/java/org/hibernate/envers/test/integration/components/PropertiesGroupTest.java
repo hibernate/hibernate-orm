@@ -33,10 +33,10 @@ public class PropertiesGroupTest extends BaseEnversFunctionalTestCase {
 	@Test
 	@Priority(10)
 	public void initData() {
-		uniquePropsAudit = configuration().getClassMapping(
+		uniquePropsAudit = metadata().getEntityBinding(
 				"org.hibernate.envers.test.entities.components.UniquePropsEntity_AUD"
 		);
-		uniquePropsNotAuditedAudit = configuration().getClassMapping(
+		uniquePropsNotAuditedAudit = metadata().getEntityBinding(
 				"org.hibernate.envers.test.entities.components.UniquePropsNotAuditedEntity_AUD"
 		);
 
@@ -79,11 +79,8 @@ public class PropertiesGroupTest extends BaseEnversFunctionalTestCase {
 	@Test
 	public void testHistoryOfUniquePropsNotAuditedEntity() {
 		Assert.assertEquals(
-				entityNotAuditedRev2, getAuditReader().find(
-				UniquePropsNotAuditedEntity.class,
-				entityNotAuditedRev2.getId(),
-				2
-		)
+				entityNotAuditedRev2,
+				getAuditReader().find( UniquePropsNotAuditedEntity.class, entityNotAuditedRev2.getId(), 2 )
 		);
 	}
 }

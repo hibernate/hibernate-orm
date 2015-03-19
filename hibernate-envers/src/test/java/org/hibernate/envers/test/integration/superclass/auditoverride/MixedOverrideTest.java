@@ -36,7 +36,7 @@ public class MixedOverrideTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 		mixedEntityId = mixedEntity.getId();
 
-		mixedTable = getCfg().getClassMapping(
+		mixedTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.MixedOverrideEntity_AUD"
 		).getTable();
 	}

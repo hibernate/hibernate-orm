@@ -24,6 +24,7 @@
 package org.hibernate.envers.internal.tools;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -67,6 +68,17 @@ public abstract class Tools {
 		}
 
 		return ret;
+	}
+
+	public static <X> List<X> collectionToList(Collection<X> collection) {
+		if ( collection instanceof List ) {
+			return (List<X>) collection;
+		}
+		else {
+			List<X> list = new ArrayList<X>();
+			list.addAll( collection );
+			return list;
+		}
 	}
 
 	public static boolean iteratorsContentEqual(Iterator iter1, Iterator iter2) {

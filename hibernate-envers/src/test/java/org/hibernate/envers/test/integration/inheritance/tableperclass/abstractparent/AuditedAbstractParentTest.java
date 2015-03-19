@@ -37,9 +37,7 @@ public class AuditedAbstractParentTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testAbstractTableExistence() {
-		Iterator<Table> tableIterator = getCfg().getTableMappings();
-		while ( tableIterator.hasNext() ) {
-			Table table = tableIterator.next();
+		for ( Table table : metadata().collectTableMappings() ) {
 			if ( "AbstractEntity_AUD".equals( table.getName() ) ) {
 				Assert.assertFalse( table.isPhysicalTable() );
 				return;

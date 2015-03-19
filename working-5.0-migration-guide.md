@@ -19,6 +19,9 @@ Working list of changes for 5.0
 * `Configuration` is  no longer `Serializable`
 * `org.hibernate.dialect.Dialect.getQuerySequencesString` expected to retrieve catalog, schema, and increment values as well
 * properties loaded from cfg.xml through EMF did not previously prefix names with "hibernate." this is now made consistent.
+* removed AuditConfiguration in preference for new `org.hibernate.envers.boot.internal.EnversService`
+* changed AuditStrategy method parameters from (removed) AuditConfiguration to (new) EnversService
+
 
 TODOs
 =====

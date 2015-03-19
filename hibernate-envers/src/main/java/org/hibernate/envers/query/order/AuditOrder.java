@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.order;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.tools.Pair;
 
 /**
@@ -31,9 +31,9 @@ import org.hibernate.envers.tools.Pair;
  */
 public interface AuditOrder {
 	/**
-	 * @param auditCfg Configuration.
+	 * @param enversService The EnversService
 	 *
 	 * @return A pair: (property name, ascending?).
 	 */
-	Pair<String, Boolean> getData(AuditConfiguration auditCfg);
+	Pair<String, Boolean> getData(EnversService enversService);
 }

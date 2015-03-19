@@ -27,7 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.SortedMap;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
@@ -42,7 +42,7 @@ public class SortedMapCollectionInitializor extends MapCollectionInitializor<Sor
 	private final Comparator comparator;
 
 	public SortedMapCollectionInitializor(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey, Number revision, boolean removed,
@@ -50,7 +50,7 @@ public class SortedMapCollectionInitializor extends MapCollectionInitializor<Sor
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData, Comparator comparator) {
 		super(
-				verCfg,
+				enversService,
 				versionsReader,
 				queryGenerator,
 				primaryKey,

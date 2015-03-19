@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.projection.internal;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.projection.AuditProjection;
@@ -43,8 +43,8 @@ public class PropertyAuditProjection implements AuditProjection {
 	}
 
 	@Override
-	public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
-		String propertyName = propertyNameGetter.get( auditCfg );
+	public Triple<String, String, Boolean> getData(EnversService enversService) {
+		String propertyName = propertyNameGetter.get( enversService );
 
 		return Triple.make( function, propertyName, distinct );
 	}

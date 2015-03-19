@@ -23,8 +23,6 @@
  */
 package org.hibernate.envers.test.integration.basic;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -32,6 +30,8 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.hibernate.envers.internal.tools.Tools.collectionToList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -44,17 +44,8 @@ public class NoneAudited extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevisionInfoTableNotCreated() {
-		@SuppressWarnings({"unchecked"}) List<PersistentClass> pcs = iteratorToList( getCfg().getClassMappings() );
+		@SuppressWarnings({"unchecked"}) List<PersistentClass> pcs = collectionToList( metadata().getEntityBindings() );
 		Assert.assertEquals( 1, pcs.size() );
 		Assert.assertTrue( pcs.get( 0 ).getClassName().contains( "BasicTestEntity3" ) );
-	}
-
-	private <T> List<T> iteratorToList(Iterator<T> it) {
-		List<T> result = new ArrayList<T>();
-		while ( it.hasNext() ) {
-			result.add( it.next() );
-		}
-
-		return result;
 	}
 }

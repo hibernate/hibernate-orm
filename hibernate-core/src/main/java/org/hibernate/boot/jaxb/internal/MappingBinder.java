@@ -23,6 +23,7 @@
  */
 package org.hibernate.boot.jaxb.internal;
 
+import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
@@ -49,6 +50,8 @@ import org.dom4j.io.STAXEventReader;
 public class MappingBinder extends AbstractBinder {
 	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
+	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
+
 	public MappingBinder() {
 		super();
 	}
@@ -66,7 +69,7 @@ public class MappingBinder extends AbstractBinder {
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
 			log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
 
-			XMLEventReader hbmReader = new HbmEventReader( staxEventReader );
+			XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
 			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, LocalSchema.HBM.getSchema(), JaxbHbmHibernateMapping.class, origin );
 			return new Binding<JaxbHbmHibernateMapping>( hbmBindings, origin );
 		}
@@ -75,7 +78,7 @@ public class MappingBinder extends AbstractBinder {
 //			return jaxb( reader, LocalSchema.MAPPING.getSchema(), JaxbEntityMappings.class, origin );
 
 			try {
-				final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader );
+				final XMLEventReader reader = new JpaOrmXmlEventReader( staxEventReader, xmlEventFactory );
 				return new Binding<Document>( toDom4jDocument( reader, origin), origin );
 			}
 			catch (JpaOrmXmlEventReader.BadVersionException e) {
@@ -109,36 +112,6 @@ public class MappingBinder extends AbstractBinder {
 					e,
 					origin
 			);
-		}
-	}
-
-	/**
-	 * Models an {@code orm.xml} file, which is processed in a delayed manner.
-	 */
-	public static class DelayedOrmXmlData {
-		private final XMLEventReader staxEventReader;
-		private final StartElement rootElementStartEvent;
-		private final Origin origin;
-
-		public DelayedOrmXmlData(
-				XMLEventReader staxEventReader,
-				StartElement rootElementStartEvent,
-				Origin origin) {
-			this.staxEventReader = staxEventReader;
-			this.rootElementStartEvent = rootElementStartEvent;
-			this.origin = origin;
-		}
-
-		public XMLEventReader getStaxEventReader() {
-			return staxEventReader;
-		}
-
-		public StartElement getRootElementStartEvent() {
-			return rootElementStartEvent;
-		}
-
-		public Origin getOrigin() {
-			return origin;
 		}
 	}
 }

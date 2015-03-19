@@ -56,6 +56,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
@@ -123,17 +124,21 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry) {
 		this.sources = sources;
+		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()
 						.getService( ClassLoaderService.class )
 						.loadJavaServices( MetadataSourcesContributor.class ) ) {
-			contributor.contribute( sources, null );
+			contributor.contribute( sources );
 		}
 
-		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
-
 		applyCfgXmlValues( serviceRegistry.getService( CfgXmlAccessService.class ) );
+
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		for ( MetadataBuilderContributor contributor : classLoaderService.loadJavaServices( MetadataBuilderContributor.class ) ) {
+			contributor.contribute( this );
+		}
 	}
 
 	private void applyCfgXmlValues(CfgXmlAccessService service) {

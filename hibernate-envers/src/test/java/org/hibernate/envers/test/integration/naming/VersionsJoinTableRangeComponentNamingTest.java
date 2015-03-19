@@ -198,7 +198,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testExpectedTableNameComponent1() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				COMPONENT_1_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
@@ -210,7 +210,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testExpectedTableNameComponent2() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				COMPONENT_2_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
@@ -222,7 +222,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testWrongTableNameComponent1() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				UNMODIFIED_COMPONENT_1_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass == null;
@@ -230,7 +230,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testWrongTableNameComponent2() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				UNMODIFIED_COMPONENT_2_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass == null;
@@ -238,7 +238,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testJoinColumnNamesComponent1() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				COMPONENT_1_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
@@ -265,7 +265,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 
 	@Test
 	public void testJoinColumnNamesComponent2() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				COMPONENT_2_AUDIT_JOIN_TABLE_NAME
 		);
 		assert auditClass != null;
@@ -297,7 +297,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 	 */
 	@Test
 	public void testOverrideNotAudited() {
-		PersistentClass auditClass = getCfg().getClassMapping(
+		PersistentClass auditClass = metadata().getEntityBinding(
 				VersionsJoinTableRangeComponentTestEntity.class.getName()
 						+ "_AUD"
 		);

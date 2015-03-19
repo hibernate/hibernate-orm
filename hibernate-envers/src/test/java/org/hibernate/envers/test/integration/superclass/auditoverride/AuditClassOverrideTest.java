@@ -49,10 +49,10 @@ public class AuditClassOverrideTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 		classNotAuditedEntityId = classOverrideNotAuditedEntity.getId();
 
-		classAuditedTable = getCfg().getClassMapping(
+		classAuditedTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.ClassOverrideAuditedEntity_AUD"
 		).getTable();
-		classNotAuditedTable = getCfg().getClassMapping(
+		classNotAuditedTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.ClassOverrideNotAuditedEntity_AUD"
 		).getTable();
 	}

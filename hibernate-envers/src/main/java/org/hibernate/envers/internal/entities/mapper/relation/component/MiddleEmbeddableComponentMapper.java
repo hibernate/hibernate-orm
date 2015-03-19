@@ -55,12 +55,16 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 			Object dataObject,
 			Number revision) {
 		try {
-			final Object componentInstance = dataObject != null ? dataObject : ReflectHelper.getDefaultConstructor(
-					componentClass
-			).newInstance();
+			final Object componentInstance = dataObject != null
+					? dataObject
+					: ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
 			delegate.mapToEntityFromMap(
-					entityInstantiator.getAuditConfiguration(), componentInstance, data, null,
-					entityInstantiator.getAuditReaderImplementor(), revision
+					entityInstantiator.getEnversService(),
+					componentInstance,
+					data,
+					null,
+					entityInstantiator.getAuditReaderImplementor(),
+					revision
 			);
 			return componentInstance;
 		}

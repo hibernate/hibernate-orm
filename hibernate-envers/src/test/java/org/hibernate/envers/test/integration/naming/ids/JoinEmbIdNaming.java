@@ -141,19 +141,17 @@ public class JoinEmbIdNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnNames() {
-		Iterator<Column> columns =
-				getCfg().getClassMapping(
-						"org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD"
-				)
-						.getProperty( "reference_x" ).getColumnIterator();
+		Iterator<Column> columns = metadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD"
+		).getProperty( "reference_x" ).getColumnIterator();
+
 		assertTrue( columns.hasNext() );
 		assertEquals( "XX_reference", columns.next().getName() );
 		assertFalse( columns.hasNext() );
 
-		columns = getCfg().getClassMapping(
+		columns = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD"
-		)
-				.getProperty( "reference_y" ).getColumnIterator();
+		).getProperty( "reference_y" ).getColumnIterator();
 
 		assertTrue( columns.hasNext() );
 		assertEquals( "YY_reference", columns.next().getName() );

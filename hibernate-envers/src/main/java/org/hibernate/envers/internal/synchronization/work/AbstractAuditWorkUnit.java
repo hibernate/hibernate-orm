@@ -30,8 +30,8 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.strategy.AuditStrategy;
 
 /**
@@ -41,7 +41,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected final SessionImplementor sessionImplementor;
-	protected final AuditConfiguration verCfg;
+	protected final EnversService enversService;
 	protected final Serializable id;
 	protected final String entityName;
 	protected final AuditStrategy auditStrategy;
@@ -50,23 +50,26 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	private Object performedData;
 
 	protected AbstractAuditWorkUnit(
-			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-			Serializable id, RevisionType revisionType) {
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
+			RevisionType revisionType) {
 		this.sessionImplementor = sessionImplementor;
-		this.verCfg = verCfg;
+		this.enversService = enversService;
 		this.id = id;
 		this.entityName = entityName;
 		this.revisionType = revisionType;
-		this.auditStrategy = verCfg.getAuditStrategy();
+		this.auditStrategy = enversService.getAuditStrategy();
 	}
 
 	protected void fillDataWithId(Map<String, Object> data, Object revision) {
-		final AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
+		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
 
 		final Map<String, Object> originalId = new HashMap<String, Object>();
 		originalId.put( entitiesCfg.getRevisionFieldName(), revision );
 
-		verCfg.getEntCfg().get( getEntityName() ).getIdMapper().mapToMapFromId( originalId, id );
+		enversService.getEntitiesConfigurations().get( getEntityName() ).getIdMapper().mapToMapFromId( originalId, id );
 		data.put( entitiesCfg.getRevisionTypePropName(), revisionType );
 		data.put( entitiesCfg.getOriginalIdPropName(), originalId );
 	}
@@ -75,7 +78,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	public void perform(Session session, Object revisionData) {
 		final Map<String, Object> data = generateData( revisionData );
 
-		auditStrategy.perform( session, getEntityName(), verCfg, id, data, revisionData );
+		auditStrategy.perform( session, getEntityName(), enversService, id, data, revisionData );
 
 		setPerformed( data );
 	}
@@ -101,7 +104,10 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
 	public void undo(Session session) {
 		if ( isPerformed() ) {
-			session.delete( verCfg.getAuditEntCfg().getAuditEntityName( getEntityName() ), performedData );
+			session.delete(
+					enversService.getAuditEntitiesConfiguration().getAuditEntityName( getEntityName() ),
+					performedData
+			);
 			session.flush();
 		}
 	}

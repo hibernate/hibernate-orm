@@ -25,7 +25,7 @@ package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
 import java.util.List;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -44,7 +44,7 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 	protected final EntityInstantiator entityInstantiator;
 
 	public AbstractCollectionInitializor(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey, Number revision, boolean removed) {
@@ -54,7 +54,7 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 		this.revision = revision;
 		this.removed = removed;
 
-		entityInstantiator = new EntityInstantiator( verCfg, versionsReader );
+		entityInstantiator = new EntityInstantiator( enversService, versionsReader );
 	}
 
 	protected abstract T initializeCollection(int size);

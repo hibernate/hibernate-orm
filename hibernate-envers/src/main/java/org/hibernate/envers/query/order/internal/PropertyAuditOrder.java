@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.order.internal;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.tools.Pair;
@@ -41,7 +41,7 @@ public class PropertyAuditOrder implements AuditOrder {
 	}
 
 	@Override
-	public Pair<String, Boolean> getData(AuditConfiguration auditCfg) {
-		return Pair.make( propertyNameGetter.get( auditCfg ), asc );
+	public Pair<String, Boolean> getData(EnversService enversService) {
+		return Pair.make( propertyNameGetter.get( enversService ), asc );
 	}
 }

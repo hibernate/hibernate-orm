@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.event.spi;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.DelWorkUnit;
@@ -39,23 +39,23 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class EnversPostDeleteEventListenerImpl extends BaseEnversEventListener implements PostDeleteEventListener {
-	protected EnversPostDeleteEventListenerImpl(AuditConfiguration enversConfiguration) {
-		super( enversConfiguration );
+	public EnversPostDeleteEventListenerImpl(EnversService enversService) {
+		super( enversService );
 	}
 
 	@Override
 	public void onPostDelete(PostDeleteEvent event) {
 		final String entityName = event.getPersister().getEntityName();
 
-		if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {
 			checkIfTransactionInProgress( event.getSession() );
 
-			final AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get( event.getSession() );
+			final AuditProcess auditProcess = getEnversService().getAuditProcessManager().get( event.getSession() );
 
 			final AuditWorkUnit workUnit = new DelWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
-					getAuditConfiguration(),
+					getEnversService(),
 					event.getId(),
 					event.getPersister(),
 					event.getDeletedState()
@@ -77,6 +77,6 @@ public class EnversPostDeleteEventListenerImpl extends BaseEnversEventListener i
 
 	@Override
 	public boolean requiresPostCommitHanding(EntityPersister persister) {
-		return getAuditConfiguration().getEntCfg().isVersioned( persister.getEntityName() );
+		return getEnversService().getEntitiesConfigurations().isVersioned( persister.getEntityName() );
 	}
 }

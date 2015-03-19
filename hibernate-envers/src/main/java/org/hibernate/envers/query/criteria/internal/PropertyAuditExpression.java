@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -45,16 +45,18 @@ public class PropertyAuditExpression implements AuditCriterion {
 	}
 
 	public void addToQuery(
-			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			EnversService enversService, AuditReaderImplementor versionsReader,
+			String entityName,
+			QueryBuilder qb,
+			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
-				auditCfg,
+				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
-		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
-		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, otherPropertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, otherPropertyName );
 		parameters.addWhere( propertyName, op, otherPropertyName );
 	}
 }

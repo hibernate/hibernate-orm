@@ -34,8 +34,8 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 
 /**
@@ -46,29 +46,36 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	private final String referencingPropertyName;
 
 	public PersistentCollectionChangeWorkUnit(
-			SessionImplementor sessionImplementor, String entityName,
-			AuditConfiguration auditCfg, PersistentCollection collection,
-			CollectionEntry collectionEntry, Serializable snapshot, Serializable id,
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
+			PersistentCollection collection,
+			CollectionEntry collectionEntry,
+			Serializable snapshot,
+			Serializable id,
 			String referencingPropertyName) {
 		super(
-				sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(
-				id,
-				collectionEntry.getRole()
-		), RevisionType.MOD
+				sessionImplementor,
+				entityName,
+				enversService,
+				new PersistentCollectionChangeWorkUnitId( id, collectionEntry.getRole() ),
+				RevisionType.MOD
 		);
 
 		this.referencingPropertyName = referencingPropertyName;
 
-		collectionChanges = auditCfg.getEntCfg().get( getEntityName() ).getPropertyMapper()
+		collectionChanges = enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper()
 				.mapCollectionChanges( sessionImplementor, referencingPropertyName, collection, snapshot, id );
 	}
 
 	public PersistentCollectionChangeWorkUnit(
-			SessionImplementor sessionImplementor, String entityName,
-			AuditConfiguration verCfg, Serializable id,
+			SessionImplementor sessionImplementor,
+			String entityName,
+			EnversService enversService,
+			Serializable id,
 			List<PersistentCollectionChangeData> collectionChanges,
 			String referencingPropertyName) {
-		super( sessionImplementor, entityName, verCfg, id, RevisionType.MOD );
+		super( sessionImplementor, entityName, enversService, id, RevisionType.MOD );
 
 		this.collectionChanges = collectionChanges;
 		this.referencingPropertyName = referencingPropertyName;
@@ -87,7 +94,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public void perform(Session session, Object revisionData) {
-		final AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
+		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
 
 		for ( PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges ) {
 			// Setting the revision number
@@ -98,7 +105,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 					session,
 					getEntityName(),
 					referencingPropertyName,
-					verCfg,
+					enversService,
 					persistentCollectionChangeData,
 					revisionData
 			);
@@ -168,7 +175,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 				else {
 					// If the changes collide, checking if the first one isn't a DEL, and the second a subsequent ADD
 					// If so, removing the change alltogether.
-					final String revTypePropName = verCfg.getAuditEntCfg().getRevisionTypePropName();
+					final String revTypePropName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
 					if ( RevisionType.ADD.equals( newChangesIdMap.get( originalOriginalId ).getData().get( revTypePropName ) )
 							&& RevisionType.DEL.equals( originalCollectionChangeData.getData().get( revTypePropName ) ) ) {
 						newChangesIdMap.remove( originalOriginalId );
@@ -183,7 +190,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 			return new PersistentCollectionChangeWorkUnit(
 					sessionImplementor,
 					entityName,
-					verCfg,
+					enversService,
 					id,
 					mergedChanges,
 					referencingPropertyName
@@ -198,7 +205,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	private Object getOriginalId(PersistentCollectionChangeData persistentCollectionChangeData) {
-		return persistentCollectionChangeData.getData().get( verCfg.getAuditEntCfg().getOriginalIdPropName() );
+		return persistentCollectionChangeData.getData().get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
 	}
 
 	/**

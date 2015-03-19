@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.customtype;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -30,9 +31,10 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( Environment.HBM2DDL_AUTO, "" );
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+
+		settings.put( Environment.HBM2DDL_AUTO, "" );
 	}
 
 	@Test
@@ -47,7 +49,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	@Test
 	@Priority(1)
 	public void dropSchema() {
-		dropSchema( session );
+		dropSchema( getSession() );
 	}
 
 	public void dropSchema(Session session) {

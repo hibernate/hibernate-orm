@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -44,11 +44,14 @@ public class LogicalAuditExpression implements AuditCriterion {
 	}
 
 	public void addToQuery(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			QueryBuilder qb,
+			Parameters parameters) {
 		Parameters opParameters = parameters.addSubParameters( op );
 
-		lhs.addToQuery( verCfg, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
-		rhs.addToQuery( verCfg, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
+		lhs.addToQuery( enversService, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
+		rhs.addToQuery( enversService, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
 	}
 }

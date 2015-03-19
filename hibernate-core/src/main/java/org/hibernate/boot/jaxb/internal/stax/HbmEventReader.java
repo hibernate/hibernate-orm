@@ -97,6 +97,9 @@ public class HbmEventReader extends EventReaderDelegate {
 			targetNamespaces.add( namespace );
 		}
 
+		// Transfer the location info from the incoming event to the event factory
+		// so that the event we ask it to generate for us has the same location info
+		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
 				new QName( LocalSchema.HBM.getNamespaceUri(), startElement.getName().getLocalPart() ),
 				startElement.getAttributes(),

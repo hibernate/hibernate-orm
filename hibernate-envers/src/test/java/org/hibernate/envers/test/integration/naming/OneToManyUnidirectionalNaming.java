@@ -104,7 +104,7 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
 	@Test
 	public void testTableName() {
 		assert MIDDLE_VERSIONS_ENTITY_NAME.equals(
-				getCfg().getClassMapping( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getName()
+				metadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getName()
 		);
 	}
 
@@ -112,7 +112,7 @@ public class OneToManyUnidirectionalNaming extends BaseEnversJPAFunctionalTestCa
 	@Test
 	public void testJoinColumnName() {
 		Iterator<Column> columns =
-				getCfg().getClassMapping( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getColumnIterator();
+				metadata().getEntityBinding( MIDDLE_VERSIONS_ENTITY_NAME ).getTable().getColumnIterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;

@@ -73,9 +73,7 @@ public class DefaultTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase
 
 	@Test
 	public void testRevEntityTableCreation() {
-		Iterator<Table> tableIterator = getCfg().getTableMappings();
-		while ( tableIterator.hasNext() ) {
-			Table table = tableIterator.next();
+		for ( Table table : metadata().collectTableMappings() ) {
 			if ( "REVCHANGES".equals( table.getName() ) ) {
 				assert table.getColumnSpan() == 2;
 				assert table.getColumn( new Column( "REV" ) ) != null;

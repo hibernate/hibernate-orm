@@ -80,7 +80,7 @@ public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testEscapeEntityField() {
-		Table table = getCfg().getClassMapping(
+		Table table = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.quotation.QuotedFieldsEntity_AUD"
 		).getTable();
 		Column column1 = getColumnByName( table, "id" );

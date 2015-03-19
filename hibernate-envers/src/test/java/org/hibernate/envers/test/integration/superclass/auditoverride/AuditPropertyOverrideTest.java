@@ -54,13 +54,13 @@ public class AuditPropertyOverrideTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().commit();
 		auditedEntityId = auditedEntity.getId();
 
-		propertyTable = getCfg().getClassMapping(
+		propertyTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.PropertyOverrideEntity_AUD"
 		).getTable();
-		transitiveTable = getCfg().getClassMapping(
+		transitiveTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.TransitiveOverrideEntity_AUD"
 		).getTable();
-		auditedTable = getCfg().getClassMapping(
+		auditedTable = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditoverride.AuditedSpecialEntity_AUD"
 		).getTable();
 	}

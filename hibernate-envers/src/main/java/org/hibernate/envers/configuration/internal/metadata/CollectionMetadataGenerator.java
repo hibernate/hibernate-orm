@@ -403,7 +403,7 @@ public final class CollectionMetadataGenerator {
 			// If the relation is inverse, then referencedEntityName is not null.
 			mappedBy = getMappedBy(
 					propertyValue.getCollectionTable(),
-					mainGenerator.getCfg().getClassMapping( referencedEntityName )
+					mainGenerator.getMetadata().getEntityBinding( referencedEntityName )
 			);
 
 			referencingPrefixRelated = mappedBy + "_";
@@ -602,7 +602,7 @@ public final class CollectionMetadataGenerator {
 
 			final Element parentXmlMapping = xmlMapping.getParent();
 			final ComponentAuditingData auditData = new ComponentAuditingData();
-			final ReflectionManager reflectionManager = mainGenerator.getCfg().getReflectionManager();
+			final ReflectionManager reflectionManager = mainGenerator.getMetadata().getMetadataBuildingOptions().getReflectionManager();
 
 			new ComponentAuditedPropertiesReader(
 					ModificationStore.FULL,
@@ -828,7 +828,8 @@ public final class CollectionMetadataGenerator {
 		// Adding the revision type property to the entity xml.
 		mainGenerator.addRevisionType(
 				isEmbeddableElementType() ? middleEntityXmlId : middleEntityXml,
-				middleEntityXml
+				middleEntityXml,
+				isEmbeddableElementType()
 		);
 
 		// All other properties should also be part of the primary key of the middle entity.
@@ -851,7 +852,7 @@ public final class CollectionMetadataGenerator {
 		else if ( collectionValue.getElement() instanceof ManyToOne ) {
 			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
 			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getMetadata().getClass( manyToOneValue.getReferencedEntityName() );
+			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
 		}
 
 		// If there's an @AuditMappedBy specified, returning it directly.

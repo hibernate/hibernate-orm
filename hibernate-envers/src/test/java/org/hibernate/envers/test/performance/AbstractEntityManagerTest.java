@@ -35,7 +35,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.event.spi.EnversIntegrator;
+import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.envers.test.AbstractEnversTest;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;

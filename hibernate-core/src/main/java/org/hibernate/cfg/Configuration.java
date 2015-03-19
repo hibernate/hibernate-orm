@@ -272,6 +272,7 @@ public class Configuration {
 		standardServiceRegistryBuilder.configure( resource );
 		// todo : still need to have StandardServiceRegistryBuilder handle the "other cfg.xml" elements.
 		//		currently it just reads the config properties
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 		return this;
 	}
 
@@ -316,6 +317,7 @@ public class Configuration {
 	 */
 	public Configuration configure(URL url) throws HibernateException {
 		standardServiceRegistryBuilder.configure( url );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 		return this;
 	}
 
@@ -331,6 +333,7 @@ public class Configuration {
 	 */
 	public Configuration configure(File configFile) throws HibernateException {
 		standardServiceRegistryBuilder.configure( configFile );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 		return this;
 	}
 

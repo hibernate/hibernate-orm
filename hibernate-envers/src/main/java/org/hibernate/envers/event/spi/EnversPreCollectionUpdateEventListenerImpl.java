@@ -24,7 +24,7 @@
 package org.hibernate.envers.event.spi;
 
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 
@@ -39,8 +39,8 @@ public class EnversPreCollectionUpdateEventListenerImpl
 		extends BaseEnversCollectionEventListener
 		implements PreCollectionUpdateEventListener {
 
-	protected EnversPreCollectionUpdateEventListenerImpl(AuditConfiguration enversConfiguration) {
-		super( enversConfiguration );
+	public EnversPreCollectionUpdateEventListenerImpl(EnversService enversService) {
+		super( enversService );
 	}
 
 	@Override

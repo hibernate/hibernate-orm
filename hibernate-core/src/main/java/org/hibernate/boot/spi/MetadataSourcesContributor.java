@@ -25,8 +25,6 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.boot.MetadataSources;
 
-import org.jboss.jandex.IndexView;
-
 /**
  * A bootstrap process hook for contributing sources to MetadataSources.
  *
@@ -36,8 +34,7 @@ public interface MetadataSourcesContributor {
 	/**
 	 * Perform the process of contributing to MetadataSources.
 	 *
-	 * @param metadataSources
-	 * @param jandexIndex The Jandex index
+	 * @param metadataSources The MetadataSources, to which to contribute.
 	 */
-	public void contribute(MetadataSources metadataSources, IndexView jandexIndex);
+	public void contribute(MetadataSources metadataSources);
 }

@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
@@ -61,36 +61,42 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 
 	@Override
 	public void mapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision) {
+			EnversService enversService,
+			Object obj,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		if ( obj != null ) {
-			nullSafeMapToEntityFromMap( verCfg, obj, data, primaryKey, versionsReader, revision );
+			nullSafeMapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
 		}
 	}
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session, String referencingPropertyName,
-			PersistentCollection newColl, Serializable oldColl,
+			SessionImplementor session,
+			String referencingPropertyName,
+			PersistentCollection newColl,
+			Serializable oldColl,
 			Serializable id) {
 		return null;
 	}
 
 	/**
-	 * @param verCfg Audit configuration.
+	 * @param enversService The EnversService
 	 * @param entityName Entity name.
 	 *
 	 * @return Entity class, name and information whether it is audited or not.
 	 */
-	protected EntityInfo getEntityInfo(AuditConfiguration verCfg, String entityName) {
-		EntityConfiguration entCfg = verCfg.getEntCfg().get( entityName );
+	protected EntityInfo getEntityInfo(EnversService enversService, String entityName) {
+		EntityConfiguration entCfg = enversService.getEntitiesConfigurations().get( entityName );
 		boolean isRelationAudited = true;
 		if ( entCfg == null ) {
 			// a relation marked as RelationTargetAuditMode.NOT_AUDITED
-			entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration( entityName );
+			entCfg = enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName );
 			isRelationAudited = false;
 		}
-		final Class entityClass = ReflectionTools.loadClass( entCfg.getEntityClassName(), verCfg.getClassLoaderService() );
+		final Class entityClass = ReflectionTools.loadClass( entCfg.getEntityClassName(), enversService.getClassLoaderService() );
 		return new EntityInfo( entityClass, entityName, isRelationAudited );
 	}
 
@@ -108,11 +114,9 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 
 	/**
 	 * Parameter {@code obj} is never {@code null}.
-	 *
-	 * @see PropertyMapper#mapToEntityFromMap(AuditConfiguration, Object, Map, Object, AuditReaderImplementor, Number)
 	 */
 	public abstract void nullSafeMapToEntityFromMap(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			Object obj,
 			Map data,
 			Object primaryKey,

@@ -92,7 +92,7 @@ public class UnversionedOptimisticLockingField extends BaseEnversJPAFunctionalTe
 
 	@Test
 	public void testMapping() {
-		PersistentClass pc = getCfg().getClassMapping( UnversionedOptimisticLockingFieldEntity.class.getName() + "_AUD" );
+		PersistentClass pc = metadata().getEntityBinding( UnversionedOptimisticLockingFieldEntity.class.getName() + "_AUD" );
 		Iterator pi = pc.getPropertyIterator();
 		while ( pi.hasNext() ) {
 			Property p = (Property) pi.next();

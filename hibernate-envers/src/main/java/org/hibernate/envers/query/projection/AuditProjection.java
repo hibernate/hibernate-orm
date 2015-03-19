@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.projection;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.Triple;
 
 /**
@@ -31,9 +31,9 @@ import org.hibernate.envers.internal.tools.Triple;
  */
 public interface AuditProjection {
 	/**
-	 * @param auditCfg Configuration.
+	 * @param enversService The EnversService
 	 *
 	 * @return A triple: (function name - possibly null, property name, add distinct?).
 	 */
-	Triple<String, String, Boolean> getData(AuditConfiguration auditCfg);
+	Triple<String, String, Boolean> getData(EnversService enversService);
 }

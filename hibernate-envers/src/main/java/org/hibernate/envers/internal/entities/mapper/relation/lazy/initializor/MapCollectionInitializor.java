@@ -27,7 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
@@ -45,14 +45,14 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
 	private final MiddleComponentData indexComponentData;
 
 	public MapCollectionInitializor(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey, Number revision, boolean removed,
 			Class<? extends T> collectionClass,
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData) {
-		super( verCfg, versionsReader, queryGenerator, primaryKey, revision, removed );
+		super( enversService, versionsReader, queryGenerator, primaryKey, revision, removed );
 
 		this.collectionClass = collectionClass;
 		this.elementComponentData = elementComponentData;

@@ -26,7 +26,7 @@ package org.hibernate.envers.event.spi;
 import java.io.Serializable;
 
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 
@@ -42,8 +42,8 @@ public class EnversPreCollectionRemoveEventListenerImpl
 		extends BaseEnversCollectionEventListener
 		implements PreCollectionRemoveEventListener {
 
-	protected EnversPreCollectionRemoveEventListenerImpl(AuditConfiguration enversConfiguration) {
-		super( enversConfiguration );
+	public EnversPreCollectionRemoveEventListenerImpl(EnversService enversService) {
+		super( enversService );
 	}
 
 	@Override

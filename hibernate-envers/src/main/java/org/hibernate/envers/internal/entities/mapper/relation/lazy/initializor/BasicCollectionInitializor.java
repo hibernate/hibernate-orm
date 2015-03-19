@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
@@ -45,13 +45,13 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
 	private final MiddleComponentData elementComponentData;
 
 	public BasicCollectionInitializor(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey, Number revision, boolean removed,
 			Class<? extends T> collectionClass,
 			MiddleComponentData elementComponentData) {
-		super( verCfg, versionsReader, queryGenerator, primaryKey, revision, removed );
+		super( enversService, versionsReader, queryGenerator, primaryKey, revision, removed );
 
 		this.collectionClass = collectionClass;
 		this.elementComponentData = elementComponentData;

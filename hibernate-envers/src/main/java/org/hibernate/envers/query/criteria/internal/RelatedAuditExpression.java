@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -48,16 +48,19 @@ public class RelatedAuditExpression implements AuditCriterion {
 
 	@Override
 	public void addToQuery(
-			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			QueryBuilder qb,
+			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
-				auditCfg,
+				enversService,
 				versionsReader,
 				entityName,
 				propertyNameGetter
 		);
 
-		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( auditCfg, entityName, propertyName );
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
 
 		if ( relatedEntity == null ) {
 			throw new AuditException(

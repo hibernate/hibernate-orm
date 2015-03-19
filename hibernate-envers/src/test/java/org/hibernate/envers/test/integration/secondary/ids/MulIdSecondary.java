@@ -89,7 +89,7 @@ public class MulIdSecondary extends BaseEnversJPAFunctionalTestCase {
 	public void testTableNames() {
 		assert "sec_mulid_versions".equals(
 				((Iterator<Join>)
-						getCfg().getClassMapping(
+						metadata().getEntityBinding(
 								"org.hibernate.envers.test.integration.secondary.ids.SecondaryMulIdTestEntity_AUD"
 						)
 								.getJoinIterator())

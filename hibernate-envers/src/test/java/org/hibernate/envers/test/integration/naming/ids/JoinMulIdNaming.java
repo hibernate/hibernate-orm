@@ -141,19 +141,18 @@ public class JoinMulIdNaming extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testJoinColumnNames() {
-		Iterator<Column> columns =
-				getCfg().getClassMapping(
-						"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
-				)
-						.getProperty( "reference_id1" ).getColumnIterator();
+		Iterator<Column> columns = metadata().getEntityBinding(
+				"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
+		).getProperty( "reference_id1" ).getColumnIterator();
+
 		assertTrue( columns.hasNext() );
 		assertEquals( "ID1_reference", columns.next().getName() );
 		assertFalse( columns.hasNext() );
 
-		columns = getCfg().getClassMapping(
+		columns = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD"
-		)
-				.getProperty( "reference_id2" ).getColumnIterator();
+		).getProperty( "reference_id2" ).getColumnIterator();
+
 		assertTrue( columns.hasNext() );
 		assertEquals( "ID2_reference", columns.next().getName() );
 		assertFalse( columns.hasNext() );

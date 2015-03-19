@@ -1,1 +1,1 @@
-org.hibernate.envers.internal.entities.TypeContributorImpl
+org.hibernate.envers.boot.internal.TypeContributorImpl

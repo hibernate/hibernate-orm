@@ -26,7 +26,7 @@ package org.hibernate.envers.query.criteria;
 import java.util.Collection;
 
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
 import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
@@ -273,8 +273,8 @@ public class AuditProperty<T> implements AuditProjection {
 
 	// Projection on this property
 
-	public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
-		return Triple.make( null, propertyNameGetter.get( auditCfg ), false );
+	public Triple<String, String, Boolean> getData(EnversService enversService) {
+		return Triple.make( null, propertyNameGetter.get( enversService ), false );
 	}
 
 	// Order

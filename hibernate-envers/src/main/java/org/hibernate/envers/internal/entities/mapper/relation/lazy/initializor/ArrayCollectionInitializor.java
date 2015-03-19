@@ -26,7 +26,7 @@ package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -41,13 +41,13 @@ public class ArrayCollectionInitializor extends AbstractCollectionInitializor<Ob
 	private final MiddleComponentData indexComponentData;
 
 	public ArrayCollectionInitializor(
-			AuditConfiguration verCfg,
+			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			RelationQueryGenerator queryGenerator,
 			Object primaryKey, Number revision, boolean removed,
 			MiddleComponentData elementComponentData,
 			MiddleComponentData indexComponentData) {
-		super( verCfg, versionsReader, queryGenerator, primaryKey, revision, removed );
+		super( enversService, versionsReader, queryGenerator, primaryKey, revision, removed );
 
 		this.elementComponentData = elementComponentData;
 		this.indexComponentData = indexComponentData;

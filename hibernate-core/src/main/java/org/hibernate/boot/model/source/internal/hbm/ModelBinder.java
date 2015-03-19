@@ -953,7 +953,9 @@ public class ModelBinder {
 	private void finishBindingCompositeIdentifier(
 			MappingDocument sourceDocument,
 			RootClass rootEntityDescriptor,
-			CompositeIdentifierSource identifierSource, Component cid, String propertyName) {
+			CompositeIdentifierSource identifierSource,
+			Component cid,
+			String propertyName) {
 		if ( propertyName == null ) {
 			rootEntityDescriptor.setEmbeddedIdentifier( cid.isEmbedded() );
 			if ( cid.isEmbedded() ) {
@@ -1889,6 +1891,10 @@ public class ModelBinder {
 				attribute
 		);
 
+		final String xmlNodeName = determineXmlNodeName( embeddedSource, componentBinding.getOwner().getNodeName() );
+		componentBinding.setNodeName( xmlNodeName );
+		attribute.setNodeName( xmlNodeName );
+
 		return attribute;
 	}
 
@@ -2439,7 +2445,7 @@ public class ModelBinder {
 			AttributeSource propertySource,
 			Property property) {
 		property.setName( propertySource.getName() );
-		property.setNodeName( propertySource.getXmlNodeName() );
+		property.setNodeName( determineXmlNodeName( propertySource, null ) );
 
 		property.setPropertyAccessorName(
 				StringHelper.isNotEmpty( propertySource.getPropertyAccessorName() )
@@ -2537,6 +2543,21 @@ public class ModelBinder {
 			message.append( "]" );
 			log.debug( message.toString() );
 		}
+	}
+
+	private String determineXmlNodeName(AttributeSource propertySource, String fallbackXmlNodeName) {
+		String nodeName = propertySource.getXmlNodeName();
+		if ( StringHelper.isNotEmpty( nodeName ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
+		}
+		else {
+			nodeName = propertySource.getName();
+		}
+		if ( nodeName == null ) {
+			nodeName = fallbackXmlNodeName;
+		}
+
+		return nodeName;
 	}
 
 	private void bindComponent(

@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 
 /**
  * Provides a function to get the name of a property, which is used in a query, to apply some restrictions on it.
@@ -32,9 +32,9 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
  */
 public interface PropertyNameGetter {
 	/**
-	 * @param auditCfg Audit configuration.
+	 * @param enversService The EnversService
 	 *
 	 * @return Name of the property, to be used in a query.
 	 */
-	public String get(AuditConfiguration auditCfg);
+	public String get(EnversService enversService);
 }

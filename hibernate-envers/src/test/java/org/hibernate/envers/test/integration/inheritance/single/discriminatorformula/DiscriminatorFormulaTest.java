@@ -31,7 +31,7 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	@Priority(10)
 	public void initData() {
-		parentAudit = getCfg().getClassMapping(
+		parentAudit = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.inheritance.single.discriminatorformula.ParentEntity_AUD"
 		);
 

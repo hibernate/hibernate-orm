@@ -1660,7 +1660,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private boolean inSecondPass = false;
 
-	private void processSecondPasses(MetadataBuildingContext buildingContext) {
+
+	/**
+	 * Ugh!  But we need this done before we ask Envers to produce its entities.
+	 */
+	public void processSecondPasses(MetadataBuildingContext buildingContext) {
 		inSecondPass = true;
 
 		try {
@@ -1969,6 +1973,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns(), buildingContext );
 			}
 		}
+
+		uniqueConstraintHoldersByTable.clear();
 	}
 
 	private void buildUniqueKeyFromColumnNames(
@@ -2154,6 +2160,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		for ( NaturalIdUniqueKeyBinder naturalIdUniqueKeyBinder : naturalIdUniqueKeyBinderMap.values() ) {
 			naturalIdUniqueKeyBinder.process();
 		}
+
+		naturalIdUniqueKeyBinderMap.clear();
 	}
 
 	private void processCachingOverrides() {

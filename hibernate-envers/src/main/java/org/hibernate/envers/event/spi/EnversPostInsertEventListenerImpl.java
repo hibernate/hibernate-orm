@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.event.spi;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AddWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
@@ -39,23 +39,23 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener implements PostInsertEventListener {
-	protected EnversPostInsertEventListenerImpl(AuditConfiguration enversConfiguration) {
-		super( enversConfiguration );
+	public EnversPostInsertEventListenerImpl(EnversService enversService) {
+		super( enversService );
 	}
 
 	@Override
 	public void onPostInsert(PostInsertEvent event) {
 		final String entityName = event.getPersister().getEntityName();
 
-		if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {
 			checkIfTransactionInProgress( event.getSession() );
 
-			final AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get( event.getSession() );
+			final AuditProcess auditProcess = getEnversService().getAuditProcessManager().get( event.getSession() );
 
 			final AuditWorkUnit workUnit = new AddWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
-					getAuditConfiguration(),
+					getEnversService(),
 					event.getId(),
 					event.getPersister(),
 					event.getState()
@@ -77,6 +77,6 @@ public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener i
 
 	@Override
 	public boolean requiresPostCommitHanding(EntityPersister persister) {
-		return getAuditConfiguration().getEntCfg().isVersioned( persister.getEntityName() );
+		return getEnversService().getEntitiesConfigurations().isVersioned( persister.getEntityName() );
 	}
 }

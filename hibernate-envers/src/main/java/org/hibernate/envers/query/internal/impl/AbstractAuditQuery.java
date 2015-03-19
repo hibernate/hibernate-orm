@@ -33,7 +33,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -64,29 +64,30 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 	protected boolean hasProjection;
 	protected boolean hasOrder;
 
-	protected final AuditConfiguration verCfg;
+	protected final EnversService enversService;
 	protected final AuditReaderImplementor versionsReader;
 
 	protected AbstractAuditQuery(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
 			Class<?> cls) {
-		this( verCfg, versionsReader, cls, cls.getName() );
+		this( enversService, versionsReader, cls, cls.getName() );
 	}
 
 	protected AbstractAuditQuery(
-			AuditConfiguration verCfg,
-			AuditReaderImplementor versionsReader, Class<?> cls, String entityName) {
-		this.verCfg = verCfg;
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Class<?> cls,
+			String entityName) {
+		this.enversService = enversService;
 		this.versionsReader = versionsReader;
 
 		criterions = new ArrayList<AuditCriterion>();
-		entityInstantiator = new EntityInstantiator( verCfg, versionsReader );
+		entityInstantiator = new EntityInstantiator( enversService, versionsReader );
 
 		entityClassName = cls.getName();
 		this.entityName = entityName;
-		versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
-				entityName
-		);
+		versionsEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
 
 		qb = new QueryBuilder( versionsEntityName, REFERENCED_ENTITY_ALIAS );
 	}
@@ -131,10 +132,10 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 	// Projection and order
 
 	public AuditQuery addProjection(AuditProjection projection) {
-		Triple<String, String, Boolean> projectionData = projection.getData( verCfg );
+		Triple<String, String, Boolean> projectionData = projection.getData( enversService );
 		hasProjection = true;
 		String propertyName = CriteriaTools.determinePropertyName(
-				verCfg,
+				enversService,
 				versionsReader,
 				entityName,
 				projectionData.getSecond()
@@ -145,9 +146,9 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
 	public AuditQuery addOrder(AuditOrder order) {
 		hasOrder = true;
-		Pair<String, Boolean> orderData = order.getData( verCfg );
+		Pair<String, Boolean> orderData = order.getData( enversService );
 		String propertyName = CriteriaTools.determinePropertyName(
-				verCfg,
+				enversService,
 				versionsReader,
 				entityName,
 				orderData.getFirst()

@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.internal.tools.graph.GraphDefiner;
 import org.hibernate.mapping.PersistentClass;
@@ -39,10 +39,10 @@ import org.hibernate.mapping.PersistentClass;
  * @author Adam Warski (adam at warski dot org)
  */
 public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass, String> {
-	private Configuration cfg;
+	private final MetadataImplementor metadata;
 
-	public PersistentClassGraphDefiner(Configuration cfg) {
-		this.cfg = cfg;
+	public PersistentClassGraphDefiner(MetadataImplementor metadata) {
+		this.metadata = metadata;
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass
 
 	@Override
 	public PersistentClass getValue(String entityName) {
-		return cfg.getClassMapping( entityName );
+		return metadata.getEntityBinding( entityName );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -77,6 +77,6 @@ public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public List<PersistentClass> getValues() {
-		return Tools.iteratorToList( cfg.getClassMappings() );
+		return Tools.collectionToList( metadata.getEntityBindings() );
 	}
 }

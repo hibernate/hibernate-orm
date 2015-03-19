@@ -71,7 +71,7 @@ public class TotalAuditParentsTest extends BaseEnversJPAFunctionalTestCase {
 		);
 		Set<String> unexpectedColumns = TestTools.makeSet( "notAudited" );
 
-		Table table = getCfg().getClassMapping(
+		Table table = metadata().getEntityBinding(
 				"org.hibernate.envers.test.integration.superclass.auditparents.BabyCompleteEntity_AUD"
 		).getTable();
 

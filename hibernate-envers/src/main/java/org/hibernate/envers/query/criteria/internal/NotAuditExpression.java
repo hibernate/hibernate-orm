@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -40,8 +40,11 @@ public class NotAuditExpression implements AuditCriterion {
 	}
 
 	public void addToQuery(
-			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-			QueryBuilder qb, Parameters parameters) {
-		criterion.addToQuery( verCfg, versionsReader, entityName, qb, parameters.addNegatedParameters() );
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			QueryBuilder qb,
+			Parameters parameters) {
+		criterion.addToQuery( enversService, versionsReader, entityName, qb, parameters.addNegatedParameters() );
 	}
 }

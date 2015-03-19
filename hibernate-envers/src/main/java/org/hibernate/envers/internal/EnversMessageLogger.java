@@ -39,7 +39,6 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger(projectCode = "HHH")
 public interface EnversMessageLogger extends CoreMessageLogger {
-
 	/**
 	 * Message indicating that user attempted to use the deprecated ValidTimeAuditStrategy
 	 */

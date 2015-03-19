@@ -25,13 +25,13 @@ package org.hibernate.osgi;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-
 import javax.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -51,7 +51,7 @@ import org.osgi.framework.ServiceRegistration;
  * 3.) Client bundles create and manage their own SessionFactory.  A
  *     SessionFactory is registered as an OSGi ServiceFactory -- each requesting
  *     bundle gets its own instance of a SessionFactory.  The use of services,
- *     rather than direct use of Configuration, is necessary to shield users
+ *     rather than manual building of the SessionFactory, is necessary to shield users
  *     from ClassLoader issues.  See {@link OsgiSessionFactoryService} for more
  *     information.
  * 

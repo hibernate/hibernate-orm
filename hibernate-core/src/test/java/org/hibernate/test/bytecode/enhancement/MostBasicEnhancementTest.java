@@ -25,6 +25,7 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.Session;
 
+import org.hibernate.test.bytecode.enhancement.entity.MyEntity;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -53,14 +54,14 @@ public class MostBasicEnhancementTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		MyEntity myEntity = (MyEntity) s.get( MyEntity.class, 1L );
+		MyEntity myEntity1 = (MyEntity) s.get( MyEntity.class, 1L );
 		MyEntity myEntity2 = (MyEntity) s.get( MyEntity.class, 2L );
 
-		assertNotNull( myEntity.$$_hibernate_getEntityInstance() );
-		assertSame( myEntity, myEntity.$$_hibernate_getEntityInstance() );
-		assertNotNull( myEntity.$$_hibernate_getEntityEntry() );
-		assertNull( myEntity.$$_hibernate_getPreviousManagedEntity() );
-		assertNotNull( myEntity.$$_hibernate_getNextManagedEntity() );
+		assertNotNull( myEntity1.$$_hibernate_getEntityInstance() );
+		assertSame( myEntity1, myEntity1.$$_hibernate_getEntityInstance() );
+		assertNotNull( myEntity1.$$_hibernate_getEntityEntry() );
+		assertNull( myEntity1.$$_hibernate_getPreviousManagedEntity() );
+		assertNotNull( myEntity1.$$_hibernate_getNextManagedEntity() );
 
 		assertNotNull( myEntity2.$$_hibernate_getEntityInstance() );
 		assertSame( myEntity2, myEntity2.$$_hibernate_getEntityInstance() );
@@ -72,7 +73,7 @@ public class MostBasicEnhancementTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertNull( myEntity.$$_hibernate_getEntityEntry() );
+		assertNull( myEntity1.$$_hibernate_getEntityEntry() );
 	}
 
 

@@ -20,13 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- */package org.hibernate.test.bytecode.enhancement.customer;
+ */package org.hibernate.test.bytecode.enhancement.entity.customer;
 
+import javax.persistence.Embeddable;
 import java.io.Serializable;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@Embeddable
 public class Address implements Serializable {
     private String street1;
     private String street2;

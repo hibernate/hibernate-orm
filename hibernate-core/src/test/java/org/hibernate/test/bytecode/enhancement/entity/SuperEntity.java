@@ -21,23 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.bytecode.enhance;
+package org.hibernate.test.bytecode.enhancement.entity;
 
-import org.hibernate.HibernateException;
+import javax.persistence.Entity;
 
 /**
- * An exception indicating some kind of problem performing bytecode enhancement.
- *
  * @author Steve Ebersole
  */
-public class EnhancementException extends HibernateException {
-	/**
-	 * Constructs an EnhancementException
-	 *
-	 * @param message Message explaining the exception condition
-	 * @param cause The underlying cause.
-	 */
-	public EnhancementException(String message, Throwable cause) {
-		super( message, cause );
-	}
+@Entity
+public class SuperEntity {
 }

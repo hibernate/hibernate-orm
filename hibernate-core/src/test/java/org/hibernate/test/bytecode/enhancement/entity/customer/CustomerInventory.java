@@ -20,7 +20,8 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- */package org.hibernate.test.bytecode.enhancement.customer;
+ */
+package org.hibernate.test.bytecode.enhancement.entity.customer;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.bytecode.enhancement;
+package org.hibernate.test.bytecode.enhancement.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

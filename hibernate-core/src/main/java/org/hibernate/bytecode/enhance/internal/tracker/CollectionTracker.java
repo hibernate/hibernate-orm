@@ -21,51 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.bytecode.enhancement.customer;
+package org.hibernate.bytecode.enhance.internal.tracker;
 
-import javax.persistence.Embeddable;
+import java.util.Arrays;
 
 /**
+ * small low memory class to keep track of the number of elements in a collection
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Embeddable
-public class SupplierComponentPK {
+public final class CollectionTracker {
 
-    String componentID;
-    int supplierID;
+	private String[] names;
+	private int[] sizes;
 
-    public SupplierComponentPK() {
-    }
+	public CollectionTracker() {
+		names = new String[0];
+		sizes = new int[0];
+	}
 
-    public SupplierComponentPK(String suppCompID, int suppCompSuppID) {
-        this.componentID = suppCompID;
-        this.supplierID = suppCompSuppID;
-    }
+	public void add(String name, int size) {
+		for ( int i = 0; i < names.length; i++ ) {
+			if ( names[i].equals( name ) ) {
+				sizes[i] = size;
+				return;
+			}
+		}
+		names = Arrays.copyOf( names, names.length + 1 );
+		names[names.length - 1] = name;
+		sizes = Arrays.copyOf( sizes, sizes.length + 1 );
+		sizes[sizes.length - 1] = size;
+	}
 
-    public String getComponentID() {
-        return componentID;
-    }
+	public int getSize(String name) {
+		for ( int i = 0; i < names.length; i++ ) {
+			if ( name.equals( names[i] ) ) {
+				return sizes[i];
+			}
+		}
+		return -1;
+	}
 
-    public int getSupplierID() {
-        return supplierID;
-    }
-
-    @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + componentID.hashCode();
-        result = PRIME * result + supplierID;
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null || getClass() != obj.getClass())
-            return false;
-        final SupplierComponentPK other = (SupplierComponentPK) obj;
-        return componentID.equals(other.componentID);
-    }
 }

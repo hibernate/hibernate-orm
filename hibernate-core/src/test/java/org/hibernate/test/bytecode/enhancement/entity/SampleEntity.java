@@ -21,15 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.bytecode.enhancement;
-
-import javax.persistence.Id;
-import javax.persistence.Transient;
+package org.hibernate.test.bytecode.enhancement.entity;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+
+import javax.persistence.Id;
+import javax.persistence.Transient;
 
 /**
  * @author Steve Ebersole

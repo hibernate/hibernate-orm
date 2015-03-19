@@ -21,32 +21,51 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.bytecode.enhance.spi;
+package org.hibernate.test.bytecode.enhancement.entity.customer;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.persistence.Embeddable;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CollectionTracker {
-	private Map<String, Integer> tracker;
+@Embeddable
+public class SupplierComponentPK {
 
-	public CollectionTracker() {
-		tracker = new HashMap<String, Integer>();
-	}
+    String componentID;
+    int supplierID;
 
-	public void add(String name, int size) {
-		tracker.put( name, size );
-	}
+    public SupplierComponentPK() {
+    }
 
-	public int getSize(String name) {
-		Integer size = tracker.get( name );
-		if ( size == null ) {
-			return -1;
-		}
-		else {
-			return size;
-		}
-	}
+    public SupplierComponentPK(String suppCompID, int suppCompSuppID) {
+        this.componentID = suppCompID;
+        this.supplierID = suppCompSuppID;
+    }
+
+    public String getComponentID() {
+        return componentID;
+    }
+
+    public int getSupplierID() {
+        return supplierID;
+    }
+
+    @Override
+    public int hashCode() {
+        final int PRIME = 31;
+        int result = 1;
+        result = PRIME * result + componentID.hashCode();
+        result = PRIME * result + supplierID;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        final SupplierComponentPK other = (SupplierComponentPK) obj;
+        return componentID.equals(other.componentID);
+    }
 }

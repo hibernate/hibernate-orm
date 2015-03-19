@@ -21,9 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.bytecode.enhancement;
+package org.hibernate.test.bytecode.enhancement.tracker;
 
-import org.hibernate.bytecode.enhance.spi.CompositeOwnerTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.junit.Test;
 
@@ -32,7 +32,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-
 public class CompositeOwnerTrackerTest {
 
     private int counter = 0;

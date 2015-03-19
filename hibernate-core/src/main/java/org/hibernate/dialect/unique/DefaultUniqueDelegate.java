@@ -71,7 +71,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 
 	protected String uniqueConstraintSql( org.hibernate.mapping.UniqueKey uniqueKey ) {
 		final StringBuilder sb = new StringBuilder();
-		sb.append( " unique (" );
+		sb.append( "unique (" );
 		final Iterator<org.hibernate.mapping.Column> columnIterator = uniqueKey.columnIterator();
 		while ( columnIterator.hasNext() ) {
 			final org.hibernate.mapping.Column column = columnIterator.next();

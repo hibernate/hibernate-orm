@@ -9,12 +9,17 @@ versionInjection {
 
 dependencies {
     compile( libraries.jta )
-//    compile( libraries.dom4j )
-    compile( libraries.commons_annotations )
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
     compile( libraries.jandex )
+
+    // We need dom4j for a number of things temporarily:
+    //      1) (unsupported) EntityMode.DOM4J support
+    //      2) Envers
+    //      3) hibernate-commons-annotations
+    compile( libraries.dom4j )
+    compile( libraries.commons_annotations )
 
     antlr( libraries.antlr )
 
@@ -22,9 +27,6 @@ dependencies {
     provided( libraries.jacc )
     provided( libraries.validation )
     provided( libraries.classmate )
-    // We need dom4j to compile the unsupported EntityMode.DOM4J support for now.  However
-    // we do not want it as part of our transitive runtime dependencies
-    provided( libraries.dom4j )
 
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
@@ -37,11 +39,6 @@ dependencies {
     }
     // for testing stored procedure support
     testCompile( libraries.derby )
-    // Again, we need it temporarily for tests of the unsupported EntityMode.DOM4J support.
-    testCompile( libraries.dom4j ) {
-        transitive = true
-    }
-
 
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )

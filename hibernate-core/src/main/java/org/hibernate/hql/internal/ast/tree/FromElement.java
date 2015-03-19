@@ -403,7 +403,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 				ASTUtil.appendSibling( origin, this );
 			}
 			else {
-				if ( !getWalker().isInFrom() && !getWalker().isInSelect() ) {
+				if ( !getWalker().isInFrom() && !getWalker().isInSelect() && !getWalker().isInEntityGraph()) {
 					getFromClause().addChild( this );
 				}
 				else {

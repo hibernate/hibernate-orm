@@ -5,6 +5,28 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.8.Final (2015.01.06)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-9330] - orphanRemoval=true does not work in bidirectional relationships (without cascading)
+    [HHH-9337] - Region.destroy() attempts to remove a cache listener, but region class is not annotated with @Listener
+    [HHH-9401] - SQL warnings are never logged due to incorrect condition check
+    [HHH-9419] - Remove after get with optimistic lock fails
+    [HHH-9444] - Rounding of fractional seconds causes test failures on MySQL 5.6.4+
+    [HHH-9467] - Cannot enable NamingStrategyDelegator implementations using standalone schema tools
+    [HHH-9498] - Using C3P0 connection pool but not setting hibernate.connection.isolation results in a NumberFormatException
+    [HHH-9500] - H2: SchemaExport ERROR when using in-memory database - drop constraint issue HHH000389
+
+** Improvement
+    [HHH-6670] - H2Dialect should use "if exists" when dropping sequences
+    [HHH-8401] - Support fractional seconds on MySQL 5.7
+    [HHH-9479] - Avoid immediate collection capacity increase in ActionQueue constructor
+    [HHH-9545] - H2Dialect should use "if exists" when dropping constraints
+
+** Task
+    [HHH-9508] - Avoid source code syntax which fails in Eclipse
+
 Changes in version 4.3.7.Final (2014.10.30)
 ------------------------------------------------------------------------------------------------------------------------
 

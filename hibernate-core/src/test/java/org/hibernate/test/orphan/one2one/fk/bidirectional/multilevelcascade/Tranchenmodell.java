@@ -31,15 +31,18 @@ import java.util.List;
 public class Tranchenmodell {
 
     @Id
-    private Long id;
+	@GeneratedValue
+	private Long id;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
+	@OrderColumn
     private List<Tranche> tranchen = new ArrayList<Tranche>();
 
     @OneToOne(optional = true, fetch = FetchType.LAZY)
     private Preisregelung preisregelung;
 
-
+	@OneToOne(mappedBy = "tranchenmodell", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	private X x;
 
     public Long getId() {
         return id;
@@ -61,5 +64,11 @@ public class Tranchenmodell {
         this.preisregelung = preisregelung;
     }
 
+	public X getX() {
+		return x;
+	}
 
+	public void setX(X x) {
+		this.x = x;
+	}
 }

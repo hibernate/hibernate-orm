@@ -139,6 +139,13 @@ public class JpaDescriptorParser {
 					Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
 			);
 		}
+
+        try {
+            stream.close();
+        } catch (IOException e) {
+            // eat it
+        }
+
 		return persistence;
 	}
 
@@ -161,6 +168,12 @@ public class JpaDescriptorParser {
 			if ( mapping != null ) {
 				entityMappings.add( mapping );
 			}
+
+            try {
+                stream.close();
+            } catch (IOException e) {
+                // eat it
+            }
 		}
 	}
 

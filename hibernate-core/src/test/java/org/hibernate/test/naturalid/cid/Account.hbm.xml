@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.test.naturalid.cid" default-access="field">
+  <class name="Account" table="accounts" >
+     <composite-id name="accountId">
+        <key-property name="id"/>
+        <generator class="assigned" />
+    </composite-id>
+    <natural-id mutable="true">
+        <property name="shortCode" column="short_code" not-null="true"/>
+    </natural-id>
+  </class>
+</hibernate-mapping>

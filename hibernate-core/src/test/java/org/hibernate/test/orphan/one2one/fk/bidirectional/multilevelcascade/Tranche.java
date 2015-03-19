@@ -29,13 +29,16 @@ import javax.persistence.*;
 public class Tranche {
 
     @Id
-    private Long id;
+	@GeneratedValue
+	private Long id;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     private Tranchenmodell tranchenmodell;
 
+	@OneToOne(mappedBy = "tranche", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	private Y y;
 
-    public Long getId() {
+	public Long getId() {
         return id;
     }
 
@@ -50,4 +53,12 @@ public class Tranche {
     public void setTranchenmodell(Tranchenmodell tranchenmodell) {
         this.tranchenmodell = tranchenmodell;
     }
+
+	public Y getY() {
+		return y;
+	}
+
+	public void setY(Y y) {
+		this.y = y;
+	}
 }

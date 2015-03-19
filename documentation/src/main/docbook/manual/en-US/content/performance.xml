@@ -1061,11 +1061,6 @@ public SortedSet&lt;Ticket&gt; getTickets() {
     <section xml:id="performance-cache-compat-matrix">
       <title>Cache-provider/concurrency-strategy compatibility</title>
 
-      <important>
-        <para>None of the cache providers support all of the cache concurrency
-        strategies.</para>
-      </important>
-
       <para>The following table shows which providers are compatible with
       which concurrency strategies.</para>
 

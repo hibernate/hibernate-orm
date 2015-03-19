@@ -883,6 +883,10 @@
               <entry>select a NamingStrategy</entry>
             </row>
             <row>
+              <entry><para>--namingdelegator=<replaceable>eg.MyNamingStrategyDelegator</replaceable></para></entry>
+              <entry>select a NamingStrategyDelegator</entry>
+            </row>
+            <row>
               <entry><para>--config=<replaceable>hibernate.cfg.xml</replaceable></para></entry>
               <entry>read Hibernate configuration from an XML file</entry>
             </row>
@@ -901,6 +905,11 @@
           </tbody>
         </tgroup>
       </table>
+      <note>
+        <para>
+          The options, <option>--naming</option> and <option>--namingdelegator</option>, should not be used together.
+        </para>
+      </note>
       <example>
         <title>Embedding SchemaExport into your application</title>
         <programlisting language="Java" role="JAVA"><xi:include href="extras/embedding_SchemaExport.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>

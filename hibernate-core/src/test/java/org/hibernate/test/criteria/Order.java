@@ -29,24 +29,45 @@ import java.util.Set;
 
 public class Order {
 
-  private int orderId;
+	private int orderId;
 
-  public int getOrderId() {
+	public int getOrderId() {
     return orderId;
   }
 
-  private Set<OrderLine> orderLines = new HashSet<OrderLine>();
+	private Set<OrderLine> orderLines = new HashSet<OrderLine>();
 
-  public Set<OrderLine> getLines() {
+	public Set<OrderLine> getLines() {
     return Collections.unmodifiableSet(orderLines);
   }
 
-  public void addLine(OrderLine orderLine){
-    orderLine.setOrder(this);
-    this.orderLines.add(orderLine);
-  }
-  
-  public String toString() {
+	public void addLine(OrderLine orderLine){
+		orderLine.setOrder(this);
+		this.orderLines.add(orderLine);
+	}
+
+	private Set<OrderContact> orderContacts = new HashSet<OrderContact>();
+
+	public Set<OrderContact> getContacts() {
+		return Collections.unmodifiableSet(orderContacts);
+	}
+
+	public void addContact(OrderContact orderContact){
+		orderContact.getOrders().add( this );
+		this.orderContacts.add(orderContact);
+	}
+
+	public OrderAddress orderAddress;
+
+	public OrderAddress getOrderAddress() {
+		return orderAddress;
+	}
+
+	public void setOrderAddress(OrderAddress orderAddress) {
+		this.orderAddress = orderAddress;
+	}
+
+	public String toString() {
     return "" + getOrderId() + " - " + getLines();
   }
 }

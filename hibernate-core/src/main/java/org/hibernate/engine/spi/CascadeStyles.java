@@ -205,9 +205,7 @@ public class CascadeStyles {
 	public static final CascadeStyle DELETE_ORPHAN = new BaseCascadeStyle() {
 		@Override
 		public boolean doCascade(CascadingAction action) {
-			return action == CascadingActions.DELETE ||
-					action == CascadingActions.SAVE_UPDATE ||
-					action == CascadingActions.PERSIST_ON_FLUSH;
+			return action == CascadingActions.DELETE || action == CascadingActions.SAVE_UPDATE;
 		}
 
 		@Override

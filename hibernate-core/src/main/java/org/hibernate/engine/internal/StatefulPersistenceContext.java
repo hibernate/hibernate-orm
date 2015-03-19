@@ -145,6 +145,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private int cascading;
 	private int loadCounter;
+	private int removeOrphanBeforeUpdatesCounter;
 	private boolean flushing;
 
 	private boolean defaultReadOnly;
@@ -1029,6 +1030,42 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
+	public boolean isRemovingOrphanBeforeUpates() {
+		return removeOrphanBeforeUpdatesCounter > 0;
+	}
+
+	public void beginRemoveOrphanBeforeUpdates() {
+		if ( getCascadeLevel() < 1 ) {
+			throw new IllegalStateException( "Attempt to remove orphan when not cascading." );
+		}
+		if ( removeOrphanBeforeUpdatesCounter >= getCascadeLevel() ) {
+			throw new IllegalStateException(
+					String.format(
+							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] before incrementing removeOrphanBeforeUpdatesCounter",
+							getCascadeLevel(),
+							removeOrphanBeforeUpdatesCounter
+					)
+			);
+		}
+		removeOrphanBeforeUpdatesCounter++;
+	}
+
+	public void endRemoveOrphanBeforeUpdates() {
+		if ( getCascadeLevel() < 1 ) {
+			throw new IllegalStateException( "Finished removing orphan when not cascading." );
+		}
+		if ( removeOrphanBeforeUpdatesCounter > getCascadeLevel() ) {
+			throw new IllegalStateException(
+					String.format(
+							"Cascade level [%d] is out of sync with removeOrphanBeforeUpdatesCounter [%d] before decrementing removeOrphanBeforeUpdatesCounter",
+							getCascadeLevel(),
+							removeOrphanBeforeUpdatesCounter
+					)
+			);
+		}
+		removeOrphanBeforeUpdatesCounter--;
+	}
+
 	/**
 	 * Call this before beginning a two-phase load
 	 */
@@ -1369,7 +1406,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		final boolean tracing = LOG.isTraceEnabled();
 		if ( tracing ) {
-			LOG.trace( "Serializing persistence-context" );
+			LOG.trace( "Serializing persisatence-context" );
 		}
 
 		oos.writeBoolean( defaultReadOnly );

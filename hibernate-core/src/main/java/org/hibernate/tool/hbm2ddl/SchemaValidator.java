@@ -34,6 +34,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.naming.NamingStrategyDelegator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
@@ -87,6 +88,8 @@ public class SchemaValidator {
 			Configuration cfg = new Configuration();
 
 			String propFile = null;
+			boolean hasNaming = false;
+			boolean hasNamingDelegator = false;
 
 			for ( int i = 0; i < args.length; i++ ) {
 				if ( args[i].startsWith( "--" ) ) {
@@ -97,10 +100,21 @@ public class SchemaValidator {
 						cfg.configure( args[i].substring( 9 ) );
 					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
+						hasNaming = true;
+						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
 						cfg.setNamingStrategy(
 								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) ).newInstance()
 						);
 					}
+					else if ( args[i].startsWith( "--namingdelegator=" ) ) {
+						hasNamingDelegator = true;
+						checkNamingAndNamingDelegatorNotBothSpecified( hasNaming, hasNamingDelegator );
+						cfg.setNamingStrategyDelegator(
+								(NamingStrategyDelegator) ReflectHelper.classForName( args[i].substring( 18 ) )
+										.newInstance()
+						);
+					}
+
 				}
 				else {
 					cfg.addFile( args[i] );
@@ -126,6 +140,12 @@ public class SchemaValidator {
 		catch ( Exception e ) {
             LOG.unableToRunSchemaUpdate(e);
 			e.printStackTrace();
+		}
+	}
+
+	private static void checkNamingAndNamingDelegatorNotBothSpecified(boolean namingSpecified, boolean namingDelegatorSpecified) {
+		if ( namingSpecified && namingDelegatorSpecified ) {
+			throw new HibernateException( "--naming=<naming_strategy> and --namingdelegator=<naming_strategy_delegator> cannot be used together." );
 		}
 	}
 

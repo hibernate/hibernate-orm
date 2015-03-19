@@ -6,9 +6,14 @@
     <id name="orderId" column="order_id" type="int" unsaved-value="0" access="field" >
       <generator class="increment" />
     </id>
+    <many-to-one name="orderAddress" cascade="all"/>
     <set name="orderLines" cascade="all-delete-orphan" access="field" inverse="true" fetch="select">
       <key column="order_id" />
       <one-to-many class="OrderLine" />
+    </set>
+    <set name="orderContacts" cascade="all-delete-orphan" access="field" fetch="select">
+        <key column="order_id" />
+        <many-to-many class="OrderContact" />
     </set>
   </class>
   <class name="OrderLine" table="order_line">
@@ -18,5 +23,31 @@
     <many-to-one name="order" column="order_id" class="Order" />
     <property name="articleId" column="article_id" type="string" />
   </class>
+  <class name="OrderContact" table="order_contact">
+    <id name="contactId" column="order_contact_id" type="int" unsaved-value="0" access="field" >
+      <generator class="increment" />
+    </id>
+    <property name="contact" column="contact" type="string" />
+    <set name="orders" access="field" inverse="true" fetch="select">
+          <key column="contact_id" />
+          <many-to-many class="Order" />
+    </set>
+  </class>
+  <class name="OrderAddress">
+      <id name="orderAddressId" type="int" unsaved-value="0" access="field" >
+          <generator class="increment" />
+      </id>
+      <many-to-one name="deliveryAddress" class="Address" cascade="all" />
+      <set name="notifiedAddresses" cascade="all"  inverse="false" fetch="select" >
+          <key column="orderAddressId"/>
+          <one-to-many class="Address"/>
+      </set>
+  </class>
+   <class name="Address">
+        <id name="addressId" column="address_id" type="int" unsaved-value="0" access="field" >
+            <generator class="increment" />
+        </id>
+        <property name="addressText"/>
+    </class>
 </hibernate-mapping>
 

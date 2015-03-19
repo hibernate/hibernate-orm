@@ -20,7 +20,7 @@
  */
 package org.hibernate.osgi.test.client;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -33,10 +33,15 @@ public class TestIntegrator implements Integrator {
 	
 	private boolean passed = false;
 
-	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	@Override
+	public void integrate(
+			Metadata metadata,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry) {
 		passed = true;
 	}
 
+	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		passed = true;
 	}

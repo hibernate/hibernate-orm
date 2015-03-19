@@ -44,6 +44,9 @@ ext {
             jandex:         'org.jboss:jandex:1.1.0.Final',
             classmate:      'com.fasterxml:classmate:0.8.0',
 
+            // Woodstox
+            woodstox:           "org.codehaus.woodstox:woodstox-core-asl:4.3.0",
+
             // Dom4J
             dom4j:          'dom4j:dom4j:1.6.1@jar',
 

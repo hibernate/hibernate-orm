@@ -24,6 +24,8 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.Locale;
+
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,7 +33,9 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.LiteralType;
+import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 /**
  * A node representing a static Java constant.
@@ -83,9 +87,44 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 				? heuristicType
 				: expectedType;
 		try {
-			final LiteralType literalType = (LiteralType) type;
-			final Dialect dialect = factory.getDialect();
-			return literalType.objectToSQLString( constantValue, dialect );
+			if ( LiteralType.class.isInstance( type ) ) {
+				final LiteralType literalType = (LiteralType) type;
+				final Dialect dialect = factory.getDialect();
+				return literalType.objectToSQLString( constantValue, dialect );
+			}
+			else if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				final AttributeConverterTypeAdapter converterType = (AttributeConverterTypeAdapter) type;
+				if ( !converterType.getModelType().isInstance( constantValue ) ) {
+					throw new QueryException(
+							String.format(
+									Locale.ENGLISH,
+									"Recognized query constant expression [%s] was not resolved to type [%s] expected by defined AttributeConverter [%s]",
+									constantExpression,
+									constantValue.getClass().getName(),
+									converterType.getModelType().getName()
+							)
+					);
+				}
+				final Object value = converterType.getAttributeConverter().convertToDatabaseColumn( constantValue );
+				if ( String.class.equals( converterType.getJdbcType() ) ) {
+					return "'" + value + "'";
+				}
+				else {
+					return value.toString();
+				}
+			}
+			else {
+				throw new QueryException(
+						String.format(
+								Locale.ENGLISH,
+								"Unrecognized Hibernate Type for handling query constant (%s); expecting LiteralType implementation or AttributeConverter",
+								constantExpression
+						)
+				);
+			}
+		}
+		catch (QueryException e) {
+			throw e;
 		}
 		catch (Exception t) {
 			throw new QueryException( QueryTranslator.ERROR_CANNOT_FORMAT_LITERAL + constantExpression, t );

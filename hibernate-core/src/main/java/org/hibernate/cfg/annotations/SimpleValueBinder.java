@@ -88,6 +88,8 @@ public class SimpleValueBinder {
 	private String explicitType = "";
 	private String defaultType = "";
 	private Properties typeParameters = new Properties();
+	private boolean isNationalized;
+
 	private Table table;
 	private SimpleValue simpleValue;
 	private boolean isVersion;
@@ -159,7 +161,7 @@ public class SimpleValueBinder {
 		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
 
-		final boolean isNationalized = property.isAnnotationPresent( Nationalized.class )
+		isNationalized = property.isAnnotationPresent( Nationalized.class )
 				|| buildingContext.getBuildingOptions().useNationalizedCharacterData();
 
 		Type annType = property.getAnnotation( Type.class );
@@ -389,6 +391,9 @@ public class SimpleValueBinder {
 			table = columns[0].getTable();
 		}
 		simpleValue = new SimpleValue( buildingContext.getMetadataCollector(), table );
+		if ( isNationalized ) {
+			simpleValue.makeNationalized();
+		}
 
 		linkWithValue();
 

@@ -614,6 +614,9 @@ public class ModelBinder {
 				primaryTable,
 				entityDescriptor.getIdentifier()
 		);
+		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
+			keyBinding.makeNationalized();
+		}
 		entityDescriptor.setKey( keyBinding );
 		keyBinding.setCascadeDeleteEnabled( entitySource.isCascadeDeleteEnabled() );
 		relationalObjectBinder.bindColumns(
@@ -1818,6 +1821,9 @@ public class ModelBinder {
 				secondaryTable,
 				persistentClass.getIdentifier()
 		);
+		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
+			keyBinding.makeNationalized();
+		}
 		secondaryTableJoin.setKey( keyBinding );
 
 		keyBinding.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
@@ -2799,10 +2805,14 @@ public class ModelBinder {
 	}
 
 	private static void bindSimpleValueType(
-			MappingDocument sourceDocument,
+			MappingDocument mappingDocument,
 			HibernateTypeSource typeSource,
 			SimpleValue simpleValue) {
-		final TypeResolution typeResolution = resolveType( sourceDocument, typeSource );
+		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
+			simpleValue.makeNationalized();
+		}
+
+		final TypeResolution typeResolution = resolveType( mappingDocument, typeSource );
 		if ( typeResolution == null ) {
 			// no explicit type info was found
 			return;

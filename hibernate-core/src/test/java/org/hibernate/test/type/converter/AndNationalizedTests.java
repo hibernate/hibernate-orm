@@ -31,11 +31,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataImpl;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.TestForIssue;
@@ -53,20 +49,15 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9599")
 	public void basicTest() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		try {
-			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( TestEntity.class ).buildMetadata();
-			( (MetadataImpl) metadata ).validate();
+		Configuration cfg = new Configuration()
+				.addAnnotatedClass( TestEntity.class );
+		cfg.buildMappings();
 
-			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
-			assertEquals(
-					Types.NVARCHAR,
-					entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
-			);
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		final PersistentClass entityBinding = cfg.getClassMapping( TestEntity.class.getName() );
+		assertEquals(
+				Types.NVARCHAR,
+				entityBinding.getProperty( "name" ).getType().sqlTypes( cfg.buildMapping() )[0]
+		);
 	}
 
 	@Entity(name = "TestEntity")

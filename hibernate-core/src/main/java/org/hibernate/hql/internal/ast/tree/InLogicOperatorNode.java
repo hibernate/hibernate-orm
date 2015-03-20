@@ -27,14 +27,14 @@ package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
 import java.util.List;
 
+import antlr.SemanticException;
+import antlr.collections.AST;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
-
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * @author Steve Ebersole
@@ -66,6 +66,14 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
 				if ( ExpectedTypeAwareNode.class.isAssignableFrom( inListChild.getClass() ) ) {
 					( (ExpectedTypeAwareNode) inListChild ).setExpectedType( lhsType );
 				}
+
+				// fix for HHH-9605
+				if ( CollectionFunction.class.isAssignableFrom( inListChild.getClass() ) &&
+						ExpectedTypeAwareNode.class.isAssignableFrom( lhs.getClass() ) ) {
+					lhsType = ((CollectionFunction) inListChild).getDataType();
+					((ExpectedTypeAwareNode) lhs).setExpectedType( lhsType );
+				}
+
 				inListChild = inListChild.getNextSibling();
 			}
 		}

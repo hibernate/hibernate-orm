@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -43,7 +42,6 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
@@ -51,7 +49,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -67,7 +65,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-9495" )
-public class ElementCollectionTests extends BaseNonConfigCoreFunctionalTestCase {
+public class ElementCollectionTests extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { TheEntity.class };
@@ -76,7 +74,7 @@ public class ElementCollectionTests extends BaseNonConfigCoreFunctionalTestCase 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
 		// first some assertions of the metamodel
-		PersistentClass entityBinding = metadata().getEntityBinding( TheEntity.class.getName() );
+		PersistentClass entityBinding = configuration().getClassMapping( TheEntity.class.getName() );
 		assertNotNull( entityBinding );
 
 		Property setAttributeBinding = entityBinding.getProperty( "set" );

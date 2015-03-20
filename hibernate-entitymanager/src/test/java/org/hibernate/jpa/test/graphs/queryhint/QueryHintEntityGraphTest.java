@@ -191,7 +191,6 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9448")
-	@FailureExpected( jiraKey = "HHH-9448")
 	public void testLoadGraphWithRestriction() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();

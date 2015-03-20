@@ -31,8 +31,10 @@ import java.util.Properties;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
@@ -44,6 +46,8 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
@@ -55,14 +59,12 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
 import org.hibernate.usertype.DynamicParameterizedType;
 
-import org.jboss.logging.Logger;
-
 /**
  * Any value that maps to columns.
  * @author Gavin King
  */
 public class SimpleValue implements KeyValue {
-	private static final Logger log = Logger.getLogger( SimpleValue.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
@@ -96,6 +98,7 @@ public class SimpleValue implements KeyValue {
 		return metadata;
 	}
 
+	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
 	}
@@ -113,7 +116,8 @@ public class SimpleValue implements KeyValue {
 	public void addFormula(Formula formula) {
 		columns.add(formula);
 	}
-	
+
+	@Override
 	public boolean hasFormula() {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -123,27 +127,51 @@ public class SimpleValue implements KeyValue {
 		return false;
 	}
 
+	@Override
 	public int getColumnSpan() {
 		return columns.size();
 	}
+
+	@Override
 	public Iterator<Selectable> getColumnIterator() {
 		return columns.iterator();
 	}
+
 	public List getConstraintColumns() {
 		return columns;
 	}
+
 	public String getTypeName() {
 		return typeName;
 	}
-	public void setTypeName(String type) {
-		this.typeName = type;
+
+	public void setTypeName(String typeName) {
+		if ( typeName != null && typeName.startsWith( AttributeConverterTypeAdapter.NAME_PREFIX ) ) {
+			final String converterClassName = typeName.substring( AttributeConverterTypeAdapter.NAME_PREFIX.length() );
+			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			try {
+				final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
+				attributeConverterDefinition = new AttributeConverterDefinition( converterClass.newInstance(), false );
+				return;
+			}
+			catch (Exception e) {
+				log.logBadHbmAttributeConverterType( typeName, e.getMessage() );
+			}
+		}
+
+		this.typeName = typeName;
 	}
+
 	public void setTable(Table table) {
 		this.table = table;
 	}
 
+	@Override
 	public void createForeignKey() throws MappingException {}
 
+	@Override
 	public void createForeignKeyOfEntity(String entityName) {
 		if ( !hasFormula() && !"none".equals(getForeignKeyName())) {
 			ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName );
@@ -151,6 +179,7 @@ public class SimpleValue implements KeyValue {
 		}
 	}
 
+	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect, 
@@ -445,13 +474,15 @@ public class SimpleValue implements KeyValue {
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
-		final String name = String.format(
+		final String name = AttributeConverterTypeAdapter.NAME_PREFIX + attributeConverterDefinition.getAttributeConverter().getClass().getName();
+		final String description = String.format(
 				"BasicType adapter for AttributeConverter<%s,%s>",
 				entityAttributeJavaType.getSimpleName(),
 				databaseColumnJavaType.getSimpleName()
 		);
 		return new AttributeConverterTypeAdapter(
 				name,
+				description,
 				attributeConverterDefinition.getAttributeConverter(),
 				sqlTypeDescriptorAdapter,
 				entityAttributeJavaType,

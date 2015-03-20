@@ -39,7 +39,10 @@ import org.jboss.logging.Logger;
 public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStandardBasicType<T> {
 	private static final Logger log = Logger.getLogger( AttributeConverterTypeAdapter.class );
 
+	public static final String NAME_PREFIX = "converted::";
+
 	private final String name;
+	private final String description;
 
 	private final Class modelType;
 	private final Class jdbcType;
@@ -47,6 +50,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 
 	public AttributeConverterTypeAdapter(
 			String name,
+			String description,
 			AttributeConverter<? extends T,?> attributeConverter,
 			SqlTypeDescriptor sqlTypeDescriptorAdapter,
 			Class modelType,
@@ -54,6 +58,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			JavaTypeDescriptor<T> entityAttributeJavaTypeDescriptor) {
 		super( sqlTypeDescriptorAdapter, entityAttributeJavaTypeDescriptor );
 		this.name = name;
+		this.description = description;
 		this.modelType = modelType;
 		this.jdbcType = jdbcType;
 		this.attributeConverter = attributeConverter;
@@ -76,5 +81,10 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 
 	public AttributeConverter<? extends T,?> getAttributeConverter() {
 		return attributeConverter;
+	}
+
+	@Override
+	public String toString() {
+		return description;
 	}
 }

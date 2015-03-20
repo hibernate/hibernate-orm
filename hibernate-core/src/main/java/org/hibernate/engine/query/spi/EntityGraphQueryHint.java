@@ -95,8 +95,9 @@ public class EntityGraphQueryHint {
 			final Type propertyType = origin.getPropertyType( attributeName, attributeName );
 
 			try {
-				FromElement fromElement = null;
-				if ( !explicitFetches.containsKey( role ) ) {
+				FromElement fromElement = explicitFetches.get( role );
+				boolean explicitFromElement = false;
+				if ( fromElement == null ) {
 					if ( propertyType.isEntityType() ) {
 						final EntityType entityType = (EntityType) propertyType;
 
@@ -137,10 +138,16 @@ public class EntityGraphQueryHint {
 								queryableCollection, collectionType.getRole(), JoinType.LEFT_OUTER_JOIN, true, false
 						);
 					}
+				} else {
+					explicitFromElement = true;
+					fromElement.setInProjectionList( true );
+					fromElement.setFetch( true );
 				}
 
 				if ( fromElement != null ) {
-					fromElements.add( fromElement );
+					if( !explicitFromElement ){
+						fromElements.add( fromElement );
+					}
 
 					// recurse into subgraphs
 					for ( Subgraph<?> subgraph : attributeNode.getSubgraphs().values() ) {

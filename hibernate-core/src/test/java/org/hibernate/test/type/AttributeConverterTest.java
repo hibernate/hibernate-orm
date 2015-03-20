@@ -34,10 +34,12 @@ import java.sql.Timestamp;
 import java.sql.Types;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.IrrelevantEntity;
@@ -46,18 +48,21 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.internal.ast.tree.JavaConstantNode;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+
 import org.junit.Test;
 
 /**
@@ -282,8 +287,81 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			sf.close();
 		}
 	}
-	
-	
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8866")
+	public void testEnumConverter() {
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( EntityWithConvertibleField.class );
+		cfg.addAttributeConverter( ConvertibleEnumConverter.class, true );
+		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+		cfg.buildMappings();
+
+		{
+			// first lets validate that the converter was applied...
+			PersistentClass tester = cfg.getClassMapping( EntityWithConvertibleField.class.getName() );
+			Property nameProp = tester.getProperty( "convertibleEnum" );
+			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+			Type type = nameValue.getType();
+			assertNotNull( type );
+			assertTyping( BasicType.class, type );
+			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter not applied" );
+			}
+			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			assertTyping( EnumJavaTypeDescriptor.class, basicType.getJavaTypeDescriptor() );
+			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+
+			// then lets build the SF and verify its use...
+			final SessionFactory sf = cfg.buildSessionFactory();
+
+			try {
+				Session s = sf.openSession();
+				s.getTransaction().begin();
+				EntityWithConvertibleField entity = new EntityWithConvertibleField();
+				entity.setId( "ID" );
+				entity.setConvertibleEnum( ConvertibleEnum.VALUE );
+				String entityID = entity.getId();
+				s.persist( entity );
+				s.getTransaction().commit();
+				s.close();
+
+				s = sf.openSession();
+				s.beginTransaction();
+				entity = (EntityWithConvertibleField) s.load( EntityWithConvertibleField.class, entityID );
+				assertEquals( ConvertibleEnum.VALUE, entity.getConvertibleEnum() );
+				s.getTransaction().commit();
+				s.close();
+
+				JavaConstantNode javaConstantNode = new JavaConstantNode();
+				javaConstantNode.setExpectedType( type );
+				javaConstantNode.setSessionFactory( (SessionFactoryImplementor) sf );
+				javaConstantNode.setText( "org.hibernate.test.type.AttributeConverterTest$ConvertibleEnum.VALUE" );
+				final String outcome = javaConstantNode.getRenderText( (SessionFactoryImplementor) sf );
+				assertEquals( "'VALUE'", outcome );
+
+				s = sf.openSession();
+				s.beginTransaction();
+				s.createQuery( "FROM EntityWithConvertibleField e where e.convertibleEnum = org.hibernate.test.type.AttributeConverterTest$ConvertibleEnum.VALUE" )
+						.list();
+				s.getTransaction().commit();
+				s.close();
+
+				s = sf.openSession();
+				s.beginTransaction();
+				s.delete( entity );
+				s.getTransaction().commit();
+				s.close();
+			}
+			finally {
+				try {
+					sf.close();
+				}
+				catch (Exception ignore) {
+				}
+			}
+		}
+	}
 
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -392,6 +470,62 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 		public void setDateCreated(Instant dateCreated) {
 			this.dateCreated = dateCreated;
+		}
+	}
+
+	public static enum ConvertibleEnum {
+		VALUE,
+		DEFAULT;
+
+		public String convertToString() {
+			switch ( this ) {
+				case VALUE: {
+					return "VALUE";
+				}
+				default: {
+					return "DEFAULT";
+				}
+			}
+		}
+	}
+
+	@Converter(autoApply = true)
+	public static class ConvertibleEnumConverter implements AttributeConverter<ConvertibleEnum, String> {
+		@Override
+		public String convertToDatabaseColumn(ConvertibleEnum attribute) {
+			return attribute.convertToString();
+		}
+
+		@Override
+		public ConvertibleEnum convertToEntityAttribute(String dbData) {
+			return ConvertibleEnum.valueOf( dbData );
+		}
+	}
+
+	@Entity( name = "EntityWithConvertibleField" )
+	@Table( name = "EntityWithConvertibleField" )
+	public static class EntityWithConvertibleField {
+		private String id;
+		private ConvertibleEnum convertibleEnum;
+
+		@Id
+		@Column(name = "id")
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		@Column(name = "testEnum")
+
+		public ConvertibleEnum getConvertibleEnum() {
+			return convertibleEnum;
+		}
+
+		public void setConvertibleEnum(ConvertibleEnum convertibleEnum) {
+			this.convertibleEnum = convertibleEnum;
 		}
 	}
 

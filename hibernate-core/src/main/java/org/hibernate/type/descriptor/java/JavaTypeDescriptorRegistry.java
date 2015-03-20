@@ -64,6 +64,12 @@ public class JavaTypeDescriptorRegistry {
 			return descriptor;
 		}
 
+		if ( cls.isEnum() ) {
+			descriptor = new EnumJavaTypeDescriptor( cls );
+			descriptorsByClass.put( cls, descriptor );
+			return descriptor;
+		}
+
 		if ( Serializable.class.isAssignableFrom( cls ) ) {
 			return new SerializableTypeDescriptor( cls );
 		}
@@ -80,8 +86,8 @@ public class JavaTypeDescriptorRegistry {
 		return new FallbackJavaTypeDescriptor<T>( cls );
 	}
 
-	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
 
+	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
 		@SuppressWarnings("unchecked")
 		protected FallbackJavaTypeDescriptor(Class<T> type) {
 			// MutableMutabilityPlan would be the "safest" option, but we do not necessarily know how to deepCopy etc...
@@ -112,4 +118,5 @@ public class JavaTypeDescriptorRegistry {
 			return (T) value;
 		}
 	}
+
 }

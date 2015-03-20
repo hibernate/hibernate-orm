@@ -68,10 +68,10 @@ public class InLogicOperatorNode extends BinaryLogicOperatorNode implements Bina
 				}
 
 				// fix for HHH-9605
-				if ( CollectionFunction.class.isAssignableFrom( inListChild.getClass() ) &&
-						ExpectedTypeAwareNode.class.isAssignableFrom( lhs.getClass() ) ) {
-					lhsType = ((CollectionFunction) inListChild).getDataType();
-					((ExpectedTypeAwareNode) lhs).setExpectedType( lhsType );
+				if ( CollectionFunction.class.isInstance( inListChild )
+						&& ExpectedTypeAwareNode.class.isInstance( lhs ) ) {
+					final Type rhsType = ((CollectionFunction) inListChild).getDataType();
+					((ExpectedTypeAwareNode) lhs).setExpectedType( rhsType );
 				}
 
 				inListChild = inListChild.getNextSibling();

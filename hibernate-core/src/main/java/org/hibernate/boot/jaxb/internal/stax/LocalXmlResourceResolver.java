@@ -81,7 +81,17 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				log.debug(
 						"Recognized legacy hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
 				);
-				return openUrlStream( LEGACY_HBM_DTD_MAPPING.getMappedLocalUrl() );
+				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
+			}
+			else if ( LEGACY2_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
+				log.recognizedObsoleteHibernateNamespace(
+						LEGACY2_HBM_DTD_MAPPING.getIdentifierBase(),
+						HBM_DTD_MAPPING.getIdentifierBase()
+				);
+				log.debug(
+						"Recognized legacy hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
+				);
+				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
 			}
 			else if ( CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
 				log.debug(
@@ -167,6 +177,11 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	public static final DtdMapping LEGACY_HBM_DTD_MAPPING = new DtdMapping(
 			"http://www.hibernate.org/dtd/hibernate-mapping",
+			"org/hibernate/hibernate-mapping-3.0.dtd"
+	);
+
+	public static final DtdMapping LEGACY2_HBM_DTD_MAPPING = new DtdMapping(
+			"http://hibernate.sourceforge.net/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 

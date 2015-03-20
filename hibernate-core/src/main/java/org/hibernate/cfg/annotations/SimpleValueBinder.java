@@ -78,6 +78,8 @@ import org.jboss.logging.Logger;
 public class SimpleValueBinder {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SimpleValueBinder.class.getName());
 
+	private Mappings mappings;
+
 	private String propertyName;
 	private String returnedClassName;
 	private Ejb3Column[] columns;
@@ -85,7 +87,8 @@ public class SimpleValueBinder {
 	private String explicitType = "";
 	private String defaultType = "";
 	private Properties typeParameters = new Properties();
-	private Mappings mappings;
+	private boolean isNationalized;
+
 	private Table table;
 	private SimpleValue simpleValue;
 	private boolean isVersion;
@@ -157,7 +160,7 @@ public class SimpleValueBinder {
 		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
 
-		final boolean isNationalized = property.isAnnotationPresent( Nationalized.class )
+		isNationalized = property.isAnnotationPresent( Nationalized.class )
 				|| mappings.useNationalizedCharacterData();
 
 		Type annType = property.getAnnotation( Type.class );
@@ -387,6 +390,9 @@ public class SimpleValueBinder {
 			table = columns[0].getTable();
 		}
 		simpleValue = new SimpleValue( mappings, table );
+		if ( isNationalized ) {
+			simpleValue.makeNationalized();
+		}
 
 		linkWithValue();
 
@@ -407,7 +413,7 @@ public class SimpleValueBinder {
 		if ( columns[0].isNameDeferred() && !mappings.isInSecondPass() && referencedEntityName != null ) {
 			mappings.addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass(
-							referencedEntityName, ( Ejb3JoinColumn[] ) columns, simpleValue
+							referencedEntityName, (Ejb3JoinColumn[]) columns, simpleValue
 					)
 			);
 		}

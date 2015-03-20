@@ -42,6 +42,7 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -143,6 +144,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 
 		if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+			// the @Convert did not name an attribute...
 			if ( canElementBeConverted && canKeyBeConverted ) {
 				throw new IllegalStateException(
 						"@Convert placed on Map attribute [" + collection.getRole()
@@ -158,28 +160,44 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			// if neither, we should not be here...
 		}
 		else {
-			if ( canElementBeConverted && canKeyBeConverted ) {
+			// the @Convert named an attribute...
+			final String keyPath = removePrefix( info.getAttributeName(), "key" );
+			final String elementPath = removePrefix( info.getAttributeName(), "value" );
+
+			if ( canElementBeConverted && canKeyBeConverted && keyPath == null && elementPath == null ) {
 				// specified attributeName needs to have 'key.' or 'value.' prefix
-				if ( info.getAttributeName().startsWith( "key." ) ) {
-					keyAttributeConversionInfoMap.put(
-							info.getAttributeName().substring( 4 ),
-							info
-					);
-				}
-				else if ( info.getAttributeName().startsWith( "value." ) ) {
-					elementAttributeConversionInfoMap.put(
-							info.getAttributeName().substring( 6 ),
-							info
-					);
-				}
-				else {
-					throw new IllegalStateException(
-							"@Convert placed on Map attribute [" + collection.getRole()
-									+ "] must define attributeName of 'key' or 'value'"
-					);
-				}
+				throw new IllegalStateException(
+						"@Convert placed on Map attribute [" + collection.getRole()
+								+ "] must define attributeName of 'key' or 'value'"
+				);
+			}
+
+			if ( keyPath != null ) {
+				keyAttributeConversionInfoMap.put( keyPath, info );
+			}
+			else if ( elementPath != null ) {
+				elementAttributeConversionInfoMap.put( elementPath, info );
 			}
 		}
+	}
+
+	/**
+	 * Check if path has the given prefix and remove it.
+	 *
+	 * @param path Path.
+	 * @param prefix Prefix.
+	 * @return Path without prefix, or null, if path did not have the prefix.
+	 */
+	private String removePrefix(String path, String prefix) {
+		if ( path.equals(prefix) ) {
+			return "";
+		}
+
+		if (path.startsWith(prefix + ".")) {
+			return path.substring( prefix.length() + 1 );
+		}
+
+		return null;
 	}
 
 	@Override
@@ -219,8 +237,17 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
-		// todo : implement
-		return null;
+		final String key = removePrefix( path, "key" );
+		if ( key != null ) {
+			return keyAttributeConversionInfoMap.get( key );
+		}
+
+		final String element = removePrefix( path, "element" );
+		if ( element != null ) {
+			return elementAttributeConversionInfoMap.get( element );
+		}
+
+		return elementAttributeConversionInfoMap.get( path );
 	}
 
 	public String getClassName() {

@@ -38,6 +38,8 @@ import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+import org.jboss.logging.Logger;
+
 /**
  * Adapter for incorporating JPA {@link AttributeConverter} handling into the SqlTypeDescriptor contract.
  * <p/>
@@ -50,6 +52,8 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescriptor {
+	private static final Logger log = Logger.getLogger( AttributeConverterSqlTypeDescriptorAdapter.class );
+
 	private final AttributeConverter converter;
 	private final SqlTypeDescriptor delegate;
 	private final JavaTypeDescriptor intermediateJavaTypeDescriptor;
@@ -84,10 +88,10 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		// Get the binder for the intermediate type representation
 		final ValueBinder realBinder = delegate.getBinder( intermediateJavaTypeDescriptor );
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+
+		return new ValueBinder<X>() {
 			@Override
-			@SuppressWarnings("unchecked")
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+			public void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Object convertedValue;
 				try {
 					convertedValue = converter.convertToDatabaseColumn( value );
@@ -98,6 +102,8 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 				catch (RuntimeException re) {
 					throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
 				}
+
+				log.debugf( "Converted value on binding : %s -> %s", value, convertedValue );
 				realBinder.bind( st, convertedValue, index, options );
 			}
 		};
@@ -108,27 +114,34 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		// Get the extractor for the intermediate type representation
 		final ValueExtractor realExtractor = delegate.getExtractor( intermediateJavaTypeDescriptor );
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+
+		return new ValueExtractor<X>() {
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+			public X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 				return doConversion( realExtractor.extract( rs, name, options ) );
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+			public X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return doConversion( realExtractor.extract( statement, index, options ) );
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return doConversion( realExtractor.extract( statement, new String[] {name}, options ) );
+			public X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException {
+				if ( paramNames.length > 1 ) {
+					throw new IllegalArgumentException( "Basic value extraction cannot handle multiple output parameters" );
+				}
+				return doConversion( realExtractor.extract( statement, paramNames, options ) );
 			}
 
 			@SuppressWarnings("unchecked")
 			private X doConversion(Object extractedValue) {
 				try {
-					return (X) converter.convertToEntityAttribute( extractedValue );
+					X convertedValue = (X) converter.convertToEntityAttribute( extractedValue );
+					log.debugf( "Converted value on extraction: %s -> %s", extractedValue, convertedValue );
+					return convertedValue;
 				}
 				catch (PersistenceException pe) {
 					throw pe;

@@ -46,7 +46,7 @@ public interface ValueExtractor<X> {
 	 */
 	public X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
 
-	public X extract(CallableStatement rs, int index, WrapperOptions options) throws SQLException;
+	public X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
 
 	public X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException;
 }

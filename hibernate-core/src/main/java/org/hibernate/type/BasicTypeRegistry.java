@@ -79,7 +79,6 @@ public class BasicTypeRegistry implements Serializable {
 		register( ClassType.INSTANCE );
 		register( UUIDBinaryType.INSTANCE );
 		register( UUIDCharType.INSTANCE );
-		register( PostgresUUIDType.INSTANCE );
 
 		register( BinaryType.INSTANCE );
 		register( WrapperBinaryType.INSTANCE );

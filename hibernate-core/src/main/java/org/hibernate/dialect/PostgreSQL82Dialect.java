@@ -23,6 +23,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.PostgresUUIDType;
+
 /**
  * An SQL dialect for Postgres 8.2 and later, adds support for "if exists" when dropping tables
  * 
@@ -32,5 +36,13 @@ public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return true;
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		// HHH-9562
+		typeContributions.contributeType( PostgresUUIDType.INSTANCE );
 	}
 }

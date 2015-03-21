@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
@@ -162,6 +163,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -2423,15 +2425,16 @@ public final class AnnotationBinder {
 				|| property.isAnnotationPresent( EmbeddedId.class );
 
 		GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
-		String generatorType = generatedValue != null ?
-				generatorType( generatedValue.strategy(), buildingContext ) :
-				"assigned";
-		String generatorName = generatedValue != null ?
-				generatedValue.generator() :
-				BinderHelper.ANNOTATION_STRING_DEFAULT;
+		String generatorType = generatedValue != null
+				? generatorType( generatedValue.strategy(), buildingContext, returnedClass )
+				: "assigned";
+		String generatorName = generatedValue != null
+				? generatedValue.generator()
+				: BinderHelper.ANNOTATION_STRING_DEFAULT;
 		if ( isComponent ) {
+			//a component must not have any generator
 			generatorType = "assigned";
-		} //a component must not have any generator
+		}
 		BinderHelper.makeIdGenerator( idValue, generatorType, generatorName, buildingContext, localGenerators );
 
 		if ( LOG.isTraceEnabled() ) {
@@ -2742,7 +2745,7 @@ public final class AnnotationBinder {
 
 				GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
 				String generatorType = generatedValue != null
-						? generatorType( generatedValue.strategy(), buildingContext )
+						? generatorType( generatedValue.strategy(), buildingContext, property.getType() )
 						: "assigned";
 				String generator = generatedValue != null ? generatedValue.generator() : BinderHelper.ANNOTATION_STRING_DEFAULT;
 
@@ -3226,23 +3229,38 @@ public final class AnnotationBinder {
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
 	}
 
-	private static String generatorType(GenerationType generatorEnum, MetadataBuildingContext buildingContext) {
+	private static String generatorType(
+			GenerationType generatorEnum,
+			MetadataBuildingContext buildingContext,
+			XClass javaTypeXClass) {
 		boolean useNewGeneratorMappings = buildingContext.getBuildingOptions().isUseNewIdentifierGenerators();
 		switch ( generatorEnum ) {
-			case IDENTITY:
+			case IDENTITY: {
 				return "identity";
-			case AUTO:
-				return useNewGeneratorMappings
-						? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
-						: "native";
-			case TABLE:
+			}
+			case AUTO: {
+				final Class javaType = buildingContext.getBuildingOptions()
+						.getReflectionManager()
+						.toClass( javaTypeXClass );
+				if ( UUID.class.isAssignableFrom( javaType ) ) {
+					return UUIDGenerator.class.getName();
+				}
+				else {
+					return useNewGeneratorMappings
+							? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
+							: "native";
+				}
+			}
+			case TABLE: {
 				return useNewGeneratorMappings
 						? org.hibernate.id.enhanced.TableGenerator.class.getName()
 						: MultipleHiLoPerTableGenerator.class.getName();
-			case SEQUENCE:
+			}
+			case SEQUENCE: {
 				return useNewGeneratorMappings
 						? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
 						: "seqhilo";
+			}
 		}
 		throw new AssertionFailure( "Unknown GeneratorType: " + generatorEnum );
 	}

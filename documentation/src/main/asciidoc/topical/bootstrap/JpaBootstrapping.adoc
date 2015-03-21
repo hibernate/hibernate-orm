@@ -1,0 +1,5 @@
+= Bootstrapping Hibernate JPA
+:toc:
+
+* Spec compliant bootstrapping
+* EntityManagerFactoryBuilder

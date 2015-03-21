@@ -196,6 +196,11 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	}
 
 	@Override
+	public ClassLoader getTempClassLoader() {
+		return null;
+	}
+
+	@Override
 	public void pushClassTransformer(List<String> entityClassNames) {
 		// todo : log a message that this is currently not supported...
 	}

@@ -1,0 +1,11 @@
+= Legacy Bootstrapping
+:toc:
+
+The legacy way to bootstrap a `SessionFactory` is via the `org.hibernate.cfg.Configuration` object.
+`Configuration` represents, essentially, a single point for specifying all aspects of building
+the `SessionFactory`: everything from settings, to mappings, to strategies, etc.
+
+However there is a huge draw back to this approach which led to the development of the new
+approach discussed below.
+
+todo : discuss the timing issues

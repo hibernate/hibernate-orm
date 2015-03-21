@@ -686,6 +686,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void populate(MetadataBuilder metamodelBuilder, MergedSettings mergedSettings, StandardServiceRegistry ssr) {
+		if ( persistenceUnit.getTempClassLoader() != null ) {
+			metamodelBuilder.with( persistenceUnit.getTempClassLoader() );
+		}
+
 		metamodelBuilder.with( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
 		metamodelBuilder.with(
 				new StandardScanOptions(

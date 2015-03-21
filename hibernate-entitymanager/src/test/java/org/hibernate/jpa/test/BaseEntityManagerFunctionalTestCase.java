@@ -189,6 +189,11 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 
 		@Override
+		public ClassLoader getTempClassLoader() {
+			return null;
+		}
+
+		@Override
 		public void pushClassTransformer(List<String> entityClassNames) {
 		}
 	}

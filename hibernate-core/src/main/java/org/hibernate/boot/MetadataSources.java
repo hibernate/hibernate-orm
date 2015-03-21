@@ -207,7 +207,9 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read metadata from the annotations attached to the given class.
+	 * Read metadata from the annotations attached to the given class.  The important
+	 * distinction here is that the {@link Class} will not be accessed until later
+	 * which is important for on-the-fly bytecode-enhancement
 	 *
 	 * @param annotatedClassName The name of a class containing annotations
 	 *

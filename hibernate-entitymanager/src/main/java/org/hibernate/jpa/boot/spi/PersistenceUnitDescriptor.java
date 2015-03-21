@@ -96,6 +96,7 @@ public interface PersistenceUnitDescriptor {
 	public Properties getProperties();
 
 	public ClassLoader getClassLoader();
+	public ClassLoader getTempClassLoader();
 
 	public void pushClassTransformer(List<String> entityClassNames);
 }

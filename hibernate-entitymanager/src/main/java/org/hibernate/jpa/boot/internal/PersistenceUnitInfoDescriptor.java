@@ -90,6 +90,11 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
+	public ClassLoader getTempClassLoader() {
+		return persistenceUnitInfo.getNewTempClassLoader();
+	}
+
+	@Override
 	public boolean isExcludeUnlistedClasses() {
 		return persistenceUnitInfo.excludeUnlistedClasses();
 	}

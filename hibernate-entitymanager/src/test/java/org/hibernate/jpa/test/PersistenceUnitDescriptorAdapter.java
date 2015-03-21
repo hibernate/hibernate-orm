@@ -121,6 +121,11 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 	}
 
 	@Override
+	public ClassLoader getTempClassLoader() {
+		return null;
+	}
+
+	@Override
 	public void pushClassTransformer(List<String> entityClassNames) {
 	}
 }

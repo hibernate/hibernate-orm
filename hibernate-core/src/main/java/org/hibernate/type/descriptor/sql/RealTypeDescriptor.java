@@ -71,17 +71,20 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getFloat( name ), options );
+				final float value = rs.getFloat( name );
+				return javaTypeDescriptor.wrap( rs.wasNull() ? null : Float.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getFloat( index ), options );
+				final float value = statement.getFloat( index );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Float.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getFloat( name ), options );
+				final float value = statement.getFloat( name );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Float.valueOf( value ), options );
 			}
 		};
 	}

@@ -71,17 +71,20 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getInt( name ), options );
+				final int value = rs.getInt( name );
+				return javaTypeDescriptor.wrap( rs.wasNull() ? null : Integer.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getInt( index ), options );
+				final int value = statement.getInt( index );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Integer.valueOf( value ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getInt( name ), options );
+				final int value = statement.getInt( name );
+				return javaTypeDescriptor.wrap( statement.wasNull() ? null : Integer.valueOf( value ), options );
 			}
 		};
 	}

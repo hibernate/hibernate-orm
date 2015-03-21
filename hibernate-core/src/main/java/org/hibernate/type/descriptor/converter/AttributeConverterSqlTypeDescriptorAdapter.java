@@ -84,10 +84,10 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		// Get the binder for the intermediate type representation
 		final ValueBinder realBinder = delegate.getBinder( intermediateJavaTypeDescriptor );
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		// We cannot extend BasicBinder below because we need to send null values to the converter. See HHH-8697.
+		return new ValueBinder<X>() {
 			@Override
-			@SuppressWarnings("unchecked")
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+			public void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Object convertedValue;
 				try {
 					convertedValue = converter.convertToDatabaseColumn( value );

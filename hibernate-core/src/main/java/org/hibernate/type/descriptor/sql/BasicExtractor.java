@@ -63,7 +63,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
 		final boolean traceEnabled = log.isTraceEnabled();
-		if ( value == null || rs.wasNull() ) {
+		if ( value == null ) {
 			if ( traceEnabled ) {
 				log.tracef(
 						"extracted value ([%s] : [%s]) - [null]",
@@ -89,8 +89,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	/**
 	 * Perform the extraction.
 	 * <p/>
-	 * Called from {@link #extract}.  Null checking of the value (as well as consulting {@link ResultSet#wasNull}) is
-	 * done there.
+	 * Called from {@link #extract}. Null checking of the value is done there, but not
+	 * checking {@link ResultSet#wasNull}. Implementations must ensure they return
+	 * {@code null} when appropriate.
 	 *
 	 * @param rs The result set
 	 * @param name The value name in the result set
@@ -106,7 +107,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	public J extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final J value = doExtract( statement, index, options );
 		final boolean traceEnabled = log.isTraceEnabled();
-		if ( value == null || statement.wasNull() ) {
+		if ( value == null ) {
 			if ( traceEnabled ) {
 				log.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
@@ -132,8 +133,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	/**
 	 * Perform the extraction.
 	 * <p/>
-	 * Called from {@link #extract}.  Null checking of the value (as well as consulting {@link ResultSet#wasNull}) is
-	 * done there.
+	 * Called from {@link #extract}. Null checking of the value is done there, but not
+	 * checking {@link ResultSet#wasNull}. Implementations must ensure they return
+	 * {@code null} when appropriate.
 	 *
 	 * @param statement The callable statement containing the output parameter
 	 * @param index The index (position) of the output parameter
@@ -153,7 +155,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 		final String paramName = paramNames[0];
 		final J value = doExtract( statement, paramName, options );
 		final boolean traceEnabled = log.isTraceEnabled();
-		if ( value == null || statement.wasNull() ) {
+		if ( value == null ) {
 			if ( traceEnabled ) {
 				log.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
@@ -179,8 +181,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	/**
 	 * Perform the extraction.
 	 * <p/>
-	 * Called from {@link #extract}.  Null checking of the value (as well as consulting {@link ResultSet#wasNull}) is
-	 * done there.
+	 * Called from {@link #extract}. Null checking of the value is done there, but not
+	 * checking {@link ResultSet#wasNull}. Implementations must ensure they return
+	 * {@code null} when appropriate.
 	 *
 	 * @param statement The callable statement containing the output parameter
 	 * @param name The output parameter name

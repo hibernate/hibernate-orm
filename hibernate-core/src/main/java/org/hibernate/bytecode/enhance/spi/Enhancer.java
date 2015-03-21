@@ -1009,6 +1009,12 @@ public class Enhancer {
 
 					final int constIndex = itr.u16bitAt( index + 1 );
 
+					final String className = constPool.getFieldrefClassName( constIndex );
+					if ( !className.equals( managedCtClass.getName() ) ) {
+						// its not a field for the managed class, so skip it
+						continue;
+					}
+
 					final String fieldName = constPool.getFieldrefName( constIndex );
 					final PersistentAttributeDescriptor attributeDescriptor = attributeDescriptorMap.get( fieldName );
 

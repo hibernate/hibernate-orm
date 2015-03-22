@@ -23,14 +23,12 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.DOMWriter;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -46,12 +44,13 @@ import org.hibernate.envers.internal.tools.graph.GraphTopologicalSort;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.mapping.PersistentClass;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.DOMWriter;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -77,12 +76,15 @@ public class EntitiesConfigurator {
 		while ( classes.hasNext() ) {
 			final PersistentClass pc = classes.next();
 
-			// Collecting information from annotations on the persistent class pc
-			final AnnotationsMetadataReader annotationsMetadataReader =
-					new AnnotationsMetadataReader( globalCfg, reflectionManager, pc );
-			final ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
+			// Ensure we're in POJO, not dynamic model, mapping.
+			if (pc.getClassName() != null) {
+				// Collecting information from annotations on the persistent class pc
+				final AnnotationsMetadataReader annotationsMetadataReader =
+						new AnnotationsMetadataReader(globalCfg, reflectionManager, pc);
+				final ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
 
-			classesAuditingData.addClassAuditingData( pc, auditData );
+				classesAuditingData.addClassAuditingData(pc, auditData);
+			}
 		}
 
 		// Now that all information is read we can update the calculated fields.

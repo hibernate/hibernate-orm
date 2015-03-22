@@ -23,10 +23,8 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import java.util.Date;
-import java.util.Set;
-import javax.persistence.Column;
-
+import org.dom4j.Document;
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -57,8 +55,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
-import org.dom4j.Document;
-import org.dom4j.Element;
+import javax.persistence.Column;
+import java.util.Date;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -316,77 +315,79 @@ public class RevisionInfoConfiguration {
 		Class<?> revisionInfoClass = null;
 
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
-			XClass clazz;
-			try {
-				clazz = reflectionManager.classForName( persistentClass.getClassName(), this.getClass() );
-			}
-			catch (ClassNotFoundException e) {
-				throw new MappingException( e );
-			}
-
-			final RevisionEntity revisionEntity = clazz.getAnnotation( RevisionEntity.class );
-			if ( revisionEntity != null ) {
-				if ( revisionEntityFound ) {
-					throw new MappingException( "Only one entity may be annotated with @RevisionEntity!" );
+			// Ensure we're in POJO, not dynamic model, mapping.
+			if (persistentClass.getClassName() != null) {
+				XClass clazz;
+				try {
+					clazz = reflectionManager.classForName( persistentClass.getClassName(), this.getClass() );
+				}
+				catch (ClassNotFoundException e) {
+					throw new MappingException( e );
 				}
 
-				// Checking if custom revision entity isn't audited
-				if ( clazz.getAnnotation( Audited.class ) != null ) {
-					throw new MappingException( "An entity annotated with @RevisionEntity cannot be audited!" );
-				}
+				final RevisionEntity revisionEntity = clazz.getAnnotation( RevisionEntity.class );
+				if ( revisionEntity != null ) {
+					if (revisionEntityFound) {
+						throw new MappingException("Only one entity may be annotated with @RevisionEntity!");
+					}
 
-				revisionEntityFound = true;
+					// Checking if custom revision entity isn't audited
+					if (clazz.getAnnotation(Audited.class) != null) {
+						throw new MappingException("An entity annotated with @RevisionEntity cannot be audited!");
+					}
 
-				final MutableBoolean revisionNumberFound = new MutableBoolean();
-				final MutableBoolean revisionTimestampFound = new MutableBoolean();
-				final MutableBoolean modifiedEntityNamesFound = new MutableBoolean();
+					revisionEntityFound = true;
 
-				searchForRevisionInfoCfg(
-						clazz,
-						reflectionManager,
-						revisionNumberFound,
-						revisionTimestampFound,
-						modifiedEntityNamesFound
-				);
+					final MutableBoolean revisionNumberFound = new MutableBoolean();
+					final MutableBoolean revisionTimestampFound = new MutableBoolean();
+					final MutableBoolean modifiedEntityNamesFound = new MutableBoolean();
 
-				if ( !revisionNumberFound.isSet() ) {
-					throw new MappingException(
-							"An entity annotated with @RevisionEntity must have a field annotated " +
-									"with @RevisionNumber!"
+					searchForRevisionInfoCfg(
+							clazz,
+							reflectionManager,
+							revisionNumberFound,
+							revisionTimestampFound,
+							modifiedEntityNamesFound
 					);
-				}
 
-				if ( !revisionTimestampFound.isSet() ) {
-					throw new MappingException(
-							"An entity annotated with @RevisionEntity must have a field annotated " +
-									"with @RevisionTimestamp!"
-					);
-				}
+					if (!revisionNumberFound.isSet()) {
+						throw new MappingException(
+								"An entity annotated with @RevisionEntity must have a field annotated " +
+										"with @RevisionNumber!"
+						);
+					}
 
-				revisionInfoEntityName = persistentClass.getEntityName();
-				revisionInfoClass = persistentClass.getMappedClass();
-				final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
-				revisionInfoTimestampType = persistentClass.getProperty( revisionInfoTimestampData.getName() ).getType();
-				if ( globalCfg.isTrackEntitiesChangedInRevision()
-						|| (globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class
-						.isAssignableFrom( revisionInfoClass ))
-						|| (!globalCfg.isUseRevisionEntityWithNativeId() && SequenceIdTrackingModifiedEntitiesRevisionEntity.class
-						.isAssignableFrom( revisionInfoClass ))
-						|| modifiedEntityNamesFound.isSet() ) {
-					// If tracking modified entities parameter is enabled, custom revision info entity is a subtype
-					// of DefaultTrackingModifiedEntitiesRevisionEntity class, or @ModifiedEntityNames annotation is used.
-					revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
-							revisionInfoEntityName,
-							revisionInfoClass, revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate(),
-							modifiedEntityNamesData
-					);
-					globalCfg.setTrackEntitiesChangedInRevision( true );
-				}
-				else {
-					revisionInfoGenerator = new DefaultRevisionInfoGenerator(
-							revisionInfoEntityName, revisionInfoClass,
-							revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate()
-					);
+					if (!revisionTimestampFound.isSet()) {
+						throw new MappingException(
+								"An entity annotated with @RevisionEntity must have a field annotated " +
+										"with @RevisionTimestamp!"
+						);
+					}
+
+					revisionInfoEntityName = persistentClass.getEntityName();
+					revisionInfoClass = persistentClass.getMappedClass();
+					final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass(revisionEntity.value());
+					revisionInfoTimestampType = persistentClass.getProperty(revisionInfoTimestampData.getName()).getType();
+					if (globalCfg.isTrackEntitiesChangedInRevision()
+							|| (globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class
+							.isAssignableFrom(revisionInfoClass))
+							|| (!globalCfg.isUseRevisionEntityWithNativeId() && SequenceIdTrackingModifiedEntitiesRevisionEntity.class
+							.isAssignableFrom(revisionInfoClass))
+							|| modifiedEntityNamesFound.isSet()) {
+						// If tracking modified entities parameter is enabled, custom revision info entity is a subtype
+						// of DefaultTrackingModifiedEntitiesRevisionEntity class, or @ModifiedEntityNames annotation is used.
+						revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
+								revisionInfoEntityName,
+								revisionInfoClass, revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate(),
+								modifiedEntityNamesData
+						);
+						globalCfg.setTrackEntitiesChangedInRevision(true);
+					} else {
+						revisionInfoGenerator = new DefaultRevisionInfoGenerator(
+								revisionInfoEntityName, revisionInfoClass,
+								revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate()
+						);
+					}
 				}
 			}
 		}

@@ -22,7 +22,7 @@ public class Sky implements Serializable {
 	protected String color;
 	@Column(name="`day`",nullable = false)
 	protected String day;
-	@Column(name = "`MONTH`", nullable = false)
+	@Column(name = "`month`", nullable = false)
 	protected String month;
 	@Transient
 	protected String area;

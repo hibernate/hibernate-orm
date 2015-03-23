@@ -57,6 +57,11 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 		return buf.toString();
 	}
 
+	@Override
+	public String extractLoggableRepresentation(byte[] value) {
+		return (value == null) ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
+	}
+
 	public byte[] fromString(String string) {
 		if ( string == null ) {
 			return null;

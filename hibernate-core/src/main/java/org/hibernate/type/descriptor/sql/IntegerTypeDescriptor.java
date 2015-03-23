@@ -43,7 +43,6 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 	public static final IntegerTypeDescriptor INSTANCE = new IntegerTypeDescriptor();
 
 	public IntegerTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

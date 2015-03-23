@@ -34,7 +34,6 @@ public class LongNVarcharTypeDescriptor extends NVarcharTypeDescriptor {
 	public static final LongNVarcharTypeDescriptor INSTANCE = new LongNVarcharTypeDescriptor();
 
 	public LongNVarcharTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

@@ -43,7 +43,6 @@ public class NVarcharTypeDescriptor implements SqlTypeDescriptor {
 	public static final NVarcharTypeDescriptor INSTANCE = new NVarcharTypeDescriptor();
 
 	public NVarcharTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

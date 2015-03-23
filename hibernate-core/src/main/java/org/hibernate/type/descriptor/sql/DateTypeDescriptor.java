@@ -44,7 +44,6 @@ public class DateTypeDescriptor implements SqlTypeDescriptor {
 	public static final DateTypeDescriptor INSTANCE = new DateTypeDescriptor();
 
 	public DateTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

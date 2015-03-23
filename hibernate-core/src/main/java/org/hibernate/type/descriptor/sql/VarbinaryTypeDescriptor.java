@@ -43,7 +43,6 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	public static final VarbinaryTypeDescriptor INSTANCE = new VarbinaryTypeDescriptor();
 
 	public VarbinaryTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	public int getSqlType() {

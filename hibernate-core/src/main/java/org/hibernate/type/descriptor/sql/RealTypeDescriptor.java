@@ -43,7 +43,6 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 	public static final RealTypeDescriptor INSTANCE = new RealTypeDescriptor();
 
 	public RealTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

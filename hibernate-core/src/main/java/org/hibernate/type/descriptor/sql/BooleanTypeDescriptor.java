@@ -43,7 +43,6 @@ public class BooleanTypeDescriptor implements SqlTypeDescriptor {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
 
 	public BooleanTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	public int getSqlType() {

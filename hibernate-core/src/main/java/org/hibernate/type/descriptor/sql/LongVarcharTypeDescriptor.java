@@ -34,7 +34,6 @@ public class LongVarcharTypeDescriptor extends VarcharTypeDescriptor {
 	public static final LongVarcharTypeDescriptor INSTANCE = new LongVarcharTypeDescriptor();
 
 	public LongVarcharTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

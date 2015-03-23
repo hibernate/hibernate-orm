@@ -43,7 +43,6 @@ public class SmallIntTypeDescriptor implements SqlTypeDescriptor {
 	public static final SmallIntTypeDescriptor INSTANCE = new SmallIntTypeDescriptor();
 
 	public SmallIntTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

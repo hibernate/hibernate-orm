@@ -33,7 +33,6 @@ public class CharTypeDescriptor extends VarcharTypeDescriptor {
 	public static final CharTypeDescriptor INSTANCE = new CharTypeDescriptor();
 
 	public CharTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

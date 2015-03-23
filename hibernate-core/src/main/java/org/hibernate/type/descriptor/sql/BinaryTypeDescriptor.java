@@ -33,7 +33,6 @@ public class BinaryTypeDescriptor extends VarbinaryTypeDescriptor {
 	public static final BinaryTypeDescriptor INSTANCE = new BinaryTypeDescriptor();
 
 	public BinaryTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

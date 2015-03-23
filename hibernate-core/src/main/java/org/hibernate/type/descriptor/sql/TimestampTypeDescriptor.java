@@ -44,7 +44,6 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 	public static final TimestampTypeDescriptor INSTANCE = new TimestampTypeDescriptor();
 
 	public TimestampTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

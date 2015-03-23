@@ -83,92 +83,84 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 
-	public static final ClobTypeDescriptor DEFAULT =
-			new ClobTypeDescriptor() {
-				{
-					SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
-				}
-
+	public static final ClobTypeDescriptor DEFAULT = new ClobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-							if ( options.useStreamForLobBinding() ) {
-								STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
-							}
-							else {
-								CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
-							}
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+					if ( options.useStreamForLobBinding() ) {
+						STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+					}
+					else {
+						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+					}
 				}
 			};
+		}
+	};
 
-	public static final ClobTypeDescriptor CLOB_BINDING =
-			new ClobTypeDescriptor() {
+	public static final ClobTypeDescriptor CLOB_BINDING = new ClobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-								throws SQLException {
-							st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
 				}
 			};
+		}
+	};
 
-	public static final ClobTypeDescriptor STREAM_BINDING =
-			new ClobTypeDescriptor() {
+	public static final ClobTypeDescriptor STREAM_BINDING = new ClobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-								throws SQLException {
-							final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
-							st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 			};
+		}
+	};
 
-	public static final ClobTypeDescriptor STREAM_BINDING_EXTRACTING =
-			new ClobTypeDescriptor() {
+	public static final ClobTypeDescriptor STREAM_BINDING_EXTRACTING = new ClobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-								throws SQLException {
-							final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
-							st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-						}
-					};
-				}
-				
-				@Override
-				public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-						@Override
-			            protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-			                return javaTypeDescriptor.wrap( rs.getCharacterStream( name ), options );
-			            }
-
-						@Override
-						protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
-								throws SQLException {
-							return javaTypeDescriptor.wrap( statement.getCharacterStream( index ), options );
-						}
-
-						@Override
-						protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
-								throws SQLException {
-							return javaTypeDescriptor.wrap( statement.getCharacterStream( name ), options );
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 			};
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+					return javaTypeDescriptor.wrap( rs.getCharacterStream( name ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+						throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getCharacterStream( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getCharacterStream( name ), options );
+				}
+			};
+		}
+	};
 
 }

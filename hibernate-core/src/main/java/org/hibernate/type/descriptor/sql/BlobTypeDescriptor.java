@@ -86,10 +86,6 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	public static final BlobTypeDescriptor DEFAULT = new BlobTypeDescriptor() {
-		{
-			SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
-		}
-
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {

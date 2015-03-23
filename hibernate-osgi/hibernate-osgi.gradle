@@ -9,6 +9,10 @@ configurations {
 	}
 }
 
+test {
+	enabled = false
+}
+
 sourceSets {
 	testClientBundle
 }
@@ -121,7 +125,7 @@ task felixProperties << {
 		}
 	}
 	
-	propertiesFile = file("$buildDir/osgi-lib/felix-framework.properties")
+	File propertiesFile = file("$buildDir/osgi-lib/felix-framework.properties")
 	
 	// append jars wrapped using BND
 	FileTree tree = fileTree(dir: "$buildDir/osgi-lib/bnd")

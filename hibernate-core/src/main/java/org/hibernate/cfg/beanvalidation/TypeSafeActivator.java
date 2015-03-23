@@ -264,12 +264,14 @@ class TypeSafeActivator {
 			applyLength( property, descriptor, propertyDesc );
 
 			// pass an empty set as composing constraints inherit the main constraint and thus are matching already
-			hasNotNull = hasNotNull || applyConstraints(
+			boolean hasNotNullFromComposingConstraints = applyConstraints(
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
 					canApplyNotNull,
 					dialect
 			);
+
+			hasNotNull = hasNotNull || hasNotNullFromComposingConstraints;
 		}
 		return hasNotNull;
 	}

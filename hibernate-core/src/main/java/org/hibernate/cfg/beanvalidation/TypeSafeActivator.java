@@ -270,10 +270,10 @@ class TypeSafeActivator {
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
 					canApplyNotNull,
-                    dialect
+					dialect
 			);
 
-            hasNotNull = hasNotNull || hasNotNullFromComposingConstraints;
+			hasNotNull = hasNotNull || hasNotNullFromComposingConstraints;
 		}
 		return hasNotNull;
 	}

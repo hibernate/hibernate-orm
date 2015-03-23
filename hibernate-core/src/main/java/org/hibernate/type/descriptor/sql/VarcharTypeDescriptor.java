@@ -43,7 +43,6 @@ public class VarcharTypeDescriptor implements SqlTypeDescriptor {
 	public static final VarcharTypeDescriptor INSTANCE = new VarcharTypeDescriptor();
 
 	public VarcharTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

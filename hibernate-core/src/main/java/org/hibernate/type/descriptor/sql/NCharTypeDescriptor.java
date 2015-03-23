@@ -34,7 +34,6 @@ public class NCharTypeDescriptor extends NVarcharTypeDescriptor {
 	public static final NCharTypeDescriptor INSTANCE = new NCharTypeDescriptor();
 
 	public NCharTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

@@ -46,7 +46,6 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 	public static final BitTypeDescriptor INSTANCE = new BitTypeDescriptor();
 
 	public BitTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	public int getSqlType() {

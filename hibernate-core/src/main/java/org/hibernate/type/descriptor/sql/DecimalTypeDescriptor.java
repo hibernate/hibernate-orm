@@ -44,7 +44,6 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 	public static final DecimalTypeDescriptor INSTANCE = new DecimalTypeDescriptor();
 
 	public DecimalTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

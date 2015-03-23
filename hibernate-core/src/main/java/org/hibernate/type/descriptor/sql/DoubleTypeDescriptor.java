@@ -43,7 +43,6 @@ public class DoubleTypeDescriptor implements SqlTypeDescriptor {
 	public static final DoubleTypeDescriptor INSTANCE = new DoubleTypeDescriptor();
 
 	public DoubleTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

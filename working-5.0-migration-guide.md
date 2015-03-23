@@ -21,6 +21,10 @@ Working list of changes for 5.0
 * properties loaded from cfg.xml through EMF did not previously prefix names with "hibernate." this is now made consistent.
 * removed AuditConfiguration in preference for new `org.hibernate.envers.boot.internal.EnversService`
 * changed AuditStrategy method parameters from (removed) AuditConfiguration to (new) EnversService
+* Built-in `org.hibernate.type.descriptor.sql.SqlTypeDescriptor` implementations no longer auto-register themselves
+    with `org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry`.  Applications using custom SqlTypeDescriptor
+    implementations extending the built-in ones and relying on that behavior should be updated to call
+    `SqlTypeDescriptorRegistry#addDescriptor` themselves.
 
 
 TODOs

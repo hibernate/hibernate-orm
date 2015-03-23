@@ -43,7 +43,6 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 	public static final BigIntTypeDescriptor INSTANCE = new BigIntTypeDescriptor();
 
 	public BigIntTypeDescriptor() {
-		SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
 	}
 
 	@Override

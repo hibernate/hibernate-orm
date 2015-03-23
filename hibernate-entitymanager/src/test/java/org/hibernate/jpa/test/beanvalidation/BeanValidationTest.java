@@ -26,8 +26,18 @@ package org.hibernate.jpa.test.beanvalidation;
 import java.math.BigDecimal;
 import javax.persistence.EntityManager;
 import javax.persistence.RollbackException;
+import javax.persistence.metamodel.EntityType;
 import javax.validation.ConstraintViolationException;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
+import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
+import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -44,6 +54,7 @@ public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 	public void testBeanValidationIntegrationOnFlush() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
+        ch.setTitle("foo");
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		try {
@@ -66,6 +77,7 @@ public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 	public void testBeanValidationIntegrationOnCommit() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "9" ) );
+        ch.setTitle("foo");
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.persist( ch );
@@ -82,6 +94,13 @@ public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		em.close();
 	}
+
+    @Test
+    public void testTitleColumnHasExpectedLength() {
+        EntityManager em = getOrCreateEntityManager();
+        int len = (Integer) em.createNativeQuery("select CHARACTER_MAXIMUM_LENGTH from INFORMATION_SCHEMA.COLUMNS c where c.TABLE_NAME = 'CUPHOLDER' and c.COLUMN_NAME = 'TITLE'").getSingleResult();
+        Assert.assertEquals(64, len);
+    }
 
 	@Override
 	public Class[] getAnnotatedClasses() {

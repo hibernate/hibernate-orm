@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa.test.beanvalidation;
+
 import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,11 +18,14 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 public class CupHolder {
+
 	@Id
 	@GeneratedValue
-	//@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Integer id;
+
 	private BigDecimal radius;
+
+	private String title;
 
 	public Integer getId() {
 		return id;
@@ -31,7 +35,7 @@ public class CupHolder {
 		this.id = id;
 	}
 
-	@Max( value = 10, message = "Radius way out")
+	@Max(value = 10, message = "Radius way out")
 	@NotNull
 	public BigDecimal getRadius() {
 		return radius;
@@ -39,5 +43,15 @@ public class CupHolder {
 
 	public void setRadius(BigDecimal radius) {
 		this.radius = radius;
+	}
+
+	@NotNull
+	@ValidTitle
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 }

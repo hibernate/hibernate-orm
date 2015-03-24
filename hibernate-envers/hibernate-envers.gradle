@@ -1,11 +1,5 @@
 apply plugin: 'hibernate-matrix-testing'
 
-configurations {
-    hibernateJpaModelGenTool {
-        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
-    }
-}
-
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( project( ':hibernate-entitymanager' ) )
@@ -17,8 +11,6 @@ dependencies {
     testCompile( project(path: ':hibernate-entitymanager', configuration: 'tests') )
 
     testRuntime( libraries.javassist )
-
-    hibernateJpaModelGenTool( project( ':hibernate-jpamodelgen' ) )
 }
 
 def pomName() {
@@ -47,8 +39,6 @@ sourceSets {
         }
     }
 }
-
-addMetaGenProcessor( sourceSets.main )
 
 jar {
     manifest {

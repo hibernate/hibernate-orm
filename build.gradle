@@ -22,6 +22,7 @@ buildscript {
     repositories {
         mavenCentral()
         mavenLocal()
+		jcenter()
 
         maven {
             name 'jboss-nexus'
@@ -120,9 +121,6 @@ subprojects { subProject ->
 			// todo : need to make sure these are non-exported
 			description = 'Non-exported compile-time dependencies.'
 		}
-		jbossLoggingTool {
-			description = "Dependencies for running the JBoss logging AnnotationProcessor tool"
-		}
 		jaxb {
 			description = 'Dependencies for running ant xjc (jaxb class generation)'
 		}
@@ -149,8 +147,6 @@ subprojects { subProject ->
 		testRuntime( libraries.h2 )
 		testRuntime( libraries.woodstox )
 
-		jbossLoggingTool( libraries.logging_processor )
-
 		jaxb( libraries.jaxb ){
 			exclude group: "javax.xml.stream"
 		}
@@ -159,7 +155,6 @@ subprojects { subProject ->
 		jaxb( libraries.jaxb2_jaxb )
 		jaxb( libraries.jaxb2_jaxb_xjc )
 
-		animalSniffer ( libraries.animal_sniffer )
 		javaApiSignature ( libraries.java16_signature )
 	}
 
@@ -273,32 +268,10 @@ subprojects { subProject ->
 	// Gradle plugin).  For now, just compile first in order to get the logging classes.
 	eclipseClasspath.dependsOn generateSources
 
-
-	// Animal Sniffer ~~~~~~~~~~~~~~~~~~
-	//      add animal sniffer Java API checking to the main compile tasks
-
-	// copy the resolved Animal Sniffer signature dependency artifact to a known location and name
-	task copyJavaApiSignature(type: Copy) {
-		from configurations.javaApiSignature
-		into "$buildDir/javaApiSignature/"
-		rename '.*signature', 'javaApi.signature'
-	}
-
-	// prepare the Animal Sniffer signature copy every time (before) we compile
-	compileJava.dependsOn copyJavaApiSignature
-
-	// and then after compilation, run the Animal Sniffer tool
-	compileJava.doLast {
-		ant.taskdef(
-				name: 'animalSniffer',
-				classname: 'org.codehaus.mojo.animal_sniffer.ant.CheckSignatureTask',
-				classpath: configurations.animalSniffer.asPath
-		)
-
-		ant.animalSniffer(
-				signature: "$buildDir/javaApiSignature/javaApi.signature",
-				classpath: sourceSets.main.compileClasspath.asPath) {
-			path( path: sourceSets.main.output.classesDir )
+	if ( subProject.name != 'hibernate-java8' ) {
+		apply plugin: org.hibernate.build.animalsniffer.AnimalSnifferPlugin
+		animalsniffer {
+			signature = "org.codehaus.mojo.signature:java16:+@signature"
 		}
 	}
 

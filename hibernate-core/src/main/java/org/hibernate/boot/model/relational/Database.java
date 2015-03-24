@@ -26,9 +26,9 @@ package org.hibernate.boot.model.relational;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -48,7 +48,7 @@ public class Database {
 
 	private Schema implicitSchema;
 
-	private final Map<Schema.Name,Schema> schemaMap = new HashMap<Schema.Name, Schema>();
+	private final Map<Schema.Name,Schema> schemaMap = new TreeMap<Schema.Name, Schema>();
 
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
 	private List<InitCommand> initCommands;

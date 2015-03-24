@@ -1,0 +1,12 @@
+repositories {
+	mavenCentral()
+}
+
+apply plugin: "groovy"
+
+dependencies {
+	compile gradleApi()
+	compile localGroovy()
+
+	compile "org.codehaus.mojo:animal-sniffer:1.14"
+}

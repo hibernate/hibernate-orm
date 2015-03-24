@@ -23,8 +23,7 @@
  */
 package org.hibernate.envers.internal;
 
-import org.hibernate.internal.CoreMessageLogger;
-
+import org.jboss.logging.BasicLogger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
@@ -38,7 +37,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
-public interface EnversMessageLogger extends CoreMessageLogger {
+public interface EnversMessageLogger extends BasicLogger {
 	/**
 	 * Message indicating that user attempted to use the deprecated ValidTimeAuditStrategy
 	 */

@@ -3,6 +3,10 @@ include 'hibernate-testing'
 include 'hibernate-entitymanager'
 include 'hibernate-envers'
 
+if ( JavaVersion.current().java8Compatible ) {
+    include 'hibernate-java8'
+}
+
 include 'hibernate-osgi'
 
 include 'hibernate-c3p0'

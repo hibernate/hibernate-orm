@@ -24,8 +24,8 @@
 package org.hibernate.boot.model.relational;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -48,8 +48,8 @@ public class Schema {
 
 	private final Name physicalName;
 
-	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
-	private Map<Identifier, Sequence> sequences = new HashMap<Identifier, Sequence>();
+	private Map<Identifier, Table> tables = new TreeMap<Identifier, Table>();
+	private Map<Identifier, Sequence> sequences = new TreeMap<Identifier, Sequence>();
 
 	public Schema(Database database, Name name) {
 		this.database = database;
@@ -168,7 +168,7 @@ public class Schema {
 		return sequences.values();
 	}
 
-	public static class Name {
+	public static class Name implements Comparable<Name> {
 		private final Identifier catalog;
 		private final Identifier schema;
 
@@ -210,6 +210,39 @@ public class Schema {
 			int result = catalog != null ? catalog.hashCode() : 0;
 			result = 31 * result + (schema != null ? schema.hashCode() : 0);
 			return result;
+		}
+
+		@Override
+		public int compareTo(Name that) {
+			// per Comparable, the incoming Name cannot be null.  However, its catalog/schema might be
+			// so we need to account for that.
+			int catalogCheck = ComparableHelper.compare( this.getCatalog(), that.getCatalog() );
+			if ( catalogCheck != 0 ) {
+				return catalogCheck;
+			}
+
+			return ComparableHelper.compare( this.getSchema(), that.getSchema() );
+		}
+	}
+
+	public static class ComparableHelper {
+		public static <T extends Comparable<T>> int compare(T first, T second) {
+			if ( first == null ) {
+				if ( second == null ) {
+					return 0;
+				}
+				else {
+					return 1;
+				}
+			}
+			else {
+				if ( second == null ) {
+					return -1;
+				}
+				else {
+					return first.compareTo( second );
+				}
+			}
 		}
 	}
 }

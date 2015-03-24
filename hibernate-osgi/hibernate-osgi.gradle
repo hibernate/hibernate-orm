@@ -105,7 +105,7 @@ task copyBnd(type: Copy) {
 	into "$buildDir/osgi-lib/bnd"
 }
 
-task runBnd(type: JavaExec){
+task runBnd(type: JavaExec) {
 	main = "-jar"
 	args "$buildDir/osgi-lib/bnd/bnd-2.1.0.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd"
 }
@@ -174,7 +174,10 @@ task testClientBundleJar(type: Jar) {
 
 runBnd.dependsOn copyToLib
 runBnd.dependsOn copyBnd
+copyBnd.dependsOn copyToLib
+
 felixProperties.dependsOn runBnd
+
 test.dependsOn felixProperties
 test.dependsOn testClientBundleJar
 test.dependsOn jar

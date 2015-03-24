@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.criteria;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +35,15 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.test.hql.StateProvince;
+
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.hql.StateProvince;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * HHH-2166 Long "in" lists in queries results in a Java stack overflow
@@ -49,6 +52,7 @@ import org.junit.Test;
  * 
  * @author Strong Liu
  */
+@Ignore
 public class LongInElementsTest extends BaseCoreFunctionalTestCase {
 	private static final int ELEMENTS_SIZE = 4000;
 

@@ -33,7 +33,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class Identifier {
+public class Identifier implements Comparable<Identifier> {
 	private final String text;
 	private final boolean isQuoted;
 
@@ -210,6 +210,11 @@ public class Identifier {
 		return identifier.isQuoted()
 				? identifier
 				: Identifier.toIdentifier( identifier.getText(), true );
+	}
+
+	@Override
+	public int compareTo(Identifier o) {
+		return getCanonicalName().compareTo( o.getCanonicalName() );
 	}
 }
 

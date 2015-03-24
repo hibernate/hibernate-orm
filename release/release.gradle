@@ -4,6 +4,14 @@ apply plugin: 'distribution'
 
 buildDir = "target"
 
+//project.tasks*.each {
+//    it.doFirst {
+        if ( !JavaVersion.current().java8Compatible ) {
+            throw new GradleException( "Release must use Java 8 or greater" )
+        }
+//    }
+//}
+
 idea.module {
 }
 

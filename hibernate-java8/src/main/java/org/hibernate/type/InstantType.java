@@ -23,7 +23,9 @@
  */
 package org.hibernate.type;
 
-import java.time.LocalTime;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
@@ -31,7 +33,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 /**
@@ -39,48 +41,48 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class LocalTimeType
-		extends AbstractSingleColumnStandardBasicType<LocalTime>
-		implements VersionType<LocalTime>, LiteralType<LocalTime> {
+public class InstantType
+		extends AbstractSingleColumnStandardBasicType<Instant>
+		implements VersionType<Instant>, LiteralType<Instant> {
 	/**
 	 * Singleton access
 	 */
-	public static final LocalTimeType INSTANCE = new LocalTimeType();
+	public static final InstantType INSTANCE = new InstantType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss", Locale.ENGLISH );
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S 'Z'", Locale.ENGLISH );
 
-	public LocalTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, LocalTimeJavaDescriptor.INSTANCE );
+	public InstantType() {
+		super( TimestampTypeDescriptor.INSTANCE, InstantJavaDescriptor.INSTANCE );
+	}
+
+	@Override
+	public String objectToSQLString(Instant value, Dialect dialect) throws Exception {
+		return "{ts '" + FORMATTER.format( ZonedDateTime.ofInstant( value, ZoneId.of( "UTC" ) ) ) + "'}";
+	}
+
+	@Override
+	public Instant seed(SessionImplementor session) {
+		return Instant.now();
+	}
+
+	@Override
+	public Instant next(Instant current, SessionImplementor session) {
+		return Instant.now();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Comparator<Instant> getComparator() {
+		return ComparableComparator.INSTANCE;
 	}
 
 	@Override
 	public String getName() {
-		return "LocalTime";
+		return "Instant";
 	}
 
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	public String objectToSQLString(LocalTime value, Dialect dialect) throws Exception {
-		return "{t '" + FORMATTER.format( value ) + "'}";
-	}
-
-	@Override
-	public LocalTime seed(SessionImplementor session) {
-		return LocalTime.now();
-	}
-
-	@Override
-	public LocalTime next(LocalTime current, SessionImplementor session) {
-		return LocalTime.now();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Comparator<LocalTime> getComparator() {
-		return ComparableComparator.INSTANCE;
 	}
 }

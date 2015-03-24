@@ -38,5 +38,10 @@ public class Java8DateTimeTypeContributor implements TypeContributor {
 		typeContributions.contributeType( LocalDateTimeType.INSTANCE );
 		typeContributions.contributeType( LocalDateType.INSTANCE );
 		typeContributions.contributeType( LocalTimeType.INSTANCE );
+
+		typeContributions.contributeType( InstantType.INSTANCE );
+
+		typeContributions.contributeType( ZonedDateTimeType.INSTANCE );
+		typeContributions.contributeType( OffsetDateTimeType.INSTANCE );
 	}
 }

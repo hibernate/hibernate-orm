@@ -21,52 +21,50 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
+package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.type.LocalDateType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 
 /**
  * Java type descriptor for the LocalDateTime type.
  *
  * @author Steve Ebersole
  */
-public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
+public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 	/**
 	 * Singleton access
 	 */
-	public static final LocalTimeJavaDescriptor INSTANCE = new LocalTimeJavaDescriptor();
+	public static final LocalDateJavaDescriptor INSTANCE = new LocalDateJavaDescriptor();
 
 	@SuppressWarnings("unchecked")
-	public LocalTimeJavaDescriptor() {
-		super( LocalTime.class, ImmutableMutabilityPlan.INSTANCE );
+	public LocalDateJavaDescriptor() {
+		super( LocalDate.class, ImmutableMutabilityPlan.INSTANCE );
 	}
 
 	@Override
-	public String toString(LocalTime value) {
-		return LocalTimeType.FORMATTER.format( value );
+	public String toString(LocalDate value) {
+		return LocalDateType.FORMATTER.format( value );
 	}
 
 	@Override
-	public LocalTime fromString(String string) {
-		return (LocalTime) LocalTimeType.FORMATTER.parse( string );
+	public LocalDate fromString(String string) {
+		return (LocalDate) LocalDateType.FORMATTER.parse( string );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> X unwrap(LocalTime value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(LocalDate value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -75,11 +73,7 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 			return (X) value;
 		}
 
-		// Oracle documentation says to set the Date to January 1, 1970 when convert from
-		// a LocalTime to a Calendar.  IMO the same should hold true for converting to all
-		// the legacy Date/Time types...
-
-		final ZonedDateTime zonedDateTime = value.atDate( LocalDate.of( 1970, 1, 1 ) ).atZone( ZoneId.systemDefault() );
+		final ZonedDateTime zonedDateTime = value.atStartOfDay().atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( zonedDateTime );
@@ -111,34 +105,34 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 	}
 
 	@Override
-	public <X> LocalTime wrap(X value, WrapperOptions options) {
+	public <X> LocalDate wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
-		if ( LocalTime.class.isInstance( value ) ) {
-			return (LocalTime) value;
+		if ( LocalDate.class.isInstance( value ) ) {
+			return (LocalDate) value;
 		}
 
 		if ( Timestamp.class.isInstance( value ) ) {
 			final Timestamp ts = (Timestamp) value;
-			return LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ).toLocalTime();
+			return LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ).toLocalDate();
 		}
 
 		if ( Long.class.isInstance( value ) ) {
 			final Instant instant = Instant.ofEpochMilli( (Long) value );
-			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();
+			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalDate();
 		}
 
 		if ( Calendar.class.isInstance( value ) ) {
 			final Calendar calendar = (Calendar) value;
-			return LocalDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toLocalTime();
+			return LocalDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toLocalDate();
 		}
 
 		if ( Date.class.isInstance( value ) ) {
 			final Timestamp ts = (Timestamp) value;
 			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
-			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();
+			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalDate();
 		}
 
 		throw unknownWrap( value.getClass() );

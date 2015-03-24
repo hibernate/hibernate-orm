@@ -31,6 +31,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.type.descriptor.java.LocalDateJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 /**
@@ -45,7 +46,7 @@ public class LocalDateType
 	 */
 	public static final LocalDateType INSTANCE = new LocalDateType();
 
-	static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-mm-dd", Locale.ENGLISH );
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd", Locale.ENGLISH );
 
 	public LocalDateType() {
 		super( TimestampTypeDescriptor.INSTANCE, LocalDateJavaDescriptor.INSTANCE );

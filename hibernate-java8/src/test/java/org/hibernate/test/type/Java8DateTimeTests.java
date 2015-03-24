@@ -23,9 +23,12 @@
  */
 package org.hibernate.test.type;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Iterator;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -34,7 +37,9 @@ import javax.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.SerializableType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -74,10 +79,28 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
+		dump( entityBinding, theEntity );
 		assertNotNull( theEntity );
 		s.delete( theEntity );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	private void dump(PersistentClass entityBinding, TheEntity theEntity) {
+		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
+		while ( propertyBindingIterator.hasNext() ) {
+			final Property propertyBinding = (Property) propertyBindingIterator.next();
+			final JavaTypeDescriptor javaTypeDescriptor = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
+
+			System.out.println(
+					String.format(
+							"%s (%s) -> %s",
+							propertyBinding.getName(),
+							javaTypeDescriptor.getJavaTypeClass().getSimpleName(),
+							javaTypeDescriptor.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
+					)
+			);
+		}
 	}
 
 	@Entity(name = "TheEntity")
@@ -87,6 +110,9 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		private LocalDateTime localDateTime = LocalDateTime.now();
 		private LocalDate localDate = LocalDate.now();
 		private LocalTime localTime = LocalTime.now();
+		private Instant instant = Instant.now();
+		private ZonedDateTime zonedDateTime = ZonedDateTime.now();
+		private OffsetDateTime offsetDateTime = OffsetDateTime.now();
 
 		public TheEntity() {
 		}
@@ -126,6 +152,30 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 
 		public void setLocalTime(LocalTime localTime) {
 			this.localTime = localTime;
+		}
+
+		public Instant getInstant() {
+			return instant;
+		}
+
+		public void setInstant(Instant instant) {
+			this.instant = instant;
+		}
+
+		public ZonedDateTime getZonedDateTime() {
+			return zonedDateTime;
+		}
+
+		public void setZonedDateTime(ZonedDateTime zonedDateTime) {
+			this.zonedDateTime = zonedDateTime;
+		}
+
+		public OffsetDateTime getOffsetDateTime() {
+			return offsetDateTime;
+		}
+
+		public void setOffsetDateTime(OffsetDateTime offsetDateTime) {
+			this.offsetDateTime = offsetDateTime;
 		}
 	}
 }

@@ -12,6 +12,7 @@
         <property name="length" />
         <property name="weight" />
         <property name="price" />
+        <property name="date" />
 	</class>
 
 </hibernate-mapping>

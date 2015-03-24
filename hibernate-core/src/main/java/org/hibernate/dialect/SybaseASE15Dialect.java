@@ -68,8 +68,8 @@ public class SybaseASE15Dialect extends SybaseDialect {
 				)
 		);
 
-		registerFunction( "atan2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2" ) );
-		registerFunction( "atn2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2" ) );
+		registerFunction( "atan2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
+		registerFunction( "atn2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
 
 		registerFunction( "biginttohex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "biginttohext(?1)" ) );
 		registerFunction( "char_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "char_length(?1)" ) );
@@ -90,9 +90,9 @@ public class SybaseASE15Dialect extends SybaseDialect {
 				"data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2, ?3, ?4)" )
 		);
 		registerFunction( "datalength", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1)" ) );
-		registerFunction( "dateadd", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "dateadd" ) );
-		registerFunction( "datediff", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datediff" ) );
-		registerFunction( "datepart", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart" ) );
+		registerFunction( "dateadd", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "dateadd(?1, ?2, ?3)" ) );
+		registerFunction( "datediff", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datediff(?1, ?2, ?3)" ) );
+		registerFunction( "datepart", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?2)" ) );
 		registerFunction( "datetime", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "datetime" ) );
 		registerFunction( "db_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "db_id(?1)" ) );
 		registerFunction( "difference", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "difference(?1,?2)" ) );

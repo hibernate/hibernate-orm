@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.dialect.function;
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 
@@ -34,6 +35,7 @@ public class Product {
 	private int length;
 	private long weight;
 	private BigDecimal price;
+	private Date date;
 
 	public Long getId() {
 		return id;
@@ -65,6 +67,14 @@ public class Product {
 
 	public void setPrice( BigDecimal price ) {
 		this.price = price;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
 	}
 
 }

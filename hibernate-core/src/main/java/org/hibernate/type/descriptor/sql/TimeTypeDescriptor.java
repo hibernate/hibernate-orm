@@ -24,11 +24,13 @@
 package org.hibernate.type.descriptor.sql;
 
 import java.sql.CallableStatement;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
+import java.util.Calendar;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -61,7 +63,13 @@ public class TimeTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setTime( index, javaTypeDescriptor.unwrap( value, Time.class, options ) );
+				final Time time = javaTypeDescriptor.unwrap( value, Time.class, options );
+				if ( value instanceof Calendar ) {
+					st.setTime( index, time, (Calendar) value );
+				}
+				else {
+					st.setTime( index, time );
+				}
 			}
 		};
 	}

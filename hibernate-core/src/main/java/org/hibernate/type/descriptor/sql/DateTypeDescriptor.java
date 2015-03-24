@@ -29,6 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Calendar;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -61,7 +62,13 @@ public class DateTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setDate( index, javaTypeDescriptor.unwrap( value, Date.class, options ) );
+				final Date date = javaTypeDescriptor.unwrap( value, Date.class, options );
+				if ( value instanceof Calendar ) {
+					st.setDate( index, date, (Calendar) value );
+				}
+				else {
+					st.setDate( index, date );
+				}
 			}
 		};
 	}

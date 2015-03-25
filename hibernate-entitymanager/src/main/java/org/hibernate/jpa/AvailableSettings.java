@@ -287,7 +287,7 @@ public interface AvailableSettings {
 	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
 	 * database objects (tables, sequences, constraints, etc).  The value of this boolean property should be set
 	 * to {@code true} if the persistence provider is to create schemas in the database or to generate DDL that
-	 * contains “CREATE SCHEMA” commands.  If this property is not supplied (or is explicitly {@code false}), the
+	 * contains "CREATE SCHEMA" commands.  If this property is not supplied (or is explicitly {@code false}), the
 	 * provider should not attempt to create database schemas.
 	 */
 	String SCHEMA_GEN_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";

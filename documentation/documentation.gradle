@@ -30,6 +30,12 @@ configurations {
     }
 }
 
+if ( JavaVersion.current().isJava8Compatible() ) {
+    tasks.withType( Javadoc ) {
+        options.addStringOption( 'Xdoclint:none', '-quiet' )
+    }
+}
+
 dependencies {
     ext.pressgangVersion = '3.0.0'
 
@@ -113,6 +119,7 @@ task aggregateJavadocs(type: Javadoc) {
         docTitle = "Hibernate JavaDoc ($project.version)"
         bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
+        options.encoding = 'UTF-8'
         links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
         group( 'API', apiPackages.asList() )
         group( 'SPI', spiPackages.asList() )

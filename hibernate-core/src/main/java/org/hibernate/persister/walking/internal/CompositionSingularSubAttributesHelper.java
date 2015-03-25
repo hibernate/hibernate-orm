@@ -108,8 +108,8 @@ public final class CompositionSingularSubAttributesHelper {
 				compositionElementDefinition.getSource(),
 				(OuterJoinLoadable) collectionPersister.getOwnerEntityPersister(),
 				(CompositeType) collectionPersister.getIndexType(),
-				collectionPersister.getTableName(),
-				collectionPersister.getIndexColumnNames()
+				collectionPersister.getTableName(), collectionPersister.getIndexColumnNames()[0] != null ? 
+				collectionPersister.getIndexColumnNames() : collectionPersister.getIndexFormulas()
 		);
 	}
 

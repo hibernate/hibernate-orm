@@ -32,10 +32,12 @@ import org.hibernate.loader.plan.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan.spi.CollectionReference;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -89,12 +91,16 @@ public abstract class AbstractCollectionReference implements CollectionReference
 				}
 			}
 			else if ( type.isComponentType() ) {
+				String parentPropertyName = "";
+				if (persister.getCollectionType() instanceof org.hibernate.type.MapType) {
+					parentPropertyName = ((AbstractCollectionPersister) persister).getMapKeyName();
+				}
 				final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
 						collectionQuerySpace,
 						new CompositePropertyMapping(
 								(CompositeType) persister.getIndexType(),
 								(PropertyMapping) persister,
-								""
+								parentPropertyName
 						),
 						CollectionPropertyNames.COLLECTION_INDICES,
 						(CompositeType) persister.getIndexType(),

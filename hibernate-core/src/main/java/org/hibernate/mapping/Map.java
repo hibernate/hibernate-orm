@@ -31,6 +31,9 @@ import org.hibernate.type.CollectionType;
  * the key columns + index columns.
  */
 public class Map extends IndexedCollection {
+	
+	private String mapKeyName;
+
 
 	public Map(Mappings mappings, PersistentClass owner) {
 		super( mappings, owner );
@@ -38,6 +41,14 @@ public class Map extends IndexedCollection {
 	
 	public boolean isMap() {
 		return true;
+	}
+	
+	public String getMapKeyName() {
+		return mapKeyName;
+	}
+
+	public void setMapKeyName(String mapKeyName) {
+		this.mapKeyName = mapKeyName;
 	}
 
 	public CollectionType getDefaultCollectionType() {

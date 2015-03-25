@@ -243,7 +243,8 @@ public abstract class AbstractCollectionPersister
 	private final Serializable[] spaces;
 
 	private Map collectionPropertyColumnAliases = new HashMap();
-	private Map collectionPropertyColumnNames = new HashMap();
+	private Map collectionPropertyColumnNames = new HashMap(); // futile?
+	private String mapKeyName; // filled when collection is a map with a composite key (= embeddable class)
 
 	public AbstractCollectionPersister(
 			final Collection collection,
@@ -613,7 +614,7 @@ public abstract class AbstractCollectionPersister
 			manyToManyOrderByTranslation = null;
 		}
 
-		initCollectionPropertyMap();
+		initCollectionPropertyMap(collection);
 	}
 
 	private class ColumnMapperImpl implements ColumnMapper {
@@ -1878,12 +1879,18 @@ public abstract class AbstractCollectionPersister
 	}
 
 	// TODO: formulas ?
-	public void initCollectionPropertyMap() {
+	public void initCollectionPropertyMap(final Collection collection) {
 
 		initCollectionPropertyMap( "key", keyType, keyColumnAliases, keyColumnNames );
 		initCollectionPropertyMap( "element", elementType, elementColumnAliases, elementColumnNames );
 		if ( hasIndex ) {
-			initCollectionPropertyMap( "index", indexType, indexColumnAliases, indexColumnNames );
+			if (indexContainsFormula && collection instanceof org.hibernate.mapping.Map) {
+				
+				initCollectionPropertyMap( ((org.hibernate.mapping.Map)collection).getMapKeyName(), indexType, indexColumnAliases, indexColumnNames );
+			}
+			else {
+				initCollectionPropertyMap( "index", indexType, indexColumnAliases, indexColumnNames );
+			}
 		}
 		if ( hasIdentifier ) {
 			initCollectionPropertyMap(
@@ -1900,6 +1907,7 @@ public abstract class AbstractCollectionPersister
 		collectionPropertyColumnNames.put( aliasName, columnNames );
 
 		if ( type.isComponentType() ) {
+			mapKeyName = aliasName;
 			CompositeType ct = (CompositeType) type;
 			String[] propertyNames = ct.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {
@@ -2227,5 +2235,14 @@ public abstract class AbstractCollectionPersister
 				};
 			}
 		};
+	}
+
+	
+	/**
+	 * 
+	 * @return the @MapKey(name="...")
+	 */
+	public String getMapKeyName() {
+		return mapKeyName;
 	}
 }

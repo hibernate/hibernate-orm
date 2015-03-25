@@ -48,7 +48,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -531,8 +530,8 @@ public class DB2Dialect extends Dialect {
 	}
 
 	/**
-	 * DB2 allows NULLS LAST only if the order is ASC, and NULLS FIRST only if the order is DESC.
-
+	 * Handle DB2 "support" for null precedence...
+	 *
 	 * @param expression The SQL order expression. In case of {@code @OrderBy} annotation user receives property placeholder
 	 * (e.g. attribute name enclosed in '{' and '}' signs).
 	 * @param collation Collation string in format {@code collate IDENTIFIER}, or {@code null}
@@ -545,32 +544,36 @@ public class DB2Dialect extends Dialect {
 	 */
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {
-		// DB2 FTW!
 		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
 			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
 		}
 
-		if ( nullPrecedence == NullPrecedence.FIRST ) {
-			// an explicit NullPrecedence request for NULLS FIRST
-			if ( order == null || "asc".equals( order ) ) {
-				// ASC + NULLS FIRST is ok, but unnecessary
-				return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
-			}
-			else {
-				// DESC + NULLS FIRST is not supported, so hack it
-				return "order by case when " + expression + " is null then 0 else 1 end, " + expression + " desc";
-			}
+		// DB2 FTW!  A null precedence was explicitly requested, but DB2 "support" for null precedence
+		// is a joke.  Basically it supports combos that align with what it does anyway.  Here is the
+		// support matrix:
+		//		* ASC + NULLS FIRST -> case statement
+		//		* ASC + NULLS LAST -> just drop the NULLS LAST from sql fragment
+		//		* DESC + NULLS FIRST -> just drop the NULLS FIRST from sql fragment
+		//		* DESC + NULLS LAST -> case statement
+
+		if ( ( nullPrecedence == NullPrecedence.FIRST  && "desc".equalsIgnoreCase( order ) )
+				|| ( nullPrecedence == NullPrecedence.LAST && "asc".equalsIgnoreCase( order ) ) ) {
+			// we have one of:
+			//		* ASC + NULLS LAST
+			//		* DESC + NULLS FIRST
+			// so just drop the null precedence.  *NOTE: we could pass along the null precedence here,
+			// but only DB2 9.7 or greater understand it; dropping it is more portable across DB2 versions
+			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
 		}
-		else {
-			// an explicit NullPrecedence request for NULLS LAST
-			if ( order == null || "asc".equals( order ) ) {
-				// ASC + NULLS LAST is not supported, so hack it
-				return "order by case when " + expression + " is null then 1 else 0 end, " + expression + " asc";
-			}
-			else {
-				// DESC + NULLS LAST is ok, but unnecessary
-				return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
-			}
-		}
+
+		return String.format(
+				Locale.ENGLISH,
+				"case when %s is null then %s else %s end, %s %s",
+				expression,
+				nullPrecedence == NullPrecedence.FIRST ? "0" : "1",
+				nullPrecedence == NullPrecedence.FIRST ? "1" : "0",
+				expression,
+				order
+		);
 	}
 }

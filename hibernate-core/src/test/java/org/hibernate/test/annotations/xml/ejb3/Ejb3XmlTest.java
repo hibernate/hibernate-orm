@@ -33,7 +33,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.TeradataDialect;;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;

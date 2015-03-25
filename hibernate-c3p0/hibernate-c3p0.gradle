@@ -1,5 +1,4 @@
 dependencies {
-    provided( libraries.validation )
     compile project( ':hibernate-core' )
     compile( libraries.c3p0 )
 

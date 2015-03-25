@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Iterator;
 import javax.persistence.Entity;
@@ -113,6 +114,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		private Instant instant = Instant.now();
 		private ZonedDateTime zonedDateTime = ZonedDateTime.now();
 		private OffsetDateTime offsetDateTime = OffsetDateTime.now();
+		private OffsetTime offsetTime = OffsetTime.now();
 
 		public TheEntity() {
 		}
@@ -176,6 +178,14 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 
 		public void setOffsetDateTime(OffsetDateTime offsetDateTime) {
 			this.offsetDateTime = offsetDateTime;
+		}
+
+		public OffsetTime getOffsetTime() {
+			return offsetTime;
+		}
+
+		public void setOffsetTime(OffsetTime offsetTime) {
+			this.offsetTime = offsetTime;
 		}
 	}
 }

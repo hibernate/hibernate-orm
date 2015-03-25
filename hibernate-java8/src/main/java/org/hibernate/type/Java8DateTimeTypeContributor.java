@@ -43,5 +43,6 @@ public class Java8DateTimeTypeContributor implements TypeContributor {
 
 		typeContributions.contributeType( ZonedDateTimeType.INSTANCE );
 		typeContributions.contributeType( OffsetDateTimeType.INSTANCE );
+		typeContributions.contributeType( OffsetTimeType.INSTANCE );
 	}
 }

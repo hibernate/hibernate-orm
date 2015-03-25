@@ -27,8 +27,10 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.JDBCException;
+import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -43,7 +45,10 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -54,6 +59,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DB2Dialect.class );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -524,4 +530,47 @@ public class DB2Dialect extends Dialect {
 		return LIMIT_HANDLER;
 	}
 
+	/**
+	 * DB2 allows NULLS LAST only if the order is ASC, and NULLS FIRST only if the order is DESC.
+
+	 * @param expression The SQL order expression. In case of {@code @OrderBy} annotation user receives property placeholder
+	 * (e.g. attribute name enclosed in '{' and '}' signs).
+	 * @param collation Collation string in format {@code collate IDENTIFIER}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @param order Order direction. Possible values: {@code asc}, {@code desc}, or {@code null}
+	 * if expression has not been explicitly specified.
+	 * @param nullPrecedence Nulls precedence. Default value: {@link NullPrecedence#NONE}.
+	 *
+	 * @return
+	 */
+	@Override
+	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {
+		// DB2 FTW!
+		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
+		}
+
+		if ( nullPrecedence == NullPrecedence.FIRST ) {
+			// an explicit NullPrecedence request for NULLS FIRST
+			if ( order == null || "asc".equals( order ) ) {
+				// ASC + NULLS FIRST is ok, but unnecessary
+				return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
+			}
+			else {
+				// DESC + NULLS FIRST is not supported, so hack it
+				return "order by case when " + expression + " is null then 0 else 1 end, " + expression + " desc";
+			}
+		}
+		else {
+			// an explicit NullPrecedence request for NULLS LAST
+			if ( order == null || "asc".equals( order ) ) {
+				// ASC + NULLS LAST is not supported, so hack it
+				return "order by case when " + expression + " is null then 1 else 0 end, " + expression + " asc";
+			}
+			else {
+				// DESC + NULLS LAST is ok, but unnecessary
+				return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
+			}
+		}
+	}
 }

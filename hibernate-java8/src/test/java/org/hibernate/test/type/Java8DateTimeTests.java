@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.type;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -115,6 +117,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		private ZonedDateTime zonedDateTime = ZonedDateTime.now();
 		private OffsetDateTime offsetDateTime = OffsetDateTime.now();
 		private OffsetTime offsetTime = OffsetTime.now();
+		private Duration duration = Duration.of( 20, ChronoUnit.DAYS );
 
 		public TheEntity() {
 		}
@@ -186,6 +189,14 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 
 		public void setOffsetTime(OffsetTime offsetTime) {
 			this.offsetTime = offsetTime;
+		}
+
+		public Duration getDuration() {
+			return duration;
+		}
+
+		public void setDuration(Duration duration) {
+			this.duration = duration;
 		}
 	}
 }

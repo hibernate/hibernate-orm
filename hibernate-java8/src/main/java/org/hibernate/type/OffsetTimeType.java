@@ -32,7 +32,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -49,12 +49,12 @@ public class OffsetTimeType
 	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss.S xxxxx", Locale.ENGLISH );
 
 	public OffsetTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, OffsetTimeJavaDescriptor.INSTANCE );
+		super( TimeTypeDescriptor.INSTANCE, OffsetTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String objectToSQLString(OffsetTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
+		return "{t '" + FORMATTER.format( value ) + "'}";
 	}
 
 	@Override

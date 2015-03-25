@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -74,9 +75,14 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 			return (X) value;
 		}
 
+		if ( Time.class.isAssignableFrom( type ) ) {
+			return (X) Time.valueOf( value );
+		}
+
 		// Oracle documentation says to set the Date to January 1, 1970 when convert from
 		// a LocalTime to a Calendar.  IMO the same should hold true for converting to all
 		// the legacy Date/Time types...
+
 
 		final ZonedDateTime zonedDateTime = value.atDate( LocalDate.of( 1970, 1, 1 ) ).atZone( ZoneId.systemDefault() );
 
@@ -90,15 +96,7 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 			return (X) Timestamp.from( instant );
 		}
 
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Date.from( instant );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Time.from( instant );
-		}
-
-		if ( Date.class.isAssignableFrom( type ) ) {
+		if ( Date.class.equals( type ) ) {
 			return (X) Date.from( instant );
 		}
 
@@ -135,7 +133,7 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 		}
 
 		if ( Date.class.isInstance( value ) ) {
-			final Timestamp ts = (Timestamp) value;
+			final Date ts = (Date) value;
 			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();
 		}

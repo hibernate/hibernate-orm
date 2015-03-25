@@ -55,7 +55,7 @@ public class LocalDateTimeType
 
 	@Override
 	public String getName() {
-		return "LocalDateTime";
+		return LocalDateTime.class.getSimpleName();
 	}
 
 	@Override

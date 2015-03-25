@@ -32,7 +32,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
-import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -50,12 +50,12 @@ public class LocalTimeType
 	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss", Locale.ENGLISH );
 
 	public LocalTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, LocalTimeJavaDescriptor.INSTANCE );
+		super( TimeTypeDescriptor.INSTANCE, LocalTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String getName() {
-		return "LocalTime";
+		return LocalTime.class.getSimpleName();
 	}
 
 	@Override

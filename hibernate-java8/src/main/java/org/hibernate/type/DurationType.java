@@ -23,28 +23,39 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.service.ServiceRegistry;
+import java.time.Duration;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
+import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 
 /**
- * TypeContributor for adding Java8 Date/Time specific Type implementations
- *
  * @author Steve Ebersole
  */
-public class Java8DateTimeTypeContributor implements TypeContributor {
+public class DurationType
+		extends AbstractSingleColumnStandardBasicType<Duration>
+		implements LiteralType<Duration> {
+	/**
+	 * Singleton access
+	 */
+	public static final DurationType INSTANCE = new DurationType();
+
+	public DurationType() {
+		super( BigIntTypeDescriptor.INSTANCE, DurationJavaDescriptor.INSTANCE );
+	}
+
 	@Override
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( LocalDateTimeType.INSTANCE );
-		typeContributions.contributeType( LocalDateType.INSTANCE );
-		typeContributions.contributeType( LocalTimeType.INSTANCE );
+	public String objectToSQLString(Duration value, Dialect dialect) throws Exception {
+		return String.valueOf( value.toNanos() );
+	}
 
-		typeContributions.contributeType( InstantType.INSTANCE );
+	@Override
+	public String getName() {
+		return Duration.class.getSimpleName();
+	}
 
-		typeContributions.contributeType( ZonedDateTimeType.INSTANCE );
-		typeContributions.contributeType( OffsetDateTimeType.INSTANCE );
-		typeContributions.contributeType( OffsetTimeType.INSTANCE );
-
-		typeContributions.contributeType( DurationType.INSTANCE );
+	@Override
+	protected boolean registerUnderJavaType() {
+		return true;
 	}
 }

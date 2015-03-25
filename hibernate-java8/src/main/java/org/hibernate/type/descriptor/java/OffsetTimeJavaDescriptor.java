@@ -23,9 +23,11 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -73,7 +75,15 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 			return (X) offsetTime;
 		}
 
+		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+			return (X) java.sql.Time.valueOf( offsetTime.toLocalTime() );
+		}
+
 		final ZonedDateTime zonedDateTime = offsetTime.atDate( LocalDate.of( 1970, 1, 1 ) ).toZonedDateTime();
+
+		if ( Timestamp.class.isAssignableFrom( type ) ) {
+			return (X) Timestamp.valueOf( zonedDateTime.toLocalDateTime() );
+		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( zonedDateTime );
@@ -81,24 +91,12 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 
 		final Instant instant = zonedDateTime.toInstant();
 
-		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) Timestamp.from( instant );
-		}
-
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Date.from( instant );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Time.from( instant );
-		}
-
-		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) Date.from( instant );
-		}
-
 		if ( Long.class.isAssignableFrom( type ) ) {
 			return (X) Long.valueOf( instant.toEpochMilli() );
+		}
+
+		if ( java.util.Date.class.isAssignableFrom( type ) ) {
+			return (X) java.util.Date.from( instant );
 		}
 
 		throw unknownUnwrap( type );
@@ -112,6 +110,10 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 
 		if ( OffsetTime.class.isInstance( value ) ) {
 			return (OffsetTime) value;
+		}
+
+		if ( Time.class.isInstance( value ) ) {
+			return ( (Time) value ).toLocalTime().atOffset( OffsetDateTime.now().getOffset() );
 		}
 
 		if ( Timestamp.class.isInstance( value ) ) {

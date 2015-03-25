@@ -73,7 +73,17 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 			return (X) value;
 		}
 
-		final ZonedDateTime zonedDateTime = value.atStartOfDay().atZone( ZoneId.systemDefault() );
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			return (X) java.sql.Date.valueOf( value );
+		}
+
+		final LocalDateTime localDateTime = value.atStartOfDay();
+
+		if ( Timestamp.class.isAssignableFrom( type ) ) {
+			return (X) Timestamp.valueOf( localDateTime );
+		}
+
+		final ZonedDateTime zonedDateTime = localDateTime.atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( zonedDateTime );
@@ -81,19 +91,7 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 
 		final Instant instant = zonedDateTime.toInstant();
 
-		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) Timestamp.from( instant );
-		}
-
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Date.from( instant );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Time.from( instant );
-		}
-
-		if ( Date.class.isAssignableFrom( type ) ) {
+		if ( Date.class.equals( type ) ) {
 			return (X) Date.from( instant );
 		}
 
@@ -130,7 +128,7 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 		}
 
 		if ( Date.class.isInstance( value ) ) {
-			final Timestamp ts = (Timestamp) value;
+			final Date ts = (Date) value;
 			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalDate();
 		}

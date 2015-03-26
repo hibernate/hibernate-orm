@@ -3,9 +3,55 @@
 
 The legacy way to bootstrap a `SessionFactory` is via the `org.hibernate.cfg.Configuration` object.
 `Configuration` represents, essentially, a single point for specifying all aspects of building
-the `SessionFactory`: everything from settings, to mappings, to strategies, etc.
+the `SessionFactory`: everything from settings, to mappings, to strategies, etc.  I like to think of
+`Configuration` as a big pot to which we add a bunch of stuff (mappings, settings, etc) and from which
+we eventually get a `SessionFactory`.
 
-However there is a huge draw back to this approach which led to the development of the new
-approach discussed below.
+NOTE: There are some significant draw backs to this approach which led to its deprecation and the development
+of the new approach, which is discussed in the _Native Bootstrapping_ guide.  `Configuration` is deprecated but
+still available for use, in a limited form that eliminates these draw backs.
 
-todo : discuss the timing issues
+You can obtain the `Configuration` by instantiating it directly.  You then specify mapping metadata (XML
+mapping documents, annotated classes) that describe your applications object model and its mapping to a
+SQL database.
+
+If XML mapping files are in the classpath, use addResource(). For example:
+
+====
+[source, JAVA]
+----
+Configuration cfg = new Configuration()
+    // addResource does a classpath resource lookup
+    .addResource("Item.hbm.xml")
+    .addResource("Bid.hbm.xml")
+
+    // calls addResource using "/org/hibernate/auction/User.hbm.xml"
+    .addClass(org.hibernate.auction.User.class)
+
+	// parses Address class for mapping annotations
+	.addAnnotatedClass( Address.class )
+
+    // reads package-level (package-info.class) annotations in the named package
+    .addPackage( "org.hibernate.auction" )
+----
+====
+
+`Configuration` also allows you to specify configuration properties. For example:
+
+====
+[source, JAVA]
+----
+Configuration cfg = new Configuration()
+    .setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+    .setProperty("hibernate.connection.datasource", "java:comp/env/jdbc/test")
+    .setProperty("hibernate.order_updates", "true");
+----
+====
+
+This is not the only way to pass configuration properties to Hibernate. Some alternative options include:
+
+* Pass an instance of java.util.Properties to Configuration.setProperties().
+* Place a file named hibernate.properties in a root directory of the classpath.
+* Set System properties using java -Dproperty=value.
+* Include <property> elements in hibernate.cfg.xml (this is discussed later).
+* If you want to get started quicklyhibernate.properties is the easiest approach.

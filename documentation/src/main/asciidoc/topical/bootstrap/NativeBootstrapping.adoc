@@ -8,7 +8,7 @@ holding the services Hibernate will need at bootstrap- and run-time.  The second
 a Metadata object representing the mapping information for the application's model and its mapping to
 the database.
 
-NOTE : Prior to version 5.0 applications bootstrapped a `SessionFactory` is via the
+NOTE: Prior to version 5.0 applications bootstrapped a `SessionFactory` is via the
 `org.hibernate.cfg.Configuration` object.  That approach is still supported in a slightly limited manner.
 See the _Legacy Bootstrapping_ guide for details.
 

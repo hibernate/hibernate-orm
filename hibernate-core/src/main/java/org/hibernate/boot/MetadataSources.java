@@ -200,10 +200,25 @@ public class MetadataSources implements Serializable {
 		if ( packageName == null ) {
 			throw new IllegalArgumentException( "The specified package name cannot be null" );
 		}
+
 		if ( packageName.endsWith( "." ) ) {
 			packageName = packageName.substring( 0, packageName.length() - 1 );
 		}
+
 		annotatedPackages.add( packageName );
+
+		return this;
+	}
+
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageRef Java Package reference
+	 *
+	 * @return this (for method chaining)
+	 */
+	public MetadataSources addPackage(Package packageRef) {
+		annotatedPackages.add( packageRef.getName() );
 		return this;
 	}
 

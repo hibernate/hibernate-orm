@@ -59,7 +59,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest extends BaseUnitTestCase
 				.addAnnotatedClass( Item.class )
 				.addAnnotatedClass( Workflow.class )
 				.getMetadataBuilder()
-				.with( new MyNamingStrategy() )
+				.applyImplicitNamingStrategy( new MyNamingStrategy() )
 				.build();
 	}
 

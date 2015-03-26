@@ -118,6 +118,10 @@ public class Configuration {
 	private Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
+	private Map<String, SQLFunction> sqlFunctions;
+	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
+	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
+
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
@@ -689,39 +693,55 @@ public class Configuration {
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.with( implicitNamingStrategy );
+			metadataBuilder.applyImplicitNamingStrategy( implicitNamingStrategy );
 		}
 		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.with( physicalNamingStrategy );
+			metadataBuilder.applyPhysicalNamingStrategy( physicalNamingStrategy );
 		}
 		if ( sharedCacheMode != null ) {
-			metadataBuilder.with( sharedCacheMode );
+			metadataBuilder.applySharedCacheMode( sharedCacheMode );
 		}
 		if ( !typeContributorRegistrations.isEmpty() ) {
 			for ( TypeContributor typeContributor : typeContributorRegistrations ) {
-				metadataBuilder.with( typeContributor );
+				metadataBuilder.applyTypes( typeContributor );
 			}
 		}
 		if ( !basicTypes.isEmpty() ) {
 			for ( BasicType basicType : basicTypes ) {
-				metadataBuilder.with( basicType );
+				metadataBuilder.applyBasicType( basicType );
 			}
 		}
+		if ( sqlFunctions != null ) {
+			for ( Map.Entry<String, SQLFunction> entry : sqlFunctions.entrySet() ) {
+				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
+			}
+		}
+		if ( auxiliaryDatabaseObjectList != null ) {
+			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
+				metadataBuilder.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+			}
+		}
+		if ( attributeConverterDefinitionsByClass != null ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : attributeConverterDefinitionsByClass.values() ) {
+				metadataBuilder.applyAttributeConverter( attributeConverterDefinition );
+			}
+		}
+
 
 		final Metadata metadata = metadataBuilder.build();
 
 		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
-			sessionFactoryBuilder.with( interceptor );
+			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}
 		if ( getSessionFactoryObserver() != null ) {
-			sessionFactoryBuilder.add( getSessionFactoryObserver() );
+			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
 		}
 		if ( entityNotFoundDelegate != null ) {
-			sessionFactoryBuilder.with( entityNotFoundDelegate );
+			sessionFactoryBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
 		}
 		if ( entityTuplizerFactory != null ) {
-			sessionFactoryBuilder.with( entityTuplizerFactory );
+			sessionFactoryBuilder.applyEntityTuplizerFactory( entityTuplizerFactory );
 		}
 
 		return sessionFactoryBuilder.build();
@@ -745,19 +765,22 @@ public class Configuration {
 
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// these just "pass through" to MetadataSources
-
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
-		metadataSources.addAuxiliaryDatabaseObject( object );
-	}
-
-	public Map getSqlFunctions() {
-		return metadataSources.getSqlFunctions();
+	public Map<String,SQLFunction> getSqlFunctions() {
+		return sqlFunctions;
 	}
 
 	public void addSqlFunction(String functionName, SQLFunction function) {
-		metadataSources.addSqlFunction( functionName, function );
+		if ( sqlFunctions == null ) {
+			sqlFunctions = new HashMap<String, SQLFunction>();
+		}
+		sqlFunctions.put( functionName, function );
+	}
+
+	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
+		if ( auxiliaryDatabaseObjectList == null ) {
+			auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
+		}
+		auxiliaryDatabaseObjectList.add( object );
 	}
 
 	/**
@@ -768,7 +791,7 @@ public class Configuration {
 	 * by its "entity attribute" parameterized type?
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		metadataSources.addAttributeConverter( attributeConverterClass, autoApply );
+		addAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass, autoApply ) );
 	}
 
 	/**
@@ -777,7 +800,7 @@ public class Configuration {
 	 * @param attributeConverterClass The AttributeConverter class.
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		metadataSources.addAttributeConverter( attributeConverterClass );
+		addAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass ) );
 	}
 
 	/**
@@ -788,7 +811,7 @@ public class Configuration {
 	 * @param attributeConverter The AttributeConverter instance.
 	 */
 	public void addAttributeConverter(AttributeConverter attributeConverter) {
-		metadataSources.addAttributeConverter( attributeConverter );
+		addAttributeConverter( AttributeConverterDefinition.from( attributeConverter ) );
 	}
 
 	/**
@@ -801,11 +824,14 @@ public class Configuration {
 	 * by its "entity attribute" parameterized type?
 	 */
 	public void addAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		metadataSources.addAttributeConverter( attributeConverter, autoApply );
+		addAttributeConverter( AttributeConverterDefinition.from( attributeConverter, autoApply ) );
 	}
 
 	public void addAttributeConverter(AttributeConverterDefinition definition) {
-		metadataSources.addAttributeConverter( definition );
+		if ( attributeConverterDefinitionsByClass == null ) {
+			attributeConverterDefinitionsByClass = new HashMap<Class, AttributeConverterDefinition>();
+		}
+		attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
 	}
 
 	/**

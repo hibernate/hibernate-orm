@@ -48,7 +48,7 @@ public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenan
 
 	@Override
 	protected void configure(SessionFactoryBuilder sfb) {
-		sfb.with( currentTenantResolver );
+		sfb.applyCurrentTenantIdentifierResolver( currentTenantResolver );
 	}
 
 	@Override

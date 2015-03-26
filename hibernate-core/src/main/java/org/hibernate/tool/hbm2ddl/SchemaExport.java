@@ -577,13 +577,19 @@ public class SchemaExport {
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategyImplName != null ) {
-			metadataBuilder.with(
-					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategyImplName )
+			metadataBuilder.applyImplicitNamingStrategy(
+					strategySelector.resolveStrategy(
+							ImplicitNamingStrategy.class,
+							parsedArgs.implicitNamingStrategyImplName
+					)
 			);
 		}
 		if ( parsedArgs.physicalNamingStrategyImplName != null ) {
-			metadataBuilder.with(
-					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, parsedArgs.physicalNamingStrategyImplName )
+			metadataBuilder.applyPhysicalNamingStrategy(
+					strategySelector.resolveStrategy(
+							PhysicalNamingStrategy.class,
+							parsedArgs.physicalNamingStrategyImplName
+					)
 			);
 		}
 

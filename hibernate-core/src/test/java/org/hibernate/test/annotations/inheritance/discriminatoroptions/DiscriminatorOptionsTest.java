@@ -97,7 +97,7 @@ public class DiscriminatorOptionsTest extends BaseUnitTestCase {
 					.addAnnotatedClass( BaseClass2.class )
 					.addAnnotatedClass( SubClass2.class )
 					.getMetadataBuilder()
-					.withImplicitForcingOfDiscriminatorsInSelect( true )
+					.enableImplicitForcingOfDiscriminatorsInSelect( true )
 					.build();
 
 			PersistentClass persistentClass = metadata.getEntityBinding( BaseClass2.class.getName() );

@@ -57,7 +57,7 @@ public class StrategyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.with( ImplicitNamingStrategyComponentPathImpl.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyComponentPathImpl.INSTANCE );
 	}
 
 	@Override

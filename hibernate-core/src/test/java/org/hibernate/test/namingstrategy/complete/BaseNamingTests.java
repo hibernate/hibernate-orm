@@ -49,7 +49,7 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		applySources( metadataSources );
 
 		final Metadata metadata = metadataSources.getMetadataBuilder()
-				.with( getImplicitNamingStrategyToUse() )
+				.applyImplicitNamingStrategy( getImplicitNamingStrategyToUse() )
 				.build();
 
 		validateCustomer( metadata );

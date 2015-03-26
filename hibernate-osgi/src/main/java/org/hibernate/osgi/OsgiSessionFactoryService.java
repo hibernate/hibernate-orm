@@ -127,7 +127,7 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		final MetadataBuilder metadataBuilder = new MetadataSources( ssr ).getMetadataBuilder();
 		final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls( TypeContributor.class );
 		for ( TypeContributor typeContributor : typeContributors ) {
-			metadataBuilder.with( typeContributor );
+			metadataBuilder.applyTypes( typeContributor );
 		}
 
 		return metadataBuilder.build().buildSessionFactory();

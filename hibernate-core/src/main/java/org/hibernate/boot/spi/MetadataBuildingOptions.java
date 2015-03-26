@@ -24,6 +24,7 @@
 package org.hibernate.boot.spi;
 
 import java.util.List;
+import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
@@ -34,9 +35,12 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.type.BasicType;
 
 import org.jboss.jandex.IndexView;
@@ -65,9 +69,9 @@ public interface MetadataBuildingOptions {
 	/**
 	 * Access the list of BasicType registrations.  These are the BasicTypes explicitly
 	 * registered via calls to:<ul>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#with(org.hibernate.type.BasicType)}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#with(org.hibernate.usertype.UserType, java.lang.String[])}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#with(org.hibernate.usertype.CompositeUserType, java.lang.String[])}</li>
+	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}</li>
+	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, java.lang.String[])}</li>
+	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.CompositeUserType, java.lang.String[])}</li>
 	 * </ul>
 	 *
 	 * @return The BasicType registrations
@@ -76,7 +80,7 @@ public interface MetadataBuildingOptions {
 
 	/**
 	 * Access to the Jandex index passed by call to
-	 * {@link org.hibernate.boot.MetadataBuilder#with(org.jboss.jandex.IndexView)}, if any.
+	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(org.jboss.jandex.IndexView)}, if any.
 	 *
 	 * @return The Jandex index
 	 */
@@ -173,7 +177,7 @@ public interface MetadataBuildingOptions {
 	 * @return {@code true} indicates they should be ignored; {@code false}
 	 * indicates they should not be ignored.
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#withExplicitDiscriminatorsForJoinedSubclassSupport
+	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see org.hibernate.cfg.AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	boolean ignoreExplicitDiscriminatorsForJoinedInheritance();
@@ -184,7 +188,7 @@ public interface MetadataBuildingOptions {
 	 *
 	 * @return {@code true} indicates we should do discrimination; {@code false} we should not.
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#withImplicitDiscriminatorsForJoinedSubclassSupport
+	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	boolean createImplicitDiscriminatorsForJoinedInheritance();
@@ -204,27 +208,39 @@ public interface MetadataBuildingOptions {
 	 * Should we use nationalized variants of character data (e.g. NVARCHAR rather than VARCHAR)
 	 * by default?
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#withNationalizedCharacterData
+	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport
 	 * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
 	 *
 	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
 	 */
 	public boolean useNationalizedCharacterData();
 
-	/**
-	 *
-	 * @return
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#
-	 */
 	boolean isSpecjProprietarySyntaxEnabled();
 
 	/**
 	 * Retrieve the ordering in which sources should be processed.
 	 *
-	 * @return
+	 * @return The order in which sources should be processed.
 	 */
 	List<MetadataSourceType> getSourceProcessOrdering();
+
+	/**
+	 * Access to any SQL functions explicitly registered with the MetadataBuilder.  This
+	 * does not include Dialect defined functions, etc.
+	 *
+	 * @return The SQLFunctions registered through MetadataBuilder
+	 */
+	Map<String,SQLFunction> getSqlFunctions();
+
+	/**
+	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This
+	 * does not include AuxiliaryDatabaseObject defined in mappings.
+	 *
+	 * @return The AuxiliaryDatabaseObject registered through MetadataBuilder
+	 */
+	List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
+
+	List<AttributeConverterDefinition> getAttributeConverters();
 
 //	/**
 //	 * Obtain the selected strategy for resolving members identifying persistent attributes

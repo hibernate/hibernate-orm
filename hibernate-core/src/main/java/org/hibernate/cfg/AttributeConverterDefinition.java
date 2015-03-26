@@ -27,6 +27,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -43,6 +44,81 @@ public class AttributeConverterDefinition {
 	private final boolean autoApply;
 	private final Class entityAttributeType;
 	private final Class databaseColumnType;
+
+	/**
+	 * Build an AttributeConverterDefinition from the AttributeConverter Class reference and
+	 * whether or not to auto-apply it.
+	 *
+	 * @param attributeConverterClass The AttributeConverter Class
+	 * @param autoApply Should the AttributeConverter be auto-applied?
+	 *
+	 * @return The constructed definition
+	 */
+	public static AttributeConverterDefinition from(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
+		return new AttributeConverterDefinition(
+				instantiateAttributeConverter( attributeConverterClass ),
+				autoApply
+		);
+	}
+
+	private static AttributeConverter instantiateAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
+		try {
+			return attributeConverterClass.newInstance();
+		}
+		catch (Exception e) {
+			throw new AnnotationException(
+					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]",
+					e
+			);
+		}
+	}
+
+	/**
+	 * Build an AttributeConverterDefinition from the AttributeConverter Class reference.  The
+	 * converter is searched for a {@link Converter} annotation	 to determine whether it should
+	 * be treated as auto-apply.  If the annotation is present, {@link Converter#autoApply()} is
+	 * used to make that determination.  If the annotation is not present, {@code false} is assumed.
+	 *
+	 * @param attributeConverterClass The converter class
+	 *
+	 * @return The constructed definition
+	 */
+	public static AttributeConverterDefinition from(Class<? extends AttributeConverter> attributeConverterClass) {
+		return from( instantiateAttributeConverter( attributeConverterClass ) );
+	}
+
+	/**
+	 * Build an AttributeConverterDefinition from an AttributeConverter instance.  The
+	 * converter is searched for a {@link Converter} annotation	 to determine whether it should
+	 * be treated as auto-apply.  If the annotation is present, {@link Converter#autoApply()} is
+	 * used to make that determination.  If the annotation is not present, {@code false} is assumed.
+	 *
+	 * @param attributeConverter The AttributeConverter instance
+	 *
+	 * @return The constructed definition
+	 */
+	public static AttributeConverterDefinition from(AttributeConverter attributeConverter) {
+		boolean autoApply = false;
+		Converter converterAnnotation = attributeConverter.getClass().getAnnotation( Converter.class );
+		if ( converterAnnotation != null ) {
+			autoApply = converterAnnotation.autoApply();
+		}
+
+		return new AttributeConverterDefinition( attributeConverter, autoApply );
+	}
+
+	/**
+	 * Build an AttributeConverterDefinition from the AttributeConverter instance and
+	 * whether or not to auto-apply it.
+	 *
+	 * @param attributeConverter The AttributeConverter instance
+	 * @param autoApply Should the AttributeConverter be auto-applied?
+	 *
+	 * @return The constructed definition
+	 */
+	public static AttributeConverterDefinition from(AttributeConverter attributeConverter, boolean autoApply) {
+		return new AttributeConverterDefinition( attributeConverter, autoApply );
+	}
 
 	public AttributeConverterDefinition(AttributeConverter attributeConverter, boolean autoApply) {
 		this.attributeConverter = attributeConverter;

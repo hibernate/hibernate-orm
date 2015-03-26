@@ -43,7 +43,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.apache.tools.ant.BuildException;
@@ -219,12 +218,12 @@ public class SchemaValidatorTask extends MatchingTask {
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.with(
+			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, implicitNamingStrategy )
 			);
 		}
 		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.with(
+			metadataBuilder.applyPhysicalNamingStrategy(
 					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, physicalNamingStrategy )
 			);
 		}

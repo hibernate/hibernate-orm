@@ -52,31 +52,31 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#INTERCEPTOR
 	 */
-	public SessionFactoryBuilder with(Interceptor interceptor);
+	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
 
 	/**
 	 * Specifies a custom entity dirtiness strategy to be applied to the SessionFactory.  See the contract
 	 * of {@link org.hibernate.CustomEntityDirtinessStrategy} for details.
 	 *
-	 * @param customEntityDirtinessStrategy The custom strategy to be used.
+	 * @param strategy The custom strategy to be used.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
 	 */
-	public SessionFactoryBuilder with(CustomEntityDirtinessStrategy customEntityDirtinessStrategy);
+	public SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy);
 
 	/**
 	 * Specifies a strategy for resolving the notion of a "current" tenant-identifier when using multi-tenancy
 	 * together with current sessions
 	 *
-	 * @param currentTenantIdentifierResolver The resolution strategy to use.
+	 * @param resolver The resolution strategy to use.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
-	public SessionFactoryBuilder with(CurrentTenantIdentifierResolver currentTenantIdentifierResolver);
+	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
 
 	/**
 	 * Specifies one or more observers to be applied to the SessionFactory.  Can be called multiple times to add
@@ -86,7 +86,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder add(SessionFactoryObserver... observers);
+	public SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers);
 
 	/**
 	 * Specifies one or more entity name resolvers to be applied to the SessionFactory (see the {@link org.hibernate.EntityNameResolver}
@@ -96,7 +96,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder add(EntityNameResolver... entityNameResolvers);
+	public SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers);
 
 	/**
 	 * Names the {@link org.hibernate.proxy.EntityNotFoundDelegate} to be applied to the SessionFactory.  EntityNotFoundDelegate is a
@@ -106,7 +106,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder with(EntityNotFoundDelegate entityNotFoundDelegate);
+	public SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate);
 
 	/**
 	 * Specify the EntityTuplizerFactory to use.
@@ -115,7 +115,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder with(EntityTuplizerFactory entityTuplizerFactory);
+	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
 
 	/**
 	 * Register the default {@link org.hibernate.tuple.entity.EntityTuplizer} to be applied to the SessionFactory.
@@ -125,7 +125,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass);
+	public SessionFactoryBuilder applyEntityTuplizer(
+			EntityMode entityMode,
+			Class<? extends EntityTuplizer> tuplizerClass);
 
 	/**
 	 * Apply a Bean Validation ValidatorFactory to the SessionFactory being built.
@@ -136,7 +138,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder withValidatorFactory(Object validatorFactory);
+	public SessionFactoryBuilder applyValidatorFactory(Object validatorFactory);
 
 	/**
 	 * Apply a CDI BeanManager to the SessionFactory being built.
@@ -147,9 +149,9 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SessionFactoryBuilder withBeanManager(Object beanManager);
+	public SessionFactoryBuilder applyBeanManager(Object beanManager);
 
-	public SessionFactoryBuilder with(String registrationName, SQLFunction sqlFunction);
+	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction);
 
 	/**
 	 * After all options have been set, build the SessionFactory.

@@ -216,8 +216,6 @@ subprojects { subProject ->
 		systemProperties['hibernate.test.validatefailureexpected'] = true
 		systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
 		maxHeapSize = "1024m"
-		// Not strictly needed but useful to attach a profiler:
-		jvmArgs '-XX:MaxPermSize=256m'
 	}
 
 	processTestResources.doLast( {

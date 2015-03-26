@@ -66,55 +66,57 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
-				with( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
+				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
 	}
 
 	@Override
-	public SessionFactoryBuilder with(Interceptor interceptor) {
+	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor) {
 		this.options.interceptor = interceptor;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder with(CustomEntityDirtinessStrategy dirtinessStrategy) {
-		this.options.customEntityDirtinessStrategy = dirtinessStrategy;
+	public SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
+		this.options.customEntityDirtinessStrategy = strategy;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder with(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
-		this.options.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+		this.options.currentTenantIdentifierResolver = resolver;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder add(SessionFactoryObserver... observers) {
+	public SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers) {
 		this.options.sessionFactoryObserverList.addAll( Arrays.asList( observers ) );
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder add(EntityNameResolver... entityNameResolvers) {
+	public SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers) {
 		this.options.entityNameResolvers.addAll( Arrays.asList( entityNameResolvers ) );
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder with(EntityNotFoundDelegate entityNotFoundDelegate) {
+	public SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
 		this.options.entityNotFoundDelegate = entityNotFoundDelegate;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder with(EntityTuplizerFactory entityTuplizerFactory) {
+	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
 		options.settings.setEntityTuplizerFactory( entityTuplizerFactory );
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
+	public SessionFactoryBuilder applyEntityTuplizer(
+			EntityMode entityMode,
+			Class<? extends EntityTuplizer> tuplizerClass) {
 		if ( options.settings.getEntityTuplizerFactory() == null ) {
 			options.settings.setEntityTuplizerFactory( new EntityTuplizerFactory() );
 		}
@@ -123,19 +125,19 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	}
 
 	@Override
-	public SessionFactoryBuilder withValidatorFactory(Object validatorFactory) {
+	public SessionFactoryBuilder applyValidatorFactory(Object validatorFactory) {
 		this.options.validatorFactoryReference = validatorFactory;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder withBeanManager(Object beanManager) {
+	public SessionFactoryBuilder applyBeanManager(Object beanManager) {
 		this.options.beanManagerReference = beanManager;
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder with(String registrationName, SQLFunction sqlFunction) {
+	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction) {
 		if ( this.options.sqlFunctions == null ) {
 			this.options.sqlFunctions = new HashMap<String, SQLFunction>();
 		}

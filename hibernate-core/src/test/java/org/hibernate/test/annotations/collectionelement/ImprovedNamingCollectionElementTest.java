@@ -38,7 +38,7 @@ import org.junit.Test;
 public class ImprovedNamingCollectionElementTest extends DefaultNamingCollectionElementTest {
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 
 	@Test

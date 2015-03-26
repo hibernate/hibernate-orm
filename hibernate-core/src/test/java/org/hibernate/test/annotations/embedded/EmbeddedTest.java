@@ -614,6 +614,6 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 }

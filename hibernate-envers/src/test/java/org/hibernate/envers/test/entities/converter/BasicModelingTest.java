@@ -51,9 +51,10 @@ public class BasicModelingTest extends AbstractEnversTest {
 				.build();
 		try {
 			Metadata metadata = new MetadataSources( ssr )
-					.addAttributeConverter( SexConverter.class )
 					.addAnnotatedClass( Person.class )
-					.buildMetadata();
+					.getMetadataBuilder()
+					.applyAttributeConverter( SexConverter.class )
+					.build();
 
 			( (MetadataImpl) metadata ).validate();
 

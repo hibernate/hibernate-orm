@@ -268,7 +268,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	private void configure(MetadataBuilder metadataBuilder) {
 		if ( implicitNamingStrategy != null ) {
 			try {
-				metadataBuilder.with(
+				metadataBuilder.applyImplicitNamingStrategy(
 						(ImplicitNamingStrategy) ReflectHelper.classForName( implicitNamingStrategy ).newInstance()
 				);
 			}
@@ -279,7 +279,7 @@ public class SchemaUpdateTask extends MatchingTask {
 
 		if ( physicalNamingStrategy != null ) {
 			try {
-				metadataBuilder.with(
+				metadataBuilder.applyPhysicalNamingStrategy(
 						(PhysicalNamingStrategy) ReflectHelper.classForName( physicalNamingStrategy ).newInstance()
 				);
 			}

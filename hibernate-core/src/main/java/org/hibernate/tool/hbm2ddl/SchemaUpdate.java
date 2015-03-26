@@ -39,7 +39,6 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -243,13 +242,19 @@ public class SchemaUpdate {
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategyImplName != null ) {
-			metadataBuilder.with(
-					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategyImplName )
+			metadataBuilder.applyImplicitNamingStrategy(
+					strategySelector.resolveStrategy(
+							ImplicitNamingStrategy.class,
+							parsedArgs.implicitNamingStrategyImplName
+					)
 			);
 		}
 		if ( parsedArgs.physicalNamingStrategyImplName != null ) {
-			metadataBuilder.with(
-					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, parsedArgs.physicalNamingStrategyImplName )
+			metadataBuilder.applyPhysicalNamingStrategy(
+					strategySelector.resolveStrategy(
+							PhysicalNamingStrategy.class,
+							parsedArgs.physicalNamingStrategyImplName
+					)
 			);
 		}
 

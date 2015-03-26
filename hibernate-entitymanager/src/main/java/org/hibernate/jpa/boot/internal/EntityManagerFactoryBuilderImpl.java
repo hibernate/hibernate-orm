@@ -59,6 +59,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -203,9 +204,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					@Override
 					public MetadataImplementor perform() {
 						final MetadataSources metadataSources = new MetadataSources( bsr );
-						populate( metadataSources, mergedSettings, standardServiceRegistry );
+						List<AttributeConverterDefinition> attributeConverterDefinitions = populate( metadataSources, mergedSettings, standardServiceRegistry );
 						final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( standardServiceRegistry );
-						populate( metamodelBuilder, mergedSettings, standardServiceRegistry );
+						populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
 						return (MetadataImplementor) metamodelBuilder.build();
 					}
 				}
@@ -610,7 +611,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	private void populate(
+	private List<AttributeConverterDefinition> populate(
 			MetadataSources metadataSources,
 			MergedSettings mergedSettings,
 			StandardServiceRegistry ssr) {
@@ -655,12 +656,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			}
 //		}
 
+		List<AttributeConverterDefinition> attributeConverterDefinitions = null;
+
 		// add any explicit Class references passed in
 		final List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
 		if ( loadedAnnotatedClasses != null ) {
 			for ( Class cls : loadedAnnotatedClasses ) {
 				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
-					metadataSources.addAttributeConverter( (Class<? extends AttributeConverter>) cls );
+					if ( attributeConverterDefinitions == null ) {
+						attributeConverterDefinitions = new ArrayList<AttributeConverterDefinition>();
+					}
+					attributeConverterDefinitions.add( AttributeConverterDefinition.from( (Class<? extends AttributeConverter>) cls ) );
 				}
 				else {
 					metadataSources.addAnnotatedClass( cls );
@@ -683,15 +689,21 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metadataSources.addResource( ormXml );
 			}
 		}
+
+		return attributeConverterDefinitions;
 	}
 
-	private void populate(MetadataBuilder metamodelBuilder, MergedSettings mergedSettings, StandardServiceRegistry ssr) {
+	private void populate(
+			MetadataBuilder metamodelBuilder,
+			MergedSettings mergedSettings,
+			StandardServiceRegistry ssr,
+			List<AttributeConverterDefinition> attributeConverterDefinitions) {
 		if ( persistenceUnit.getTempClassLoader() != null ) {
-			metamodelBuilder.with( persistenceUnit.getTempClassLoader() );
+			metamodelBuilder.applyTempClassLoader( persistenceUnit.getTempClassLoader() );
 		}
 
-		metamodelBuilder.with( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
-		metamodelBuilder.with(
+		metamodelBuilder.applyScanEnvironment( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
+		metamodelBuilder.applyScanOptions(
 				new StandardScanOptions(
 						(String) configurationValues.get( org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY ),
 						persistenceUnit.isExcludeUnlistedClasses()
@@ -700,7 +712,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		if ( mergedSettings.cacheRegionDefinitions != null ) {
 			for ( CacheRegionDefinition localCacheRegionDefinition : mergedSettings.cacheRegionDefinitions ) {
-				metamodelBuilder.with( localCacheRegionDefinition );
+				metamodelBuilder.applyCacheRegionDefinition( localCacheRegionDefinition );
 			}
 		}
 
@@ -718,7 +730,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		);
 		if ( typeContributorList != null ) {
 			for ( TypeContributor typeContributor : typeContributorList.getTypeContributors() ) {
-				metamodelBuilder.with( typeContributor );
+				metamodelBuilder.applyTypes( typeContributor );
+			}
+		}
+
+		if ( attributeConverterDefinitions != null ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : attributeConverterDefinitions ) {
+				metamodelBuilder.applyAttributeConverter( attributeConverterDefinition );
 			}
 		}
 	}
@@ -816,7 +834,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( sessionFactoryInterceptorSetting != null ) {
 			final Interceptor sessionFactoryInterceptor =
 					strategySelector.resolveStrategy( Interceptor.class, sessionFactoryInterceptorSetting );
-			sfBuilder.with( sessionFactoryInterceptor );
+			sfBuilder.applyInterceptor( sessionFactoryInterceptor );
 		}
 
 		// Locate and apply any requested SessionFactoryObserver
@@ -824,18 +842,18 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( sessionFactoryObserverSetting != null ) {
 			final SessionFactoryObserver suppliedSessionFactoryObserver =
 					strategySelector.resolveStrategy( SessionFactoryObserver.class, sessionFactoryObserverSetting );
-			sfBuilder.add( suppliedSessionFactoryObserver );
+			sfBuilder.addSessionFactoryObservers( suppliedSessionFactoryObserver );
 		}
 
-		sfBuilder.add( ServiceRegistryCloser.INSTANCE );
+		sfBuilder.addSessionFactoryObservers( ServiceRegistryCloser.INSTANCE );
 
-		sfBuilder.with( JpaEntityNotFoundDelegate.INSTANCE );
+		sfBuilder.applyEntityNotFoundDelegate( JpaEntityNotFoundDelegate.INSTANCE );
 
 		if ( this.validatorFactory != null ) {
-			sfBuilder.withValidatorFactory( validatorFactory );
+			sfBuilder.applyValidatorFactory( validatorFactory );
 		}
 		if ( this.cdiBeanManager != null ) {
-			sfBuilder.withBeanManager( cdiBeanManager );
+			sfBuilder.applyBeanManager( cdiBeanManager );
 		}
 	}
 

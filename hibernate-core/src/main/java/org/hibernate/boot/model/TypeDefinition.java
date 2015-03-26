@@ -39,9 +39,9 @@ import org.hibernate.internal.util.compare.EqualsHelper;
  * Generally speaking this information would come from annotations
  * ({@link org.hibernate.annotations.TypeDef}) or XML mappings.  An alternative form of
  * supplying custom types is programatically via one of:<ul>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#with(org.hibernate.type.BasicType)}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#with(org.hibernate.usertype.UserType, String[])}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#with(TypeContributor)}</li>
+ *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}</li>
+ *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, String[])}</li>
+ *     <li>{@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}</li>
  * </ul>
  *
  * @author Steve Ebersole

@@ -55,7 +55,7 @@ public class ComponentNamingStrategyTest extends BaseUnitTestCase {
 			ms.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
 
 			final Metadata metadata = ms.getMetadataBuilder()
-					.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+					.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
 					.build();
 
 			final PersistentClass pc = metadata.getEntityBinding( Container.class.getName() );
@@ -81,7 +81,7 @@ public class ComponentNamingStrategyTest extends BaseUnitTestCase {
 			ms.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
 
 			final Metadata metadata = ms.getMetadataBuilder()
-					.with( ImplicitNamingStrategyComponentPathImpl.INSTANCE )
+					.applyImplicitNamingStrategy( ImplicitNamingStrategyComponentPathImpl.INSTANCE )
 					.build();
 
 			final PersistentClass pc = metadata.getEntityBinding( Container.class.getName() );

@@ -101,7 +101,7 @@ public class AssociationOverrideTest extends BaseNonConfigCoreFunctionalTestCase
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.with( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 
 	@Override

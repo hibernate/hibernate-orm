@@ -42,6 +42,7 @@ import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.DeploymentResourcesInterpreter.DeploymentResources;
+import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -58,6 +59,7 @@ import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
+import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -81,7 +83,7 @@ public class MetadataBuildingProcess {
 
 	public static MetadataImpl build(
 			final MetadataSources sources,
-			final MetadataBuildingOptions options) {
+			final MetadataBuildingOptionsImpl options) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
@@ -440,7 +442,7 @@ public class MetadataBuildingProcess {
 
 	private static void addScanResultsToSources(
 			MetadataSources sources,
-			MetadataBuildingOptions options,
+			MetadataBuildingOptionsImpl options,
 			ScanResult scanResult) {
 		final ClassLoaderService cls = options.getServiceRegistry().getService( ClassLoaderService.class );
 
@@ -461,7 +463,9 @@ public class MetadataBuildingProcess {
 				final Converter converter = (Converter) classRef.getAnnotation( Converter.class );
 				if ( converter != null ) {
 					//noinspection unchecked
-					sources.addAttributeConverter( classRef, converter.autoApply() );
+					options.addAttributeConverterDefinition(
+							AttributeConverterDefinition.from( classRef, converter.autoApply() )
+					);
 				}
 				else {
 					sources.addAnnotatedClass( classRef );

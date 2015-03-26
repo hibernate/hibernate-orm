@@ -45,7 +45,7 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 				.addAnnotatedClass(Address.class)
 				.addAnnotatedClass(Person.class)
 				.getMetadataBuilder()
-				.with( new DummyNamingStrategy() )
+				.applyPhysicalNamingStrategy( new DummyNamingStrategy() )
 				.build();
 	}
 
@@ -55,7 +55,7 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 				.addAnnotatedClass( A.class )
 				.addAnnotatedClass( AddressEntry.class )
 				.getMetadataBuilder()
-				.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+				.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
 				.build();
 
 		Collection collectionBinding = metadata.getCollectionBinding( A.class.getName() + ".address" );

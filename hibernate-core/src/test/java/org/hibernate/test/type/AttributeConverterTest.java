@@ -26,7 +26,6 @@ package org.hibernate.test.type;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.List;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -61,7 +60,6 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.legacy.J;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -141,8 +139,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
-					.addAttributeConverter( NotAutoAppliedConverter.class, false )
 					.getMetadataBuilder()
+					.applyAttributeConverter( NotAutoAppliedConverter.class, false )
 					.build();
 
 			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
@@ -167,8 +165,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
-					.addAttributeConverter( StringClobConverter.class, true )
 					.getMetadataBuilder()
+					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
 
 			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
@@ -225,8 +223,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester2.class )
-					.addAttributeConverter( StringClobConverter.class, true )
 					.getMetadataBuilder()
+					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
 
 			PersistentClass tester = metadata.getEntityBinding( Tester2.class.getName() );
@@ -337,8 +335,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( EntityWithConvertibleField.class )
-					.addAttributeConverter( ConvertibleEnumConverter.class, true )
 					.getMetadataBuilder()
+					.applyAttributeConverter( ConvertibleEnumConverter.class, true )
 					.build();
 
 			// first lets validate that the converter was applied...
@@ -413,6 +411,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Entity(name = "T1")
+	@SuppressWarnings("UnusedDeclaration")
 	public static class Tester {
 		@Id
 		private Long id;
@@ -428,6 +427,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T2")
+	@SuppressWarnings("UnusedDeclaration")
 	public static class Tester2 {
 		@Id
 		private Long id;
@@ -436,6 +436,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T3")
+	@SuppressWarnings("UnusedDeclaration")
 	public static class Tester3 {
 		@Id
 		private Long id;
@@ -445,6 +446,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity(name = "T4")
+	@SuppressWarnings("UnusedDeclaration")
 	public static class Tester4 {
 		@Id
 		private Long id;
@@ -486,6 +488,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
+	@SuppressWarnings("UnusedDeclaration")
 	public static class IrrelevantInstantEntity {
 		@Id
 		private Long id;

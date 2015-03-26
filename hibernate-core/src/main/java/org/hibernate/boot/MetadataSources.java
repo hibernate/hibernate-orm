@@ -31,21 +31,14 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 import javax.xml.transform.dom.DOMSource;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
-import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -58,13 +51,10 @@ import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.internal.UrlXmlSource;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.AttributeConverterDefinition;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
@@ -84,20 +74,15 @@ public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;
 
-	// todo : the boolean here indicates whether or not to perform validation as we load XML documents; devise a way to expose setting that.
-	//		one option is to make this a service
-	//		another is to simply define an AvailableSetting and suck that in here.
+	// NOTE : The boolean here indicates whether or not to perform validation as we load XML documents.
+	// Should we expose this setting?  Disabling would speed up JAXP and JAXB at runtime, but potentially
+	// at the cost of less obvious errors when a document is not valid.
 	private Binder mappingsBinder = new MappingBinder( true );
 
 	private List<Binding> xmlBindings = new ArrayList<Binding>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<String>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
-
-	private ConcurrentHashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
-
-	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private Map<String, SQLFunction> sqlFunctions;
 
 	public MetadataSources() {
 		this( new BootstrapServiceRegistryBuilder().build() );
@@ -141,24 +126,8 @@ public class MetadataSources implements Serializable {
 		return annotatedClassNames;
 	}
 
-	public Collection<AttributeConverterDefinition> getAttributeConverters() {
-		return attributeConverterDefinitionsByClass == null
-				? Collections.<AttributeConverterDefinition>emptyList()
-				: attributeConverterDefinitionsByClass.values();
-	}
-
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
-	}
-
-	public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return auxiliaryDatabaseObjectList == null
-				? Collections.<AuxiliaryDatabaseObject>emptyList()
-				: auxiliaryDatabaseObjectList;
-	}
-
-	public Map<String, SQLFunction> getSqlFunctions() {
-		return sqlFunctions == null ? Collections.<String,SQLFunction>emptyMap() : sqlFunctions;
 	}
 
 	/**
@@ -293,7 +262,7 @@ public class MetadataSources implements Serializable {
 	 *
 	 * @see #addFile(java.io.File)
 	 */
-	public MetadataSources addFile(String path) {;
+	public MetadataSources addFile(String path) {
 		addFile(
 				new Origin( SourceType.FILE, path ),
 				new File( path )
@@ -516,104 +485,4 @@ public class MetadataSources implements Serializable {
 		}
 		return this;
 	}
-
-	/**
-	 * Adds an AttributeConverter by its Class plus a boolean indicating whether to auto apply it.
-	 *
-	 * @param attributeConverterClass The AttributeConverter class.
-	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
-	 * by its "entity attribute" parameterized type?
-	 */
-	public MetadataSources addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter(
-				instantiateAttributeConverter( attributeConverterClass ),
-				autoApply
-		);
-		return this;
-	}
-
-	private AttributeConverter instantiateAttributeConverter(Class<? extends AttributeConverter> converterClass) {
-		return InFlightMetadataCollectorImpl.instantiateAttributeConverter( converterClass );
-	}
-
-	/**
-	 * Adds an AttributeConverter by its Class.  The indicated class is instantiated and
-	 * passed off to {@link #addAttributeConverter(javax.persistence.AttributeConverter)}.
-	 * See the javadocs on that method in regards to determination of auto-apply.
-	 *
-	 * @param attributeConverterClass The AttributeConverter class.
-	 */
-	public MetadataSources addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		addAttributeConverter( instantiateAttributeConverter( attributeConverterClass ) );
-		return this;
-	}
-
-	/**
-	 * Adds an AttributeConverter instance.
-	 * <p/>
-	 * The converter is searched for a {@link Converter} annotation	 to determine whether it
-	 * should be treated as auto-apply.  If the annotation is present, {@link Converter#autoApply()}
-	 * is used to make that determination.  If the annotation is not present, {@code false} is
-	 * assumed.
-	 *
-	 * @param attributeConverter The AttributeConverter instance.
-	 */
-	public MetadataSources addAttributeConverter(AttributeConverter attributeConverter) {
-		addAttributeConverter(
-				InFlightMetadataCollectorImpl.toAttributeConverterDefinition( attributeConverter )
-		);
-		return this;
-	}
-
-	/**
-	 * Adds an AttributeConverter instance, explicitly indicating whether to auto-apply.
-	 *
-	 * @param attributeConverter The AttributeConverter instance.
-	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
-	 * by its "entity attribute" parameterized type?
-	 */
-	public MetadataSources addAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		addAttributeConverter( new AttributeConverterDefinition( attributeConverter, autoApply ) );
-		return this;
-	}
-
-	public MetadataSources addAttributeConverter(AttributeConverterDefinition definition) {
-		if ( attributeConverterDefinitionsByClass == null ) {
-			attributeConverterDefinitionsByClass = new ConcurrentHashMap<Class, AttributeConverterDefinition>();
-		}
-
-		final Object old = attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
-
-		if ( old != null ) {
-			throw new AssertionFailure(
-					String.format(
-							"AttributeConverter class [%s] registered multiple times",
-							definition.getAttributeConverter().getClass()
-					)
-			);
-		}
-		return this;
-	}
-
-	public MetadataSources addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		if ( auxiliaryDatabaseObjectList == null ) {
-			auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
-		}
-		auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
-
-		return this;
-	}
-
-	public void addSqlFunction(String functionName, SQLFunction function) {
-		if ( sqlFunctions == null ) {
-			// need to use this form as we want to specify the "concurrency level" as 1
-			// since only one thread will ever (should) be updating this
-			sqlFunctions = new ConcurrentHashMap<String, SQLFunction>( 16, .75f, 1 );
-		}
-
-		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
-		// just in case a user's customer dialect uses mixed cases.
-		sqlFunctions.put( functionName.toLowerCase(), function );
-	}
-
 }

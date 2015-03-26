@@ -404,7 +404,7 @@ public class DefaultNamingCollectionElementTest extends BaseNonConfigCoreFunctio
 
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.with( ImplicitNamingStrategyLegacyHbmImpl.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyHbmImpl.INSTANCE );
 	}
 
 	@Override

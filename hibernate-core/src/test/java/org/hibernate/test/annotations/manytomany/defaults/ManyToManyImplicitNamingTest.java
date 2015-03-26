@@ -53,7 +53,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.with( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
+		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 
 	@Test

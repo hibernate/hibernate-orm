@@ -262,12 +262,12 @@ public class SchemaExportTask extends MatchingTask {
 
 		ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
 		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.with(
+			metadataBuilder.applyImplicitNamingStrategy(
 					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
 			);
 		}
 		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.with(
+			metadataBuilder.applyPhysicalNamingStrategy(
 					(PhysicalNamingStrategy) classLoaderService.classForName( physicalNamingStrategy ).newInstance()
 			);
 		}

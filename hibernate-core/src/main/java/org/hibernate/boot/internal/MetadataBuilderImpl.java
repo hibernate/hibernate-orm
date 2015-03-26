@@ -25,9 +25,14 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -50,6 +55,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -61,9 +67,11 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.CoreLogging;
@@ -148,132 +156,132 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		for ( CacheRegionDefinition cacheRegionDefinition : aggregatedConfig.getCacheRegionDefinitions() ) {
-			with( cacheRegionDefinition );
+			applyCacheRegionDefinition( cacheRegionDefinition );
 		}
 	}
 
 	@Override
-	public MetadataBuilder withImplicitSchemaName(String implicitSchemaName) {
+	public MetadataBuilder applyImplicitSchemaName(String implicitSchemaName) {
 		options.mappingDefaults.implicitSchemaName = implicitSchemaName;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder withImplicitCatalogName(String implicitCatalogName) {
+	public MetadataBuilder applyImplicitCatalogName(String implicitCatalogName) {
 		options.mappingDefaults.implicitCatalogName = implicitCatalogName;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(ImplicitNamingStrategy namingStrategy) {
+	public MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy) {
 		this.options.implicitNamingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(PhysicalNamingStrategy namingStrategy) {
+	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
 		this.options.physicalNamingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(ReflectionManager reflectionManager) {
+	public MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager) {
 		this.options.reflectionManager = reflectionManager;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(SharedCacheMode sharedCacheMode) {
+	public MetadataBuilder applySharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.options.sharedCacheMode = sharedCacheMode;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(AccessType implicitCacheAccessType) {
+	public MetadataBuilder applyAccessType(AccessType implicitCacheAccessType) {
 		this.options.mappingDefaults.implicitCacheAccessType = implicitCacheAccessType;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(IndexView jandexView) {
+	public MetadataBuilder applyIndexView(IndexView jandexView) {
 		this.options.jandexView = jandexView;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(ScanOptions scanOptions) {
+	public MetadataBuilder applyScanOptions(ScanOptions scanOptions) {
 		this.options.scanOptions = scanOptions;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(ScanEnvironment scanEnvironment) {
+	public MetadataBuilder applyScanEnvironment(ScanEnvironment scanEnvironment) {
 		this.options.scanEnvironment = scanEnvironment;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(Scanner scanner) {
+	public MetadataBuilder applyScanner(Scanner scanner) {
 		this.options.scannerSetting = scanner;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(ArchiveDescriptorFactory factory) {
+	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
 		this.options.archiveDescriptorFactory = factory;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled) {
+	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enabled) {
 		this.options.useNewIdentifierGenerators = enabled;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder withExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
+	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.explicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder withImplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
+	public MetadataBuilder enableImplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.implicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder withImplicitForcingOfDiscriminatorsInSelect(boolean supported) {
+	public MetadataBuilder enableImplicitForcingOfDiscriminatorsInSelect(boolean supported) {
 		options.implicitlyForceDiscriminatorInSelect = supported;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder withNationalizedCharacterData(boolean enabled) {
+	public MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled) {
 		options.useNationalizedCharacterData = enabled;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(BasicType type) {
+	public MetadataBuilder applyBasicType(BasicType type) {
 		options.basicTypeRegistrations.add( type );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(UserType type, String[] keys) {
+	public MetadataBuilder applyBasicType(UserType type, String[] keys) {
 		options.basicTypeRegistrations.add( new CustomType( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(CompositeUserType type, String[] keys) {
+	public MetadataBuilder applyBasicType(CompositeUserType type, String[] keys) {
 		options.basicTypeRegistrations.add( new CompositeCustomType( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder with(TypeContributor typeContributor) {
+	public MetadataBuilder applyTypes(TypeContributor typeContributor) {
 		typeContributor.contribute( this, options.serviceRegistry );
 		return this;
 	}
@@ -294,7 +302,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
-	public MetadataBuilder with(CacheRegionDefinition cacheRegionDefinition) {
+	public MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
 		if ( options.cacheRegionDefinitions == null ) {
 			options.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 		}
@@ -303,14 +311,14 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
-	public MetadataBuilder with(ClassLoader tempClassLoader) {
+	public MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader) {
 		options.tempClassLoader = tempClassLoader;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder setSourceProcessOrdering(List<MetadataSourceType> sourceProcessOrdering) {
-		options.sourceProcessOrdering = sourceProcessOrdering;
+	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
+		options.sourceProcessOrdering.addAll( Arrays.asList( sourceTypes ) );
 		return this;
 	}
 
@@ -318,6 +326,63 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		this.options.specjProprietarySyntaxEnabled = true;
 		return this;
 	}
+
+
+	@Override
+	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
+		if ( this.options.sqlFunctionMap == null ) {
+			// need to use this form as we want to specify the "concurrency level" as 1
+			// since only one thread will ever (should) be updating this
+			this.options.sqlFunctionMap = new HashMap<String, SQLFunction>();
+		}
+
+		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
+		// just in case a user's customer dialect uses mixed cases.
+		this.options.sqlFunctionMap.put( functionName.toLowerCase(), function );
+
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+		if ( this.options.auxiliaryDatabaseObjectList == null ) {
+			this.options.auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
+		}
+		this.options.auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
+
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyAttributeConverter(AttributeConverterDefinition definition) {
+		this.options.addAttributeConverterDefinition( definition );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
+		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass ) );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
+		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass, autoApply ) );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter) {
+		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverter ) );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
+		applyAttributeConverter( AttributeConverterDefinition.from( attributeConverter, autoApply ) );
+		return this;
+	}
+
 
 //	public MetadataBuilder with(PersistentAttributeMemberResolver resolver) {
 //		options.persistentAttributeMemberResolver = resolver;
@@ -449,7 +514,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
-		private List<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
+		private ArrayList<BasicType> basicTypeRegistrations = new ArrayList<BasicType>();
 
 		private IndexView jandexView;
 		private ClassLoader tempClassLoader;
@@ -468,13 +533,17 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private AccessType defaultCacheAccessType;
 		private boolean useNewIdentifierGenerators;
 		private MultiTenancyStrategy multiTenancyStrategy;
-		private List<CacheRegionDefinition> cacheRegionDefinitions;
+		private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
-		private List<MetadataSourceType> sourceProcessOrdering;
+		private ArrayList<MetadataSourceType> sourceProcessOrdering;
+
+		private HashMap<String,SQLFunction> sqlFunctionMap;
+		private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
+		private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
 		private static ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
@@ -603,8 +672,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
 		}
 
-		private List<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			List<MetadataSourceType> initialSelections = null;
+		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
+			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<MetadataSourceType>();
 
 			final String sourceProcessOrderingSetting = configService.getSetting(
 					AvailableSettings.ARTIFACT_PROCESSING_ORDER,
@@ -612,13 +681,14 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			);
 			if ( sourceProcessOrderingSetting != null ) {
 				final String[] orderChoices = StringHelper.split( ",; ", sourceProcessOrderingSetting, false );
-				initialSelections = CollectionHelper.arrayList( orderChoices.length );
+				initialSelections.addAll( CollectionHelper.<MetadataSourceType>arrayList( orderChoices.length ) );
 				for ( String orderChoice : orderChoices ) {
 					initialSelections.add( MetadataSourceType.parsePrecedence( orderChoice ) );
 				}
 			}
-			if ( initialSelections == null || initialSelections.isEmpty() ) {
-				initialSelections = Arrays.asList(  MetadataSourceType.HBM, MetadataSourceType.CLASS );
+			if ( initialSelections.isEmpty() ) {
+				initialSelections.add( MetadataSourceType.HBM );
+				initialSelections.add( MetadataSourceType.CLASS );
 			}
 
 			return initialSelections;
@@ -737,6 +807,42 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		@Override
 		public List<MetadataSourceType> getSourceProcessOrdering() {
 			return sourceProcessOrdering;
+		}
+
+		@Override
+		public Map<String, SQLFunction> getSqlFunctions() {
+			return sqlFunctionMap == null ? Collections.<String, SQLFunction>emptyMap() : sqlFunctionMap;
+		}
+
+		@Override
+		public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
+			return auxiliaryDatabaseObjectList == null
+					? Collections.<AuxiliaryDatabaseObject>emptyList()
+					: auxiliaryDatabaseObjectList;
+		}
+
+		@Override
+		public List<AttributeConverterDefinition> getAttributeConverters() {
+			return attributeConverterDefinitionsByClass == null
+					? Collections.<AttributeConverterDefinition>emptyList()
+					: new ArrayList<AttributeConverterDefinition>( attributeConverterDefinitionsByClass.values() );
+		}
+
+		public void addAttributeConverterDefinition(AttributeConverterDefinition definition) {
+			if ( this.attributeConverterDefinitionsByClass == null ) {
+				this.attributeConverterDefinitionsByClass = new HashMap<Class, AttributeConverterDefinition>();
+			}
+
+			final Object old = this.attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
+
+			if ( old != null ) {
+				throw new AssertionFailure(
+						String.format(
+								"AttributeConverter class [%s] registered multiple times",
+								definition.getAttributeConverter().getClass()
+						)
+				);
+			}
 		}
 
 		public static interface JpaOrmXmlPersistenceUnitDefaults {

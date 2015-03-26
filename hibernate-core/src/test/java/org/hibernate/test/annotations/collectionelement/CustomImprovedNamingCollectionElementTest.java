@@ -40,7 +40,7 @@ public class CustomImprovedNamingCollectionElementTest extends ImprovedNamingCol
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.with( new MyImprovedNamingStrategy() );
+		metadataBuilder.applyImplicitNamingStrategy( new MyImprovedNamingStrategy() );
 	}
 
 	@Test

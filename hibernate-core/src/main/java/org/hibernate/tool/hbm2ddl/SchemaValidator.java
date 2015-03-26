@@ -205,12 +205,12 @@ public class SchemaValidator {
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategy != null ) {
-			metadataBuilder.with(
+			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategy )
 			);
 		}
 		if ( parsedArgs.physicalNamingStrategy != null ) {
-			metadataBuilder.with(
+			metadataBuilder.applyPhysicalNamingStrategy(
 					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, parsedArgs.physicalNamingStrategy )
 			);
 		}

@@ -89,11 +89,11 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		osgiClassLoader.addBundle( requestingBundle );
 
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
-		bsrBuilder.with( new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) );
+		bsrBuilder.applyClassLoaderService( new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) );
 
 		final Integrator[] integrators = osgiServiceUtil.getServiceImpls( Integrator.class );
 		for ( Integrator integrator : integrators ) {
-			bsrBuilder.with( integrator );
+			bsrBuilder.applyIntegrator( integrator );
 		}
 
 		final StrategyRegistrationProvider[] strategyRegistrationProviders

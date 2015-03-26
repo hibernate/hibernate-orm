@@ -244,12 +244,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map integrationSettings,
 			ClassLoader providedClassLoader) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
-		bsrBuilder.with( new JpaIntegrator() );
+		bsrBuilder.applyIntegrator( new JpaIntegrator() );
 
 		final IntegratorProvider integratorProvider = (IntegratorProvider) integrationSettings.get( INTEGRATOR_PROVIDER );
 		if ( integratorProvider != null ) {
 			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
-				bsrBuilder.with( integrator );
+				bsrBuilder.applyIntegrator( integrator );
 			}
 		}
 		
@@ -266,11 +266,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// ClassLoaders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		if ( persistenceUnit.getClassLoader() != null ) {
-			bsrBuilder.with( persistenceUnit.getClassLoader() );
+			bsrBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
 		}
 
 		if ( providedClassLoader != null ) {
-			bsrBuilder.with( providedClassLoader );
+			bsrBuilder.applyClassLoader( providedClassLoader );
 		}
 
 		final ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
@@ -285,16 +285,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( classLoadersSetting != null ) {
 			if ( java.util.Collection.class.isInstance( classLoadersSetting ) ) {
 				for ( ClassLoader classLoader : (java.util.Collection<ClassLoader>) classLoadersSetting ) {
-					bsrBuilder.with( classLoader );
+					bsrBuilder.applyClassLoader( classLoader );
 				}
 			}
 			else if ( classLoadersSetting.getClass().isArray() ) {
 				for ( ClassLoader classLoader : (ClassLoader[]) classLoadersSetting ) {
-					bsrBuilder.with( classLoader );
+					bsrBuilder.applyClassLoader( classLoader );
 				}
 			}
 			else if ( ClassLoader.class.isInstance( classLoadersSetting ) ) {
-				bsrBuilder.with( (ClassLoader) classLoadersSetting );
+				bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
 			}
 		}
 

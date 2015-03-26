@@ -48,9 +48,9 @@ If you wish to alter how the `BootstrapServiceRegistry` is built, you would use 
 ----
     BootstrapServiceRegistryBuilder bootstrapRegistryBuilder = new BootstrapServiceRegistryBuilder();
     // add a special ClassLoader
-    bootstrapRegistryBuilder.with( mySpecialClassLoader );
+    bootstrapRegistryBuilder.applyClassLoader( mySpecialClassLoader );
     // manually add an Integrator
-    bootstrapRegistryBuilder.with( mySpecialIntegrator );
+    bootstrapRegistryBuilder.applyIntegrator( mySpecialIntegrator );
     ...
 
     BootstrapServiceRegistry bootstrapRegistry = bootstrapRegistryBuilder.build();
@@ -188,10 +188,10 @@ over the `Metadata` building process.  See its javadocs for full details.
     MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 
     // Use the JPA-compliant implicit naming strategy
-    metadataBuilder.with( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+    metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 
     // specify the schema name to use for tables, etc when none is explicitly specified
-	metadataBuilder.withImplicitSchemaName( "my_default_schema" );
+	metadataBuilder.applyImplicitSchemaName( "my_default_schema" );
 
 	Metadata metadata = metadataBuilder.build();
 ----
@@ -213,13 +213,13 @@ over the `SessionFactory` building process.
     SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
     // Supply an SessionFactory-level Interceptor
-    sessionFactoryBuilder.with( new MySessionFactoryInterceptor() );
+    sessionFactoryBuilder.applyInterceptor( new MySessionFactoryInterceptor() );
 
     // Add a custom observer
-    sessionFactoryBuilder.add( new MySessionFactoryObserver() );
+    sessionFactoryBuilder.addSessionFactoryObservers( new MySessionFactoryObserver() );
 
     // Apply a CDI BeanManager (for JPA event listeners)
-    sessionFactoryBuilder.withBeanManager( getBeanManagerFromSomewhere() );
+    sessionFactoryBuilder.applyBeanManager( getBeanManagerFromSomewhere() );
 
     SessionFactory sessionFactory = sessionFactoryBuilder.build();
 ----
@@ -235,3 +235,4 @@ over the `SessionFactory` building process.
 === MetadataSourcesContributor
 === MetadataBuilderContributor
 === SessionFactoryBuilderContributor (todo)
+=== SessionFactoryObserver

@@ -74,7 +74,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		builder.with( collectionListenerIntegrator );
+		builder.applyIntegrator( collectionListenerIntegrator );
 	}
 
 	@Override

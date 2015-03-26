@@ -43,7 +43,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		builder.with(
+		builder.applyIntegrator(
 				new Integrator() {
 					@Override
 					public void integrate(

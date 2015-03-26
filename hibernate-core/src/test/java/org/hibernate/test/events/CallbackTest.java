@@ -67,7 +67,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		builder.with(
+		builder.applyIntegrator(
 				new Integrator() {
 					@Override
 					public void integrate(
@@ -77,10 +77,13 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 						integrate( serviceRegistry );
 					}
 
-					private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
-                        serviceRegistry.getService( EventListenerRegistry.class ).setListeners(EventType.DELETE, listener);
-                        listener.initialize();
-                    }
+					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
+						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
+								EventType.DELETE,
+								listener
+						);
+						listener.initialize();
+					}
 
 					@Override
 					public void disintegrate(

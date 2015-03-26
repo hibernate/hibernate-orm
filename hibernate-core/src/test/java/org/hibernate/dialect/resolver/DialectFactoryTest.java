@@ -23,7 +23,6 @@
  */
 package org.hibernate.dialect.resolver;
 
-import java.sql.Connection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +46,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -69,10 +67,9 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -87,7 +84,9 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		final BootstrapServiceRegistry bootReg = new BootstrapServiceRegistryBuilder().with( DialectFactoryTest.class.getClassLoader() ).build();
+		final BootstrapServiceRegistry bootReg = new BootstrapServiceRegistryBuilder().applyClassLoader(
+				DialectFactoryTest.class.getClassLoader()
+		).build();
 		registry = new StandardServiceRegistryBuilder( bootReg ).build();
 
 		dialectFactory = new DialectFactoryImpl();

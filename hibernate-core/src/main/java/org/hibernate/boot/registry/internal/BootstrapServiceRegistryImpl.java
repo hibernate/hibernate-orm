@@ -52,11 +52,6 @@ import org.hibernate.service.spi.Stoppable;
  *     <li>{@link StrategySelector}</li>
  * </ul>
  *
- * IMPL NOTE : Currently implements the deprecated {@link org.hibernate.service.BootstrapServiceRegistry} contract
- * so that the registry returned from the builder works on the deprecated sense.  Once
- * {@link org.hibernate.service.BootstrapServiceRegistry} goes away, this should be updated to instead implement
- * {@link org.hibernate.boot.registry.BootstrapServiceRegistry}.
- *
  * @author Steve Ebersole
  */
 public class BootstrapServiceRegistryImpl

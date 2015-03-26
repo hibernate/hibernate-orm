@@ -332,7 +332,7 @@ public class StandardServiceRegistryBuilder {
 	 * @return The settings map.
 	 *
 	 * @deprecated Temporarily exposed since Configuration is still around and much code still uses Configuration.
-	 * This allows code to configure the builder and access that to configure Configuration object (used from HEM atm).
+	 * This allows code to configure the builder and access that to configure Configuration object.
 	 */
 	@Deprecated
 	public Map getSettings() {

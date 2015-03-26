@@ -83,7 +83,7 @@ public class ClearEventListenerTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapRegistryBuilder( builder );
-		builder.with(
+		builder.applyIntegrator(
 				new Integrator() {
 					@Override
 					public void integrate(
@@ -93,7 +93,7 @@ public class ClearEventListenerTest extends BaseCoreFunctionalTestCase {
 						integrate( serviceRegistry );
 					}
 
-					private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
+					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
 						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
 								EventType.CLEAR,
 								listener

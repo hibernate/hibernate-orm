@@ -1,16 +1,11 @@
 package org.hibernate.test.service;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
-
 import javax.persistence.Entity;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -20,9 +15,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Artem V. Navrotskiy
@@ -62,7 +62,7 @@ public class ClassLoaderServiceImplTest {
     @TestForIssue(jiraKey = "HHH-8363")
     public void testStoppableClassLoaderService() {
     	final BootstrapServiceRegistryBuilder bootstrapBuilder = new BootstrapServiceRegistryBuilder();
-    	bootstrapBuilder.with( new TestClassLoader() );
+    	bootstrapBuilder.applyClassLoader( new TestClassLoader() );
     	final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( bootstrapBuilder.build() ).build();
     	final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
     	

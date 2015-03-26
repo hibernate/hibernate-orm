@@ -145,6 +145,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.IdGenerationTypeInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
@@ -3231,38 +3232,23 @@ public final class AnnotationBinder {
 
 	private static String generatorType(
 			GenerationType generatorEnum,
-			MetadataBuildingContext buildingContext,
-			XClass javaTypeXClass) {
-		boolean useNewGeneratorMappings = buildingContext.getBuildingOptions().isUseNewIdentifierGenerators();
-		switch ( generatorEnum ) {
-			case IDENTITY: {
-				return "identity";
-			}
-			case AUTO: {
-				final Class javaType = buildingContext.getBuildingOptions()
-						.getReflectionManager()
-						.toClass( javaTypeXClass );
-				if ( UUID.class.isAssignableFrom( javaType ) ) {
-					return UUIDGenerator.class.getName();
+			final MetadataBuildingContext buildingContext,
+			final XClass javaTypeXClass) {
+		return buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter().determineGeneratorName(
+				generatorEnum,
+				new IdGenerationTypeInterpreter.Context() {
+					Class javaType = null;
+					@Override
+					public Class getIdType() {
+						if ( javaType == null ) {
+							javaType = buildingContext.getBuildingOptions()
+									.getReflectionManager()
+									.toClass( javaTypeXClass );
+						}
+						return javaType;
+					}
 				}
-				else {
-					return useNewGeneratorMappings
-							? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
-							: "native";
-				}
-			}
-			case TABLE: {
-				return useNewGeneratorMappings
-						? org.hibernate.id.enhanced.TableGenerator.class.getName()
-						: MultipleHiLoPerTableGenerator.class.getName();
-			}
-			case SEQUENCE: {
-				return useNewGeneratorMappings
-						? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
-						: "seqhilo";
-			}
-		}
-		throw new AssertionFailure( "Unknown GeneratorType: " + generatorEnum );
+		);
 	}
 
 	private static EnumSet<CascadeType> convertToHibernateCascadeType(javax.persistence.CascadeType[] ejbCascades) {

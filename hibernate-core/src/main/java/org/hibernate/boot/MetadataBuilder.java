@@ -32,6 +32,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.model.IdGenerationTypeInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -396,6 +397,9 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AttributeConverterDefinition#from(AttributeConverter, boolean)
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply);
+
+	MetadataBuilder applyIdGenerationTypeInterpreter(IdGenerationTypeInterpreter interpreter);
+
 
 //	/**
 //	 * Specify the resolve to be used in identifying the backing members of a

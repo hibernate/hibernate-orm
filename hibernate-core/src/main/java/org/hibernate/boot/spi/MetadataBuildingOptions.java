@@ -33,6 +33,7 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.model.IdGenerationTypeInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -148,6 +149,13 @@ public interface MetadataBuildingOptions {
 	AccessType getImplicitCacheAccessType();
 
 	/**
+	 * Access to the MultiTenancyStrategy for this environment.
+	 *
+	 * @return The MultiTenancyStrategy
+	 */
+	MultiTenancyStrategy getMultiTenancyStrategy();
+
+	/**
 	 * Access to whether we should be using the new identifier generator scheme.
 	 * {@code true} indicates to use the new schema, {@code false} indicates to use the
 	 * legacy scheme.
@@ -156,12 +164,7 @@ public interface MetadataBuildingOptions {
 	 */
 	boolean isUseNewIdentifierGenerators();
 
-	/**
-	 * Access to the MultiTenancyStrategy for this environment.
-	 *
-	 * @return The MultiTenancyStrategy
-	 */
-	MultiTenancyStrategy getMultiTenancyStrategy();
+	IdGenerationTypeInterpreter getIdGenerationTypeInterpreter();
 
 	/**
 	 * Access to all explicit cache region mappings.

@@ -49,6 +49,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.model.IdGenerationTypeInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -233,12 +234,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
-	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enabled) {
-		this.options.useNewIdentifierGenerators = enabled;
-		return this;
-	}
-
-	@Override
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.explicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
@@ -383,6 +378,23 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		return this;
 	}
 
+	@Override
+	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enabled) {
+		this.options.useNewIdentifierGenerators = enabled;
+		if ( enabled ) {
+			this.options.idGenerationTypeInterpreter.disableLegacyFallback();
+		}
+		else {
+			this.options.idGenerationTypeInterpreter.enableLegacyFallback();
+		}
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGenerationTypeInterpreter interpreter) {
+		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
+		return this;
+	}
 
 //	public MetadataBuilder with(PersistentAttributeMemberResolver resolver) {
 //		options.persistentAttributeMemberResolver = resolver;
@@ -531,7 +543,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		private SharedCacheMode sharedCacheMode;
 		private AccessType defaultCacheAccessType;
-		private boolean useNewIdentifierGenerators;
 		private MultiTenancyStrategy multiTenancyStrategy;
 		private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
@@ -544,6 +555,9 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private HashMap<String,SQLFunction> sqlFunctionMap;
 		private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 		private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
+
+		private boolean useNewIdentifierGenerators;
+		private IdGenerationTypeInterpreterImpl idGenerationTypeInterpreter = new IdGenerationTypeInterpreterImpl();
 
 		private static ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
@@ -578,12 +592,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			archiveDescriptorFactory = strategySelector.resolveStrategy(
 					ArchiveDescriptorFactory.class,
 					configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
-			);
-
-			useNewIdentifierGenerators = configService.getSetting(
-					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
-					StandardConverters.BOOLEAN,
-					false
 			);
 
 			multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
@@ -670,6 +678,18 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			);
 
 			sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
+
+			useNewIdentifierGenerators = configService.getSetting(
+					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
+					StandardConverters.BOOLEAN,
+					false
+			);
+			if ( useNewIdentifierGenerators ) {
+				idGenerationTypeInterpreter.disableLegacyFallback();
+			}
+			else {
+				idGenerationTypeInterpreter.enableLegacyFallback();
+			}
 		}
 
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
@@ -765,13 +785,18 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		@Override
+		public MultiTenancyStrategy getMultiTenancyStrategy() {
+			return multiTenancyStrategy;
+		}
+
+		@Override
 		public boolean isUseNewIdentifierGenerators() {
 			return useNewIdentifierGenerators;
 		}
 
 		@Override
-		public MultiTenancyStrategy getMultiTenancyStrategy() {
-			return multiTenancyStrategy;
+		public IdGenerationTypeInterpreter getIdGenerationTypeInterpreter() {
+			return idGenerationTypeInterpreter;
 		}
 
 		@Override

@@ -37,9 +37,17 @@
           <editable>true</editable>
           <description></description>
         </parameter>
+        <parameter>
+          <name>failOnError</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>Whether the build should fail if an error occurs.</description>
+        </parameter>
       </parameters>
       <configuration>
         <dir implementation="java.lang.String" default-value="${project.build.outputDirectory}">${dir}</dir>
+        <failOnError implementation="boolean" default-value="false">${failOnError}</failOnError>
       </configuration>
     </mojo>
   </mojos>

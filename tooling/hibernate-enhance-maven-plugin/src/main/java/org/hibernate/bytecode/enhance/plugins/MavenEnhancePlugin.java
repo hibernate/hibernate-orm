@@ -75,6 +75,9 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 	@Parameter(property="dir", defaultValue="${project.build.outputDirectory}")
 	private String dir = null;
 
+	@Parameter(property="failOnError", defaultValue="false")
+	private boolean failOnError;
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info( "Started enhance plugin....." );
 		/** Perform a depth first search for files. */
@@ -144,7 +147,8 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
         }
     }
 
-    private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
+    private void processEntityClassFile(File javaClassFile, CtClass ctClass )
+    		throws MojoExecutionException {
         try {
             getLog().info( String.format("Processing Entity class file [%1$s].", ctClass.getName()) );
             byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
@@ -152,12 +156,17 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
                 writeEnhancedClass(javaClassFile, result);
         }
         catch (Exception e) {
+        	if (this.failOnError) {
+        		throw new MojoExecutionException( 
+        				String.format( "Unable to enhance class [%s]", ctClass.getName() ), e );
+        	}
             getLog().error( "Unable to enhance class [" + ctClass.getName() + "]", e);
             return;
         }
     }
 
-    private void processCompositeClassFile(File javaClassFile, CtClass ctClass) {
+    private void processCompositeClassFile(File javaClassFile, CtClass ctClass)
+			throws MojoExecutionException {
         try {
             getLog().info( String.format("Processing Composite class file [%1$s].", ctClass.getName()) );
             byte[] result = enhancer.enhanceComposite(ctClass.getName(), ctClass.toBytecode());
@@ -165,6 +174,10 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
                 writeEnhancedClass(javaClassFile, result);
         }
         catch (Exception e) {
+        	if (this.failOnError) {
+        		throw new MojoExecutionException( 
+        				String.format( "Unable to enhance class [%s]", ctClass.getName() ), e );
+        	}
             getLog().error( "Unable to enhance class [" + ctClass.getName() + "]", e);
             return;
         }
@@ -175,10 +188,18 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
         try {
 			if ( javaClassFile.delete() ) {
                     if ( ! javaClassFile.createNewFile() ) {
+                    	if (this.failOnError) {
+                    		throw new MojoExecutionException( 
+                    				String.format( "Unable to recreate class file [%s]", javaClassFile.getName() ) );
+                    	}
                         getLog().error( "Unable to recreate class file [" + javaClassFile.getName() + "]");
                     }
             }
 			else {
+				if (this.failOnError) {
+	        		throw new MojoExecutionException( 
+	        				String.format( "Unable to delete class file [%s]", javaClassFile.getName() ) );
+	        	}
 				getLog().error( "Unable to delete class file [" + javaClassFile.getName() + "]");
 			}
 

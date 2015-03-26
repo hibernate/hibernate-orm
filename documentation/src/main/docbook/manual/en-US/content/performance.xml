@@ -1415,7 +1415,7 @@ hibernate.cache.use_structured_entries true</programlisting>
           the compile task as the source location of entity class files to enhance.
           <programlisting>apply plugin: 'java'
 apply plugin: 'maven'
-apply plugin: 'enhance'
+apply plugin: 'hibernate'
 buildscript {
     repositories {
         mavenCentral()
@@ -1426,7 +1426,6 @@ buildscript {
 }
 dependencies {
    compile group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-[SPEC-VERSION]-api', version: '[IMPL-VERSION]'
-   compile group: 'org.hibernate', name: 'hibernate-gradle-plugin', version: 'VERSION'
 }
           </programlisting>
           </para>

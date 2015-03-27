@@ -89,3 +89,16 @@ task copyBundleResources (type: Copy) {
 }
 processTestResources.dependsOn copyBundleResources
 
+task instrument(dependsOn: compileTestJava) << {
+    ant.taskdef(name: 'hibInstrument',
+            classname: 'org.hibernate.tool.instrument.javassist.InstrumentTask',
+            classpath: configurations.testCompile.asPath)
+    ant.hibInstrument(verbose: 'true'){
+        fileset(dir:"$buildDir/classes/test/org/hibernate/ejb/test/callbacks/"){
+            include(name: "EntityWithLazyProperty.class")
+        }
+    }
+    println("hibernate instrumentation")
+}
+
+test.dependsOn instrument

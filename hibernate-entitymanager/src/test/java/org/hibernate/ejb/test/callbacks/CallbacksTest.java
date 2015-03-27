@@ -244,7 +244,76 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 				RemoteControl.class,
 				Rythm.class,
 				Plant.class,
-				Kitten.class
+				Kitten.class,
+				EntityWithLazyProperty.class
 		};
+	}
+
+	/**
+	 * Test for HHH-7573.
+	 * Load some test data into an entity which has a lazy property and a @PreUpdate callback, then reload and update a
+	 * non lazy field which will trigger the PreUpdate lifecycle callback.
+	 * @throws Exception
+	 */
+	@Test
+	public void testJpaFlushEntityEventListener() throws Exception {
+		EntityWithLazyProperty entity;
+		EntityManager em = getOrCreateEntityManager();
+
+		byte[] testArray = new byte[]{0x2A};
+
+		//persist the test entity.
+		em.getTransaction().begin();
+		entity = new EntityWithLazyProperty();
+		entity.setSomeField("TEST");
+		entity.setLazyData(testArray);
+		em.persist(entity);
+		em.getTransaction().commit();
+		checkLazyField(entity, em, testArray);
+
+		/**
+		 * Set a non lazy field, therefore the lazyData field will be LazyPropertyInitializer.UNFETCHED_PROPERTY
+		 * for both state and newState so the field should not change. This should no longer cause a ClassCastException.
+		 */
+		em.getTransaction().begin();
+		entity = em.find(EntityWithLazyProperty.class, entity.getId());
+		entity.setSomeField("TEST1");
+		em.getTransaction().commit();
+		checkLazyField(entity, em, testArray);
+
+		/**
+		 * Set the updateLazyFieldInPreUpdate flag so that the lazy field is updated from within the
+		 * PreUpdate annotated callback method. So state == LazyPropertyInitializer.UNFETCHED_PROPERTY and
+		 * newState == EntityWithLazyProperty.PRE_UPDATE_VALUE. This should no longer cause a ClassCastException.
+		 */
+		em.getTransaction().begin();
+		entity = em.find(EntityWithLazyProperty.class, entity.getId());
+		entity.setUpdateLazyFieldInPreUpdate(true);
+		entity.setSomeField("TEST2");
+		em.getTransaction().commit();
+		checkLazyField(entity, em, EntityWithLazyProperty.PRE_UPDATE_VALUE);
+
+		/**
+		 * Set the updateLazyFieldInPreUpdate flag so that the lazy field is updated from within the
+		 * PreUpdate annotated callback method and also set the lazyData field directly to testArray1. When we reload we
+		 * should get EntityWithLazyProperty.PRE_UPDATE_VALUE.
+		 */
+		em.getTransaction().begin();
+		entity = em.find(EntityWithLazyProperty.class, entity.getId());
+		entity.setUpdateLazyFieldInPreUpdate(true);
+		entity.setLazyData(testArray);
+		entity.setSomeField("TEST3");
+		em.getTransaction().commit();
+		checkLazyField(entity, em, EntityWithLazyProperty.PRE_UPDATE_VALUE);
+
+		em.close();
+	}
+
+	private void checkLazyField(EntityWithLazyProperty entity, EntityManager em, byte[] expected) {
+		// reload the entity and check the lazy value matches what we expect.
+		em.getTransaction().begin();
+		entity = em.find(EntityWithLazyProperty.class, entity.getId());
+		assertEquals(expected, entity.getLazyData());
+		em.getTransaction().commit();
 	}
 }

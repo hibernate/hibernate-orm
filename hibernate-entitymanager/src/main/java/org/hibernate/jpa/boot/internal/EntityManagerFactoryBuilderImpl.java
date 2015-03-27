@@ -54,8 +54,6 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -195,22 +193,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.standardServiceRegistry = ssrBuilder.build();
 		configure( standardServiceRegistry, mergedSettings );
 
-		// Build the Metadata object
-		// 	NOTE : because we still use hibernate-commons-annotations, we still need to
-		//	use the TCCL hacks because hibernate-commons-annotations uses TCCL
-		final ClassLoaderService classLoaderService = bsr.getService( ClassLoaderService.class );
-		this.metadata = ( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
-				new ClassLoaderServiceImpl.Work<MetadataImplementor>() {
-					@Override
-					public MetadataImplementor perform() {
-						final MetadataSources metadataSources = new MetadataSources( bsr );
-						List<AttributeConverterDefinition> attributeConverterDefinitions = populate( metadataSources, mergedSettings, standardServiceRegistry );
-						final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( standardServiceRegistry );
-						populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
-						return (MetadataImplementor) metamodelBuilder.build();
-					}
-				}
-		);
+		final MetadataSources metadataSources = new MetadataSources( bsr );
+		List<AttributeConverterDefinition> attributeConverterDefinitions = populate( metadataSources, mergedSettings, standardServiceRegistry );
+		final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( standardServiceRegistry );
+		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
+		this.metadata = (MetadataImplementor) metamodelBuilder.build();
 
 		withValidatorFactory( configurationValues.get( AvailableSettings.VALIDATION_FACTORY ) );
 

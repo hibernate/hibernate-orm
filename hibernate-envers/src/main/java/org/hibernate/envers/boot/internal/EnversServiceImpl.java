@@ -120,16 +120,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-		// NOTE : we use the TCCL here for hibernate-commons-annotations
-		classLoaderService.withTccl(
-				new ClassLoaderService.Work<Void>() {
-					@Override
-					public Void perform() {
-						doInitialize( metadata, mappingCollector, serviceRegistry, classLoaderService );
-						return null;
-					}
-				}
-		);
+		doInitialize( metadata, mappingCollector, serviceRegistry, classLoaderService );
 	}
 
 	private void doInitialize(

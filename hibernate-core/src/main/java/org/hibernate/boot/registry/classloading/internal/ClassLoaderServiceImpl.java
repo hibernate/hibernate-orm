@@ -42,6 +42,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ClassLoaderHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -352,68 +353,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		if ( aggregatedClassLoader != null ) {
 			aggregatedClassLoader.destroy();
 			aggregatedClassLoader = null;
-		}
-	}
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// completely temporary !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-	/**
-	 * Perform some discrete work with with the TCCL set to our aggregated ClassLoader
-	 *
-	 * @param work The discrete work to be done
-	 * @param <T> The type of the work result
-	 *
-	 * @return The work result.
-	 */
-	@Override
-	public <T> T withTccl(Work<T> work) {
-		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-
-		boolean set = false;
-
-		try {
-			Thread.currentThread().setContextClassLoader(
-					new TcclSafeAggregatedClassLoader( aggregatedClassLoader, tccl ) );
-			set = true;
-		}
-		catch (Exception ignore) {
-		}
-
-		try {
-			return work.perform();
-		}
-		finally {
-			if ( set ) {
-				Thread.currentThread().setContextClassLoader( tccl );
-			}
-		}
-
-	}
-	
-	// TODO: Remove in ORM 5!  See HHH-8818
-	private class TcclSafeAggregatedClassLoader extends ClassLoader {
-		private final AggregatedClassLoader aggregatedClassLoader;
-		
-		private TcclSafeAggregatedClassLoader(AggregatedClassLoader aggregatedClassLoader, ClassLoader tccl) {
-			super(tccl);
-			this.aggregatedClassLoader = aggregatedClassLoader;
-		}
-		
-		@Override
-		public Enumeration<URL> getResources(String name) throws IOException {
-			return aggregatedClassLoader.getResources( name );
-		}
-
-		@Override
-		protected URL findResource(String name) {
-			return aggregatedClassLoader.findResource( name );
-		}
-
-		@Override
-		protected Class<?> findClass(String name) throws ClassNotFoundException {
-			return aggregatedClassLoader.findClass( name );
 		}
 	}
 

@@ -21,64 +21,63 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.bytecode.enhance.spi;
+package org.hibernate.bytecode.enhance.internal.tracker;
 
 import org.hibernate.engine.spi.CompositeOwner;
+
+import java.util.Arrays;
 
 /**
  * small low memory class to keep references to composite owners
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CompositeOwnerTracker {
+public final class CompositeOwnerTracker {
+
 	private String[] names;
 	private CompositeOwner[] owners;
-	private int size;
 
 	public CompositeOwnerTracker() {
-		names = new String[1];
-		owners = new CompositeOwner[1];
+		names = new String[0];
+		owners = new CompositeOwner[0];
 	}
 
 	public void add(String name, CompositeOwner owner) {
-		for ( int i = 0; i < size; i++ ) {
+		for ( int i = 0; i < names.length; i++ ) {
 			if ( names[i].equals( name ) ) {
 				owners[i] = owner;
 				return;
 			}
 		}
-		if ( size >= names.length ) {
-			String[] tmpNames = new String[size + 1];
-			System.arraycopy( names, 0, tmpNames, 0, size );
-			names = tmpNames;
-			CompositeOwner[] tmpOwners = new CompositeOwner[size + 1];
-			System.arraycopy( owners, 0, tmpOwners, 0, size );
-			owners = tmpOwners;
-		}
-		names[size] = name;
-		owners[size] = owner;
-		size++;
+		names = Arrays.copyOf( names, names.length + 1 );
+		names[names.length - 1] = name;
+		owners = Arrays.copyOf( owners, owners.length + 1 );
+		owners[owners.length - 1] = owner;
 	}
 
 	public void callOwner(String fieldName) {
-		for ( int i = 0; i < size; i++ ) {
-			owners[i].$$_hibernate_trackChange( names[i] + fieldName );
+		for ( int i = 0; i < owners.length ; i++ ) {
+			if ( owners[i] != null ) {
+				owners[i].$$_hibernate_trackChange( names[i] + fieldName );
+			}
 		}
 	}
 
 	public void removeOwner(String name) {
-		for ( int i = 0; i < size; i++ ) {
-			if ( names[i].equals( name ) ) {
-				if ( i < size ) {
-					for ( int j = i; j < size - 1; j++ ) {
-						names[j] = names[j + 1];
-						owners[j] = owners[j + 1];
-					}
-					names[size - 1] = null;
-					owners[size - 1] = null;
-					size--;
-				}
+		for ( int i = 0; i < names.length; i++ ) {
+			if ( name.equals( names[i] ) ) {
+
+				final String[] newNames = Arrays.copyOf( names, names.length - 1 );
+				System.arraycopy( names, i + 1, newNames, i, newNames.length - i);
+				names = newNames;
+
+				final CompositeOwner[] newOwners = Arrays.copyOf( owners, owners.length - 1 );
+				System.arraycopy( owners, i + 1, newOwners, i, newOwners.length - i);
+				owners = newOwners;
+
+				return;
 			}
 		}
 	}
+
 }

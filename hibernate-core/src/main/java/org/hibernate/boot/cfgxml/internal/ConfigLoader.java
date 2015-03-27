@@ -39,7 +39,6 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -121,6 +120,11 @@ public class ConfigLoader {
 
 	public Properties loadProperties(String resourceName) {
 		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
+
+		if ( stream == null ) {
+			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]" );
+		}
+
 		try {
 			Properties properties = new Properties();
 			properties.load( stream );

@@ -36,6 +36,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.common.reflection.ClassLoaderDelegate;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -188,6 +190,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	@Override
 	public MetadataBuilder applyReflectionManager(ReflectionManager reflectionManager) {
 		this.options.reflectionManager = reflectionManager;
+		this.options.reflectionManager.injectClassLoaderDelegate( this.options.getHcannClassLoaderDelegate() );
 		return this;
 	}
 
@@ -539,6 +542,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private PhysicalNamingStrategy physicalNamingStrategy;
 
 		private ReflectionManager reflectionManager = generateDefaultReflectionManager();
+		private ClassLoaderDelegate hcannClassLoaderDelegate;
 
 		private SharedCacheMode sharedCacheMode;
 		private AccessType defaultCacheAccessType;
@@ -557,11 +561,27 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
-		private static ReflectionManager generateDefaultReflectionManager() {
+		private ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
 			reflectionManager.setMetadataProvider( new JPAMetadataProvider() );
+			reflectionManager.injectClassLoaderDelegate( getHcannClassLoaderDelegate() );
 			return reflectionManager;
 		}
+
+		public ClassLoaderDelegate getHcannClassLoaderDelegate() {
+			if ( hcannClassLoaderDelegate == null ) {
+				hcannClassLoaderDelegate = new ClassLoaderDelegate() {
+					private final  ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
+
+					@Override
+					public <T> Class<T> classForName(String className) throws ClassLoadingException {
+						return classLoaderService.classForName( className );
+					}
+				};
+			}
+			return hcannClassLoaderDelegate;
+		}
+
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
 

@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
@@ -145,7 +144,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.IdGenerationTypeInterpreter;
+import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
@@ -161,11 +160,7 @@ import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.SequenceHiLoGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -437,146 +432,61 @@ public final class AnnotationBinder {
 	}
 
 	private static IdentifierGeneratorDefinition buildIdGenerator(java.lang.annotation.Annotation ann, MetadataBuildingContext context) {
-		IdentifierGeneratorDefinition.Builder idGen = new IdentifierGeneratorDefinition.Builder();
+		if ( ann == null ) {
+			return null;
+		}
+
+		IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 
 		if ( context.getMappingDefaults().getImplicitSchemaName() != null ) {
-			idGen.addParam( PersistentIdentifierGenerator.SCHEMA, context.getMappingDefaults().getImplicitSchemaName() );
+			definitionBuilder.addParam(
+					PersistentIdentifierGenerator.SCHEMA,
+					context.getMappingDefaults().getImplicitSchemaName()
+			);
 		}
 
 		if ( context.getMappingDefaults().getImplicitCatalogName() != null ) {
-			idGen.addParam( PersistentIdentifierGenerator.CATALOG, context.getMappingDefaults().getImplicitCatalogName() );
+			definitionBuilder.addParam(
+					PersistentIdentifierGenerator.CATALOG,
+					context.getMappingDefaults().getImplicitCatalogName()
+			);
 		}
 
-		final boolean useNewGeneratorMappings = context.getBuildingOptions().isUseNewIdentifierGenerators();
-		if ( ann == null ) {
-			idGen = null;
-		}
-		else if ( ann instanceof TableGenerator ) {
-			TableGenerator tabGen = ( TableGenerator ) ann;
-			idGen.setName( tabGen.name() );
-			if ( useNewGeneratorMappings ) {
-				idGen.setStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
-				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
-
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.catalog() ) ) {
-					idGen.addParam( PersistentIdentifierGenerator.CATALOG, tabGen.catalog() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.schema() ) ) {
-					idGen.addParam( PersistentIdentifierGenerator.SCHEMA, tabGen.schema() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.table() ) ) {
-					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM, tabGen.table() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnName() ) ) {
-					idGen.addParam(
-							org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM, tabGen.pkColumnName()
-					);
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnValue() ) ) {
-					idGen.addParam(
-							org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM, tabGen.pkColumnValue()
-					);
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.valueColumnName() ) ) {
-					idGen.addParam(
-							org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM, tabGen.valueColumnName()
-					);
-				}
-				idGen.addParam(
-						org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM,
-						String.valueOf( tabGen.allocationSize() )
-				);
-				// See comment on HHH-4884 wrt initialValue.  Basically initialValue is really the stated value + 1
-				idGen.addParam(
-						org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM,
-						String.valueOf( tabGen.initialValue() + 1 )
-				);
-                if (tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0) {
-					LOG.warn( tabGen.name() );
-				}
-			}
-			else {
-				idGen.setStrategy( MultipleHiLoPerTableGenerator.class.getName() );
-
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.table() ) ) {
-					idGen.addParam( MultipleHiLoPerTableGenerator.ID_TABLE, tabGen.table() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.catalog() ) ) {
-					idGen.addParam( PersistentIdentifierGenerator.CATALOG, tabGen.catalog() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.schema() ) ) {
-					idGen.addParam( PersistentIdentifierGenerator.SCHEMA, tabGen.schema() );
-				}
-				//FIXME implement uniqueconstrains
-                if (tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0) LOG.ignoringTableGeneratorConstraints(tabGen.name());
-
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnName() ) ) {
-					idGen.addParam( MultipleHiLoPerTableGenerator.PK_COLUMN_NAME, tabGen.pkColumnName() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.valueColumnName() ) ) {
-					idGen.addParam( MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME, tabGen.valueColumnName() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnValue() ) ) {
-					idGen.addParam( MultipleHiLoPerTableGenerator.PK_VALUE_NAME, tabGen.pkColumnValue() );
-				}
-				idGen.addParam( MultipleHiLoPerTableGenerator.MAX_LO, String.valueOf( tabGen.allocationSize() - 1 ) );
-			}
+		if ( ann instanceof TableGenerator ) {
+			context.getBuildingOptions().getIdGenerationTypeInterpreter().interpretTableGenerator(
+					(TableGenerator) ann,
+					definitionBuilder
+			);
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add table generator with name: {0}", idGen.getName() );
+				LOG.tracev( "Add table generator with name: {0}", definitionBuilder.getName() );
 			}
 		}
 		else if ( ann instanceof SequenceGenerator ) {
-			SequenceGenerator seqGen = ( SequenceGenerator ) ann;
-			idGen.setName( seqGen.name() );
-			if ( useNewGeneratorMappings ) {
-				idGen.setStrategy( SequenceStyleGenerator.class.getName() );
-
-				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.catalog() ) ) {
-					idGen.addParam( PersistentIdentifierGenerator.CATALOG, seqGen.catalog() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.schema() ) ) {
-					idGen.addParam( PersistentIdentifierGenerator.SCHEMA, seqGen.schema() );
-				}
-				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.sequenceName() ) ) {
-					idGen.addParam( SequenceStyleGenerator.SEQUENCE_PARAM, seqGen.sequenceName() );
-				}
-				idGen.addParam( SequenceStyleGenerator.INCREMENT_PARAM, String.valueOf( seqGen.allocationSize() ) );
-				idGen.addParam( SequenceStyleGenerator.INITIAL_PARAM, String.valueOf( seqGen.initialValue() ) );
-			}
-			else {
-				idGen.setStrategy( "seqhilo" );
-
-				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.sequenceName() ) ) {
-					idGen.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, seqGen.sequenceName() );
-				}
-				//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
-				//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
-				if ( seqGen.initialValue() != 1 ) {
-					LOG.unsupportedInitialValue( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS );
-				}
-				idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Add sequence generator with name: {0}", idGen.getName() );
-				}
+			context.getBuildingOptions().getIdGenerationTypeInterpreter().interpretSequenceGenerator(
+					(SequenceGenerator) ann,
+					definitionBuilder
+			);
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Add sequence generator with name: {0}", definitionBuilder.getName() );
 			}
 		}
 		else if ( ann instanceof GenericGenerator ) {
 			GenericGenerator genGen = ( GenericGenerator ) ann;
-			idGen.setName( genGen.name() );
-			idGen.setStrategy( genGen.strategy() );
+			definitionBuilder.setName( genGen.name() );
+			definitionBuilder.setStrategy( genGen.strategy() );
 			Parameter[] params = genGen.parameters();
 			for ( Parameter parameter : params ) {
-				idGen.addParam( parameter.name(), parameter.value() );
+				definitionBuilder.addParam( parameter.name(), parameter.value() );
 			}
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add generic generator with name: {0}", idGen.getName() );
+				LOG.tracev( "Add generic generator with name: {0}", definitionBuilder.getName() );
 			}
 		}
 		else {
 			throw new AssertionFailure( "Unknown Generator annotation: " + ann );
 		}
 
-		return idGen.build();
+		return definitionBuilder.build();
 	}
 
 	/**
@@ -3236,7 +3146,7 @@ public final class AnnotationBinder {
 			final XClass javaTypeXClass) {
 		return buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter().determineGeneratorName(
 				generatorEnum,
-				new IdGenerationTypeInterpreter.Context() {
+				new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
 					Class javaType = null;
 					@Override
 					public Class getIdType() {

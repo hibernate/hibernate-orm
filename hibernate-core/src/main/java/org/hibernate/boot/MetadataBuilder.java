@@ -23,7 +23,6 @@
  */
 package org.hibernate.boot;
 
-import java.util.List;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -32,7 +31,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.model.IdGenerationTypeInterpreter;
+import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -398,7 +397,7 @@ public interface MetadataBuilder {
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply);
 
-	MetadataBuilder applyIdGenerationTypeInterpreter(IdGenerationTypeInterpreter interpreter);
+	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
 
 //	/**

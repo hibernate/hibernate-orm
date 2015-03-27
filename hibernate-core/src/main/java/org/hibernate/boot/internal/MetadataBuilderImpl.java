@@ -49,7 +49,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.model.IdGenerationTypeInterpreter;
+import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -380,7 +380,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 	@Override
 	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enabled) {
-		this.options.useNewIdentifierGenerators = enabled;
 		if ( enabled ) {
 			this.options.idGenerationTypeInterpreter.disableLegacyFallback();
 		}
@@ -391,7 +390,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	}
 
 	@Override
-	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGenerationTypeInterpreter interpreter) {
+	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
 		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
 		return this;
 	}
@@ -556,8 +555,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 		private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
-		private boolean useNewIdentifierGenerators;
-		private IdGenerationTypeInterpreterImpl idGenerationTypeInterpreter = new IdGenerationTypeInterpreterImpl();
+		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private static ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
@@ -679,7 +677,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 			sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
 
-			useNewIdentifierGenerators = configService.getSetting(
+			final boolean useNewIdentifierGenerators = configService.getSetting(
 					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
 					StandardConverters.BOOLEAN,
 					false
@@ -790,12 +788,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		@Override
-		public boolean isUseNewIdentifierGenerators() {
-			return useNewIdentifierGenerators;
-		}
-
-		@Override
-		public IdGenerationTypeInterpreter getIdGenerationTypeInterpreter() {
+		public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
 			return idGenerationTypeInterpreter;
 		}
 

@@ -40,6 +40,7 @@ import org.hibernate.annotations.common.reflection.ClassLoaderDelegate;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
+import org.hibernate.annotations.common.util.StandardClassLoaderDelegateImpl;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -541,7 +542,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
 
-		private ReflectionManager reflectionManager = generateDefaultReflectionManager();
+		private ReflectionManager reflectionManager;
 		private ClassLoaderDelegate hcannClassLoaderDelegate;
 
 		private SharedCacheMode sharedCacheMode;
@@ -560,27 +561,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
-
-		private ReflectionManager generateDefaultReflectionManager() {
-			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-			reflectionManager.setMetadataProvider( new JPAMetadataProvider() );
-			reflectionManager.injectClassLoaderDelegate( getHcannClassLoaderDelegate() );
-			return reflectionManager;
-		}
-
-		public ClassLoaderDelegate getHcannClassLoaderDelegate() {
-			if ( hcannClassLoaderDelegate == null ) {
-				hcannClassLoaderDelegate = new ClassLoaderDelegate() {
-					private final  ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
-
-					@Override
-					public <T> Class<T> classForName(String className) throws ClassLoadingException {
-						return classLoaderService.classForName( className );
-					}
-				};
-			}
-			return hcannClassLoaderDelegate;
-		}
 
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
@@ -708,6 +688,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			else {
 				idGenerationTypeInterpreter.enableLegacyFallback();
 			}
+
+			reflectionManager = generateDefaultReflectionManager();
 		}
 
 		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
@@ -730,6 +712,32 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			}
 
 			return initialSelections;
+		}
+
+		private ReflectionManager generateDefaultReflectionManager() {
+			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
+			reflectionManager.setMetadataProvider( new JPAMetadataProvider() );
+			reflectionManager.injectClassLoaderDelegate( getHcannClassLoaderDelegate() );
+			return reflectionManager;
+		}
+
+		public ClassLoaderDelegate getHcannClassLoaderDelegate() {
+			if ( hcannClassLoaderDelegate == null ) {
+				hcannClassLoaderDelegate = new ClassLoaderDelegate() {
+					private final  ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
+
+					@Override
+					public <T> Class<T> classForName(String className) throws ClassLoadingException {
+						try {
+							return classLoaderService.classForName( className );
+						}
+						catch (org.hibernate.boot.registry.classloading.spi.ClassLoadingException e) {
+							return StandardClassLoaderDelegateImpl.INSTANCE.classForName( className );
+						}
+					}
+				};
+			}
+			return hcannClassLoaderDelegate;
 		}
 
 		@Override

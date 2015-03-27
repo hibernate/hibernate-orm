@@ -144,7 +144,7 @@ public class MetamodelGraphWalker {
 		if ( attributeDefinitions == null ) {
 			return;
 		}
-		for ( AttributeDefinition attributeDefinition : attributeSource.getAttributes() ) {
+		for ( AttributeDefinition attributeDefinition : attributeDefinitions ) {
 			visitAttributeDefinition( attributeDefinition );
 		}
 	}

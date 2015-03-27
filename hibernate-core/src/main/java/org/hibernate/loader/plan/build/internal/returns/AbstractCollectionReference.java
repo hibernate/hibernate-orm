@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan.build.internal.returns;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping;
 import org.hibernate.loader.plan.build.internal.spaces.QuerySpaceHelper;
@@ -34,6 +35,7 @@ import org.hibernate.loader.plan.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CompositeType;
@@ -50,6 +52,9 @@ public abstract class AbstractCollectionReference implements CollectionReference
 	private final CollectionFetchableIndex index;
 	private final CollectionFetchableElement element;
 
+	private final boolean allowElementJoin;
+	private final boolean allowIndexJoin;
+
 	protected AbstractCollectionReference(
 			ExpandingCollectionQuerySpace collectionQuerySpace,
 			PropertyPath propertyPath,
@@ -57,13 +62,31 @@ public abstract class AbstractCollectionReference implements CollectionReference
 		this.collectionQuerySpace = collectionQuerySpace;
 		this.propertyPath = propertyPath;
 
-		this.index = buildIndexGraph( collectionQuerySpace, shouldIncludeJoins );
-		this.element = buildElementGraph( collectionQuerySpace, shouldIncludeJoins );
+		this.allowElementJoin = shouldIncludeJoins;
+
+		// Currently we can only allow a join for the collection index if all of the following are true:
+		// - collection element joins are allowed;
+		// - index is an EntityType;
+		// - index values are not "formulas" (e.g., a @MapKey index is translated into "formula" value(s)).
+		// Hibernate cannot currently support eager joining of associations within a component (@Embeddable) as an index.
+		if ( shouldIncludeJoins &&
+				collectionQuerySpace.getCollectionPersister().hasIndex() &&
+				collectionQuerySpace.getCollectionPersister().getIndexType().isEntityType()  ) {
+			final String[] indexFormulas =
+					( (QueryableCollection) collectionQuerySpace.getCollectionPersister() ).getIndexFormulas();
+			final int nNonNullFormulas = ArrayHelper.countNonNull( indexFormulas );
+			this.allowIndexJoin = nNonNullFormulas == 0;
+		}
+		else {
+			this.allowIndexJoin = false;
+		}
+
+		// All other fields must be initialized before building this.index and this.element.
+		this.index = buildIndexGraph();
+		this.element = buildElementGraph();
 	}
 
-	private CollectionFetchableIndex buildIndexGraph(
-			ExpandingCollectionQuerySpace collectionQuerySpace,
-			boolean shouldIncludeJoins) {
+	private CollectionFetchableIndex buildIndexGraph() {
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		if ( persister.hasIndex() ) {
 			final Type type = persister.getIndexType();
@@ -80,7 +103,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 							(EntityType) persister.getIndexType(),
 							collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
 							collectionQuerySpace.canJoinsBeRequired(),
-							shouldIncludeJoins
+							allowIndexJoin
 					);
 					return new CollectionFetchableIndexEntityGraph( this, entityQuerySpace );
 				}
@@ -100,7 +123,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 						(CompositeType) persister.getIndexType(),
 						collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
 						collectionQuerySpace.canJoinsBeRequired(),
-						shouldIncludeJoins
+						allowIndexJoin
 				);
 				return new CollectionFetchableIndexCompositeGraph( this, compositeQuerySpace );
 			}
@@ -109,9 +132,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 		return null;
 	}
 
-	private CollectionFetchableElement buildElementGraph(
-			ExpandingCollectionQuerySpace collectionQuerySpace,
-			boolean shouldIncludeJoins) {
+	private CollectionFetchableElement buildElementGraph() {
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
@@ -126,7 +147,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 						(EntityType) persister.getElementType(),
 						collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
 						collectionQuerySpace.canJoinsBeRequired(),
-						shouldIncludeJoins
+						allowElementJoin
 				);
 				return new CollectionFetchableElementEntityGraph( this, entityQuerySpace );
 			}
@@ -146,12 +167,22 @@ public abstract class AbstractCollectionReference implements CollectionReference
 					(CompositeType) persister.getElementType(),
 					collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
 					collectionQuerySpace.canJoinsBeRequired(),
-					shouldIncludeJoins
+					allowElementJoin
 			);
 			return new CollectionFetchableElementCompositeGraph( this, compositeQuerySpace );
 		}
 
 		return null;
+	}
+
+	@Override
+	public boolean allowElementJoin() {
+		return allowElementJoin;
+	}
+
+	@Override
+	public boolean allowIndexJoin() {
+		return allowIndexJoin;
 	}
 
 	@Override

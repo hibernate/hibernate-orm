@@ -109,7 +109,7 @@ public final class CompositionSingularSubAttributesHelper {
 				(OuterJoinLoadable) collectionPersister.getOwnerEntityPersister(),
 				(CompositeType) collectionPersister.getIndexType(),
 				collectionPersister.getTableName(),
-				collectionPersister.getIndexColumnNames()
+				collectionPersister.toColumns( "index" )
 		);
 	}
 

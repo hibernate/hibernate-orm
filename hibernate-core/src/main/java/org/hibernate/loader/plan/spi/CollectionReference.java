@@ -77,4 +77,20 @@ public interface CollectionReference {
 	 * @return The PropertyPath
 	 */
 	public PropertyPath getPropertyPath();
+
+	/**
+	 * Should a collection element join be allowed? Returning <code>true</code>
+	 * indicates that an element join can safely be added.
+	 *
+	 * @return true, if a collection index join is allowed.
+	 */
+	public boolean allowElementJoin();
+
+	/**
+	 * Should a collection index join be allowed? Returning <code>true</code>
+	 * indicates that an index join can safely be added.
+	 *
+	 * @return true, if a collection index join is allowed.
+	 */
+	public boolean allowIndexJoin();
 }

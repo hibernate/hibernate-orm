@@ -86,14 +86,13 @@ public abstract class AbstractCollectionLoadQueryDetails extends AbstractLoadQue
 				new CollectionReturnReader( rootReturn ),
 				new CollectionReferenceInitializerImpl( rootReturn, collectionReferenceAliases )
 		);
-		if ( rootReturn.getCollectionPersister().getElementType().isEntityType() ) {
+		if ( rootReturn.allowElementJoin() && rootReturn.getCollectionPersister().getElementType().isEntityType() ) {
 			final EntityReference elementEntityReference = rootReturn.getElementGraph().resolveEntityReference();
 			readerCollector.add(
 				new EntityReferenceInitializerImpl( elementEntityReference, collectionReferenceAliases.getEntityElementAliases() )
 			);
 		}
-		if ( rootReturn.getCollectionPersister().hasIndex() &&
-				rootReturn.getCollectionPersister().getIndexType().isEntityType() ) {
+		if ( rootReturn.allowIndexJoin() && rootReturn.getCollectionPersister().getIndexType().isEntityType() ) {
 			final EntityReference indexEntityReference = rootReturn.getIndexGraph().resolveEntityReference();
 			final EntityReferenceAliases indexEntityReferenceAliases = aliasResolutionContext.generateEntityReferenceAliases(
 					indexEntityReference.getQuerySpaceUid(),
@@ -134,8 +133,7 @@ public abstract class AbstractCollectionLoadQueryDetails extends AbstractLoadQue
 
 	@Override
 	protected  void applyRootReturnSelectFragments(SelectStatementBuilder selectStatementBuilder) {
-		if ( getQueryableCollection().hasIndex() &&
-				getQueryableCollection().getIndexType().isEntityType() ) {
+		if ( getRootCollectionReturn().allowIndexJoin() && getQueryableCollection().getIndexType().isEntityType() ) {
 			final EntityReference indexEntityReference = getRootCollectionReturn().getIndexGraph().resolveEntityReference();
 			final EntityReferenceAliases indexEntityReferenceAliases = getAliasResolutionContext().resolveEntityReferenceAliases(
 					indexEntityReference.getQuerySpaceUid()

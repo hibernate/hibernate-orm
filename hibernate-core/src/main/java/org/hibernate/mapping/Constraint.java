@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -46,7 +47,9 @@ import org.hibernate.engine.spi.Mapping;
 public abstract class Constraint implements RelationalModel, Serializable {
 
 	private String name;
+
 	private final ArrayList<Column> columns = new ArrayList<Column>();
+
 	private Table table;
 
 	public String getName() {
@@ -56,20 +59,20 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * If a constraint is not explicitly named, this is called to generate
 	 * a unique hash using the table and column names.
 	 * Static so the name can be generated prior to creating the Constraint.
 	 * They're cached, keyed by name, in multiple locations.
-	 * 
-	 * @param prefix
-	 *            Appended to the beginning of the generated name
+	 *
+	 * @param prefix Appended to the beginning of the generated name
 	 * @param table
 	 * @param columns
+	 *
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, Table table, Column... columns) {
+	public static String generateName(String prefix, String referencedColumnName, Table table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
@@ -85,20 +88,51 @@ public abstract class Constraint implements RelationalModel, Serializable {
 			String columnName = column == null ? "" : column.getName();
 			sb.append( "column`" + columnName + "`" );
 		}
+
+		if ( referencedColumnName != null ) {
+			sb.append( "column`" + referencedColumnName + "`" );
+		}
+
 		return prefix + hashedName( sb.toString() );
 	}
 
 	/**
-	 * Helper method for {@link #generateName(String, Table, Column...)}.
-	 * 
-	 * @param prefix
-	 *            Appended to the beginning of the generated name
+	 * Helper method for {@link #generateName(String, String, Table, Column...)}.
+	 *
+	 * @param prefix Appended to the beginning of the generated name
 	 * @param table
 	 * @param columns
+	 *
+	 * @return String The generated name
+	 */
+	public static String generateName(String prefix, Table table, Column... columns) {
+		return generateName( prefix, null, table, columns );
+	}
+
+	/**
+	 * Helper method for {@link #generateName(String, String, Table, Column...)}.
+	 *
+	 * @param prefix Appended to the beginning of the generated name
+	 * @param table
+	 * @param columns
+	 *
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
+		return generateName( prefix, null, table, columns.toArray( new Column[columns.size()] ) );
+	}
+
+	/**
+	 * Helper method for {@link #generateName(String, String, Table, Column...)}.
+	 *
+	 * @param prefix Appended to the beginning of the generated name
+	 * @param table
+	 * @param columns
+	 *
+	 * @return String The generated name
+	 */
+	public static String generateName(String prefix, String referencedColumnName, Table table, List<Column> columns) {
+		return generateName( prefix, referencedColumnName, table, columns.toArray( new Column[columns.size()] ) );
 	}
 
 	/**
@@ -106,9 +140,9 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
-	 * 
-	 * @param s
-	 *            The name to be hashed.
+	 *
+	 * @param s The name to be hashed.
+	 *
 	 * @return String The hased name.
 	 */
 	public static String hashedName(String s) {
@@ -123,7 +157,7 @@ public abstract class Constraint implements RelationalModel, Serializable {
 			// character identifier restriction enforced by a few dialects.
 			return bigInt.toString( 35 );
 		}
-		catch ( NoSuchAlgorithmException e ) {
+		catch (NoSuchAlgorithmException e) {
 			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
 		}
 	}
@@ -137,18 +171,23 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	}
 
 	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) columns.add( column );
+		if ( !columns.contains( column ) ) {
+			columns.add( column );
+		}
 	}
 
 	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			Selectable col = (Selectable) columnIterator.next();
-			if ( !col.isFormula() ) addColumn( (Column) col );
+			if ( !col.isFormula() ) {
+				addColumn( (Column) col );
+			}
 		}
 	}
 
 	/**
 	 * @param column
+	 *
 	 * @return true if this constraint already contains a column with same name.
 	 */
 	public boolean containsColumn(Column column) {
@@ -160,8 +199,9 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	}
 
 	public Column getColumn(int i) {
-		return  columns.get( i );
+		return columns.get( i );
 	}
+
 	//todo duplicated method, remove one
 	public Iterator<Column> getColumnIterator() {
 		return columns.iterator();
@@ -185,12 +225,15 @@ public abstract class Constraint implements RelationalModel, Serializable {
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
-			return new StringBuilder()
-					.append( "alter table " )
-					.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-					.append( " drop constraint " )
-					.append( dialect.quote( getName() ) )
-					.toString();
+			return new StringBuilder().append( "alter table " ).append(
+					getTable().getQualifiedName(
+							dialect,
+							defaultCatalog,
+							defaultSchema
+					)
+			).append(
+					" drop constraint "
+			).append( dialect.quote( getName() ) ).toString();
 		}
 		else {
 			return null;
@@ -204,9 +247,15 @@ public abstract class Constraint implements RelationalModel, Serializable {
 			// empty string.  Prevent blank "alter table" statements.
 			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
 			if ( !StringHelper.isEmpty( constraintString ) ) {
-				StringBuilder buf = new StringBuilder( "alter table " )
-						.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-						.append( constraintString );
+				StringBuilder buf = new StringBuilder( "alter table " ).append(
+						getTable().getQualifiedName(
+								dialect,
+								defaultCatalog,
+								defaultSchema
+						)
+				).append(
+						constraintString
+				);
 				return buf.toString();
 			}
 		}
@@ -217,13 +266,16 @@ public abstract class Constraint implements RelationalModel, Serializable {
 		return columns;
 	}
 
-	public abstract String sqlConstraintString(Dialect d, String constraintName, String defaultCatalog,
-											   String defaultSchema);
+	public abstract String sqlConstraintString(
+			Dialect d,
+			String constraintName,
+			String defaultCatalog,
+			String defaultSchema);
 
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
-	
+
 	/**
 	 * @return String The prefix to use in generated constraint names.  Examples:
 	 * "UK_", "FK_", and "PK_".

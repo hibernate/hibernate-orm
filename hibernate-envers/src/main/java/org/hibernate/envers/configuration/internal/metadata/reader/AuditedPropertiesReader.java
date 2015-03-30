@@ -23,19 +23,8 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKey;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
-
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -56,6 +45,18 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKey;
+import javax.persistence.OneToMany;
+import javax.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -732,9 +733,9 @@ public class AuditedPropertiesReader {
 
 		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
 			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName(), this.getClass() );
+				this.xclass = reflectionManager.classForName( component.getComponentClassName() );
 			}
-			catch ( ClassNotFoundException e ) {
+			catch ( ClassLoadingException e ) {
 				throw new MappingException( e );
 			}
 

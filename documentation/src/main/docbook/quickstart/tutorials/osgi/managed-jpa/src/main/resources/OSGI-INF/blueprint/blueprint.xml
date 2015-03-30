@@ -17,42 +17,42 @@
     limitations under the License.
 
 -->
-<blueprint  default-activation="eager" 
-            xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns:jpa="http://aries.apache.org/xmlns/jpa/v1.0.0"
-            xmlns:tx="http://aries.apache.org/xmlns/transactions/v1.0.0">
+<blueprint default-activation="eager"
+           xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:jpa="http://aries.apache.org/xmlns/jpa/v1.0.0"
+           xmlns:tx="http://aries.apache.org/xmlns/transactions/v1.0.0">
 
   <!-- This gets the container-managed EntityManager and injects it into the DataPointServiceImpl bean. -->
-  <bean id="dpService" class="org.hibernate.osgitest.DataPointServiceImpl"> 
-      <jpa:context unitname="managed-jpa" property="entityManager"/>
-      <tx:transaction method="*" value="Required"/>
+  <bean id="dpService" class="org.hibernate.osgitest.DataPointServiceImpl">
+    <jpa:context unitname="managed-jpa" property="entityManager"/>
+    <tx:transaction method="*" value="Required"/>
   </bean>
-  <service ref="dpService" interface="org.hibernate.osgitest.DataPointService" />
-  
+  <service ref="dpService" interface="org.hibernate.osgitest.DataPointService"/>
+
   <!-- This demonstrates how to register your custom implementations of Hibernate extension points, such as
        Integrator and TypeContributor. -->
   <!-- <bean id="integrator" class="your.package.IntegratorImpl"/>
   <service ref="integrator" interface="org.hibernate.integrator.spi.Integrator"/>
   <bean id="typeContributor" class="your.package.TypeContributorImpl"/>
   <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/> -->
-  
+
   <!-- This bundle makes use of Karaf commands to demonstrate core persistence operations.  Feel free to remove it. -->
   <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
-        <command name="dp/add">
-            <action class="org.hibernate.osgitest.command.AddCommand">
-                <property name="dpService" ref="dpService"/>
-            </action>
-        </command>
-        <command name="dp/getAll">
-            <action class="org.hibernate.osgitest.command.GetAllCommand">
-                <property name="dpService" ref="dpService"/>
-            </action>
-        </command>
-        <command name="dp/deleteAll">
-            <action class="org.hibernate.osgitest.command.DeleteAllCommand">
-                <property name="dpService" ref="dpService"/>
-            </action>
-        </command>
-    </command-bundle>
+    <command>
+      <action class="org.hibernate.osgitest.command.AddCommand">
+        <property name="dpService" ref="dpService"/>
+      </action>
+    </command>
+    <command>
+      <action class="org.hibernate.osgitest.command.GetAllCommand">
+        <property name="dpService" ref="dpService"/>
+      </action>
+    </command>
+    <command>
+      <action class="org.hibernate.osgitest.command.DeleteAllCommand">
+        <property name="dpService" ref="dpService"/>
+      </action>
+    </command>
+  </command-bundle>
 </blueprint>

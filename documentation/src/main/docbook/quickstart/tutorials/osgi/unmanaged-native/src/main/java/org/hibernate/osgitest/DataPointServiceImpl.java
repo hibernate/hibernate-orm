@@ -20,17 +20,16 @@
  */
 package org.hibernate.osgitest;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.osgitest.entity.DataPoint;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Brett Meyer

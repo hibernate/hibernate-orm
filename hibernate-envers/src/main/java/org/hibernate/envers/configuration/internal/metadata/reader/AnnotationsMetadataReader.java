@@ -23,10 +23,8 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
-import java.lang.annotation.Annotation;
-import java.util.Iterator;
-
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.envers.AuditTable;
@@ -37,6 +35,9 @@ import org.hibernate.envers.SecondaryAuditTables;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+
+import java.lang.annotation.Annotation;
+import java.util.Iterator;
 
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.
@@ -113,7 +114,7 @@ public final class AnnotationsMetadataReader {
 		}
 
 		try {
-			final XClass xclass = reflectionManager.classForName( pc.getClassName(), this.getClass() );
+			final XClass xclass = reflectionManager.classForName( pc.getClassName() );
 
 			final ModificationStore defaultStore = getDefaultAudited( xclass );
 			if ( defaultStore != null ) {
@@ -132,7 +133,7 @@ public final class AnnotationsMetadataReader {
 			addAuditTable( xclass );
 			addAuditSecondaryTables( xclass );
 		}
-		catch (ClassNotFoundException e) {
+		catch (ClassLoadingException e) {
 			throw new MappingException( e );
 		}
 

@@ -9,5 +9,11 @@
 
   <bean id="typeContributor" class="org.hibernate.envers.boot.internal.TypeContributorImpl"/>
   <service ref="typeContributor" interface="org.hibernate.boot.model.TypeContributor"/>
+
+  <bean id="serviceContributor" class="org.hibernate.envers.boot.internal.EnversServiceContributor"/>
+  <service ref="serviceContributor" interface="org.hibernate.service.spi.ServiceContributor"/>
+
+  <bean id="additionalJaxbMappingProducer" class="org.hibernate.envers.boot.internal.AdditionalJaxbMappingProducerImpl"/>
+  <service ref="additionalJaxbMappingProducer" interface="org.hibernate.boot.spi.AdditionalJaxbMappingProducer"/>
   
 </blueprint>

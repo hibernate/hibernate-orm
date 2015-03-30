@@ -23,16 +23,9 @@
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-
+import org.dom4j.Document;
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -50,11 +43,17 @@ import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionColl
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
-import org.dom4j.Document;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+import javax.persistence.Entity;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -143,9 +142,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	@SuppressWarnings("deprecation")
 	private XClass toXClass(String className, ReflectionManager reflectionManager) {
 		try {
-			return reflectionManager.classForName( className, this.getClass() );
+			return reflectionManager.classForName( className );
 		}
-		catch ( ClassNotFoundException e ) {
+		catch ( ClassLoadingException e ) {
 			throw new AnnotationException( "Unable to load class defined in XML: " + className, e );
 		}
 	}

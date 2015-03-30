@@ -26,6 +26,7 @@ package org.hibernate.envers.configuration.internal;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -319,9 +320,9 @@ public class RevisionInfoConfiguration {
 			if (persistentClass.getClassName() != null) {
 				XClass clazz;
 				try {
-					clazz = reflectionManager.classForName( persistentClass.getClassName(), this.getClass() );
+					clazz = reflectionManager.classForName( persistentClass.getClassName() );
 				}
-				catch (ClassNotFoundException e) {
+				catch (ClassLoadingException e) {
 					throw new MappingException( e );
 				}
 

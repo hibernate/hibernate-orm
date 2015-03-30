@@ -20,8 +20,8 @@
  */
 package org.hibernate.osgitest;
 
-import org.hibernate.metamodel.spi.TypeContributions;
-import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
 
 
@@ -30,8 +30,8 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class TestTypeContributor implements TypeContributor {
 
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		System.out.println("TypeContributor#contribute");
-	}
+    public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+        System.out.println("TypeContributor#contribute");
+    }
 
 }

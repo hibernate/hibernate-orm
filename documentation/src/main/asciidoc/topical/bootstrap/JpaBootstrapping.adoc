@@ -1,5 +1,28 @@
 = Bootstrapping Hibernate JPA
 :toc:
 
-* Spec compliant bootstrapping
-* EntityManagerFactoryBuilder
+Bootstrapping Hibernate as a JPA provider can be done in a JPA-spec compliant manner or using a proprietary
+bootstrapping approach.  The standardized approach has some limitations in certain environments, which
+we will get into below.  But aside from those limitations, it is *highly* recommended that you use JPA-standardized
+boostrapping.
+
+NOTE: Under the covers, all of Hibernate's JPA bootstrapping makes use of its core bootstrapping.  See the
+_Native Bootstrapping_ guide for information.
+
+== JPA-compliant bootstrapping
+
+JPA actually defines 2 different ways to bootstrap a JPA provider.  It uses the terms "EE" and "SE" for these 2
+approaches, but those terms are very misleading in this context.  What the JPA spec calls EE bootstrapping is cases
+where a container (EE, OSGi, etc) will manage and inject the persistence context on behalf of the application.  What
+it calls SE bootstrapping is everything else.  We will use the terms managed and non-managed in this guide.
+
+=== Managed bootstrapping
+
+=== Non-managed bootstrapping
+
+
+== Proprietary 2-phase bootstrapping
+
+
+* times when the spec defined bootstrapping is not enough (wildfly)
+* runtime enhancement

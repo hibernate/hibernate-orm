@@ -37,6 +37,23 @@ TODOs
    * etc
 
 
+Blog items
+==========
+* New bootstrapping API - better determinism, better integration
+* Java 8 Support (though still compatible with Java 6).
+* Ability to handle additional Java types for id attributes marked as `GenerationType#AUTO`.  Built-in support
+    for Number and UUID.  Expandable via new `org.hibernate.boot.model.IdGeneratorStrategyInterpreter` extension
+* Expanded support for AttributeConverters.
+    * fully supported for non-`@Enumerated` enum values
+    * applicable in conjunction with `@Nationalized` support
+    * called to handle null values
+    * settable in hbm.xml by using `type="converter:fully.qualified.AttributeConverterName"`
+    * integrated with hibernate-envers
+    * collection values, map keys
+* scanning support for non-JPA usage
+* naming strategy
+
+
 Proposals for discussion
 ========================
 * Currently there is a "post-binding" hook to allow validation of the bound model (PersistentClass,

@@ -23,11 +23,24 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
-import com.sun.tools.classfile.ConstantPoolException;
-import com.sun.tools.javap.JavapTask;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -43,21 +56,11 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import com.sun.tools.classfile.ConstantPoolException;
+import com.sun.tools.javap.JavapTask;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -223,7 +226,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
     }
 
     static EntityEntry makeEntityEntry() {
-        return new DefaultEntityEntryFactory().createEntityEntry(
+        return DefaultEntityEntryFactory.INSTANCE.createEntityEntry(
                 Status.MANAGED,
                 null,
                 null,

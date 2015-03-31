@@ -490,7 +490,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final boolean disableVersionIncrement,
 			boolean lazyPropertiesAreUnfetched) {
 
-		EntityEntryFactory entityEntryFactory = session.getFactory().getServiceRegistry().getService( EntityEntryFactory.class );
+		final EntityEntryFactory entityEntryFactory = persister.getEntityEntryFactory();
 		final EntityEntry e = entityEntryFactory.createEntityEntry(
 				status,
 				loadedState,

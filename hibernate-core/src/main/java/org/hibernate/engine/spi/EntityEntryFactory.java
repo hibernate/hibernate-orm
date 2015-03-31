@@ -21,21 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.Service;
 
 /**
  * Contract to build {@link org.hibernate.engine.spi.EntityEntry}
  *
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author Emmanuel Bernard
  */
-public interface EntityEntryFactory extends Service {
+public interface EntityEntryFactory extends Serializable {
 
 	/**
 	 * Creates {@link org.hibernate.engine.spi.EntityEntry}.

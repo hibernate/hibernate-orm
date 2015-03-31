@@ -65,6 +65,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
+import org.hibernate.engine.internal.DefaultEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -72,6 +73,7 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -4809,6 +4811,12 @@ public abstract class AbstractEntityPersister
 
 	public int determineTableNumberForColumn(String columnName) {
 		return 0;
+	}
+
+	@Override
+	public EntityEntryFactory getEntityEntryFactory() {
+		// todo : in ORM terms this should check #isMutable() and return an appropriate one.
+		return DefaultEntityEntryFactory.INSTANCE;
 	}
 
 	/**

@@ -35,27 +35,45 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Factory for the safe approach implementation of {@link org.hibernate.engine.spi.EntityEntry}.
- * <p>
+ * <p/>
  * Smarter implementations could store less state.
  *
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author Emmanuel Bernard
  */
 public class DefaultEntityEntryFactory implements EntityEntryFactory {
-	@Override
-	public EntityEntry createEntityEntry(Status status, Object[] loadedState, Object rowId, Serializable id, Object version, LockMode lockMode, boolean existsInDatabase, EntityPersister persister, boolean disableVersionIncrement, boolean lazyPropertiesAreUnfetched, PersistenceContext persistenceContext) {
+	/**
+	 * Singleton access
+	 */
+	public static final DefaultEntityEntryFactory INSTANCE = new DefaultEntityEntryFactory();
 
-			return new MutableEntityEntry(
-					status,
-					loadedState,
-					rowId,
-					id,
-					version,
-					lockMode,
-					existsInDatabase,
-					persister,
-					disableVersionIncrement,
-					lazyPropertiesAreUnfetched,
-					persistenceContext
-			);
+	private DefaultEntityEntryFactory() {
+	}
+
+	@Override
+	public EntityEntry createEntityEntry(
+			Status status,
+			Object[] loadedState,
+			Object rowId,
+			Serializable id,
+			Object version,
+			LockMode lockMode,
+			boolean existsInDatabase,
+			EntityPersister persister,
+			boolean disableVersionIncrement,
+			boolean lazyPropertiesAreUnfetched,
+			PersistenceContext persistenceContext) {
+		return new MutableEntityEntry(
+				status,
+				loadedState,
+				rowId,
+				id,
+				version,
+				lockMode,
+				existsInDatabase,
+				persister,
+				disableVersionIncrement,
+				lazyPropertiesAreUnfetched,
+				persistenceContext
+		);
 	}
 }

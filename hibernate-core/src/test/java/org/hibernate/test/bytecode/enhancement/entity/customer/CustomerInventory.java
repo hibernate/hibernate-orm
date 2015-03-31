@@ -115,6 +115,10 @@ public class CustomerInventory implements Serializable, Comparator<CustomerInven
         return customer;
     }
 
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
     public int getCustId() {
         return custId;
     }

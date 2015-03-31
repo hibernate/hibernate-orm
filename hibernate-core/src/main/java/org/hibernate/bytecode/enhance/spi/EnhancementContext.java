@@ -70,6 +70,17 @@ public interface EnhancementContext {
 	public boolean isCompositeClass(CtClass classDescriptor);
 
 	/**
+	 * Should we manage association of bi-directional persistent attributes for this field?
+	 *
+	 * @param field The field to check.
+	 *
+	 * @return {@code true} indicates that the field is enhanced so that for bi-directional persistent fields
+	 * 			the association is managed, i.e. the associations are automatically set; {@code false} indicates that
+	 * 			the management is handled by the user.
+	 */
+	public boolean doBiDirectionalAssociationManagement(CtField field);
+
+	/**
 	 * Should we in-line dirty checking for persistent attributes for this class?
 	 *
 	 * @param classDescriptor The descriptor of the class to check.

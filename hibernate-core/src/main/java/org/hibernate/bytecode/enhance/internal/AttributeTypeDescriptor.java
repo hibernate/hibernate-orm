@@ -67,7 +67,7 @@ public abstract class AttributeTypeDescriptor {
 					|| currentValue.getType().getName().startsWith( "java.sql.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Calendar" ) ) {
-				builder.append( String.format( "&& ((%s == null) || (!%<s.equals($1))))", currentValue.getName() ) );
+				builder.append( String.format( " && ((%s == null) || (!%<s.equals($1))))", currentValue.getName() ) );
 			}
 			// all other objects
 			else {
@@ -81,7 +81,7 @@ public abstract class AttributeTypeDescriptor {
 					}
 				}
 				// TODO: for now just call equals, should probably do something else here
-				builder.append( String.format( "&& ((%s == null) || (!%<s.equals($1))))", currentValue.getName() ) );
+				builder.append( String.format( " && ((%s == null) || (!%<s.equals($1))))", currentValue.getName() ) );
 			}
 			builder.append( String.format( " { %s(\"%s\"); }", EnhancerConstants.TRACKER_CHANGER_NAME, currentValue.getName() ) );
 		}

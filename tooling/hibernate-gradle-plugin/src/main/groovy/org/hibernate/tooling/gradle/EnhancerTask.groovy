@@ -146,6 +146,10 @@ public class EnhancerTask extends DefaultTask implements EnhancementContext {
         return false;
     }
 
+    public boolean doBiDirectionalAssociationManagement(CtField field) {
+        return false;
+    }
+
     public boolean doDirtyCheckingInline(CtClass classDescriptor) {
         return true;
     }

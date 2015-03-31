@@ -23,6 +23,23 @@
  */
 package org.hibernate.tool.enhance;
 
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtField;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
+import org.apache.tools.ant.types.FileSet;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
+
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,25 +47,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Transient;
-
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
-
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
-
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.types.FileSet;
 
 /**
  * Ant task for performing build-time enhancement of entities and component/embeddable classes.
@@ -74,7 +72,7 @@ public class EnhancementTask extends Task implements EnhancementContext {
 
 	@Override
 	public void execute() throws BuildException {
-		log( "Starting Hibernate EnhancementTask execution", Project.MSG_INFO );
+		log("Starting Hibernate EnhancementTask execution", Project.MSG_INFO);
 
 		// we use the CtClass stuff here just as a simple vehicle for obtaining low level information about
 		// the class(es) contained in a file while still maintaining easy access to the underlying byte[]
@@ -116,7 +114,7 @@ public class EnhancementTask extends Task implements EnhancementContext {
 
     private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
         try {
-            byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+            byte[] result = enhancer.enhance(ctClass.getName(), ctClass.toBytecode());
             if(result != null)
                 writeEnhancedClass(javaClassFile, result);
         }
@@ -185,6 +183,11 @@ public class EnhancementTask extends Task implements EnhancementContext {
 	@Override
 	public boolean isCompositeClass(CtClass classDescriptor) {
         return classDescriptor.hasAnnotation(Embeddable.class);
+	}
+
+	@Override
+	public boolean doBiDirectionalAssociationManagement(CtField field) {
+		return false;
 	}
 
 	@Override

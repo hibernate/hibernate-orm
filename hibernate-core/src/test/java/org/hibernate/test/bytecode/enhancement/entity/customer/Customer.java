@@ -32,6 +32,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -56,6 +57,9 @@ public class Customer {
     @Id
     @Column(name="C_ID")
     private int id;
+
+    @OneToOne
+    private User user;
 
     @Column(name="C_FIRST")
     private String firstName;
@@ -207,6 +211,20 @@ public class Customer {
             customerInventories = new ArrayList<CustomerInventory>();
         }
         return customerInventories;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void addInventory(CustomerInventory inventory) {
+        List<CustomerInventory> list = getInventories();
+        list.add(inventory);
+        customerInventories = list;
     }
 
     public CustomerInventory addInventory(String item, int quantity,

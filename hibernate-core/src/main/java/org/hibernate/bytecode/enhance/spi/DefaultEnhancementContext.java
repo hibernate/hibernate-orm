@@ -64,6 +64,13 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	/**
 	 * @return true
 	 */
+	public boolean doBiDirectionalAssociationManagement(CtField field) {
+		return true;
+	}
+
+	/**
+	 * @return true
+	 */
 	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
 		return true;
 	}

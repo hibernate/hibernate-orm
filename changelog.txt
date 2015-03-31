@@ -5,6 +5,121 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in 5.0.0.Beta1 (March 31, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/18450
+
+** Sub-task
+    * [HHH-7998] - Add TypeContributions interface
+    * [HHH-9690] - Improve design of Enhancer
+
+** Bug
+    * [HHH-3868] - Merging transient entity with a component property with parent mapping causes NullPointerException
+    * [HHH-5654] - query.setLockMode("alias", LockMode.LockMode.PESSIMISTIC_WRITE); does not Lock in PostgreSqlDialect
+    * [HHH-6005] - Better handling of implicit column naming with @ElementCollection of @Embeddables
+    * [HHH-7375] - TimeZone of Calendar objects should be used in binding to JDBC statements
+    * [HHH-8494] - Misleading log info during batch execution
+    * [HHH-8769] - NPE when using dynamic model mapping
+    * [HHH-8788] - Unnecessary warning logged about follow-on locking with Criteria query and LockMode NONE
+    * [HHH-8805] - [SchemaUpdate] javax.persistence.ForeignKey doesn't respect ConstraintMode.NO_CONSTRAINT
+    * [HHH-8866] - HQL Query with enum and @Convert
+    * [HHH-8879] - Regression: Embeddable with associations as @MapKey
+    * [HHH-8895] - Filter for MappedSuperClass stopped to work from 4.1.6.Final
+    * [HHH-8901] - Create base delegator impls for SessionBuilder and SharedSessionBuilder for use by Search
+    * [HHH-8911] - ClassCastException between CompositeCustomType and ComponentType
+    * [HHH-8994] - QueryException during startup with composite key in ElementCollection map
+    * [HHH-9044] - Create Oracle12cDialect
+    * [HHH-9091] - Collection deleted due to orphan removal fails with constraint violation
+    * [HHH-9141] - Remove deprecated PersistenceProvider from hibernate-entitymanager META-INF/services/javax.persistence.spi.PersistenceProvider
+    * [HHH-9247] - JPA 2.1 Named Entity Graph cannot be configured in ORM XML
+    * [HHH-9300] - DB2Dialect generates invalid order by clause
+    * [HHH-9320] - AttributeConverter result ignored on extraction when ResultSet.wasNull
+    * [HHH-9330] - orphanRemoval=true does not work in bidirectional relationships (without cascading)
+    * [HHH-9333] - TypeMismatchException when using composite-id and natural-id mappings
+    * [HHH-9337] - Region.destroy() attempts to remove a cache listener, but region class is not annotated with @Listener
+    * [HHH-9392] - SQLGrammarException while executing a entity graph with subgraphs
+    * [HHH-9401] - SQL warnings are never logged due to incorrect condition check
+    * [HHH-9419] - Remove after get with optimistic lock fails
+    * [HHH-9444] - Rounding of fractional seconds causes test failures on MySQL 5.6.4+
+    * [HHH-9448] - Association is not fetched when EntityGraph has explicit fetch and query has implicit join
+    * [HHH-9451] - Extra state is not propagated from temporary entity entries
+    * [HHH-9457] - EntityGraph with order by using Oracle10gDialect
+    * [HHH-9467] - Cannot enable NamingStrategyDelegator implementations using standalone schema tools
+    * [HHH-9498] - Using C3P0 connection pool but not setting hibernate.connection.isolation results in a NumberFormatException
+    * [HHH-9500] - H2: SchemaExport ERROR when using in-memory database  - drop constraint issue HHH000389
+    * [HHH-9523] - EnumeratedTypeTest - select from dual causes test failures on mssql, postgresql, db2 and sybase
+    * [HHH-9528] - InputStream leak from opening resources
+    * [HHH-9549] - Selecting treated root generates invalid HQL
+    * [HHH-9561] - Master version is 4.3.7-SNAPSHOT; should be 5.0.0-SNAPSHOT
+    * [HHH-9568] - EntityManager.flush() does not behave properly with transient one-to-one association and no cascade
+    * [HHH-9597] - Criteria creates invalid Column aliases.
+    * [HHH-9599] - AnnotationException occurs when applying @Nationalized and @Convert annotations to the same field
+    * [HHH-9605] - Query on an enum collection fails
+    * [HHH-9633] - Add tests that explicitly test the "main" NamingStrategy impls
+    * [HHH-9639] - Unwrap in HikariCPConnectionProvider fails to unwrap DataSource
+    * [HHH-9642] - Embedded OneToMany association fetch join does not work in CriteriaQuery
+    * [HHH-9659] - AnnotationMetadataSourceProcessorImpl uses a Logger.debugf method without matching parameters
+    * [HHH-9679] - hibernate-enhance-maven-plugin uses no-longer support syntax in its build script
+    * [HHH-9680] - hibernate-osgi module has gone cra-cra again
+    * [HHH-9689] - Avoid NPE when trying to load non-existent properties resource
+
+** Deprecation
+    * [HHH-9645] - buildSessionFactory() should return a sessionFactory
+
+** Improvement
+    * [HHH-6670] - H2Dialect should use "if exists" when dropping sequences
+    * [HHH-8191] - Update Teradata Dialect for Teradata 14.0
+    * [HHH-8401] - Support fractional seconds on MySQL 5.7
+    * [HHH-8697] - AttributeConverter not called when value is null
+    * [HHH-8844] - Add support for Java 8 date and time types (JSR-310)
+    * [HHH-9043] - Allow customization of the modified field flag
+    * [HHH-9324] - Avoid creation of LimitHandler instances for every query
+    * [HHH-9328] - Avoid creation of Cascade objects at all
+    * [HHH-9336] - Avoid creation of TypedValue objects in AbstractPersistentCollection#getOrphans(Collection, Collection, String, SessionImplementor) for some ID types.
+    * [HHH-9479] - Avoid immediate collection capacity increase in ActionQueue constructor
+    * [HHH-9488] - Move scanning from HEM to core
+    * [HHH-9490] - Migrate from dom4j to jaxb for XML processing
+    * [HHH-9492] - Migrate to new bootstrap API (MetadataSources, etc)
+    * [HHH-9497] - Remove call to Ehcache ClassLoaderUtil.getStandardClassLoader() as it has been removed in Ehcache 2.8.3+
+    * [HHH-9545] - H2Dialect should use "if exists" when dropping constraints
+    * [HHH-9556] - support query hints for SQL Server 2012
+    * [HHH-9562] - Dialect specific UUID handling
+    * [HHH-9600] - remove outdated info about cache concurrency strategies support
+    * [HHH-9601] -  table schema not paired with @OrderColumn name value in example 7.8
+    * [HHH-9621] - Add HQL query to warning about positional parameter usage
+    * [HHH-9647] - Update jboss logging to 3.2.1.Final
+    * [HHH-9648] - Upgrade to HikariCP v. 2.3.3 (Java 6 compatible edition)
+    * [HHH-9655] - Add logging to help better track down tests that leave SessionFactories open
+    * [HHH-9658] - Simplify the way tests assert on logging statements
+    * [HHH-9698] - Leverage ClassLoaderDelegate stuff added to HCANN as means to avoid its need for TCCL
+
+** New Feature
+    * [HHH-7078] - Split NamingStrategy into ImplicitNamingStrategy/PhysicalNamingStrategy
+    * [HHH-8869] - Create HikariCP connection pool module
+    * [HHH-9042] - Add support in Envers for converted (AttributeConverter) attributes
+    * [HHH-9167] - Support Postgres9.2 JSON data type
+    * [HHH-9265] - Extract EntityEntry behind a factory + interface
+    * [HHH-9524] - Make strategy for interpreting id-generator annotations pluggable
+    * [HHH-9577] - Make UUID generation the default (AUTO) for UUID type
+
+** Patch
+    * [HHH-9495] - @Convert support for collections
+
+** Task
+    * [HHH-9466] - Drop metamodel package from source
+    * [HHH-9471] - OSGi tests failing again after changes done for HHH-9466
+    * [HHH-9487] - Improve AvailableSettings javadoc for session_factory_name / session_factory_name_is_jndi
+    * [HHH-9508] - Avoid source code syntax which fails in Eclipse
+    * [HHH-9573] - Add EntityManager test case illustrating usage of query cache
+    * [HHH-9632] - Upgrade to Infinispan 7.1.0.Final
+    * [HHH-9654] - Adjust envers for 5.0 APIs + JAXB
+    * [HHH-9668] - Initial documentation of new approach and APIs for SessionFactory building
+    * [HHH-9677] - Upgrade Gradle
+    * [HHH-9678] - Change built-in SqlTypeDescriptor impls to not auto-register themselves with SqlTypeDescriptorRegistry
+    * [HHH-9700] - Make EntityEntryFactory pluggable via EntityPersister
+
+
+
 Changes in version 4.3.6.Final (2014.07.16)
 ------------------------------------------------------------------------------------------------------------------------
 

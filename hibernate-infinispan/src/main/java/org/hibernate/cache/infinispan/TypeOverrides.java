@@ -6,15 +6,15 @@
  */
 package org.hibernate.cache.infinispan;
 
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
-
 import org.hibernate.cache.CacheException;
-
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
+
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * This class represents Infinispan cache parameters that can be configured via hibernate configuration properties
@@ -24,7 +24,7 @@ import org.infinispan.eviction.EvictionStrategy;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class TypeOverrides {
+public class TypeOverrides implements Serializable {
 
 	private final Set<String> overridden = new HashSet<String>();
 

@@ -7,6 +7,7 @@
 package org.hibernate.test.cache.infinispan.entity;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -49,7 +50,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
 
-		accessStrategy = environment.getEntityRegion( REGION_NAME, null ).buildAccessStrategy( getAccessType() );
+		accessStrategy = environment.getEntityRegion( REGION_NAME, new CacheDataDescriptionImpl(true, false, null)).buildAccessStrategy( getAccessType() );
    }
 
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {

@@ -46,7 +46,11 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 			case READ_ONLY:
 				return new ReadOnlyAccess( this );
 			case TRANSACTIONAL:
-				return new TransactionalAccess( this );
+				if (getCacheDataDescription().isMutable()) {
+					return new TransactionalAccess(this);
+				} else {
+					return new ReadOnlyAccess(this);
+				}
 			default:
 				throw new CacheException( "Unsupported access type [" + accessType.getExternalName() + "]" );
 		}

@@ -27,6 +27,7 @@
 ext {
 
     junitVersion = '4.11'
+//    h2Version = '1.4.186'
     h2Version = '1.2.145'
     bytemanVersion = '2.1.2'
     infinispanVersion = '7.1.0.Final'

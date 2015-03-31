@@ -3,17 +3,6 @@ dependencies {
     testCompile( project(':hibernate-testing') )
 }
 
-targetCompatibility = '1.8'
-sourceCompatibility = '1.8'
-
-tasks.withType( JavaCompile.class ).all { task->
-    task.options.compilerArgs += [
-            "-nowarn",
-            "-encoding", "UTF-8",
-            "-source", sourceCompatibility,
-            "-target", targetCompatibility
-    ]
-}
 
 def pomName() {
     return 'Java8-specific Hibernate O/RM functionality'

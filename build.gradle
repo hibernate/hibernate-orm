@@ -1,3 +1,5 @@
+import org.gradle.internal.jvm.Jvm
+
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
@@ -48,22 +50,40 @@ ext {
     osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", ".SNAPSHOT" )
 }
 
+if ( !JavaVersion.current().java8Compatible ) {
+	throw new GradleException( "Gradle must be run with Java 8" )
+}
+
+final Jvm java6Home;
+
+String java6HomeDirSetting = null;
+if ( rootProject.hasProperty( "JDK6_HOME" ) ) {
+	java6HomeDirSetting = rootProject.property( "JDK6_HOME" ) as String;
+}
+if ( java6HomeDirSetting == null ) {
+	java6HomeDirSetting = System.getProperty( "JDK6_HOME" );
+}
+
+if ( java6HomeDirSetting != null ) {
+	logger.info( "Using JDK6_HOME setting [${java6HomeDirSetting}]" )
+	final File java6HomeDir = new File( java6HomeDirSetting );
+	java6Home = Jvm.forHome( java6HomeDir ) as Jvm;
+
+	if ( java6Home == null ) {
+		throw new GradleException( "Could not resolve JDK6_HOME [${java6HomeDirSetting}] to proper JAVA_HOME" );
+	}
+}
+else {
+	logger.warn( "JDK6_HOME setting not specified, some build features will be disabled" )
+	java6Home = null;
+}
+
 idea {
     project {
-        languageLevel = javaLanguageLevel
-        ipr {
-            withXml { provider ->
-                provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
-                def maxHeapSizeConfig =  provider.node.component.find { it.@name == 'JavacSettings' }
-                if( maxHeapSizeConfig == null ){
-                    def javacSettingsNode =  provider.node.appendNode('component',[name: 'JavacSettings'])
-                    javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
-                }
-            }
-            beforeMerged { project ->
-                project.modulePaths.clear()
-            }
-        }
+		jdkName = '1.6'
+		languageLevel = '1.6'
+
+		vcs = 'Git'
     }
     module {
         name = "hibernate-orm"
@@ -178,12 +198,60 @@ subprojects { subProject ->
 	}
 
 	tasks.withType( JavaCompile.class ).all { task->
+		// basic compile options
 		task.options.compilerArgs += [
 				"-nowarn",
-				"-encoding", "UTF-8",
-				"-source", rootProject.javaLanguageLevel,
-				"-target", rootProject.javaLanguageLevel
+				"-encoding", "UTF-8"
 		]
+
+		if ( subProject.name.equals( 'hibernate-java8' ) ) {
+			// For hibernate-java8 module, simply compile using Java 8 JDK which is required to
+			// launch Gradle (for now).  This is verified in settings.gradle
+			task.options.compilerArgs += [
+				"-source", '1.8',
+				"-target", '1.8'
+			]
+		}
+		else {
+			// For all other modules, use the 1.6 JDK (if available) as bootstrapclasspath
+			task.options.compilerArgs += [
+					"-source", '1.6',
+					"-target", '1.6'
+			]
+
+			if ( java6Home != null ) {
+				task.options.bootClasspath = java6Home.runtimeJar.absolutePath
+			}
+		}
+	}
+
+	tasks.withType( Test.class ).all { task->
+		task.jvmArgs += ['-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=${subProject.file('target/OOM-dump.hprof').absolutePath}"]
+
+		if ( subProject.name.equals( 'hibernate-osgi' ) ) {
+			// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
+			// java6Home is not available
+			if ( java6Home == null ) {
+				task.enabled = false;
+			}
+			else {
+				task.executable = java6Home.javaExecutable
+				task.maxHeapSize = '2G'
+				task.jvmArgs += ['-XX:MaxPermGen=512M']
+			}
+		}
+		else {
+			// for all other modules, just use the Java 8 used to launch Gradle (for now)
+			task.maxHeapSize = '2G'
+			task.jvmArgs += ['-XX:MetaspaceSize=512M']
+		}
+
+//		task.beforeTest { descriptor ->
+//			println "Starting test: " + descriptor
+//		}
+//		task.afterTest { descriptor ->
+//			println "Completed test: " + descriptor
+//		}
 	}
 
 	jar {
@@ -230,32 +298,34 @@ subprojects { subProject ->
 
 	idea {
 		module {
-			iml {
-				beforeMerged { module ->
-					module.dependencies.clear()
-					module.excludeFolders.clear()
-				}
-				whenMerged { module ->
-					module.dependencies*.exported = true
-					module.excludeFolders += module.pathFactory.path(file(".gradle"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/bundles"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/classes"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/dependency-cache"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/libs"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/reports"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/test-results"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/tmp"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/matrix"))
-					module.excludeFolders += module.pathFactory.path(file("$buildDir/resources"))
-					module.excludeFolders -= module.pathFactory.path(file("$buildDir"))
-				}
+			if ( subProject.name.equals( 'hibernate-java8' ) ) {
+				jdkName = '1.8'
 			}
+
+			excludeDirs = [file( ".gradle" )]
+			excludeDirs += file( "$buildDir/classes" )
+			excludeDirs += file( "$buildDir/bundles" )
+			excludeDirs += file( "$buildDir/packages" )
+			excludeDirs += file( "$buildDir/dependency-cache" )
+			excludeDirs += file( "$buildDir/libs" )
+			excludeDirs += file( "$buildDir/reports" )
+			excludeDirs += file( "$buildDir/test-results" )
+			excludeDirs += file( "$buildDir/tmp" )
+			excludeDirs += file( "$buildDir/matrix" )
+			excludeDirs += file( "$buildDir/resources" )
+
 			downloadSources = true
-			scopes.COMPILE.plus += [configurations.provided]
+			scopes.PROVIDED.plus += [configurations.provided]
 		}
 	}
 
 	eclipse {
+		if ( subProject.name != 'hibernate-java8' && java6Home != null ) {
+			jdt {
+				sourceCompatibility = '1.6'
+				targetCompatibility = '1.6'
+			}
+		}
 		classpath {
 			plusConfigurations.add( configurations.provided )
 		}

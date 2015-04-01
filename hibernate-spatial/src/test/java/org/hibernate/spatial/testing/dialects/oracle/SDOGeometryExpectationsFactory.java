@@ -266,6 +266,6 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected Geometry decode(Object o) {
-		return decoder.toJTS( o );
+		return decoder.convert(o);
 	}
 }

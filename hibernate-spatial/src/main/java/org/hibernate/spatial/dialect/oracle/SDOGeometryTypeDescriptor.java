@@ -23,6 +23,7 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.sql.Types;
 
+import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;

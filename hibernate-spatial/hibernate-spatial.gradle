@@ -26,7 +26,6 @@ dependencies {
     compile(project(':hibernate-core'))
     compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])
     compile([group: 'org.geolatte', name: 'geolatte-geom', version: '1.0-SNAPSHOT'])
-//    compile([group: 'com.vividsolutions', name: 'jts', version: '1.12'])
 
     compile(libraries.dom4j) {
         transitive = false

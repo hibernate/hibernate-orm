@@ -40,7 +40,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.DefaultEntityEntryFactory;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -122,7 +122,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public EntityEntryFactory getEntityEntryFactory() {
-			return DefaultEntityEntryFactory.INSTANCE;
+			return MutableEntityEntryFactory.INSTANCE;
 		}
 
 		@Override

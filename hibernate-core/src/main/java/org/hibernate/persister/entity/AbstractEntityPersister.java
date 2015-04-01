@@ -23,22 +23,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -65,7 +49,8 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
-import org.hibernate.engine.internal.DefaultEntityEntryFactory;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
+import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -133,8 +118,23 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
-
 import org.jboss.logging.Logger;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -158,6 +158,7 @@ public abstract class AbstractEntityPersister
 	private final CacheEntryHelper cacheEntryHelper;
 	private final EntityMetamodel entityMetamodel;
 	private final EntityTuplizer entityTuplizer;
+	private final EntityEntryFactory entityEntryFactory;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final String[] rootTableKeyColumnNames;
@@ -278,6 +279,8 @@ public abstract class AbstractEntityPersister
 	private final Map subclassPropertyColumnNames = new HashMap();
 
 	protected final BasicEntityPropertyMapping propertyMapping;
+
+	private final boolean useReferenceCacheEntries;
 
 	protected void addDiscriminatorToInsert(Insert insert) {}
 
@@ -512,6 +515,13 @@ public abstract class AbstractEntityPersister
 
 		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
+
+		if( entityMetamodel.isMutable() ) {
+			this.entityEntryFactory = MutableEntityEntryFactory.INSTANCE;
+		}
+		else {
+			this.entityEntryFactory = ImmutableEntityEntryFactory.INSTANCE;
+		}
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		int batch = persistentClass.getBatchSize();
@@ -784,7 +794,31 @@ public abstract class AbstractEntityPersister
 		temporaryIdTableName = persistentClass.getTemporaryIdTableName();
 		temporaryIdTableDDL = persistentClass.getTemporaryIdTableDDL();
 
+
+		// Check if we can use Reference Cached entities in 2lc
+		// todo : should really validate that the cache access type is read-only
+		boolean refCacheEntries = true;
+		if ( ! factory.getSettings().isDirectReferenceCacheEntriesEnabled() ) {
+			refCacheEntries = false;
+		}
+
+		// for now, limit this to just entities that:
+		// 		1) are immutable
+		if ( entityMetamodel.isMutable() ) {
+			refCacheEntries =  false;
+		}
+
+		//		2)  have no associations.  Eventually we want to be a little more lenient with associations.
+		for ( Type type : getSubclassPropertyTypeClosure() ) {
+			if ( type.isAssociationType() ) {
+				refCacheEntries =  false;
+			}
+		}
+
+		useReferenceCacheEntries = refCacheEntries;
+
 		this.cacheEntryHelper = buildCacheEntryHelper();
+
 	}
 
 	protected CacheEntryHelper buildCacheEntryHelper() {
@@ -805,26 +839,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean canUseReferenceCacheEntries() {
-		// todo : should really validate that the cache access type is read-only
-
-		if ( ! factory.getSettings().isDirectReferenceCacheEntriesEnabled() ) {
-			return false;
-		}
-
-		// for now, limit this to just entities that:
-		// 		1) are immutable
-		if ( entityMetamodel.isMutable() ) {
-			return false;
-		}
-
-		//		2)  have no associations.  Eventually we want to be a little more lenient with associations.
-		for ( Type type : getSubclassPropertyTypeClosure() ) {
-			if ( type.isAssociationType() ) {
-				return false;
-			}
-		}
-
-		return true;
+		return useReferenceCacheEntries;
 	}
 
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
@@ -4815,8 +4830,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
-		// todo : in ORM terms this should check #isMutable() and return an appropriate one.
-		return DefaultEntityEntryFactory.INSTANCE;
+		return this.entityEntryFactory;
 	}
 
 	/**

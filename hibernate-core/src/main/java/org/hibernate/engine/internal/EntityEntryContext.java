@@ -23,17 +23,20 @@
  */
 package org.hibernate.engine.internal;
 
+import org.hibernate.LockMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.jboss.logging.Logger;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
-
-import org.hibernate.LockMode;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.ManagedEntity;
-
-import org.jboss.logging.Logger;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this
@@ -239,7 +242,10 @@ public class EntityEntryContext {
 
 		// finally clean out the ManagedEntity and return the associated EntityEntry
 		final EntityEntry theEntityEntry = managedEntity.$$_hibernate_getEntityEntry();
-		managedEntity.$$_hibernate_setEntityEntry( null );
+		// need to think about implications for memory leaks here if we don't removed reference to EntityEntry
+		if( canClearEntityEntryReference(managedEntity) ){
+			managedEntity.$$_hibernate_setEntityEntry( null );
+		}
 		return theEntityEntry;
 	}
 
@@ -278,7 +284,10 @@ public class EntityEntryContext {
 		while ( node != null ) {
 			final ManagedEntity nextNode = node.$$_hibernate_getNextManagedEntity();
 
-			node.$$_hibernate_setEntityEntry( null );
+			if( canClearEntityEntryReference(node) ){
+				node.$$_hibernate_setEntityEntry( null );
+			}
+
 			node.$$_hibernate_setPreviousManagedEntity( null );
 			node.$$_hibernate_setNextManagedEntity( null );
 
@@ -331,6 +340,9 @@ public class EntityEntryContext {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
 			oos.writeBoolean( managedEntity == managedEntity.$$_hibernate_getEntityInstance() );
 			oos.writeObject( managedEntity.$$_hibernate_getEntityInstance() );
+			// we need to know which implementation of EntityEntry is being serialized
+			oos.writeInt( managedEntity.$$_hibernate_getEntityEntry().getClass().getName().length() );
+			oos.writeChars( managedEntity.$$_hibernate_getEntityEntry().getClass().getName() );
 			managedEntity.$$_hibernate_getEntityEntry().serialize( oos );
 
 			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
@@ -366,7 +378,16 @@ public class EntityEntryContext {
 		for ( int i = 0; i < count; i++ ) {
 			final boolean isEnhanced = ois.readBoolean();
 			final Object entity = ois.readObject();
-			final EntityEntry entry = MutableEntityEntry.deserialize(ois, rtn);
+
+			//Call deserialize method dynamically via reflection
+			final int numChars = ois.readInt();
+			final char[] entityEntryClassNameArr = new char[numChars];
+			for ( int j = 0; j < numChars; j++ ) {
+				entityEntryClassNameArr[j] = ois.readChar();
+			}
+
+			final EntityEntry entry = deserializeEntityEntry( entityEntryClassNameArr, ois, rtn );
+
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
 				managedEntity = (ManagedEntity) entity;
@@ -396,10 +417,53 @@ public class EntityEntryContext {
 		return context;
 	}
 
+	private static EntityEntry deserializeEntityEntry(char[] entityEntryClassNameArr, ObjectInputStream ois, StatefulPersistenceContext rtn){
+		EntityEntry entry = null;
+
+		final String entityEntryClassName = new String( entityEntryClassNameArr );
+		final Class entityEntryClass =   rtn.getSession().getFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityEntryClassName );
+
+		try {
+			final Method deserializeMethod = entityEntryClass.getDeclaredMethod( "deserialize", ObjectInputStream.class,	PersistenceContext.class );
+			entry = (EntityEntry) deserializeMethod.invoke( null, ois, rtn );
+		}
+		catch (NoSuchMethodException e) {
+			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
+		}
+		catch (InvocationTargetException e) {
+			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
+		}
+		catch (IllegalAccessException e) {
+			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
+		}
+
+		return entry;
+
+	}
+
 	public int getNumberOfManagedEntities() {
 		return count;
 	}
 
+	/*
+	Check instance type of EntityEntry and if type is ImmutableEntityEntry, check to see if entity is referenced cached in the second level cache
+	 */
+	private boolean canClearEntityEntryReference(ManagedEntity managedEntity){
+
+		if( managedEntity.$$_hibernate_getEntityEntry() == null ) {
+			return true;
+		}
+
+		if( !(managedEntity.$$_hibernate_getEntityEntry() instanceof ImmutableEntityEntry) ) {
+			return true;
+		}
+		else if( managedEntity.$$_hibernate_getEntityEntry().getPersister().canUseReferenceCacheEntries() ) {
+			return false;
+		}
+
+		return true;
+
+	}
 	/**
 	 * The wrapper for entity classes which do not implement ManagedEntity
 	 */

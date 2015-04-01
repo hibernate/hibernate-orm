@@ -40,13 +40,13 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Emmanuel Bernard
  */
-public class DefaultEntityEntryFactory implements EntityEntryFactory {
+public class MutableEntityEntryFactory implements EntityEntryFactory {
 	/**
 	 * Singleton access
 	 */
-	public static final DefaultEntityEntryFactory INSTANCE = new DefaultEntityEntryFactory();
+	public static final MutableEntityEntryFactory INSTANCE = new MutableEntityEntryFactory();
 
-	private DefaultEntityEntryFactory() {
+	private MutableEntityEntryFactory() {
 	}
 
 	@Override

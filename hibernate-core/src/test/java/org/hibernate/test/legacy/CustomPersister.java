@@ -19,7 +19,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.internal.DefaultEntityEntryFactory;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
@@ -77,7 +77,7 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
-		return DefaultEntityEntryFactory.INSTANCE;
+		return MutableEntityEntryFactory.INSTANCE;
 	}
 
 	@Override

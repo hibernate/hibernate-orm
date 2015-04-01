@@ -46,7 +46,7 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.engine.internal.DefaultEntityEntryFactory;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.EntityEntry;
@@ -226,7 +226,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
     }
 
     static EntityEntry makeEntityEntry() {
-        return DefaultEntityEntryFactory.INSTANCE.createEntityEntry(
+        return MutableEntityEntryFactory.INSTANCE.createEntityEntry(
                 Status.MANAGED,
                 null,
                 null,

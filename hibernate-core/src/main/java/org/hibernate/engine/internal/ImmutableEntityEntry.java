@@ -25,6 +25,7 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
+import org.hibernate.UnsupportedLockAttemptException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -46,14 +47,40 @@ import java.io.Serializable;
  * @author Gunnar Morling
  * @author Sanne Grinovero  <sanne@hibernate.org>
  */
-public final class MutableEntityEntry extends AbstractEntityEntry {
+public final class ImmutableEntityEntry extends AbstractEntityEntry {
+
+	/**
+	 * Holds several boolean and enum typed attributes in a very compact manner. Enum values are stored in 4 bits
+	 * (where 0 represents {@code null}, and each enum value is represented by its ordinal value + 1), thus allowing
+	 * for up to 15 values per enum. Boolean values are stored in one bit.
+	 * <p>
+	 * The value is structured as follows:
+	 *
+	 * <pre>
+	 * 1 - Lock mode
+	 * 2 - Status
+	 * 3 - Previous Status
+	 * 4 - existsInDatabase
+	 * 5 - isBeingReplicated
+	 * 6 - loadedWithLazyPropertiesUnfetched; NOTE: this is not updated when properties are fetched lazily!
+	 *
+	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
+	 * </pre>
+	 * Use {@link #setCompressedValue(org.hibernate.engine.internal.ImmutableEntityEntry.EnumState, Enum)},
+	 * {@link #getCompressedValue(org.hibernate.engine.internal.ImmutableEntityEntry.EnumState, Class)} etc
+	 * to access the enums and booleans stored in this value.
+	 * <p>
+	 * Representing enum values by their ordinal value is acceptable for our case as this value itself is never
+	 * serialized or deserialized and thus is not affected should ordinal values change.
+	 */
+	private transient int compressedState;
 
 	/**
 	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
 	 * Use the other constructor!
 	 */
 	@Deprecated
-	public MutableEntityEntry(
+	public ImmutableEntityEntry(
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
@@ -71,7 +98,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 				persister,disableVersionIncrement, lazyPropertiesAreUnfetched, persistenceContext );
 	}
 
-	public MutableEntityEntry(
+	public ImmutableEntityEntry(
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
@@ -92,7 +119,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 	 * This for is used during custom deserialization handling
 	 */
 	@SuppressWarnings( {"JavaDoc"})
-	private MutableEntityEntry(
+	private ImmutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
 			final Serializable id,
@@ -112,6 +139,17 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 				persistenceContext );
 	}
 
+	@Override
+	public void setLockMode(LockMode lockMode) {
+
+		switch(lockMode) {
+			case NONE : case READ:
+				setCompressedValue( EnumState.LOCK_MODE, lockMode );
+				break;
+			default:
+				throw new UnsupportedLockAttemptException("Lock mode not supported");
+		}
+	}
 
 	/**
 	 * Custom deserialization routine used during deserialization of a
@@ -130,7 +168,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			ObjectInputStream ois,
 			PersistenceContext persistenceContext) throws IOException, ClassNotFoundException {
 		String previousStatusString;
-		return new MutableEntityEntry(
+		return new ImmutableEntityEntry(
 				persistenceContext.getSession().getFactory(),
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),
@@ -148,4 +186,9 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 				persistenceContext
 		);
 	}
+
+	public PersistenceContext getPersistenceContext(){
+		return persistenceContext;
+	}
+
 }

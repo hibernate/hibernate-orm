@@ -38,7 +38,7 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.engine.internal.DefaultEntityEntryFactory;
+import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -149,7 +149,7 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public EntityEntryFactory getEntityEntryFactory() {
-			return DefaultEntityEntryFactory.INSTANCE;
+			return MutableEntityEntryFactory.INSTANCE;
 		}
 
 		@Override

@@ -10,7 +10,7 @@
 		<id name="name"/>
         <property name="ssn" unique="true"/>
 		<list name="children" cascade="persist,merge">
-			<key column="parentName" not-null="true"/>
+			<key column="parentSsn" not-null="true" property-ref="ssn"/>
 			<list-index column="sibling"/>
 			<one-to-many class="Child"/>
 		</list>

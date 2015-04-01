@@ -30,31 +30,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ClassLoaderHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of the service for interacting with class loaders
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public class ClassLoaderServiceImpl implements ClassLoaderService {
-	private static final Logger log = CoreLogging.logger( ClassLoaderServiceImpl.class );
 
-	private final Map<Class, ServiceLoader> serviceLoaders = new HashMap<Class, ServiceLoader>();
-	private AggregatedClassLoader aggregatedClassLoader;
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
+
+	private final ConcurrentMap<Class, ServiceLoader> serviceLoaders = new ConcurrentHashMap<Class, ServiceLoader>();
+	private volatile AggregatedClassLoader aggregatedClassLoader;
 
 	/**
 	 * Constructs a ClassLoaderServiceImpl with standard set-up
@@ -172,7 +174,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	private static class AggregatedClassLoader extends ClassLoader {
-		private ClassLoader[] individualClassLoaders;
+		private final ClassLoader[] individualClassLoaders;
 
 		private AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet) {
 			super( null );
@@ -229,16 +231,13 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			throw new ClassNotFoundException( "Could not load requested class : " + name );
 		}
 
-		public void destroy() {
-			individualClassLoaders = null;
-		}
 	}
 
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <T> Class<T> classForName(String className) {
 		try {
-			return (Class<T>) Class.forName( className, true, aggregatedClassLoader );
+			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
 		}
 		catch (Exception e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
@@ -255,7 +254,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		try {
-			return aggregatedClassLoader.getResource( name );
+			return getAggregatedClassLoader().getResource( name );
 		}
 		catch (Exception ignore) {
 		}
@@ -275,7 +274,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		try {
 			log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
-			final InputStream stream = aggregatedClassLoader.getResourceAsStream( name );
+			final InputStream stream = getAggregatedClassLoader().getResourceAsStream( name );
 			if ( stream != null ) {
 				return stream;
 			}
@@ -295,7 +294,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 			try {
 				log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
-				final InputStream stream = aggregatedClassLoader.getResourceAsStream( stripped );
+				final InputStream stream = getAggregatedClassLoader().getResourceAsStream( stripped );
 				if ( stream != null ) {
 					return stream;
 				}
@@ -311,7 +310,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public List<URL> locateResources(String name) {
 		final ArrayList<URL> urls = new ArrayList<URL>();
 		try {
-			final Enumeration<URL> urlEnumeration = aggregatedClassLoader.getResources( name );
+			final Enumeration<URL> urlEnumeration = getAggregatedClassLoader().getResources( name );
 			if ( urlEnumeration != null && urlEnumeration.hasMoreElements() ) {
 				while ( urlEnumeration.hasMoreElements() ) {
 					urls.add( urlEnumeration.nextElement() );
@@ -326,21 +325,26 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract) {
-		ServiceLoader<S> serviceLoader;
-		if ( serviceLoaders.containsKey( serviceContract ) ) {
-			serviceLoader = serviceLoaders.get( serviceContract );
-		}
-		else {
-			serviceLoader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
+	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
+		ServiceLoader<S> serviceLoader = serviceLoaders.get( serviceContract );
+		if ( serviceLoader == null ) {
+			serviceLoader = ServiceLoader.load( serviceContract, getAggregatedClassLoader() );
 			serviceLoaders.put( serviceContract, serviceLoader );
 		}
-
 		final LinkedHashSet<S> services = new LinkedHashSet<S>();
 		for ( S service : serviceLoader ) {
 			services.add( service );
 		}
 		return services;
+	}
+
+
+	private ClassLoader getAggregatedClassLoader() {
+		final ClassLoader aggregated = this.aggregatedClassLoader;
+		if ( aggregated == null ) {
+			throw log.usingStoppedClassLoaderService();
+		}
+		return aggregated;
 	}
 
 	@Override
@@ -349,11 +353,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			serviceLoader.reload(); // clear service loader providers
 		}
 		serviceLoaders.clear();
-
-		if ( aggregatedClassLoader != null ) {
-			aggregatedClassLoader.destroy();
-			aggregatedClassLoader = null;
-		}
+		//Avoid ClassLoader leaks
+		this.aggregatedClassLoader = null;
 	}
 
 }

@@ -25,7 +25,7 @@ package org.hibernate.boot.registry.classloading.spi;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.service.Service;
@@ -87,5 +87,5 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 *     
 	 * @return The ordered set of discovered services.
 	 */
-	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract);
+	public <S> Collection<S> loadJavaServices(Class<S> serviceContract);
 }

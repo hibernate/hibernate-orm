@@ -1700,4 +1700,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to interpret type [%s] as an AttributeConverter due to an exception : %s", id = 468)
 	void logBadHbmAttributeConverterType(String type, String exceptionMessage);
 
+	@Message(value = "The ClassLoaderService can not be reused. This instance was stopped already.", id = 469)
+	HibernateException usingStoppedClassLoaderService();
 }

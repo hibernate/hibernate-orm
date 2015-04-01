@@ -27,7 +27,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -316,7 +315,7 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	private void applyServiceContributors() {
-		final LinkedHashSet<ServiceContributor> serviceContributors =
+		final Iterable<ServiceContributor> serviceContributors =
 				bootstrapServiceRegistry.getService( ClassLoaderService.class )
 						.loadJavaServices( ServiceContributor.class );
 

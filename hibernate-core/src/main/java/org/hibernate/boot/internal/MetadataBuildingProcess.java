@@ -299,8 +299,8 @@ public class MetadataBuildingProcess {
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
-		LinkedHashSet<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
-		if ( producers != null && !producers.isEmpty() ) {
+		Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+		if ( producers != null ) {
 			final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 //			final MappingBinder mappingBinder = new MappingBinder( true );
 			// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML

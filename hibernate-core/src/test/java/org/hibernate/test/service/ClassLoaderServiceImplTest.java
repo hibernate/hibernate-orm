@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.LinkedHashSet;
 import javax.persistence.Entity;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
@@ -15,13 +15,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 /**
@@ -76,20 +74,24 @@ public class ClassLoaderServiceImplTest {
     	
     	StandardServiceRegistryBuilder.destroy( serviceRegistry );
     	
-    	// Should return null -- aggregratedClassLoader blown away.
-    	testIntegrator2 = findTestIntegrator( classLoaderService );
-    	assertNull( testIntegrator2 );
-    }
-    
-    private TestIntegrator findTestIntegrator(ClassLoaderService classLoaderService) {
-    	final LinkedHashSet<Integrator> integrators = classLoaderService.loadJavaServices( Integrator.class );
-    	for (Integrator integrator : integrators) {
-    		if (integrator instanceof TestIntegrator) {
-    			return (TestIntegrator) integrator;
-    		}
+    	try {
+    		findTestIntegrator( classLoaderService );
+    		Assert.fail("Should have thrown an HibernateException -- the ClassLoaderService instance was closed.");
     	}
-    	return null;
+    	catch (HibernateException e) {
+    		String message = e.getMessage();
+    		Assert.assertEquals( "HHH000469: The ClassLoaderService can not be reused. This instance was stopped already.", message);
+    	}
     }
+
+	private TestIntegrator findTestIntegrator(ClassLoaderService classLoaderService) {
+		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
+			if ( integrator instanceof TestIntegrator ) {
+				return (TestIntegrator) integrator;
+			}
+		}
+		return null;
+	}
 
     private static class TestClassLoader extends ClassLoader {
     	

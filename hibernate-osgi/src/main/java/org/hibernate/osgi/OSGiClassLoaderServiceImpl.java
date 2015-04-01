@@ -20,7 +20,6 @@
  */
 package org.hibernate.osgi;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
@@ -45,10 +44,16 @@ public class OSGiClassLoaderServiceImpl extends ClassLoaderServiceImpl implement
 
 	@Override
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract) {
-		LinkedHashSet<S> parentDiscoveredServices = super.loadJavaServices( serviceContract );
+		Iterable<S> parentDiscoveredServices = super.loadJavaServices( serviceContract );
 		S[] serviceImpls = osgiServiceUtil.getServiceImpls(serviceContract);
-		Collections.addAll( parentDiscoveredServices, serviceImpls );
-		return parentDiscoveredServices;
+		LinkedHashSet<S> composite = new LinkedHashSet<S>();
+		for ( S service : parentDiscoveredServices ) {
+			composite.add( service );
+		}
+		for ( S service : serviceImpls ) {
+			composite.add( service );
+		}
+		return composite;
 	}
 
 	@Override

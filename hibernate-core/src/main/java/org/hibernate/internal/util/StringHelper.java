@@ -91,6 +91,10 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
+	public static String join(String separator, Iterable objects) {
+		return join( separator, objects.iterator() );
+	}
+
 	public static String[] add(String[] x, String sep, String[] y) {
 		final String[] result = new String[x.length];
 		for ( int i = 0; i < x.length; i++ ) {

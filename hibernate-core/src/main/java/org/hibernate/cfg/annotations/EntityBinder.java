@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javax.persistence.Access;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -783,10 +784,44 @@ public class EntityBinder {
 	}
 
 	private void setFKNameIfDefined(Join join) {
+		// just awful..
+
 		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
 		if ( matchingTable != null && !BinderHelper.isEmptyAnnotationValue( matchingTable.foreignKey().name() ) ) {
 			( (SimpleValue) join.getKey() ).setForeignKeyName( matchingTable.foreignKey().name() );
 		}
+		else {
+			javax.persistence.SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
+			if ( jpaSecondaryTable != null ) {
+				if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					( (SimpleValue) join.getKey() ).setForeignKeyName( "none" );
+				}
+				else {
+					( (SimpleValue) join.getKey() ).setForeignKeyName( StringHelper.nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
+				}
+			}
+		}
+	}
+
+	private SecondaryTable findMatchingSecondaryTable(Join join) {
+		final String nameToMatch = join.getTable().getQuotedName();
+
+		SecondaryTable secondaryTable = annotatedClass.getAnnotation( SecondaryTable.class );
+		if ( secondaryTable != null && nameToMatch.equals( secondaryTable.name() ) ) {
+			return secondaryTable;
+		}
+
+		SecondaryTables secondaryTables = annotatedClass.getAnnotation( SecondaryTables.class );
+		if ( secondaryTables != null ) {
+			for ( SecondaryTable secondaryTable2 : secondaryTables.value() ) {
+				if ( secondaryTable != null && nameToMatch.equals( secondaryTable.name() ) ) {
+					return secondaryTable;
+				}
+			}
+
+		}
+
+		return null;
 	}
 
 	private org.hibernate.annotations.Table findMatchingComplimentTableAnnotation(Join join) {
@@ -986,6 +1021,7 @@ public class EntityBinder {
 			secondaryTables.put( table.getQuotedName(), join );
 			secondaryTableJoins.put( table.getQuotedName(), joinColumns );
 		}
+
 		return join;
 	}
 

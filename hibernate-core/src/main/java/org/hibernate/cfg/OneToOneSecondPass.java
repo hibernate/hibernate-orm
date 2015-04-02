@@ -26,6 +26,8 @@ package org.hibernate.cfg;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.persistence.ConstraintMode;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ForeignKey;
@@ -261,9 +263,22 @@ public class OneToOneSecondPass implements SecondPass {
 				);
 			}
 		}
-		ForeignKey fk = inferredData.getProperty().getAnnotation( ForeignKey.class );
-		String fkName = fk != null ? fk.name() : "";
-		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) value.setForeignKeyName( fkName );
+
+		final ForeignKey fk = inferredData.getProperty().getAnnotation( ForeignKey.class );
+		if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
+			value.setForeignKeyName( fk.name() );
+		}
+		else {
+			final javax.persistence.ForeignKey jpaFk = inferredData.getProperty().getAnnotation( javax.persistence.ForeignKey.class );
+			if ( jpaFk != null ) {
+				if ( jpaFk.value() == ConstraintMode.NO_CONSTRAINT ) {
+					value.setForeignKeyName( "none" );
+				}
+				else {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( jpaFk.name() ) );
+				}
+			}
+		}
 	}
 
 	/**

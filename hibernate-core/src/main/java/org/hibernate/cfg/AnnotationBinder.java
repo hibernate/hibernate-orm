@@ -40,6 +40,7 @@ import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
@@ -2903,17 +2904,20 @@ public final class AnnotationBinder {
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
-		
-		String fkName = null;
-		if ( joinColumn != null && joinColumn.foreignKey() != null ) {
-			fkName = joinColumn.foreignKey().name();
+
+		if ( joinColumn != null
+				&& joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+			// not ideal...
+			value.setForeignKeyName( "none" );
 		}
-		if ( StringHelper.isEmpty( fkName ) ) {
-			ForeignKey fk = property.getAnnotation( ForeignKey.class );
-			fkName = fk != null ? fk.name() : "";
-		}
-		if ( !StringHelper.isEmpty( fkName ) ) {
-			value.setForeignKeyName( fkName );
+		else {
+			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
+			if ( fk != null && StringHelper.isEmpty( fk.name() ) ) {
+				value.setForeignKeyName( fk.name() );
+			}
+			else if ( joinColumn != null ) {
+				value.setForeignKeyName( joinColumn.foreignKey().name() );
+			}
 		}
 
 		String path = propertyHolder.getPath() + "." + propertyName;

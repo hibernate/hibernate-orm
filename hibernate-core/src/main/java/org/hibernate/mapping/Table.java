@@ -39,6 +39,8 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -62,7 +64,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map foreignKeys = new LinkedHashMap();
+	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<ForeignKeyKey, ForeignKey>();
 	private Map<String, Index> indexes = new LinkedHashMap<String, Index>();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 	private int uniqueInteger;
@@ -275,6 +277,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	public Iterator getForeignKeyIterator() {
 		return foreignKeys.values().iterator();
+	}
+
+	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
+		return Collections.unmodifiableMap( foreignKeys );
 	}
 
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
@@ -693,9 +699,9 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			List keyColumns,
 			String referencedEntityName,
 			List referencedColumns) {
-		Object key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
+		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
-		ForeignKey fk = (ForeignKey) foreignKeys.get( key );
+		ForeignKey fk = foreignKeys.get( key );
 		if ( fk == null ) {
 			fk = new ForeignKey();
 			fk.setTable( this );
@@ -848,7 +854,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 
-	static class ForeignKeyKey implements Serializable {
+	public static class ForeignKeyKey implements Serializable {
 		String referencedClassName;
 		List columns;
 		List referencedColumns;
@@ -875,6 +881,15 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			return fkk.columns.equals( columns ) &&
 					fkk.referencedClassName.equals( referencedClassName ) && fkk.referencedColumns
 					.equals( referencedColumns );
+		}
+
+		@Override
+		public String toString() {
+			return "ForeignKeyKey{" +
+					"columns=" + StringHelper.join( ",", columns ) +
+					", referencedClassName='" + referencedClassName + '\'' +
+					", referencedColumns=" + StringHelper.join( ",", referencedColumns ) +
+					'}';
 		}
 	}
 

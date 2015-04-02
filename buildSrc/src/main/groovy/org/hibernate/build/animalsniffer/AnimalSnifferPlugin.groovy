@@ -40,8 +40,8 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 
 	@Override
 	void apply(Project project) {
-		project.configurations.maybeCreate( "signature" )
-		final AnimalSnifferExtension extension = project.extensions.create( "animalsniffer", AnimalSnifferExtension )
+		project.configurations.maybeCreate( "animalSnifferSignature" )
+		final AnimalSnifferExtension extension = project.extensions.create( "animalSniffer", AnimalSnifferExtension )
 
 		project.tasks.findByName( JavaPlugin.CLASSES_TASK_NAME ).doLast(
 				new Action<Task>() {
@@ -52,8 +52,9 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 						}
 
 						def logger = new GradleLogger( logger )
-						def signatures = project.configurations.signature.resolvedConfiguration.resolvedArtifacts*.file
+						def signatures = project.configurations.animalSnifferSignature.resolvedConfiguration.resolvedArtifacts*.file
 						signatures.each {
+							task.logger.lifecycle( "Starting AnimalSniffer checks against [${it.name}]" )
 							SignatureChecker signatureChecker = new SignatureChecker(
 									it.newInputStream(),
 									Collections.emptySet(),

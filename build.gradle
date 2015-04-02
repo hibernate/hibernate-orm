@@ -147,7 +147,7 @@ subprojects { subProject ->
 		configurations {
 			all*.exclude group: 'xml-apis', module: 'xml-apis'
 		}
-		animalSniffer
+		animalSnifferSignature
 		javaApiSignature
 	}
 
@@ -175,6 +175,7 @@ subprojects { subProject ->
 		jaxb( libraries.jaxb2_jaxb )
 		jaxb( libraries.jaxb2_jaxb_xjc )
 
+		animalSnifferSignature( libraries.java16_signature )
 		javaApiSignature ( libraries.java16_signature )
 	}
 
@@ -338,8 +339,9 @@ subprojects { subProject ->
 
 	if ( subProject.name != 'hibernate-java8' ) {
 		apply plugin: org.hibernate.build.animalsniffer.AnimalSnifferPlugin
-		animalsniffer {
-			signature = "org.codehaus.mojo.signature:java16:+@signature"
+
+		animalSniffer {
+			skip = true;
 		}
 	}
 

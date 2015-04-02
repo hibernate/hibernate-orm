@@ -2912,11 +2912,11 @@ public final class AnnotationBinder {
 		}
 		else {
 			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
-			if ( fk != null && StringHelper.isEmpty( fk.name() ) ) {
+			if ( fk != null && StringHelper.isNotEmpty( fk.name() ) ) {
 				value.setForeignKeyName( fk.name() );
 			}
 			else if ( joinColumn != null ) {
-				value.setForeignKeyName( joinColumn.foreignKey().name() );
+				value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );
 			}
 		}
 

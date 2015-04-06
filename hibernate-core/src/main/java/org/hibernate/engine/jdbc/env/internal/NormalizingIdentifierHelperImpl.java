@@ -183,10 +183,10 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 
-		if ( jdbcEnvironment.getCurrentCatalog() == null
-				|| catalogName.equals( jdbcEnvironment.getCurrentCatalog().getText() ) ) {
-			return null;
-		}
+//		if ( jdbcEnvironment.getCurrentCatalog() == null
+//				|| catalogName.equals( jdbcEnvironment.getCurrentCatalog().getText() ) ) {
+//			return null;
+//		}
 
 		return toIdentifierFromMetaData( catalogName );
 	}
@@ -227,10 +227,10 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 
-		if ( jdbcEnvironment.getCurrentSchema() == null
-				|| schemaName.equals( jdbcEnvironment.getCurrentSchema().getText() ) ) {
-			return null;
-		}
+//		if ( jdbcEnvironment.getCurrentSchema() == null
+//				|| schemaName.equals( jdbcEnvironment.getCurrentSchema().getText() ) ) {
+//			return null;
+//		}
 
 		return toIdentifier( schemaName );
 	}

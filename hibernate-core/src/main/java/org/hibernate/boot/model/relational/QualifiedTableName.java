@@ -28,7 +28,7 @@ import org.hibernate.boot.model.naming.Identifier;
 /**
  * @author Steve Ebersole
  */
-public class QualifiedTableName extends AbstractQualifiedName {
+public class QualifiedTableName extends QualifiedNameImpl {
 	public QualifiedTableName(Identifier catalogName, Identifier schemaName, Identifier tableName) {
 		super( catalogName, schemaName, tableName );
 	}

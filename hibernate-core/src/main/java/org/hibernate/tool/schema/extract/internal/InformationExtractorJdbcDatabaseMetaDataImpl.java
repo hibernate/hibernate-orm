@@ -141,7 +141,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 //		}
 
 		if ( identifierToUse == null ) {
-			return SANS_CATALOG_FILTER;
+			return ALL_CATALOGS_FILTER;
+//			return SANS_CATALOG_FILTER;
 		}
 
 		return determineAppropriateCapitalization( identifierToUse );
@@ -157,7 +158,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 //		}
 
 		if ( identifierToUse == null ) {
-			return SANS_SCHEMA_FILTER;
+			return ALL_SCHEMAS_FILTER;
+//			return SANS_SCHEMA_FILTER;
 		}
 
 		return determineAppropriateCapitalization( identifierToUse );
@@ -196,19 +198,13 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	public TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
 		final Identifier catalogIdentifier = identifierHelper().fromMetaDataCatalogName(
-				resultSet.getString(
-						"TABLE_CAT"
-				)
+				resultSet.getString( "TABLE_CAT" )
 		);
 		final Identifier schemaIdentifier = identifierHelper().fromMetaDataSchemaName(
-				resultSet.getString(
-						"TABLE_SCHEM"
-				)
+				resultSet.getString( "TABLE_SCHEM" )
 		);
 		final Identifier tableIdentifier = identifierHelper().fromMetaDataObjectName(
-				resultSet.getString(
-						"TABLE_NAME"
-				)
+				resultSet.getString( "TABLE_NAME" )
 		);
 		final QualifiedTableName tableName = new QualifiedTableName(
 				new Schema.Name( catalogIdentifier, schemaIdentifier ),

@@ -26,6 +26,7 @@ package org.hibernate.tool.schema.internal;
 import java.util.Iterator;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
@@ -53,7 +54,14 @@ public class StandardIndexExporter implements Exporter<Index> {
 
 		final String indexNameForCreation;
 		if ( dialect.qualifyIndexName() ) {
-			indexNameForCreation = StringHelper.qualify( tableName, index.getName() );
+			indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+					new QualifiedNameImpl(
+							index.getTable().getQualifiedTableName().getCatalogName(),
+							index.getTable().getQualifiedTableName().getSchemaName(),
+							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getName() )
+					),
+					jdbcEnvironment.getDialect()
+			);
 		}
 		else {
 			indexNameForCreation = index.getName();

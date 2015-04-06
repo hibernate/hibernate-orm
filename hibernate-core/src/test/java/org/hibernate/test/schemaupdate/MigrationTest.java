@@ -23,13 +23,21 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
+
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.hbm2ddl.Target;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -130,5 +138,33 @@ public class MigrationTest extends BaseUnitTestCase {
 //		new SchemaExport( serviceRegistry, v3cfg ).drop( false, true );
 //	}
 
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9713" )
+	public void testIndexCreationViaSchemaUpdate() {
+		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addAnnotatedClass( EntityWithIndex.class )
+				.buildMetadata();
+
+		// export the schema
+		new SchemaExport( metadata ).execute( Target.EXPORT, SchemaExport.Type.CREATE );
+
+		try {
+			// update the schema
+			new SchemaUpdate( metadata ).execute( Target.EXPORT );
+		}
+		finally {
+			// drop the schema
+			new SchemaExport( metadata ).execute( Target.EXPORT, SchemaExport.Type.DROP );
+		}
+	}
+
+	@Entity( name = "EntityWithIndex" )
+	@Table( name = "T_Entity_With_Index",indexes = @Index( columnList = "name" ) )
+	public static class EntityWithIndex {
+		@Id
+		public Integer id;
+		public String name;
+	}
 }
 

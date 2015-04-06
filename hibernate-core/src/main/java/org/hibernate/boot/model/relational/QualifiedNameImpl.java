@@ -28,8 +28,8 @@ import org.hibernate.boot.model.naming.Identifier;
 /**
  * @author Steve Ebersole
  */
-public class AbstractQualifiedName extends QualifiedNameParser.NameParts implements QualifiedName {
-	public AbstractQualifiedName(Schema.Name schemaName, Identifier objectName) {
+public class QualifiedNameImpl extends QualifiedNameParser.NameParts implements QualifiedName {
+	public QualifiedNameImpl(Schema.Name schemaName, Identifier objectName) {
 		this(
 				schemaName.getCatalog(),
 				schemaName.getSchema(),
@@ -37,7 +37,7 @@ public class AbstractQualifiedName extends QualifiedNameParser.NameParts impleme
 		);
 	}
 
-	public AbstractQualifiedName(Identifier catalogName, Identifier schemaName, Identifier objectName) {
+	public QualifiedNameImpl(Identifier catalogName, Identifier schemaName, Identifier objectName) {
 		super( catalogName, schemaName, objectName );
 	}
 }

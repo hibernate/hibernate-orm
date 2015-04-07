@@ -138,7 +138,8 @@ task jaxb {
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
                 binding: 'src/main/xjb/hbm-configuration-bindings.xjb',
-                schema: cfgXsd.path
+                schema: cfgXsd.path,
+                target: '2.0'
         )
 
 		// hibernate-mapping
@@ -146,7 +147,8 @@ task jaxb {
 				destdir: '${jaxbTargetDir}',
 				binding: 'src/main/xjb/hbm-mapping-bindings.xjb',
 				schema: hbmXsd.path,
-				extension: 'true'
+				extension: 'true',
+				target: '2.0'
 		) {
 			arg line:     '-Xinheritance -Xsimplify'
 		}

@@ -58,7 +58,8 @@ task jaxb {
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
                 package: 'org.hibernate.jpamodelgen.xml.jaxb',
-                extension: 'true'
+                extension: 'true',
+                target: '2.0'
         ) {
             schema  ( dir: xsdDir.path, includes: "*.xsd" )
         }

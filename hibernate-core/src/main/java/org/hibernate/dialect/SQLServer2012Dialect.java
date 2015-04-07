@@ -23,9 +23,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.NullPrecedence;
-
-
 /**
  * Microsoft SQL Server 2012 Dialect
  *
@@ -66,10 +63,5 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select name from sys.sequences";
-	}
-
-	@Override
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		return renderOrderByElementDefaultBehavior( expression, collation, order, nulls );
 	}
 }

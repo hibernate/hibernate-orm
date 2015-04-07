@@ -93,13 +93,15 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		for ( Schema schema : database.getSchemas() ) {
 			if ( createSchemas ) {
 				if ( schema.getName().getSchema() != null ) {
-					applySqlString(
-							database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
-									schema.getName().getSchema().render( database.getJdbcEnvironment().getDialect() )
-							),
-							targets,
-							false
-					);
+					if ( !existingDatabase.schemaExists( schema.getName() ) ) {
+						applySqlString(
+								database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
+										schema.getName().getSchema().render( database.getJdbcEnvironment().getDialect() )
+								),
+								targets,
+								false
+						);
+					}
 				}
 			}
 

@@ -51,6 +51,7 @@ import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -2802,5 +2803,14 @@ public abstract class Dialect implements ConversionContext {
 	public CallableStatementSupport getCallableStatementSupport() {
 		// most databases do not support returning cursors (ref_cursor)...
 		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
+	}
+
+	/**
+	 * By default interpret this based on DatabaseMetaData.
+	 *
+	 * @return
+	 */
+	public NameQualifierSupport getNameQualifierSupport() {
+		return null;
 	}
 }

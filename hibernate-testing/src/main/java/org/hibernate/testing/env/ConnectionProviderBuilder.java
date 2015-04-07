@@ -38,7 +38,8 @@ import org.hibernate.testing.DialectCheck;
  */
 public class ConnectionProviderBuilder implements DialectCheck {
 	public static final String DRIVER = "org.h2.Driver";
-	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MVCC=TRUE";
+//	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MVCC=TRUE";
+	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1";
 	public static final String USER = "sa";
 	public static final String PASS = "";
 

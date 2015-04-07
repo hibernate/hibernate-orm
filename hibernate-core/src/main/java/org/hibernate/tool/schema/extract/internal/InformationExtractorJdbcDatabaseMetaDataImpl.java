@@ -65,12 +65,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 public class InformationExtractorJdbcDatabaseMetaDataImpl implements InformationExtractor {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( InformationExtractorJdbcDatabaseMetaDataImpl.class );
 
-	public static final String ALL_CATALOGS_FILTER = null;
-	public static final String SANS_CATALOG_FILTER = "";
-
-	public static final String ALL_SCHEMAS_FILTER = null;
-	public static final String SANS_SCHEMA_FILTER = "";
-
 	private final String[] tableTypes;
 
 	private final ExtractionContext extractionContext;
@@ -94,6 +88,41 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	protected JDBCException convertSQLException(SQLException sqlException, String message) {
 		return extractionContext.getJdbcEnvironment().getSqlExceptionHelper().convert( sqlException, message );
+	}
+
+	@Override
+	public boolean schemaExists(Identifier catalog, Identifier schema) {
+		try {
+			final ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getSchemas(
+					determineCatalogFilter( catalog ),
+					determineSchemaFilter( schema )
+			);
+
+			try {
+				if ( !resultSet.next() ) {
+					return false;
+				}
+
+				if ( resultSet.next() ) {
+					log.debugf(
+							"Multiple schemas found with that name [%s.%s]",
+							catalog.getCanonicalName(),
+							schema.getCanonicalName()
+					);
+				}
+				return true;
+			}
+			finally {
+				try {
+					resultSet.close();
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+		catch (SQLException sqlException) {
+			throw convertSQLException( sqlException, "Unable to query DatabaseMetaData for existing schemas" );
+		}
 	}
 
 	@Override
@@ -136,16 +165,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		if ( identifierToUse == null ) {
 			identifierToUse = extractionContext.getDefaultCatalog();
 		}
-//		if ( identifierToUse == null ) {
-//			identifierToUse = extractionContext.getJdbcEnvironment().getCurrentCatalog();
-//		}
 
-		if ( identifierToUse == null ) {
-			return ALL_CATALOGS_FILTER;
-//			return SANS_CATALOG_FILTER;
-		}
-
-		return determineAppropriateCapitalization( identifierToUse );
+		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataCatalogName( identifierToUse );
 	}
 
 	private String determineSchemaFilter(Identifier schema) throws SQLException {
@@ -153,47 +174,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		if ( identifierToUse == null ) {
 			identifierToUse = extractionContext.getDefaultSchema();
 		}
-//		if ( identifierToUse == null ) {
-//			identifierToUse = extractionContext.getJdbcEnvironment().getCurrentSchema();
-//		}
 
-		if ( identifierToUse == null ) {
-			return ALL_SCHEMAS_FILTER;
-//			return SANS_SCHEMA_FILTER;
-		}
-
-		return determineAppropriateCapitalization( identifierToUse );
-	}
-
-	private String determineAppropriateCapitalization(Identifier identifierToUse) throws SQLException {
-		if ( identifierToUse.isQuoted() ) {
-			if ( extractionContext.getJdbcDatabaseMetaData().storesMixedCaseQuotedIdentifiers() ) {
-				return identifierToUse.getText();
-			}
-			else if ( extractionContext.getJdbcDatabaseMetaData().storesUpperCaseQuotedIdentifiers() ) {
-				return identifierToUse.getText().toUpperCase( Locale.ENGLISH );
-			}
-			else if ( extractionContext.getJdbcDatabaseMetaData().storesLowerCaseQuotedIdentifiers() ) {
-				return identifierToUse.getText().toLowerCase( Locale.ENGLISH );
-			}
-			else {
-				return identifierToUse.getText();
-			}
-		}
-		else {
-			if ( extractionContext.getJdbcDatabaseMetaData().storesMixedCaseIdentifiers() ) {
-				return identifierToUse.getText();
-			}
-			else if ( extractionContext.getJdbcDatabaseMetaData().storesUpperCaseIdentifiers() ) {
-				return identifierToUse.getText().toUpperCase( Locale.ENGLISH );
-			}
-			else if ( extractionContext.getJdbcDatabaseMetaData().storesLowerCaseIdentifiers() ) {
-				return identifierToUse.getText().toLowerCase( Locale.ENGLISH );
-			}
-			else {
-				return identifierToUse.getText();
-			}
-		}
+		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
 	}
 
 	public TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
@@ -227,7 +209,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getTables(
 					catalogFilter,
 					schemaFilter,
-					determineAppropriateCapitalization( tableName ),
+					extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataObjectName( tableName ),
 					tableTypes
 			);
 

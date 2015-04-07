@@ -40,6 +40,7 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -77,6 +78,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	public JdbcEnvironmentImpl(ServiceRegistryImplementor serviceRegistry, Dialect dialect) {
 		this.dialect = dialect;
 
+		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
+		if ( nameQualifierSupport == null ) {
+			// assume both catalogs and schemas are supported
+			nameQualifierSupport = NameQualifierSupport.BOTH;
+		}
+
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
@@ -90,10 +97,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		// a simple impl that works on H2
 		this.identifierHelper = new NormalizingIdentifierHelperImpl(
 				this,
+				nameQualifierSupport,
 				globallyQuoteIdentifiers,
 				true,	// storesMixedCaseQuotedIdentifiers
 				false,	// storesLowerCaseQuotedIdentifiers
 				false, 	// storesUpperCaseQuotedIdentifiers
+				false,  // storesMixedCaseIdentifiers
 				true,	// storesUpperCaseIdentifiers
 				false	// storesLowerCaseIdentifiers
 		);
@@ -108,7 +117,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 
 		// again, a simple impl that works on H2
-		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl();
+		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
 	}
@@ -127,6 +136,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				.apply( databaseMetaData )
 				.build();
 
+		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
+		if ( nameQualifierSupport == null ) {
+			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
+		}
+
 		for ( String keyword : dialect.getKeywords() ) {
 			reservedWords.add( keyword.toUpperCase() );
 		}
@@ -138,10 +152,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		// a simple impl that works on H2
 		this.identifierHelper = new NormalizingIdentifierHelperImpl(
 				this,
+				nameQualifierSupport,
 				globallyQuoteIdentifiers,
 				true,	// storesMixedCaseQuotedIdentifiers
 				false,	// storesLowerCaseQuotedIdentifiers
 				false, 	// storesUpperCaseQuotedIdentifiers
+				false,  // storesMixedCaseIdentifiers
 				true,	// storesUpperCaseIdentifiers
 				false	// storesLowerCaseIdentifiers
 		);
@@ -149,11 +165,41 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.currentCatalog = null;
 		this.currentSchema = null;
 
-		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( databaseMetaData );
+		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl(
+				nameQualifierSupport,
+				databaseMetaData
+		);
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
 	}
 
+	private NameQualifierSupport determineNameQualifierSupport(DatabaseMetaData databaseMetaData) throws SQLException {
+		final boolean supportsCatalogs = databaseMetaData.supportsCatalogsInTableDefinitions();
+		final boolean supportsSchemas = databaseMetaData.supportsSchemasInTableDefinitions();
+
+		if ( supportsCatalogs && supportsSchemas ) {
+			return NameQualifierSupport.BOTH;
+		}
+		else if ( supportsCatalogs ) {
+			return NameQualifierSupport.CATALOG;
+		}
+		else if ( supportsSchemas ) {
+			return NameQualifierSupport.SCHEMA;
+		}
+		else {
+			return NameQualifierSupport.NONE;
+		}
+	}
+
+	/**
+	 * The main constructor form.  Builds a JdbcEnvironment using the available DatabaseMetaData
+	 *
+	 * @param serviceRegistry The service registry
+	 * @param dialect The resolved dialect
+	 * @param databaseMetaData The available DatabaseMetaData
+	 *
+	 * @throws SQLException
+	 */
 	public JdbcEnvironmentImpl(
 			ServiceRegistryImplementor serviceRegistry,
 			Dialect dialect,
@@ -167,6 +213,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				.setConnectionSchemaName( determineCurrentSchemaName( databaseMetaData, serviceRegistry, dialect ) )
 				.build();
 
+		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
+		if ( nameQualifierSupport == null ) {
+			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
+		}
+
 		for ( String keyword : dialect.getKeywords() ) {
 			reservedWords.add( keyword.toUpperCase() );
 		}
@@ -178,10 +229,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		this.identifierHelper = new NormalizingIdentifierHelperImpl(
 				this,
+				nameQualifierSupport,
 				globallyQuoteIdentifiers,
 				databaseMetaData.storesMixedCaseQuotedIdentifiers(),
 				databaseMetaData.storesLowerCaseQuotedIdentifiers(),
 				databaseMetaData.storesUpperCaseQuotedIdentifiers(),
+				databaseMetaData.storesMixedCaseIdentifiers(),
 				databaseMetaData.storesUpperCaseIdentifiers(),
 				databaseMetaData.storesLowerCaseIdentifiers()
 		);
@@ -190,7 +243,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.currentCatalog = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionCatalogName() );
 		this.currentSchema = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionSchemaName() );
 
-		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( databaseMetaData );
+		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl(
+				nameQualifierSupport,
+				databaseMetaData
+		);
 
 		this.typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
 

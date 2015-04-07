@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -49,7 +50,7 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	/**
 	 * Throws a mapping exception because DollarValue is not mapped
 	 */
-	@Test(expected = GenericJDBCException.class)
+	@Test(expected = JDBCException.class)
 	public void testWithoutIntegrator() {
 		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
 				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )

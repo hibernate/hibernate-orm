@@ -180,6 +180,7 @@ subprojects { subProject ->
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// should really use Jvm.current().toolsJar
 	ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
 	if ( ext.toolsJar.exists() ) {
 		dependencies{

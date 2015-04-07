@@ -132,37 +132,4 @@ public class QuoteGlobalTest extends BaseNonConfigCoreFunctionalTestCase {
 		return new String[] { "quote/DataPoint.hbm.xml" };
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// this really should be in a different test class
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-7927")
-	public void testTableGeneratorQuoting() {
-		final Metadata metadata = new MetadataSources( serviceRegistry() ).addAnnotatedClass( TestEntity.class ).buildMetadata();
-
-		final ConnectionProvider connectionProvider = serviceRegistry().getService( ConnectionProvider.class );
-		final Target target = new TargetDatabaseImpl( new JdbcConnectionAccessImpl( connectionProvider ) );
-		final SchemaManagementTool tool = serviceRegistry().getService( SchemaManagementTool.class );
-
-		tool.getSchemaDropper( null ).doDrop( metadata, false, target );
-		tool.getSchemaCreator( null ).doCreation( metadata, false, target );
-
-		try {
-			new SchemaValidator( serviceRegistry(), (MetadataImplementor) metadata ).validate();
-		}
-		catch (HibernateException e) {
-			fail( "The identifier generator table should have validated.  " + e.getMessage() );
-		}
-		finally {
-			tool.getSchemaDropper( null ).doDrop( metadata, false, target );
-		}
-	}
-	
-	@Entity
-	private static class TestEntity {
-		@Id
-		@GeneratedValue(strategy = GenerationType.TABLE)
-		private int id;
-	}
 }

@@ -31,6 +31,7 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
 /**
@@ -40,59 +41,65 @@ import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
  * @author Steve Ebersole
  */
 public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObjectNameFormatter {
-	private final String catalogSeparator;
-	private final boolean catalogAtEnd;
+	private final Format format;
 
-	public QualifiedObjectNameFormatterStandardImpl(DatabaseMetaData databaseMetaData) throws SQLException {
+	public QualifiedObjectNameFormatterStandardImpl(
+			NameQualifierSupport nameQualifierSupport,
+			String catalogSeparator,
+			boolean catalogAtEnd) {
+		this.format = buildFormat( nameQualifierSupport, catalogSeparator, catalogAtEnd );
+	}
+
+	private Format buildFormat(
+			NameQualifierSupport nameQualifierSupport,
+			String catalogSeparator,
+			boolean catalogAtEnd) {
+		switch ( nameQualifierSupport ) {
+			case NONE: {
+				return NoQualifierSupportFormat.INSTANCE;
+			}
+			case CATALOG: {
+				return catalogAtEnd
+						? new NameCatalogFormat( catalogSeparator )
+						: new CatalogNameFormat( catalogSeparator );
+			}
+			case SCHEMA: {
+				return SchemaNameFormat.INSTANCE;
+			}
+			default: {
+				return catalogAtEnd
+						? new SchemaNameCatalogFormat( catalogSeparator )
+						: new CatalogSchemaNameFormat( catalogSeparator );
+			}
+		}
+	}
+
+	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport) {
+		// most dbs simply do <catalog>.<schema>.<name>
+		this( nameQualifierSupport, ".", false );
+	}
+
+	public QualifiedObjectNameFormatterStandardImpl(
+			NameQualifierSupport nameQualifierSupport,
+			DatabaseMetaData databaseMetaData) throws SQLException {
 		this(
+				nameQualifierSupport,
 				databaseMetaData.getCatalogSeparator(),
 				!databaseMetaData.isCatalogAtStart()
 		);
 	}
 
-	public QualifiedObjectNameFormatterStandardImpl(String catalogSeparator, boolean catalogAtEnd) {
-		this.catalogSeparator = catalogSeparator;
-		this.catalogAtEnd = catalogAtEnd;
-	}
-
-	public QualifiedObjectNameFormatterStandardImpl() {
-		// most dbs simply do <catalog>.<schema>.<name>
-		this( ".", false );
-	}
-
 	@Override
 	public String format(QualifiedTableName qualifiedTableName, Dialect dialect) {
-		return format(
-				render( qualifiedTableName.getCatalogName(), dialect ),
-				render( qualifiedTableName.getSchemaName(), dialect ),
-				render( qualifiedTableName.getTableName(), dialect )
+		return format.format(
+				qualifiedTableName.getCatalogName(),
+				qualifiedTableName.getSchemaName(),
+				qualifiedTableName.getTableName(),
+				dialect
 		);
 	}
 
-	private String format(String catalogName, String schemaName, String objectName) {
-		StringBuilder buff = new StringBuilder();
-		if ( !catalogAtEnd ) {
-			if ( catalogName != null ) {
-				buff.append( catalogName ).append( catalogSeparator );
-			}
-		}
-
-		if ( schemaName != null ) {
-			buff.append( schemaName ).append( '.' );
-		}
-
-		buff.append( objectName );
-
-		if ( catalogAtEnd ) {
-			if ( catalogName != null ) {
-				buff.append( catalogSeparator ).append( catalogName );
-			}
-		}
-
-		return buff.toString();
-	}
-
-	private String render(Identifier identifier, Dialect dialect) {
+	private static String render(Identifier identifier, Dialect dialect) {
 		if ( identifier == null ) {
 			return null;
 		}
@@ -102,21 +109,148 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 
 	@Override
 	public String format(QualifiedSequenceName qualifiedSequenceName, Dialect dialect) {
-		return format(
-				render( qualifiedSequenceName.getCatalogName(), dialect ),
-				render( qualifiedSequenceName.getSchemaName(), dialect ),
-				render( qualifiedSequenceName.getSequenceName(), dialect )
+		return format.format(
+				qualifiedSequenceName.getCatalogName(),
+				qualifiedSequenceName.getSchemaName(),
+				qualifiedSequenceName.getSequenceName(),
+				dialect
 		);
 	}
 
 	@Override
 	public String format(QualifiedName qualifiedName, Dialect dialect) {
-		return format(
-				render( qualifiedName.getCatalogName(), dialect ),
-				render( qualifiedName.getSchemaName(), dialect ),
-				render( qualifiedName.getObjectName(), dialect )
+		return format.format(
+				qualifiedName.getCatalogName(),
+				qualifiedName.getSchemaName(),
+				qualifiedName.getObjectName(),
+				dialect
 		);
 	}
 
+	private static interface Format {
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
+	}
 
+	private static class NoQualifierSupportFormat implements Format {
+		/**
+		 * Singleton access
+		 */
+		public static final NoQualifierSupportFormat INSTANCE = new NoQualifierSupportFormat();
+
+		@Override
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			return render( name, dialect );
+		}
+	}
+
+	private static class SchemaNameCatalogFormat implements Format {
+		private final String catalogSeparator;
+
+		public SchemaNameCatalogFormat(String catalogSeparator) {
+			this.catalogSeparator = catalogSeparator;
+		}
+
+		@Override
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			StringBuilder buff = new StringBuilder();
+			if ( schema != null ) {
+				buff.append( render( schema, dialect ) ).append( '.' );
+			}
+
+			buff.append( render( name, dialect ) );
+
+			if ( catalog != null ) {
+				buff.append( catalogSeparator ).append( render( catalog, dialect ) );
+			}
+
+			return buff.toString();
+		}
+	}
+
+	private static class CatalogSchemaNameFormat implements Format {
+		private final String catalogSeparator;
+
+		public CatalogSchemaNameFormat(String catalogSeparator) {
+			this.catalogSeparator = catalogSeparator;
+		}
+
+		@Override
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			StringBuilder buff = new StringBuilder();
+
+			if ( catalog != null ) {
+				buff.append( render( catalog, dialect ) ).append( catalogSeparator );
+			}
+
+			if ( schema != null ) {
+				buff.append( render( schema, dialect ) ).append( '.' );
+			}
+
+			buff.append( render( name, dialect ) );
+
+			return buff.toString();
+		}
+	}
+
+	private static class NameCatalogFormat implements Format {
+		private final String catalogSeparator;
+
+		public NameCatalogFormat(String catalogSeparator) {
+			this.catalogSeparator = catalogSeparator;
+		}
+
+		@Override
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			StringBuilder buff = new StringBuilder();
+
+			buff.append( render( name, dialect ) );
+
+			if ( catalog != null ) {
+				buff.append( catalogSeparator ).append( render( catalog, dialect ) );
+			}
+
+			return buff.toString();
+		}
+	}
+
+	private static class CatalogNameFormat implements Format {
+		private final String catalogSeparator;
+
+		public CatalogNameFormat(String catalogSeparator) {
+			this.catalogSeparator = catalogSeparator;
+		}
+
+		@Override
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			StringBuilder buff = new StringBuilder();
+
+			if ( catalog != null ) {
+				buff.append( render( catalog, dialect ) ).append( catalogSeparator );
+			}
+
+			buff.append( render( name, dialect ) );
+
+			return buff.toString();
+		}
+	}
+
+	private static class SchemaNameFormat implements Format {
+		/**
+		 * Singleton access
+		 */
+		public static final SchemaNameFormat INSTANCE = new SchemaNameFormat();
+
+		@Override
+		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+			StringBuilder buff = new StringBuilder();
+
+			if ( schema != null ) {
+				buff.append( render( schema, dialect ) ).append( '.' );
+			}
+
+			buff.append( render( name, dialect ) );
+
+			return buff.toString();
+		}
+	}
 }

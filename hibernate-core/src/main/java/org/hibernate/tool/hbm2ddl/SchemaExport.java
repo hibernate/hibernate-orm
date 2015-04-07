@@ -110,10 +110,20 @@ public class SchemaExport {
 
 	/**
 	 * Builds a SchemaExport object.
+	 *
 	 * @param metadata The metadata object holding the mapping info to be exported
 	 */
 	public SchemaExport(MetadataImplementor metadata) {
 		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata );
+	}
+
+	/**
+	 * Builds a SchemaExport object.
+	 *
+	 * @param metadata The metadata object holding the mapping info to be exported
+	 */
+	public SchemaExport(MetadataImplementor metadata, boolean exportSchemas) {
+		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata, exportSchemas );
 	}
 
 	/**
@@ -129,14 +139,34 @@ public class SchemaExport {
 						serviceRegistry.getService( ConnectionProvider.class )
 				),
 				serviceRegistry,
-				metadata
+				metadata,
+				false
+		);
+	}
+
+	/**
+	 * Builds a SchemaExport object.
+	 *
+	 * @param serviceRegistry The registry of services available for use.  Should, at a minimum, contain
+	 * the JdbcServices service.
+	 * @param metadata The metadata object holding the mapping info to be exported
+	 */
+	public SchemaExport(ServiceRegistry serviceRegistry, MetadataImplementor metadata, boolean exportSchemas) {
+		this(
+				new SuppliedConnectionProviderConnectionHelper(
+						serviceRegistry.getService( ConnectionProvider.class )
+				),
+				serviceRegistry,
+				metadata,
+				exportSchemas
 		);
 	}
 
 	private SchemaExport(
 			ConnectionHelper connectionHelper,
 			ServiceRegistry serviceRegistry,
-			MetadataImplementor metadata) {
+			MetadataImplementor metadata,
+			boolean exportSchemas) {
 		this.connectionHelper = connectionHelper;
 		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
@@ -177,10 +207,10 @@ public class SchemaExport {
 
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 
-		schemaManagementTool.getSchemaDropper( settings ).doDrop( metadata, false, target );
+		schemaManagementTool.getSchemaDropper( settings ).doDrop( metadata, exportSchemas, target );
 		this.dropSQL = commands.toArray( new String[commands.size()] );
 
-		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata, false, target );
+		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata, exportSchemas, target );
 		this.createSQL = commands.toArray( new String[commands.size()] );
 	}
 
@@ -196,7 +226,8 @@ public class SchemaExport {
 		this(
 				connectionHelper,
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
-				metadata
+				metadata,
+				false
 		);
 	}
 
@@ -520,7 +551,7 @@ public class SchemaExport {
 			try {
 				final MetadataImplementor metadata = buildMetadata( commandLineArgs, serviceRegistry );
 
-				SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata )
+				SchemaExport schemaExport = new SchemaExport( serviceRegistry, metadata, commandLineArgs.exportSchemas )
 						.setHaltOnError( commandLineArgs.halt )
 						.setOutputFile( commandLineArgs.outputFile )
 						.setDelimiter( commandLineArgs.delimiter )
@@ -634,6 +665,8 @@ public class SchemaExport {
 		boolean export = true;
 		boolean format = false;
 
+		boolean exportSchemas = false;
+
 		String delimiter = null;
 
 		String outputFile = null;
@@ -660,6 +693,9 @@ public class SchemaExport {
 					}
 					else if ( arg.equals( "--create" ) ) {
 						parsedArgs.create = true;
+					}
+					else if ( arg.equals( "--schemas" ) ) {
+						parsedArgs.exportSchemas = true;
 					}
 					else if ( arg.equals( "--haltonerror" ) ) {
 						parsedArgs.halt = true;

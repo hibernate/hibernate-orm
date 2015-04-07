@@ -166,5 +166,42 @@ public class MigrationTest extends BaseUnitTestCase {
 		public Integer id;
 		public String name;
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9550" )
+	public void testSameTableNameDifferentExplicitSchemas() {
+		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addAnnotatedClass( CustomerInfo.class )
+				.addAnnotatedClass( PersonInfo.class )
+				.buildMetadata();
+
+		// export the schema
+		new SchemaExport( metadata, true ).execute( Target.EXPORT, SchemaExport.Type.CREATE );
+
+		try {
+			// update the schema
+			new SchemaUpdate( metadata ).execute( Target.EXPORT );
+		}
+		finally {
+			// drop the schema
+			new SchemaExport( metadata, true ).execute( Target.EXPORT, SchemaExport.Type.DROP );
+		}
+	}
+
+	@Entity
+	@Table( name = "PERSON", schema = "CRM" )
+	public static class CustomerInfo {
+		@Id
+		private Integer id;
+	}
+
+	@Entity
+	@Table( name = "PERSON", schema = "ERP" )
+	public static class PersonInfo {
+		@Id
+		private Integer id;
+	}
+
+
 }
 

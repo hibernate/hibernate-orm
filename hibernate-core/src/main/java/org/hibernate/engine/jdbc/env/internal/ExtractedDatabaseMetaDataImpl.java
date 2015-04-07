@@ -45,8 +45,8 @@ import org.hibernate.engine.jdbc.spi.TypeInfo;
 public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData {
 	private final JdbcEnvironment jdbcEnvironment;
 
-	private final String connectionSchemaName;
 	private final String connectionCatalogName;
+	private final String connectionSchemaName;
 
 	private final boolean supportsRefCursors;
 	private final boolean supportsNamedParameters;
@@ -63,8 +63,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 	private ExtractedDatabaseMetaDataImpl(
 			JdbcEnvironment jdbcEnvironment,
-			String connectionSchemaName,
 			String connectionCatalogName,
+			String connectionSchemaName,
 			Set<String> extraKeywords,
 			LinkedHashSet<TypeInfo> typeInfoSet,
 			boolean supportsRefCursors,
@@ -78,8 +78,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			boolean lobLocatorUpdateCopy) {
 		this.jdbcEnvironment = jdbcEnvironment;
 
-		this.connectionSchemaName = connectionSchemaName;
 		this.connectionCatalogName = connectionCatalogName;
+		this.connectionSchemaName = connectionSchemaName;
 
 		this.extraKeywords = extraKeywords != null
 				? extraKeywords

@@ -112,6 +112,11 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	}
 
 	@Override
+	public boolean schemaExists(Schema.Name schema) {
+		return extractor.schemaExists( schema.getCatalog(), schema.getSchema() );
+	}
+
+	@Override
 	public TableInformation getTableInformation(
 			Identifier catalogName,
 			Identifier schemaName,

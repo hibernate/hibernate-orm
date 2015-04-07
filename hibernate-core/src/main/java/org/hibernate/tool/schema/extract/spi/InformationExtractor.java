@@ -40,6 +40,8 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  */
 public interface InformationExtractor {
 
+	boolean schemaExists(Identifier catalog, Identifier schema);
+
 	/**
 	 * Return information about all matching tables, depending on whether to apply filter for
 	 * catalog/schema.
@@ -104,5 +106,4 @@ public interface InformationExtractor {
 	 * @return The extracted foreign-key information
 	 */
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation);
-
 }

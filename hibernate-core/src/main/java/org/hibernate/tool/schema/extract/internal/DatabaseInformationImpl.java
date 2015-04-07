@@ -49,6 +49,11 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	// DatabaseInformation implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	public boolean schemaExists(Schema.Name schema) {
+		return false;
+	}
+
+	@Override
 	public TableInformation getTableInformation(Identifier catalogName, Identifier schemaName, Identifier tableName) {
 		return locateRegisteredTableInformation( new QualifiedTableName( catalogName, schemaName, tableName ) );
 	}

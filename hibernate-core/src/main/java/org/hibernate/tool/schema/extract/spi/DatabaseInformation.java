@@ -37,6 +37,15 @@ import org.hibernate.boot.model.relational.Schema;
  */
 public interface DatabaseInformation {
 	/**
+	 * Check to see if the given schema already exists.
+	 *
+	 * @param schema The schema name
+	 *
+	 * @return {@code true} indicates a schema with the given name already exists
+	 */
+	boolean schemaExists(Schema.Name schema);
+
+	/**
 	 * Obtain reference to the named TableInformation
 	 *
 	 * @param catalogName The name of the catalog which contains the schema which the table belongs to

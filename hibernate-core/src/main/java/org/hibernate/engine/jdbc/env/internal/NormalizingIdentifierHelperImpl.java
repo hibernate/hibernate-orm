@@ -23,10 +23,12 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.util.Locale;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 
 import org.jboss.logging.Logger;
 
@@ -38,27 +40,33 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	private final JdbcEnvironment jdbcEnvironment;
 
+	private final NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
 
 	private final boolean storesMixedCaseQuotedIdentifiers;
 	private final boolean storesLowerCaseQuotedIdentifiers;
 	private final boolean storesUpperCaseQuotedIdentifiers;
+	private final boolean storesMixedCaseIdentifiers;
 	private final boolean storesUpperCaseIdentifiers;
 	private final boolean storesLowerCaseIdentifiers;
 
 	public NormalizingIdentifierHelperImpl(
 			JdbcEnvironment jdbcEnvironment,
+			NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
 			boolean storesMixedCaseQuotedIdentifiers,
 			boolean storesLowerCaseQuotedIdentifiers,
 			boolean storesUpperCaseQuotedIdentifiers,
+			boolean storesMixedCaseIdentifiers,
 			boolean storesUpperCaseIdentifiers,
 			boolean storesLowerCaseIdentifiers) {
 		this.jdbcEnvironment = jdbcEnvironment;
+		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 		this.storesMixedCaseQuotedIdentifiers = storesMixedCaseQuotedIdentifiers;
 		this.storesLowerCaseQuotedIdentifiers = storesLowerCaseQuotedIdentifiers;
 		this.storesUpperCaseQuotedIdentifiers = storesUpperCaseQuotedIdentifiers;
+		this.storesMixedCaseIdentifiers = storesMixedCaseIdentifiers;
 		this.storesUpperCaseIdentifiers = storesUpperCaseIdentifiers;
 		this.storesLowerCaseIdentifiers = storesLowerCaseIdentifiers;
 
@@ -124,11 +132,16 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public String toMetaDataCatalogName(Identifier identifier) {
+		if ( !nameQualifierSupport.supportsCatalogs() ) {
+			// null is used to tell DBMD to not limit results based on catalog.
+			return null;
+		}
+
 		if ( identifier == null ) {
-			// todo : not sure if this is interpreted as <""> or <currentCatalog>
-			return jdbcEnvironment.getCurrentCatalog() == null
-					? null
-					: jdbcEnvironment.getCurrentCatalog().render( jdbcEnvironment.getDialect() );
+			if ( jdbcEnvironment.getCurrentCatalog() == null ) {
+				return "";
+			}
+			identifier = jdbcEnvironment.getCurrentCatalog();
 		}
 
 		return toMetaDataText( identifier );
@@ -139,30 +152,48 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			throw new IllegalArgumentException( "Identifier cannot be null; bad usage" );
 		}
 
-		// todo : not actually sure the right thing to do here.
-		// 		Shouldn't the identifiers be quoted using db-quoting?
-
-		if ( identifier.isQuoted() && storesMixedCaseQuotedIdentifiers ) {
-			return identifier.getText();
+		if ( identifier.isQuoted() ) {
+			if ( storesMixedCaseQuotedIdentifiers ) {
+				return identifier.getText();
+			}
+			else if ( storesUpperCaseQuotedIdentifiers ) {
+				return identifier.getText().toUpperCase( Locale.ENGLISH );
+			}
+			else if ( storesLowerCaseQuotedIdentifiers ) {
+				return identifier.getText().toLowerCase( Locale.ENGLISH );
+			}
+			else {
+				return identifier.getText();
+			}
 		}
-		else if ( ( identifier.isQuoted() && storesUpperCaseQuotedIdentifiers )
-				|| ( !identifier.isQuoted() && storesUpperCaseIdentifiers ) ) {
-			return StringHelper.toUpperCase( identifier.getText() );
+		else {
+			if ( storesMixedCaseIdentifiers ) {
+				return identifier.getText();
+			}
+			else if ( storesUpperCaseIdentifiers ) {
+				return identifier.getText().toUpperCase( Locale.ENGLISH );
+			}
+			else if ( storesLowerCaseIdentifiers ) {
+				return identifier.getText().toLowerCase( Locale.ENGLISH );
+			}
+			else {
+				return identifier.getText();
+			}
 		}
-		else if ( ( identifier.isQuoted() && storesLowerCaseQuotedIdentifiers )
-				|| ( !identifier.isQuoted() && storesLowerCaseIdentifiers ) ) {
-			return StringHelper.toLowerCase( identifier.getText() );
-		}
-		return identifier.getText();
 	}
 
 	@Override
 	public String toMetaDataSchemaName(Identifier identifier) {
+		if ( !nameQualifierSupport.supportsSchemas() ) {
+			// null is used to tell DBMD to not limit results based on schema.
+			return null;
+		}
+
 		if ( identifier == null ) {
-			// todo : not sure if this is interpreted as <""> or <currentSchema>
-			return jdbcEnvironment.getCurrentSchema() == null
-					? null
-					: jdbcEnvironment.getCurrentSchema().getText();
+			if ( jdbcEnvironment.getCurrentSchema() == null ) {
+				return "";
+			}
+			identifier = jdbcEnvironment.getCurrentSchema();
 		}
 
 		return toMetaDataText( identifier );
@@ -179,7 +210,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public Identifier fromMetaDataCatalogName(String catalogName) {
-		if ( catalogName == null ) {
+		if ( catalogName == null || !nameQualifierSupport.supportsCatalogs() ) {
 			return null;
 		}
 
@@ -223,7 +254,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public Identifier fromMetaDataSchemaName(String schemaName) {
-		if ( schemaName == null ) {
+		if ( schemaName == null || !nameQualifierSupport.supportsSchemas() ) {
 			return null;
 		}
 

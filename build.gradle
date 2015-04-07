@@ -148,7 +148,6 @@ subprojects { subProject ->
 			all*.exclude group: 'xml-apis', module: 'xml-apis'
 		}
 		animalSnifferSignature
-		javaApiSignature
 	}
 
 	// appropriately inject the common dependencies into each sub-project
@@ -175,8 +174,8 @@ subprojects { subProject ->
 		jaxb( libraries.jaxb2_jaxb )
 		jaxb( libraries.jaxb2_jaxb_xjc )
 
+		// Referenced by AS Groovy plug-in
 		animalSnifferSignature( libraries.java16_signature )
-		javaApiSignature ( libraries.java16_signature )
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -342,7 +341,7 @@ subprojects { subProject ->
 		apply plugin: org.hibernate.build.animalsniffer.AnimalSnifferPlugin
 
 		animalSniffer {
-			skip = true;
+			skip = false;
 		}
 	}
 

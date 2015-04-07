@@ -28,9 +28,12 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.plugins.JavaPlugin
 
 import groovy.transform.Canonical
+
+import org.codehaus.mojo.animal_sniffer.ClassListBuilder;
 import org.codehaus.mojo.animal_sniffer.SignatureChecker
 import org.codehaus.mojo.animal_sniffer.logging.Logger
 import org.slf4j.LoggerFactory
@@ -43,7 +46,7 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 		project.configurations.maybeCreate( "animalSnifferSignature" )
 		final AnimalSnifferExtension extension = project.extensions.create( "animalSniffer", AnimalSnifferExtension )
 
-		project.tasks.findByName( JavaPlugin.CLASSES_TASK_NAME ).doLast(
+		project.tasks.findByName( JavaPlugin.COMPILE_JAVA_TASK_NAME ).doLast(
 				new Action<Task>() {
 					@Override
 					void execute(Task task) {
@@ -53,11 +56,12 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 
 						def logger = new GradleLogger( logger )
 						def signatures = project.configurations.animalSnifferSignature.resolvedConfiguration.resolvedArtifacts*.file
+
 						signatures.each {
 							task.logger.lifecycle( "Starting AnimalSniffer checks against [${it.name}]" )
 							SignatureChecker signatureChecker = new SignatureChecker(
 									it.newInputStream(),
-									Collections.emptySet(),
+									getIgnoredTypes( project ),
 									logger
 							)
 							signatureChecker.setCheckJars( false );
@@ -77,6 +81,36 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 					}
 				}
 		);
+	}
+
+	/**
+	 * Returns all those types which may be referenced although they are not part of the given signature, i.e. the
+	 * types of the currently compiled project and types contributed by compile/provided dependencies.
+	 */
+	private Set<String> getIgnoredTypes(Project project) {
+		def logger = new GradleLogger( logger )
+		def ClassListBuilder clb = new ClassListBuilder( logger )
+
+		// Any references to classes from the current project are fine
+		clb.process( project.file( project.sourceSets.main.output.classesDir ) )
+
+		// Any references to classes from compile/provided dependencies are fine
+		// TODO: This could be made configurable via includes/excludes as done for the Maven plug-in
+		def dependencies = project.configurations.compile.resolvedConfiguration.resolvedArtifacts*.file +
+			project.configurations.provided.resolvedConfiguration.resolvedArtifacts*.file
+
+		// Add files from self-resolving dependencies ( gradleApi(), localGroovy() ) if present; These don't show up in
+		// the list of resolved artifacts created before
+		project.configurations.compile.dependencies.withType( SelfResolvingDependency.class ).each {
+			dependencies.addAll( it.resolve() )
+		}
+
+		dependencies.each {
+			clb.process( it )
+		}
+
+		// it's ignored types actually, not packages
+		return clb.getPackages()
 	}
 }
 

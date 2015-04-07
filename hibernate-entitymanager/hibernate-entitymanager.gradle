@@ -89,7 +89,7 @@ task copyBundleResources (type: Copy) {
             'jdbc.driver': 'org.h2.Driver',
             'jdbc.user': 'sa',
             'jdbc.pass': '',
-            'jdbc.url': 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE',
+            'jdbc.url': 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1',
     ]);
     doFirst {
         bundlesTargetDir.mkdirs()

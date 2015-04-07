@@ -28,6 +28,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.plugins.JavaPlugin
 
 import groovy.transform.Canonical
@@ -97,6 +98,12 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 		// TODO: This could be made configurable via includes/excludes as done for the Maven plug-in
 		def dependencies = project.configurations.compile.resolvedConfiguration.resolvedArtifacts*.file +
 			project.configurations.provided.resolvedConfiguration.resolvedArtifacts*.file
+
+		// Add files from self-resolving dependencies ( gradleApi(), localGroovy() ) if present; These don't show up in
+		// the list of resolved artifacts created before
+		project.configurations.compile.dependencies.withType( SelfResolvingDependency.class ).each {
+			dependencies.addAll( it.resolve() )
+		}
 
 		dependencies.each {
 			clb.process( it )

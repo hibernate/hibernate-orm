@@ -2,11 +2,15 @@ repositories {
 	mavenCentral()
 }
 
+apply from: "../libraries.gradle"
 apply plugin: "groovy"
 
 dependencies {
 	compile gradleApi()
 	compile localGroovy()
 
-	compile "org.codehaus.mojo:animal-sniffer:1.14"
+	compile libraries.animal_sniffer
+
+	// TODO: This can be removed once using AS > 1.14
+	compile libraries.as_asm
 }

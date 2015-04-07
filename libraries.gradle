@@ -75,9 +75,10 @@ ext {
 			jaxb2_jaxb:     'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb:2.2.4-1',
 			jaxb2_jaxb_xjc: 'org.jvnet.jaxb2_commons:jaxb2-basics-jaxb-xjc:2.2.4-1',
 
-            // Animal Sniffer Ant Task and Java 1.6 API signature file
-            // not using 1.9 for the time being due to MANIMALSNIFFER-34
-            animal_sniffer:     'org.codehaus.mojo:animal-sniffer-ant-tasks:1.13',
+            // Animal Sniffer and Java 1.6 API signature file; Intentionally not using AS 1.14 for the time being due
+            // to MANIMALSNIFFER-62; ASM 5 is enforced to make AS work with Java 8 class files; This will not be
+            // required anymore once AS > 1.14 is used
+            animal_sniffer:     'org.codehaus.mojo:animal-sniffer:1.13',
             as_asm:             'org.ow2.asm:asm-all:5.0.3',
             java16_signature:   'org.codehaus.mojo.signature:java16:1.0@signature',
 

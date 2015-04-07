@@ -46,7 +46,7 @@ class AnimalSnifferPlugin implements Plugin<Project> {
 		project.configurations.maybeCreate( "animalSnifferSignature" )
 		final AnimalSnifferExtension extension = project.extensions.create( "animalSniffer", AnimalSnifferExtension )
 
-		project.tasks.findByName( JavaPlugin.CLASSES_TASK_NAME ).doLast(
+		project.tasks.findByName( JavaPlugin.COMPILE_JAVA_TASK_NAME ).doLast(
 				new Action<Task>() {
 					@Override
 					void execute(Task task) {

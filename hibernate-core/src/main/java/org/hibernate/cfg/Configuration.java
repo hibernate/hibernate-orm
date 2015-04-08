@@ -1412,6 +1412,7 @@ public class Configuration implements Serializable {
 			metadataSourceQueue.processMetadata( determineMetadataSourcePrecedence() );
 		}
 
+		sortSecondPassesByDependencies();
 
 
 		try {
@@ -1461,6 +1462,43 @@ public class Configuration implements Serializable {
 		}
 		
 		Thread.currentThread().setContextClassLoader( tccl );
+	}
+
+	private void sortSecondPassesByDependencies() {
+
+		List<SecondPass> sorted = new ArrayList<SecondPass>( secondPasses.size() );
+		Set<DependentSecondPass> toSort = new HashSet<DependentSecondPass>();
+		for ( SecondPass secondPass : secondPasses ) {
+			if ( secondPass instanceof DependentSecondPass ) {
+				toSort.add( (DependentSecondPass) secondPass );
+			} else {
+				sorted.add( secondPass );
+			}
+		}
+		topologicalSort( sorted, toSort );
+		secondPasses = sorted;
+	}
+
+	/* naive O(n^3) topological sort */
+	private void topologicalSort( List<SecondPass> sorted, Set<DependentSecondPass> toSort ) {
+		while (!toSort.isEmpty())
+		{
+			DependentSecondPass independent = null;
+
+			searchForIndependent:
+			for ( DependentSecondPass pass : toSort ) {
+				for ( DependentSecondPass other : toSort ) {
+					if (pass.dependentUpon( other ))
+						continue searchForIndependent;
+				}
+				independent = pass;
+				break;
+			}
+			if (independent == null)
+				throw new MappingException( "cyclic dependency in derived identities" );
+			toSort.remove( independent );
+			sorted.add( independent );
+		}
 	}
 
 	private void processSecondPassesOfType(Class<? extends SecondPass> type) {

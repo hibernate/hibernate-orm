@@ -26,6 +26,7 @@ package org.hibernate.cfg;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -42,7 +43,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Emmanuel Bernard
  */
-public class CopyIdentifierComponentSecondPass implements SecondPass {
+public class CopyIdentifierComponentSecondPass implements DependentSecondPass {
 	private static final Logger log = Logger.getLogger( CopyIdentifierComponentSecondPass.class );
 
 	private final String referencedEntityName;
@@ -90,79 +91,142 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			columnByReferencedName.put( referencedColumnName.toLowerCase(), joinColumn );
 		}
 		//try default column orientation
-		int index = 0;
+		AtomicInteger index = new AtomicInteger( 0 );
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
 			for (Ejb3JoinColumn joinColumn : joinColumns) {
-				columnByReferencedName.put( "" + index, joinColumn );
-				index++;
+				columnByReferencedName.put( "" + index.get(), joinColumn );
+				index.getAndIncrement();
 			}
-			index = 0;
+			index.set( 0 );
 		}
 
 		while ( properties.hasNext() ) {
 			Property referencedProperty = properties.next();
 			if ( referencedProperty.isComposite() ) {
-				throw new AssertionFailure( "Unexpected nested component on the referenced entity when mapping a @MapsId: "
-						+ referencedEntityName);
+				Property property = createComponentProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
+				component.addProperty( property );
 			}
 			else {
-				Property property = new Property();
-				property.setName( referencedProperty.getName() );
-				property.setNodeName( referencedProperty.getNodeName() );
-				//FIXME set optional?
-				//property.setOptional( property.isOptional() );
-				property.setPersistentClass( component.getOwner() );
-				property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-				SimpleValue value = new SimpleValue( mappings, component.getTable() );
-				property.setValue( value );
-				final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
-				value.setTypeName( referencedValue.getTypeName() );
-				value.setTypeParameters( referencedValue.getTypeParameters() );
-				final Iterator<Selectable> columns = referencedValue.getColumnIterator();
-
-				if ( joinColumns[0].isNameDeferred() ) {
-					joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
-						referencedPersistentClass,
-						columns,
-						value);
-				}
-				else {
-					//FIXME take care of Formula
-					while ( columns.hasNext() ) {
-						final Selectable selectable = columns.next();
-						if ( ! Column.class.isInstance( selectable ) ) {
-							log.debug( "Encountered formula definition; skipping" );
-							continue;
-						}
-						final Column column = (Column) selectable;
-						final Ejb3JoinColumn joinColumn;
-						String logicalColumnName = null;
-						if ( isExplicitReference ) {
-							final String columnName = column.getName();
-							logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
-							//JPA 2 requires referencedColumnNames to be case insensitive
-							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase() );
-						}
-						else {
-							joinColumn = columnByReferencedName.get( "" + index );
-							index++;
-						}
-						if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {
-							throw new AnnotationException(
-									isExplicitReference ?
-											"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
-											"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
-							);
-						}
-						final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
-								.getName();
-						value.addColumn( new Column( columnName ) );
-						column.setValue( value );
-					}
-				}
+				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
 				component.addProperty( property );
 			}
 		}
+	}
+
+	private Property createComponentProperty(
+			PersistentClass referencedPersistentClass,
+			boolean isExplicitReference,
+			Map<String, Ejb3JoinColumn> columnByReferencedName,
+			AtomicInteger index,
+			Property referencedProperty ) {
+		Property property = new Property();
+		property.setName( referencedProperty.getName() );
+		property.setNodeName( referencedProperty.getNodeName() );
+		//FIXME set optional?
+		//property.setOptional( property.isOptional() );
+		property.setPersistentClass( component.getOwner() );
+		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
+		Component value = new Component( mappings, component.getOwner() );
+
+		property.setValue( value );
+		final Component referencedValue = (Component) referencedProperty.getValue();
+		value.setTypeName( referencedValue.getTypeName() );
+		value.setTypeParameters( referencedValue.getTypeParameters() );
+		value.setComponentClassName( referencedValue.getComponentClassName() );
+
+
+		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
+		while(propertyIterator.hasNext())
+		{
+			Property referencedComponentProperty = propertyIterator.next();
+
+			if ( referencedComponentProperty.isComposite() ) {
+				Property componentProperty = createComponentProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
+				value.addProperty( componentProperty );
+			}
+			else {
+				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
+				value.addProperty( componentProperty );
+			}
+		}
+
+		return property;
+	}
+
+
+	private Property createSimpleProperty(
+			PersistentClass referencedPersistentClass,
+			boolean isExplicitReference,
+			Map<String, Ejb3JoinColumn> columnByReferencedName,
+			AtomicInteger index,
+			Property referencedProperty ) {
+		Property property = new Property();
+		property.setName( referencedProperty.getName() );
+		property.setNodeName( referencedProperty.getNodeName() );
+		//FIXME set optional?
+		//property.setOptional( property.isOptional() );
+		property.setPersistentClass( component.getOwner() );
+		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
+		SimpleValue value = new SimpleValue( mappings, component.getTable() );
+		property.setValue( value );
+		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
+		value.setTypeName( referencedValue.getTypeName() );
+		value.setTypeParameters( referencedValue.getTypeParameters() );
+		final Iterator<Selectable> columns = referencedValue.getColumnIterator();
+
+		if ( joinColumns[0].isNameDeferred() ) {
+			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
+				referencedPersistentClass,
+				columns,
+				value);
+		}
+		else {
+			//FIXME take care of Formula
+			while ( columns.hasNext() ) {
+				final Selectable selectable = columns.next();
+				if ( ! Column.class.isInstance( selectable ) ) {
+					log.debug( "Encountered formula definition; skipping" );
+					continue;
+				}
+				final Column column = (Column) selectable;
+				final Ejb3JoinColumn joinColumn;
+				String logicalColumnName = null;
+				if ( isExplicitReference ) {
+					final String columnName = column.getName();
+					logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
+					//JPA 2 requires referencedColumnNames to be case insensitive
+					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase() );
+				}
+				else {
+					joinColumn = columnByReferencedName.get( "" + index.get() );
+					index.getAndIncrement();
+				}
+				if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {
+					throw new AnnotationException(
+							isExplicitReference ?
+									"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
+									"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
+					);
+				}
+				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
+						.getName();
+				value.addColumn( new Column( columnName ) );
+				if ( joinColumn != null ) {
+					joinColumn.linkWithValue( value );
+				}
+				column.setValue( value );
+			}
+		}
+		return property;
+	}
+
+	@Override
+	public boolean dependentUpon( SecondPass secondPass ) {
+		if ( secondPass instanceof CopyIdentifierComponentSecondPass ) {
+			CopyIdentifierComponentSecondPass other = (CopyIdentifierComponentSecondPass) secondPass;
+			return this.referencedEntityName.equals( other.component.getOwner().getEntityName() );
+		}
+		return false;
 	}
 }

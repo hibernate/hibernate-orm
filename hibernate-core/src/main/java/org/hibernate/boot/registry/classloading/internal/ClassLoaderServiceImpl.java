@@ -42,6 +42,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ClassLoaderHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -371,6 +373,13 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		 * @return The result of the work
 		 */
 		public T perform();
+
+		/**
+		 * Get the configuration values of the Work context.
+		 *
+		 * @return the configuration values;
+		 */
+		public Map getConfigurationValues();
 	}
 
 	/**
@@ -386,9 +395,27 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		boolean set = false;
 
+		/**
+		 * The value for hibernate.classloading.use_current_tccl_as_parent
+		 * determines whether the thread context ClassLoader for this
+		 * Thread (TCCL) should use the current TCCL as parent ClassLoader.
+		 * Default is true.
+		 */
+		final boolean useCurrentTcclAsParent = ConfigurationHelper.getBoolean(
+				"hibernate.classloading.use_current_tccl_as_parent",
+				work.getConfigurationValues(),
+				true
+		);
+
 		try {
-			Thread.currentThread().setContextClassLoader(
-					new TcclSafeAggregatedClassLoader( aggregatedClassLoader, tccl ) );
+			final ClassLoader tcclNew;
+			if ( useCurrentTcclAsParent ) {
+				tcclNew = new TcclSafeAggregatedClassLoader( aggregatedClassLoader, tccl );
+			}
+			else {
+				tcclNew = aggregatedClassLoader;
+			}
+			Thread.currentThread().setContextClassLoader( tcclNew );
 			set = true;
 		}
 		catch (Exception ignore) {
@@ -404,7 +431,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 	}
-	
+
 	// TODO: Remove in ORM 5!  See HHH-8818
 	private class TcclSafeAggregatedClassLoader extends ClassLoader {
 		private final AggregatedClassLoader aggregatedClassLoader;

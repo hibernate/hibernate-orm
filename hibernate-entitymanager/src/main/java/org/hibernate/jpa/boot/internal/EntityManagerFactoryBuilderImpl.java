@@ -823,6 +823,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						
 						return null;
 					}
+
+					@Override
+					public Map getConfigurationValues() {
+						return configurationValues;
+					}
 				}
 		);
 
@@ -871,6 +876,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 								configurationValues,
 								hibernateConfiguration
 						);
+					}
+
+					@Override
+					public Map getConfigurationValues() {
+						return configurationValues;
 					}
 				}
 		);

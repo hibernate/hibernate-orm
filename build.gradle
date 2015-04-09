@@ -4,6 +4,31 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
 
+
+buildscript {
+	repositories {
+		mavenCentral()
+		mavenLocal()
+		jcenter()
+
+		maven {
+			name 'jboss-nexus'
+			url "http://repository.jboss.org/nexus/content/groups/public/"
+		}
+		maven {
+			name "jboss-snapshots"
+			url "http://snapshots.jboss.org/maven2/"
+		}
+	}
+	dependencies {
+		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
+		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
+		classpath 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
+		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.0.Final'
+	}
+}
+
 allprojects {
     repositories {
         mavenCentral()
@@ -20,34 +45,12 @@ allprojects {
     }
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-        mavenLocal()
-		jcenter()
-
-        maven {
-            name 'jboss-nexus'
-            url "http://repository.jboss.org/nexus/content/groups/public/"
-        }
-        maven {
-            name "jboss-snapshots"
-            url "http://snapshots.jboss.org/maven2/"
-        }
-    }
-    dependencies {
-        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-        classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
-        classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-    }
-}
-
 ext {
     expectedGradleVersion = '2.2'
     hibernateTargetVersion = '5.0.0-SNAPSHOT'
     javaLanguageLevel = '1.6'
 
-    osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", ".SNAPSHOT" )
+    osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
 }
 
 if ( !JavaVersion.current().java8Compatible ) {
@@ -136,19 +139,22 @@ subprojects { subProject ->
 	apply plugin: 'build-dashboard'
 	apply plugin: 'project-report'
 
+	apply plugin: 'org.hibernate.build.gradle.animalSniffer'
+
+	if ( subProject.name == 'hibernate-java8' ) {
+		animalSniffer {
+			skip = true
+		}
+	}
+
 	configurations {
 		provided {
 			// todo : need to make sure these are non-exported
 			description = 'Non-exported compile-time dependencies.'
 		}
-		jaxb {
-			description = 'Dependencies for running ant xjc (jaxb class generation)'
-		}
 		configurations {
 			all*.exclude group: 'xml-apis', module: 'xml-apis'
 		}
-		animalSnifferSignature
-		javaApiSignature
 	}
 
 	// appropriately inject the common dependencies into each sub-project
@@ -167,16 +173,8 @@ subprojects { subProject ->
 		testRuntime( libraries.h2 )
 		testRuntime( libraries.woodstox )
 
-		jaxb( libraries.jaxb ){
-			exclude group: "javax.xml.stream"
-		}
-		jaxb( libraries.jaxb2_basics )
-		jaxb( libraries.jaxb2_ant )
-		jaxb( libraries.jaxb2_jaxb )
-		jaxb( libraries.jaxb2_jaxb_xjc )
-
-		animalSnifferSignature( libraries.java16_signature )
-		javaApiSignature ( libraries.java16_signature )
+		// Configuration added by the AnimalSniffer plugin
+		animalSnifferSignature libraries.java16_signature
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,9 +219,9 @@ subprojects { subProject ->
 					"-target", '1.6'
 			]
 
-			if ( java6Home != null ) {
-				task.options.bootClasspath = java6Home.runtimeJar.absolutePath
-			}
+//			if ( java6Home != null ) {
+//				task.options.bootClasspath = java6Home.runtimeJar.absolutePath
+//			}
 		}
 	}
 
@@ -337,14 +335,6 @@ subprojects { subProject ->
 	// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
 	// Gradle plugin).  For now, just compile first in order to get the logging classes.
 	eclipseClasspath.dependsOn generateSources
-
-	if ( subProject.name != 'hibernate-java8' ) {
-		apply plugin: org.hibernate.build.animalsniffer.AnimalSnifferPlugin
-
-		animalSniffer {
-			skip = true;
-		}
-	}
 
 	// specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	task checkstylePublicSources(type: Checkstyle) {

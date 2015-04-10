@@ -1,4 +1,5 @@
 apply plugin: 'version-injection'
+apply plugin: 'org.hibernate.build.gradle.xjc'
 
 dependencies {
 	testCompile libraries.junit
@@ -21,12 +22,12 @@ versionInjection {
 }
 
 ext {
-	jaxbTargetDir = file( "${buildDir}/generated-sources/jaxb/main" )
+	xjcTargetDir = file( "${buildDir}/generated-src/xjc/main" )
 	xsdDir = file( "${projectDir}/src/main/xsd" )
 }
 
 sourceSets.main {
-    java.srcDir jaxbTargetDir
+    java.srcDir xjcTargetDir
 	resources.srcDir xsdDir
 }
 
@@ -46,17 +47,16 @@ jar {
 task jaxb {
     // configure Gradle up-to-date checking
     inputs.dir( xsdDir )
-    outputs.dir( jaxbTargetDir )
+    outputs.dir( xjcTargetDir )
 
     // perform actions
     doLast {
-        jaxbTargetDir.mkdirs()
+        xjcTargetDir.mkdirs()
 
-        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.jaxb.asPath)
-        ant.jaxbTargetDir = jaxbTargetDir
+        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
 
         ant.xjc(
-                destdir: '${jaxbTargetDir}',
+                destdir: ( xjcTargetDir as File ).absolutePath,
                 package: 'org.hibernate.jpamodelgen.xml.jaxb',
                 extension: 'true'
         ) {
@@ -64,7 +64,7 @@ task jaxb {
         }
     }
 }
-runSourceGenerators.dependsOn jaxb
+tasks.compileJava.dependsOn jaxb
 
 checkstyleMain.exclude '**/jaxb/**'
 

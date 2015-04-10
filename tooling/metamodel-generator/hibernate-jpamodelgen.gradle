@@ -9,12 +9,9 @@ dependencies {
 	testCompile libraries.slf4j_log4j
 }
 
-def pomName() {
-    return 'Hibernate JPA 2 Metamodel Generator'
-}
-
-def pomDescription() {
-    return 'Annotation Processor to generate JPA 2 static metamodel classes'
+mavenPom {
+    name = 'Hibernate JPA 2 Metamodel Generator'
+    description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 }
 
 versionInjection {

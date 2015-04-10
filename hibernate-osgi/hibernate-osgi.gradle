@@ -9,10 +9,6 @@ configurations {
 	}
 }
 
-test {
-	enabled = false
-}
-
 sourceSets {
 	testClientBundle
 }
@@ -20,6 +16,36 @@ sourceSets {
 sourceSets.test {
 	compileClasspath += sourceSets.testClientBundle.output
 	runtimeClasspath += sourceSets.testClientBundle.output
+}
+
+test {
+	// for now, always disable!!
+	enabled = false
+
+}
+
+if ( project.properties.java6Home == null ) {
+	// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
+	// java6Home is not available
+	enabled = false
+}
+else {
+	compileTestJava {
+		options.fork = true
+		options.forkOptions.executable = project.properties.java6Home.javacExecutable
+		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
+	}
+	compileTestClientBundleJava {
+		options.fork = true
+		options.forkOptions.executable = project.properties.java6Home.javacExecutable
+		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
+	}
+
+	test {
+		executable = project.properties.java6Home
+		maxHeapSize = '2G'
+		jvmArgs += ['-XX:MaxPermGen=512M']
+	}
 }
 
 dependencies {
@@ -71,16 +97,13 @@ dependencies {
 	testClientBundleCompile( "org.osgi:org.osgi.core:4.3.1" )
 }
 
-def pomName() {
-	return 'Hibernate OSGi Support'
-}
-
-def pomDescription() {
-	return 'Support for running Hibernate O/RM in OSGi environments'
+mavenPom {
+	name = 'Hibernate OSGi Support'
+	description = 'Support for running Hibernate O/RM in OSGi environments'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
 }
 
 jar {

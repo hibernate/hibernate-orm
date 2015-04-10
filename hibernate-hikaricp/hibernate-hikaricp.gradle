@@ -4,14 +4,11 @@ dependencies {
     testCompile project( ':hibernate-testing' )
 }
 
-def pomName() {
-    return 'Hibernate/HikariCP Integration'
-}
-
-def pomDescription() {
-    return 'Integration for HikariCP into Hibernate O/RM'
+mavenPom {
+    name = 'Hibernate/HikariCP Integration'
+    description = 'Integration for HikariCP into Hibernate O/RM'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
 }

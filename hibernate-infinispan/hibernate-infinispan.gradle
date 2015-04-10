@@ -16,16 +16,13 @@ dependencies {
     testCompile ('mysql:mysql-connector-java:5.1.17')
 }
 
-def pomName() {
-    return 'Hibernate/Infinispan Integration'
-}
-
-def pomDescription() {
-    return 'Integration for Infinispan into Hibernate as a second-level caching service'
+mavenPom {
+    name = 'Hibernate/Infinispan Integration'
+    description = 'Integration for Infinispan into Hibernate as a second-level caching service'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
 }
 
 test {

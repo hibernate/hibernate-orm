@@ -1,5 +1,15 @@
 repositories {
 	mavenCentral()
+	jcenter()
+
+	maven {
+		name 'jboss-nexus'
+		url "http://repository.jboss.org/nexus/content/groups/public/"
+	}
+	maven {
+		name "jboss-snapshots"
+		url "http://snapshots.jboss.org/maven2/"
+	}
 }
 
 apply plugin: "groovy"
@@ -7,4 +17,6 @@ apply plugin: "groovy"
 dependencies {
 	compile gradleApi()
 	compile localGroovy()
+
+	compile 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
 }

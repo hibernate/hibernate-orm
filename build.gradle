@@ -24,7 +24,6 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
 		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
 	}
 }
@@ -48,37 +47,8 @@ allprojects {
 ext {
     expectedGradleVersion = '2.2'
     hibernateTargetVersion = '5.0.0-SNAPSHOT'
-    javaLanguageLevel = '1.6'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
-}
-
-if ( !JavaVersion.current().java8Compatible ) {
-	throw new GradleException( "Gradle must be run with Java 8" )
-}
-
-final Jvm java6Home;
-
-String java6HomeDirSetting = null;
-if ( rootProject.hasProperty( "JDK6_HOME" ) ) {
-	java6HomeDirSetting = rootProject.property( "JDK6_HOME" ) as String;
-}
-if ( java6HomeDirSetting == null ) {
-	java6HomeDirSetting = System.getProperty( "JDK6_HOME" );
-}
-
-if ( java6HomeDirSetting != null ) {
-	logger.info( "Using JDK6_HOME setting [${java6HomeDirSetting}]" )
-	final File java6HomeDir = new File( java6HomeDirSetting );
-	java6Home = Jvm.forHome( java6HomeDir ) as Jvm;
-
-	if ( java6Home == null ) {
-		throw new GradleException( "Could not resolve JDK6_HOME [${java6HomeDirSetting}] to proper JAVA_HOME" );
-	}
-}
-else {
-	logger.warn( "JDK6_HOME setting not specified, some build features will be disabled" )
-	java6Home = null;
 }
 
 idea {
@@ -93,19 +63,10 @@ idea {
     }
 }
 
-// Used in POM customization.  Each sub-project overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def pomName() {
-    return "A Hibernate O/RM module"
-}
-def pomDescription() {
-    return "A module of the Hibernate O/RM project"
-}
 // Used in MANIFEST.MF for OSGi Bundles
 def osgiDescription() {
-	// by default just reuse the pomDescription
-	return pomDescription()
+	return "A module of the Hibernate O/RM project"
 }
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -117,6 +78,7 @@ subprojects { subProject ->
 
     group = 'org.hibernate'
     version = rootProject.hibernateTargetVersion
+
     ext.exportPackageVersion = rootProject.osgiExportVersion
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
@@ -132,20 +94,12 @@ subprojects { subProject ->
 	apply plugin: 'maven-publish-auth'
 	apply plugin: 'osgi'
 
-	apply from: "${rootProject.projectDir}/source-generation.gradle"
-
 	apply plugin: 'findbugs'
 	apply plugin: 'checkstyle'
 	apply plugin: 'build-dashboard'
 	apply plugin: 'project-report'
 
-	apply plugin: 'org.hibernate.build.gradle.animalSniffer'
-
-	if ( subProject.name == 'hibernate-java8' ) {
-		animalSniffer {
-			skip = true
-		}
-	}
+	apply plugin: org.hibernate.build.HibernateBuildPlugin
 
 	configurations {
 		provided {
@@ -172,9 +126,6 @@ subprojects { subProject ->
 		testRuntime( libraries.javassist )
 		testRuntime( libraries.h2 )
 		testRuntime( libraries.woodstox )
-
-		// Configuration added by the AnimalSniffer plugin
-		animalSnifferSignature libraries.java16_signature
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -187,71 +138,11 @@ subprojects { subProject ->
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	targetCompatibility = rootProject.javaLanguageLevel
-	sourceCompatibility = rootProject.javaLanguageLevel
-
 	task compile
 	compile.dependsOn compileJava, processResources, compileTestJava, processTestResources
 
 	sourceSets.main {
 		compileClasspath += configurations.provided
-	}
-
-	tasks.withType( JavaCompile.class ).all { task->
-		// basic compile options
-		task.options.compilerArgs += [
-				"-nowarn",
-				"-encoding", "UTF-8"
-		]
-
-		if ( subProject.name.equals( 'hibernate-java8' ) ) {
-			// For hibernate-java8 module, simply compile using Java 8 JDK which is required to
-			// launch Gradle (for now).  This is verified in settings.gradle
-			task.options.compilerArgs += [
-				"-source", '1.8',
-				"-target", '1.8'
-			]
-		}
-		else {
-			// For all other modules, use the 1.6 JDK (if available) as bootstrapclasspath
-			task.options.compilerArgs += [
-					"-source", '1.6',
-					"-target", '1.6'
-			]
-
-//			if ( java6Home != null ) {
-//				task.options.bootClasspath = java6Home.runtimeJar.absolutePath
-//			}
-		}
-	}
-
-	tasks.withType( Test.class ).all { task->
-		task.jvmArgs += ['-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=${subProject.file('target/OOM-dump.hprof').absolutePath}"]
-
-		if ( subProject.name.equals( 'hibernate-osgi' ) ) {
-			// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
-			// java6Home is not available
-			if ( java6Home == null ) {
-				task.enabled = false;
-			}
-			else {
-				task.executable = java6Home.javaExecutable
-				task.maxHeapSize = '2G'
-				task.jvmArgs += ['-XX:MaxPermGen=512M']
-			}
-		}
-		else {
-			// for all other modules, just use the Java 8 used to launch Gradle (for now)
-			task.maxHeapSize = '2G'
-			task.jvmArgs += ['-XX:MetaspaceSize=512M']
-		}
-
-//		task.beforeTest { descriptor ->
-//			println "Starting test: " + descriptor
-//		}
-//		task.afterTest { descriptor ->
-//			println "Completed test: " + descriptor
-//		}
 	}
 
 	jar {
@@ -283,7 +174,14 @@ subprojects { subProject ->
 	test {
 		systemProperties['hibernate.test.validatefailureexpected'] = true
 		systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
-		maxHeapSize = "1024m"
+
+//		beforeTest { descriptor ->
+//			println "Starting test: " + descriptor
+//		}
+
+//		afterTest { descriptor ->
+//			println "Completed test: " + descriptor
+//		}
 	}
 
 	processTestResources.doLast( {
@@ -298,9 +196,7 @@ subprojects { subProject ->
 
 	idea {
 		module {
-			if ( subProject.name.equals( 'hibernate-java8' ) ) {
-				jdkName = '1.8'
-			}
+			jdkName = javaTarget.version
 
 			excludeDirs = [file( ".gradle" )]
 			excludeDirs += file( "$buildDir/classes" )
@@ -320,11 +216,9 @@ subprojects { subProject ->
 	}
 
 	eclipse {
-		if ( subProject.name != 'hibernate-java8' && java6Home != null ) {
-			jdt {
-				sourceCompatibility = '1.6'
-				targetCompatibility = '1.6'
-			}
+		jdt {
+			sourceCompatibility = javaTarget.version
+			targetCompatibility = javaTarget.version
 		}
 		classpath {
 			plusConfigurations.add( configurations.provided )
@@ -334,7 +228,7 @@ subprojects { subProject ->
 	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
 	// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
 	// Gradle plugin).  For now, just compile first in order to get the logging classes.
-	eclipseClasspath.dependsOn generateSources
+	eclipseClasspath.dependsOn compile
 
 	// specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	task checkstylePublicSources(type: Checkstyle) {
@@ -400,69 +294,17 @@ subprojects { subProject ->
 			mavenJava(MavenPublication) {
 				from components.java
 
-				artifact sourcesJar {
-					classifier "sources"
-				}
-
-				pom.withXml {
-					// append additional metadata
-					asNode().children().last() + {
-						resolveStrategy = Closure.DELEGATE_FIRST
-
-						name subProject.pomName()
-						description subProject.pomDescription()
-						url 'http://hibernate.org'
-						organization {
-							name 'Hibernate.org'
-							url 'http://hibernate.org'
-						}
-						issueManagement {
-							system 'jira'
-							url 'https://hibernate.atlassian.net/browse/HHH'
-						}
-						scm {
-							url 'http://github.com/hibernate/hibernate-orm'
-							connection 'scm:git:http://github.com/hibernate/hibernate-orm.git'
-							developerConnection 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-						}
-						licenses {
-							license {
-								name 'GNU Lesser General Public License'
-								url 'http://www.gnu.org/licenses/lgpl-2.1.html'
-								comments 'See discussion at http://hibernate.org/license for more details.'
-								distribution 'repo'
-							}
-						}
-						developers {
-							developer {
-								id 'hibernate-team'
-								name 'The Hibernate Development Team'
-								organization 'Hibernate.org'
-								organizationUrl 'http://hibernate.org'
-							}
-						}
-					}
-
-					// TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
-					//      rather than 'compile'; fix that.
-					asNode().dependencies[0].dependency.each {
-						it.scope[0].value = 'compile'
-					}
+				artifact( sourcesJar ) {
+					classifier 'sources'
 				}
 			}
-		}
-
-		repositories {
-			maven {
-				if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
-					name 'jboss-snapshots-repository'
-					url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-				}
-				else {
-					name 'jboss-releases-repository'
-					url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
-				}
-			}
+			// http://issues.gradle.org/browse/GRADLE-2966
+			// Once ^^ is resolved:
+			//		1) Move hibernate-testing module into hibernate-core tests
+			//		2) Define a second publication on hibernate-core for publishing the testing jar
+			// We could kind of do this now, but it would just be the jar.  Every module would still need
+			// to duplicate the testing dependencies.  Well, on second thought, we could centralize the
+			// testing dependencies here within the subprojects block
 		}
 	}
 

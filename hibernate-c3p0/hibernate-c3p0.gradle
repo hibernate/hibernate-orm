@@ -9,14 +9,11 @@ dependencies {
     testCompile project( ':hibernate-testing' )
 }
 
-def pomName() {
-    return 'Hibernate/c3p0 Integration'
-}
-
-def pomDescription() {
-    return 'Integration for c3p0 Connection pooling into Hibernate O/RM'
+mavenPom {
+    name = 'Hibernate/c3p0 Integration'
+    description = 'Integration for c3p0 Connection pooling into Hibernate O/RM'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
 }

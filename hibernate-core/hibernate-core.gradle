@@ -4,10 +4,6 @@ apply plugin: 'hibernate-matrix-testing'
 apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
-versionInjection {
-    into( 'org.hibernate.Version', 'getVersionString' )
-}
-
 dependencies {
     compile( libraries.jta )
     compile( libraries.jpa )
@@ -46,16 +42,17 @@ dependencies {
     testRuntime( libraries.unified_el )
 }
 
-def pomName() {
-    return 'Core Hibernate O/RM functionality'
-}
-
-def pomDescription() {
-    return 'The core O/RM functionality as provided by Hibernate'
+mavenPom {
+    name = 'Core Hibernate O/RM functionality'
+    description = 'The core O/RM functionality as provided by Hibernate'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
+}
+
+versionInjection {
+    into( 'org.hibernate.Version', 'getVersionString' )
 }
 
 jar {
@@ -129,4 +126,5 @@ xjc {
 
 
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
-sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
+//sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
+tasks.compile.dependsOn generateGrammarSource

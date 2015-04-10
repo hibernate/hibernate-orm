@@ -9,3 +9,8 @@ dependencies {
    compile gradleApi()
    compile localGroovy()
 }
+
+mavenPom {
+   name = 'Hibernate Gradle plugin'
+   description = "Gradle plugin for integrating Hibernate functionality into your build"
+}

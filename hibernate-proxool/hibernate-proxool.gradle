@@ -4,14 +4,11 @@ dependencies {
     testCompile project( ':hibernate-testing' )
 }
 
-def pomName() {
-    return 'Hibernate/Proxool Integration'
-}
-
-def pomDescription() {
-    return 'Integration for Proxool Connection pooling into Hibernate O/RM'
+mavenPom {
+    name = 'Hibernate/Proxool Integration'
+    description = 'Integration for Proxool Connection pooling into Hibernate O/RM'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
 }

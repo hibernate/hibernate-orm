@@ -13,16 +13,14 @@ dependencies {
     testRuntime( libraries.javassist )
 }
 
-def pomName() {
-    return 'Entity versioning support'
-}
+mavenPom {
+    name = 'ENtity VERSioning support'
+    description = 'ENtity VERSioning support'
 
-def pomDescription() {
-    return 'Entity versioning support'
 }
 
 def osgiDescription() {
-	return pomDescription()
+	return mavenPom.description
 }
 
 sourceSets {

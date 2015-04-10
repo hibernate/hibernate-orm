@@ -208,7 +208,7 @@ class HibernateBuildPlugin implements Plugin<Project> {
 				if ( applyExtensionValues ) {
 					asNode().appendNode( 'name', publishingExtension.name )
 					asNode().appendNode( 'description', publishingExtension.description )
-					Node licenseNode = asNode().appendNode( "license" )
+					Node licenseNode = asNode().appendNode( "licenses" ).appendNode( "license" )
 					if ( publishingExtension.license == MavenPublishingExtension.License.APACHE2 ) {
 						licenseNode.appendNode( 'name', 'Apache License, Version 2.0' )
 						licenseNode.appendNode( 'url', 'http://www.apache.org/licenses/LICENSE-2.0.txt' )

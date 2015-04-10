@@ -1,5 +1,3 @@
-import org.gradle.internal.jvm.Jvm
-
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
@@ -310,7 +308,7 @@ subprojects { subProject ->
 
 	model {
 		tasks.generatePomFileForMavenJavaPublication {
-			destination = file( "$project.buildDir/generated-pom.xml" )
+			destination = file( "$subProject.buildDir/generated-pom.xml" )
 		}
 	}
 

@@ -1,8 +1,8 @@
 package org.hibernate.spatial;
 
-import java.io.Serializable;
+import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
 
-import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
+import java.io.Serializable;
 
 /**
  * A global configuration object that is is used by

@@ -30,6 +30,7 @@ import java.sql.Struct;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.oracle.Decoders;
 import org.geolatte.geom.codec.db.oracle.SDOGeometry;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
@@ -52,26 +53,26 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	 * @param javaDescriptor the {@code JavaTypeDescriptor} to use
 	 * @param sqlTypeDescriptor the {@code SqlTypeDescriptor} to use
 	 */
-	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlTypeDescriptor ) {
+	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
 		super( javaDescriptor, sqlTypeDescriptor );
 	}
 
 	@Override
 	protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final Object geomObj = rs.getObject( name );
-		return getJavaDescriptor().wrap( convert(geomObj), options );
+		return getJavaDescriptor().wrap( convert( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final Object geomObj = statement.getObject( index );
-		return getJavaDescriptor().wrap( convert(geomObj), options );
+		return getJavaDescriptor().wrap( convert( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 		final Object geomObj = statement.getObject( name );
-		return getJavaDescriptor().wrap( convert(geomObj), options );
+		return getJavaDescriptor().wrap( convert( geomObj ), options );
 	}
 
 	/**
@@ -86,11 +87,11 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 			return null;
 		}
 		final SDOGeometry sdogeom = SDOGeometry.load( (Struct) struct );
-		return toGeomerty(sdogeom);
+		return toGeomerty( sdogeom );
 	}
 
 	private Geometry toGeomerty(SDOGeometry sdoGeom) {
-        return Decoders.decode(sdoGeom);
-    }
+		return Decoders.decode( sdoGeom );
+	}
 
 }

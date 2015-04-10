@@ -24,7 +24,9 @@ package org.hibernate.spatial.testing.dialects.h2geodb;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.hibernate.metamodel.spi.MetadataImplementor;
+
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.GeometryEquality;
@@ -39,9 +41,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class GeoDBTestSupport extends TestSupport {
 
-
-	public DataSourceUtils createDataSourceUtil(MetadataImplementor metadataImplementor) {
-		super.createDataSourceUtil( metadataImplementor );
+	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
+		super.createDataSourceUtil( serviceRegistry );
 		try {
 			return new GeoDBDataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 		}
@@ -62,7 +63,11 @@ public class GeoDBTestSupport extends TestSupport {
 	}
 
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new GeoDBExpectationsFactory( (GeoDBDataSourceUtils) dataSourceUtils );
+		if ( dataSourceUtils instanceof GeoDBDataSourceUtils) {
+			return new GeoDBExpectationsFactory( (GeoDBDataSourceUtils) dataSourceUtils );
+		} else {
+			throw new IllegalArgumentException("Requires a GeoDBDataSourceUtils instance");
+		}
 	}
 
 	public SQLExpressionTemplate getSQLExpressionTemplate() {

@@ -29,8 +29,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.sqlserver.Decoders;
-import org.geolatte.geom.codec.sqlserver.Encoders;
+
+import org.geolatte.geom.codec.db.sqlserver.Decoders;
+import org.geolatte.geom.codec.db.sqlserver.Encoders;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -46,7 +47,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/23/11
  */
-public class SqlServer2008GeometryTypeDescriptor  implements SqlTypeDescriptor {
+public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	/**
 	 * An instance of the descrtiptor
@@ -65,9 +66,10 @@ public class SqlServer2008GeometryTypeDescriptor  implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return new BasicBinder<X>(javaTypeDescriptor, this){
+		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+					throws SQLException {
 				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
 				final byte[] bytes = Encoders.encode( geometry );
 				st.setObject( index, bytes );
@@ -103,7 +105,7 @@ public class SqlServer2008GeometryTypeDescriptor  implements SqlTypeDescriptor {
 		if ( obj == null ) {
 			return null;
 		}
-		if ( ( obj instanceof byte[] ) ) {
+		if ( (obj instanceof byte[]) ) {
 			raw = (byte[]) obj;
 		}
 		else if ( obj instanceof Blob ) {
@@ -119,7 +121,7 @@ public class SqlServer2008GeometryTypeDescriptor  implements SqlTypeDescriptor {
 		try {
 			return blob.getBytes( 1, (int) blob.length() );
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			throw new RuntimeException( "Error on transforming blob into array.", e );
 		}
 	}

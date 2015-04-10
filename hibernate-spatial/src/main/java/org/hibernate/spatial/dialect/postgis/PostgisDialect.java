@@ -21,9 +21,10 @@
 package org.hibernate.spatial.dialect.postgis;
 
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.metamodel.spi.TypeContributions;
+
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;

@@ -25,6 +25,7 @@ import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.oracle.Encoders;
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 import org.geolatte.geom.codec.db.oracle.SDOGeometry;
+
 import org.hibernate.HibernateException;
 import org.hibernate.spatial.helper.FinderException;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -43,12 +44,15 @@ import java.sql.Types;
  */
 class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
-    private static final String SQL_TYPE_NAME = "MDSYS.SDO_GEOMETRY";
+	private static final String SQL_TYPE_NAME = "MDSYS.SDO_GEOMETRY";
 
 	private final OracleJDBCTypeFactory typeFactory;
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 
-	public SDOGeometryValueBinder(JavaTypeDescriptor<J> javaTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor, OracleJDBCTypeFactory typeFactory) {
+	public SDOGeometryValueBinder(
+			JavaTypeDescriptor<J> javaTypeDescriptor,
+			SqlTypeDescriptor sqlTypeDescriptor,
+			OracleJDBCTypeFactory typeFactory) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.typeFactory = typeFactory;
 	}
@@ -70,19 +74,26 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	private Object toNative(Geometry geom, Connection connection) {
-        final SDOGeometry sdoGeom = Encoders.encode(geom);
-        if (geom != null) {
-            try {
-                return store(sdoGeom, connection);
-            } catch (SQLException e) {
-                throw new HibernateException("Problem during conversion from JTS to SDOGeometry", e);
-            } catch (FinderException e) {
-                throw new HibernateException("OracleConnection could not be retrieved for creating SDOGeometry " +
-                        "STRUCT", e);
-            }
-        } else {
-            throw new UnsupportedOperationException("Conversion of " + geom.getClass().getSimpleName() + " to Oracle STRUCT not supported");
-        }
-    }
+		try {
+			final SDOGeometry sdoGeom = Encoders.encode( geom );
+			return store( sdoGeom, connection );
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Problem during conversion from JTS to SDOGeometry", e );
+		}
+		catch (FinderException e) {
+			throw new HibernateException(
+					"OracleConnection could not be retrieved for creating SDOGeometry " +
+							"STRUCT", e
+			);
+		}
+		catch (IllegalArgumentException e) {
+			//we get here if the type of geometry is unsupported by geolatte encoders
+			throw new HibernateException( e.getMessage() );
+		}
+		catch(Exception e) {
+			throw new HibernateException( e );
+		}
+	}
 
 }

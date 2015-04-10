@@ -24,6 +24,7 @@ package org.hibernate.spatial.testing.dialects.oracle;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import org.geolatte.geom.jts.JTS;
 import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.dialect.oracle.SDOGeometryValueExtractor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
@@ -266,6 +267,6 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected Geometry decode(Object o) {
-		return decoder.convert(o);
+		return JTS.to(decoder.convert(o));
 	}
 }

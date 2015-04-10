@@ -47,7 +47,7 @@ import org.hibernate.spatial.LogFactory;
 
 /**
  * A utility class to serialize from/to GeoDB WKB's.
- *
+ * <p/>
  * <p>Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
  * not available in common maven repositories, such a dependency is to be avoided.</p>
  *
@@ -70,7 +70,7 @@ public class GeoDbWkb {
 	public static byte[] to(Geometry geometry) {
 		final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 		final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
-		return ( buffer == null ? null : buffer.toByteArray() );
+		return (buffer == null ? null : buffer.toByteArray());
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class GeoDbWkb {
 				);
 			}
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOGGER.warn( "Could not convert database object to a Geometry." );
 			throw new HibernateException( e );
 		}
@@ -110,11 +110,11 @@ public class GeoDbWkb {
 	}
 
 	private static Geometry<C2D> toPolygon(Envelope env) {
-		final PositionSequence<C2D> ps = PositionSequenceBuilders.fixedSized(4, C2D.class)
-				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate(1) )
-				.add( env.lowerLeft().getCoordinate( 0 ), env.upperRight().getCoordinate(1) )
-				.add( env.upperRight().getCoordinate( 0 ), env.upperRight().getCoordinate(1) )
-				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate(1) )
+		final PositionSequence<C2D> ps = PositionSequenceBuilders.fixedSized( 4, C2D.class )
+				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate( 1 ) )
+				.add( env.lowerLeft().getCoordinate( 0 ), env.upperRight().getCoordinate( 1 ) )
+				.add( env.upperRight().getCoordinate( 0 ), env.upperRight().getCoordinate( 1 ) )
+				.add( env.lowerLeft().getCoordinate( 0 ), env.lowerLeft().getCoordinate( 1 ) )
 				.toPositionSequence();
 		return new Polygon<C2D>( ps, CoordinateReferenceSystems.PROJECTED_2D_METER );
 	}
@@ -127,11 +127,11 @@ public class GeoDbWkb {
 		try {
 			in = blob.getBinaryStream();
 			int n = 0;
-			while ( ( n = in.read( buf ) ) >= 0 ) {
+			while ( (n = in.read( buf )) >= 0 ) {
 				baos.write( buf, 0, n );
 			}
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOGGER.warn( "Could not convert database BLOB object to binary stream.", e );
 		}
 		finally {
@@ -140,7 +140,7 @@ public class GeoDbWkb {
 					in.close();
 				}
 			}
-			catch ( IOException e ) {
+			catch (IOException e) {
 				LOGGER.warn( "Could not close binary stream." );
 			}
 		}

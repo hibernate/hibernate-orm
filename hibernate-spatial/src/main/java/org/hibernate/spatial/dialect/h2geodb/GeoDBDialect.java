@@ -21,10 +21,12 @@
 
 package org.hibernate.spatial.dialect.h2geodb;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.service.ServiceRegistry;
+
+
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
@@ -40,7 +42,6 @@ import org.hibernate.type.StandardBasicTypes;
 public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
 
-
 	/**
 	 * Constructor. Registers OGC simple feature functions (see
 	 * http://portal.opengeospatial.org/files/?artifact_id=829 for details).
@@ -53,118 +54,31 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		super();
 
 		// Register Geometry column type
-		registerColumnType(
-				GeoDBGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				"GEOMETRY"
-		);
+		registerColumnType( GeoDBGeometryTypeDescriptor.INSTANCE.getSqlType(), "GEOMETRY" );
 
 		// Register functions that operate on spatial types
-		registerFunction(
-				"dimension", new StandardSQLFunction(
-				"ST_Dimension",
-				StandardBasicTypes.INTEGER
-		)
-		);
-		registerFunction(
-				"geometrytype", new StandardSQLFunction(
-				"GeometryType", StandardBasicTypes.STRING
-		)
-		);
-		registerFunction(
-				"srid", new StandardSQLFunction(
-				"ST_SRID",
-				StandardBasicTypes.INTEGER
-		)
-		);
+		registerFunction( "dimension", new StandardSQLFunction( "ST_Dimension", StandardBasicTypes.INTEGER ) );
+		registerFunction( "geometrytype", new StandardSQLFunction( "GeometryType", StandardBasicTypes.STRING ) );
+		registerFunction( "srid", new StandardSQLFunction( "ST_SRID", StandardBasicTypes.INTEGER ) );
 		registerFunction( "envelope", new StandardSQLFunction( "ST_Envelope" ) );
-		registerFunction(
-				"astext", new StandardSQLFunction(
-				"ST_AsText",
-				StandardBasicTypes.STRING
-		)
-		);
-		registerFunction(
-				"asbinary", new StandardSQLFunction(
-				"ST_AsEWKB",
-				StandardBasicTypes.BINARY
-		)
-		);
-		registerFunction(
-				"isempty", new StandardSQLFunction(
-				"ST_IsEmpty",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"issimple", new StandardSQLFunction(
-				"ST_IsSimple",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
+		registerFunction( "astext", new StandardSQLFunction( "ST_AsText", StandardBasicTypes.STRING ) );
+		registerFunction( "asbinary", new StandardSQLFunction( "ST_AsEWKB", StandardBasicTypes.BINARY ) );
+		registerFunction( "isempty", new StandardSQLFunction( "ST_IsEmpty", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "issimple", new StandardSQLFunction( "ST_IsSimple", StandardBasicTypes.BOOLEAN ) );
 		registerFunction( "boundary", new StandardSQLFunction( "ST_Boundary" ) );
 
 		// Register functions for spatial relation constructs
-		registerFunction(
-				"overlaps", new StandardSQLFunction(
-				"ST_Overlaps",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"intersects", new StandardSQLFunction(
-				"ST_Intersects",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"equals", new StandardSQLFunction(
-				"ST_Equals",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"contains", new StandardSQLFunction(
-				"ST_Contains",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"crosses", new StandardSQLFunction(
-				"ST_Crosses",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"disjoint", new StandardSQLFunction(
-				"ST_Disjoint",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"touches", new StandardSQLFunction(
-				"ST_Touches",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"within", new StandardSQLFunction(
-				"ST_Within",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-		registerFunction(
-				"relate", new StandardSQLFunction(
-				"ST_Relate",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
+		registerFunction( "overlaps", new StandardSQLFunction( "ST_Overlaps", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "intersects", new StandardSQLFunction( "ST_Intersects", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "equals", new StandardSQLFunction( "ST_Equals", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "contains", new StandardSQLFunction( "ST_Contains", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "crosses", new StandardSQLFunction( "ST_Crosses", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "disjoint", new StandardSQLFunction( "ST_Disjoint", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "touches", new StandardSQLFunction( "ST_Touches", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "within", new StandardSQLFunction( "ST_Within", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "relate", new StandardSQLFunction( "ST_Relate", StandardBasicTypes.BOOLEAN ) );
 		// register the spatial analysis functions
-		registerFunction(
-				"distance", new StandardSQLFunction(
-				"ST_Distance",
-				StandardBasicTypes.DOUBLE
-		)
-		);
+		registerFunction( "distance", new StandardSQLFunction( "ST_Distance", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "buffer", new StandardSQLFunction( "ST_Buffer" ) );
 		registerFunction( "convexhull", new StandardSQLFunction( "ST_ConvexHull" ) );
 		registerFunction( "difference", new StandardSQLFunction( "ST_Difference" ) );
@@ -172,21 +86,13 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		registerFunction( "symdifference", new StandardSQLFunction( "ST_SymDifference" ) );
 		registerFunction( "geomunion", new StandardSQLFunction( "ST_Union" ) );
 
-		registerFunction(
-				"dwithin", new StandardSQLFunction(
-				"ST_DWithin",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
+		registerFunction( "dwithin", new StandardSQLFunction( "ST_DWithin", StandardBasicTypes.BOOLEAN ) );
 
 	}
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(
-				typeContributions,
-				serviceRegistry
-		);
+		super.contributeTypes( typeContributions, serviceRegistry );
 		typeContributions.contributeType( new GeolatteGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
 		typeContributions.contributeType( new JTSGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
 	}
@@ -201,8 +107,8 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 			//			return stbuf.toString();
 			default:
 				throw new IllegalArgumentException(
-						"Aggregations of type "
-								+ aggregation + " are not supported by this dialect"
+						"Aggregations of type " + aggregation + " are not supported by " +
+								"this dialect"
 				);
 		}
 	}
@@ -248,9 +154,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 			case SpatialRelation.EQUALS:
 				return " ST_Equals(" + columnName + ", ?)";
 			default:
-				throw new IllegalArgumentException(
-						"Spatial relation is not known by this dialect"
-				);
+				throw new IllegalArgumentException( "Spatial relation is not known by this dialect" );
 		}
 	}
 
@@ -261,7 +165,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return function != SpatialFunction.difference && ( getFunctions().get( function.toString() ) != null );
+		return function != SpatialFunction.difference && (getFunctions().get( function.toString() ) != null);
 	}
 
 }

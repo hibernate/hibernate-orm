@@ -789,13 +789,14 @@ public abstract class AbstractExpectationsFactory {
 	protected <T> Map<Integer, T> retrieveExpected(NativeSQLStatement nativeSQLStatement, int type)
 			throws SQLException {
 		PreparedStatement preparedStatement = null;
+		ResultSet results = null;
 		Connection cn = null;
 		Map<Integer, T> expected = new HashMap<Integer, T>();
 		try {
 			cn = createConnection();
 			preparedStatement = nativeSQLStatement.prepare( cn );
 			LOG.info( "Native SQL is: " + preparedStatement.toString() );
-			ResultSet results = preparedStatement.executeQuery();
+			results = preparedStatement.executeQuery();
 			while ( results.next() ) {
 				int id = results.getInt( 1 );
 				switch ( type ) {
@@ -831,11 +832,20 @@ public abstract class AbstractExpectationsFactory {
 			return expected;
 		}
 		finally {
+			if (results != null) {
+				try {
+					results.close();
+				}catch(SQLException e) {}
+			}
 			if ( preparedStatement != null ) {
-				preparedStatement.close();
+				try {
+					preparedStatement.close();
+				}catch(SQLException e) {}
 			}
 			if ( cn != null ) {
-				cn.close();
+				try {
+					cn.close();
+				}catch(SQLException e){}
 			}
 		}
 	}

@@ -23,7 +23,8 @@ package org.hibernate.spatial.testing;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 
@@ -35,8 +36,8 @@ public abstract class TestSupport {
 
 	protected ConfigurationService configurationService;
 
-	public DataSourceUtils createDataSourceUtil(MetadataImplementor metadataImplementor) {
-		this.configurationService = metadataImplementor.getServiceRegistry().getService( ConfigurationService.class );
+	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
+		this.configurationService = serviceRegistry.getService( ConfigurationService.class );
 		return new DataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 	}
 

@@ -3,9 +3,10 @@ package org.hibernate.spatial.dialect.mysql;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.metamodel.spi.TypeContributions;
+
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;

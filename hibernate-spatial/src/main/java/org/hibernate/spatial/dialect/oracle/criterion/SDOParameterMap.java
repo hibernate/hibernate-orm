@@ -276,11 +276,11 @@ public class SDOParameterMap {
 			return "";
 		}
 		stb.append( '\'' );
-		for ( String paramName : params.keySet() ) {
-			if ( params.get( paramName ) == null ) {
+		for ( Map.Entry<String, Object> kv : params.entrySet() ) {
+			if ( kv.getValue() == null ) {
 				continue;
 			}
-			stb.append( paramName ).append( "=" ).append( params.get( paramName ) ).append( " " );
+			stb.append( kv.getKey() ).append( "=" ).append( kv.getValue() ).append( " " );
 		}
 		stb.deleteCharAt( stb.length() - 1 );
 		stb.append( '\'' );

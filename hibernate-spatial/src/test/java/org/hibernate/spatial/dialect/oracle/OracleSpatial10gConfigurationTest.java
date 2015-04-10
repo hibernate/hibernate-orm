@@ -1,5 +1,7 @@
 package org.hibernate.spatial.dialect.oracle;
 
+import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
+import org.geolatte.geom.codec.db.oracle.DefaultConnectionFinder;
 import org.junit.Assert;
 import org.junit.Test;
 

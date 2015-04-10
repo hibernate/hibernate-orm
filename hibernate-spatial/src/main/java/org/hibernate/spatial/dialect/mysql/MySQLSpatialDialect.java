@@ -22,9 +22,10 @@ package org.hibernate.spatial.dialect.mysql;
 
 import java.util.Map;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.metamodel.spi.TypeContributions;
+
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;

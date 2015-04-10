@@ -34,7 +34,7 @@ public class SDOTestDataReader extends TestDataReader {
 
 	@Override
 	protected void addDataElement(Element element, List<TestDataElement> testDataElements) {
-		int id = Integer.valueOf( element.selectSingleNode( "id" ).getText() );
+		int id = Integer.parseInt( element.selectSingleNode( "id" ).getText() );
 		String type = element.selectSingleNode( "type" ).getText();
 		String wkt = element.selectSingleNode( "wkt" ).getText();
 		String sdo = element.selectSingleNode( "sdo" ).getText();

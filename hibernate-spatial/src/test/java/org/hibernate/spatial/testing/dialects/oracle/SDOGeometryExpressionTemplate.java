@@ -30,6 +30,9 @@ public class SDOGeometryExpressionTemplate implements SQLExpressionTemplate {
 
 	@SuppressWarnings( "unchecked" )
 	public String toInsertSql(TestDataElement testDataElement) {
+		if(! (testDataElement instanceof SDOTestDataElement)) {
+			throw new IllegalArgumentException( "Require SDOTestDataElements" );
+		}
 		SDOTestDataElement sdoTestDataElement = (SDOTestDataElement) testDataElement;
 		return String.format( SQL_TEMPLATE, sdoTestDataElement.id, sdoTestDataElement.type, sdoTestDataElement.sdo );
 	}

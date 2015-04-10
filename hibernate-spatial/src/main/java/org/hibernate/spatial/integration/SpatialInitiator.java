@@ -2,6 +2,7 @@ package org.hibernate.spatial.integration;
 
 import java.util.Map;
 
+import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -11,7 +12,7 @@ import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.spatial.HibernateSpatialConfiguration;
-import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
+
 
 /**
  * The {@code ServiceInitiator} for Hibernate Spatial.

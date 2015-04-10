@@ -21,27 +21,25 @@
 
 package org.hibernate.spatial.testing;
 
-import java.sql.BatchUpdateException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-
 import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.sql.BatchUpdateException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -109,15 +107,15 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 *
 	 * @return
 	 */
-	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
-		super.afterConstructAndConfigureMetadata( metadataImplementor );
-		initializeSpatialTestSupport( metadataImplementor );
+	protected void afterConfigurationBuilt(Configuration cfg) {
+        super.afterConfigurationBuilt(cfg);
+		initializeSpatialTestSupport( serviceRegistry() );
 	}
 
-	private void initializeSpatialTestSupport(MetadataImplementor cfg) {
+	private void initializeSpatialTestSupport(ServiceRegistry serviceRegistry) {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( getDialect() );
-			dataSourceUtils = support.createDataSourceUtil( cfg );
+			dataSourceUtils = support.createDataSourceUtil( serviceRegistry );
 			expectationsFactory = support.createExpectationsFactory( dataSourceUtils );
 			testData = support.createTestData( this );
 			geometryEquality = support.createGeometryEquality();
@@ -220,7 +218,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	protected void compare(Integer id, Object expected, Object received, String geometryType) {
-		assertTrue( expected != null || ( expected == null && received == null ) );
+		assertTrue( expected != null || received == null );
 		if ( expected instanceof byte[] ) {
 			assertArrayEquals( "Failure on testsuite-suite for case " + id, (byte[]) expected, (byte[]) received );
 

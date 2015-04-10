@@ -27,7 +27,7 @@ test {
 if ( project.properties.java6Home == null ) {
 	// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
 	// java6Home is not available
-	enabled = false
+	test.enabled = false
 }
 else {
 	compileTestJava {

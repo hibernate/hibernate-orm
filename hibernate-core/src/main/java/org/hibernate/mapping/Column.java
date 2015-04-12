@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -122,7 +123,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		}
 
 		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()
-				&& !quoted && !name.toLowerCase().equals( "rowid" );
+				&& !quoted && !name.toLowerCase(Locale.ROOT).equals( "rowid" );
 		if ( !useRawName ) {
 			if ( suffix.length() >= dialect.getMaxAliasLength() ) {
 				throw new MappingException( String.format(
@@ -168,7 +169,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		//used also for generation of FK names!
 		return isQuoted() ?
 			name.hashCode() :
-			name.toLowerCase().hashCode();
+			name.toLowerCase(Locale.ROOT).hashCode();
 	}
 
 	@Override
@@ -345,7 +346,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public String getCanonicalName() {
-		return quoted ? name : name.toLowerCase();
+		return quoted ? name : name.toLowerCase(Locale.ROOT);
 	}
 
 	/**

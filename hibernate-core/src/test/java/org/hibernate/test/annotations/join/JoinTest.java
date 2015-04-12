@@ -25,6 +25,7 @@ package org.hibernate.test.annotations.join;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import org.junit.Test;
 
@@ -216,7 +217,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		Cat c = (Cat) s.get( Cat.class, cat.getId() );
-		assertEquals( storyPart2.toUpperCase(), c.getStoryPart2() );
+		assertEquals( storyPart2.toUpperCase(Locale.ROOT), c.getStoryPart2() );
 
 		tx.rollback();
 		s.close();

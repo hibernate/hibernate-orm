@@ -23,13 +23,14 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 
@@ -60,7 +61,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 				"with query as (select inner_query.*, row_number() over (order by current_timestamp) as __hibernate_row_nr__ from ( " +
 						"select distinct top(?) f1 as f53245 from table849752 order by f234, f67 desc ) inner_query )" +
 						" select f53245 from query where __hibernate_row_nr__ >= ? and __hibernate_row_nr__ < ?",
-				dialect.buildLimitHandler( input, toRowSelection( 10, 15 ) ).getProcessedSql().toLowerCase()
+				dialect.buildLimitHandler( input, toRowSelection( 10, 15 ) ).getProcessedSql().toLowerCase(Locale.ROOT)
 		);
 	}
 

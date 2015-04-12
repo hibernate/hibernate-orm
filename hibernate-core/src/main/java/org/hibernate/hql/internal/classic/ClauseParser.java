@@ -25,6 +25,7 @@ package org.hibernate.hql.internal.classic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.QueryException;
 
@@ -40,7 +41,7 @@ public class ClauseParser implements Parser {
 
 	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
-		String lcToken = token.toLowerCase();
+		String lcToken = token.toLowerCase(Locale.ROOT);
 
 		if ( "(".equals( token ) ) {
 			parenCount++;

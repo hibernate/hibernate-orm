@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.LockOptions;
 import org.hibernate.sql.ANSICaseFragment;
@@ -37,6 +38,7 @@ import org.hibernate.sql.CaseFragment;
  * @author Steve Ebersole
  */
 public class Oracle9iDialect extends Oracle8iDialect {
+
 	@Override
 	protected void registerCharacterTypeMappings() {
 		registerColumnType( Types.CHAR, "char(1 char)" );
@@ -62,7 +64,7 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		sql = sql.trim();
 		String forUpdateClause = null;
 		boolean isForUpdate = false;
-		final int forUpdateIndex = sql.toLowerCase().lastIndexOf( "for update") ;
+		final int forUpdateIndex = sql.toLowerCase(Locale.ROOT).lastIndexOf( "for update") ;
 		if ( forUpdateIndex > -1 ) {
 			// save 'for update ...' and then remove it
 			forUpdateClause = sql.substring( forUpdateIndex );

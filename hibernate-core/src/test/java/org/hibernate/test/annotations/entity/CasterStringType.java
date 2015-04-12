@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -41,10 +42,10 @@ public class CasterStringType implements UserType, ParameterizedType {
 		String result = rs.getString( names[0] );
 		if ( rs.wasNull() ) return null;
 		if ( parameters.getProperty( CAST ).equals( "lower" ) ) {
-			return result.toLowerCase();
+			return result.toLowerCase(Locale.ROOT);
 		}
 		else {
-			return result.toUpperCase();
+			return result.toUpperCase(Locale.ROOT);
 		}
 	}
 
@@ -55,10 +56,10 @@ public class CasterStringType implements UserType, ParameterizedType {
 		else {
 			String string = (String) value;
 			if ( parameters.getProperty( CAST ).equals( "lower" ) ) {
-				string = string.toLowerCase();
+				string = string.toLowerCase(Locale.ROOT);
 			}
 			else {
-				string = string.toUpperCase();
+				string = string.toUpperCase(Locale.ROOT);
 			}
 			st.setString( index, string );
 		}

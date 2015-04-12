@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.MappingException;
@@ -60,7 +61,7 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 		clazz.getProperty( fetch.association() );
 
 		profile.addFetch(
-				fetch.entity().getName(), fetch.association(), fetch.mode().toString().toLowerCase()
+				fetch.entity().getName(), fetch.association(), fetch.mode().toString().toLowerCase(Locale.ROOT)
 		);
 	}
 }

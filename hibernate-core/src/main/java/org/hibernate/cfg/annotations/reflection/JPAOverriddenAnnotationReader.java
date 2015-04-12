@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Access;
@@ -1980,7 +1981,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 					parameterDescriptor.setValue( "mode", ParameterMode.IN );
 				}
 				else {
-					parameterDescriptor.setValue( "mode", ParameterMode.valueOf( modeValue.toUpperCase() ) );
+					parameterDescriptor.setValue( "mode", ParameterMode.valueOf( modeValue.toUpperCase(Locale.ROOT) ) );
 				}
 				String clazzName = parameterElement.attributeValue( "class" );
 				Class clazz;

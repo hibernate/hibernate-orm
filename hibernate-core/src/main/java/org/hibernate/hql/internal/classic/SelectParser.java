@@ -26,6 +26,7 @@ package org.hibernate.hql.internal.classic;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.QueryException;
@@ -75,7 +76,7 @@ public class SelectParser implements Parser {
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
-		String lctoken = token.toLowerCase();
+		String lctoken = token.toLowerCase(Locale.ROOT);
 
 		if ( first ) {
 			first = false;

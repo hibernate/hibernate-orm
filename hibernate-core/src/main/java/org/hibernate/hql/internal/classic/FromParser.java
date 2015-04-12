@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.internal.classic;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.QueryException;
@@ -70,7 +71,7 @@ public class FromParser implements Parser {
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
 		// start by looking for HQL keywords...
-		String lcToken = token.toLowerCase();
+		String lcToken = token.toLowerCase(Locale.ROOT);
 		if ( lcToken.equals( "," ) ) {
 			if ( !( expectingJoin | expectingAs ) ) throw new QueryException( "unexpected token: ," );
 			expectingJoin = false;

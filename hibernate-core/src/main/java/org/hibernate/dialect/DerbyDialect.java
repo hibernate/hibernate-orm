@@ -25,6 +25,7 @@ package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
@@ -186,7 +187,7 @@ public class DerbyDialect extends DB2Dialect {
 	@Override
 	public String getLimitString(String query, final int offset, final int limit) {
 		final StringBuilder sb = new StringBuilder(query.length() + 50);
-		final String normalizedSelect = query.toLowerCase().trim();
+		final String normalizedSelect = query.toLowerCase(Locale.ROOT).trim();
 		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
 
 		if ( hasForUpdateClause( forUpdateIndex ) ) {

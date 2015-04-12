@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -88,7 +89,7 @@ public class InterbaseDialect extends Dialect {
 
 	@Override
 	public String getDropSequenceString(String sequenceName) {
-		return "delete from RDB$GENERATORS where RDB$GENERATOR_NAME = '" + sequenceName.toUpperCase() + "'";
+		return "delete from RDB$GENERATORS where RDB$GENERATOR_NAME = '" + sequenceName.toUpperCase(Locale.ROOT) + "'";
 	}
 
 	@Override

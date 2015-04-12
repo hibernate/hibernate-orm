@@ -23,10 +23,6 @@
  */
 package org.hibernate.dialect;
 
-import java.io.Serializable;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -52,8 +48,12 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
+
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -278,7 +278,7 @@ public class HSQLDialect extends Dialect {
 			return new StringBuilder( sql.length() + 10 )
 					.append( sql )
 					.insert(
-							sql.toLowerCase().indexOf( "select" ) + 6,
+							sql.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6,
 							hasOffset ? " limit ? ?" : " top ?"
 					)
 					.toString();

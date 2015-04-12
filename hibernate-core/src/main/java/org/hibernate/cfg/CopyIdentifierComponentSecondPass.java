@@ -25,6 +25,7 @@ package org.hibernate.cfg;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -87,7 +88,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				break;
 			}
 			//JPA 2 requires referencedColumnNames to be case insensitive
-			columnByReferencedName.put( referencedColumnName.toLowerCase(), joinColumn );
+			columnByReferencedName.put( referencedColumnName.toLowerCase(Locale.ROOT), joinColumn );
 		}
 		//try default column orientation
 		int index = 0;
@@ -142,7 +143,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 							final String columnName = column.getName();
 							logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
 							//JPA 2 requires referencedColumnNames to be case insensitive
-							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase() );
+							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
 						}
 						else {
 							joinColumn = columnByReferencedName.get( "" + index );

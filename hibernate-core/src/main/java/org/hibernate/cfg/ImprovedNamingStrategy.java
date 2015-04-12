@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
@@ -79,7 +80,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 				buf.insert(i++, '_');
 			}
 		}
-		return buf.toString().toLowerCase();
+		return buf.toString().toLowerCase(Locale.ROOT);
 	}
 
 	public String collectionTableName(

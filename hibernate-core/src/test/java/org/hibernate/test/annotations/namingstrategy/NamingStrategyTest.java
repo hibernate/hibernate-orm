@@ -1,6 +1,8 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
+import org.junit.Before;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;

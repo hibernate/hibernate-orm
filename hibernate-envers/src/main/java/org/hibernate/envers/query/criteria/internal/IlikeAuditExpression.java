@@ -7,6 +7,8 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
+import java.util.Locale;
+
 public class IlikeAuditExpression implements AuditCriterion {
 
 	private PropertyNameGetter propertyNameGetter;
@@ -28,7 +30,7 @@ public class IlikeAuditExpression implements AuditCriterion {
 				propertyNameGetter);
 		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
 
-		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase() );
+		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase(Locale.ROOT) );
 	}
 
 }

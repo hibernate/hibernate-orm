@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.Locale;
 
 import org.junit.Test;
 
@@ -142,7 +143,7 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 		private String generateFinalNamePattern(DatabaseMetaData meta, String name) throws SQLException {
 			if ( meta.storesLowerCaseIdentifiers() ) {
-				return name.toLowerCase();
+				return name.toLowerCase(Locale.ROOT);
 			}
 			else {
 				return name;

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
@@ -132,7 +133,7 @@ public class Junction implements Criterion {
 		 * @return SQL operator
 		 */
 		public String getOperator() {
-			return name().toLowerCase();
+			return name().toLowerCase(Locale.ROOT);
 		}
 	}
 }

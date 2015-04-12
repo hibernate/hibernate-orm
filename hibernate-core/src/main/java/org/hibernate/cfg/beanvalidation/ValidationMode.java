@@ -24,6 +24,7 @@
 package org.hibernate.cfg.beanvalidation;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -68,7 +69,7 @@ public enum ValidationMode {
 		}
 		else {
 			try {
-				return valueOf( modeProperty.trim().toUpperCase() );
+				return valueOf( modeProperty.trim().toUpperCase(Locale.ROOT) );
 			}
 			catch ( IllegalArgumentException e ) {
 				throw new HibernateException( "Unknown validation mode in " + BeanValidationIntegrator.MODE_PROPERTY + ": " + modeProperty );

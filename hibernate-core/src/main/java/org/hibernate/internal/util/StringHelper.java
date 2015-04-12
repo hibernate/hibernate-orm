@@ -357,7 +357,7 @@ public final class StringHelper {
 	}
 
 	public static boolean booleanValue(String tfString) {
-		String trimmed = tfString.trim().toLowerCase();
+		String trimmed = tfString.trim().toLowerCase(Locale.ROOT);
 		return trimmed.equals( "true" ) || trimmed.equals( "t" );
 	}
 
@@ -558,7 +558,7 @@ public final class StringHelper {
 		String result = truncate( unqualifyEntityName(description), ALIAS_TRUNCATE_LENGTH )
 				// Important to use Locale.ENGLISH.  See HHH-8579.  #toLowerCase() uses the default Locale.  Certain DBs
 				// do not like non-ascii characters in aliases, etc., so ensure consistency/portability here.
-				.toLowerCase(Locale.ENGLISH)
+				.toLowerCase(Locale.ROOT)
 		        .replace( '/', '_' ) // entityNames may now include slashes for the representations
 				.replace( '$', '_' ); //classname may be an inner class
 		result = cleanAlias( result );
@@ -602,13 +602,13 @@ public final class StringHelper {
 	}
 	
 	public static String toUpperCase(String str) {
-		return str==null ? null : str.toUpperCase();
+		return str==null ? null : str.toUpperCase(Locale.ROOT);
 	}
 	
 	public static String toLowerCase(String str) {
 		// Important to use Locale.ENGLISH.  See HHH-8579.  #toLowerCase() uses the default Locale.  Certain DBs do not
 		// like non-ascii characters in aliases, etc., so ensure consistency/portability here.
-		return str == null ? null : str.toLowerCase(Locale.ENGLISH);
+		return str == null ? null : str.toLowerCase(Locale.ROOT);
 	}
 
 	public static String moveAndToBeginning(String filter) {

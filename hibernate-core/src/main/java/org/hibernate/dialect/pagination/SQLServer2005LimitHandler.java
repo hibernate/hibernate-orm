@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -296,7 +297,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 */
 	private static int shallowIndexOf(StringBuilder sb, String search, int fromIndex) {
 		// case-insensitive match
-		final String lowercase = sb.toString().toLowerCase();
+		final String lowercase = sb.toString().toLowerCase(Locale.ROOT);
 		final int len = lowercase.length();
 		final int searchlen = search.length();
 		int pos = -1;

@@ -27,6 +27,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -242,7 +243,7 @@ public class Oracle9Dialect extends Dialect {
 
 		sql = sql.trim();
 		boolean isForUpdate = false;
-		if ( sql.toLowerCase().endsWith( " for update" ) ) {
+		if ( sql.toLowerCase(Locale.ROOT).endsWith( " for update" ) ) {
 			sql = sql.substring( 0, sql.length() - 11 );
 			isForUpdate = true;
 		}

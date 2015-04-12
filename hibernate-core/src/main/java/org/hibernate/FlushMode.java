@@ -23,6 +23,8 @@
  */
 package org.hibernate;
 
+import java.util.Locale;
+
 /**
  * Represents a flushing strategy. The flush process synchronizes
  * database state with session state by detecting state changes
@@ -119,7 +121,7 @@ public enum FlushMode {
 		}
 
 		try {
-			return FlushMode.valueOf( externalName.toUpperCase() );
+			return FlushMode.valueOf( externalName.toUpperCase(Locale.ROOT) );
 		}
 		catch ( IllegalArgumentException e ) {
 			throw new MappingException( "unknown FlushMode : " + externalName );

@@ -41,6 +41,7 @@ import org.hibernate.type.Type;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
+import java.util.Locale;
 
 /**
  * Represents a constructor (new) in a SELECT.
@@ -146,11 +147,11 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 	public void prepare() throws SemanticException {
 		constructorArgumentTypes = resolveConstructorArgumentTypes();
 		String path = ( (PathNode) getFirstChild() ).getPath();
-		if ( "map".equals( path.toLowerCase() ) ) {
+		if ( "map".equals( path.toLowerCase(Locale.ROOT) ) ) {
 			isMap = true;
 			resultType = Map.class;
 		}
-		else if ( "list".equals( path.toLowerCase() ) ) {
+		else if ( "list".equals( path.toLowerCase(Locale.ROOT) ) ) {
 			isList = true;
 			resultType = List.class;
 		}

@@ -2500,7 +2500,7 @@ public class ModelBinder {
 								String.format(
 										Locale.ENGLISH,
 										"Cannot specify both insert=\"true\" and generated=\"%s\" for property %s",
-										generationTiming.name().toLowerCase(),
+										generationTiming.name().toLowerCase(Locale.ROOT),
 										propertySource.getName()
 								),
 								mappingDocument.getOrigin()
@@ -2522,7 +2522,7 @@ public class ModelBinder {
 								String.format(
 										Locale.ENGLISH,
 										"Cannot specify both update=\"true\" and generated=\"%s\" for property %s",
-										generationTiming.name().toLowerCase(),
+										generationTiming.name().toLowerCase(Locale.ROOT),
 										propertySource.getName()
 								),
 								mappingDocument.getOrigin()

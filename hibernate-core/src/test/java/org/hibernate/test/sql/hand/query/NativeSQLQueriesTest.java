@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
@@ -906,7 +907,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 			for ( int i = 0; i < tuple.length; i++ ) {
 				String alias = aliases[i];
 				if ( alias != null ) {
-					result.put( alias.toUpperCase(), tuple[i] );
+					result.put( alias.toUpperCase(Locale.ROOT), tuple[i] );
 				}
 			}
 			return result;

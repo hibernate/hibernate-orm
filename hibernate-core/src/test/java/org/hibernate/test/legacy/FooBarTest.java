@@ -1951,7 +1951,7 @@ public class FooBarTest extends LegacyTestCase {
 		List list = s.createCriteria(Foo.class)
 			.add( Restrictions.eq( "integer", f.getInteger() ) )
 			.add( Restrictions.eqProperty("integer", "integer") )
-			.add( Restrictions.like( "string", f.getString().toUpperCase() ).ignoreCase() )
+			.add( Restrictions.like( "string", f.getString().toUpperCase(Locale.ROOT) ).ignoreCase() )
 			.add( Restrictions.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
 			.setFetchMode("foo", FetchMode.JOIN)
 			.setFetchMode("baz", FetchMode.SELECT)

@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.CaseFragment;
@@ -75,7 +76,7 @@ public class OracleDialect extends Oracle9Dialect {
 
 		sql = sql.trim();
 		boolean isForUpdate = false;
-		if ( sql.toLowerCase().endsWith( " for update" ) ) {
+		if ( sql.toLowerCase(Locale.ROOT).endsWith( " for update" ) ) {
 			sql = sql.substring( 0, sql.length()-11 );
 			isForUpdate = true;
 		}

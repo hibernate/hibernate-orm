@@ -24,6 +24,7 @@
 package org.hibernate.test.manytomany.batchload;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
@@ -97,7 +98,7 @@ public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 				// of dialects...
 				Assert.assertFalse(
 						"batch load of many-to-many should use inner join",
-						sql.toLowerCase().contains( "left outer join" )
+						sql.toLowerCase(Locale.ROOT).contains( "left outer join" )
 				);
 				return super.onPrepareStatement( sql );
 			}

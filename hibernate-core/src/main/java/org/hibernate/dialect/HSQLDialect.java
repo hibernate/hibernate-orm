@@ -26,6 +26,7 @@ package org.hibernate.dialect;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -86,7 +87,7 @@ public class HSQLDialect extends Dialect {
 				return new StringBuilder( sql.length() + 10 )
 						.append( sql )
 						.insert(
-								sql.toLowerCase().indexOf( "select" ) + 6,
+								sql.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6,
 								hasOffset ? " limit ? ?" : " top ?"
 						)
 						.toString();
@@ -319,7 +320,7 @@ public class HSQLDialect extends Dialect {
 			return new StringBuilder( sql.length() + 10 )
 					.append( sql )
 					.insert(
-							sql.toLowerCase().indexOf( "select" ) + 6,
+							sql.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6,
 							hasOffset ? " limit ? ?" : " top ?"
 					)
 					.toString();

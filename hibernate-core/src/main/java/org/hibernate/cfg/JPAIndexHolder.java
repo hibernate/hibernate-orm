@@ -25,6 +25,7 @@ package org.hibernate.cfg;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringTokenizer;
 import javax.persistence.Index;
 
@@ -69,7 +70,7 @@ public class JPAIndexHolder {
 	private void initializeColumns(String[] columns, String[] ordering, List<String> list) {
 		for ( int i = 0, size = list.size(); i < size; i++ ) {
 			final String description = list.get( i );
-			final String tmp = description.toLowerCase();
+			final String tmp = description.toLowerCase(Locale.ROOT);
 			if ( tmp.endsWith( " desc" ) ) {
 				columns[i] = description.substring( 0, description.length() - 5 );
 				ordering[i] = "desc";

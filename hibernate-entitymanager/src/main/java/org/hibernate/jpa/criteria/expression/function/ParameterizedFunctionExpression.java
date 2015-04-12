@@ -25,6 +25,7 @@ package org.hibernate.jpa.criteria.expression.function;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
@@ -73,7 +74,7 @@ public class ParameterizedFunctionExpression<X>
 			List<Expression<?>> argumentExpressions) {
 		super( criteriaBuilder, javaType, functionName );
 		this.argumentExpressions = argumentExpressions;
-		this.isStandardJpaFunction = STANDARD_JPA_FUNCTION_NAMES.contains( functionName.toUpperCase() );
+		this.isStandardJpaFunction = STANDARD_JPA_FUNCTION_NAMES.contains( functionName.toUpperCase(Locale.ROOT) );
 	}
 
 	public ParameterizedFunctionExpression(
@@ -83,7 +84,7 @@ public class ParameterizedFunctionExpression<X>
 			Expression<?>... argumentExpressions) {
 		super( criteriaBuilder, javaType, functionName );
 		this.argumentExpressions = Arrays.asList( argumentExpressions );
-		this.isStandardJpaFunction = STANDARD_JPA_FUNCTION_NAMES.contains( functionName.toUpperCase() );
+		this.isStandardJpaFunction = STANDARD_JPA_FUNCTION_NAMES.contains( functionName.toUpperCase(Locale.ROOT) );
 	}
 
 	protected boolean isStandardJpaFunction() {

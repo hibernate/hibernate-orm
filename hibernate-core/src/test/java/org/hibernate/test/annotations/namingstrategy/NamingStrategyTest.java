@@ -1,6 +1,7 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
+import java.util.Locale;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -62,7 +63,7 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 		assertEquals(
 				"Expecting A#address collection table name (implicit) to be [A_address] per JPA spec (section 11.1.8)",
 				"A_ADDRESS",
-				collectionBinding.getCollectionTable().getQuotedName().toUpperCase()
+				collectionBinding.getCollectionTable().getQuotedName().toUpperCase(Locale.ROOT)
 		);
 	}
 

@@ -24,6 +24,7 @@
 package org.hibernate.jpa.test.metadata;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Attribute;
@@ -413,7 +414,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		for (Attribute<?,?> attribute : safeAttributes ) {
 			final String name = attribute.getJavaMember().getName();
 			assertNotNull( attribute.getJavaMember() );
-			assertTrue( name.toLowerCase().endsWith( attribute.getName().toLowerCase() ) );
+			assertTrue( name.toLowerCase(Locale.ROOT).endsWith( attribute.getName().toLowerCase(Locale.ROOT) ) );
 		}
 	}
 

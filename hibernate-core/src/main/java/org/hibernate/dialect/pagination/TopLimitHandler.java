@@ -20,6 +20,7 @@
  */
 package org.hibernate.dialect.pagination;
 
+import java.util.Locale;
 import org.hibernate.engine.spi.RowSelection;
 
 
@@ -62,8 +63,8 @@ public class TopLimitHandler extends AbstractLimitHandler {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
 
-		final int selectIndex = sql.toLowerCase().indexOf( "select" );
-		final int selectDistinctIndex = sql.toLowerCase().indexOf( "select distinct" );
+		final int selectIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select" );
+		final int selectDistinctIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select distinct" );
 		final int insertionPoint = selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);
 
 		return new StringBuilder( sql.length() + 8 )

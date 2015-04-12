@@ -25,6 +25,7 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -219,7 +220,7 @@ public class InformixDialect extends Dialect {
 		}
 		return new StringBuilder( querySelect.length() + 8 )
 				.append( querySelect )
-				.insert( querySelect.toLowerCase().indexOf( "select" ) + 6, " first " + limit )
+				.insert( querySelect.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6, " first " + limit )
 				.toString();
 	}
 

@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
@@ -73,7 +74,8 @@ public class Oracle8iDialect extends Dialect {
 			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
 			sql = sql.trim();
 			boolean isForUpdate = false;
-			if (sql.toLowerCase().endsWith( " for update" )) {
+			if (sql.toLowerCase(Locale.ROOT
+                        ).endsWith( " for update" )) {
 				sql = sql.substring( 0, sql.length() - 11 );
 				isForUpdate = true;
 			}
@@ -306,7 +308,7 @@ public class Oracle8iDialect extends Dialect {
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
 		boolean isForUpdate = false;
-		if ( sql.toLowerCase().endsWith( " for update" ) ) {
+		if ( sql.toLowerCase(Locale.ROOT).endsWith( " for update" ) ) {
 			sql = sql.substring( 0, sql.length()-11 );
 			isForUpdate = true;
 		}

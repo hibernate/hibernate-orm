@@ -23,6 +23,7 @@ package org.hibernate.jpa.internal.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -192,7 +193,7 @@ public final class XmlHelper {
 	public static boolean getOptionalChildBooleanContent(Element element, String name) throws Exception {
 		Element child = getOptionalChild( element, name );
 		if ( child != null ) {
-			String value = getElementContent( child ).toLowerCase();
+			String value = getElementContent( child ).toLowerCase(Locale.ROOT);
 			return value.equals( "true" ) || value.equals( "yes" );
 		}
 

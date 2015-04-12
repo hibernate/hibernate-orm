@@ -228,8 +228,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		}
 
 		// lovely decipher of whether the incoming value represents a quoted identifier...
-		final boolean isUpperCase = text.toUpperCase().equals( text );
-		final boolean isLowerCase = text.toLowerCase().equals( text );
+		final boolean isUpperCase = text.toUpperCase(Locale.ROOT).equals( text );
+		final boolean isLowerCase = text.toLowerCase(Locale.ROOT).equals( text );
 		final boolean isMixedCase = ! isLowerCase && ! isUpperCase;
 
 		if ( jdbcEnvironment.isReservedWord( text ) ) {

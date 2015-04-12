@@ -25,6 +25,7 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -126,7 +127,7 @@ public class BasicFormatterImpl implements Formatter {
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
-				lcToken = token.toLowerCase();
+				lcToken = token.toLowerCase(Locale.ROOT);
 
 				if ( "'".equals( token ) ) {
 					String t;

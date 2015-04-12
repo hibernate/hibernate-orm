@@ -24,6 +24,7 @@
 package org.hibernate.dialect.function;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
@@ -59,7 +60,7 @@ public class SQLFunctionRegistry {
 	 * @return The located function, maye return {@code null}
 	 */
 	public SQLFunction findSQLFunction(String functionName) {
-		final String name = functionName.toLowerCase();
+		final String name = functionName.toLowerCase(Locale.ROOT);
 		final SQLFunction userFunction = userFunctions.get( name );
 		return userFunction != null
 				? userFunction
@@ -75,7 +76,7 @@ public class SQLFunctionRegistry {
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public boolean hasFunction(String functionName) {
-		final String name = functionName.toLowerCase();
+		final String name = functionName.toLowerCase(Locale.ROOT);
 		return userFunctions.containsKey( name ) || dialect.getFunctions().containsKey( name );
 	}
 

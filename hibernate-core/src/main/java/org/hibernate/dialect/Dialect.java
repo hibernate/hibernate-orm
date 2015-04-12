@@ -109,6 +109,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -710,7 +711,7 @@ public abstract class Dialect implements ConversionContext {
 	protected void registerFunction(String name, SQLFunction function) {
 		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
 		// just in case a user's customer dialect uses mixed cases.
-		sqlFunctions.put( name.toLowerCase(), function );
+		sqlFunctions.put( name.toLowerCase(Locale.ROOT), function );
 	}
 
 	/**
@@ -2452,7 +2453,7 @@ public abstract class Dialect implements ConversionContext {
 			orderByElement.append( " " ).append( order );
 		}
 		if ( nulls != NullPrecedence.NONE ) {
-			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase() );
+			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase(Locale.ROOT) );
 		}
 		return orderByElement.toString();
 	}

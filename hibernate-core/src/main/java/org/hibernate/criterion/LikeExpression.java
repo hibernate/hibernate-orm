@@ -23,6 +23,7 @@
  */
 package org.hibernate.criterion;
 
+import java.util.Locale;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -94,7 +95,7 @@ public class LikeExpression implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) {
-		final String matchValue = ignoreCase ? value.toString().toLowerCase() : value.toString();
+		final String matchValue = ignoreCase ? value.toString().toLowerCase(Locale.ROOT) : value.toString();
 
 		return new TypedValue[] { criteriaQuery.getTypedValue( criteria, propertyName, matchValue ) };
 	}

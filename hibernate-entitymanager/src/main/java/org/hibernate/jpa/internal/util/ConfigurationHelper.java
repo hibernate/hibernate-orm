@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.internal.util;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import javax.persistence.FlushModeType;
@@ -65,7 +66,7 @@ public abstract class ConfigurationHelper {
 		if (flushMode == null) {
 			return null;
 		}
-		flushMode = flushMode.toUpperCase();
+		flushMode = flushMode.toUpperCase(Locale.ROOT);
 		return FlushMode.valueOf( flushMode );
 	}
 

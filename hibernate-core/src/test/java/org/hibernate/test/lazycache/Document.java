@@ -1,6 +1,7 @@
 //$Id: Document.java 7772 2005-08-05 23:03:46Z oneovthafew $
 package org.hibernate.test.lazycache;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Gavin King
@@ -17,7 +18,7 @@ public class Document {
 	public Document(String name, String summary, String text) {
 		lastTextModification = new Date();
 		this.name = name;
-		upperCaseName = name.toUpperCase();
+		upperCaseName = name.toUpperCase(Locale.ROOT);
 		this.summary = summary;
 		this.text = text;
 	}

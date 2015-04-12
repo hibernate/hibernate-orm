@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+import java.util.Locale;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 
@@ -32,7 +33,7 @@ public class DefaultComponentSafeNamingStrategy extends EJB3NamingStrategy {
 	public static final NamingStrategy INSTANCE = new DefaultComponentSafeNamingStrategy();
 
 	protected static String addUnderscores(String name) {
-		return name.replace( '.', '_' ).toLowerCase();
+		return name.replace( '.', '_' ).toLowerCase(Locale.ROOT);
 	}
 
 	@Override

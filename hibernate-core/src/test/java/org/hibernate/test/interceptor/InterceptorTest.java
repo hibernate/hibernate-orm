@@ -25,6 +25,7 @@ package org.hibernate.test.interceptor;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 
 import org.junit.Test;
@@ -296,8 +297,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			@Override
 			public String onPrepareStatement(String sql) {
 				assertNotNull( sql );
-				String expectedSql = expectedSQLs.poll().toLowerCase();
-				assertTrue("sql:\n " + sql.toLowerCase() +"\n doesn't start with \n"+expectedSql+"\n", sql.toLowerCase().startsWith( expectedSql ) );
+				String expectedSql = expectedSQLs.poll().toLowerCase(Locale.ROOT);
+				assertTrue("sql:\n " + sql.toLowerCase(Locale.ROOT) +"\n doesn't start with \n"+expectedSql+"\n", sql.toLowerCase(Locale.ROOT).startsWith( expectedSql ) );
 				return sql;
 			}
 		};

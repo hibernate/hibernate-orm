@@ -24,6 +24,7 @@
 package org.hibernate.tool.schema.internal;
 
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
@@ -115,7 +116,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 			ColumnInformation columnInformation,
 			Metadata metadata) {
 		boolean typesMatch = column.getSqlTypeCode( metadata ) == columnInformation.getTypeCode()
-				|| column.getSqlType( dialect, metadata ).toLowerCase().startsWith( columnInformation.getTypeName().toLowerCase() );
+				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
 		if ( !typesMatch ) {
 			throw new SchemaManagementException(
 					String.format(
@@ -123,9 +124,9 @@ public class SchemaValidatorImpl implements SchemaValidator {
 									"table [%s]; found [%s (Types#%s)], but expecting [%s (Types#%s)]",
 							column.getName(),
 							table.getName(),
-							columnInformation.getTypeName().toLowerCase(),
+							columnInformation.getTypeName().toLowerCase(Locale.ROOT),
 							JdbcTypeNameMapper.getTypeName( columnInformation.getTypeCode() ),
-							column.getSqlType().toLowerCase(),
+							column.getSqlType().toLowerCase(Locale.ROOT),
 							JdbcTypeNameMapper.getTypeName( column.getSqlTypeCode( metadata ) )
 					)
 			);

@@ -23,6 +23,7 @@
  */
 package org.hibernate;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.cfg.Environment;
@@ -88,7 +89,7 @@ public enum MultiTenancyStrategy {
 
 		final String strategyName = strategy.toString();
 		try {
-			return MultiTenancyStrategy.valueOf( strategyName.toUpperCase() );
+			return MultiTenancyStrategy.valueOf( strategyName.toUpperCase(Locale.ROOT) );
 		}
 		catch ( RuntimeException e ) {
 			LOG.warn( "Unknown multi tenancy strategy [ " +strategyName +" ], using MultiTenancyStrategy.NONE." );

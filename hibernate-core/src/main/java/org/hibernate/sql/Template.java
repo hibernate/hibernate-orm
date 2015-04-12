@@ -27,6 +27,7 @@ package org.hibernate.sql;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -165,7 +166,7 @@ public final class Template {
 		String nextToken = hasMore ? tokens.nextToken() : null;
 		while ( hasMore ) {
 			String token = nextToken;
-			String lcToken = token.toLowerCase();
+			String lcToken = token.toLowerCase(Locale.ROOT);
 			hasMore = tokens.hasMoreTokens();
 			nextToken = hasMore ? tokens.nextToken() : null;
 
@@ -378,7 +379,7 @@ public final class Template {
 //		String nextToken = hasMore ? tokens.nextToken() : null;
 //		while ( hasMore ) {
 //			String token = nextToken;
-//			String lcToken = token.toLowerCase();
+//			String lcToken = token.toLowerCase(Locale.ROOT);
 //			hasMore = tokens.hasMoreTokens();
 //			nextToken = hasMore ? tokens.nextToken() : null;
 //

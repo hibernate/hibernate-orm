@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Criteria;
@@ -289,7 +290,7 @@ public class Example implements Criterion {
 			if ( value instanceof String ) {
 				String string = (String) value;
 				if ( isIgnoreCaseEnabled ) {
-					string = string.toLowerCase();
+					string = string.toLowerCase(Locale.ROOT);
 				}
 				if ( isLikeEnabled ) {
 					string = matchMode.toMatchString( string );

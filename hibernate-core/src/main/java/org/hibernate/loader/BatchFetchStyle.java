@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader;
 
+import java.util.Locale;
 import org.jboss.logging.Logger;
 
 /**
@@ -60,7 +61,7 @@ public enum BatchFetchStyle {
 	private static final Logger log = Logger.getLogger( BatchFetchStyle.class );
 
 	public static BatchFetchStyle byName(String name) {
-		return valueOf( name.toUpperCase() );
+		return valueOf( name.toUpperCase(Locale.ROOT) );
 	}
 
 	public static BatchFetchStyle interpret(Object setting) {

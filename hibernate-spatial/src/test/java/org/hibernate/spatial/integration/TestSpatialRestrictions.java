@@ -25,14 +25,15 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
+import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.integration.jts.GeomEntity;
@@ -46,9 +47,12 @@ import static org.junit.Assert.fail;
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
-	private static Log LOG = LogFactory.make();
+	private static HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			TestSpatialRestrictions.class.getName()
+	);
 
-	protected Log getLogger() {
+	protected HSMessageLogger getLogger() {
 		return LOG;
 	}
 

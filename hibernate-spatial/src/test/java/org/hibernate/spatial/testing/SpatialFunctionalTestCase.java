@@ -21,25 +21,29 @@
 
 package org.hibernate.spatial.testing;
 
-import com.vividsolutions.jts.geom.Geometry;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import com.vividsolutions.jts.geom.Geometry;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.HSMessageLogger;
+import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.spatial.SpatialFunction;
+
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -182,7 +186,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		return dialect.supportsFiltering();
 	}
 
-	abstract protected Log getLogger();
+	abstract protected HSMessageLogger getLogger();
 
 	/**
 	 * Adds the query results to a Map.

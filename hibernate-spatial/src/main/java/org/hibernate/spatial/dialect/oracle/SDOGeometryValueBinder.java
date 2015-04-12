@@ -27,7 +27,6 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 import org.geolatte.geom.codec.db.oracle.SDOGeometry;
 
 import org.hibernate.HibernateException;
-import org.hibernate.spatial.helper.FinderException;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -69,7 +68,7 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 		}
 	}
 
-	public Object store(SDOGeometry geom, Connection conn) throws SQLException, FinderException {
+	public Object store(SDOGeometry geom, Connection conn) throws SQLException {
 		return typeFactory.createStruct( geom, conn );
 	}
 
@@ -80,12 +79,6 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 		}
 		catch (SQLException e) {
 			throw new HibernateException( "Problem during conversion from JTS to SDOGeometry", e );
-		}
-		catch (FinderException e) {
-			throw new HibernateException(
-					"OracleConnection could not be retrieved for creating SDOGeometry " +
-							"STRUCT", e
-			);
 		}
 		catch (IllegalArgumentException e) {
 			//we get here if the type of geometry is unsupported by geolatte encoders

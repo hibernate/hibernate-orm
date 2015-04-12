@@ -21,30 +21,26 @@
 
 package org.hibernate.spatial;
 
-import org.jboss.logging.Logger;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.annotations.LogMessage;
+import org.jboss.logging.annotations.Message;
+import org.jboss.logging.annotations.MessageLogger;
+import org.hibernate.internal.CoreMessageLogger;
+
+import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * A static factory for <code>Log</code>s.
- *
- * The implementation is based on the hibernate-ogm LoggerFactory class.
+ * The logger interface for the Hibernate Spatial module.
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 1/14/12
  */
-public class LogFactory {
-
-	private LogFactory(){}
-
+@MessageLogger(projectCode = "HHH")
+public interface HSMessageLogger extends BasicLogger {
 	/**
-	 * Creates a new logger for the class that invokes this method.
-	 *
-	 * @return A new logger for the invoking class.
+	 * Message indicating that user attempted to use the deprecated ValidTimeAuditStrategy
 	 */
-	public static Log make() {
-		final Throwable t = new Throwable();
-		final StackTraceElement directCaller = t.getStackTrace()[1];
-		return Logger.getMessageLogger( Log.class, directCaller.getClassName() );
-	}
-
+//	@LogMessage(level = WARN)
+//	@Message(value = "ValidTimeAuditStrategy is deprecated, please use ValidityAuditStrategy instead", id = 25001)
+//	void voidvalidTimeAuditStrategyDeprecated();
 
 }

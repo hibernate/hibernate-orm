@@ -44,8 +44,9 @@ import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.geolatte.geom.codec.WktDecoder;
 
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
+import org.jboss.logging.Logger;
+
+import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * <p>Unit testsuite-suite support class.</p>
@@ -55,7 +56,10 @@ import org.hibernate.spatial.LogFactory;
 public class DataSourceUtils {
 
 
-	private static Log LOG = LogFactory.make();
+	private static HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			DataSourceUtils.class.getName()
+	);
 
 
 	private final SQLExpressionTemplate sqlExpressionTemplate;

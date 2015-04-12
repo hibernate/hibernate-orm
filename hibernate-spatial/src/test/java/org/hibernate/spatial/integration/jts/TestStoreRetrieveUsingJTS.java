@@ -6,13 +6,15 @@ import java.util.Map;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
+
+import org.jboss.logging.Logger;
+
 import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
+import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.TestDataElement;
@@ -29,9 +31,13 @@ import static org.junit.Assert.assertTrue;
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 public class TestStoreRetrieveUsingJTS extends SpatialFunctionalTestCase {
 
-	private static Log LOG = LogFactory.make();
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			TestStoreRetrieveUsingJTS.class.getName()
+	);
 
-	protected Log getLogger() {
+
+	protected HSMessageLogger getLogger() {
 		return LOG;
 	}
 

@@ -4,6 +4,8 @@ import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
 
 import java.io.Serializable;
 
+import org.jboss.logging.Logger;
+
 /**
  * A global configuration object that is is used by
  * some Dialects during construction.
@@ -13,7 +15,10 @@ import java.io.Serializable;
  */
 public class HibernateSpatialConfiguration implements Serializable {
 
-	private static final Log LOG = LogFactory.make();
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			HibernateSpatialConfiguration.class.getName()
+	);
 	private Boolean isOgcStrict = Boolean.TRUE;
 	private ConnectionFinder connectionFinder;
 

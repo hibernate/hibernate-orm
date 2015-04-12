@@ -35,8 +35,9 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
+import org.jboss.logging.Logger;
+
+import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * An <code>AbstractExpectationsFactory</code> provides the expected
@@ -49,7 +50,10 @@ import org.hibernate.spatial.LogFactory;
  */
 public abstract class AbstractExpectationsFactory {
 
-	private static final Log LOG = LogFactory.make();
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			AbstractExpectationsFactory.class.getName()
+	);
 
 	public final static String TEST_POLYGON_WKT = "POLYGON((0 0, 50 0, 100 100, 0 100, 0 0))";
 	public final static String TEST_POINT_WKT = "POINT(0 0)";

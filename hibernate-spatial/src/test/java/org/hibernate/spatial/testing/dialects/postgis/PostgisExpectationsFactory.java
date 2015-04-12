@@ -29,8 +29,9 @@ import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.jts.JTS;
 import org.postgresql.util.PGobject;
 
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
+import org.jboss.logging.Logger;
+
+import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -42,7 +43,10 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 
-	private static final Log LOG = LogFactory.make();
+	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			PostgisExpectationsFactory.class.getName()
+	);
 
 
 	public PostgisExpectationsFactory(DataSourceUtils utils) {

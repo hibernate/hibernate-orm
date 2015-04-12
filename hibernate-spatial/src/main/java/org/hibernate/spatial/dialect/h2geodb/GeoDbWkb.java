@@ -41,9 +41,10 @@ import org.geolatte.geom.codec.WkbEncoder;
 import org.geolatte.geom.crs.CoordinateReferenceSystems;
 import org.geolatte.geom.jts.JTS;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
+import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * A utility class to serialize from/to GeoDB WKB's.
@@ -55,7 +56,10 @@ import org.hibernate.spatial.LogFactory;
  */
 public class GeoDbWkb {
 
-	private static final Log LOGGER = LogFactory.make();
+	private static final HSMessageLogger LOGGER = Logger.getMessageLogger(
+			HSMessageLogger.class,
+			GeoDbWkb.class.getName()
+	);
 
 	private GeoDbWkb() {
 	}

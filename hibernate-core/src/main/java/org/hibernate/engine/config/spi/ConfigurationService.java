@@ -28,7 +28,13 @@ import java.util.Map;
 import org.hibernate.service.Service;
 
 /**
- * Provides access to the initial user-provided configuration values
+ * Provides access to the initial user-provided configuration values.  Generally speaking
+ * these values come from:<ul>
+ *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#loadProperties}</li>
+ *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySetting}</li>
+ *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySettings}</li>
+ *     <li>Calls to {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#configure}</li>
+ * </ul>
  *
  * @author Steve Ebersole
  */

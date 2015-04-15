@@ -138,7 +138,7 @@ public abstract class AbstractSessionImpl
 				this,
 				getHQLQueryPlan( queryString, false ).getParameterMetadata()
 		);
-		query.setComment( "named HQL query " + namedQueryDefinition.getName() );
+		query.setComment(namedQueryDefinition.getComment() != null ? namedQueryDefinition.getComment() : namedQueryDefinition.getName());
 		if ( namedQueryDefinition.getLockOptions() != null ) {
 			query.setLockOptions( namedQueryDefinition.getLockOptions() );
 		}
@@ -156,7 +156,7 @@ public abstract class AbstractSessionImpl
 				this,
 				parameterMetadata
 		);
-		query.setComment( "named native SQL query " + namedQueryDefinition.getName() );
+		query.setComment(namedQueryDefinition.getComment() != null ? namedQueryDefinition.getComment() : namedQueryDefinition.getName());
 		return query;
 	}
 
@@ -193,7 +193,7 @@ public abstract class AbstractSessionImpl
 				this,
 				factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
 		);
-		query.setComment( "named native SQL query " + queryName );
+		query.setComment(nsqlqd.getComment() != null ? nsqlqd.getComment() : nsqlqd.getName());
 		initQuery( query, nsqlqd );
 		return query;
 	}

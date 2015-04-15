@@ -144,7 +144,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			        this,
 			        getHQLQueryPlan( queryString, false ).getParameterMetadata()
 			);
-			query.setComment( "named HQL query " + queryName );
+			query.setComment( nqd.getComment() );
 			if ( nqd.getLockTimeout() != null ) {
 				( (QueryImpl) query ).getLockOptions().setTimeOut( nqd.getLockTimeout() );
 			}
@@ -160,7 +160,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			        this,
 					parameterMetadata
 			);
-			query.setComment( "named native SQL query " + queryName );
+			query.setComment(nsqlqd.getComment() );
 			nqd = nsqlqd;
 		}
 		initQuery( query, nqd );
@@ -179,7 +179,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		        this,
 		        factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
 		);
-		query.setComment( "named native SQL query " + queryName );
+		query.setComment( nsqlqd.getComment() );
 		initQuery( query, nsqlqd );
 		return query;
 	}

@@ -99,8 +99,6 @@ public class ActionQueue {
 	public ActionQueue(SessionImplementor session) {
 		this.session = session;
 
-		unresolvedInsertions = new UnresolvedEntityInsertActions();
-
 		insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );
 		deletions = new ExecutableList<EntityDeleteAction>();
 		updates = new ExecutableList<EntityUpdateAction>();
@@ -137,7 +135,9 @@ public class ActionQueue {
 		for ( ExecutableList<?> l : executableLists ) {
 			l.clear();
 		}
-		unresolvedInsertions.clear();
+		if(unresolvedInsertions != null) {
+			unresolvedInsertions.clear();
+		}
 	}
 
 	/**
@@ -167,6 +167,9 @@ public class ActionQueue {
 				LOG.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
 							nonNullableTransientDependencies.toLoggableString( insert.getSession() ) );
 			}
+			if(unresolvedInsertions == null) {
+				unresolvedInsertions = new UnresolvedEntityInsertActions();
+			}
 			unresolvedInsertions.addUnresolvedEntityInsertAction( insert, nonNullableTransientDependencies );
 		}
 	}
@@ -183,8 +186,10 @@ public class ActionQueue {
 			insertions.add( insert );
 		}
 		insert.makeEntityManaged();
-		for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
-			addResolvedEntityInsertAction( resolvedAction );
+		if(unresolvedInsertions != null) {
+			for (AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions(insert.getInstance(), session)) {
+				addResolvedEntityInsertAction(resolvedAction);
+			}
 		}
 	}
 
@@ -285,7 +290,7 @@ public class ActionQueue {
 	 * transient entity; false, otherwise
 	 */
 	public boolean hasUnresolvedEntityInsertActions() {
-		return !unresolvedInsertions.isEmpty();
+		return unresolvedInsertions != null && !unresolvedInsertions.isEmpty();
 	}
 
 	/**
@@ -299,7 +304,9 @@ public class ActionQueue {
 	 * the first unresolved entity insert action.
 	 */
 	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
-		unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
+		if(unresolvedInsertions != null) {
+			unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
+		}
 	}
 
 	public void registerProcess(AfterTransactionCompletionProcess process) {
@@ -327,7 +334,7 @@ public class ActionQueue {
 	 * @throws HibernateException error executing queued actions.
 	 */
 	public void executeActions() throws HibernateException {
-		if ( !unresolvedInsertions.isEmpty() ) {
+		if ( hasUnresolvedEntityInsertActions() ) {
 			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
 		}
 
@@ -384,7 +391,7 @@ public class ActionQueue {
 	 * @return {@code true} if insertions or deletions are currently queued; {@code false} otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return !insertions.isEmpty() || !unresolvedInsertions.isEmpty() || !deletions.isEmpty() || !orphanRemovals.isEmpty();
+		return !insertions.isEmpty() || hasUnresolvedEntityInsertActions() || !deletions.isEmpty() || !orphanRemovals.isEmpty();
 	}
 
 	/**
@@ -402,6 +409,9 @@ public class ActionQueue {
 			if ( areTablesToBeUpdated( l, tables ) ) {
 				return true;
 			}
+		}
+		if(unresolvedInsertions == null) {
+			return false;
 		}
 		return areTablesToBeUpdated( unresolvedInsertions, tables );
 	}
@@ -601,7 +611,7 @@ public class ActionQueue {
 	}
 
 	public boolean hasAnyQueuedActions() {
-		return !updates.isEmpty() || !insertions.isEmpty() || !unresolvedInsertions.isEmpty() || !deletions.isEmpty() || !collectionUpdates.isEmpty()
+		return !updates.isEmpty() || !insertions.isEmpty() || hasUnresolvedEntityInsertActions() || !deletions.isEmpty() || !collectionUpdates.isEmpty()
 				|| !collectionQueuedOps.isEmpty() || !collectionRemovals.isEmpty() || !collectionCreations.isEmpty();
 	}
 
@@ -637,7 +647,9 @@ public class ActionQueue {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		LOG.trace( "Serializing action-queue" );
-
+		if(unresolvedInsertions == null) {
+			unresolvedInsertions = new UnresolvedEntityInsertActions();
+		}
 		unresolvedInsertions.serialize( oos );
 
 		for ( ExecutableList<?> l : executableLists ) {

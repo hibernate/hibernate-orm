@@ -115,7 +115,6 @@ public class ActionQueue {
 	}
 
 	private void init() {
-		unresolvedInsertions = new UnresolvedEntityInsertActions();
 		insertions = new ArrayList<AbstractEntityInsertAction>( INIT_QUEUE_LIST_SIZE );
 		deletions = new ArrayList<EntityDeleteAction>( INIT_QUEUE_LIST_SIZE );
 		updates = new ArrayList( INIT_QUEUE_LIST_SIZE );
@@ -143,7 +142,9 @@ public class ActionQueue {
 
 		orphanRemovals.clear();
 
-		unresolvedInsertions.clear();
+		if(unresolvedInsertions != null) {
+			unresolvedInsertions.clear();
+		}
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -216,6 +217,9 @@ public class ActionQueue {
 						nonNullableTransientDependencies.toLoggableString( insert.getSession() )
 				);
 			}
+			if(unresolvedInsertions == null) {
+				unresolvedInsertions = new UnresolvedEntityInsertActions();
+			}
 			unresolvedInsertions.addUnresolvedEntityInsertAction( insert, nonNullableTransientDependencies );
 		}
 	}
@@ -233,9 +237,11 @@ public class ActionQueue {
 			insertions.add( insert );
 		}
 		insert.makeEntityManaged();
-		for ( AbstractEntityInsertAction resolvedAction :
-				unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
-			addResolvedEntityInsertAction( resolvedAction );
+		if (unresolvedInsertions != null) {
+			for (AbstractEntityInsertAction resolvedAction :
+					unresolvedInsertions.resolveDependentActions(insert.getInstance(), session)) {
+				addResolvedEntityInsertAction(resolvedAction);
+			}
 		}
 	}
 
@@ -248,7 +254,7 @@ public class ActionQueue {
 
 	 */
 	public boolean hasUnresolvedEntityInsertActions() {
-		return ! unresolvedInsertions.isEmpty();
+		return unresolvedInsertions != null && !unresolvedInsertions.isEmpty();
 	}
 
 	/**
@@ -264,7 +270,9 @@ public class ActionQueue {
 	 * entity insert action.
 	 */
 	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
-		unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
+		if(unresolvedInsertions != null) {
+			unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
+		}
 	}
 
 	public void addAction(BulkOperationCleanupAction cleanupAction) {
@@ -294,7 +302,7 @@ public class ActionQueue {
 	 * @throws HibernateException error executing queued actions.
 	 */
 	public void executeActions() throws HibernateException {
-		if ( ! unresolvedInsertions.isEmpty() ) {
+		if ( hasUnresolvedEntityInsertActions() ) {
 			throw new IllegalStateException(
 					"About to execute actions, but there are unresolved entity insert actions."
 			);
@@ -350,7 +358,7 @@ public class ActionQueue {
 	public boolean areTablesToBeUpdated(Set tables) {
 		return areTablesToUpdated( updates, tables ) ||
 				areTablesToUpdated( insertions, tables ) ||
-				areTablesToUpdated( unresolvedInsertions.getDependentEntityInsertActions(), tables ) ||
+				(unresolvedInsertions != null && areTablesToUpdated( unresolvedInsertions.getDependentEntityInsertActions(), tables )) ||
 				areTablesToUpdated( deletions, tables ) ||
 				areTablesToUpdated( collectionUpdates, tables ) ||
 				areTablesToUpdated( collectionCreations, tables ) ||
@@ -363,9 +371,9 @@ public class ActionQueue {
 	 * Check whether any insertion or deletion actions are currently queued.
 	 *
 	 * @return True if insertions or deletions are currently queued; false otherwise.
-	 */
+	 */=
 	public boolean areInsertionsOrDeletionsQueued() {
-		return ( insertions.size() > 0 || ! unresolvedInsertions.isEmpty() || deletions.size() > 0 || orphanRemovals.size() > 0 );
+		return ( insertions.size() > 0 || !(unresolvedInsertions == null || unresolvedInsertions.isEmpty()) || deletions.size() > 0 || orphanRemovals.size() > 0 );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -527,7 +535,7 @@ public class ActionQueue {
 	public boolean hasAnyQueuedActions() {
 		return updates.size() > 0 ||
 				insertions.size() > 0 ||
-				! unresolvedInsertions.isEmpty() ||
+				!(unresolvedInsertions == null ||  unresolvedInsertions.isEmpty()) ||
 				deletions.size() > 0 ||
 				orphanRemovals.size() > 0 ||
 				collectionUpdates.size() > 0 ||
@@ -570,7 +578,9 @@ public class ActionQueue {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		LOG.trace( "Serializing action-queue" );
-
+		if(unresolvedInsertions == null) {
+			unresolvedInsertions = new UnresolvedEntityInsertActions();
+		}
 		unresolvedInsertions.serialize( oos );
 
 		int queueSize = insertions.size();

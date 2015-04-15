@@ -98,7 +98,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	public ExecutableList(int initialCapacity, ExecutableList.Sorter<E> sorter) {
 		this.sorter = sorter;
 		this.executables = new ArrayList<E>( initialCapacity );
-		this.querySpaces = new HashSet<Serializable>();
+		this.querySpaces = null;
 		this.sorted = true;
 	}
 
@@ -109,12 +109,17 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 */
 	public Set<Serializable> getQuerySpaces() {
 		if ( querySpaces == null ) {
-			querySpaces = new HashSet<Serializable>();
 			for ( E e : executables ) {
 				Serializable[] propertySpaces = e.getPropertySpaces();
-				if ( querySpaces != null && propertySpaces != null ) {
+				if ( propertySpaces != null && propertySpaces.length > 0 ) {
+					if( querySpaces == null ) {
+						querySpaces = new HashSet<Serializable>();
+					}
 					Collections.addAll( querySpaces, propertySpaces );
 				}
+			}
+			if( querySpaces == null ) {
+				return Collections.emptySet();
 			}
 		}
 		return querySpaces;
@@ -326,6 +331,10 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		for ( E e : executables ) {
 			e.afterDeserialize( session );
 		}
+	}
+
+	public String toString() {
+		return "ExecutableList{size=" + executables.size() + "}";
 	}
 
 }

@@ -191,7 +191,12 @@ public class HQLQueryPlan implements Serializable {
 
 		final int guessedResultSize = guessResultSize( rowSelection );
 		final List combinedResults = new ArrayList( guessedResultSize );
-		final IdentitySet distinction = new IdentitySet( guessedResultSize );
+		final IdentitySet distinction;
+		if (needsLimit) {
+			distinction = new IdentitySet(guessedResultSize);
+		} else {
+			distinction = null;
+		}
 		int includedCount = -1;
 		translator_loop:
 		for ( QueryTranslator translator : translators ) {

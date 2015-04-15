@@ -434,7 +434,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			return entity;
 		}
 
-		entity = loadFromSecondLevelCache( event, persister, options );
+		entity = loadFromSecondLevelCache( event, persister, options, keyToLoad );
 		if ( entity != null ) {
 			if ( traceEnabled ) {
 				LOG.tracev(
@@ -561,7 +561,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	protected Object loadFromSecondLevelCache(
 			final LoadEvent event,
 			final EntityPersister persister,
-			final LoadEventListener.LoadType options) {
+			final LoadEventListener.LoadType options,
+			EntityKey entityKey) {
 
 		final SessionImplementor source = event.getSession();
 		final boolean useCache = persister.hasCache()
@@ -602,7 +603,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
-		Object entity = convertCacheEntryToEntity( entry, event.getEntityId(), persister, event );
+		Object entity = convertCacheEntryToEntity( entry, event.getEntityId(), persister, event, entityKey );
 		
 		if ( !persister.isInstance( entity ) ) {
 			throw new WrongClassException(
@@ -619,7 +620,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			CacheEntry entry,
 			Serializable entityId,
 			EntityPersister persister,
-			LoadEvent event) {
+			LoadEvent event,
+			EntityKey entityKey) {
 
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
@@ -668,7 +670,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		// make it circular-reference safe
-		final EntityKey entityKey = session.generateEntityKey( entityId, subclassPersister );
 		TwoPhaseLoad.addUninitializedCachedEntity(
 				entityKey,
 				entity,

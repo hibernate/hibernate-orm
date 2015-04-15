@@ -5,6 +5,57 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.9.Final (2015.04.15)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-8494] - Misleading log info during batch execution
+    [HHH-8769] - NPE when using dynamic model mapping
+    [HHH-8788] - Unnecessary warning logged about follow-on locking with Criteria query and LockMode NONE
+    [HHH-8866] - HQL Query with enum and @Convert
+    [HHH-8879] - Regression: Embeddable with associations as @MapKey
+    [HHH-8911] - ClassCastException between CompositeCustomType and ComponentType
+    [HHH-8994] - QueryException during startup with composite key in ElementCollection map
+    [HHH-9091] - Collection deleted due to orphan removal fails with constraint violation
+    [HHH-9247] - JPA 2.1 Named Entity Graph cannot be configured in ORM XML
+    [HHH-9320] - AttributeConverter result ignored on extraction when ResultSet.wasNull
+    [HHH-9333] - TypeMismatchException when using composite-id and natural-id mappings
+    [HHH-9392] - SQLGrammarException while executing a entity graph with subgraphs
+    [HHH-9446] - ClassCastException on loaded entities under GlassFish 4.0
+    [HHH-9448] - Association is not fetched when EntityGraph has explicit fetch and query has implicit join
+    [HHH-9451] - Extra state is not propagated from temporary entity entries
+    [HHH-9457] - EntityGraph with order by using Oracle10gDialect
+    [HHH-9468] - Add documentation about enabling NamingStrategyDelegator implementations
+    [HHH-9523] - EnumeratedTypeTest - select from dual causes test failures on mssql, postgresql, db2 and sybase
+    [HHH-9528] - InputStream leak from opening resources
+    [HHH-9549] - Selecting treated root generates invalid HQL
+    [HHH-9568] - EntityManager.flush() does not behave properly with transient one-to-one association and no cascade
+    [HHH-9597] - Criteria creates invalid Column aliases.
+    [HHH-9599] - AnnotationException occurs when applying @Nationalized and @Convert annotations to the same field
+    [HHH-9605] - Query on an enum collection fails
+    [HHH-9633] - Add tests that explicitly test the "main" NamingStrategy impls
+    [HHH-9639] - Unwrap in HikariCPConnectionProvider fails to unwrap DataSource
+    [HHH-9642] - Embedded OneToMany association fetch join does not work in CriteriaQuery
+
+** Deprecation
+    [HHH-9645] - buildSessionFactory() should return a sessionFactory
+
+** Improvement
+    [HHH-8697] - AttributeConverter not called when value is null
+    [HHH-9043] - Allow customization of the modified field flag
+    [HHH-9497] - Remove call to Ehcache ClassLoaderUtil.getStandardClassLoader() as it has been removed in Ehcache 2.8.3+
+    [HHH-9600] - remove outdated info about cache concurrency strategies support
+    [HHH-9601] - table schema not paired with @OrderColumn name value in example 7.8
+    [HHH-9621] - Add HQL query to warning about positional parameter usage
+    [HHH-9648] - Upgrade to HikariCP v. 2.3.3 (Java 6 compatible edition)
+
+** Patch
+    [HHH-9495] - @Convert support for collections
+
+** Task
+    [HHH-9573] - Add EntityManager test case illustrating usage of query cache
+    [HHH-9678] - Change built-in SqlTypeDescriptor impls to not auto-register themselves with SqlTypeDescriptorRegistry
+
 Changes in version 4.3.8.Final (2015.01.06)
 ------------------------------------------------------------------------------------------------------------------------
 

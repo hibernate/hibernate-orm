@@ -233,6 +233,7 @@ over the `SessionFactory` building process.
 === ServiceContributor
 === TypeContributor
 === MetadataSourcesContributor
-=== MetadataBuilderContributor
-=== SessionFactoryBuilderContributor (todo)
+=== MetadataBuilderInitializer
+=== SessionFactoryBuilderFactory
+=== SessionFactoryBuilderInitializer (todo)
 === SessionFactoryObserver

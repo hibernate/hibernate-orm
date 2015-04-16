@@ -32,6 +32,8 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
  * down".  E.g.  global -> PU -> document -> mapping
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface MetadataBuildingContext {
 	/**

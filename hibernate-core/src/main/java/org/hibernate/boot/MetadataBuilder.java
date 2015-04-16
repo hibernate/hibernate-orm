@@ -51,6 +51,8 @@ import org.jboss.jandex.IndexView;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ *
+ * @since 5.0
  */
 public interface MetadataBuilder {
 	/**

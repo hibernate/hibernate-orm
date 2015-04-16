@@ -39,6 +39,8 @@ import org.hibernate.type.TypeResolver;
  * @todo Should Mapping be implemented here, or on InFlightMetadataCollector instead?
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface MetadataImplementor extends Metadata, Mapping {
 	/**

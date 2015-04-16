@@ -27,13 +27,15 @@ import java.util.Map;
 
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.service.Service;
 
 /**
  * Facade for generation of {@link QueryTranslator} and {@link FilterTranslator} instances.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface QueryTranslatorFactory {
+public interface QueryTranslatorFactory extends Service {
 	/**
 	 * Construct a {@link QueryTranslator} instance capable of translating
 	 * an HQL query string.
@@ -49,8 +51,12 @@ public interface QueryTranslatorFactory {
 	 * @param entityGraphQueryHint
 	 * @return an appropriate translator.
 	 */
-	public QueryTranslator createQueryTranslator(String queryIdentifier, String queryString, Map filters,
-			SessionFactoryImplementor factory, EntityGraphQueryHint entityGraphQueryHint);
+	public QueryTranslator createQueryTranslator(
+			String queryIdentifier,
+			String queryString,
+			Map filters,
+			SessionFactoryImplementor factory,
+			EntityGraphQueryHint entityGraphQueryHint);
 
 	/**
 	 * Construct a {@link FilterTranslator} instance capable of translating
@@ -58,5 +64,9 @@ public interface QueryTranslatorFactory {
 	 *
 	 * @see #createQueryTranslator
 	 */
-	public FilterTranslator createFilterTranslator(String queryIdentifier, String queryString, Map filters, SessionFactoryImplementor factory);
+	public FilterTranslator createFilterTranslator(
+			String queryIdentifier,
+			String queryString,
+			Map filters,
+			SessionFactoryImplementor factory);
 }

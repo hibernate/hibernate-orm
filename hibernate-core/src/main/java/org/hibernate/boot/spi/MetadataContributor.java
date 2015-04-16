@@ -29,9 +29,11 @@ import org.jboss.jandex.IndexView;
  * Contract for contributing to Metadata (InFlightMetadataCollector).
  *
  * This hook occurs just after all processing of all {@link org.hibernate.boot.MetadataSources},
- * and just before {@link AdditionalJaxbRootProducer}.
+ * and just before {@link org.hibernate.boot.spi.AdditionalJaxbMappingProducer}.
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface MetadataContributor {
 	/**

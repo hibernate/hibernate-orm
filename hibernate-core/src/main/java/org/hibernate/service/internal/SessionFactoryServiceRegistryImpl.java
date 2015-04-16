@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.internal;
 
-import org.hibernate.SessionFactory;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceBinding;
@@ -37,14 +37,14 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryImpl implements SessionFactoryServiceRegistry  {
 
-	private final SessionFactory.SessionFactoryOptions sessionFactoryOptions;
+	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings( {"unchecked"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
 			SessionFactoryImplementor sessionFactory,
-			SessionFactory.SessionFactoryOptions sessionFactoryOptions) {
+			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
 
 		this.sessionFactory = sessionFactory;

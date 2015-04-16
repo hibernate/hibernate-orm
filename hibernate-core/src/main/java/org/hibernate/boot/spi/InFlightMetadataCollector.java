@@ -66,6 +66,8 @@ import org.hibernate.type.TypeResolver;
  * An in-flight representation of Metadata while Metadata is being built.
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
 

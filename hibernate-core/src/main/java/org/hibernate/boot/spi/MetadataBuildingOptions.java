@@ -51,6 +51,8 @@ import org.jboss.jandex.IndexView;
  * {@link org.hibernate.boot.MetadataBuilder#build()} processing).
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface MetadataBuildingOptions {
 	/**

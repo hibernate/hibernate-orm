@@ -39,12 +39,17 @@ import org.hibernate.internal.CoreMessageLogger;
  * the translation.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class ASTQueryTranslatorFactory implements QueryTranslatorFactory {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ASTQueryTranslatorFactory.class );
 
+	/**
+	 * Singleton access
+	 */
+	public static final ASTQueryTranslatorFactory INSTANCE = new ASTQueryTranslatorFactory();
+
 	public ASTQueryTranslatorFactory() {
-		LOG.usingAstQueryTranslatorFactory();
 	}
 
 	@Override

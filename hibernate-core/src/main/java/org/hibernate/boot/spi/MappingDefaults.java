@@ -31,6 +31,8 @@ import org.hibernate.cache.spi.access.AccessType;
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ *
+ * @since 5.0
  */
 public interface MappingDefaults {
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";

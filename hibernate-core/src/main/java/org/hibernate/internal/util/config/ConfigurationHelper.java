@@ -305,6 +305,26 @@ public final class ConfigurationHelper {
 		}
 		return value;
 	}
+	/**
+	 * Extract a property value by name from the given properties object.
+	 * <p/>
+	 * Both <tt>null</tt> and <tt>empty string</tt> are viewed as the same, and return null.
+	 *
+	 * @param propertyName The name of the property for which to extract value
+	 * @param properties The properties object
+	 * @return The property value; may be null.
+	 */
+	public static String extractPropertyValue(String propertyName, Map properties) {
+		String value = (String) properties.get( propertyName );
+		if ( value == null ) {
+			return null;
+		}
+		value = value.trim();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+		return value;
+	}
 
 	/**
 	 * Constructs a map from a property value.
@@ -320,6 +340,31 @@ public final class ConfigurationHelper {
 	 * @return The resulting map; never null, though perhaps empty.
 	 */
 	public static Map toMap(String propertyName, String delim, Properties properties) {
+		Map map = new HashMap();
+		String value = extractPropertyValue( propertyName, properties );
+		if ( value != null ) {
+			StringTokenizer tokens = new StringTokenizer( value, delim );
+			while ( tokens.hasMoreTokens() ) {
+				map.put( tokens.nextToken(), tokens.hasMoreElements() ? tokens.nextToken() : "" );
+			}
+		}
+		return map;
+	}
+
+	/**
+	 * Constructs a map from a property value.
+	 * <p/>
+	 * The exact behavior here is largely dependant upon what is passed in as
+	 * the delimiter.
+	 *
+	 * @see #extractPropertyValue(String, java.util.Properties)
+	 *
+	 * @param propertyName The name of the property for which to retrieve value
+	 * @param delim The string defining tokens used as both entry and key/value delimiters.
+	 * @param properties The properties object
+	 * @return The resulting map; never null, though perhaps empty.
+	 */
+	public static Map toMap(String propertyName, String delim, Map properties) {
 		Map map = new HashMap();
 		String value = extractPropertyValue( propertyName, properties );
 		if ( value != null ) {

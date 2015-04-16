@@ -43,6 +43,7 @@ import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
+import org.hibernate.hql.internal.QueryTranslatorFactoryInitiator;
 import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
 import org.hibernate.jmx.internal.JmxServiceInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
@@ -86,6 +87,7 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 		serviceInitiators.add( RefCursorSupportInitiator.INSTANCE );
 
+		serviceInitiators.add( QueryTranslatorFactoryInitiator.INSTANCE );
 		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
 
 		serviceInitiators.add( JtaPlatformResolverInitiator.INSTANCE );

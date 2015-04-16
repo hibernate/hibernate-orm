@@ -31,6 +31,8 @@ import java.net.URL;
  * mitigate accessing the ClassLoader in these cases.
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface ClassLoaderAccess {
 	/**

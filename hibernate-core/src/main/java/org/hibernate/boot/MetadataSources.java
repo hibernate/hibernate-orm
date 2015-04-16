@@ -68,6 +68,8 @@ import org.w3c.dom.Document;
  * how sources are processed (naming strategies, etc).
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public class MetadataSources implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );

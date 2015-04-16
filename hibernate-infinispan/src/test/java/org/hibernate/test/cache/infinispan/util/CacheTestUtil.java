@@ -27,11 +27,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl.SessionFactoryOptionsImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Settings;
-import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
@@ -91,8 +92,6 @@ public class CacheTestUtil {
    public static InfinispanRegionFactory startRegionFactory(ServiceRegistry serviceRegistry) {
       try {
          final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-         final Properties properties = toProperties( cfgService.getSettings() );
-         final Settings settings = new SettingsFactory().buildSettings( properties, serviceRegistry );
 
          String factoryType = cfgService.getSetting( AvailableSettings.CACHE_REGION_FACTORY, StandardConverters.STRING );
          Class clazz = Thread.currentThread().getContextClassLoader().loadClass( factoryType );
@@ -103,7 +102,13 @@ public class CacheTestUtil {
          else {
             regionFactory = (InfinispanRegionFactory) clazz.newInstance();
          }
+
+         final SessionFactoryOptionsImpl sessionFactoryOptions = new SessionFactoryOptionsImpl( (StandardServiceRegistry) serviceRegistry );
+         final Settings settings = new Settings( sessionFactoryOptions );
+         final Properties properties = toProperties( cfgService.getSettings() );
+
          regionFactory.start( settings, properties );
+
          return regionFactory;
       }
       catch (RuntimeException e) {

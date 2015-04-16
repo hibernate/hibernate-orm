@@ -29,6 +29,10 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.SchemaAutoTooling;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -37,85 +41,96 @@ import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
+import org.jboss.logging.Logger;
+
 /**
  * Settings that affect the behaviour of Hibernate at runtime.
  *
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.boot.spi.SessionFactoryOptions} instead.
  */
+@Deprecated
 public final class Settings {
+	private static final Logger LOG = Logger.getLogger( Settings.class );
 
-	private Integer maximumFetchDepth;
-	private Map querySubstitutions;
-	private int jdbcBatchSize;
-	private int defaultBatchFetchSize;
-	private boolean scrollableResultSetsEnabled;
-	private boolean getGeneratedKeysEnabled;
-	private String defaultSchemaName;
-	private String defaultCatalogName;
-	private Integer jdbcFetchSize;
-	private String sessionFactoryName;
-	private boolean sessionFactoryNameAlsoJndiName;
-	private boolean autoCreateSchema;
-	private boolean autoDropSchema;
-	private boolean autoUpdateSchema;
-	private boolean autoValidateSchema;
-	private boolean queryCacheEnabled;
-	private boolean structuredCacheEntriesEnabled;
-	private boolean secondLevelCacheEnabled;
-	private boolean autoEvictCollectionCache;
-	private String cacheRegionPrefix;
-	private boolean minimalPutsEnabled;
-	private boolean commentsEnabled;
-	private boolean statisticsEnabled;
-	private boolean jdbcBatchVersionedData;
-	private boolean identifierRollbackEnabled;
-	private boolean flushBeforeCompletionEnabled;
-	private boolean autoCloseSessionEnabled;
-	private ConnectionReleaseMode connectionReleaseMode;
-	private RegionFactory regionFactory;
-	private QueryCacheFactory queryCacheFactory;
-	private QueryTranslatorFactory queryTranslatorFactory;
-	private boolean wrapResultSetsEnabled;
-	private boolean orderUpdatesEnabled;
-	private boolean orderInsertsEnabled;
-	private EntityMode defaultEntityMode;
-	private boolean dataDefinitionImplicitCommit;
-	private boolean dataDefinitionInTransactionSupported;
-	private boolean strictJPAQLCompliance;
-	private boolean namedQueryStartupCheckingEnabled;
-	private EntityTuplizerFactory entityTuplizerFactory;
-	private boolean checkNullability;
-	private NullPrecedence defaultNullPrecedence;
-	private boolean initializeLazyStateOutsideTransactions;
-//	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
-//	private BytecodeProvider bytecodeProvider;
-	private String importFiles;
-	private MultiTenancyStrategy multiTenancyStrategy;
+	private final SessionFactoryOptions sessionFactoryOptions;
+	private final String defaultCatalogName;
+	private final String defaultSchemaName;
 
-	private JtaPlatform jtaPlatform;
-
-	private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
-	private BatchFetchStyle batchFetchStyle;
-	private boolean directReferenceCacheEntriesEnabled;
-	
-	private boolean jtaTrackByThread;
-	private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;
-
-
-	/**
-	 * Package protected constructor
-	 */
-	Settings() {
+	public Settings(SessionFactoryOptions sessionFactoryOptions) {
+		this( sessionFactoryOptions, null, null );
 	}
 
-	// public getters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public String getImportFiles() {
-		return importFiles;
+	public Settings(SessionFactoryOptions sessionFactoryOptions, Metadata metadata) {
+		this(
+				sessionFactoryOptions,
+				extractName( metadata.getDatabase().getDefaultSchema().getName().getCatalog() ),
+				extractName( metadata.getDatabase().getDefaultSchema().getName().getSchema() )
+		);
 	}
 
-	public void setImportFiles(String importFiles) {
-		this.importFiles = importFiles;
+	private static String extractName(Identifier identifier) {
+		return identifier == null ? null : identifier.render();
+	}
+
+	public Settings(SessionFactoryOptions sessionFactoryOptions, String defaultCatalogName, String defaultSchemaName) {
+		this.sessionFactoryOptions = sessionFactoryOptions;
+		this.defaultCatalogName = defaultCatalogName;
+		this.defaultSchemaName = defaultSchemaName;
+
+		final boolean debugEnabled =  LOG.isDebugEnabled();
+
+		if ( debugEnabled ) {
+			LOG.debugf( "SessionFactory name : %s", sessionFactoryOptions.getSessionFactoryName() );
+			LOG.debugf( "Automatic flush during beforeCompletion(): %s", enabledDisabled( sessionFactoryOptions.isFlushBeforeCompletionEnabled() ) );
+			LOG.debugf( "Automatic session close at end of transaction: %s", enabledDisabled( sessionFactoryOptions.isAutoCloseSessionEnabled() ) );
+
+			LOG.debugf( "Statistics: %s", enabledDisabled( sessionFactoryOptions.isStatisticsEnabled() ) );
+
+			LOG.debugf( "Deleted entity synthetic identifier rollback: %s", enabledDisabled( sessionFactoryOptions.isIdentifierRollbackEnabled() ) );
+			LOG.debugf( "Default entity-mode: %s", sessionFactoryOptions.getDefaultEntityMode() );
+			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled( sessionFactoryOptions.isCheckNullability() ) );
+			LOG.debugf( "Allow initialization of lazy state outside session : %s", enabledDisabled( sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled() ) );
+
+			LOG.debugf( "Using BatchFetchStyle : " + sessionFactoryOptions.getBatchFetchStyle().name() );
+			LOG.debugf( "Default batch fetch size: %s", sessionFactoryOptions.getDefaultBatchFetchSize() );
+			LOG.debugf( "Maximum outer join fetch depth: %s", sessionFactoryOptions.getMaximumFetchDepth() );
+			LOG.debugf( "Default null ordering: %s", sessionFactoryOptions.getDefaultNullPrecedence() );
+			LOG.debugf( "Order SQL updates by primary key: %s", enabledDisabled( sessionFactoryOptions.isOrderUpdatesEnabled() ) );
+			LOG.debugf( "Order SQL inserts for batching: %s", enabledDisabled( sessionFactoryOptions.isOrderInsertsEnabled() ) );
+
+			LOG.debugf( "multi-tenancy strategy : %s", sessionFactoryOptions.getMultiTenancyStrategy() );
+
+			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled( sessionFactoryOptions.isJtaTrackByThread() ) );
+
+			LOG.debugf( "Query language substitutions: %s", sessionFactoryOptions.getQuerySubstitutions() );
+			LOG.debugf( "JPA query language strict compliance: %s", enabledDisabled( sessionFactoryOptions.isStrictJpaQueryLanguageCompliance() ) );
+			LOG.debugf( "Named query checking : %s", enabledDisabled( sessionFactoryOptions.isNamedQueryStartupCheckingEnabled() ) );
+
+			LOG.debugf( "Second-level cache: %s", enabledDisabled( sessionFactoryOptions.isSecondLevelCacheEnabled() ) );
+			LOG.debugf( "Second-level query cache: %s", enabledDisabled( sessionFactoryOptions.isQueryCacheEnabled() ) );
+			LOG.debugf( "Second-level query cache factory: %s", sessionFactoryOptions.getQueryCacheFactory() );
+			LOG.debugf( "Second-level cache region prefix: %s", sessionFactoryOptions.getCacheRegionPrefix() );
+			LOG.debugf( "Optimize second-level cache for minimal puts: %s", enabledDisabled( sessionFactoryOptions.isMinimalPutsEnabled() ) );
+			LOG.debugf( "Structured second-level cache entries: %s", enabledDisabled( sessionFactoryOptions.isStructuredCacheEntriesEnabled() ) );
+			LOG.debugf( "Second-level cache direct-reference entries: %s", enabledDisabled( sessionFactoryOptions.isDirectReferenceCacheEntriesEnabled() ) );
+			LOG.debugf( "Automatic eviction of collection cache: %s", enabledDisabled( sessionFactoryOptions.isAutoEvictCollectionCache() ) );
+
+			LOG.debugf( "JDBC batch size: %s", sessionFactoryOptions.getJdbcBatchSize() );
+			LOG.debugf( "JDBC batch updates for versioned data: %s", enabledDisabled( sessionFactoryOptions.isJdbcBatchVersionedData() ) );
+			LOG.debugf( "Scrollable result sets: %s", enabledDisabled( sessionFactoryOptions.isScrollableResultSetsEnabled() ) );
+			LOG.debugf( "Wrap result sets: %s", enabledDisabled( sessionFactoryOptions.isWrapResultSetsEnabled() ) );
+			LOG.debugf( "JDBC3 getGeneratedKeys(): %s", enabledDisabled( sessionFactoryOptions.isGetGeneratedKeysEnabled() ) );
+			LOG.debugf( "JDBC result set fetch size: %s", sessionFactoryOptions.getJdbcFetchSize() );
+			LOG.debugf( "Connection release mode: %s", sessionFactoryOptions.getConnectionReleaseMode() );
+			LOG.debugf( "Generate SQL with comments: %s", enabledDisabled( sessionFactoryOptions.isCommentsEnabled() ) );
+		}
+	}
+
+	private static String enabledDisabled(boolean value) {
+		return value ? "enabled" : "disabled";
 	}
 
 	public String getDefaultSchemaName() {
@@ -126,414 +141,200 @@ public final class Settings {
 		return defaultCatalogName;
 	}
 
-	public int getJdbcBatchSize() {
-		return jdbcBatchSize;
-	}
-
-	public int getDefaultBatchFetchSize() {
-		return defaultBatchFetchSize;
-	}
-
-	public Map getQuerySubstitutions() {
-		return querySubstitutions;
-	}
-
-	public boolean isIdentifierRollbackEnabled() {
-		return identifierRollbackEnabled;
-	}
-
-	public boolean isScrollableResultSetsEnabled() {
-		return scrollableResultSetsEnabled;
-	}
-
-	public boolean isGetGeneratedKeysEnabled() {
-		return getGeneratedKeysEnabled;
-	}
-
-	public boolean isMinimalPutsEnabled() {
-		return minimalPutsEnabled;
-	}
-
-	public Integer getJdbcFetchSize() {
-		return jdbcFetchSize;
-	}
-
 	public String getSessionFactoryName() {
-		return sessionFactoryName;
+		return sessionFactoryOptions.getSessionFactoryName();
 	}
 
 	public boolean isSessionFactoryNameAlsoJndiName() {
-		return sessionFactoryNameAlsoJndiName;
-	}
-
-	public boolean isAutoCreateSchema() {
-		return autoCreateSchema;
-	}
-
-	public boolean isAutoDropSchema() {
-		return autoDropSchema;
-	}
-
-	public boolean isAutoUpdateSchema() {
-		return autoUpdateSchema;
-	}
-
-	public Integer getMaximumFetchDepth() {
-		return maximumFetchDepth;
-	}
-
-	public RegionFactory getRegionFactory() {
-		return regionFactory;
-	}
-
-	public boolean isQueryCacheEnabled() {
-		return queryCacheEnabled;
-	}
-
-	public boolean isCommentsEnabled() {
-		return commentsEnabled;
-	}
-
-	public boolean isSecondLevelCacheEnabled() {
-		return secondLevelCacheEnabled;
-	}
-
-	public String getCacheRegionPrefix() {
-		return cacheRegionPrefix;
-	}
-
-	public QueryCacheFactory getQueryCacheFactory() {
-		return queryCacheFactory;
-	}
-
-	public boolean isStatisticsEnabled() {
-		return statisticsEnabled;
-	}
-
-	public boolean isJdbcBatchVersionedData() {
-		return jdbcBatchVersionedData;
+		return sessionFactoryOptions.isSessionFactoryNameAlsoJndiName();
 	}
 
 	public boolean isFlushBeforeCompletionEnabled() {
-		return flushBeforeCompletionEnabled;
+		return sessionFactoryOptions.isFlushBeforeCompletionEnabled();
 	}
 
 	public boolean isAutoCloseSessionEnabled() {
-		return autoCloseSessionEnabled;
+		return sessionFactoryOptions.isAutoCloseSessionEnabled();
 	}
 
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return connectionReleaseMode;
-	}
-
-	public QueryTranslatorFactory getQueryTranslatorFactory() {
-		return queryTranslatorFactory;
-	}
-
-	public boolean isWrapResultSetsEnabled() {
-		return wrapResultSetsEnabled;
-	}
-
-	public boolean isOrderUpdatesEnabled() {
-		return orderUpdatesEnabled;
-	}
-
-	public boolean isOrderInsertsEnabled() {
-		return orderInsertsEnabled;
-	}
-
-	public boolean isStructuredCacheEntriesEnabled() {
-		return structuredCacheEntriesEnabled;
-	}
-
-	public boolean isDirectReferenceCacheEntriesEnabled() {
-		return directReferenceCacheEntriesEnabled;
-	}
-
-	public EntityMode getDefaultEntityMode() {
-		return defaultEntityMode;
-	}
-
-	public boolean isAutoValidateSchema() {
-		return autoValidateSchema;
-	}
-
-	public boolean isDataDefinitionImplicitCommit() {
-		return dataDefinitionImplicitCommit;
-	}
-
-	public boolean isDataDefinitionInTransactionSupported() {
-		return dataDefinitionInTransactionSupported;
-	}
-
-	public boolean isStrictJPAQLCompliance() {
-		return strictJPAQLCompliance;
-	}
-
-	public boolean isNamedQueryStartupCheckingEnabled() {
-		return namedQueryStartupCheckingEnabled;
-	}
-
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
-	}
-
-//	public ComponentTuplizerFactory getComponentTuplizerFactory() {
-//		return componentTuplizerFactory;
-//	}
-
-	public NullPrecedence getDefaultNullPrecedence() {
-		return defaultNullPrecedence;
-	}
-
-	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	void setDefaultSchemaName(String string) {
-		defaultSchemaName = string;
-	}
-
-	void setDefaultCatalogName(String string) {
-		defaultCatalogName = string;
-	}
-
-	void setJdbcBatchSize(int i) {
-		jdbcBatchSize = i;
-	}
-
-	void setDefaultBatchFetchSize(int i) {
-		defaultBatchFetchSize = i;
-	}
-
-	void setQuerySubstitutions(Map map) {
-		querySubstitutions = map;
-	}
-
-	void setIdentifierRollbackEnabled(boolean b) {
-		identifierRollbackEnabled = b;
-	}
-
-	void setMinimalPutsEnabled(boolean b) {
-		minimalPutsEnabled = b;
-	}
-
-	void setScrollableResultSetsEnabled(boolean b) {
-		scrollableResultSetsEnabled = b;
-	}
-
-	void setGetGeneratedKeysEnabled(boolean b) {
-		getGeneratedKeysEnabled = b;
-	}
-
-	void setJdbcFetchSize(Integer integer) {
-		jdbcFetchSize = integer;
-	}
-
-	void setSessionFactoryName(String string) {
-		sessionFactoryName = string;
-	}
-
-	void setSessionFactoryNameAlsoJndiName(boolean sessionFactoryNameAlsoJndiName) {
-		this.sessionFactoryNameAlsoJndiName = sessionFactoryNameAlsoJndiName;
-	}
-
-	void setAutoCreateSchema(boolean b) {
-		autoCreateSchema = b;
-	}
-
-	void setAutoDropSchema(boolean b) {
-		autoDropSchema = b;
-	}
-
-	void setAutoUpdateSchema(boolean b) {
-		autoUpdateSchema = b;
-	}
-
-	void setMaximumFetchDepth(Integer i) {
-		maximumFetchDepth = i;
-	}
-
-	void setRegionFactory(RegionFactory regionFactory) {
-		this.regionFactory = regionFactory;
-	}
-
-	void setQueryCacheEnabled(boolean b) {
-		queryCacheEnabled = b;
-	}
-
-	void setCommentsEnabled(boolean commentsEnabled) {
-		this.commentsEnabled = commentsEnabled;
-	}
-
-	void setSecondLevelCacheEnabled(boolean secondLevelCacheEnabled) {
-		this.secondLevelCacheEnabled = secondLevelCacheEnabled;
-	}
-
-	void setCacheRegionPrefix(String cacheRegionPrefix) {
-		this.cacheRegionPrefix = cacheRegionPrefix;
-	}
-
-	void setQueryCacheFactory(QueryCacheFactory queryCacheFactory) {
-		this.queryCacheFactory = queryCacheFactory;
-	}
-
-	void setStatisticsEnabled(boolean statisticsEnabled) {
-		this.statisticsEnabled = statisticsEnabled;
-	}
-
-	void setJdbcBatchVersionedData(boolean jdbcBatchVersionedData) {
-		this.jdbcBatchVersionedData = jdbcBatchVersionedData;
-	}
-
-	void setFlushBeforeCompletionEnabled(boolean flushBeforeCompletionEnabled) {
-		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
-	}
-
-	void setAutoCloseSessionEnabled(boolean autoCloseSessionEnabled) {
-		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
-	}
-
-	void setConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		this.connectionReleaseMode = connectionReleaseMode;
-	}
-
-	void setQueryTranslatorFactory(QueryTranslatorFactory queryTranslatorFactory) {
-		this.queryTranslatorFactory = queryTranslatorFactory;
-	}
-
-	void setWrapResultSetsEnabled(boolean wrapResultSetsEnabled) {
-		this.wrapResultSetsEnabled = wrapResultSetsEnabled;
-	}
-
-	void setOrderUpdatesEnabled(boolean orderUpdatesEnabled) {
-		this.orderUpdatesEnabled = orderUpdatesEnabled;
-	}
-
-	void setOrderInsertsEnabled(boolean orderInsertsEnabled) {
-		this.orderInsertsEnabled = orderInsertsEnabled;
-	}
-
-	void setStructuredCacheEntriesEnabled(boolean structuredCacheEntriesEnabled) {
-		this.structuredCacheEntriesEnabled = structuredCacheEntriesEnabled;
-	}
-
-	void setDefaultEntityMode(EntityMode defaultEntityMode) {
-		this.defaultEntityMode = defaultEntityMode;
-	}
-
-	void setAutoValidateSchema(boolean autoValidateSchema) {
-		this.autoValidateSchema = autoValidateSchema;
-	}
-
-	void setDataDefinitionImplicitCommit(boolean dataDefinitionImplicitCommit) {
-		this.dataDefinitionImplicitCommit = dataDefinitionImplicitCommit;
-	}
-
-	void setDataDefinitionInTransactionSupported(boolean dataDefinitionInTransactionSupported) {
-		this.dataDefinitionInTransactionSupported = dataDefinitionInTransactionSupported;
-	}
-
-	void setStrictJPAQLCompliance(boolean strictJPAQLCompliance) {
-		this.strictJPAQLCompliance = strictJPAQLCompliance;
-	}
-
-	void setNamedQueryStartupCheckingEnabled(boolean namedQueryStartupCheckingEnabled) {
-		this.namedQueryStartupCheckingEnabled = namedQueryStartupCheckingEnabled;
-	}
-
-	public void setEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.entityTuplizerFactory = entityTuplizerFactory;
-	}
-
-	public boolean isCheckNullability() {
-		return checkNullability;
-	}
-
-	public void setCheckNullability(boolean checkNullability) {
-		this.checkNullability = checkNullability;
-	}
-
-	//	void setComponentTuplizerFactory(ComponentTuplizerFactory componentTuplizerFactory) {
-//		this.componentTuplizerFactory = componentTuplizerFactory;
-//	}
-
-	//	public BytecodeProvider getBytecodeProvider() {
-//		return bytecodeProvider;
-//	}
-//
-//	void setBytecodeProvider(BytecodeProvider bytecodeProvider) {
-//		this.bytecodeProvider = bytecodeProvider;
-//	}
-
-
-	public JtaPlatform getJtaPlatform() {
-		return jtaPlatform;
-	}
-
-	void setJtaPlatform(JtaPlatform jtaPlatform) {
-		this.jtaPlatform = jtaPlatform;
-	}
-
-	public MultiTenancyStrategy getMultiTenancyStrategy() {
-		return multiTenancyStrategy;
-	}
-
-	void setMultiTenancyStrategy(MultiTenancyStrategy multiTenancyStrategy) {
-		this.multiTenancyStrategy = multiTenancyStrategy;
-	}
-
-	public boolean isInitializeLazyStateOutsideTransactionsEnabled() {
-		return initializeLazyStateOutsideTransactions;
-	}
-
-	void setInitializeLazyStateOutsideTransactions(boolean initializeLazyStateOutsideTransactions) {
-		this.initializeLazyStateOutsideTransactions = initializeLazyStateOutsideTransactions;
-	}
-
-	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
-		return multiTableBulkIdStrategy;
-	}
-
-	void setMultiTableBulkIdStrategy(MultiTableBulkIdStrategy multiTableBulkIdStrategy) {
-		this.multiTableBulkIdStrategy = multiTableBulkIdStrategy;
-	}
-
-	public BatchFetchStyle getBatchFetchStyle() {
-		return batchFetchStyle;
-	}
-
-	void setBatchFetchStyle(BatchFetchStyle batchFetchStyle) {
-		this.batchFetchStyle = batchFetchStyle;
-	}
-
-	public void setDirectReferenceCacheEntriesEnabled(boolean directReferenceCacheEntriesEnabled) {
-		this.directReferenceCacheEntriesEnabled = directReferenceCacheEntriesEnabled;
-	}
-
-	void setDefaultNullPrecedence(NullPrecedence defaultNullPrecedence) {
-		this.defaultNullPrecedence = defaultNullPrecedence;
-	}
-
-	public boolean isJtaTrackByThread() {
-		return jtaTrackByThread;
-	}
-
-	public void setJtaTrackByThread(boolean jtaTrackByThread) {
-		this.jtaTrackByThread = jtaTrackByThread;
-	}
-
-	public boolean isAutoEvictCollectionCache() {
-		return autoEvictCollectionCache;
-	}
-
-	public void setAutoEvictCollectionCache(boolean autoEvictCollectionCache) {
-		this.autoEvictCollectionCache = autoEvictCollectionCache;
-	}
-
-	public void setBaselineSessionEventsListenerBuilder(BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder) {
-		this.baselineSessionEventsListenerBuilder = baselineSessionEventsListenerBuilder;
+	public boolean isStatisticsEnabled() {
+		return sessionFactoryOptions.isStatisticsEnabled();
 	}
 
 	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder() {
-		return baselineSessionEventsListenerBuilder;
+		return sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
+	}
+
+	public boolean isIdentifierRollbackEnabled() {
+		return sessionFactoryOptions.isIdentifierRollbackEnabled();
+	}
+
+	public EntityMode getDefaultEntityMode() {
+		return sessionFactoryOptions.getDefaultEntityMode();
+	}
+
+	public EntityTuplizerFactory getEntityTuplizerFactory() {
+		return sessionFactoryOptions.getEntityTuplizerFactory();
+	}
+
+	public boolean isCheckNullability() {
+		return sessionFactoryOptions.isCheckNullability();
+	}
+
+	public boolean isInitializeLazyStateOutsideTransactionsEnabled() {
+		return sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled();
+	}
+
+	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
+		return sessionFactoryOptions.getMultiTableBulkIdStrategy();
+	}
+
+	public BatchFetchStyle getBatchFetchStyle() {
+		return sessionFactoryOptions.getBatchFetchStyle();
+	}
+
+	public int getDefaultBatchFetchSize() {
+		return sessionFactoryOptions.getDefaultBatchFetchSize();
+	}
+
+	public Integer getMaximumFetchDepth() {
+		return sessionFactoryOptions.getMaximumFetchDepth();
+	}
+
+	public NullPrecedence getDefaultNullPrecedence() {
+		return sessionFactoryOptions.getDefaultNullPrecedence();
+	}
+
+	public boolean isOrderUpdatesEnabled() {
+		return sessionFactoryOptions.isOrderUpdatesEnabled();
+	}
+
+	public boolean isOrderInsertsEnabled() {
+		return sessionFactoryOptions.isOrderInsertsEnabled();
+	}
+
+	public MultiTenancyStrategy getMultiTenancyStrategy() {
+		return sessionFactoryOptions.getMultiTenancyStrategy();
+	}
+	public boolean isJtaTrackByThread() {
+		return sessionFactoryOptions.isJtaTrackByThread();
+	}
+
+	public Map getQuerySubstitutions() {
+		return sessionFactoryOptions.getQuerySubstitutions();
+	}
+
+	public boolean isStrictJPAQLCompliance() {
+		return sessionFactoryOptions.isStrictJpaQueryLanguageCompliance();
+	}
+
+	public boolean isNamedQueryStartupCheckingEnabled() {
+		return sessionFactoryOptions.isNamedQueryStartupCheckingEnabled();
+	}
+
+	public boolean isSecondLevelCacheEnabled() {
+		return sessionFactoryOptions.isSecondLevelCacheEnabled();
+	}
+
+	public boolean isQueryCacheEnabled() {
+		return sessionFactoryOptions.isQueryCacheEnabled();
+	}
+
+	public QueryCacheFactory getQueryCacheFactory() {
+		return sessionFactoryOptions.getQueryCacheFactory();
+	}
+
+	public String getCacheRegionPrefix() {
+		return sessionFactoryOptions.getCacheRegionPrefix();
+	}
+
+	public boolean isMinimalPutsEnabled() {
+		return sessionFactoryOptions.isMinimalPutsEnabled();
+	}
+
+	public boolean isStructuredCacheEntriesEnabled() {
+		return sessionFactoryOptions.isStructuredCacheEntriesEnabled();
+	}
+
+	public boolean isDirectReferenceCacheEntriesEnabled() {
+		return sessionFactoryOptions.isDirectReferenceCacheEntriesEnabled();
+	}
+
+	public boolean isAutoEvictCollectionCache() {
+		return sessionFactoryOptions.isAutoEvictCollectionCache();
+	}
+
+	public boolean isAutoCreateSchema() {
+		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE
+				|| sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP;
+	}
+
+	public boolean isAutoDropSchema() {
+		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.CREATE_DROP;
+	}
+
+	public boolean isAutoUpdateSchema() {
+		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.UPDATE;
+	}
+
+	public boolean isAutoValidateSchema() {
+		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.VALIDATE;
+	}
+
+	public boolean isDataDefinitionImplicitCommit() {
+		return sessionFactoryOptions.isDataDefinitionImplicitCommit();
+	}
+
+	public boolean isDataDefinitionInTransactionSupported() {
+		return sessionFactoryOptions.isDataDefinitionInTransactionSupported();
+	}
+
+	public int getJdbcBatchSize() {
+		return sessionFactoryOptions.getJdbcBatchSize();
+	}
+
+	public boolean isJdbcBatchVersionedData() {
+		return sessionFactoryOptions.isJdbcBatchVersionedData();
+	}
+
+	public Integer getJdbcFetchSize() {
+		return sessionFactoryOptions.getJdbcFetchSize();
+	}
+
+	public boolean isScrollableResultSetsEnabled() {
+		return sessionFactoryOptions.isScrollableResultSetsEnabled();
+	}
+
+	public boolean isWrapResultSetsEnabled() {
+		return sessionFactoryOptions.isWrapResultSetsEnabled();
+	}
+
+	public boolean isGetGeneratedKeysEnabled() {
+		return sessionFactoryOptions.isGetGeneratedKeysEnabled();
+	}
+
+	public ConnectionReleaseMode getConnectionReleaseMode() {
+		return sessionFactoryOptions.getConnectionReleaseMode();
+	}
+
+	public boolean isCommentsEnabled() {
+		return sessionFactoryOptions.isCommentsEnabled();
+	}
+
+	public RegionFactory getRegionFactory() {
+		return sessionFactoryOptions.getServiceRegistry().getService( RegionFactory.class );
+	}
+
+	public JtaPlatform getJtaPlatform() {
+		return sessionFactoryOptions.getServiceRegistry().getService( JtaPlatform.class );
+	}
+
+	public QueryTranslatorFactory getQueryTranslatorFactory() {
+		return sessionFactoryOptions.getServiceRegistry().getService( QueryTranslatorFactory.class );
+	}
+
+	public void setCheckNullability(boolean enabled) {
+		// ugh, used by org.hibernate.cfg.beanvalidation.TypeSafeActivator as part of the BV integrator
+		sessionFactoryOptions.setCheckNullability( enabled );
 	}
 }

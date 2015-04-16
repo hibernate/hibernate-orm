@@ -36,6 +36,11 @@ import org.hibernate.cfg.Settings;
  * {@link StandardQueryCache}.
  */
 public class StandardQueryCacheFactory implements QueryCacheFactory {
+	/**
+	 * Singleton access
+	 */
+	public static final StandardQueryCacheFactory INSTANCE = new StandardQueryCacheFactory();
+
 	@Override
 	public QueryCache getQueryCache(
 			final String regionName,

@@ -29,14 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import javax.naming.Referenceable;
 
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.Settings;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.stat.Statistics;
 
 /**
@@ -56,43 +52,6 @@ import org.hibernate.stat.Statistics;
  * @author Steve Ebersole
  */
 public interface SessionFactory extends Referenceable, Serializable {
-	/**
-	 * Aggregator of special options used to build the SessionFactory.
-	 */
-	public interface SessionFactoryOptions {
-		/**
-		 * The service registry to use in building the factory.
-		 *
-		 * @return The service registry to use.
-		 */
-		public StandardServiceRegistry getServiceRegistry();
-
-		/**
-		 * Get the interceptor to use by default for all sessions opened from this factory.
-		 *
-		 * @return The interceptor to use factory wide.  May be {@code null}
-		 */
-		public Interceptor getInterceptor();
-
-		public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
-		public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
-		public SessionFactoryObserver[] getSessionFactoryObservers();
-		public EntityNameResolver[] getEntityNameResolvers();
-		public Settings getSettings();
-
-		/**
-		 * Get the delegate for handling entity-not-found exception conditions.
-		 *
-		 * @return The specific EntityNotFoundDelegate to use,  May be {@code null}
-		 */
-		public EntityNotFoundDelegate getEntityNotFoundDelegate();
-
-		public Map<String, SQLFunction> getCustomSqlFunctionMap();
-
-		public Object getBeanManagerReference();
-
-		public Object getValidatorFactoryReference();
-	}
 
 	/**
 	 * Get the special options used to build the factory.

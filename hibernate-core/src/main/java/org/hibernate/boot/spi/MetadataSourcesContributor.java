@@ -29,6 +29,8 @@ import org.hibernate.boot.MetadataSources;
  * A bootstrap process hook for contributing sources to MetadataSources.
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface MetadataSourcesContributor {
 	/**

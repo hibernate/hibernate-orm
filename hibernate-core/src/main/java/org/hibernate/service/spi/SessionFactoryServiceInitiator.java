@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.spi;
 
-import org.hibernate.SessionFactory;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 
@@ -48,7 +48,7 @@ public interface SessionFactoryServiceInitiator<R extends Service> extends Servi
 	 */
 	public R initiateService(
 			SessionFactoryImplementor sessionFactory,
-			SessionFactory.SessionFactoryOptions sessionFactoryOptions,
+			SessionFactoryOptions sessionFactoryOptions,
 			ServiceRegistryImplementor registry);
 
 }

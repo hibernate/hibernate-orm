@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.internal;
 
-import org.hibernate.SessionFactory;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -45,7 +45,7 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 	@Override
 	public SessionFactoryServiceRegistryImpl buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
-			SessionFactory.SessionFactoryOptions options) {
+			SessionFactoryOptions options) {
 		return new SessionFactoryServiceRegistryImpl( theBasicServiceRegistry, sessionFactory, options );
 	}
 }

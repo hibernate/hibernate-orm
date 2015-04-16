@@ -50,6 +50,8 @@ import org.hibernate.mapping.Table;
  * reading the mapping information exposed here and collecting it via InFlightMetadataCollector
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface Metadata extends Mapping {
 	/**

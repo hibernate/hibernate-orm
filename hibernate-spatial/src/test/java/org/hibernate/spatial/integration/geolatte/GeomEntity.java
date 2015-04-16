@@ -37,19 +37,21 @@ import org.hibernate.spatial.testing.TestDataElement;
 
 /**
  * Test class used in unit testing.
+ *
+ * Not that this is Entity class uses raw Geometries, because in test classes a wide variety of SRIDs and
+ * coordinate spaces are mixed. (This creates notable problems for Oracle, which is very, very strict in what it accepts)
+ *
  */
 @Entity
 @Table(name = "geomtest")
 public class GeomEntity {
-
-	private final static CoordinateReferenceSystem<C3DM> CRS = CoordinateReferenceSystems.PROJECTED_3DM_METER;
 
 	@Id
 	private Integer id;
 
 	private String type;
 
-	private Geometry<C3DM> geom;
+	private Geometry geom;
 
 	public Integer getId() {
 		return id;
@@ -67,17 +69,17 @@ public class GeomEntity {
 		this.type = type;
 	}
 
-	public Geometry<C3DM> getGeom() {
+	public Geometry getGeom() {
 		return geom;
 	}
 
-	public void setGeom(Geometry<C3DM> geom) {
+	public void setGeom(Geometry geom) {
 		this.geom = geom;
 	}
 
 	public static GeomEntity createFrom(TestDataElement element) throws WktDecodeException {
 		WktDecoder decoder = Wkt.newDecoder( Wkt.Dialect.POSTGIS_EWKT_1 );
-		Geometry<C3DM> geom = decoder.decode( element.wkt, CRS  );
+		Geometry geom = decoder.decode( element.wkt );
 		GeomEntity result = new GeomEntity();
 		result.setId( element.id );
 		result.setGeom( geom );

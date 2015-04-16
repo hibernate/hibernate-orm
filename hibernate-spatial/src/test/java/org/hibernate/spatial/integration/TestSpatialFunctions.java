@@ -502,12 +502,18 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
+	// The convexhull tests are skipped for Oracle because of error:
+	// ORA-13276: internal error [Geodetic Geometry too big for Local Transform] in coordinate transformation
+
 	@Test
+	@SkipForDialect(value = OracleSpatial10gDialect.class)
 	public void test_convexhull_on_jts() throws SQLException {
 		convexhull( JTS );
 	}
 
+
 	@Test
+	@SkipForDialect(value = OracleSpatial10gDialect.class)
 	public void test_convexhull_on_geolatte() throws SQLException {
 		convexhull( GEOLATTE );
 	}

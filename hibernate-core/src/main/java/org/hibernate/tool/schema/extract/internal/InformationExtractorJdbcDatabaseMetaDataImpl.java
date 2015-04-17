@@ -521,7 +521,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	private QualifiedTableName extractKeyTableName(ResultSet resultSet, String prefix) throws SQLException {
 		final String incomingCatalogName = resultSet.getString( prefix + "TABLE_SCHEM" );
-		final String incomingSchemaName = resultSet.getString( prefix + "TABLE_CATALOG" );
+		final String incomingSchemaName = resultSet.getString( prefix + "TABLE_CAT" );
 		final String incomingTableName = resultSet.getString( prefix + "TABLE_NAME" );
 
 		return new QualifiedTableName(

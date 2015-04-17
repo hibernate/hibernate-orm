@@ -585,15 +585,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 					configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
 
-			this.multiTableBulkIdStrategy = strategySelector.resolveStrategy(
+			this.multiTableBulkIdStrategy = strategySelector.resolveDefaultableStrategy(
 					MultiTableBulkIdStrategy.class,
-					configurationSettings.get( HQL_BULK_ID_STRATEGY )
+					configurationSettings.get( HQL_BULK_ID_STRATEGY ),
+					jdbcServices.getJdbcEnvironment().getDialect().getDefaultMultiTableBulkIdStrategy()
 			);
-			if ( this.multiTableBulkIdStrategy == null ) {
-				this.multiTableBulkIdStrategy = jdbcServices.getDialect().supportsTemporaryTables()
-						? TemporaryTableBulkIdStrategy.INSTANCE
-						: new PersistentTableBulkIdStrategy();
-			}
 
 			this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
 			this.defaultBatchFetchSize = ConfigurationHelper.getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );

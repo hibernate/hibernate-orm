@@ -49,6 +49,8 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.hql.spi.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -580,6 +582,11 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public boolean supportsCommentOn() {
 		return true;
+	}
+
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy();
 	}
 
 	@Override

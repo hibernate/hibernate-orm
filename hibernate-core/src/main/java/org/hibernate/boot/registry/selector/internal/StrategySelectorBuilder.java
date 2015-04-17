@@ -97,6 +97,8 @@ import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
 import org.hibernate.event.internal.EntityCopyAllowedObserver;
 import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
 import org.hibernate.event.spi.EntityCopyObserver;
+import org.hibernate.hql.spi.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
 import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
@@ -370,6 +372,16 @@ public class StrategySelectorBuilder {
 				MultiTableBulkIdStrategy.class,
 				PersistentTableBulkIdStrategy.SHORT_NAME,
 				PersistentTableBulkIdStrategy.class
+		);
+		strategySelector.registerStrategyImplementor(
+				MultiTableBulkIdStrategy.class,
+				GlobalTemporaryTableBulkIdStrategy.SHORT_NAME,
+				GlobalTemporaryTableBulkIdStrategy.class
+		);
+		strategySelector.registerStrategyImplementor(
+				MultiTableBulkIdStrategy.class,
+				LocalTemporaryTableBulkIdStrategy.SHORT_NAME,
+				LocalTemporaryTableBulkIdStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				MultiTableBulkIdStrategy.class,

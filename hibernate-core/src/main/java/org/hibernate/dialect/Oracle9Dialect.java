@@ -37,6 +37,8 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.hql.spi.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
@@ -349,6 +351,11 @@ public class Oracle9Dialect extends Dialect {
 	@Override
 	public boolean supportsCommentOn() {
 		return true;
+	}
+
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy();
 	}
 
 	@Override

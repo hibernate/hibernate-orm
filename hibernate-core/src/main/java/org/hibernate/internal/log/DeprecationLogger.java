@@ -151,4 +151,13 @@ public interface DeprecationLogger {
 			id = 90000010
 	)
 	void deprecatedManyToManyFetch();
+
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "org.hibernate.hql.spi.TemporaryTableBulkIdStrategy (temporary) has been deprecated in favor of the" +
+					" more specific org.hibernate.hql.spi.LocalTemporaryTableBulkIdStrategy (local_temporary).",
+			id = 90000010
+	)
+	void logDeprecationOfTemporaryTableBulkIdStrategy();
 }

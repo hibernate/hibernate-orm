@@ -58,6 +58,9 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.hql.spi.LocalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -1515,6 +1518,13 @@ public abstract class Dialect implements ConversionContext {
 
 
 	// temporary table support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		// mimic the old behavior for now...
+		return supportsTemporaryTables()
+				? LocalTemporaryTableBulkIdStrategy.INSTANCE
+				: new PersistentTableBulkIdStrategy();
+	}
 
 	/**
 	 * Does this dialect support temporary tables?

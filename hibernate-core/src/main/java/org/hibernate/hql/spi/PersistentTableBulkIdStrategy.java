@@ -23,13 +23,10 @@
  */
 package org.hibernate.hql.spi;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -45,7 +42,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.AbstractSessionImpl;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Queryable;
@@ -55,6 +51,10 @@ import org.hibernate.type.UUIDCharType;
 import org.jboss.logging.Logger;
 
 /**
+ * This is a strategy that mimics temporary tables for databases which do not support
+ * temporary tables.  It follows a pattern similar to the ANSI SQL definition of global
+ * temporary table using a "session id" column to segment rows from the various sessions.
+ *
  * @author Steve Ebersole
  */
 public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
@@ -74,6 +74,13 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 	private boolean cleanUpTables;
 	private List<String> tableCleanUpDdl;
 
+	/**
+	 * Creates the tables for all the entities that might need it
+	 *
+	 * @param jdbcServices The JdbcService object
+	 * @param connectionAccess Access to the JDBC Connection
+	 * @param metadata Access to the O/RM mapping information
+	 */
 	@Override
 	public void prepare(
 			JdbcServices jdbcServices,
@@ -101,32 +108,31 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 		final List<Table> idTableDefinitions = new ArrayList<Table>();
 
 		for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+			if ( !MultiTableBulkIdHelper.INSTANCE.needsIdTable( entityBinding ) ) {
+				continue;
+			}
 			final Table idTableDefinition = generateIdTableDefinition( entityBinding, metadata );
 			idTableDefinitions.add( idTableDefinition );
+
+			if ( cleanUpTables ) {
+				if ( tableCleanUpDdl == null ) {
+					tableCleanUpDdl = new ArrayList<String>();
+				}
+				tableCleanUpDdl.add( idTableDefinition.sqlDropString( jdbcServices.getDialect(), null, null  ) );
+			}
 		}
+
+		// we export them all at once to better reuse JDBC resources
 		exportTableDefinitions( idTableDefinitions, jdbcServices, connectionAccess, metadata );
 	}
 
 	protected Table generateIdTableDefinition(PersistentClass entityMapping, MetadataImplementor metadata) {
-		Table idTable = new Table( entityMapping.getTemporaryIdTableName() );
-		if ( catalog != null ) {
-			idTable.setCatalog( catalog );
-		}
-		if ( schema != null ) {
-			idTable.setSchema( schema );
-		}
-		Iterator itr = entityMapping.getTable().getPrimaryKey().getColumnIterator();
-		while( itr.hasNext() ) {
-			Column column = (Column) itr.next();
-			idTable.addColumn( column.clone()  );
-		}
-		Column sessionIdColumn = new Column( "hib_sess_id" );
-		sessionIdColumn.setSqlType( "CHAR(36)" );
-		sessionIdColumn.setComment( "Used to hold the Hibernate Session identifier" );
-		idTable.addColumn( sessionIdColumn );
-
-		idTable.setComment( "Used to hold id values for the " + entityMapping.getEntityName() + " class" );
-		return idTable;
+		return MultiTableBulkIdHelper.INSTANCE.generateIdTableDefinition(
+				entityMapping,
+				catalog,
+				schema,
+				true
+		);
 	}
 
 	protected void exportTableDefinitions(
@@ -134,99 +140,21 @@ public class PersistentTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			MetadataImplementor metadata) {
-		try {
-			Connection connection;
-			try {
-				connection = connectionAccess.obtainConnection();
-			}
-			catch (UnsupportedOperationException e) {
-				// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-				log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
-				return;
-			}
-
-			try {
-				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-				Statement statement = connection.createStatement();
-				for ( Table idTableDefinition : idTableDefinitions ) {
-					if ( cleanUpTables ) {
-						if ( tableCleanUpDdl == null ) {
-							tableCleanUpDdl = new ArrayList<String>();
-						}
-						tableCleanUpDdl.add( idTableDefinition.sqlDropString( jdbcServices.getDialect(), null, null  ) );
-					}
-					try {
-						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), metadata, null, null );
-						jdbcServices.getSqlStatementLogger().logStatement( sql );
-						// TODO: ResultSetExtractor
-						statement.execute( sql );
-					}
-					catch (SQLException e) {
-						log.debugf( "Error attempting to export id-table [%s] : %s", idTableDefinition.getName(), e.getMessage() );
-					}
-				}
-				
-				// TODO
-//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
-				statement.close();
-			}
-			catch (SQLException e) {
-				log.error( "Unable to use JDBC Connection to create Statement", e );
-			}
-			finally {
-				try {
-					connectionAccess.releaseConnection( connection );
-				}
-				catch (SQLException ignore) {
-				}
-			}
-		}
-		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
-		}
+		MultiTableBulkIdHelper.INSTANCE.exportTableDefinitions(
+				idTableDefinitions,
+				jdbcServices,
+				connectionAccess,
+				metadata
+		);
 	}
 
 	@Override
 	public void release(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
-		if ( ! cleanUpTables || tableCleanUpDdl == null ) {
+		if ( ! cleanUpTables ) {
 			return;
 		}
 
-		try {
-			Connection connection = connectionAccess.obtainConnection();
-
-			try {
-				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-				Statement statement = connection.createStatement();
-
-				for ( String cleanupDdl : tableCleanUpDdl ) {
-					try {
-						jdbcServices.getSqlStatementLogger().logStatement( cleanupDdl );
-						statement.execute( cleanupDdl );
-					}
-					catch (SQLException e) {
-						log.debugf( "Error attempting to cleanup id-table : [%s]", e.getMessage() );
-					}
-				}
-				
-				// TODO
-//				session.getTransactionCoordinator().getJdbcCoordinator().release( statement );
-				statement.close();
-			}
-			catch (SQLException e) {
-				log.error( "Unable to use JDBC Connection to create Statement", e );
-			}
-			finally {
-				try {
-					connectionAccess.releaseConnection( connection );
-				}
-				catch (SQLException ignore) {
-				}
-			}
-		}
-		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
-		}
+		MultiTableBulkIdHelper.INSTANCE.cleanupTableDefinitions( jdbcServices, connectionAccess, tableCleanUpDdl );
 	}
 
 	@Override

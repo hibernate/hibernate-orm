@@ -24,16 +24,6 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -44,8 +34,18 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
-
 import org.jboss.logging.Logger;
+
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * JDBC database metadata
@@ -116,18 +116,18 @@ public class DatabaseMetadata {
 					} else if ( (isQuoted && meta.storesUpperCaseQuotedIdentifiers())
 						|| (!isQuoted && meta.storesUpperCaseIdentifiers() )) {
 						rs = meta.getTables(
-								StringHelper.toUpperCase(catalog),
-								StringHelper.toUpperCase(schema),
-								StringHelper.toUpperCase(name),
+                                catalog != null ? catalog.toUpperCase(Locale.ROOT) : null,
+								schema != null ? schema.toUpperCase(Locale.ROOT) : null,
+								name.toUpperCase(Locale.ROOT),
 								types
 							);
 					}
 					else if ( (isQuoted && meta.storesLowerCaseQuotedIdentifiers())
 							|| (!isQuoted && meta.storesLowerCaseIdentifiers() )) {
-						rs = meta.getTables( 
-								StringHelper.toLowerCase( catalog ),
-								StringHelper.toLowerCase(schema), 
-								StringHelper.toLowerCase(name), 
+						rs = meta.getTables(
+                                catalog != null ? catalog.toLowerCase(Locale.ROOT) : null,
+                                schema != null ? schema.toLowerCase(Locale.ROOT) : null,
+								name.toLowerCase(Locale.ROOT),
 								types 
 							);
 					}
@@ -178,7 +178,7 @@ public class DatabaseMetadata {
 					rs = statement.executeQuery(sql);
 
 					while ( rs.next() ) {
-						sequences.add( StringHelper.toLowerCase(rs.getString(1)).trim() );
+						sequences.add(rs.getString(1).toLowerCase(Locale.ROOT).trim());
 					}
 				}
 				finally {
@@ -196,7 +196,7 @@ public class DatabaseMetadata {
 	public boolean isSequence(Object key) {
 		if (key instanceof String){
 			String[] strings = StringHelper.split(".", (String) key);
-			return sequences.contains( StringHelper.toLowerCase(strings[strings.length-1]));
+			return sequences.contains( strings[strings.length-1].toLowerCase(Locale.ROOT));
 		}
 		return false;
 	}

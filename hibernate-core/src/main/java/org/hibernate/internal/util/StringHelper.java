@@ -24,6 +24,9 @@
  */
 package org.hibernate.internal.util;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,9 +34,6 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.StringTokenizer;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
 
 public final class StringHelper {
 
@@ -547,8 +547,6 @@ public final class StringHelper {
 	 */
 	private static String generateAliasRoot(String description) {
 		String result = truncate( unqualifyEntityName(description), ALIAS_TRUNCATE_LENGTH )
-				// Important to use Locale.ENGLISH.  See HHH-8579.  #toLowerCase() uses the default Locale.  Certain DBs
-				// do not like non-ascii characters in aliases, etc., so ensure consistency/portability here.
 				.toLowerCase(Locale.ROOT)
 		        .replace( '/', '_' ) // entityNames may now include slashes for the representations
 				.replace( '$', '_' ); //classname may be an inner class
@@ -590,16 +588,6 @@ public final class StringHelper {
 			result = result.substring( 0, slashPos - 1 );
 		}
 		return result;
-	}
-	
-	public static String toUpperCase(String str) {
-		return str==null ? null : str.toUpperCase(Locale.ROOT);
-	}
-	
-	public static String toLowerCase(String str) {
-		// Important to use Locale.ENGLISH.  See HHH-8579.  #toLowerCase() uses the default Locale.  Certain DBs do not
-		// like non-ascii characters in aliases, etc., so ensure consistency/portability here.
-		return str == null ? null : str.toLowerCase(Locale.ROOT);
 	}
 
 	public static String moveAndToBeginning(String filter) {

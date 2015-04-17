@@ -23,18 +23,17 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.ForeignKey;
+import org.jboss.logging.Logger;
+
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
-
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.ForeignKey;
-import org.jboss.logging.Logger;
-
 /**
  * JDBC table metadata
  *
@@ -89,11 +88,11 @@ public class TableMetadata {
 	}
 
 	public ColumnMetadata getColumnMetadata(String columnName) {
-		return (ColumnMetadata) columns.get( StringHelper.toLowerCase(columnName) );
+		return (ColumnMetadata) columns.get( columnName.toLowerCase(Locale.ROOT) );
 	}
 
 	public ForeignKeyMetadata getForeignKeyMetadata(String keyName) {
-		return (ForeignKeyMetadata) foreignKeys.get( StringHelper.toLowerCase(keyName) );
+		return (ForeignKeyMetadata) foreignKeys.get( keyName.toLowerCase(Locale.ROOT) );
 	}
 
 	public ForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk) {
@@ -108,7 +107,7 @@ public class TableMetadata {
 	}
 
 	public IndexMetadata getIndexMetadata(String indexName) {
-		return (IndexMetadata) indexes.get( StringHelper.toLowerCase(indexName) );
+		return (IndexMetadata) indexes.get( indexName.toLowerCase(Locale.ROOT) );
 	}
 
 	private void addForeignKey(ResultSet rs) throws SQLException {
@@ -121,7 +120,7 @@ public class TableMetadata {
 		ForeignKeyMetadata info = getForeignKeyMetadata(fk);
 		if (info == null) {
 			info = new ForeignKeyMetadata(rs);
-			foreignKeys.put( StringHelper.toLowerCase(info.getName()), info );
+			foreignKeys.put( info.getName().toLowerCase(Locale.ROOT), info );
 		}
 
 		info.addReference( rs );
@@ -137,7 +136,7 @@ public class TableMetadata {
 		IndexMetadata info = getIndexMetadata(index);
 		if (info == null) {
 			info = new IndexMetadata(rs);
-			indexes.put( StringHelper.toLowerCase(info.getName()), info );
+			indexes.put( info.getName().toLowerCase(Locale.ROOT), info );
 		}
 
 		info.addColumn( getColumnMetadata( rs.getString("COLUMN_NAME") ) );
@@ -152,7 +151,7 @@ public class TableMetadata {
 
 		if ( getColumnMetadata(column) == null ) {
 			ColumnMetadata info = new ColumnMetadata(rs);
-			columns.put( StringHelper.toLowerCase(info.getName()), info );
+			columns.put( info.getName().toLowerCase(Locale.ROOT), info );
 		}
 	}
 

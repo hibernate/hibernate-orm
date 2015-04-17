@@ -23,21 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import javax.persistence.Access;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedEntityGraphs;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.SecondaryTable;
-import javax.persistence.SecondaryTables;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -83,9 +68,9 @@ import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.cfg.naming.NamingStrategyDelegate;
 import org.hibernate.cfg.naming.NamingStrategyDelegator;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -99,8 +84,22 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
-
 import org.jboss.logging.Logger;
+
+import javax.persistence.Access;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.SecondaryTable;
+import javax.persistence.SecondaryTables;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
@@ -337,7 +336,7 @@ public class EntityBinder {
 		if ( sqlUpdate != null ) {
 			persistentClass.setCustomSQLUpdate( sqlUpdate.sql(), sqlUpdate.callable(),
 					ExecuteUpdateResultCheckStyle.fromExternalName( sqlUpdate.check().toString().toLowerCase(Locale.ROOT) )
-			);Locale.ROOT
+			);
 		}
 		if ( sqlDelete != null ) {
 			persistentClass.setCustomSQLDelete( sqlDelete.sql(), sqlDelete.callable(),
@@ -386,7 +385,7 @@ public class EntityBinder {
 			String filterName = filter.name();
 			String cond = filter.condition();
 			if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
-				FilterDefinition definition = mappings.getFilterDefinition( filterName );
+				FilterDefinition definition = mappings.getFilterDefinition(filterName);
 				cond = definition == null ? null : definition.getDefaultFilterCondition();
 				if ( StringHelper.isEmpty( cond ) ) {
 					throw new AnnotationException(
@@ -399,10 +398,10 @@ public class EntityBinder {
 		}
 		LOG.debugf( "Import with entity name %s", name );
 		try {
-			mappings.addImport( persistentClass.getEntityName(), name );
+			mappings.addImport(persistentClass.getEntityName(), name);
 			String entityName = persistentClass.getEntityName();
 			if ( !entityName.equals( name ) ) {
-				mappings.addImport( entityName, entityName );
+				mappings.addImport(entityName, entityName);
 			}
 		}
 		catch (MappingException me) {
@@ -426,7 +425,7 @@ public class EntityBinder {
 		if ( annotation == null ) {
 			return;
 		}
-		mappings.addNamedEntityGraphDefintion( new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() ) );
+		mappings.addNamedEntityGraphDefintion(new NamedEntityGraphDefinition(annotation, name, persistentClass.getEntityName()));
 	}
 	
 	public void bindDiscriminatorValue() {
@@ -497,12 +496,12 @@ public class EntityBinder {
 			}
 			else {
 				if ( AnnotationBinder.isDefault(
-						mappings.getReflectionManager().toXClass( proxy.proxyClass() ), mappings
+						mappings.getReflectionManager().toXClass(proxy.proxyClass()), mappings
 				) ) {
 					proxyClass = annotatedClass;
 				}
 				else {
-					proxyClass = mappings.getReflectionManager().toXClass( proxy.proxyClass() );
+					proxyClass = mappings.getReflectionManager().toXClass(proxy.proxyClass());
 				}
 			}
 		}
@@ -559,20 +558,20 @@ public class EntityBinder {
 
 		@Override
 		public String handleExplicitName(NamingStrategy strategy, String name) {
-			return strategy.tableName( name );
+			return strategy.tableName(name);
 		}
 
 		@Override
 		public String determineImplicitName(NamingStrategyDelegator strategyDelegator) {
-			return getNamingStrategyDelegate( strategyDelegator ).determineImplicitPrimaryTableName(
-					entityName,
-					jpaEntityName
-			);
+			return getNamingStrategyDelegate(strategyDelegator).determineImplicitPrimaryTableName(
+                    entityName,
+                    jpaEntityName
+            );
 		}
 
 		@Override
 		public String handleExplicitName(NamingStrategyDelegator strategyDelegator, String name) {
-			return getNamingStrategyDelegate( strategyDelegator ).toPhysicalTableName( name );
+			return getNamingStrategyDelegate(strategyDelegator).toPhysicalTableName( name );
 		}
 	}
 
@@ -593,17 +592,17 @@ public class EntityBinder {
 				name
 		);
 		final Table table = TableBinder.buildAndFillTable(
-				schema,
-				catalog,
-				tableNameContext,
-				namingStrategyHelper,
-				persistentClass.isAbstract(),
-				uniqueConstraints,
-				constraints,
-				denormalizedSuperclassTable,
-				mappings,
-				this.subselect
-		);
+                schema,
+                catalog,
+                tableNameContext,
+                namingStrategyHelper,
+                persistentClass.isAbstract(),
+                uniqueConstraints,
+                constraints,
+                denormalizedSuperclassTable,
+                mappings,
+                this.subselect
+        );
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
 		if ( rowId != null ) {
 			table.setRowId( rowId.value() );
@@ -631,7 +630,7 @@ public class EntityBinder {
 			Join join = (Join) joins.next();
 			createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, join );
 		}
-		mappings.addJoins( persistentClass, secondaryTables );
+		mappings.addJoins(persistentClass, secondaryTables);
 	}
 
 	private void createPrimaryColumnsToSecondaryTable(Object uncastedColumn, PropertyHolder propertyHolder, Join join) {
@@ -698,7 +697,7 @@ public class EntityBinder {
 		for (Ejb3JoinColumn joinColumn : ejb3JoinColumns) {
 			joinColumn.forceNotNull();
 		}
-		bindJoinToPersistentClass( join, ejb3JoinColumns, mappings );
+		bindJoinToPersistentClass(join, ejb3JoinColumns, mappings);
 	}
 
 	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, Mappings mappings) {
@@ -713,7 +712,7 @@ public class EntityBinder {
 	}
 
 	private void setFKNameIfDefined(Join join) {
-		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
+		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation(join);
 		if ( matchingTable != null && !BinderHelper.isEmptyAnnotationValue( matchingTable.foreignKey().name() ) ) {
 			( (SimpleValue) join.getKey() ).setForeignKeyName( matchingTable.foreignKey().name() );
 		}
@@ -794,7 +793,7 @@ public class EntityBinder {
 
 		@Override
 		public String handleExplicitName(NamingStrategyDelegator strategyDelegator, String name) {
-			return getNamingStrategyDelegate( strategyDelegator ).toPhysicalTableName( name );
+			return getNamingStrategyDelegate(strategyDelegator).toPhysicalTableName( name );
 		}
 	}
 

@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -750,7 +751,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 						parenCount--;
 					}
 
-					String lc = token.toLowerCase();
+					String lc = token.toLowerCase(Locale.ROOT);
 					if ( lc.equals( ", " ) ) {
 						if ( nolast ) {
 							nolast = false;

@@ -35,6 +35,7 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.testing.SkipForDialect;
@@ -528,8 +529,8 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Forest f2 = (Forest) s.get( Forest.class, f.getId() );
-		assertEquals( f.getSmallText().toLowerCase(), f2.getSmallText() );
-		assertEquals( f.getBigText().toUpperCase(), f2.getBigText() );
+		assertEquals( f.getSmallText().toLowerCase(Locale.ROOT), f2.getSmallText() );
+		assertEquals( f.getBigText().toUpperCase(Locale.ROOT), f2.getBigText() );
 		tx.commit();
 		s.close();
 	}

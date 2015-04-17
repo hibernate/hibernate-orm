@@ -41,6 +41,7 @@ import org.jboss.logging.Logger;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
+import java.util.Locale;
 
 /**
  * Represents a method call.
@@ -109,7 +110,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		name.setType( SqlTokenTypes.METHOD_NAME );
 		String text = name.getText();
 		// Use the lower case function name.
-		methodName = text.toLowerCase();
+		methodName = text.toLowerCase(Locale.ROOT);
 		// Remember whether we're in a SELECT clause or not.
 		this.inSelect = inSelect;
 	}

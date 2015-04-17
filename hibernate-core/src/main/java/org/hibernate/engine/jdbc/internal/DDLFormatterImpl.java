@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 import org.hibernate.internal.util.StringHelper;
@@ -44,13 +45,13 @@ public class DDLFormatterImpl implements Formatter {
 		if ( StringHelper.isEmpty( sql ) ) {
 			return sql;
 		}
-		if ( sql.toLowerCase().startsWith( "create table" ) ) {
+		if ( sql.toLowerCase(Locale.ROOT).startsWith( "create table" ) ) {
 			return formatCreateTable( sql );
 		}
-		else if ( sql.toLowerCase().startsWith( "alter table" ) ) {
+		else if ( sql.toLowerCase(Locale.ROOT).startsWith( "alter table" ) ) {
 			return formatAlterTable( sql );
 		}
-		else if ( sql.toLowerCase().startsWith( "comment on" ) ) {
+		else if ( sql.toLowerCase(Locale.ROOT).startsWith( "comment on" ) ) {
 			return formatCommentOn( sql );
 		}
 		else {

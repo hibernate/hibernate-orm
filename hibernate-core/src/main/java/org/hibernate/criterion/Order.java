@@ -25,6 +25,7 @@ package org.hibernate.criterion;
 
 import java.io.Serializable;
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.Criteria;
 import org.hibernate.NullPrecedence;
@@ -167,6 +168,6 @@ public class Order implements Serializable {
 	public String toString() {
 		return propertyName + ' '
 				+ ( ascending ? "asc" : "desc" )
-				+ ( nullPrecedence != null ? ' ' + nullPrecedence.name().toLowerCase() : "" );
+				+ ( nullPrecedence != null ? ' ' + nullPrecedence.name().toLowerCase(Locale.ROOT) : "" );
 	}
 }

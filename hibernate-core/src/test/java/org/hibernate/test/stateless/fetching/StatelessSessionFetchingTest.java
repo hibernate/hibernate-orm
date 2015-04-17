@@ -24,6 +24,7 @@
 package org.hibernate.test.stateless.fetching;
 
 import java.util.Date;
+import java.util.Locale;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -74,7 +75,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		private String determineUniquePrefix() {
-			return StringHelper.collapseQualifier( getClass().getName(), false ).toUpperCase();
+			return StringHelper.collapseQualifier( getClass().getName(), false ).toUpperCase(Locale.ROOT);
 		}
 	}
 

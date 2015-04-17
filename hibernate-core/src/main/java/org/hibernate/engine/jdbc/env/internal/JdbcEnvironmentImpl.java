@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -88,7 +89,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
 		for ( String keyword : dialect.getKeywords() ) {
-			reservedWords.add( keyword.toUpperCase() );
+			reservedWords.add( keyword.toUpperCase(Locale.ROOT) );
 		}
 
 		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
@@ -142,7 +143,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 
 		for ( String keyword : dialect.getKeywords() ) {
-			reservedWords.add( keyword.toUpperCase() );
+			reservedWords.add( keyword.toUpperCase(Locale.ROOT) );
 		}
 		// ExtractedMetaDataSupport already capitalizes them
 		reservedWords.addAll( extractedMetaDataSupport.getExtraKeywords() );
@@ -219,7 +220,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 
 		for ( String keyword : dialect.getKeywords() ) {
-			reservedWords.add( keyword.toUpperCase() );
+			reservedWords.add( keyword.toUpperCase(Locale.ROOT) );
 		}
 		// ExtractedMetaDataSupport already capitalizes them
 		reservedWords.addAll( extractedMetaDataSupport.getExtraKeywords() );
@@ -335,7 +336,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 	@Override
 	public boolean isReservedWord(String word) {
-		return reservedWords.contains( word.toUpperCase() );
+		return reservedWords.contains( word.toUpperCase(Locale.ROOT) );
 	}
 
 	@Override

@@ -26,6 +26,7 @@ package org.hibernate.hql.internal;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.MappingException;
@@ -89,7 +90,7 @@ public final class QuerySplitter {
 		int start = getStartingPositionFor( tokens, templateQuery );
 		int count = 0;
 		String next;
-		String last = tokens[start - 1].toLowerCase();
+		String last = tokens[start - 1].toLowerCase(Locale.ROOT);
 
 		for ( int i = start; i < tokens.length; i++ ) {
 
@@ -100,12 +101,12 @@ public final class QuerySplitter {
 				continue;
 			}
 
-			next = nextNonWhite( tokens, i ).toLowerCase();
+			next = nextNonWhite( tokens, i ).toLowerCase(Locale.ROOT);
 
 			boolean process = isJavaIdentifier( token ) &&
 					isPossiblyClassName( last, next );
 
-			last = token.toLowerCase();
+			last = token.toLowerCase(Locale.ROOT);
 
 			if ( process ) {
 				String importedClassName = getImportedClass( token, factory );
@@ -144,13 +145,13 @@ public final class QuerySplitter {
 
 	private static int getStartingPositionFor(String[] tokens, StringBuilder templateQuery) {
 		templateQuery.append( tokens[0] );
-		if ( !"select".equals( tokens[0].toLowerCase() ) ) {
+		if ( !"select".equals( tokens[0].toLowerCase(Locale.ROOT) ) ) {
 			return 1;
 		}
 
 		// select-range is terminated by declaration of "from"
 		for ( int i = 1; i < tokens.length; i++ ) {
-			if ( "from".equals( tokens[i].toLowerCase() ) ) {
+			if ( "from".equals( tokens[i].toLowerCase(Locale.ROOT) ) ) {
 				return i;
 			}
 			templateQuery.append( tokens[i] );

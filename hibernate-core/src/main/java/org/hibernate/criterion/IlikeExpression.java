@@ -24,6 +24,7 @@
  */
 package org.hibernate.criterion;
 
+import java.util.Locale;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -74,7 +75,7 @@ public class IlikeExpression implements Criterion {
 				criteriaQuery.getTypedValue(
 						criteria,
 						propertyName,
-						value.toString().toLowerCase()
+						value.toString().toLowerCase(Locale.ROOT)
 				)
 		};
 	}

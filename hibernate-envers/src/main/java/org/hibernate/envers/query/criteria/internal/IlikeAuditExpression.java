@@ -1,5 +1,6 @@
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.Locale;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
@@ -30,7 +31,7 @@ public class IlikeAuditExpression implements AuditCriterion {
 		);
 		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
 
-		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase() );
+		parameters.addWhereWithFunction( propertyName, " lower ", " like ", value.toLowerCase(Locale.ROOT) );
 	}
 
 }

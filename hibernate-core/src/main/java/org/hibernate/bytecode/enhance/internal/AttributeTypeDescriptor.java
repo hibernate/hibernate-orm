@@ -31,6 +31,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 
 import javax.persistence.Id;
 import java.util.Collection;
+import java.util.Locale;
 
 /**
  * utility class to generate interceptor methods
@@ -176,7 +177,7 @@ public abstract class AttributeTypeDescriptor {
 				throw new IllegalArgumentException( "Primitive attribute type descriptor can only be used on primitive types" );
 			}
 			// capitalize first letter
-			this.type = primitiveType.getSimpleName().substring( 0, 1 ).toUpperCase() + primitiveType.getSimpleName().substring( 1 );
+			this.type = primitiveType.getSimpleName().substring( 0, 1 ).toUpperCase(Locale.ROOT) + primitiveType.getSimpleName().substring( 1 );
 		}
 
 		public String buildReadInterceptionBodyFragment(String fieldName) {
@@ -197,7 +198,7 @@ public abstract class AttributeTypeDescriptor {
 							"}%n" +
 							"this.%1$s = localVar;",
 					fieldName,
-					type.toLowerCase(),
+					type.toLowerCase(Locale.ROOT ),
 					type,
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME
 			);

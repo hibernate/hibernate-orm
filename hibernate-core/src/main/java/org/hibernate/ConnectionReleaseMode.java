@@ -23,6 +23,8 @@
  */
 package org.hibernate;
 
+import java.util.Locale;
+
 /**
  * Defines the various policies by which Hibernate might release its underlying
  * JDBC connection.
@@ -61,6 +63,6 @@ public enum ConnectionReleaseMode{
 	 * @return The matched enum value.
 	 */
 	public static ConnectionReleaseMode parse(final String name) {
-		return ConnectionReleaseMode.valueOf( name.toUpperCase() );
+		return ConnectionReleaseMode.valueOf( name.toUpperCase(Locale.ROOT) );
 	}
 }

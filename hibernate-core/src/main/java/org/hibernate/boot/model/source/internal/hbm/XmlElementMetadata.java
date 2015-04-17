@@ -23,6 +23,8 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.util.Locale;
+
 /**
  * Provides meta-information about XML elements.
  *
@@ -173,7 +175,7 @@ public enum XmlElementMetadata {
 	 * @return The {@code hbm.xml} element name
 	 */
 	public String getElementName() {
-		return name().toLowerCase();
+		return name().toLowerCase(Locale.ROOT);
 	}
 
 	/**

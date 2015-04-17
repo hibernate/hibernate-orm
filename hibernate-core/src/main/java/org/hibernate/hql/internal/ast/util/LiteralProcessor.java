@@ -51,6 +51,7 @@ import org.jboss.logging.Logger;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
+import java.util.Locale;
 
 /**
  * A delegate that handles literals and constants for HqlSqlWalker, performing the token replacement functions and
@@ -207,7 +208,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			constant.setText( replacement );
 		}
 		else {
-			boolean bool = "true".equals( constant.getText().toLowerCase() );
+			boolean bool = "true".equals( constant.getText().toLowerCase(Locale.ROOT) );
 			Dialect dialect = walker.getSessionFactoryHelper().getFactory().getDialect();
 			constant.setText( dialect.toBooleanValueString( bool ) );
 		}

@@ -24,6 +24,7 @@
 package org.hibernate.criterion;
 
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
@@ -111,7 +112,7 @@ public class SimpleExpression implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		final Object casedValue = ignoreCase ? value.toString().toLowerCase() : value;
+		final Object casedValue = ignoreCase ? value.toString().toLowerCase(Locale.ROOT) : value;
 		return new TypedValue[] { criteriaQuery.getTypedValue( criteria, propertyName, casedValue ) };
 	}
 

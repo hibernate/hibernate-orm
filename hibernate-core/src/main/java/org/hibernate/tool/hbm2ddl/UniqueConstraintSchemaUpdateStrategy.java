@@ -20,6 +20,7 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import java.util.Locale;
 import org.jboss.logging.Logger;
 
 /**
@@ -56,7 +57,7 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 	private static final Logger log = Logger.getLogger( UniqueConstraintSchemaUpdateStrategy.class );
 
 	public static UniqueConstraintSchemaUpdateStrategy byName(String name) {
-		return valueOf( name.toUpperCase() );
+		return valueOf( name.toUpperCase(Locale.ROOT) );
 	}
 
 	public static UniqueConstraintSchemaUpdateStrategy interpret(Object setting) {

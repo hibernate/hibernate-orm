@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.classic;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -107,7 +108,7 @@ public class PreprocessingParser implements Parser {
 			}
 		}
 		else {
-			String prop = CollectionProperties.getNormalizedPropertyName( token.toLowerCase() );
+			String prop = CollectionProperties.getNormalizedPropertyName( token.toLowerCase(Locale.ROOT) );
 			if ( prop != null ) {
 				currentCollectionProp = prop;
 				return;
@@ -123,7 +124,7 @@ public class PreprocessingParser implements Parser {
 			String doubleToken = ( token.length() > 1 ) ?
 					lastToken + ' ' + token :
 					lastToken + token;
-			if ( HQL_OPERATORS.contains( doubleToken.toLowerCase() ) ) {
+			if ( HQL_OPERATORS.contains( doubleToken.toLowerCase(Locale.ROOT) ) ) {
 				parser.token( doubleToken, q );
 				lastToken = null;
 			}

@@ -28,6 +28,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.Query;
@@ -398,7 +399,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		chaos.setId( 1l );
 
 		String lowerName = "hello";
-		String upperName = lowerName.toUpperCase();
+		String upperName = lowerName.toUpperCase(Locale.ROOT);
 		assertFalse( lowerName.equals( upperName ) );
 
 		chaos.setName( "hello" );

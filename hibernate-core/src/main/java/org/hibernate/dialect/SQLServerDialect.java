@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -79,8 +80,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	static int getAfterSelectInsertPoint(String sql) {
-		final int selectIndex = sql.toLowerCase().indexOf( "select" );
-		final int selectDistinctIndex = sql.toLowerCase().indexOf( "select distinct" );
+		final int selectIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select" );
+		final int selectDistinctIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select distinct" );
 		return selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);
 	}
 

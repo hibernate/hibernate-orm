@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
@@ -214,7 +215,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private Set<String> parseKeywords(String extraKeywordsString) {
 			final Set<String> keywordSet = new HashSet<String>();
 			for ( String keyword : extraKeywordsString.split( "," ) ) {
-				keywordSet.add( keyword.toUpperCase() );
+				keywordSet.add( keyword.toUpperCase(Locale.ROOT) );
 			}
 			return keywordSet;
 		}

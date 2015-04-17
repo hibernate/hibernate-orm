@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
@@ -339,7 +340,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
 		// just in case a user's customer dialect uses mixed cases.
-		this.options.sqlFunctionMap.put( functionName.toLowerCase(), function );
+		this.options.sqlFunctionMap.put( functionName.toLowerCase(Locale.ROOT), function );
 
 		return this;
 	}

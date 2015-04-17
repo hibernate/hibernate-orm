@@ -27,6 +27,7 @@ package org.hibernate.hql.internal.classic;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -210,7 +211,7 @@ public class WhereParser implements Parser {
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
-		String lcToken = token.toLowerCase();
+		String lcToken = token.toLowerCase(Locale.ROOT);
 
 		//Cope with [,]
 		if ( token.equals( "[" ) && !expectingPathContinuation ) {
@@ -441,7 +442,7 @@ public class WhereParser implements Parser {
 				}
 				else { //anything else
 
-					String negatedToken = negated ? ( String ) NEGATIONS.get( token.toLowerCase() ) : null;
+					String negatedToken = negated ? ( String ) NEGATIONS.get( token.toLowerCase(Locale.ROOT) ) : null;
 					if ( negatedToken != null && ( !betweenSpecialCase || !"or".equals( negatedToken ) ) ) {
 						appendToken( q, negatedToken );
 					}

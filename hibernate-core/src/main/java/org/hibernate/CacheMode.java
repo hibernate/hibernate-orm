@@ -23,6 +23,8 @@
  */
 package org.hibernate;
 
+import java.util.Locale;
+
 /**
  * Controls how the session interacts with the second-level cache and query cache.
  *
@@ -100,7 +102,7 @@ public enum CacheMode {
 		}
 
 		try {
-			return CacheMode.valueOf( setting.toUpperCase() );
+			return CacheMode.valueOf( setting.toUpperCase(Locale.ROOT) );
 		}
 		catch ( IllegalArgumentException e ) {
 			throw new MappingException( "Unknown Cache Mode: " + setting );

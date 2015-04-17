@@ -24,6 +24,7 @@
 package org.hibernate.hql.internal;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.persister.collection.CollectionPropertyNames;
@@ -36,17 +37,17 @@ import org.hibernate.persister.collection.CollectionPropertyNames;
 public final class CollectionProperties {
 	public static final Map HQL_COLLECTION_PROPERTIES;
 
-	private static final String COLLECTION_INDEX_LOWER = CollectionPropertyNames.COLLECTION_INDEX.toLowerCase();
+	private static final String COLLECTION_INDEX_LOWER = CollectionPropertyNames.COLLECTION_INDEX.toLowerCase(Locale.ROOT);
 
 	static {
 		HQL_COLLECTION_PROPERTIES = new HashMap();
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_ELEMENTS.toLowerCase(), CollectionPropertyNames.COLLECTION_ELEMENTS );
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_INDICES.toLowerCase(), CollectionPropertyNames.COLLECTION_INDICES );
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_SIZE.toLowerCase(), CollectionPropertyNames.COLLECTION_SIZE );
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MAX_INDEX.toLowerCase(), CollectionPropertyNames.COLLECTION_MAX_INDEX );
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MIN_INDEX.toLowerCase(), CollectionPropertyNames.COLLECTION_MIN_INDEX );
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MAX_ELEMENT.toLowerCase(), CollectionPropertyNames.COLLECTION_MAX_ELEMENT );
-		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MIN_ELEMENT.toLowerCase(), CollectionPropertyNames.COLLECTION_MIN_ELEMENT );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_ELEMENTS.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_ELEMENTS );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_INDICES.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_INDICES );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_SIZE.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_SIZE );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MAX_INDEX.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_MAX_INDEX );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MIN_INDEX.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_MIN_INDEX );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MAX_ELEMENT.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_MAX_ELEMENT );
+		HQL_COLLECTION_PROPERTIES.put( CollectionPropertyNames.COLLECTION_MIN_ELEMENT.toLowerCase(Locale.ROOT), CollectionPropertyNames.COLLECTION_MIN_ELEMENT );
 		HQL_COLLECTION_PROPERTIES.put( COLLECTION_INDEX_LOWER, CollectionPropertyNames.COLLECTION_INDEX );
 	}
 
@@ -55,7 +56,7 @@ public final class CollectionProperties {
 
 	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isCollectionProperty(String name) {
-		final String key = name.toLowerCase();
+		final String key = name.toLowerCase(Locale.ROOT);
 		// CollectionPropertyMapping processes everything except 'index'.
 		if ( COLLECTION_INDEX_LOWER.equals( key ) ) {
 			return false;
@@ -70,7 +71,7 @@ public final class CollectionProperties {
 	}
 
 	public static boolean isAnyCollectionProperty(String name) {
-		final String key = name.toLowerCase();
+		final String key = name.toLowerCase(Locale.ROOT);
 		return HQL_COLLECTION_PROPERTIES.containsKey( key );
 	}
 }

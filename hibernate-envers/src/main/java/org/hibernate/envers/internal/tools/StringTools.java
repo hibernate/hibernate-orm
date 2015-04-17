@@ -24,6 +24,7 @@
 package org.hibernate.envers.internal.tools;
 
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -80,6 +81,6 @@ public abstract class StringTools {
      * @return capitalized string
      */
     public static String capitalizeFirst(String fieldName) {
-        return fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+        return fieldName.substring(0, 1).toUpperCase(Locale.ROOT) + fieldName.substring(1);
     }
 }

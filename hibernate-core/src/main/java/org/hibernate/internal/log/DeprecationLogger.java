@@ -157,7 +157,7 @@ public interface DeprecationLogger {
 	@Message(
 			value = "org.hibernate.hql.spi.TemporaryTableBulkIdStrategy (temporary) has been deprecated in favor of the" +
 					" more specific org.hibernate.hql.spi.LocalTemporaryTableBulkIdStrategy (local_temporary).",
-			id = 90000010
+			id = 90000011
 	)
 	void logDeprecationOfTemporaryTableBulkIdStrategy();
 }

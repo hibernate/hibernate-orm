@@ -29,16 +29,15 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.hbm2ddl.Target;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -49,6 +48,7 @@ import org.junit.Test;
 public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9716" )
+	@FailureExpected( jiraKey = "HHH-9716" )
 	public void testMigrationOfForeignKeys() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {

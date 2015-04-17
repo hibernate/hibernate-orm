@@ -228,29 +228,6 @@ subprojects { subProject ->
 	// Gradle plugin).  For now, just compile first in order to get the logging classes.
 	eclipseClasspath.dependsOn compile
 
-	// specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	task checkstylePublicSources(type: Checkstyle) {
-		checkstyleClasspath = checkstyleMain.checkstyleClasspath
-		classpath = checkstyleMain.classpath
-		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-		source subProject.sourceSets.main.java.srcDirs
-		// exclude generated sources
-		exclude '**/generated-src/**'
-		// because cfg package is a mess mainly from annotation stuff
-		exclude '**/org/hibernate/cfg/**'
-		exclude '**/org/hibernate/cfg/*'
-		// because this should only report on api/spi
-		exclude '**/internal/**'
-		exclude '**/internal/*'
-		ignoreFailures = false
-		showViolations = true
-		reports {
-			xml {
-				destination "$buildDir/reports/checkstyle/public.xml"
-			}
-		}
-	}
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	// Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	checkstyle {
@@ -259,14 +236,8 @@ subprojects { subProject ->
 		showViolations = false
 		ignoreFailures = true
 	}
-	// exclude generated sources
-	// unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
-	//checkstyleMain.exclude '**/generated-src/**'
-	checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/**'
-	checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/*'
-	checkstyleMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
-	checkstyleMain.exclude '**/*_$logger*'
-	checkstyleMain.exclude '**/org/hibernate/internal/jaxb/**'
+	// exclude generated java sources - by explicitly setting the base source dir
+	checkstyleMain.source = 'src/main/java'
 	// because cfg package is a mess mainly from annotation stuff
 	checkstyleMain.exclude '**/org/hibernate/cfg/**'
 	checkstyleMain.exclude '**/org/hibernate/cfg/*'
@@ -276,15 +247,8 @@ subprojects { subProject ->
 		ignoreFailures = true
 		toolVersion = '3.0.1'
 	}
-	// exclude generated sources
-	// unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
-	//findbugsMain.exclude '**/generated-src/**'
-	findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/**'
-	findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/*'
-	findbugsMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
-	findbugsMain.exclude '**/*_$logger*'
-	findbugsMain.exclude '**/org/hibernate/internal/jaxb/**'
-
+	// exclude generated java sources - by explicitly setting the base source dir
+	findbugsMain.source = 'src/main/java'
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

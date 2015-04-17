@@ -274,6 +274,7 @@ subprojects { subProject ->
 	findbugs {
 		sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
 		ignoreFailures = true
+		toolVersion = '3.0.1'
 	}
 	// exclude generated sources
 	// unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task

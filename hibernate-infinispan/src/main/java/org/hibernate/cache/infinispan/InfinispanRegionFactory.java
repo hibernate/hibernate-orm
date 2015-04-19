@@ -1,19 +1,5 @@
 package org.hibernate.cache.infinispan;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
@@ -37,7 +23,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commons.util.FileLookupFactory;
@@ -54,6 +39,20 @@ import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -127,6 +126,13 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 */
 	public static final String ENTITY_CACHE_RESOURCE_PROP = PREFIX + ENTITY_KEY + CONFIG_SUFFIX;
 
+	private static final String IMMUTABLE_ENTITY_KEY = "immutable-entity";
+
+	/**
+	 * Name of the configuration that should be used for immutable entity caches.
+	 */
+	public static final String IMMUTABLE_ENTITY_CACHE_RESOURCE_PROP = PREFIX + IMMUTABLE_ENTITY_KEY + CONFIG_SUFFIX;
+
 	private static final String COLLECTION_KEY = "collection";
 
 	/**
@@ -168,6 +174,11 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 * Default value for {@link #ENTITY_CACHE_RESOURCE_PROP}.
 	 */
 	public static final String DEF_ENTITY_RESOURCE = "entity";
+
+	/**
+	 * Default value for {@link #IMMUTABLE_ENTITY_CACHE_RESOURCE_PROP}.
+	 */
+	public static final String DEF_IMMUTABLE_ENTITY_RESOURCE = "immutable-entity";
 
 	/**
 	 * Default value for {@link #TIMESTAMPS_CACHE_RESOURCE_PROP}.
@@ -232,9 +243,9 @@ public class InfinispanRegionFactory implements RegionFactory {
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		if ( log.isDebugEnabled() ) {
-			log.debug( "Building entity cache region [" + regionName + "]" );
+			log.debugf( "Building entity cache region [%s] (mutable=%s, versioned=%s)", regionName, metadata.isMutable(), metadata.isVersioned());
 		}
-		final AdvancedCache cache = getCache( regionName, ENTITY_KEY, properties );
+		final AdvancedCache cache = getCache( regionName, metadata.isMutable() ? ENTITY_KEY : IMMUTABLE_ENTITY_KEY, properties );
 		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, metadata, this );
 		startRegion( region, regionName );
 		return region;
@@ -440,8 +451,11 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	private Map<String, TypeOverrides> initGenericDataTypeOverrides() {
 		final TypeOverrides entityOverrides = new TypeOverrides();
-		entityOverrides.setCacheName( DEF_ENTITY_RESOURCE );
+		entityOverrides.setCacheName(DEF_ENTITY_RESOURCE);
 		typeOverrides.put( ENTITY_KEY, entityOverrides );
+		final TypeOverrides immutableEntityOverrides = new TypeOverrides();
+		immutableEntityOverrides.setCacheName( DEF_IMMUTABLE_ENTITY_RESOURCE );
+		typeOverrides.put( IMMUTABLE_ENTITY_KEY, immutableEntityOverrides );
 		final TypeOverrides collectionOverrides = new TypeOverrides();
 		collectionOverrides.setCacheName( DEF_ENTITY_RESOURCE );
 		typeOverrides.put( COLLECTION_KEY, collectionOverrides );
@@ -503,7 +517,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	private void defineGenericDataTypeCacheConfigurations(Properties properties) {
-		final String[] defaultGenericDataTypes = new String[] {ENTITY_KEY, COLLECTION_KEY, TIMESTAMPS_KEY, QUERY_KEY};
+		final String[] defaultGenericDataTypes = new String[] {ENTITY_KEY, IMMUTABLE_ENTITY_KEY, COLLECTION_KEY, TIMESTAMPS_KEY, QUERY_KEY};
 		for ( String type : defaultGenericDataTypes ) {
 			final TypeOverrides override = overrideStatisticsIfPresent( typeOverrides.get( type ), properties );
 			final String cacheName = override.getCacheName();

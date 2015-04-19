@@ -20,9 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.entity;
-import org.hibernate.cache.spi.access.AccessType;
 
-import static org.junit.Assert.fail;
+import org.hibernate.cache.spi.access.AccessType;
+import org.junit.Test;
 
 /**
  * Tests for the "extra API" in EntityRegionAccessStrategy;
@@ -40,15 +40,9 @@ public class ReadOnlyExtraAPITestCase extends TransactionalExtraAPITestCase {
 		return AccessType.READ_ONLY;
 	}
 
+	@Test(expected = UnsupportedOperationException.class)
 	@Override
 	public void testAfterUpdate() {
-		try {
-			getEntityAccessStrategy().afterUpdate(
-               KEY, VALUE2, 1, 2, new MockSoftLock());
-			fail( "Call to afterUpdate did not throw exception" );
-		}
-		catch (UnsupportedOperationException expected) {
-		}
+		getEntityAccessStrategy().afterUpdate(KEY, VALUE2, 1, 2, new MockSoftLock());
 	}
-
 }

@@ -21,10 +21,20 @@
  */
 package org.hibernate.test.cache.infinispan;
 
-import java.util.Properties;
-import javax.transaction.TransactionManager;
-
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
+import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
+import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
+import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
+import org.hibernate.cache.internal.CacheDataDescriptionImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cfg.Settings;
+import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -34,26 +44,13 @@ import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.TestingUtil;
+import org.infinispan.transaction.TransactionMode;
 import org.junit.Test;
 
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
-import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
-import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
-import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
-import org.hibernate.cfg.Settings;
-import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import javax.transaction.TransactionManager;
+import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -62,6 +59,8 @@ import static org.junit.Assert.fail;
  * @since 3.5
  */
 public class InfinispanRegionFactoryTestCase  {
+   private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
+   private static CacheDataDescription IMMUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(false, false, null);
 
    @Test
    public void testConfigurationProcessing() {
@@ -149,7 +148,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertFalse(factory.getDefinedConfigurations().contains(addresses));
          AdvancedCache cache;
 
-         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(person, p, null);
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(person, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(address));
@@ -162,7 +161,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(30000, cacheCfg.expiration().maxIdle());
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
-         region = (EntityRegionImpl) factory.buildEntityRegion(address, p, null);
+         region = (EntityRegionImpl) factory.buildEntityRegion(address, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(address));
@@ -173,7 +172,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(20000, cacheCfg.eviction().maxEntries());
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
-         region = (EntityRegionImpl) factory.buildEntityRegion(car, p, null);
+         region = (EntityRegionImpl) factory.buildEntityRegion(car, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(address));
@@ -185,7 +184,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
-               factory.buildCollectionRegion(addresses, p, null);
+               factory.buildCollectionRegion(addresses, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(parts));
@@ -198,7 +197,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(35000, cacheCfg.expiration().maxIdle());
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
-         collectionRegion = (CollectionRegionImpl) factory.buildCollectionRegion(parts, p, null);
+         collectionRegion = (CollectionRegionImpl) factory.buildCollectionRegion(parts, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertTrue(factory.getDefinedConfigurations().contains(addresses));
          assertNull(factory.getTypeOverrides().get(parts));
@@ -209,7 +208,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(25000, cacheCfg.eviction().maxEntries());
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
-         collectionRegion = (CollectionRegionImpl) factory.buildCollectionRegion(parts, p, null);
+         collectionRegion = (CollectionRegionImpl) factory.buildCollectionRegion(parts, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertTrue(factory.getDefinedConfigurations().contains(addresses));
          assertNull(factory.getTypeOverrides().get(parts));
@@ -237,7 +236,7 @@ public class InfinispanRegionFactoryTestCase  {
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
          factory.getCacheManager();
-         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, MUTABLE_NON_VERSIONED);
          assertNull(factory.getTypeOverrides().get("com.acme.Address"));
          cache = region.getCache();
          Configuration cacheCfg = cache.getCacheConfiguration();
@@ -248,7 +247,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(100000, cacheCfg.expiration().maxIdle());
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
-               factory.buildCollectionRegion("com.acme.Person.addresses", p, null);
+               factory.buildCollectionRegion("com.acme.Person.addresses", p, MUTABLE_NON_VERSIONED);
          assertNull(factory.getTypeOverrides().get("com.acme.Person.addresses"));
          cache = collectionRegion.getCache();
          cacheCfg = cache.getCacheConfiguration();
@@ -277,7 +276,7 @@ public class InfinispanRegionFactoryTestCase  {
          factory.getCacheManager();
          assertNotNull(factory.getTypeOverrides().get(person));
          assertFalse(factory.getDefinedConfigurations().contains(person));
-         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(person, p, null);
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(person, p, MUTABLE_NON_VERSIONED);
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          AdvancedCache cache = region.getCache();
@@ -287,6 +286,23 @@ public class InfinispanRegionFactoryTestCase  {
          assertEquals(10000, cacheCfg.eviction().maxEntries());
          assertEquals(60000, cacheCfg.expiration().lifespan());
          assertEquals(30000, cacheCfg.expiration().maxIdle());
+      } finally {
+         factory.stop();
+      }
+   }
+
+   @Test
+   public void testBuildImmutableEntityRegion() {
+      AdvancedCache cache;
+      Properties p = new Properties();
+      InfinispanRegionFactory factory = createRegionFactory(p);
+      try {
+         factory.getCacheManager();
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, IMMUTABLE_NON_VERSIONED);
+         assertNull(factory.getTypeOverrides().get("com.acme.Address"));
+         cache = region.getCache();
+         Configuration cacheCfg = cache.getCacheConfiguration();
+         assertEquals("Immutable entity should get non-transactional cache", TransactionMode.NON_TRANSACTIONAL, cacheCfg.transaction().transactionMode());
       } finally {
          factory.stop();
       }
@@ -461,12 +477,12 @@ public class InfinispanRegionFactoryTestCase  {
       try {
          EmbeddedCacheManager manager = factory.getCacheManager();
          assertTrue(manager.getCacheManagerConfiguration().globalJmxStatistics().enabled());
-         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, MUTABLE_NON_VERSIONED);
          AdvancedCache cache = region.getCache();
          assertTrue(factory.getTypeOverrides().get("entity").isExposeStatistics());
          assertTrue(cache.getCacheConfiguration().jmxStatistics().enabled());
 
-         region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Person", p, null);
+         region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Person", p, MUTABLE_NON_VERSIONED);
          cache = region.getCache();
          assertTrue(factory.getTypeOverrides().get("com.acme.Person").isExposeStatistics());
          assertTrue(cache.getCacheConfiguration().jmxStatistics().enabled());
@@ -489,7 +505,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertTrue(cache.getCacheConfiguration().jmxStatistics().enabled());
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
-               factory.buildCollectionRegion("com.acme.Person.addresses", p, null);
+               factory.buildCollectionRegion("com.acme.Person.addresses", p, MUTABLE_NON_VERSIONED);
          cache = collectionRegion.getCache();
          assertTrue(factory.getTypeOverrides().get("collection").isExposeStatistics());
          assertTrue(cache.getCacheConfiguration().jmxStatistics().enabled());
@@ -510,12 +526,12 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.entity.eviction.max_entries", "10000");
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
-         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, MUTABLE_NON_VERSIONED);
          AdvancedCache cache = region.getCache();
          assertFalse(factory.getTypeOverrides().get("entity").isExposeStatistics());
          assertFalse(cache.getCacheConfiguration().jmxStatistics().enabled());
 
-         region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Person", p, null);
+         region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Person", p, MUTABLE_NON_VERSIONED);
          cache = region.getCache();
          assertFalse(factory.getTypeOverrides().get("com.acme.Person").isExposeStatistics());
          assertFalse(cache.getCacheConfiguration().jmxStatistics().enabled());
@@ -537,7 +553,7 @@ public class InfinispanRegionFactoryTestCase  {
          assertFalse(cache.getCacheConfiguration().jmxStatistics().enabled());
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
-               factory.buildCollectionRegion("com.acme.Person.addresses", p, null);
+               factory.buildCollectionRegion("com.acme.Person.addresses", p, MUTABLE_NON_VERSIONED);
          cache = collectionRegion.getCache();
          assertFalse(factory.getTypeOverrides().get("collection").isExposeStatistics());
          assertFalse(cache.getCacheConfiguration().jmxStatistics().enabled());

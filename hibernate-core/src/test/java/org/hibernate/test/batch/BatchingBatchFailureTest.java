@@ -90,9 +90,9 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 			try {
 				//at this point the transaction is still active but the batch should have been aborted (have to use reflection to get at the field)
 				SessionImplementor sessionImplementor = (SessionImplementor) session;
-				Field field = sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
+				Field field = sessionImplementor.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
 				field.setAccessible( true );
-				Batch batch = (Batch) field.get( sessionImplementor.getTransactionCoordinator().getJdbcCoordinator() );
+				Batch batch = (Batch) field.get( sessionImplementor.getJdbcCoordinator() );
 				if ( batch == null ) {
 					throw new Exception( "Current batch was null" );
 				}

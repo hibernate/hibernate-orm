@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
@@ -934,11 +935,11 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 			t.commit();
 			assertFalse( isContractVersioned );
 		}
-		catch (StaleStateException ex) {
+		catch (TransactionException e){
 			t.rollback();
 			assertTrue( isContractVersioned );
 			if ( ! sessionFactory().getSettings().isJdbcBatchVersionedData() ) {
-				assertTrue( StaleObjectStateException.class.isInstance( ex ) );
+				assertTrue( StaleObjectStateException.class.isInstance( e.getCause() ) );
 			}
 		}
 		s.close();

@@ -28,7 +28,6 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 
@@ -66,7 +65,7 @@ public abstract class EhCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		settings.put( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.USE_STRUCTURED_CACHE, "true" );
-		settings.put( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
+//		settings.put( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 	}
 
 	@Test

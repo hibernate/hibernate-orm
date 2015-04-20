@@ -94,6 +94,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jndi.spi.JndiService;
@@ -110,10 +112,9 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
-import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
+import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -136,6 +137,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.secure.spi.JaccService;
@@ -1123,10 +1125,6 @@ public final class SessionFactoryImpl
 		return identifierGenerators.get(rootEntityName);
 	}
 
-	private TransactionFactory transactionFactory() {
-		return serviceRegistry.getService( TransactionFactory.class );
-	}
-
 	private boolean canAccessTransactionManager() {
 		try {
 			return serviceRegistry.getService( JtaPlatform.class ).retrieveTransactionManager() != null;
@@ -1149,9 +1147,9 @@ public final class SessionFactoryImpl
 		}
 
 		if ( "jta".equals( impl ) ) {
-			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
-				LOG.autoFlushWillNotWork();
-			}
+//			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
+//				LOG.autoFlushWillNotWork();
+//			}
 			return new JTASessionContext( this );
 		}
 		else if ( "thread".equals( impl ) ) {
@@ -1228,7 +1226,15 @@ public final class SessionFactoryImpl
 			listeners = settings.getBaselineSessionEventsListenerBuilder().buildBaselineList();
 		}
 
-		protected TransactionCoordinatorImpl getTransactionCoordinator() {
+		protected TransactionCoordinator getTransactionCoordinator() {
+			return null;
+		}
+
+		protected JdbcCoordinatorImpl getJdbcCoordinator(){
+			return null;
+		}
+
+		protected TransactionImpl getTransactionImpl(){
 			return null;
 		}
 
@@ -1244,6 +1250,8 @@ public final class SessionFactoryImpl
 					sessionFactory,
 					sessionOwner,
 					getTransactionCoordinator(),
+					getJdbcCoordinator(),
+					getTransactionImpl(),
 					getTransactionCompletionProcesses(),
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),

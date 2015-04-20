@@ -15,7 +15,6 @@ import org.hibernate.type.Type;
  */
 public class DocumentInterceptor implements Interceptor {
 
-
 	public boolean onLoad(Object entity, Serializable id, Object[] state,
 			String[] propertyNames, Type[] types) throws CallbackException {
 		return false;
@@ -91,4 +90,9 @@ public class DocumentInterceptor implements Interceptor {
 	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {}
 	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {}
 	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {}
+
+	@Override
+	public String inspect(String sql) {
+		return sql;
+	}
 }

@@ -346,8 +346,8 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 					.setTableName( queryableCollection.getTableName() )
 					.addColumn( "code" )
 					.addColumn( "transactions_index" );
-			PreparedStatement preparedStatement = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
-			ResultSet resultSet = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+			PreparedStatement preparedStatement = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+			ResultSet resultSet = ((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
 			Map<Integer, String> valueMap = new HashMap<Integer, String>();
 			while ( resultSet.next() ) {
 				final String code = resultSet.getString( 1 );

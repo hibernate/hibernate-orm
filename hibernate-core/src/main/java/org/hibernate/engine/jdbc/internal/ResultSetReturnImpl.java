@@ -55,11 +55,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	public ResultSetReturnImpl(JdbcCoordinator jdbcCoordinator) {
 		this.jdbcCoordinator = jdbcCoordinator;
 
-		final JdbcServices jdbcServices = jdbcCoordinator.getTransactionCoordinator().getTransactionContext()
-				.getTransactionEnvironment()
-				.getJdbcServices();
+		final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getServiceRegistry()
+				.getService( JdbcServices.class );
 
 		this.dialect = jdbcServices.getDialect();
+
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 	}
@@ -78,11 +80,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			try {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
 			}
 			finally {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+				jdbcExecuteStatementEnd();
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -90,6 +92,14 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "could not extract ResultSet" );
 		}
+	}
+
+	private void jdbcExecuteStatementEnd() {
+		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteStatementEnd();
+	}
+
+	private void jdbcExecuteStatementStart() {
+		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteStatementStart();
 	}
 
 	private boolean isTypeOf(final Statement statement, final Class<? extends Statement> type) {
@@ -117,11 +127,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			try {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+				jdbcExecuteStatementStart();
 				rs = dialect.getResultSet( callableStatement );
 			}
 			finally {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+				jdbcExecuteStatementEnd();
 			}
 			postExtract( rs, callableStatement );
 			return rs;
@@ -137,11 +147,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			try {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+				jdbcExecuteStatementStart();
 				rs = statement.executeQuery( sql );
 			}
 			finally {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+				jdbcExecuteStatementEnd();
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -157,7 +167,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			try {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
 					while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
 						// do nothing until we hit the resultset
@@ -166,7 +176,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+				jdbcExecuteStatementEnd();
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -182,7 +192,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			try {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+				jdbcExecuteStatementStart();
 				if ( !statement.execute( sql ) ) {
 					while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
 						// do nothing until we hit the resultset
@@ -191,7 +201,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
-				jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+				jdbcExecuteStatementEnd();
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -204,14 +214,14 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public int executeUpdate(PreparedStatement statement) {
 		try {
-			jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "could not execute statement" );
 		}
 		finally {
-			jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+			jdbcExecuteStatementEnd();
 		}
 	}
 	
@@ -219,20 +229,20 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	public int executeUpdate(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
 		try {
-			jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startStatementExecution();
+			jdbcExecuteStatementStart();
 			return statement.executeUpdate( sql );
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "could not execute statement" );
 		}
 		finally {
-			jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endStatementExecution();
+			jdbcExecuteStatementEnd();
 		}
 	}
 
 	private void postExtract(ResultSet rs, Statement st) {
 		if ( rs != null ) {
-			jdbcCoordinator.register( rs, st );
+			jdbcCoordinator.getResourceRegistry().register( rs, st );
 		}
 	}
 

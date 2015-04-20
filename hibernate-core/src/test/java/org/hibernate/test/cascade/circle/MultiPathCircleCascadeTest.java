@@ -456,6 +456,13 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		cleanup();
 	}
 
+	private Node getSimpleUpdatedDetachedEntity(){
+
+		Node deliveryNode = new Node();
+		deliveryNode.setName( "deliveryNodeB" );
+		return deliveryNode;
+	}
+
 	private Route getUpdatedDetachedEntity() {
 
 		Session s = openSession();
@@ -677,7 +684,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 				assertTrue( ex instanceof PropertyValueException );
 			}
 			else {
-				assertTrue( ex instanceof JDBCException );
+				assertTrue( (ex instanceof JDBCException) || (ex.getCause() instanceof JDBCException) );
 			}
 		}
 		else {

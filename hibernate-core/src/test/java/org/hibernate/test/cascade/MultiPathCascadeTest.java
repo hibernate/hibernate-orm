@@ -26,6 +26,7 @@ package org.hibernate.test.cascade;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -194,8 +195,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch (TransientObjectException ex) {
-			// expected
+		catch (TransactionException e) {
+			assertTrue( e.getCause() instanceof TransientObjectException );
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -243,8 +244,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch (TransientObjectException ex) {
-			// expected
+		catch (TransactionException e) {
+			assertTrue( e.getCause() instanceof TransientObjectException );
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -292,8 +293,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch (TransientObjectException ex) {
-			// expected
+		catch (TransactionException e) {
+			assertTrue( e.getCause() instanceof TransientObjectException );
 		}
 		finally {
 			s.getTransaction().rollback();

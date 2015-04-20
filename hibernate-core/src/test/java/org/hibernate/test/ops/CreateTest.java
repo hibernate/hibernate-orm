@@ -31,11 +31,13 @@ import org.junit.Test;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.exception.ConstraintViolationException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -146,8 +148,9 @@ public class CreateTest extends AbstractOperationTestCase {
 			tx.commit();
 			fail( "Expecting constraint failure" );
 		}
-		catch (ConstraintViolationException cve) {
+		catch (TransactionException te) {
 			//verify that an exception is thrown!
+			assertTrue( te.getCause() instanceof  ConstraintViolationException);
 		}
 		tx.rollback();
 		s.close();
@@ -162,8 +165,9 @@ public class CreateTest extends AbstractOperationTestCase {
 			tx.commit();
 			assertFalse(true);
 		}
-		catch (ConstraintViolationException cve) {
+		catch (TransactionException te) {
 			//verify that an exception is thrown!
+			assertTrue( te.getCause() instanceof  ConstraintViolationException);
 		}
 		tx.rollback();
 		s.close();

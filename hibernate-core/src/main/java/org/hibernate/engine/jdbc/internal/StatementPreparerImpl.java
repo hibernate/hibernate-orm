@@ -32,9 +32,10 @@ import java.sql.Statement;
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.Settings;
-import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
  * Standard implementation of StatementPreparer
@@ -60,7 +61,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	protected final Connection connection() {
-		return logicalConnection().getConnection();
+		return logicalConnection().getPhysicalConnection();
 	}
 
 	protected final LogicalConnectionImplementor logicalConnection() {
@@ -68,16 +69,14 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	protected final SqlExceptionHelper sqlExceptionHelper() {
-		return jdbcCoordinator.getTransactionCoordinator().getTransactionContext().getTransactionEnvironment()
-				.getJdbcServices()
-				.getSqlExceptionHelper();
+		return getJdbcService().getSqlExceptionHelper();
 	}
 	
 	@Override
 	public Statement createStatement() {
 		try {
 			final Statement statement = connection().createStatement();
-			jdbcCoordinator.register( statement );
+			jdbcCoordinator.getResourceRegistry().register( statement, true );
 			return statement;
 		}
 		catch ( SQLException e ) {
@@ -173,21 +172,23 @@ class StatementPreparerImpl implements StatementPreparer {
 		protected final String sql;
 
 		protected StatementPreparationTemplate(String sql) {
-			this.sql = jdbcCoordinator.getTransactionCoordinator().getTransactionContext().onPrepareStatement( sql );
+			this.sql = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getStatementInspector().inspect(
+					sql
+			);
 		}
 
 		public PreparedStatement prepareStatement() {
 			try {
-				jdbcCoordinator.getLogicalConnection().getJdbcServices().getSqlStatementLogger().logStatement( sql );
+				getJdbcService().getSqlStatementLogger().logStatement( sql );
 
 				final PreparedStatement preparedStatement;
 				try {
-					jdbcCoordinator.getTransactionCoordinator().getTransactionContext().startPrepareStatement();
+					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
-					jdbcCoordinator.getTransactionCoordinator().getTransactionContext().endPrepareStatement();
+					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );
 				return preparedStatement;
@@ -200,8 +201,8 @@ class StatementPreparerImpl implements StatementPreparer {
 		protected abstract PreparedStatement doPrepare() throws SQLException;
 
 		public void postProcess(PreparedStatement preparedStatement) throws SQLException {
-			jdbcCoordinator.register( preparedStatement );
-			logicalConnection().notifyObserversStatementPrepared();
+			jdbcCoordinator.getResourceRegistry().register( preparedStatement, true );
+//			logicalConnection().notifyObserversStatementPrepared();
 		}
 
 		private void setStatementTimeout(PreparedStatement preparedStatement) throws SQLException {
@@ -210,6 +211,14 @@ class StatementPreparerImpl implements StatementPreparer {
 				preparedStatement.setQueryTimeout( remainingTransactionTimeOutPeriod );
 			}
 		}
+	}
+
+	private JdbcServices getJdbcService() {
+		return jdbcCoordinator
+				.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getServiceRegistry()
+				.getService( JdbcServices.class );
 	}
 
 	private abstract class QueryStatementPreparationTemplate extends StatementPreparationTemplate {

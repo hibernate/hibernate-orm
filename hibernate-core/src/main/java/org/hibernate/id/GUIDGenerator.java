@@ -53,9 +53,9 @@ public class GUIDGenerator implements IdentifierGenerator {
 	public Serializable generate(SessionImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getFactory().getDialect().getSelectGUIDString();
 		try {
-			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 				final String result;
 				try {
 					if ( !rs.next() ) {
@@ -64,13 +64,14 @@ public class GUIDGenerator implements IdentifierGenerator {
 					result = rs.getString(1);
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, st );
+					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
 				}
                 LOG.guidGenerated(result);
 				return result;
 			}
 			finally {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {

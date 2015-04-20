@@ -56,13 +56,6 @@ public interface TransactionEnvironment {
 	public JtaPlatform getJtaPlatform();
 
 	/**
-	 * Retrieve the transaction factory for this environment.
-	 *
-	 * @return The transaction factory
-	 */
-	public TransactionFactory getTransactionFactory();
-
-	/**
 	 * Get access to the statistics collector
 	 *
 	 * @return The statistics collector

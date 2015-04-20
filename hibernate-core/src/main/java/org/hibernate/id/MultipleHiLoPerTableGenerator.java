@@ -192,7 +192,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 			//keep the behavior consistent even for boundary usages
 			IntegralDataTypeHolder value = null;
 			while ( value == null || value.lt( 1 ) ) {
-				value = session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork( work, true );
+				value = session.getTransactionCoordinator().createIsolationDelegate().delegateWork( work, true );
 			}
 			return value.makeValue();
 		}
@@ -200,7 +200,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		return hiloOptimizer.generate(
 				new AccessCallback() {
 					public IntegralDataTypeHolder getNextValue() {
-						return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
+						return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
 								work,
 								true
 						);

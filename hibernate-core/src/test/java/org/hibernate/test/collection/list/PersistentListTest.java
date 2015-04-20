@@ -94,9 +94,9 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 								.addColumn( "NAME" )
 								.addColumn( "LIST_INDEX" )
 								.addCondition( "NAME", "<>", "?" );
-						PreparedStatement preparedStatement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
 						preparedStatement.setString( 1, "root" );
-						ResultSet resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+						ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
 						Map<String, Integer> valueMap = new HashMap<String, Integer>();
 						while ( resultSet.next() ) {
 							final String name = resultSet.getString( 1 );
@@ -151,8 +151,8 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 								.addColumn( "ORDER_ID" )
 								.addColumn( "INDX" )
 								.addColumn( "PRD_CODE" );
-						PreparedStatement preparedStatement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
-						ResultSet resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
+						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );
+						ResultSet resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( preparedStatement );
 						Map<String, Integer> valueMap = new HashMap<String, Integer>();
 						while ( resultSet.next() ) {
 							final int fk = resultSet.getInt( 1 );

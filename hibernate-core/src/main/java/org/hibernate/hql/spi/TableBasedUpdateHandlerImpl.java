@@ -135,17 +135,18 @@ public class TableBasedUpdateHandlerImpl
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
+					ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
 					int sum = 1;
 					sum += handlePrependedParametersOnIdSelection( ps, session, sum );
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
 						sum += parameterSpecification.bind( ps, queryParameters, session, sum );
 					}
-					resultCount = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+					resultCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 				}
 				finally {
 					if ( ps != null ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+						session.getJdbcCoordinator().getResourceRegistry().release( ps );
+						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
 			}
@@ -160,7 +161,7 @@ public class TableBasedUpdateHandlerImpl
 				}
 				try {
 					try {
-						ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
+						ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
 						if ( assignmentParameterSpecifications[i] != null ) {
 							int position = 1; // jdbc params are 1-based
 							for ( int x = 0; x < assignmentParameterSpecifications[i].length; x++ ) {
@@ -168,11 +169,12 @@ public class TableBasedUpdateHandlerImpl
 							}
 							handleAddedParametersOnUpdate( ps, session, position );
 						}
-						session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+						session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 					}
 					finally {
 						if ( ps != null ) {
-							session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+							session.getJdbcCoordinator().getResourceRegistry().release( ps );
+							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
 				}

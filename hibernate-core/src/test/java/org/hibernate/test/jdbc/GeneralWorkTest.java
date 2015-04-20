@@ -65,17 +65,17 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 						// in this current form, users must handle try/catches themselves for proper resource release
 						Statement statement = null;
 						try {
-							statement = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+							statement = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
 							ResultSet resultSet = null;
 							try {
 								
-								resultSet = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
+								resultSet = ((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
 							}
 							finally {
 								releaseQuietly( ((SessionImplementor)session), resultSet, statement );
 							}
 							try {
-								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_BOAT" );
+								((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_BOAT" );
 							}
 							finally {
 								releaseQuietly( ((SessionImplementor)session), resultSet, statement );
@@ -101,8 +101,8 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 						public void execute(Connection connection) throws SQLException {
 							Statement statement = null;
 							try {
-								statement = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-								((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from non_existent" );
+								statement = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
+								((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from non_existent" );
 							}
 							finally {
 								releaseQuietly( ((SessionImplementor)session), statement );
@@ -136,10 +136,10 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 						Statement statement = null;
 						long personCount = 0;
 						try {
-							statement = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+							statement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().createStatement();
 							ResultSet resultSet = null;
 							try {
-								resultSet = ((SessionImplementor)session2).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( statement, "select count(*) from T_JDBC_PERSON" );
+								resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( statement, "select count(*) from T_JDBC_PERSON" );
 								resultSet.next();
 								personCount = resultSet.getLong( 1 );
 								assertEquals( 1L, personCount );
@@ -171,7 +171,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-			s.getTransactionCoordinator().getJdbcCoordinator().release( statement );
+			s.getJdbcCoordinator().getResourceRegistry().release( statement );
 		}
 		catch (Exception e) {
 			// ignore
@@ -183,7 +183,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-			s.getTransactionCoordinator().getJdbcCoordinator().release( resultSet, statement );
+			s.getJdbcCoordinator().getResourceRegistry().release( resultSet, statement );
 		}
 		catch (Exception e) {
 			// ignore

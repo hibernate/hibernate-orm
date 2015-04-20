@@ -56,13 +56,14 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.Type;
 
@@ -360,8 +361,23 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
+	public JdbcCoordinator getJdbcCoordinator() {
+		return sessionImplementor.getJdbcCoordinator();
+	}
+
+	@Override
 	public boolean isClosed() {
 		return sessionImplementor.isClosed();
+	}
+
+	@Override
+	public boolean shouldAutoClose() {
+		return sessionImplementor.shouldAutoClose();
+	}
+
+	@Override
+	public boolean isAutoCloseSessionEnabled() {
+		return sessionImplementor.isAutoCloseSessionEnabled();
 	}
 
 	@Override

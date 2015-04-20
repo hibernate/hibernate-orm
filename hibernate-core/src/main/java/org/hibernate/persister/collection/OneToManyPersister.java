@@ -225,13 +225,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 											expectation
 											);
 								}
-								st = session.getTransactionCoordinator()
+								st = session
 										.getJdbcCoordinator()
 										.getBatch( recreateBatchKey )
 										.getBatchStatement( sql, callable );
 							}
 							else {
-								st = session.getTransactionCoordinator()
+								st = session
 										.getJdbcCoordinator()
 										.getStatementPreparer()
 										.prepareStatement( sql, callable );
@@ -246,24 +246,25 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								offset = writeElement( st, collection.getElement( entry ), offset, session );
 
 								if ( useBatch ) {
-									session.getTransactionCoordinator()
+									session
 											.getJdbcCoordinator()
 											.getBatch( recreateBatchKey )
 											.addToBatch();
 								}
 								else {
-									expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+									expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 								}
 							}
 							catch ( SQLException sqle ) {
 								if ( useBatch ) {
-									session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
+									session.getJdbcCoordinator().abortBatch();
 								}
 								throw sqle;
 							}
 							finally {
 								if ( !useBatch ) {
-									session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+									session.getJdbcCoordinator().getResourceRegistry().release( st );
+									session.getJdbcCoordinator().afterStatementExecution();
 								}
 							}
 
@@ -331,13 +332,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 						Object entry = entries.next();
 						if ( collection.needsUpdating( entry, i, elementType ) ) {  // will still be issued when it used to be null
 							if ( useBatch ) {
-								st = session.getTransactionCoordinator()
+								st = session
 										.getJdbcCoordinator()
 										.getBatch( deleteRowBatchKey )
 										.getBatchStatement( sql, isDeleteCallable() );
 							}
 							else {
-								st = session.getTransactionCoordinator()
+								st = session
 										.getJdbcCoordinator()
 										.getStatementPreparer()
 										.prepareStatement( sql, isDeleteCallable() );
@@ -345,13 +346,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							int loc = writeKey( st, id, offset, session );
 							writeElementToWhere( st, collection.getSnapshotElement(entry, i), loc, session );
 							if ( useBatch ) {
-								session.getTransactionCoordinator()
+								session
 										.getJdbcCoordinator()
 										.getBatch( deleteRowBatchKey )
 										.addToBatch();
 							}
 							else {
-								deleteExpectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								deleteExpectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 							count++;
 						}
@@ -360,13 +361,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				catch ( SQLException e ) {
 					if ( useBatch ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
+						session.getJdbcCoordinator().abortBatch();
 					}
 					throw e;
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+						session.getJdbcCoordinator().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
 			}
@@ -393,13 +395,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 						int offset = 1;
 						if ( collection.needsUpdating( entry, i, elementType ) ) {
 							if ( useBatch ) {
-								st = session.getTransactionCoordinator()
+								st = session
 										.getJdbcCoordinator()
 										.getBatch( insertRowBatchKey )
 										.getBatchStatement( sql, callable );
 							}
 							else {
-								st = session.getTransactionCoordinator()
+								st = session
 										.getJdbcCoordinator()
 										.getStatementPreparer()
 										.prepareStatement( sql, callable );
@@ -415,10 +417,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							writeElementToWhere( st, collection.getElement( entry ), loc, session );
 
 							if ( useBatch ) {
-								session.getTransactionCoordinator().getJdbcCoordinator().getBatch( insertRowBatchKey ).addToBatch();
+								session.getJdbcCoordinator().getBatch( insertRowBatchKey ).addToBatch();
 							}
 							else {
-								insertExpectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								insertExpectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 							}
 							count++;
 						}
@@ -427,13 +429,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				catch ( SQLException sqle ) {
 					if ( useBatch ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
+						session.getJdbcCoordinator().abortBatch();
 					}
 					throw sqle;
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+						session.getJdbcCoordinator().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
 			}

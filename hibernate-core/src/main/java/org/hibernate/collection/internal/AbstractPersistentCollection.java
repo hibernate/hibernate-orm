@@ -242,10 +242,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 
 		if ( isTempSession ) {
-			isJTA = session.getTransactionCoordinator()
-					.getTransactionContext().getTransactionEnvironment()
-					.getTransactionFactory()
-					.compatibleWithJtaSynchronization();
+			isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 			
 			if ( !isJTA ) {
 				// Explicitly handle the transactions only if we're not in

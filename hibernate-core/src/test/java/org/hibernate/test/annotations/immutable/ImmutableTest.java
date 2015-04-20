@@ -120,7 +120,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		}
 		catch (HibernateException e) {
-			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
+			assertTrue(e.getCause().getMessage().contains("changed an immutable collection instance"));
             log.debug("success");
 		}
 		s.close();
@@ -137,7 +137,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			tx.commit();
 			fail();
 		} catch (HibernateException e) {
-			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
+			assertTrue(e.getCause().getMessage().contains("changed an immutable collection instance"));
             log.debug("success");
 		}
 		s.close();

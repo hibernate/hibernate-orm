@@ -63,6 +63,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Example;
@@ -4005,6 +4006,12 @@ public class FooBarTest extends LegacyTestCase {
 		}
 		catch (LazyInitializationException e) {
 			ok = true;
+			s.getTransaction().rollback();
+		}
+		catch (TransactionException te) {
+			if(te.getCause() instanceof LazyInitializationException) {
+				ok = true;
+			}
 			s.getTransaction().rollback();
 		}
 		finally {

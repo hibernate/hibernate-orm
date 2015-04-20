@@ -27,7 +27,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -40,7 +39,6 @@ public class TransactionEnvironmentImpl implements TransactionEnvironment {
     private final transient ServiceRegistry serviceRegistry;
     private final transient JdbcServices jdbcServices;
     private final transient JtaPlatform jtaPlatform;
-    private final transient TransactionFactory transactionFactory;
 
     public TransactionEnvironmentImpl(SessionFactoryImpl sessionFactory) {
         this.sessionFactory = sessionFactory;
@@ -48,7 +46,6 @@ public class TransactionEnvironmentImpl implements TransactionEnvironment {
         this.serviceRegistry = sessionFactory.getServiceRegistry();
         this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
         this.jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
-        this.transactionFactory = serviceRegistry.getService( TransactionFactory.class );
     }
 
     @Override
@@ -68,11 +65,6 @@ public class TransactionEnvironmentImpl implements TransactionEnvironment {
     @Override
     public JtaPlatform getJtaPlatform() {
         return jtaPlatform;
-    }
-
-    @Override
-    public TransactionFactory getTransactionFactory() {
-        return transactionFactory;
     }
 
     @Override

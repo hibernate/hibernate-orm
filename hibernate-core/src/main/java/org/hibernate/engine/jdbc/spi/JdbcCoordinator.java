@@ -25,13 +25,17 @@ package org.hibernate.engine.jdbc.spi;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.resource.jdbc.ResourceRegistry;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.backend.store.spi.DataStoreTransactionAccess;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
 /**
  * Coordinates JDBC-related activities.
@@ -39,13 +43,13 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public interface JdbcCoordinator extends Serializable {
-	/**
-	 * Retrieve the transaction coordinator associated with this JDBC coordinator.
-	 *
-	 * @return The transaction coordinator
-	 */
-	public TransactionCoordinator getTransactionCoordinator();
+public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwner, DataStoreTransactionAccess {
+//	/**
+//	 * Retrieve the transaction coordinator associated with this JDBC coordinator.
+//	 *
+//	 * @return The transaction coordinator
+//	 */
+//	public TransactionCoordinator getTransactionCoordinator();
 
 	/**
 	 * Retrieves the logical connection associated with this JDBC coordinator.
@@ -105,7 +109,7 @@ public interface JdbcCoordinator extends Serializable {
 	 *
 	 * @return The {@link Connection} associated with the managed {@link #getLogicalConnection() logical connection}
 	 *
-	 * @see LogicalConnection#close
+	 * @see org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor#close
 	 */
 	public Connection close();
 
@@ -138,13 +142,6 @@ public interface JdbcCoordinator extends Serializable {
 	 */
 	public void cancelLastQuery();
 
-	/**
-	 * Set the effective transaction timeout period for the current transaction, in seconds.
-	 *
-	 * @param seconds The number of seconds before a time out should occur.
-	 */
-	public void setTransactionTimeOut(int seconds);
-
     /**
 	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
 	 *
@@ -154,52 +151,6 @@ public interface JdbcCoordinator extends Serializable {
 	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
 	 */
 	public int determineRemainingTransactionTimeOutPeriod();
-
-	/**
-	 * Register a JDBC statement.
-	 *
-	 * @param statement The statement to register.
-	 */
-	public void register(Statement statement);
-	
-	/**
-	 * Release a previously registered statement.
-	 *
-	 * @param statement The statement to release.
-	 */
-	public void release(Statement statement);
-
-	/**
-	 * Register a JDBC result set.
-	 * <p/>
-	 * Implementation note: Second parameter has been introduced to prevent
-	 * multiple registrations of the same statement in case {@link ResultSet#getStatement()}
-	 * does not return original {@link Statement} object.
-	 *
-	 * @param resultSet The result set to register.
-	 * @param statement Statement from which {@link ResultSet} has been generated.
-	 */
-	public void register(ResultSet resultSet, Statement statement);
-
-	/**
-	 * Release a previously registered result set.
-	 *
-	 * @param resultSet The result set to release.
-	 * @param statement Statement from which {@link ResultSet} has been generated.
-	 */
-	public void release(ResultSet resultSet, Statement statement);
-
-	/**
-	 * Does this registry currently have any registered resources?
-	 *
-	 * @return True if the registry does have registered resources; false otherwise.
-	 */
-	public boolean hasRegisteredResources();
-
-	/**
-	 * Release all registered resources.
-	 */
-	public void releaseResources();
 
 	/**
 	 * Enable connection releases
@@ -224,4 +175,13 @@ public interface JdbcCoordinator extends Serializable {
 	 * @return {@code true} indicates the coordinator can be serialized.
 	 */
 	public boolean isReadyForSerialization();
+
+	/**
+	 * The release mode under which this logical connection is operating.
+	 *
+	 * @return the release mode.
+	 */
+	public ConnectionReleaseMode getConnectionReleaseMode();
+
+	public ResourceRegistry getResourceRegistry();
 }

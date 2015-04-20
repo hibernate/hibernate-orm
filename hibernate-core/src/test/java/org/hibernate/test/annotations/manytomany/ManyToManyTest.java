@@ -547,7 +547,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "Unique constraints not applied on association table" );
 		}
-		catch (JDBCException e) {
+		catch (Exception e) {
 			//success
 			s.getTransaction().rollback();
 		}

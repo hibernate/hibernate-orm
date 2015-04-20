@@ -136,13 +136,14 @@ public class GlobalTemporaryTableBulkIdStrategy implements MultiTableBulkIdStrat
 		final String sql = "delete from " + tableName;
 		PreparedStatement ps = null;
 		try {
-			ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 		}
 		finally {
 			if ( ps != null ) {
 				try {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+					session.getJdbcCoordinator().getResourceRegistry().release( ps );
+					session.getJdbcCoordinator().afterStatementExecution();
 				}
 				catch( Throwable ignore ) {
 					// ignore

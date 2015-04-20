@@ -154,7 +154,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 							new ReturningWork<Integer>() {
 								@Override
 								public Integer execute(Connection connection) throws SQLException {
-									PreparedStatement preparedStatement = sessionImplementor.getTransactionCoordinator()
+									PreparedStatement preparedStatement = sessionImplementor
 											.getJdbcCoordinator().getStatementPreparer().prepareStatement( updateSql );
 
 									try {
@@ -196,13 +196,14 @@ public class ValidityAuditStrategy implements AuditStrategy {
 										// where REVEND is null
 										// 		nothing to bind....
 
-										return sessionImplementor.getTransactionCoordinator()
+										return sessionImplementor
 												.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement );
 									}
 									finally {
-										sessionImplementor.getTransactionCoordinator().getJdbcCoordinator().release(
+										sessionImplementor.getJdbcCoordinator().getResourceRegistry().release(
 												preparedStatement
 										);
+										sessionImplementor.getJdbcCoordinator().afterStatementExecution();
 									}
 								}
 							}

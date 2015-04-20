@@ -39,6 +39,7 @@ import org.hibernate.QueryException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -311,11 +312,12 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		}
 		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
 			// protect to only do this check once
-			final ExtractedDatabaseMetaData databaseMetaData = getSession().getTransactionCoordinator()
+			final ExtractedDatabaseMetaData databaseMetaData = getSession()
 					.getJdbcCoordinator()
-					.getLogicalConnection()
-					.getJdbcServices()
-					.getExtractedMetaDataSupport();
+					.getJdbcSessionOwner()
+					.getJdbcSessionContext()
+					.getServiceRegistry().getService( JdbcEnvironment.class )
+					.getExtractedDatabaseMetaData();
 			if ( ! databaseMetaData.supportsNamedParameters() ) {
 				LOG.unsupportedNamedParameters();
 			}
@@ -404,7 +406,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		);
 
 		try {
-			final CallableStatement statement = (CallableStatement) getSession().getTransactionCoordinator()
+			final CallableStatement statement = (CallableStatement) getSession()
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( call, true );

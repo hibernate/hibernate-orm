@@ -23,6 +23,8 @@
  */
 package org.hibernate.internal;
 
+import javax.persistence.EntityNotFoundException;
+import javax.transaction.SystemException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -34,6 +36,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,7 +45,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityNotFoundException;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -85,6 +89,8 @@ import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.FilterQueryPlan;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
@@ -99,8 +105,8 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
-import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.engine.transaction.internal.TransactionImpl;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -154,11 +160,14 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * Concrete implementation of a Session.
@@ -190,7 +199,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
-	private transient TransactionCoordinatorImpl transactionCoordinator;
+	private transient TransactionCoordinator transactionCoordinator;
+	private transient JdbcCoordinatorImpl jdbcCoordinator;
 	private transient Interceptor interceptor;
 	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
@@ -212,6 +222,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
 
+	private transient JdbcSessionContext jdbcSessionContext;
+
 	/**
 	 * Constructor used for openSession(...) processing, as well as construction
 	 * of sessions for getCurrentSession().
@@ -232,7 +244,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			final Connection connection,
 			final SessionFactoryImpl factory,
 			final SessionOwner sessionOwner,
-			final TransactionCoordinatorImpl transactionCoordinator,
+			final TransactionCoordinator transactionCoordinator,
+			final JdbcCoordinatorImpl jdbcCoordinator,
+			final TransactionImpl transaction,
 			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses,
 			final boolean autoJoinTransactions,
 			final long timestamp,
@@ -248,24 +262,27 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
 
+
+
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
+		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, getStatementInspector() );
 
 		if ( transactionCoordinator == null ) {
 			this.isTransactionCoordinatorShared = false;
 			this.connectionReleaseMode = connectionReleaseMode;
 			this.autoJoinTransactions = autoJoinTransactions;
 
-			this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
-			this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(
-					new ConnectionObserverStatsBridge( factory )
-			);
+			this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
+			this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( this.jdbcCoordinator );
 		}
 		else {
 			if ( connection != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
 			}
 			this.transactionCoordinator = transactionCoordinator;
+			this.jdbcCoordinator = jdbcCoordinator;
+			this.currentHibernateTransaction = transaction;
 			this.isTransactionCoordinatorShared = true;
 			this.autoJoinTransactions = false;
 			if ( transactionCompletionProcesses != null ) {
@@ -277,36 +294,39 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}
-			if ( connectionReleaseMode != transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnectionReleaseMode() ) {
+			if ( connectionReleaseMode != this.jdbcCoordinator.getConnectionReleaseMode() ) {
 				LOG.debug(
-						"Session creation specified 'connectionReleaseMode', which is invalid in conjunction " +
+						"Session creation specified 'getConnectionReleaseMode', which is invalid in conjunction " +
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}
-			this.connectionReleaseMode = transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnectionReleaseMode();
+			this.connectionReleaseMode = this.jdbcCoordinator.getConnectionReleaseMode();
 
-			// add a transaction observer so that we can handle delegating managed actions back to THIS session
-			// versus the session that created (and therefore "owns") the transaction coordinator
 			transactionObserver = new TransactionObserver() {
 				@Override
-				public void afterBegin(TransactionImplementor transaction) {
+				public void afterBegin() {
 				}
 
 				@Override
-				public void beforeCompletion(TransactionImplementor transaction) {
+				public void beforeCompletion() {
 					if ( isOpen() && flushBeforeCompletionEnabled ) {
 						SessionImpl.this.managedFlush();
 					}
-					beforeTransactionCompletion( transaction );
+					actionQueue.beforeTransactionCompletion();
+					try {
+						interceptor.beforeTransactionCompletion( currentHibernateTransaction );
+					}
+					catch (Throwable t) {
+						LOG.exceptionInBeforeTransactionCompletionInterceptor( t );
+					}
 				}
 
 				@Override
-				public void afterCompletion(boolean successful, TransactionImplementor transaction) {
-					afterTransactionCompletion( transaction, successful );
+				public void afterCompletion(boolean successful) {
+					afterTransactionCompletion( successful );
 					if ( isOpen() && autoCloseSessionEnabled ) {
 						managedClose();
 					}
-					transactionCoordinator.removeObserver( this );
 				}
 			};
 
@@ -315,12 +335,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
-		if (factory.getStatistics().isStatisticsEnabled()) {
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().openSession();
 		}
 
-      if ( TRACE_ENABLED )
-		   LOG.tracef( "Opened session at timestamp: %s", timestamp );
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Opened session at timestamp: %s", timestamp );
+		}
 	}
 
 	@Override
@@ -367,14 +388,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		try {
 			if ( !isTransactionCoordinatorShared ) {
-				return transactionCoordinator.close();
+				return jdbcCoordinator.close();
 			}
 			else {
 				if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
-					LOG.warn( "On close, shared Session had before / after transaction actions that have not yet been processed" );
-				}
-				else {
-					transactionCoordinator.removeObserver( transactionObserver );
+					LOG.warn(
+							"On close, shared Session had before / after transaction actions that have not yet been processed"
+					);
 				}
 				return null;
 			}
@@ -386,18 +406,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	@Override
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return connectionReleaseMode;
+	public boolean isAutoCloseSessionEnabled() {
+		return autoCloseSessionEnabled;
 	}
 
 	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return autoJoinTransactions;
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return autoCloseSessionEnabled;
 	}
 
 	@Override
@@ -409,11 +424,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public boolean isFlushModeNever() {
 		return FlushMode.isManualFlushMode( getFlushMode() );
-	}
-
-	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return flushBeforeCompletionEnabled;
 	}
 
 	@Override
@@ -448,27 +458,27 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public Connection connection() throws HibernateException {
 		errorIfClosed();
-		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnection();
+		return this.jdbcCoordinator.getLogicalConnection().getPhysicalConnection();
 	}
 
 	@Override
 	public boolean isConnected() {
 		checkTransactionSynchStatus();
-		return !isClosed() && transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isOpen();
+		return !isClosed() && this.jdbcCoordinator.getLogicalConnection().isOpen();
 	}
 
 	@Override
 	public boolean isTransactionInProgress() {
 		checkTransactionSynchStatus();
-		return !isClosed() && transactionCoordinator.isTransactionInProgress();
+		return !isClosed() && transactionCoordinator.getTransactionDriverControl()
+						.getStatus() == TransactionStatus.ACTIVE;
 	}
 
 	@Override
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
 		LOG.debug( "Disconnecting session" );
-		transactionCoordinator.getJdbcCoordinator().releaseResources();
-		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualDisconnect();
+		return this.jdbcCoordinator.getLogicalConnection().manualDisconnect();
 	}
 
 	@Override
@@ -476,7 +486,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		LOG.debug( "Reconnecting session" );
 		checkTransactionSynchStatus();
-		transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
+		this.jdbcCoordinator.getLogicalConnection().manualReconnect( conn );
 	}
 
 	@Override
@@ -500,46 +510,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * @param success Was the operation a success
 	 */
 	public void afterOperation(boolean success) {
-		if ( ! transactionCoordinator.isTransactionInProgress() ) {
-			transactionCoordinator.afterNonTransactionalQuery( success );
-		}
-	}
-
-	@Override
-	public void afterTransactionBegin(TransactionImplementor hibernateTransaction) {
-		errorIfClosed();
-		interceptor.afterTransactionBegin( hibernateTransaction );
-	}
-
-	@Override
-	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction) {
-		LOG.trace( "before transaction completion" );
-		actionQueue.beforeTransactionCompletion();
-		try {
-			interceptor.beforeTransactionCompletion( hibernateTransaction );
-		}
-		catch (Throwable t) {
-			LOG.exceptionInBeforeTransactionCompletionInterceptor( t );
-		}
-	}
-
-	@Override
-	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful) {
-		LOG.trace( "after transaction completion" );
-		persistenceContext.afterTransactionCompletion();
-		actionQueue.afterTransactionCompletion( successful );
-
-		getEventListenerManager().transactionCompletion( successful );
-
-		try {
-			interceptor.afterTransactionCompletion( hibernateTransaction );
-		}
-		catch (Throwable t) {
-			LOG.exceptionInAfterTransactionCompletionInterceptor( t );
-		}
-
-		if ( autoClear ) {
-			internalClear();
+		if ( ! isTransactionInProgress() ) {
+			jdbcCoordinator.afterTransaction();
 		}
 	}
 
@@ -566,36 +538,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		getEventListenerManager().addListener( listeners );
-	}
-
-	@Override
-	public void startPrepareStatement() {
-		getEventListenerManager().jdbcPrepareStatementStart();
-	}
-
-	@Override
-	public void endPrepareStatement() {
-		getEventListenerManager().jdbcPrepareStatementEnd();
-	}
-
-	@Override
-	public void startStatementExecution() {
-		getEventListenerManager().jdbcExecuteStatementStart();
-	}
-
-	@Override
-	public void endStatementExecution() {
-		getEventListenerManager().jdbcExecuteStatementEnd();
-	}
-
-	@Override
-	public void startBatchExecution() {
-		getEventListenerManager().jdbcExecuteBatchStart();
-	}
-
-	@Override
-	public void endBatchExecution() {
-		getEventListenerManager().jdbcExecuteBatchEnd();
 	}
 
 	/**
@@ -665,9 +607,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		delayedAfterCompletion();
 	}
-	
+
 	private void delayedAfterCompletion() {
-		transactionCoordinator.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
+		if(transactionCoordinator instanceof JtaTransactionCoordinatorImpl) {
+			((JtaTransactionCoordinatorImpl)transactionCoordinator).getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
+		}
 	}
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1229,6 +1173,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			return false;
 		}
 		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
+		listeners( EventType.AUTO_FLUSH );
 		for ( AutoFlushEventListener listener : listeners( EventType.AUTO_FLUSH ) ) {
 			listener.onAutoFlush( event );
 		}
@@ -1462,12 +1407,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		checkTransactionSynchStatus();
 		LOG.tracev( "Setting cache mode to: {0}", cacheMode );
 		this.cacheMode= cacheMode;
-	}
-
-	@Override
-	public Transaction getTransaction() throws HibernateException {
-		errorIfClosed();
-		return transactionCoordinator.getTransaction();
 	}
 
 	@Override
@@ -1995,7 +1934,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public void cancelQuery() throws HibernateException {
 		errorIfClosed();
-		getTransactionCoordinator().getJdbcCoordinator().cancelLastQuery();
+		this.jdbcCoordinator.cancelLastQuery();
 	}
 
 	@Override
@@ -2098,7 +2037,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
-		return transactionCoordinator.getJdbcCoordinator().coordinateWork( work );
+		return this.jdbcCoordinator.coordinateWork( work );
 	}
 
 	@Override
@@ -2110,6 +2049,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public TransactionCoordinator getTransactionCoordinator() {
 		errorIfClosed();
 		return transactionCoordinator;
+	}
+
+	@Override
+	public JdbcCoordinator getJdbcCoordinator() {
+		return this.jdbcCoordinator;
 	}
 
 	@Override
@@ -2212,26 +2156,29 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * @throws IOException Indicates a general IO stream exception
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
 		LOG.trace( "Deserializing session" );
 
 		ois.defaultReadObject();
 
 		entityNameResolver = new CoordinatingEntityNameResolver();
 
-		connectionReleaseMode = ConnectionReleaseMode.parse( ( String ) ois.readObject() );
+		connectionReleaseMode = ConnectionReleaseMode.parse( (String) ois.readObject() );
 		autoClear = ois.readBoolean();
 		autoJoinTransactions = ois.readBoolean();
-		flushMode = FlushMode.valueOf( ( String ) ois.readObject() );
-		cacheMode = CacheMode.valueOf( ( String ) ois.readObject() );
+		flushMode = FlushMode.valueOf( (String) ois.readObject() );
+		cacheMode = CacheMode.valueOf( (String) ois.readObject() );
 		flushBeforeCompletionEnabled = ois.readBoolean();
 		autoCloseSessionEnabled = ois.readBoolean();
-		interceptor = ( Interceptor ) ois.readObject();
+		interceptor = (Interceptor) ois.readObject();
 
 		factory = SessionFactoryImpl.deserialize( ois );
-		sessionOwner = ( SessionOwner ) ois.readObject();
+		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, interceptor );
+		sessionOwner = (SessionOwner) ois.readObject();
 
-		transactionCoordinator = TransactionCoordinatorImpl.deserialize( ois, this );
+		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
+
+		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator );
 
 		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
@@ -2253,7 +2200,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * @throws IOException Indicates a general IO stream exception
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( ! transactionCoordinator.getJdbcCoordinator().isReadyForSerialization() ) {
+		if ( !jdbcCoordinator.isReadyForSerialization() ) {
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 
@@ -2274,7 +2221,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		factory.serialize( oos );
 		oos.writeObject( sessionOwner );
 
-		transactionCoordinator.serialize( oos );
+		jdbcCoordinator.serialize( oos );
 
 		persistenceContext.serialize( oos );
 		actionQueue.serialize( oos );
@@ -2297,6 +2244,74 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	private transient LobHelperImpl lobHelper;
+
+	@Override
+	public JdbcSessionContext getJdbcSessionContext() {
+		return this.jdbcSessionContext;
+	}
+
+	private StatementInspector getStatementInspector() {
+		return this.interceptor;
+	}
+
+	@Override
+	public void beforeTransactionCompletion() {
+		boolean flush = false;
+		try {
+			flush = (!isFlushModeNever() &&
+					!flushBeforeCompletionEnabled) || (
+					!isClosed()
+							&& !isFlushModeNever()
+							&& flushBeforeCompletionEnabled
+							&& !JtaStatusHelper.isRollback(
+							getSessionFactory().getSettings()
+									.getJtaPlatform()
+									.getCurrentStatus()
+					));
+		}
+		catch (SystemException se) {
+			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
+		}
+		if ( flush ) {
+			managedFlush();
+		}
+		LOG.trace( "before transaction completion" );
+		actionQueue.beforeTransactionCompletion();
+		try {
+			interceptor.beforeTransactionCompletion( currentHibernateTransaction );
+		}
+		catch (Throwable t) {
+			LOG.exceptionInBeforeTransactionCompletionInterceptor( t );
+		}
+	}
+
+	@Override
+	public void afterTransactionCompletion(boolean successful) {
+
+		LOG.trace( "after transaction completion" );
+		persistenceContext.afterTransactionCompletion();
+		actionQueue.afterTransactionCompletion( successful );
+
+		getEventListenerManager().transactionCompletion( successful );
+
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
+			factory.getStatisticsImplementor().endTransaction( successful );
+		}
+
+		try {
+			interceptor.afterTransactionCompletion( currentHibernateTransaction );
+		}
+		catch (Throwable t) {
+			LOG.exceptionInAfterTransactionCompletionInterceptor( t );
+		}
+
+		if ( shouldAutoClose() && !isClosed() ) {
+			managedClose();
+		}
+		else if ( autoClear ) {
+			internalClear();
+		}
+	}
 
 	private static class LobHelperImpl implements LobHelper {
 		private final SessionImpl session;
@@ -2360,8 +2375,18 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		protected TransactionCoordinatorImpl getTransactionCoordinator() {
+		protected TransactionCoordinator getTransactionCoordinator() {
 			return shareTransactionContext ? session.transactionCoordinator : super.getTransactionCoordinator();
+		}
+
+		@Override
+		protected JdbcCoordinatorImpl getJdbcCoordinator() {
+			return shareTransactionContext ? session.jdbcCoordinator : super.getJdbcCoordinator();
+		}
+
+		@Override
+		protected TransactionImpl getTransactionImpl(){
+			return shareTransactionContext ? session.currentHibernateTransaction : super.getTransactionImpl();
 		}
 
 		@Override
@@ -2843,5 +2868,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			}
 			return null;
 		}
+	}
+
+	@Override
+	public void afterTransactionBegin() {
+		errorIfClosed();
+		interceptor.afterTransactionBegin( currentHibernateTransaction );
 	}
 }

@@ -84,13 +84,13 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 					public void execute(Connection connection) throws SQLException {
 						PreparedStatement stmnt = null;
 						try {
-							stmnt = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
-							session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( stmnt );
+							stmnt = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
+							session.getJdbcCoordinator().getResultSetReturn().executeUpdate( stmnt );
 						}
 						finally {
 							if ( stmnt != null ) {
 								try {
-									session.getTransactionCoordinator().getJdbcCoordinator().release( stmnt );
+									session.getJdbcCoordinator().getResourceRegistry().release( stmnt );
 								}
 								catch( Throwable ignore ) {
 								}

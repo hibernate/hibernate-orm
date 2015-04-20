@@ -38,35 +38,31 @@ public interface TransactionImplementor extends Transaction {
 	 */
 	public IsolationDelegate createIsolationDelegate();
 
-	/**
-	 * Get the current state of this transaction's join status.
-	 *
-	 * @return The current join status
-	 */
-	public JoinStatus getJoinStatus();
+//	/**
+//	 * Get the current state of this transaction's join status.
+//	 *
+//	 * @return The current join status
+//	 */
+//	public JoinStatus getJoinStatus();
+//
+//	/**
+//	 * Mark a transaction as joinable
+//	 */
+//	public void markForJoin();
+//
+//	/**
+//	 * Perform a join to the underlying transaction
+//	 */
+//	public void join();
+//
+//	/**
+//	 * Reset this transaction's join status.
+//	 */
+//	public void resetJoinStatus();
+//
+//	/**
+//	 * Called after completion of the underlying transaction to signify the facade is no longer valid.
+//	 */
+//	public void invalidate();
 
-	/**
-	 * Mark a transaction as joinable
-	 */
-	public void markForJoin();
-
-	/**
-	 * Perform a join to the underlying transaction
-	 */
-	public void join();
-
-	/**
-	 * Reset this transaction's join status.
-	 */
-	public void resetJoinStatus();
-
-	/**
-	 * Make a best effort to mark the underlying transaction for rollback only.
-	 */
-	public void markRollbackOnly();
-
-	/**
-	 * Called after completion of the underlying transaction to signify the facade is no longer valid.
-	 */
-	public void invalidate();
 }

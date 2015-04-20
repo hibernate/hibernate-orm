@@ -63,9 +63,9 @@ public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		Transaction transaction = session.getTransaction();
 		transaction.setTimeout( 2 );
-		assertEquals( -1, ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+		assertEquals( -1, ((SessionImplementor)session).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
 		transaction.begin();
-		assertNotSame( -1, ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+		assertNotSame( -1, ((SessionImplementor)session).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
 		transaction.commit();
 		session.close();
 	}
@@ -75,7 +75,7 @@ public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		Transaction transaction = session.getTransaction();
 		transaction.setTimeout( 1 );
-		assertEquals( -1, ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
+		assertEquals( -1, ((SessionImplementor)session).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
 		transaction.begin();
 		Thread.sleep( 1000 );
 		session.persist( new Person( "Lukasz", "Antoniak" ) );

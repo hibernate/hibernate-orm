@@ -25,7 +25,9 @@ package org.hibernate;
 
 import javax.transaction.Synchronization;
 
+import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.LocalStatus;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
  * Defines the contract for abstracting applications from the configured underlying means of transaction management.
@@ -44,12 +46,6 @@ import org.hibernate.engine.transaction.spi.LocalStatus;
  * @author Steve Ebersole
  */
 public interface Transaction {
-	/**
-	 * Is this transaction the initiator of any underlying transaction?
-	 *
-	 * @return {@code true} if this transaction initiated the underlying transaction; {@code false} otherwise.
-	 */
-	public boolean isInitiator();
 
 	/**
 	 * Begin this transaction.  No-op if the transaction has already been begun.  Note that this is not necessarily
@@ -93,58 +89,7 @@ public interface Transaction {
 	 *
 	 * @return The current local status.
 	 */
-	public LocalStatus getLocalStatus();
-
-	/**
-	 * Is this transaction still active?
-	 * <p/>
-	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a
-	 * transaction is active when it is initiated directly through the JDBC {@link java.sql.Connection}, only when
-	 * it is initiated from here.
-	 *
-	 * @return {@code true} if the transaction is still active; {@code false} otherwise.
-	 *
-	 * @throws HibernateException Indicates a problem checking the transaction status.
-	 */
-	public boolean isActive();
-
-	/**
-	 * Is Hibernate participating in the underlying transaction?
-	 * <p/>
-	 * Generally speaking this will be the same as {@link #isActive()}.
-	 * 
-	 * @return {@code true} if Hibernate is known to be participating in the underlying transaction; {@code false}
-	 * otherwise.
-	 */
-	public boolean isParticipating();
-
-	/**
-	 * Was this transaction committed?
-	 * <p/>
-	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a
-	 * transaction was committed when the commit was performed directly through the JDBC {@link java.sql.Connection},
-	 * only when the commit was done from this.
-	 *
-	 * @return {@code true} if the transaction is rolled back; {@code false} otherwise.
-	 *
-	 * @throws HibernateException Indicates a problem checking the transaction status.
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public boolean wasCommitted();
-
-	/**
-	 * Was this transaction rolled back or set to rollback only?
-	 * <p/>
-	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a
-	 * transaction was rolled back when rollback was performed directly through the JDBC {@link java.sql.Connection},
-	 * only when it was rolled back  from here.
-	 *
-	 * @return {@literal true} if the transaction is rolled back; {@literal false} otherwise.
-	 *
-	 * @throws HibernateException Indicates a problem checking the transaction status.
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public boolean wasRolledBack();
+	public TransactionStatus getStatus();
 
 	/**
 	 * Register a user synchronization callback for this transaction.
@@ -168,4 +113,10 @@ public interface Transaction {
 	 * @return The timeout, in seconds.
 	 */
 	public int getTimeout();
+
+	/**
+	 * Make a best effort to mark the underlying transaction for rollback only.
+	 */
+	public void markRollbackOnly();
+
 }

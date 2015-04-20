@@ -55,7 +55,6 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final BatchKey key;
 	private final JdbcCoordinator jdbcCoordinator;
 
-	private final TransactionContext transactionContext;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
 
@@ -72,23 +71,26 @@ public abstract class AbstractBatchImpl implements Batch {
 		this.key = key;
 		this.jdbcCoordinator = jdbcCoordinator;
 
-		this.transactionContext = jdbcCoordinator.getTransactionCoordinator().getTransactionContext();
-		final JdbcServices jdbcServices = transactionContext.getTransactionEnvironment().getJdbcServices();
+		final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getServiceRegistry()
+				.getService( JdbcServices.class );
+
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 	}
 
+	protected JdbcCoordinator getJdbcCoordinator(){
+		return this.jdbcCoordinator;
+	}
+
 	/**
-	 * Perform batch execution.
+	 * Perform batch execution..
 	 * <p/>
 	 * This is called from the explicit {@link #execute() execution}, but may also be called from elsewhere
 	 * depending on the exact implementation.
 	 */
 	protected abstract void doExecuteBatch();
-
-	public TransactionContext transactionContext() {
-		return transactionContext;
-	}
 
 	/**
 	 * Convenience access to the SQLException helper.
@@ -170,7 +172,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	protected void releaseStatements() {
 		for ( PreparedStatement statement : getStatements().values() ) {
 			clearBatch( statement );
-			jdbcCoordinator.release( statement );
+			jdbcCoordinator.getResourceRegistry().release( statement );
+			jdbcCoordinator.afterStatementExecution();
 		}
 		getStatements().clear();
 	}

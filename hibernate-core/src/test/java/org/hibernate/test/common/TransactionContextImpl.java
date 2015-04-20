@@ -23,11 +23,9 @@
  */
 package org.hibernate.test.common;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -56,23 +54,8 @@ public class TransactionContextImpl implements TransactionContext {
 	}
 
 	@Override
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return transactionEnvironment.getTransactionFactory().getDefaultReleaseMode();
-	}
-
-	@Override
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		return jdbcConnectionAccess;
-	}
-
-	@Override
-	public boolean shouldAutoJoinTransaction() {
-		return true;
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return false;
 	}
 
 	@Override
@@ -86,17 +69,7 @@ public class TransactionContextImpl implements TransactionContext {
 	}
 
 	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return true;
-	}
-
-	@Override
 	public void managedFlush() {
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return false;
 	}
 
 	@Override
@@ -104,43 +77,8 @@ public class TransactionContextImpl implements TransactionContext {
 	}
 
 	@Override
-	public void afterTransactionBegin(TransactionImplementor hibernateTransaction) {
-	}
-
-	@Override
-	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction) {
-	}
-
-	@Override
-	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful) {
-	}
-
-	@Override
 	public String onPrepareStatement(String sql) {
 		return sql;
 	}
 
-	@Override
-	public void startPrepareStatement() {
-	}
-
-	@Override
-	public void endPrepareStatement() {
-	}
-
-	@Override
-	public void startStatementExecution() {
-	}
-
-	@Override
-	public void endStatementExecution() {
-	}
-
-	@Override
-	public void startBatchExecution() {
-	}
-
-	@Override
-	public void endBatchExecution() {
-	}
 }

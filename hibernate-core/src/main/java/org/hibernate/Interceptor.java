@@ -26,6 +26,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.Type;
 
 /**
@@ -52,7 +53,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface Interceptor {
+public interface Interceptor extends StatementInspector {
 	/**
 	 * Called just before an object is initialized. The interceptor may change the <tt>state</tt>, which will
 	 * be propagated to the persistent object. Note that when this method is called, <tt>entity</tt> will be

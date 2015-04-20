@@ -30,8 +30,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
@@ -51,6 +52,8 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
@@ -59,10 +62,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
-import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -71,9 +71,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -83,9 +84,12 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, StatelessSessionImpl.class.getName());
 
 	private TransactionCoordinator transactionCoordinator;
+
+	private transient JdbcCoordinator jdbcCoordinator;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 	private long timestamp;
-	
+	private JdbcSessionContext jdbcSessionContext;
+
 	StatelessSessionImpl(
 			Connection connection,
 			String tenantIdentifier,
@@ -99,15 +103,27 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			SessionFactoryImpl factory,
 			long timestamp) {
 		super( factory, tenantIdentifier );
-		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
-		this.timestamp = timestamp;
-	}
+		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, EmptyInterceptor.INSTANCE );
+		this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
 
-	// TransactionContext ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator );
+		this.timestamp = timestamp;
+
+	}
 
 	@Override
 	public TransactionCoordinator getTransactionCoordinator() {
 		return transactionCoordinator;
+	}
+
+	@Override
+	public JdbcCoordinator getJdbcCoordinator() {
+		return this.jdbcCoordinator;
+	}
+
+	@Override
+	public boolean shouldAutoJoinTransaction() {
+		return true;
 	}
 
 	@Override
@@ -344,23 +360,13 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return factory.getSettings().getConnectionReleaseMode();
-	}
-
-	@Override
-	public boolean shouldAutoJoinTransaction() {
-		return true;
-	}
-
-	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return factory.getSettings().isAutoCloseSessionEnabled();
 	}
 
 	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return true;
+	public boolean shouldAutoClose() {
+		return isAutoCloseSessionEnabled() && !isClosed();
 	}
 
 	@Override
@@ -373,34 +379,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed!" );
 		}
-		transactionCoordinator.close();
+		jdbcCoordinator.close();
 		setClosed();
 	}
 
 	@Override
 	public void managedFlush() {
 		errorIfClosed();
-		getTransactionCoordinator().getJdbcCoordinator().executeBatch();
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return isAutoCloseSessionEnabled() && !isClosed();
-	}
-
-	@Override
-	public void afterTransactionBegin(TransactionImplementor hibernateTransaction) {
-		// nothing to do here
-	}
-
-	@Override
-	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction) {
-		// nothing to do here
-	}
-
-	@Override
-	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful) {
-		// nothing to do here
+		jdbcCoordinator.executeBatch();
 	}
 
 	@Override
@@ -419,30 +405,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public void startPrepareStatement() {
-	}
-
-	@Override
-	public void endPrepareStatement() {
-	}
-
-	@Override
-	public void startStatementExecution() {
-	}
-
-	@Override
-	public void endStatementExecution() {
-	}
-
-	@Override
-	public void startBatchExecution() {
-	}
-
-	@Override
-	public void endBatchExecution() {
-	}
-
-	@Override
 	public String bestGuessEntityName(Object object) {
 		if (object instanceof HibernateProxy) {
 			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
@@ -453,7 +415,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Connection connection() {
 		errorIfClosed();
-		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnection();
+		return jdbcCoordinator.getLogicalConnection().getPhysicalConnection();
 	}
 
 	@Override
@@ -556,12 +518,13 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public boolean isConnected() {
-		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected();
+		return jdbcCoordinator.getLogicalConnection().isPhysicallyConnected();
 	}
 
 	@Override
 	public boolean isTransactionInProgress() {
-		return transactionCoordinator.isTransactionInProgress();
+		return !isClosed() && transactionCoordinator.isJoined() && transactionCoordinator.getTransactionDriverControl()
+				.getStatus() == TransactionStatus.ACTIVE;
 	}
 
 	@Override
@@ -582,12 +545,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public void setFlushMode(FlushMode fm) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Transaction getTransaction() throws HibernateException {
-		errorIfClosed();
-		return transactionCoordinator.getTransaction();
 	}
 
 	@Override
@@ -636,8 +593,8 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	public void afterOperation(boolean success) {
-		if ( ! transactionCoordinator.isTransactionInProgress() ) {
-			transactionCoordinator.afterNonTransactionalQuery( success );
+		if ( ! isTransactionInProgress() ) {
+			jdbcCoordinator.afterTransaction();
 		}
 	}
 
@@ -803,5 +760,28 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		}
 		temporaryPersistenceContext.clear();
 		return result;
+	}
+
+	@Override
+	public JdbcSessionContext getJdbcSessionContext() {
+		return this.jdbcSessionContext;
+	}
+
+	@Override
+	public void afterTransactionBegin() {
+
+	}
+
+	@Override
+	public void beforeTransactionCompletion() {
+
+	}
+
+	@Override
+	public void afterTransactionCompletion(boolean successful) {
+		if ( shouldAutoClose()
+				&& !isClosed() ) {
+			managedClose();
+		}
 	}
 }

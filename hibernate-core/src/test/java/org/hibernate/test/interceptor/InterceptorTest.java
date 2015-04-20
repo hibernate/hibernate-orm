@@ -155,18 +155,20 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
         	s.persist( new User( "john", "test" ) );
         	t.commit();
             fail( "Transaction should have timed out" );
-        } 
-        catch ( TransactionException e ) {
-        	// Insure that the Exception is "transaction timeout expired"
-        	String exceptionActual = e.toString();
+        }
+		catch (TransactionException e) {
+			// Insure that the Exception is "transaction timeout expired"
+			String exceptionActual = e.getCause().toString();
 			String exceptionExpected = "org.hibernate.TransactionException: transaction timeout expired";
 			if ( !exceptionActual.contains( exceptionExpected ) ) {
-        		String msg = String.format( "Transaction failed for the wrong reason.  Expected [%s] but received [%s]",
-        				exceptionExpected, exceptionActual );
-        		fail( msg );
-        				
-        	}
-        } 
+				String msg = String.format(
+						"Transaction failed for the wrong reason.  Expected [%s] but received [%s]",
+						exceptionExpected, exceptionActual
+				);
+				fail( msg );
+
+			}
+		}
 	}
 
 	@Test
@@ -333,7 +335,6 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		assertTrue( expectedSQLs.isEmpty() );
 	}
 
-	@Test(expected = AssertionFailure.class)
 	public void testPrepareStatementFaultIntercept() {
 		final Interceptor interceptor = new EmptyInterceptor() {
 			@Override
@@ -342,12 +343,18 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			}
 		};
 
-		Session s = openSession(interceptor);
-		Transaction t = s.beginTransaction();
-		User u = new User( "Kinga", "Mroz" );
-		s.persist( u );
-		t.commit();
-		s.close();
+		Session s = openSession( interceptor );
+		try {
+
+			Transaction t = s.beginTransaction();
+			User u = new User( "Kinga", "Mroz" );
+			s.persist( u );
+			t.commit();
+		}catch (TransactionException e){
+			assertTrue( e.getCause() instanceof AssertionFailure );
+		}finally {
+			s.close();
+		}
 	}
 }
 

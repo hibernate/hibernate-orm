@@ -147,8 +147,8 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 			private long value;
 
 			public void execute(Connection connection) throws SQLException {
-				PreparedStatement query = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "select currval('" + TEST_SEQUENCE + "');" );
-				ResultSet resultSet = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( query );
+				PreparedStatement query = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( "select currval('" + TEST_SEQUENCE + "');" );
+				ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( query );
 				resultSet.next();
 				value = resultSet.getLong( 1 );
 			}

@@ -45,28 +45,6 @@ public interface TransactionContext extends Serializable {
 	public TransactionEnvironment getTransactionEnvironment();
 
 	/**
-	 * Get the mode for releasing JDBC connection in effect for ths context.
-	 *
-	 * @return The connection release mode.
-	 */
-	public ConnectionReleaseMode getConnectionReleaseMode();
-
-	/**
-	 * Should transactions be auto joined?  Generally this is only a concern for CMT transactions.  The default
-	 * should be to auto join.  JPA defines an explicit operation for joining a CMT transaction.
-	 *
-	 * @return Should we automatically join transactions
-	 */
-	public boolean shouldAutoJoinTransaction();
-
-	/**
-	 * Should session automatically be closed after transaction completion in this context?
-	 *
-	 * @return {@literal true}/{@literal false} appropriately.
-	 */
-	public boolean isAutoCloseSessionEnabled();
-
-	/**
 	 * Is this context already closed?
 	 *
 	 * @return {@literal true}/{@literal false} appropriately.
@@ -81,50 +59,16 @@ public interface TransactionContext extends Serializable {
 	public boolean isFlushModeNever();
 
 	/**
-	 * Should before transaction completion processing perform a flush when initiated from JTA synchronization for this
-	 * context?
-	 *
-	 * @return {@literal true}/{@literal false} appropriately.
-	 */
-	public boolean isFlushBeforeCompletionEnabled();
-
-	/**
 	 * Perform a managed flush.
 	 */
 	public void managedFlush();
-
-	/**
-	 * Should JTA synchronization processing perform a automatic close (call to {@link #managedClose} for this
-	 * context?
-	 * 
-	 * @return {@literal true}/{@literal false} appropriately.
-	 */
-	public boolean shouldAutoClose();
 
 	/**
 	 * Perform a managed close.
 	 */
 	public void managedClose();
 
-	public void afterTransactionBegin(TransactionImplementor hibernateTransaction);
-
-	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction);
-
-	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful);
-
 	public String onPrepareStatement(String sql);
 
 	public JdbcConnectionAccess getJdbcConnectionAccess();
-
-	public void startPrepareStatement();
-
-	public void endPrepareStatement();
-
-	public void startStatementExecution();
-
-	public void endStatementExecution();
-
-	public void startBatchExecution();
-
-	public void endBatchExecution();
 }

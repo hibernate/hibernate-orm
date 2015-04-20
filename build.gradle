@@ -238,17 +238,23 @@ subprojects { subProject ->
 	}
 	// exclude generated java sources - by explicitly setting the base source dir
 	checkstyleMain.source = 'src/main/java'
-	// because cfg package is a mess mainly from annotation stuff
-	checkstyleMain.exclude '**/org/hibernate/cfg/**'
-	checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
 	findbugs {
 		sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
 		ignoreFailures = true
 		toolVersion = '3.0.1'
+		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
+		reportLevel = 'low'
 	}
 	// exclude generated java sources - by explicitly setting the base source dir
 	findbugsMain.source = 'src/main/java'
+
+
+	// because cfg package is a mess mainly from annotation stuff
+	checkstyleMain.exclude '**/org/hibernate/cfg/**'
+	checkstyleMain.exclude '**/org/hibernate/cfg/*'
+	findbugsMain.exclude '**/org/hibernate/cfg/**'
+	findbugsMain.exclude '**/org/hibernate/cfg/*'
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

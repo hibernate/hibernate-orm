@@ -377,13 +377,15 @@ public class ActionQueue {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private static boolean areTablesToUpdated(Iterable actions, Set tableSpaces) {
-		for ( Executable action : (Iterable<Executable>) actions ) {
-			final Serializable[] spaces = action.getPropertySpaces();
-			for ( Serializable space : spaces ) {
-				if ( tableSpaces.contains( space ) ) {
-					LOG.debugf( "Changes must be flushed to space: %s", space );
-					return true;
+	private static boolean areTablesToUpdated(List actions, Set tableSpaces) {
+		if(!actions.isEmpty()) {
+			for (Executable action : actions) {
+				final Serializable[] spaces = action.getPropertySpaces();
+				for (Serializable space : spaces) {
+					if (tableSpaces.contains(space)) {
+						LOG.debugf("Changes must be flushed to space: %s", space);
+						return true;
+					}
 				}
 			}
 		}
@@ -391,10 +393,12 @@ public class ActionQueue {
 	}
 
 	private void executeActions(List list) throws HibernateException {
-		for ( Object aList : list ) {
-			execute( (Executable) aList );
+		if(!list.isEmpty()) {
+			for (Object aList : list) {
+				execute((Executable) aList);
+			}
+			list.clear();
 		}
-		list.clear();
 		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
 	}
 
@@ -421,8 +425,10 @@ public class ActionQueue {
 
 	@SuppressWarnings({ "unchecked" })
 	private void prepareActions(List queue) throws HibernateException {
-		for ( Executable executable : (List<Executable>) queue ) {
-			executable.beforeExecutions();
+		if(!queue.isEmpty()) {
+			for (Executable executable : (List<Executable>) queue) {
+				executable.beforeExecutions();
+			}
 		}
 	}
 
@@ -753,18 +759,18 @@ public class ActionQueue {
 		}
 
 		public void beforeTransactionCompletion() {
-			for ( BeforeTransactionCompletionProcess process : processes ) {
-				try {
-					process.doBeforeTransactionCompletion( session );
+			if( !processes.isEmpty()) {
+				for (BeforeTransactionCompletionProcess process : processes) {
+					try {
+						process.doBeforeTransactionCompletion(session);
+					} catch (HibernateException he) {
+						throw he;
+					} catch (Exception e) {
+						throw new AssertionFailure("Unable to perform beforeTransactionCompletion callback", e);
+					}
 				}
-				catch (HibernateException he) {
-					throw he;
-				}
-				catch (Exception e) {
-					throw new AssertionFailure( "Unable to perform beforeTransactionCompletion callback", e );
-				}
+				processes.clear();
 			}
-			processes.clear();
 		}
 	}
 

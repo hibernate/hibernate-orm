@@ -87,11 +87,11 @@ public class DbTimestampType extends TimestampType {
 	private Timestamp usePreparedStatement(String timestampSelectString, SessionImplementor session) {
 		PreparedStatement ps = null;
 		try {
-			ps = session.getTransactionCoordinator()
+			ps = session
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( timestampSelectString, false );
-			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
+			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
@@ -108,7 +108,8 @@ public class DbTimestampType extends TimestampType {
 		}
 		finally {
 			if ( ps != null ) {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+				session.getJdbcCoordinator().getResourceRegistry().release( ps );
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 	}
@@ -116,12 +117,12 @@ public class DbTimestampType extends TimestampType {
 	private Timestamp useCallableStatement(String callString, SessionImplementor session) {
 		CallableStatement cs = null;
 		try {
-			cs = (CallableStatement) session.getTransactionCoordinator()
+			cs = (CallableStatement) session
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( callString, true );
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
-			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( cs );
+			session.getJdbcCoordinator().getResultSetReturn().execute( cs );
 			Timestamp ts = cs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Current timestamp retreived from db : {0} (nanos={1}, time={2})", ts, ts.getNanos(), ts.getTime() );
@@ -137,7 +138,8 @@ public class DbTimestampType extends TimestampType {
 		}
 		finally {
 			if ( cs != null ) {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( cs );
+				session.getJdbcCoordinator().getResourceRegistry().release( cs );
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 	}

@@ -35,7 +35,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Order;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -62,7 +62,8 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void addSettings(Map settings) {
 		TestingJtaBootstrap.prepare( settings );
-		settings.put( AvailableSettings.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+		//settings.put( AvailableSettings.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
 		settings.put( AvailableSettings.AUTO_CLOSE_SESSION, "true" );
 		settings.put( AvailableSettings.FLUSH_BEFORE_COMPLETION, "true" );
 		settings.put( AvailableSettings.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );

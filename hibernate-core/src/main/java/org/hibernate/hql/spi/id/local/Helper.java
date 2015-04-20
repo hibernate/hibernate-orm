@@ -61,20 +61,16 @@ public class Helper {
 		TemporaryTableCreationWork work = new TemporaryTableCreationWork( idTableInfo, session.getFactory() );
 
 		if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
-			final Connection connection = session.getTransactionCoordinator()
-					.getJdbcCoordinator()
+			final Connection connection = session.getJdbcCoordinator()
 					.getLogicalConnection()
-					.getConnection();
+					.getPhysicalConnection();
 
 			work.execute( connection );
 
-			session.getTransactionCoordinator()
-					.getJdbcCoordinator()
-					.afterStatementExecution();
+			session.getJdbcCoordinator().afterStatementExecution();
 		}
 		else {
 			session.getTransactionCoordinator()
-					.getTransaction()
 					.createIsolationDelegate()
 					.delegateWork( work, ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT );
 		}
@@ -143,20 +139,16 @@ public class Helper {
 		if ( afterUseAction == AfterUseAction.DROP ) {
 			TemporaryTableDropWork work = new TemporaryTableDropWork( idTableInfo, session.getFactory() );
 			if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
-				final Connection connection = session.getTransactionCoordinator()
-						.getJdbcCoordinator()
+				final Connection connection = session.getJdbcCoordinator()
 						.getLogicalConnection()
-						.getConnection();
+						.getPhysicalConnection();
 
 				work.execute( connection );
 
-				session.getTransactionCoordinator()
-						.getJdbcCoordinator()
-						.afterStatementExecution();
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 			else {
 				session.getTransactionCoordinator()
-						.getTransaction()
 						.createIsolationDelegate()
 						.delegateWork( work, ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT );
 			}
@@ -166,8 +158,8 @@ public class Helper {
 			PreparedStatement ps = null;
 			try {
 				final String sql = "delete from " + idTableInfo.getQualifiedIdTableName();
-				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+				ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+				session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			catch( Throwable t ) {
 				log.unableToCleanupTemporaryIdTable(t);
@@ -175,7 +167,7 @@ public class Helper {
 			finally {
 				if ( ps != null ) {
 					try {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+						session.getJdbcCoordinator().getResourceRegistry().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore

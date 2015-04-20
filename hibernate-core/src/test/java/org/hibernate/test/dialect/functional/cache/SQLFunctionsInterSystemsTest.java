@@ -646,8 +646,8 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 					new Work() {
 						@Override
 						public void execute(Connection connection) throws SQLException {
-							Statement stmt = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-							((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
+							Statement stmt = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().createStatement();
+							((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, "DROP FUNCTION spLock FROM TestInterSystemsFunctionsClass" );
 						}
 					}
 			);
@@ -663,7 +663,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						Statement stmt = ((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
+						Statement stmt = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().createStatement();
 						String create_function = "CREATE FUNCTION SQLUser.TestInterSystemsFunctionsClass_spLock\n" +
 								"     ( INOUT pHandle %SQLProcContext, \n" +
 								"       ROWID INTEGER \n" +
@@ -675,7 +675,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 								"    {\n" +
 								"        q 0\n" +
 								"     }";
-						((SessionImplementor)s).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, create_function );
+						((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, create_function );
 					}
 				}
 		);

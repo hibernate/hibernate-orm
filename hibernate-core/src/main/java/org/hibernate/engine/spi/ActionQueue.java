@@ -481,7 +481,7 @@ public class ActionQueue {
 		}
 
 		list.clear();
-		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
+		session.getJdbcCoordinator().executeBatch();
 	}
 
 	/**

@@ -23,15 +23,6 @@
  */
 package org.hibernate.jpa.spi;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityExistsException;
@@ -67,6 +58,15 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -82,12 +82,12 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
@@ -100,15 +100,7 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.engine.transaction.spi.JoinStatus;
-import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.engine.transaction.synchronization.spi.AfterCompletionAction;
-import org.hibernate.engine.transaction.synchronization.spi.ExceptionMapper;
-import org.hibernate.engine.transaction.synchronization.spi.ManagedFlushChecker;
-import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
@@ -1556,10 +1548,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		checkOpen();
 
 		final SessionImplementor session = (SessionImplementor) internalGetSession();
-		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
-
-		return isOpen() && transaction.getJoinStatus() == JoinStatus.JOINED;
+		return isOpen() && session.getTransactionCoordinator().isJoined();
 	}
 
 	@Override
@@ -1577,51 +1566,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 
 		final SessionImplementor session = (SessionImplementor) internalGetSession();
-		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
-
-		transaction.markForJoin();
-		transactionCoordinator.pulse();
-
-		LOG.debug( "Looking for a JTA transaction to join" );
-		if ( ! transactionCoordinator.isTransactionJoinable() ) {
-			if ( explicitRequest ) {
-				// if this is an explicit join request, log a warning so user can track underlying cause
-				// of subsequent exceptions/messages
-				LOG.unableToJoinTransaction(Environment.TRANSACTION_STRATEGY);
-			}
-		}
-
-		try {
-			if ( transaction.getJoinStatus() == JoinStatus.JOINED ) {
-				LOG.debug( "Transaction already joined" );
-				return; // noop
-			}
-
-			// join the transaction and then recheck the status
-			transaction.join();
-			if ( transaction.getJoinStatus() == JoinStatus.NOT_JOINED ) {
-				if ( explicitRequest ) {
-					throw new TransactionRequiredException( "No active JTA transaction on joinTransaction call" );
-				}
-				else {
-					LOG.debug( "Unable to join JTA transaction" );
-					return;
-				}
-			}
-			else if ( transaction.getJoinStatus() == JoinStatus.MARKED_FOR_JOINED ) {
-				throw new AssertionFailure( "Transaction MARKED_FOR_JOINED after isOpen() call" );
-			}
-
-			// register behavior changes
-			final SynchronizationCallbackCoordinator callbackCoordinator = transactionCoordinator.getSynchronizationCallbackCoordinator();
-			callbackCoordinator.setManagedFlushChecker( new ManagedFlushCheckerImpl() );
-			callbackCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
-			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( session, transactionType ) );
-		}
-		catch (HibernateException he) {
-			throw convert( he );
-		}
+		session.getTransactionCoordinator().explicitJoin();
 	}
 
 	/**
@@ -1701,55 +1646,59 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
-		if ( e instanceof StaleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( (StaleStateException) e );
+		Throwable cause = e;
+		if(e instanceof TransactionException){
+			cause = e.getCause();
+		}
+		if ( cause instanceof StaleStateException ) {
+			final PersistenceException converted = wrapStaleStateException( (StaleStateException) cause );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( e, lockOptions );
+		else if ( cause instanceof LockingStrategyException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
-			final PersistenceException converted = wrapLockException( e, lockOptions );
+		else if ( cause instanceof org.hibernate.exception.LockTimeoutException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( e, lockOptions );
+		else if ( cause instanceof org.hibernate.PessimisticLockException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.QueryTimeoutException ) {
-			final QueryTimeoutException converted = new QueryTimeoutException( e.getMessage(), e );
+		else if ( cause instanceof org.hibernate.QueryTimeoutException ) {
+			final QueryTimeoutException converted = new QueryTimeoutException( cause.getMessage(), cause );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+		else if ( cause instanceof ObjectNotFoundException ) {
+			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.NonUniqueObjectException ) {
-			final EntityExistsException converted = new EntityExistsException( e.getMessage() );
+		else if ( cause instanceof org.hibernate.NonUniqueObjectException ) {
+			final EntityExistsException converted = new EntityExistsException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
         }
-		else if ( e instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( e.getMessage() );
+		else if ( cause instanceof org.hibernate.NonUniqueResultException ) {
+			final NonUniqueResultException converted = new NonUniqueResultException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+		else if ( cause instanceof UnresolvableObjectException ) {
+			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof QueryException ) {
-			return new IllegalArgumentException( e );
+		else if ( cause instanceof QueryException ) {
+			return new IllegalArgumentException( cause );
 		}
-		else if ( e instanceof TransientObjectException ) {
+		else if ( cause instanceof TransientObjectException ) {
 			try {
 				markForRollbackOnly();
 			}
@@ -1760,7 +1709,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
 		else {
-			final PersistenceException converted = new PersistenceException( e );
+			final PersistenceException converted = new PersistenceException( cause );
 			handlePersistenceException( converted );
 			return converted;
 		}
@@ -1835,56 +1784,5 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			pe = new OptimisticLockException( e );
 		}
 		return pe;
-	}
-
-	private static class AfterCompletionActionImpl implements AfterCompletionAction {
-		private final SessionImplementor session;
-		private final PersistenceUnitTransactionType transactionType;
-
-		private AfterCompletionActionImpl(SessionImplementor session, PersistenceUnitTransactionType transactionType) {
-			this.session = session;
-			this.transactionType = transactionType;
-		}
-
-		@Override
-		public void doAction(TransactionCoordinator transactionCoordinator, int status) {
-			if ( session.isClosed() ) {
-                LOG.trace("Session was closed; nothing to do");
-				return;
-			}
-
-			final boolean successful = JtaStatusHelper.isCommitted( status );
-			if ( !successful && transactionType == PersistenceUnitTransactionType.JTA ) {
-				( (Session) session ).clear();
-			}
-			session.getTransactionCoordinator().resetJoinStatus();
-		}
-	}
-
-	private static class ManagedFlushCheckerImpl implements ManagedFlushChecker {
-		@Override
-		public boolean shouldDoManagedFlush(TransactionCoordinator coordinator, int jtaStatus) {
-			return !coordinator.getTransactionContext().isClosed()
-					&& !coordinator.getTransactionContext().isFlushModeNever()
-					&& !JtaStatusHelper.isRollback( jtaStatus );
-		}
-	}
-
-	private class CallbackExceptionMapperImpl implements ExceptionMapper {
-		@Override
-		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-			throw new PersistenceException( message, systemException );
-		}
-
-		@Override
-		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
-			if ( HibernateException.class.isInstance( failure ) ) {
-				throw convert( failure );
-			}
-			if ( PersistenceException.class.isInstance( failure ) ) {
-				throw failure;
-			}
-			throw new PersistenceException( message, failure );
-		}
 	}
 }

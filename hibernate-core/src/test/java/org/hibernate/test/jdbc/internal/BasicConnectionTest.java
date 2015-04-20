@@ -35,6 +35,8 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.resource.jdbc.ResourceRegistry;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -50,9 +52,9 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		SessionImplementor sessionImpl = (SessionImplementor) session;
 		boolean caught = false;
 		try {
-			PreparedStatement ps = sessionImpl.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer()
+			PreparedStatement ps = sessionImpl.getJdbcCoordinator().getStatementPreparer()
 					.prepareStatement( "select count(*) from NON_EXISTENT" );
-			sessionImpl.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( ps );
+			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps );
 		}
 		catch ( JDBCException ok ) {
 			caught = true;
@@ -68,7 +70,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 	public void testBasicJdbcUsage() throws JDBCException {
 		Session session = openSession();
 		SessionImplementor sessionImpl = (SessionImplementor) session;
-		JdbcCoordinator jdbcCoord = sessionImpl.getTransactionCoordinator().getJdbcCoordinator();
+		JdbcCoordinator jdbcCoord = sessionImpl.getJdbcCoordinator();
 
 		try {
 			Statement statement = jdbcCoord.getStatementPreparer().createStatement();
@@ -81,10 +83,10 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			}
 			jdbcCoord.getResultSetReturn().execute( statement,
 					"create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-			assertTrue( jdbcCoord.hasRegisteredResources() );
+			assertTrue( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 			assertTrue( jdbcCoord.getLogicalConnection().isPhysicallyConnected() );
-			jdbcCoord.release( statement );
-			assertFalse( jdbcCoord.hasRegisteredResources() );
+			getResourceRegistry( jdbcCoord ).release( statement );
+			assertFalse( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 			assertTrue( jdbcCoord.getLogicalConnection().isPhysicallyConnected() ); // after_transaction specified
 
 			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
@@ -96,7 +98,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			jdbcCoord.getResultSetReturn().extract( ps );
 
-			assertTrue( jdbcCoord.hasRegisteredResources() );
+			assertTrue( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 		}
 		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
@@ -105,6 +107,10 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			session.close();
 		}
 
-		assertFalse( jdbcCoord.hasRegisteredResources() );
+		assertFalse( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
+	}
+
+	private ResourceRegistry getResourceRegistry(JdbcCoordinator jdbcCoord) {
+		return jdbcCoord.getResourceRegistry();
 	}
 }

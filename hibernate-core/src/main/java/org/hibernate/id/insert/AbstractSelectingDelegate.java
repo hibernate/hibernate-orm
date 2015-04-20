@@ -52,16 +52,17 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			Binder binder) {
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = session.getTransactionCoordinator()
+			PreparedStatement insert = session
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
-				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
+				session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			}
 			finally {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( insert );
+				session.getJdbcCoordinator().getResourceRegistry().release( insert );
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -76,22 +77,23 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 		try {
 			//fetch the generated id in a separate query
-			PreparedStatement idSelect = session.getTransactionCoordinator()
+			PreparedStatement idSelect = session
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( session, idSelect, binder.getEntity() );
-				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( idSelect );
+				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
 				try {
 					return getResult( session, rs, binder.getEntity() );
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, idSelect );
+					session.getJdbcCoordinator().getResourceRegistry().release( rs, idSelect );
 				}
 			}
 			finally {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( idSelect );
+				session.getJdbcCoordinator().getResourceRegistry().release( idSelect );
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 
 		}

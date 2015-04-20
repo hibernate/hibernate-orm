@@ -153,11 +153,12 @@ public abstract class AbstractLoadPlanBasedLoader {
 			}
 			finally {
 				if ( wrapper != null ) {
-					session.getTransactionCoordinator().getJdbcCoordinator().release(
+					session.getJdbcCoordinator().getResourceRegistry().release(
 							wrapper.getResultSet(),
 							wrapper.getStatement()
 					);
-					session.getTransactionCoordinator().getJdbcCoordinator().release( wrapper.getStatement() );
+					session.getJdbcCoordinator().getResourceRegistry().release( wrapper.getStatement() );
+					session.getJdbcCoordinator().afterStatementExecution();
 				}
 				persistenceContext.afterLoad();
 			}
@@ -252,7 +253,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 		final boolean callable = queryParameters.isCallable();
 		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
 
-		final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator()
+		final PreparedStatement st = session.getJdbcCoordinator()
 				.getStatementPreparer().prepareQueryStatement( sql, callable, scrollMode );
 
 		try {
@@ -303,11 +304,13 @@ public abstract class AbstractLoadPlanBasedLoader {
 			}
 		}
 		catch ( SQLException sqle ) {
-			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+			session.getJdbcCoordinator().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().afterStatementExecution();
 			throw sqle;
 		}
 		catch ( HibernateException he ) {
-			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+			session.getJdbcCoordinator().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().afterStatementExecution();
 			throw he;
 		}
 
@@ -444,7 +447,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 			throws SQLException, HibernateException {
 
 		try {
-			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 			rs = wrapResultSetIfEnabled( rs , session );
 
 			if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {
@@ -457,7 +460,8 @@ public abstract class AbstractLoadPlanBasedLoader {
 			return rs;
 		}
 		catch ( SQLException sqle ) {
-			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+			session.getJdbcCoordinator().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().afterStatementExecution();
 			throw sqle;
 		}
 	}

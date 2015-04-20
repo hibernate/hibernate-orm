@@ -282,10 +282,10 @@ public interface AvailableSettings {
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
-	 * Names the implementation of {@link org.hibernate.engine.transaction.spi.TransactionFactory} to use for
-	 * creating {@link org.hibernate.Transaction} instances
+	 * Names the implementation of {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder} to use for
+	 * creating {@link org.hibernate.resource.transaction.TransactionCoordinator} instances
 	 */
-	String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
+	String TRANSACTION_COORDINATOR_STRATEGY = "hibernate.transaction.coordinator_class";
 
 	/**
 	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use for integrating
@@ -807,4 +807,13 @@ public interface AvailableSettings {
 	 * annotations (combined with {@code orm.xml} mappings).
 	 */
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+
+	/**
+	 * Used to specify if using {@link javax.transaction.UserTransaction}  class to use for JTA transaction management.
+	 *
+	 * Default is <code>false</code>
+	 *
+	 * @since 5.0
+	 */
+	String PREFER_USER_TRANSACTION = "hibernate.jta.prefer_user_transaction";
 }

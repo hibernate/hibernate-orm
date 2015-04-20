@@ -73,10 +73,10 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						// result in a constraint violation
 						PreparedStatement ps = null;
 						try {
-							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)" );
+							ps = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().prepareStatement( "INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)" );
 							ps.setLong(1, 52134241);    // Non-existent user_id
 							ps.setLong(2, 5342);        // Non-existent group_id
-							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+							((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 
 							fail("INSERT should have failed");
 						}
@@ -106,8 +106,8 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 						// prepare/execute a query against a non-existent table
 						PreparedStatement ps = null;
 						try {
-							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( "SELECT user_id, user_name FROM tbl_no_there" );
-							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( ps );
+							ps = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().prepareStatement( "SELECT user_id, user_name FROM tbl_no_there" );
+							((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( ps );
 
 							fail("SQL compilation should have failed");
 						}
@@ -140,7 +140,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						final JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator();
+						final JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getJdbcCoordinator();
 						final StatementPreparer statementPreparer = jdbcCoordinator.getStatementPreparer();
 						final ResultSetReturn resultSetReturn = jdbcCoordinator.getResultSetReturn();
 						PreparedStatement ps = null;
@@ -169,7 +169,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	private void releaseStatement(Session session, PreparedStatement ps) {
 		if ( ps != null ) {
 			try {
-				( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator().release( ps );
+				( (SessionImplementor) session ).getJdbcCoordinator().getResourceRegistry().release( ps );
 			}
 			catch ( Throwable ignore ) {
 				// ignore...

@@ -86,14 +86,14 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session.getTransactionCoordinator()
+			return session
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( insertSQL, PreparedStatement.RETURN_GENERATED_KEYS );
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
-			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			ResultSet rs = null;
 			try {
 				rs = insert.getGeneratedKeys();
@@ -105,7 +105,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			}
 			finally {
 				if ( rs != null ) {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, insert );
+					session.getJdbcCoordinator().getResourceRegistry().release( rs, insert );
 				}
 			}
 		}
@@ -134,14 +134,14 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session.getTransactionCoordinator()
+			return session
 					.getJdbcCoordinator()
 					.getStatementPreparer()
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
-			ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().execute( insert );
+			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().execute( insert );
 			try {
 				return IdentifierGeneratorHelper.getGeneratedIdentity(
 						rs,
@@ -150,7 +150,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 				);
 			}
 			finally {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( rs, insert );
+				session.getJdbcCoordinator().getResourceRegistry().release( rs, insert );
 			}
 		}
 

@@ -45,6 +45,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJta
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.Statistics;
 
@@ -253,7 +254,7 @@ public class JBossStandaloneJtaExampleTest {
               .applySetting( Environment.HBM2DDL_AUTO, "create-drop" )
               .applySetting( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() )
               .applySetting( Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory" )
-              .applySetting( Environment.TRANSACTION_STRATEGY, "jta" )
+              .applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() )
               .applySetting( Environment.CURRENT_SESSION_CONTEXT_CLASS, "jta" )
               .applySetting( Environment.RELEASE_CONNECTIONS, "auto" )
               .applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" )

@@ -61,7 +61,8 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 				final PreparedStatement statement = entry.getValue();
 				final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( statement );
 				getKey().getExpectation().verifyOutcome( rowCount, statement, 0 );
-				jdbcCoordinator.release( statement );
+				jdbcCoordinator.getResourceRegistry().release( statement );
+				jdbcCoordinator.afterStatementExecution();
 			}
 			catch ( SQLException e ) {
 				abortBatch();

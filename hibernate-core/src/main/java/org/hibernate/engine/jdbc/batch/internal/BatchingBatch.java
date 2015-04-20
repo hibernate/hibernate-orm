@@ -123,11 +123,11 @@ public class BatchingBatch extends AbstractBatchImpl {
 					final PreparedStatement statement = entry.getValue();
 					final int[] rowCounts;
 					try {
-						transactionContext().startBatchExecution();
+						getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteBatchStart();
 						rowCounts = statement.executeBatch();
 					}
 					finally {
-						transactionContext().endBatchExecution();
+						getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteBatchEnd();
 					}
 					checkRowCounts( rowCounts, statement );
 				}

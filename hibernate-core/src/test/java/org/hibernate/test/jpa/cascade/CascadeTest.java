@@ -27,9 +27,11 @@ import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.test.jpa.AbstractJPATest;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -68,9 +70,9 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch( TransientObjectException e ) {
-				// expected result
-				log.trace( "handled expected exception", e );
+			catch (TransactionException te) {
+				assertTrue( te.getCause() instanceof TransientObjectException );
+				log.trace( "handled expected exception", te );
 				s.getTransaction().rollback();
 			}
 			finally {

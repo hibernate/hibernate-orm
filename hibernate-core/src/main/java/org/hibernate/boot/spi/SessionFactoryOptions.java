@@ -183,4 +183,6 @@ public interface SessionFactoryOptions {
 	public Map<String, SQLFunction> getCustomSqlFunctionMap();
 
 	void setCheckNullability(boolean enabled);
+
+	public boolean isPreferUserTransaction();
 }

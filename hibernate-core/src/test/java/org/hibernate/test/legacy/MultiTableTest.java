@@ -137,8 +137,8 @@ public class MultiTableTest extends LegacyTestCase {
 					public void execute(Connection connection) throws SQLException {
 						final String sql = "select * from leafsubsubclass sm, nonleafsubclass m, rootclass s " +
 								"where sm.sid=m.sid and sm.sid=s.id1_ and sm.sid=1";
-						Statement st = ((SessionImplementor)s2).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
-						((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st, sql ).next();
+						Statement st = ((SessionImplementor)s2).getJdbcCoordinator().getStatementPreparer().createStatement();
+						((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( st, sql ).next();
 					}
 				}
 		);

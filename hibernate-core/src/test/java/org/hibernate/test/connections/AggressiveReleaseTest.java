@@ -11,15 +11,19 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +43,8 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		super.addSettings( settings );
 
 		TestingJtaBootstrap.prepare( settings );
-		settings.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+//		settings.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
 		settings.put( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "0" );
@@ -220,9 +225,9 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 	@Test
 	public void testConnectionMaintanenceDuringFlush() throws Throwable {
+		final Statistics statistics = sessionFactory().getStatistics();
 		prepare();
 		Session s = getSessionUnderTest();
-		s.beginTransaction();
 
 		List<Silly> entities = new ArrayList<Silly>();
 		for ( int i = 0; i < 10; i++ ) {
@@ -237,9 +242,9 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			silly.setName( "new-" + silly.getName() );
 			silly.getOther().setName( "new-" + silly.getOther().getName() );
 		}
-		long initialCount = sessionFactory().getStatistics().getConnectCount();
+		long initialCount = statistics.getConnectCount();
 		s.flush();
-		assertEquals( "connection not maintained through flush", initialCount + 1, sessionFactory().getStatistics().getConnectCount() );
+		assertEquals( "connection not maintained through flush", initialCount + 1, statistics.getConnectCount() );
 
 		s.createQuery( "delete from Silly" ).executeUpdate();
 		s.createQuery( "delete from Other" ).executeUpdate();

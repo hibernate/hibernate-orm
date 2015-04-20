@@ -71,7 +71,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {
-			final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
 				if ( getLockable().isVersioned() ) {
@@ -83,7 +83,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 					);
 				}
 
-				final ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
 					if ( !rs.next() ) {
 						if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -94,11 +94,12 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 					}
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, st );
+					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().afterStatementExecution();
 			}
 
 		}

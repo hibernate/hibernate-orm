@@ -35,6 +35,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -43,6 +44,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,13 +52,14 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
-	private DateFormat df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
 
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
@@ -108,7 +111,7 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.flush();
 		tx.commit();
 		s.close();
-		
+
 
 		s = openSession();
 		tx = s.beginTransaction();
@@ -190,7 +193,9 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 			//success
 		}
 		finally {
-			if ( tx != null ) tx.rollback();
+			if ( tx != null ) {
+				tx.rollback();
+			}
 			s.close();
 		}
 	}
@@ -286,11 +291,13 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 			tx.commit();
 			fail( "Optimistic locking should work" );
 		}
-		catch (StaleStateException e) {
-			//fine
+		catch (TransactionException e) {
+			assertTrue( e.getCause() instanceof StaleStateException );
 		}
 		finally {
-			if ( tx != null ) tx.rollback();
+			if ( tx != null ) {
+				tx.rollback();
+			}
 			s.close();
 		}
 	}
@@ -379,7 +386,7 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 		airFrance.setDepartureDate( new Date( 05, 06, 21, 10, 0, 0 ) );
 		airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
 		airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
-		airFrance.setBuyDate( new java.sql.Timestamp(122367443) );
+		airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
 		airFrance.setFactor( 25 );
 		s.persist( airFrance );
 		tx.commit();
@@ -392,10 +399,10 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 		Flight copyAirFrance = (Flight) q.uniqueResult();
 		assertNotNull( copyAirFrance );
 		assertEquals(
-				df.format(new Date( 05, 06, 21 )).toString(),
-				df.format(copyAirFrance.getDepartureDate()).toString()
+				df.format( new Date( 05, 06, 21 ) ).toString(),
+				df.format( copyAirFrance.getDepartureDate() ).toString()
 		);
-		assertEquals( df.format(airFrance.getBuyDate()), df.format(copyAirFrance.getBuyDate()));
+		assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
 
 		s.delete( copyAirFrance );
 		tx.commit();
@@ -417,7 +424,9 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		catch (Exception e) {
 			//success
-			if ( tx != null ) tx.rollback();
+			if ( tx != null ) {
+				tx.rollback();
+			}
 		}
 		finally {
 			s.close();
@@ -426,7 +435,7 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Flight.class,
 				Company.class,
 				Sky.class

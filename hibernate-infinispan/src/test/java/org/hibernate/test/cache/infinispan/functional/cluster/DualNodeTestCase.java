@@ -32,7 +32,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -116,8 +117,8 @@ public abstract class DualNodeTestCase extends BaseNonConfigCoreFunctionalTestCa
 		return DualNodeJtaPlatformImpl.class;
 	}
 
-	protected Class getTransactionFactoryClass() {
-		return CMTTransactionFactory.class;
+	protected Class<? extends TransactionCoordinatorBuilder> getTransactionCoordinatorBuilder() {
+		return JtaTransactionCoordinatorBuilderImpl.class;
 	}
 
 	protected void sleep(long ms) {
@@ -140,7 +141,7 @@ public abstract class DualNodeTestCase extends BaseNonConfigCoreFunctionalTestCa
 	protected void applyStandardSettings(Map settings) {
 		settings.put( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 		settings.put( AvailableSettings.JTA_PLATFORM, getJtaPlatformClass().getName() );
-		settings.put( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		settings.put( Environment.TRANSACTION_COORDINATOR_STRATEGY, getTransactionCoordinatorBuilder().getName() );
 		settings.put( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
 		settings.put( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
 	}

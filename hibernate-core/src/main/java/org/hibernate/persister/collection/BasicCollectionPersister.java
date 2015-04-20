@@ -232,13 +232,13 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 									expectation
 							);
 						}
-						st = session.getTransactionCoordinator()
+						st = session
 								.getJdbcCoordinator()
 								.getBatch( updateBatchKey )
 								.getBatchStatement( sql, callable );
 					}
 					else {
-						st = session.getTransactionCoordinator()
+						st = session
 								.getJdbcCoordinator()
 								.getStatementPreparer()
 								.prepareStatement( sql, callable );
@@ -261,24 +261,25 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 						}
 
 						if ( useBatch ) {
-							session.getTransactionCoordinator()
+							session
 									.getJdbcCoordinator()
 									.getBatch( updateBatchKey )
 									.addToBatch();
 						}
 						else {
-							expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
 						}
 					}
 					catch ( SQLException sqle ) {
 						if ( useBatch ) {
-							session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
+							session.getJdbcCoordinator().abortBatch();
 						}
 						throw sqle;
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+							session.getJdbcCoordinator().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
 					count++;

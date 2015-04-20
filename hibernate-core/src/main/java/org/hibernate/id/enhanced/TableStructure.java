@@ -148,7 +148,7 @@ public class TableStructure implements DatabaseStructure {
 		return new AccessCallback() {
 			@Override
 			public IntegralDataTypeHolder getNextValue() {
-				return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
+				return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
 						new AbstractReturningWork<IntegralDataTypeHolder>() {
 							@Override
 							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {

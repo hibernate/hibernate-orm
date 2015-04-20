@@ -113,4 +113,8 @@ public class DocumentInterceptor implements Interceptor {
 	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
 	}
 
+	@Override
+	public String inspect(String sql) {
+		return sql;
+	}
 }

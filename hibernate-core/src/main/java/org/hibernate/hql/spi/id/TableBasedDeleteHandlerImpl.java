@@ -130,17 +130,18 @@ public class TableBasedDeleteHandlerImpl
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
+					ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
 					int pos = 1;
 					pos += handlePrependedParametersOnIdSelection( ps, session, pos );
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
 						pos += parameterSpecification.bind( ps, queryParameters, session, pos );
 					}
-					resultCount = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+					resultCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 				}
 				finally {
 					if ( ps != null ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+						session.getJdbcCoordinator().getResourceRegistry().release( ps );
+						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
 			}
@@ -152,16 +153,17 @@ public class TableBasedDeleteHandlerImpl
 			for ( String delete : deletes ) {
 				try {
 					try {
-						ps = session.getTransactionCoordinator()
+						ps = session
 								.getJdbcCoordinator()
 								.getStatementPreparer()
 								.prepareStatement( delete, false );
 						handleAddedParametersOnDelete( ps, session );
-						session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+						session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 					}
 					finally {
 						if ( ps != null ) {
-							session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+							session.getJdbcCoordinator().getResourceRegistry().release( ps );
+							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
 				}

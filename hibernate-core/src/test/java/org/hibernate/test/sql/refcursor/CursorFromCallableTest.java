@@ -102,10 +102,10 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 				Arrays.asList( new NumValue( 1, "Line 1" ), new NumValue( 2, "Line 2" ) ),
 				session.getNamedQuery( "NumValue.getSomeValues" ).list()
 		);
-		JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator();
+		JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getJdbcCoordinator();
 		Assert.assertFalse(
 				"Prepared statement and result set should be released after query execution.",
-				jdbcCoordinator.hasRegisteredResources()
+				jdbcCoordinator.getResourceRegistry().hasRegisteredResources()
 		);
 		session.getTransaction().commit();
 		session.close();
@@ -118,7 +118,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 		session.doWork( new Work() {
 			@Override
 			public void execute(Connection connection) throws SQLException {
-				final JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator();
+				final JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getJdbcCoordinator();
 				final StatementPreparer statementPreparer = jdbcCoordinator.getStatementPreparer();
 				final ResultSetReturn resultSetReturn = jdbcCoordinator.getResultSetReturn();
 				PreparedStatement preparedStatement = null;
@@ -129,7 +129,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 				finally {
 					if ( preparedStatement != null ) {
 						try {
-							jdbcCoordinator.release( preparedStatement );
+							jdbcCoordinator.getResourceRegistry().release( preparedStatement );
 						}
 						catch ( Throwable ignore ) {
 							// ignore...

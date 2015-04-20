@@ -202,17 +202,18 @@ public class NativeSQLQueryPlan implements Serializable {
 			queryParameters.processFilters( this.customQuery.getSQL(), session );
 			final String sql = queryParameters.getFilteredSQL();
 
-			ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 
 			try {
 				int col = 1;
 				col += bindPositionalParameters( ps, queryParameters, col, session );
 				col += bindNamedParameters( ps, queryParameters.getNamedParameters(), col, session );
-				result = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+				result = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+					session.getJdbcCoordinator().getResourceRegistry().release( ps );
+					session.getJdbcCoordinator().afterStatementExecution();
 				}
 			}
 		}

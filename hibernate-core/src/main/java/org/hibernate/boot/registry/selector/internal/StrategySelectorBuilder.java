@@ -74,9 +74,6 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
@@ -92,7 +89,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJ
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
 import org.hibernate.event.internal.EntityCopyAllowedObserver;
 import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
@@ -165,7 +161,7 @@ public class StrategySelectorBuilder {
 		// build the baseline...
 		addDialects( strategySelector );
 		addJtaPlatforms( strategySelector );
-		addTransactionFactories( strategySelector );
+//		addTransactionFactories( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
 		addEntityCopyObserverStrategies( strategySelector );
 
@@ -355,16 +351,16 @@ public class StrategySelectorBuilder {
 		}
 	}
 
-	private void addTransactionFactories(StrategySelectorImpl strategySelector) {
-		strategySelector.registerStrategyImplementor( TransactionFactory.class, JdbcTransactionFactory.SHORT_NAME, JdbcTransactionFactory.class );
-		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.JDBCTransactionFactory", JdbcTransactionFactory.class );
-
-		strategySelector.registerStrategyImplementor( TransactionFactory.class, JtaTransactionFactory.SHORT_NAME, JtaTransactionFactory.class );
-		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.JTATransactionFactory", JtaTransactionFactory.class );
-
-		strategySelector.registerStrategyImplementor( TransactionFactory.class, CMTTransactionFactory.SHORT_NAME, CMTTransactionFactory.class );
-		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.CMTTransactionFactory", CMTTransactionFactory.class );
-	}
+//	private void addTransactionFactories(StrategySelectorImpl strategySelector) {
+//		strategySelector.registerStrategyImplementor( TransactionFactory.class, JdbcTransactionFactory.SHORT_NAME, JdbcTransactionFactory.class );
+//		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.JDBCTransactionFactory", JdbcTransactionFactory.class );
+//
+//		strategySelector.registerStrategyImplementor( TransactionFactory.class, JtaTransactionFactory.SHORT_NAME, JtaTransactionFactory.class );
+//		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.JTATransactionFactory", JtaTransactionFactory.class );
+//
+//		strategySelector.registerStrategyImplementor( TransactionFactory.class, CMTTransactionFactory.SHORT_NAME, CMTTransactionFactory.class );
+//		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.CMTTransactionFactory", CMTTransactionFactory.class );
+//	}
 
 	private void addMultiTableBulkIdStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(

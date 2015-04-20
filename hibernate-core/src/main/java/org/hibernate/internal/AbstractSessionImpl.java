@@ -26,9 +26,11 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.MultiTenancyStrategy;
@@ -38,11 +40,14 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
@@ -53,8 +58,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.transaction.spi.TransactionContext;
-import org.hibernate.engine.transaction.spi.TransactionEnvironment;
+import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -62,6 +66,14 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
+import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.TransactionCoordinatorJtaBuilder;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -70,10 +82,12 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public abstract class AbstractSessionImpl
-		implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext {
+		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner {
 	protected transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
 	private boolean closed;
+
+	protected transient Transaction currentHibernateTransaction;
 
 	protected AbstractSessionImpl(SessionFactoryImpl factory, String tenantIdentifier) {
 		this.factory = factory;
@@ -94,14 +108,11 @@ public abstract class AbstractSessionImpl
 		return factory;
 	}
 
-	@Override
-	public TransactionEnvironment getTransactionEnvironment() {
-		return factory.getTransactionEnvironment();
-	}
+	public abstract boolean shouldAutoJoinTransaction();
 
 	@Override
 	public <T> T execute(final LobCreationContext.Callback<T> callback) {
-		return getTransactionCoordinator().getJdbcCoordinator().coordinateWork(
+		return getJdbcCoordinator().coordinateWork(
 				new WorkExecutorVisitable<T>() {
 					@Override
 					public T accept(WorkExecutor<T> workExecutor, Connection connection) throws SQLException {
@@ -153,7 +164,9 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition) {
-		final ParameterMetadata parameterMetadata = factory.getQueryPlanCache().getSQLParameterMetadata( namedQueryDefinition.getQueryString() );
+		final ParameterMetadata parameterMetadata = factory.getQueryPlanCache().getSQLParameterMetadata(
+				namedQueryDefinition.getQueryString()
+		);
 		final SQLQuery query = new SQLQueryImpl(
 				namedQueryDefinition,
 				this,
@@ -306,6 +319,16 @@ public abstract class AbstractSessionImpl
 	}
 
 	@Override
+	public Transaction getTransaction() throws HibernateException {
+		errorIfClosed();
+		if ( this.currentHibernateTransaction == null || this.currentHibernateTransaction.getStatus() != TransactionStatus.ACTIVE ) {
+			this.currentHibernateTransaction = new TransactionImpl( getTransactionCoordinator() );
+		}
+		getTransactionCoordinator().pulse();
+		return currentHibernateTransaction;
+	}
+
+	@Override
 	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
 			throws HibernateException {
 		return listCustomQuery( getNativeSQLQueryPlan( spec ).getCustomQuery(), queryParameters );
@@ -447,4 +470,153 @@ public abstract class AbstractSessionImpl
 			return connectionProvider.supportsAggressiveRelease();
 		}
 	}
+
+	public class JdbcSessionContextImpl implements JdbcSessionContext {
+		private final SessionFactoryImpl sessionFactory;
+		private final StatementInspector inspector;
+		private final transient ServiceRegistry serviceRegistry;
+		private final transient JdbcObserver jdbcObserver;
+
+		public JdbcSessionContextImpl(SessionFactoryImpl sessionFactory, StatementInspector inspector) {
+			this.sessionFactory = sessionFactory;
+			this.inspector = inspector;
+			this.serviceRegistry = sessionFactory.getServiceRegistry();
+			this.jdbcObserver = new JdbcObserverImpl();
+		}
+
+		@Override
+		public boolean isScrollableResultSetsEnabled() {
+			return settings().isScrollableResultSetsEnabled();
+		}
+
+		@Override
+		public boolean isGetGeneratedKeysEnabled() {
+			return settings().isGetGeneratedKeysEnabled();
+		}
+
+		@Override
+		public int getFetchSize() {
+			return settings().getJdbcFetchSize();
+		}
+
+		@Override
+		public ConnectionReleaseMode getConnectionReleaseMode() {
+			return settings().getConnectionReleaseMode();
+		}
+
+		@Override
+		public ConnectionAcquisitionMode getConnectionAcquisitionMode() {
+			return null;
+		}
+
+		@Override
+		public StatementInspector getStatementInspector() {
+			return inspector;
+		}
+
+		@Override
+		public JdbcObserver getObserver() {
+			return this.jdbcObserver;
+		}
+
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			return this.sessionFactory;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return this.serviceRegistry;
+		}
+
+		private final Settings settings() {
+			return this.sessionFactory.getSettings();
+		}
+	}
+
+	public class JdbcObserverImpl implements JdbcObserver {
+
+		private final transient List<ConnectionObserver> observers;
+
+		public JdbcObserverImpl() {
+			this.observers = new ArrayList<ConnectionObserver>();
+			this.observers.add( new ConnectionObserverStatsBridge( factory ) );
+		}
+
+		@Override
+		public void jdbcConnectionAcquisitionStart() {
+
+		}
+
+		@Override
+		public void jdbcConnectionAcquisitionEnd(Connection connection) {
+			for ( ConnectionObserver observer : observers ) {
+				observer.physicalConnectionObtained( connection );
+			}
+		}
+
+		@Override
+		public void jdbcConnectionReleaseStart() {
+
+		}
+
+		@Override
+		public void jdbcConnectionReleaseEnd() {
+			for ( ConnectionObserver observer : observers ) {
+				observer.physicalConnectionReleased();
+			}
+		}
+
+		@Override
+		public void jdbcPrepareStatementStart() {
+			getEventListenerManager().jdbcPrepareStatementStart();
+		}
+
+		@Override
+		public void jdbcPrepareStatementEnd() {
+			for ( ConnectionObserver observer : observers ) {
+				observer.statementPrepared();
+			}
+			getEventListenerManager().jdbcPrepareStatementEnd();
+		}
+
+		@Override
+		public void jdbcExecuteStatementStart() {
+			getEventListenerManager().jdbcExecuteStatementStart();
+		}
+
+		@Override
+		public void jdbcExecuteStatementEnd() {
+			getEventListenerManager().jdbcExecuteStatementEnd();
+		}
+
+		@Override
+		public void jdbcExecuteBatchStart() {
+			getEventListenerManager().jdbcExecuteBatchStart();
+		}
+
+		@Override
+		public void jdbcExecuteBatchEnd() {
+			getEventListenerManager().jdbcExecuteBatchEnd();
+		}
+	}
+
+	@Override
+	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
+		TransactionCoordinatorBuilder transactionCoordinatorBuilder = factory.getServiceRegistry()
+				.getService( TransactionCoordinatorBuilder.class );
+
+		if ( transactionCoordinatorBuilder instanceof TransactionCoordinatorJtaBuilder ) {
+			((TransactionCoordinatorJtaBuilder) transactionCoordinatorBuilder).setJtaPlatform(
+					factory.getSettings()
+							.getJtaPlatform()
+			).setAutoJoinTransactions( shouldAutoJoinTransaction() ).setPerformJtaThreadTracking(
+					factory.getSettings()
+							.isJtaTrackByThread()
+			).setPreferUserTransactions( factory.getSettings().isPreferUserTransaction() );
+		}
+
+		return transactionCoordinatorBuilder;
+	}
+
 }

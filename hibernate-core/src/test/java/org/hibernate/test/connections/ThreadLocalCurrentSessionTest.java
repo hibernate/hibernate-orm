@@ -32,6 +32,7 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.LocalStatus;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 
 	@Override
 	protected void release(Session session) {
-		if ( session.getTransaction().getLocalStatus() != LocalStatus.ACTIVE ) {
+		if ( session.getTransaction().getStatus() != TransactionStatus.ACTIVE ) {
 			TestableThreadLocalContext.unbind( sessionFactory() );
 			return;
 		}

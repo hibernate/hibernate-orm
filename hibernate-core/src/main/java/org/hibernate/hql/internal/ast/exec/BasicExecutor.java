@@ -93,7 +93,7 @@ public class BasicExecutor implements StatementExecutor {
 
 		try {
 			try {
-				st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+				st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				Iterator paramSpecItr = parameterSpecifications.iterator();
 				int pos = 1;
 				while ( paramSpecItr.hasNext() ) {
@@ -106,11 +106,12 @@ public class BasicExecutor implements StatementExecutor {
 					}
 				}
 
-				return session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+				return session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 			}
 			finally {
 				if ( st != null ) {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+					session.getJdbcCoordinator().getResourceRegistry().release( st );
+					session.getJdbcCoordinator().afterStatementExecution();
 				}
 			}
 		}

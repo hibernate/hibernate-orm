@@ -342,7 +342,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		//		lazy collections during their processing.
 		// For more information, see HHH-2763
 		try {
-			session.getTransactionCoordinator().getJdbcCoordinator().flushBeginning();
+			session.getJdbcCoordinator().flushBeginning();
 			session.getPersistenceContext().setFlushing( true );
 			// we need to lock the collection caches before executing entity inserts/updates in order to
 			// account for bi-directional associations
@@ -351,7 +351,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		}
 		finally {
 			session.getPersistenceContext().setFlushing( false );
-			session.getTransactionCoordinator().getJdbcCoordinator().flushEnding();
+			session.getJdbcCoordinator().flushEnding();
 		}
 	}
 

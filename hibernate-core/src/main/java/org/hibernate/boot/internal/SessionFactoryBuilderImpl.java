@@ -60,12 +60,12 @@ import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -113,6 +113,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 
 /**
  * @author Gail Badner
@@ -532,6 +533,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean wrapResultSetsEnabled;
 
 		private Map<String, SQLFunction> sqlFunctions;
+		private boolean preferUserTransaction;
 
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -683,13 +685,16 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 			final String releaseModeName = ConfigurationHelper.getString( RELEASE_CONNECTIONS, configurationSettings, "auto" );
 			if ( "auto".equals( releaseModeName ) ) {
-				this.connectionReleaseMode = serviceRegistry.getService( TransactionFactory.class ).getDefaultReleaseMode();
+				this.connectionReleaseMode = serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+						.getDefaultConnectionReleaseMode();
 			}
 			else {
 				connectionReleaseMode = ConnectionReleaseMode.parse( releaseModeName );
 			}
 
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
+
+			this.preferUserTransaction = ConfigurationHelper.getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
 		}
 
 		@Override
@@ -947,6 +952,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			return sqlFunctions == null ? Collections.<String, SQLFunction>emptyMap() : sqlFunctions;
 		}
 
+		@Override
+		public boolean isPreferUserTransaction() {
+			return this.preferUserTransaction;
+		}
 	}
 
 	@Override

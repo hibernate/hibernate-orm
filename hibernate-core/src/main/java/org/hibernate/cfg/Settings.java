@@ -329,4 +329,8 @@ public final class Settings {
 		// ugh, used by org.hibernate.cfg.beanvalidation.TypeSafeActivator as part of the BV integrator
 		sessionFactoryOptions.setCheckNullability( enabled );
 	}
+
+	public boolean isPreferUserTransaction() {
+		return sessionFactoryOptions.isPreferUserTransaction();
+	}
 }

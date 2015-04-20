@@ -92,7 +92,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {
 			try {
-				final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+				final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
 					lockable.getVersionType().nullSafeSet( st, version, 1, session );
 					int offset = 2;
@@ -104,7 +104,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
-					final int affected = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+					final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 					// todo:  should this instead check for exactly one row modified?
 					if ( affected < 0 ) {
 						if (factory.getStatistics().isStatisticsEnabled()) {
@@ -115,7 +115,8 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( st );
+					session.getJdbcCoordinator().getResourceRegistry().release( st );
+					session.getJdbcCoordinator().afterStatementExecution();
 				}
 
 			}

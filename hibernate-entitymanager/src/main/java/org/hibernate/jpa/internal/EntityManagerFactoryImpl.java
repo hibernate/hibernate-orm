@@ -66,7 +66,6 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
@@ -98,7 +97,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryImpl.class );
 
-	private final transient SessionFactoryImpl sessionFactory;
+	private final transient SessionFactoryImplementor sessionFactory;
 	private final transient PersistenceUnitTransactionType transactionType;
 	private final transient boolean discardOnClose;
 	private final transient Class sessionInterceptorClass;
@@ -117,7 +116,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			MetadataImplementor metadata,
 			SettingsImpl settings,
 			Map<?, ?> configurationValues) {
-		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
+		this.sessionFactory = sessionFactory;
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
 		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
@@ -290,6 +289,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 	}
 
+	@Override
 	public EntityManager createEntityManager() {
 		return internalCreateEntityManager( SynchronizationType.SYNCHRONIZED, Collections.EMPTY_MAP );
 	}
@@ -309,6 +309,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 	}
 
+	@Override
 	public EntityManager createEntityManager(Map map) {
 		return internalCreateEntityManager( SynchronizationType.SYNCHRONIZED, map );
 	}
@@ -334,16 +335,19 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		);
 	}
 
+	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return criteriaBuilder;
 	}
 
+	@Override
 	public Metamodel getMetamodel() {
 		validateNotClosed();
 		return metamodel;
 	}
 
+	@Override
 	public void close() {
 		// The spec says so, that's why :(
 		validateNotClosed();
@@ -352,11 +356,13 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		EntityManagerFactoryRegistry.INSTANCE.removeEntityManagerFactory(entityManagerFactoryName, this);
 	}
 
+	@Override
 	public Map<String, Object> getProperties() {
 		validateNotClosed();
 		return properties;
 	}
 
+	@Override
 	public Cache getCache() {
 		validateNotClosed();
 
@@ -370,6 +376,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 	}
 
+	@Override
 	public PersistenceUnitUtil getPersistenceUnitUtil() {
 		validateNotClosed();
 		return util;
@@ -514,11 +521,13 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return results;
 	}
 
+	@Override
 	public boolean isOpen() {
 		return ! sessionFactory.isClosed();
 	}
 
-	public SessionFactoryImpl getSessionFactory() {
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
@@ -542,22 +551,26 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			this.sessionFactory = sessionFactory;
 		}
 
+		@Override
 		public boolean contains(Class entityClass, Object identifier) {
 			return sessionFactory.getCache().containsEntity( entityClass, ( Serializable ) identifier );
 		}
 
+		@Override
 		public void evict(Class entityClass, Object identifier) {
 			sessionFactory.getCache().evictEntity( entityClass, ( Serializable ) identifier );
 		}
 
+		@Override
 		public void evict(Class entityClass) {
 			sessionFactory.getCache().evictEntityRegion( entityClass );
 		}
 
+		@Override
 		public void evictAll() {
 			// Evict only the "JPA cache", which is purely defined as the entity regions.
 			sessionFactory.getCache().evictEntityRegions();
-// TODO : if we want to allow an optional clearing of all cache data, the additional calls would be:
+			// TODO : if we want to allow an optional clearing of all cache data, the additional calls would be:
 //			sessionFactory.getCache().evictCollectionRegions();
 //			sessionFactory.getCache().evictQueryRegions();
 		}
@@ -604,7 +617,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 
-
 	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {
 		private final HibernateEntityManagerFactory emf;
 		private transient PersistenceUtilHelper.MetadataCache cache;
@@ -614,31 +626,42 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			this.cache = emf.cache;
 		}
 
+		@Override
 		public boolean isLoaded(Object entity, String attributeName) {
 			// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
-			log.debug("PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead");
+			log.debug(
+					"PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead"
+			);
 			LoadState state = PersistenceUtilHelper.isLoadedWithoutReference( entity, attributeName, cache );
-			if (state == LoadState.LOADED) {
+			if ( state == LoadState.LOADED ) {
 				return true;
 			}
-			else if (state == LoadState.NOT_LOADED ) {
+			else if ( state == LoadState.NOT_LOADED ) {
 				return false;
 			}
 			else {
-				return PersistenceUtilHelper.isLoadedWithReference( entity, attributeName, cache ) != LoadState.NOT_LOADED;
+				return PersistenceUtilHelper.isLoadedWithReference(
+						entity,
+						attributeName,
+						cache
+				) != LoadState.NOT_LOADED;
 			}
 		}
 
+		@Override
 		public boolean isLoaded(Object entity) {
 			// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
-			log.debug("PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead");
+			log.debug(
+					"PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead"
+			);
 			return PersistenceUtilHelper.isLoaded( entity ) != LoadState.NOT_LOADED;
 		}
 
+		@Override
 		public Object getIdentifier(Object entity) {
 			final Class entityClass = Hibernate.getClass( entity );
 			final ClassMetadata classMetadata = emf.getSessionFactory().getClassMetadata( entityClass );
-			if (classMetadata == null) {
+			if ( classMetadata == null ) {
 				throw new IllegalArgumentException( entityClass + " is not an entity" );
 			}
 			//TODO does that work for @IdClass?

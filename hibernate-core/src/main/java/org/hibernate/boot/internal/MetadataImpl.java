@@ -149,6 +149,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
+		final SessionFactoryBuilder defaultBuilder = new SessionFactoryBuilderImpl( this );
+
 		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
 
@@ -156,7 +158,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		List<String> activeFactoryNames = null;
 
 		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories ) {
-			final SessionFactoryBuilder returnedBuilder = discoveredBuilderFactory.getSessionFactoryBuilder( this );
+			final SessionFactoryBuilder returnedBuilder = discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
 					activeFactoryNames = new ArrayList<String>();
@@ -177,7 +179,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			return builder;
 		}
 
-		return new SessionFactoryBuilderImpl( this );
+		return defaultBuilder;
 	}
 
 	@Override

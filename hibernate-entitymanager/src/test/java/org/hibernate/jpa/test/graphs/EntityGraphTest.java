@@ -20,6 +20,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Subgraph;
 import javax.persistence.Table;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -243,6 +248,50 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         assertEquals( result.friends.size(), 1 );
         assertTrue( Hibernate.isInitialized( result.managers) );
         assertEquals( result.managers.size(), 1 );
+
+        em.getTransaction().commit();
+        em.close();
+    }
+
+    @Test
+    @TestForIssue(jiraKey = "HHH-9735")
+    public void loadIsMemeberQueriedCollection() {
+
+        EntityManager em = getOrCreateEntityManager();
+        em.getTransaction().begin();
+
+        Bar bar = new Bar();
+        em.persist( bar );
+
+        Foo foo = new Foo();
+        foo.bar = bar;
+        bar.foos.add(foo);
+        em.persist( foo );
+
+        em.getTransaction().commit();
+        em.clear();
+
+        em.getTransaction().begin();
+        foo = em.find(Foo.class, foo.id);
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Bar> cq = cb.createQuery(Bar.class);
+        Root<Bar> from = cq.from(Bar.class);
+
+        Expression<Set<Foo>> foos = from.get("foos");
+
+        cq.where(cb.isMember(foo, foos));
+
+        TypedQuery<Bar> query = em.createQuery(cq);
+
+        EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
+        barGraph.addAttributeNodes("foos");
+        query.setHint("javax.persistence.loadgraph", barGraph);
+
+        Bar result = query.getSingleResult();
+
+        assertTrue( Hibernate.isInitialized( result ) );
+        assertTrue( Hibernate.isInitialized( result.foos ) );
 
         em.getTransaction().commit();
         em.close();

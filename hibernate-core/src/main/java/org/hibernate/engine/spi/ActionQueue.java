@@ -371,15 +371,15 @@ public class ActionQueue {
 	 * Check whether any insertion or deletion actions are currently queued.
 	 *
 	 * @return True if insertions or deletions are currently queued; false otherwise.
-	 */=
+	 */
 	public boolean areInsertionsOrDeletionsQueued() {
 		return ( insertions.size() > 0 || !(unresolvedInsertions == null || unresolvedInsertions.isEmpty()) || deletions.size() > 0 || orphanRemovals.size() > 0 );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private static boolean areTablesToUpdated(List actions, Set tableSpaces) {
+	private static boolean areTablesToUpdated(java.util.Collection actions, Set tableSpaces) {
 		if(!actions.isEmpty()) {
-			for (Executable action : actions) {
+			for (Executable action : (Iterable<Executable>)actions) {
 				final Serializable[] spaces = action.getPropertySpaces();
 				for (Serializable space : spaces) {
 					if (tableSpaces.contains(space)) {

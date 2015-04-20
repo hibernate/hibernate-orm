@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.hibernate.mapping.Collection;
 import org.jboss.logging.Logger;
 
 import org.hibernate.PropertyValueException;
@@ -100,7 +101,7 @@ public class UnresolvedEntityInsertActions {
 	 * Returns the unresolved insert actions.
 	 * @return the unresolved insert actions.
 	 */
-	public Iterable<AbstractEntityInsertAction> getDependentEntityInsertActions() {
+	public java.util.Collection<AbstractEntityInsertAction> getDependentEntityInsertActions() {
 		return dependenciesByAction.keySet();
 	}
 

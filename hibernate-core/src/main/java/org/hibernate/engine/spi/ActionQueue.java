@@ -115,32 +115,38 @@ public class ActionQueue {
 	}
 
 	private void init() {
-		insertions = new ArrayList<AbstractEntityInsertAction>( INIT_QUEUE_LIST_SIZE );
-		deletions = new ArrayList<EntityDeleteAction>( INIT_QUEUE_LIST_SIZE );
-		updates = new ArrayList( INIT_QUEUE_LIST_SIZE );
-
-		collectionCreations = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionRemovals = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionUpdates = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionQueuedOps = new ArrayList( INIT_QUEUE_LIST_SIZE );
-
-		orphanRemovals = new ArrayList<OrphanRemovalAction>( INIT_QUEUE_LIST_SIZE );
 
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 	}
 
 	public void clear() {
-		updates.clear();
-		insertions.clear();
-		deletions.clear();
+		if(updates != null) {
+			updates.clear();
+		}
+		if(insertions != null) {
+			insertions.clear();
+		}
+		if(deletions != null) {
+			deletions.clear();
+		}
 
-		collectionCreations.clear();
-		collectionRemovals.clear();
-		collectionUpdates.clear();
-		collectionQueuedOps.clear();
+		if(collectionCreations != null) {
+			collectionCreations.clear();
+		}
+		if(collectionRemovals != null) {
+			collectionRemovals.clear();
+		}
+		if(collectionUpdates != null) {
+			collectionUpdates.clear();
+		}
+		if(collectionQueuedOps != null) {
+			collectionQueuedOps.clear();
+		}
 
-		orphanRemovals.clear();
+		if(orphanRemovals != null) {
+			orphanRemovals.clear();
+		}
 
 		if(unresolvedInsertions != null) {
 			unresolvedInsertions.clear();
@@ -155,36 +161,57 @@ public class ActionQueue {
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityDeleteAction action) {
+		if(deletions == null) {
+			deletions = new ArrayList<EntityDeleteAction>(INIT_QUEUE_LIST_SIZE);
+		}
 		deletions.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(OrphanRemovalAction action) {
+		if(orphanRemovals == null) {
+			orphanRemovals = new ArrayList<OrphanRemovalAction>(INIT_QUEUE_LIST_SIZE);
+		}
 		orphanRemovals.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityUpdateAction action) {
+		if(updates == null) {
+			updates = new ArrayList(INIT_QUEUE_LIST_SIZE);
+		}
 		updates.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionRecreateAction action) {
+		if(collectionCreations == null) {
+			collectionCreations = new ArrayList(INIT_QUEUE_LIST_SIZE);
+		}
 		collectionCreations.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionRemoveAction action) {
+		if(collectionRemovals == null) {
+			collectionRemovals = new ArrayList();
+		}
 		collectionRemovals.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionUpdateAction action) {
+		if(collectionUpdates == null) {
+			collectionUpdates = new ArrayList();
+		}
 		collectionUpdates.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(QueuedOperationCollectionAction action) {
+		if(collectionQueuedOps == null) {
+			collectionQueuedOps = new ArrayList();
+		}
 		collectionQueuedOps.add( action );
 	}
 
@@ -233,7 +260,10 @@ public class ActionQueue {
 			execute( insert );
 		}
 		else {
-			LOG.trace( "Adding resolved non-early insert action." );
+			if(insertions == null) {
+				insertions = new ArrayList(INIT_QUEUE_LIST_SIZE);
+			}
+			LOG.trace("Adding resolved non-early insert action.");
 			insertions.add( insert );
 		}
 		insert.makeEntityManaged();
@@ -373,11 +403,14 @@ public class ActionQueue {
 	 * @return True if insertions or deletions are currently queued; false otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return ( insertions.size() > 0 || !(unresolvedInsertions == null || unresolvedInsertions.isEmpty()) || deletions.size() > 0 || orphanRemovals.size() > 0 );
+		return ( size(insertions) > 0 || !(unresolvedInsertions == null || unresolvedInsertions.isEmpty()) || size(deletions) > 0 || size(orphanRemovals) > 0 );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	private static boolean areTablesToUpdated(java.util.Collection actions, Set tableSpaces) {
+		if(actions == null) {
+			return false;
+		}
 		if(!actions.isEmpty()) {
 			for (Executable action : (Iterable<Executable>)actions) {
 				final Serializable[] spaces = action.getPropertySpaces();
@@ -393,7 +426,7 @@ public class ActionQueue {
 	}
 
 	private void executeActions(List list) throws HibernateException {
-		if(!list.isEmpty()) {
+		if(!empty(list)) {
 			for (Object aList : list) {
 				execute((Executable) aList);
 			}
@@ -425,7 +458,7 @@ public class ActionQueue {
 
 	@SuppressWarnings({ "unchecked" })
 	private void prepareActions(List queue) throws HibernateException {
-		if(!queue.isEmpty()) {
+		if(!empty(queue)) {
 			for (Executable executable : (List<Executable>) queue) {
 				executable.beforeExecutions();
 			}
@@ -440,41 +473,41 @@ public class ActionQueue {
 	@Override
     public String toString() {
 		return new StringBuilder()
-				.append( "ActionQueue[insertions=" ).append( insertions )
-				.append( " updates=" ).append( updates )
-				.append( " deletions=" ).append( deletions )
-				.append( " orphanRemovals=" ).append( orphanRemovals )
-				.append( " collectionCreations=" ).append( collectionCreations )
-				.append( " collectionRemovals=" ).append( collectionRemovals )
-				.append( " collectionUpdates=" ).append( collectionUpdates )
-				.append( " collectionQueuedOps=" ).append( collectionQueuedOps )
+				.append( "ActionQueue[insertions=" ).append( listToString(insertions) )
+				.append( " updates=" ).append( listToString(updates) )
+				.append( " deletions=" ).append( listToString(deletions) )
+				.append( " orphanRemovals=" ).append( listToString(orphanRemovals) )
+				.append( " collectionCreations=" ).append( listToString(collectionCreations) )
+				.append( " collectionRemovals=" ).append( listToString(collectionRemovals) )
+				.append( " collectionUpdates=" ).append( listToString(collectionUpdates) )
+				.append( " collectionQueuedOps=" ).append( listToString(collectionQueuedOps) )
 				.append( " unresolvedInsertDependencies=" ).append( unresolvedInsertions )
 				.append( "]" )
 				.toString();
 	}
 
 	public int numberOfCollectionRemovals() {
-		return collectionRemovals.size();
+		return size(collectionRemovals);
 	}
 
 	public int numberOfCollectionUpdates() {
-		return collectionUpdates.size();
+		return size(collectionUpdates);
 	}
 
 	public int numberOfCollectionCreations() {
-		return collectionCreations.size();
+		return size(collectionCreations);
 	}
 
 	public int numberOfDeletions() {
-		return deletions.size() + orphanRemovals.size();
+		return size(deletions) + size(orphanRemovals);
 	}
 
 	public int numberOfUpdates() {
-		return updates.size();
+		return size(updates);
 	}
 
 	public int numberOfInsertions() {
-		return insertions.size();
+		return size(insertions);
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -492,7 +525,9 @@ public class ActionQueue {
 	public void sortActions() {
 		if ( session.getFactory().getSettings().isOrderUpdatesEnabled() ) {
 			//sort the updates by pk
-			java.util.Collections.sort( updates );
+			if(updates != null) {
+				java.util.Collections.sort(updates);
+			}
 		}
 		if ( session.getFactory().getSettings().isOrderInsertsEnabled() ) {
 			sortInsertActions();
@@ -514,18 +549,31 @@ public class ActionQueue {
 
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public ArrayList cloneDeletions() {
+		if(deletions == null) {
+			return new ArrayList();
+		}
 		return ( ArrayList ) deletions.clone();
 	}
 
 	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
-		collectionCreations.clear();
-		collectionUpdates.clear();
-		collectionQueuedOps.clear();
-		updates.clear();
+		if(collectionCreations != null) {
+			collectionCreations.clear();
+		}
+		if(collectionUpdates != null) {
+			collectionUpdates.clear();
+		}
+		if(collectionQueuedOps != null) {
+			collectionQueuedOps.clear();
+		}
+		if(updates != null) {
+			updates.clear();
+		}
 		// collection deletions are a special case since update() can add
 		// deletions of collections not loaded by the session.
-		for ( int i = collectionRemovals.size() - 1; i >= previousCollectionRemovalSize; i-- ) {
-			collectionRemovals.remove( i );
+		if(collectionRemovals != null) {
+			for (int i = collectionRemovals.size() - 1; i >= previousCollectionRemovalSize; i--) {
+				collectionRemovals.remove(i);
+			}
 		}
 	}
 
@@ -539,15 +587,15 @@ public class ActionQueue {
 	}
 
 	public boolean hasAnyQueuedActions() {
-		return updates.size() > 0 ||
-				insertions.size() > 0 ||
+		return size(updates) > 0 ||
+				size(insertions) > 0 ||
 				!(unresolvedInsertions == null ||  unresolvedInsertions.isEmpty()) ||
-				deletions.size() > 0 ||
-				orphanRemovals.size() > 0 ||
-				collectionUpdates.size() > 0 ||
-				collectionQueuedOps.size() > 0 ||
-				collectionRemovals.size() > 0 ||
-				collectionCreations.size() > 0;
+				size(deletions) > 0 ||
+				size(orphanRemovals) > 0 ||
+				size(collectionUpdates) > 0 ||
+				size(collectionQueuedOps) > 0 ||
+				size(collectionRemovals) > 0 ||
+				size(collectionCreations) > 0;
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
@@ -557,18 +605,22 @@ public class ActionQueue {
 				rescuedEntity = initializer.getImplementation( session );
 			}
 		}
-		for ( int i = 0; i < deletions.size(); i++ ) {
-			EntityDeleteAction action = deletions.get( i );
-			if ( action.getInstance() == rescuedEntity ) {
-				deletions.remove( i );
-				return;
+		if(deletions != null) {
+			for (int i = 0; i < deletions.size(); i++) {
+				EntityDeleteAction action = deletions.get(i);
+				if (action.getInstance() == rescuedEntity) {
+					deletions.remove(i);
+					return;
+				}
 			}
 		}
-		for ( int i = 0; i < orphanRemovals.size(); i++ ) {
-			EntityDeleteAction action = orphanRemovals.get( i );
-			if ( action.getInstance() == rescuedEntity ) {
-				orphanRemovals.remove( i );
-				return;
+		if(orphanRemovals != null) {
+			for (int i = 0; i < orphanRemovals.size(); i++) {
+				EntityDeleteAction action = orphanRemovals.get(i);
+				if (action.getInstance() == rescuedEntity) {
+					orphanRemovals.remove(i);
+					return;
+				}
 			}
 		}
 		throw new AssertionFailure( "Unable to perform un-delete for instance " + entry.getEntityName() );
@@ -589,56 +641,56 @@ public class ActionQueue {
 		}
 		unresolvedInsertions.serialize( oos );
 
-		int queueSize = insertions.size();
+		int queueSize = size(insertions);
 		LOG.tracev( "Starting serialization of [{0}] insertions entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( insertions.get( i ) );
 		}
 
-		queueSize = deletions.size();
+		queueSize = size(deletions);
 		LOG.tracev( "Starting serialization of [{0}] deletions entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( deletions.get( i ) );
 		}
 
-		queueSize = orphanRemovals.size();
+		queueSize = size(orphanRemovals);
 		LOG.tracev( "Starting serialization of [{0}] orphanRemovals entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( orphanRemovals.get( i ) );
 		}
 
-		queueSize = updates.size();
+		queueSize = size(updates);
 		LOG.tracev( "Starting serialization of [{0}] updates entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( updates.get( i ) );
 		}
 
-		queueSize = collectionUpdates.size();
+		queueSize = size(collectionUpdates);
 		LOG.tracev( "Starting serialization of [{0}] collectionUpdates entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionUpdates.get( i ) );
 		}
 
-		queueSize = collectionRemovals.size();
+		queueSize = size(collectionRemovals);
 		LOG.tracev( "Starting serialization of [{0}] collectionRemovals entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionRemovals.get( i ) );
 		}
 
-		queueSize = collectionCreations.size();
+		queueSize = size(collectionCreations);
 		LOG.tracev( "Starting serialization of [{0}] collectionCreations entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionCreations.get( i ) );
 		}
 
-		queueSize = collectionQueuedOps.size();
+		queueSize = size(collectionQueuedOps);
 		LOG.tracev( "Starting serialization of [{0}] collectionQueuedOps entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
@@ -842,7 +894,7 @@ public class ActionQueue {
 
 		public InsertActionSorter() {
 			//optimize the hash size to eliminate a rehash.
-			entityBatchNumber = new HashMap<Object,Integer>( insertions.size() + 1, 1.0f );
+			entityBatchNumber = new HashMap<Object,Integer>( size(insertions) + 1, 1.0f );
 		}
 
 		/**
@@ -851,40 +903,46 @@ public class ActionQueue {
 		@SuppressWarnings({ "unchecked", "UnnecessaryBoxing" })
 		public void sort() {
 			// the list of entity names that indicate the batch number
-			for ( EntityInsertAction action : (List<EntityInsertAction>) insertions ) {
-				// remove the current element from insertions. It will be added back later.
-				String entityName = action.getEntityName();
+			if(!empty(insertions)) {
+				for (EntityInsertAction action : (List<EntityInsertAction>) insertions) {
+					// remove the current element from insertions. It will be added back later.
+					String entityName = action.getEntityName();
 
-				// the entity associated with the current action.
-				Object currentEntity = action.getInstance();
+					// the entity associated with the current action.
+					Object currentEntity = action.getInstance();
 
-				Integer batchNumber;
-				if ( latestBatches.containsKey( entityName ) ) {
-					// There is already an existing batch for this type of entity.
-					// Check to see if the latest batch is acceptable.
-					batchNumber = findBatchNumber( action, entityName );
+					Integer batchNumber;
+					if (latestBatches.containsKey(entityName)) {
+						// There is already an existing batch for this type of entity.
+						// Check to see if the latest batch is acceptable.
+						batchNumber = findBatchNumber(action, entityName);
+					} else {
+						// add an entry for this type of entity.
+						// we can be assured that all referenced entities have already
+						// been processed,
+						// so specify that this entity is with the latest batch.
+						// doing the batch number before adding the name to the list is
+						// a faster way to get an accurate number.
+
+						batchNumber = actionBatches.size();
+						latestBatches.put(entityName, batchNumber);
+					}
+					entityBatchNumber.put(currentEntity, batchNumber);
+					addToBatch(batchNumber, action);
 				}
-				else {
-					// add an entry for this type of entity.
-					// we can be assured that all referenced entities have already
-					// been processed,
-					// so specify that this entity is with the latest batch.
-					// doing the batch number before adding the name to the list is
-					// a faster way to get an accurate number.
-
-					batchNumber = actionBatches.size();
-					latestBatches.put( entityName, batchNumber );
-				}
-				entityBatchNumber.put( currentEntity, batchNumber );
-				addToBatch( batchNumber, action );
+				insertions.clear();
 			}
-			insertions.clear();
 
-			// now rebuild the insertions list. There is a batch for each entry in the name list.
-			for ( int i = 0; i < actionBatches.size(); i++ ) {
-				List<EntityInsertAction> batch = actionBatches.get( i );
-				for ( EntityInsertAction action : batch ) {
-					insertions.add( action );
+			if(!actionBatches.isEmpty()) {
+				if(insertions == null) {
+					insertions = new ArrayList(INIT_QUEUE_LIST_SIZE);
+				}
+				// now rebuild the insertions list. There is a batch for each entry in the name list.
+				for (int i = 0; i < actionBatches.size(); i++) {
+					List<EntityInsertAction> batch = actionBatches.get(i);
+					for (EntityInsertAction action : batch) {
+						insertions.add(action);
+					}
 				}
 			}
 		}
@@ -945,5 +1003,26 @@ public class ActionQueue {
 			actions.add( action );
 		}
 
+	}
+
+	private int size(List<?> list) {
+		if(list == null) {
+			return 0;
+		}
+		return list.size();
+	}
+
+	private boolean empty(List<?> list) {
+		if(list == null) {
+			return true;
+		}
+		return list.isEmpty();
+	}
+
+	public String listToString(List<?> list) {
+		if(list == null) {
+			return "[]";
+		}
+		return list.toString();
 	}
 }

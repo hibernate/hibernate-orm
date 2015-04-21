@@ -26,22 +26,14 @@ package org.hibernate.boot.spi;
 import org.hibernate.boot.SessionFactoryBuilder;
 
 /**
- * An extension point for integrators that wish to hook into the process of how a SessionFactory
- * is built.  Intended as a "discoverable service" ({@link java.util.ServiceLoader}).  There can
- * be at most one implementation discovered that returns a non-null SessionFactoryBuilder.
+ * A {@link SessionFactoryBuilder} extension geared towards integrators of Hibernate ORM.
  *
- * @author Steve Ebersole
+ * @author Gunnar Morling
  */
-public interface SessionFactoryBuilderFactory {
+public interface SessionFactoryBuilderIntegrator extends SessionFactoryBuilder {
+
 	/**
-	 * The contract method.  Return the SessionFactoryBuilder.  May return {@code null}
-	 *
-	 * @param metadata The metadata from which we will be building a SessionFactory.
-	 * @param defaultBuilder The default SessionFactoryBuilder instance.  If the SessionFactoryBuilder being built
-	 * here needs to use this passed SessionFactoryBuilder instance it is the responsibility of the built
-	 * SessionFactoryBuilder impl to delegate configuration calls to the passed default impl.
-	 *
-	 * @return The SessionFactoryBuilder, or {@code null}
+	 * Applies the given integrator-specific options.
 	 */
-	public SessionFactoryBuilder getSessionFactoryBuilder(MetadataImplementor metadata, SessionFactoryBuilderIntegrator defaultBuilder);
+	SessionFactoryBuilderIntegrator applyIntegratorOptions(Object integratorOptions);
 }

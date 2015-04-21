@@ -371,7 +371,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void release(Statement statement) {
 		LOG.tracev( "Releasing statement [{0}]", statement );
 		Set<ResultSet> resultSets = xref.get( statement );
-		if ( resultSets != null ) {
+		if ( resultSets != null && !resultSets.isEmpty()) {
 			for ( ResultSet resultSet : resultSets ) {
 				close( resultSet );
 			}
@@ -379,7 +379,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		xref.remove( statement );
 		close( statement );
-		
+
 		afterStatementExecution();
 	}
 
@@ -474,10 +474,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	protected void closeAll(Set<ResultSet> resultSets) {
-		for ( ResultSet resultSet : resultSets ) {
-			close( resultSet );
+		if (!resultSets.isEmpty()) {
+			for (ResultSet resultSet : resultSets) {
+				close(resultSet);
+			}
+			resultSets.clear();
 		}
-		resultSets.clear();
 	}
 
 	@SuppressWarnings({ "unchecked" })

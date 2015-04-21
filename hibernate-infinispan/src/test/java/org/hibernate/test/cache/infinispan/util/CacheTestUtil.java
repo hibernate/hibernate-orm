@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl.SessionFactoryOptionsImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;

@@ -204,7 +204,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	@Entity
 	public static class CustomerOrder {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public Long id;
 
 		@OneToOne
@@ -220,7 +220,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	@Entity
 	public static class Address {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public Long id;
 
 		public String city;
@@ -229,7 +229,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	@Entity
 	public static class OrderPosition {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public Long id;
 
 		public Integer amount;
@@ -242,7 +242,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	@Entity
 	public static class Product {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public Long id;
 
 		public String productName;

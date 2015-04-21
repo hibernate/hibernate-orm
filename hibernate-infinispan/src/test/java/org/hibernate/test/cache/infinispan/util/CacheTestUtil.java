@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -103,7 +104,11 @@ public class CacheTestUtil {
             regionFactory = (InfinispanRegionFactory) clazz.newInstance();
          }
 
-         final SessionFactoryOptionsImpl sessionFactoryOptions = new SessionFactoryOptionsImpl( (StandardServiceRegistry) serviceRegistry );
+         final SessionFactoryOptionsImpl sessionFactoryOptions = new SessionFactoryOptionsImpl(
+                 new SessionFactoryBuilderImpl.SessionFactoryOptionsStateStandardImpl(
+                         (StandardServiceRegistry) serviceRegistry
+                 )
+         );
          final Settings settings = new Settings( sessionFactoryOptions );
          final Properties properties = toProperties( cfgService.getSettings() );
 

@@ -334,24 +334,30 @@ public final class TransactionCoordinatorImpl implements TransactionCoordinator 
 
 	@Override
 	public void sendAfterTransactionBeginNotifications(TransactionImplementor hibernateTransaction) {
-		for ( TransactionObserver observer : observers ) {
-			observer.afterBegin( currentHibernateTransaction );
+		if(!observers.isEmpty()) {
+			for (TransactionObserver observer : observers) {
+				observer.afterBegin(currentHibernateTransaction);
+			}
 		}
 	}
 
 	@Override
 	public void sendBeforeTransactionCompletionNotifications(TransactionImplementor hibernateTransaction) {
 		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-		for ( TransactionObserver observer : observers ) {
-			observer.beforeCompletion( hibernateTransaction );
+		if(!observers.isEmpty()) {
+			for (TransactionObserver observer : observers) {
+				observer.beforeCompletion(hibernateTransaction);
+			}
 		}
 	}
 
 	@Override
 	public void sendAfterTransactionCompletionNotifications(TransactionImplementor hibernateTransaction, int status) {
 		final boolean successful = JtaStatusHelper.isCommitted( status );
-		for ( TransactionObserver observer : new ArrayList<TransactionObserver>( observers ) ) {
-			observer.afterCompletion( successful, hibernateTransaction );
+		if(!observers.isEmpty()) {
+			for (TransactionObserver observer : new ArrayList<TransactionObserver>(observers)) {
+				observer.afterCompletion(successful, hibernateTransaction);
+			}
 		}
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );
 	}

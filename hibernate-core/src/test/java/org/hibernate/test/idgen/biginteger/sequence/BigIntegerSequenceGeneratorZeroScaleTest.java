@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,49 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+
 package org.hibernate.test.idgen.biginteger.sequence;
 
 import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 
 /**
- * @author Steve Ebersole
+ * This test explicitly maps scale="0" for the sequence column. It works around the arithmetic
+ * overflow that happens because the generated column cannot accommodate the SQL Server
+ * sequence that starts, by default, with the value, -9,223,372,036,854,775,808.
+ *
+ * @author Gail Badner
  */
 @RequiresDialectFeature( value = DialectChecks.SupportsSequences.class )
-public class BigIntegerSequenceGeneratorTest extends BaseCoreFunctionalTestCase {
+public class BigIntegerSequenceGeneratorZeroScaleTest extends BigIntegerSequenceGeneratorTest {
+
 	public String[] getMappings() {
-		return new String[] { "idgen/biginteger/sequence/Mapping.hbm.xml" };
+		return new String[] { "idgen/biginteger/sequence/ZeroScaleMapping.hbm.xml" };
 	}
 
 	@Test
-	@SkipForDialect( SQLServer2012Dialect.class )
+	@TestForIssue( jiraKey = "HHH-9250")
 	public void testBasics() {
-		Session s = openSession();
-		s.beginTransaction();
-		Entity entity = new Entity( "BigInteger + sequence #1" );
-		s.save( entity );
-		Entity entity2 = new Entity( "BigInteger + sequence #2" );
-		s.save( entity2 );
-		s.getTransaction().commit();
-		s.close();
-
-// hsqldb defines different behavior for the initial select from a sequence
-// then say oracle
-//		assertEquals( BigInteger.valueOf( 1 ), entity.getId() );
-//		assertEquals( BigInteger.valueOf( 2 ), entity2.getId() );
-
-		s = openSession();
-		s.beginTransaction();
-		s.delete( entity );
-		s.delete( entity2 );
-		s.getTransaction().commit();
-		s.close();
-
+		super.testBasics();
 	}
+
 }

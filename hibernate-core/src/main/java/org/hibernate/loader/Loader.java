@@ -1132,7 +1132,7 @@ public abstract class Loader {
 		if ( hydratedObjects != null ) {
 			for ( Object hydratedObject : hydratedObjects ) {
 				TwoPhaseLoad.postLoad( hydratedObject, session, post );
-				if ( afterLoadActions != null ) {
+				if ( afterLoadActions != null && !afterLoadActions.isEmpty() ) {
 					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
 						final EntityEntry entityEntry = session.getPersistenceContext().getEntry( hydratedObject );
 						if ( entityEntry == null ) {

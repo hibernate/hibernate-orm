@@ -80,6 +80,8 @@ import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.backend.store.internal.ResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
@@ -549,16 +551,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 		settings.setTransactionType( txnType );
-		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_STRATEGY );
+		boolean hasTxStrategy = configurationValues.containsKey( Environment.TRANSACTION_COORDINATOR_STRATEGY );
 		if ( hasTxStrategy ) {
-			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_STRATEGY );
+			LOG.overridingTransactionStrategyDangerous( Environment.TRANSACTION_COORDINATOR_STRATEGY );
 		}
 		else {
 			if ( txnType == PersistenceUnitTransactionType.JTA ) {
-				ssrBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class );
+				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class );
 			}
 			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				ssrBuilder.applySetting( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class );
+				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, ResourceLocalTransactionCoordinatorBuilderImpl.class );
 			}
 		}
 	}

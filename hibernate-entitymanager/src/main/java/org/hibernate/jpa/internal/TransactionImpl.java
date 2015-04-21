@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.jpa.spi.AbstractEntityManagerImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
  * @author Gavin King
@@ -54,7 +55,7 @@ public class TransactionImpl implements EntityTransaction {
 	public void begin() {
 		try {
 			rollbackOnly = false;
-			if ( tx != null && tx.isActive() ) {
+			if ( tx != null && tx.getStatus() == TransactionStatus.ACTIVE ) {
 				throw new IllegalStateException( "Transaction already active" );
 			}
 			//entityManager.adjustFlushMode();
@@ -66,7 +67,7 @@ public class TransactionImpl implements EntityTransaction {
 	}
 
 	public void commit() {
-		if ( tx == null || !tx.isActive() ) {
+		if ( tx == null || tx.getStatus() != TransactionStatus.ACTIVE ) {
 			throw new IllegalStateException( "Transaction not active" );
 		}
 		if ( rollbackOnly ) {
@@ -101,7 +102,7 @@ public class TransactionImpl implements EntityTransaction {
 	}
 
 	public void rollback() {
-		if ( tx == null || !tx.isActive() ) {
+		if ( tx == null || tx.getStatus() != TransactionStatus.ACTIVE ) {
 			throw new IllegalStateException( "Transaction not active" );
 		}
 		try {
@@ -136,7 +137,7 @@ public class TransactionImpl implements EntityTransaction {
 
 	public boolean isActive() {
 		try {
-			return tx != null && tx.isActive();
+			return tx != null && tx.getStatus() == TransactionStatus.ACTIVE;
 		}
 		catch (RuntimeException e) {
 			throw new PersistenceException( "unexpected error when checking transaction status", e );

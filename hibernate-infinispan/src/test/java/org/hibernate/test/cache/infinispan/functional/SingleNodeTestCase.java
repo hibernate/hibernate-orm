@@ -23,9 +23,15 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
-import java.util.Map;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
+import java.util.Map;
+
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.test.fwk.TestCacheManagerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -33,17 +39,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+
+import org.junit.Before;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
-import org.junit.Before;
-
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * @author Galder Zamarreño
@@ -92,8 +94,8 @@ public abstract class SingleNodeTestCase extends BaseNonConfigCoreFunctionalTest
 		return TestInfinispanRegionFactory.class;
 	}
 
-	protected Class<? extends TransactionFactory> getTransactionFactoryClass() {
-		return CMTTransactionFactory.class;
+	protected Class<? extends TransactionCoordinatorBuilder> getTransactionCoordinatorBuilder() {
+		return JtaTransactionCoordinatorBuilderImpl.class;
 	}
 
 	protected Class<? extends ConnectionProvider> getConnectionProviderClass() {
@@ -121,7 +123,7 @@ public abstract class SingleNodeTestCase extends BaseNonConfigCoreFunctionalTest
 		if ( getJtaPlatform() != null ) {
 			settings.put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
 		}
-		settings.put( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		settings.put( Environment.TRANSACTION_COORDINATOR_STRATEGY, getTransactionCoordinatorBuilder().getName() );
 		settings.put( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 	}
 

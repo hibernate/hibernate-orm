@@ -91,8 +91,7 @@ public interface TransactionCoordinator {
 	/**
 	 * Adds an observer to the coordinator.
 	 * <p/>
-	 * Unlike synchronizations added to the {@link #getSynchronizationRegistry() registry}, observers are not to be
-	 * cleared on transaction completion.
+	 * observers are not to be cleared on transaction completion.
 	 *
 	 * @param observer The observer to add.
 	 */

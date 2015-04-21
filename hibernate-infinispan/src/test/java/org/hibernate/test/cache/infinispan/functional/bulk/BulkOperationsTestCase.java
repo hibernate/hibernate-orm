@@ -35,7 +35,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -75,8 +76,9 @@ public class BulkOperationsTestCase extends BaseNonConfigCoreFunctionalTestCase 
 		return SingleNodeTestCase.TestInfinispanRegionFactory.class;
 	}
 
-	protected Class<? extends TransactionFactory> getTransactionFactoryClass() {
-		return CMTTransactionFactory.class;
+
+	protected Class<? extends TransactionCoordinatorBuilder> getTransactionCoordinatorBuilder() {
+		return JtaTransactionCoordinatorBuilderImpl.class;
 	}
 
 	protected Class<? extends ConnectionProvider> getConnectionProviderClass() {
@@ -96,7 +98,7 @@ public class BulkOperationsTestCase extends BaseNonConfigCoreFunctionalTestCase 
 		settings.put( Environment.USE_QUERY_CACHE, "false" );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
-		settings.put( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		settings.put( Environment.TRANSACTION_COORDINATOR_STRATEGY, getTransactionCoordinatorBuilder().getName() );
 		settings.put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
 		settings.put( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 	}

@@ -46,7 +46,9 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryBuilderIntegrator;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.boot.spi.SessionFactoryOptionsIntegrator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -69,7 +71,6 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
@@ -118,7 +119,7 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
+public class SessionFactoryBuilderImpl implements SessionFactoryBuilder, SessionFactoryBuilderIntegrator {
 	private static final Logger log = Logger.getLogger( SessionFactoryBuilderImpl.class );
 
 	private final MetadataImplementor metadata;
@@ -432,6 +433,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	}
 
 	@Override
+	public SessionFactoryBuilderIntegrator applyIntegratorOptions(Object integratorOptions) {
+		this.options.integratorOptions = integratorOptions;
+		return this;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T extends SessionFactoryBuilder> T unwrap(Class<T> type) {
 		return (T) this;
@@ -443,7 +450,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		return new SessionFactoryImpl( metadata, options );
 	}
 
-	public static class SessionFactoryOptionsImpl implements SessionFactoryOptions {
+	public static class SessionFactoryOptionsImpl implements SessionFactoryOptions, SessionFactoryOptionsIntegrator {
 		private final StandardServiceRegistry serviceRegistry;
 
 		// integration
@@ -520,6 +527,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 
 		private Map<String, SQLFunction> sqlFunctions;
 
+		// SessionFactoryOptionsIntegrator
+		private Object integratorOptions;
 
 		public SessionFactoryOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -936,6 +945,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		public void setCheckNullability(boolean enabled) {
 			this.checkNullability = enabled;
 		}
-	}
 
+		@Override
+		public Object getIntegratorOptions() {
+			return integratorOptions;
+		}
+	}
 }

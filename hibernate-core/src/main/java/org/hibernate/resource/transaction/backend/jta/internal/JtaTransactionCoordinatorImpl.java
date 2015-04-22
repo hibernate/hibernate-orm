@@ -134,6 +134,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			return;
 		}
 
+		if ( physicalTransactionDelegate.getStatus() != TransactionStatus.ACTIVE ) {
+			return;
+		}
+
 		joinJtaTransaction();
 	}
 

@@ -107,8 +107,8 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
 
 		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator );
+		this.currentHibernateTransaction = getTransaction();
 		this.timestamp = timestamp;
-
 	}
 
 	@Override

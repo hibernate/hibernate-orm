@@ -89,7 +89,7 @@ public abstract class AbstractSessionImpl
 	private final String tenantIdentifier;
 	private boolean closed;
 
-	protected transient TransactionImpl currentHibernateTransaction;
+	protected transient Transaction currentHibernateTransaction;
 
 	protected AbstractSessionImpl(SessionFactoryImpl factory, String tenantIdentifier) {
 		this.factory = factory;

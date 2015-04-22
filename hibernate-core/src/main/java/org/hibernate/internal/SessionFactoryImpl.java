@@ -23,6 +23,8 @@
  */
 package org.hibernate.internal;
 
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -41,8 +43,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
@@ -61,6 +63,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
@@ -95,7 +98,6 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jndi.spi.JndiService;
@@ -112,7 +114,6 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
-import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -154,8 +155,6 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-
-import org.jboss.logging.Logger;
 
 
 /**
@@ -1230,11 +1229,11 @@ public final class SessionFactoryImpl
 			return null;
 		}
 
-		protected JdbcCoordinatorImpl getJdbcCoordinator(){
+		protected JdbcCoordinatorImpl getJdbcCoordinator() {
 			return null;
 		}
 
-		protected TransactionImpl getTransactionImpl(){
+		protected Transaction getTransaction() {
 			return null;
 		}
 
@@ -1251,7 +1250,7 @@ public final class SessionFactoryImpl
 					sessionOwner,
 					getTransactionCoordinator(),
 					getJdbcCoordinator(),
-					getTransactionImpl(),
+					getTransaction(),
 					getTransactionCompletionProcesses(),
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),

@@ -36,7 +36,6 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -107,7 +106,6 @@ import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -189,9 +187,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	// a separate class responsible for generating/dispatching events just duplicates most of the Session methods...
 	// passing around separate interceptor, factory, actionQueue, and persistentContext is not manageable...
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			SessionImpl.class.getName()
+	);
 
-   private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
+	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
 
 	private transient long timestamp;
 
@@ -246,7 +247,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			final SessionOwner sessionOwner,
 			final TransactionCoordinator transactionCoordinator,
 			final JdbcCoordinatorImpl jdbcCoordinator,
-			final TransactionImpl transaction,
+			final Transaction transaction,
 			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses,
 			final boolean autoJoinTransactions,
 			final long timestamp,
@@ -262,8 +263,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
 
-
-
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
 		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, getStatementInspector() );
@@ -275,6 +274,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
 			this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( this.jdbcCoordinator );
+			this.currentHibernateTransaction = getTransaction();
 		}
 		else {
 			if ( connection != null ) {
@@ -342,6 +342,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( TRACE_ENABLED ) {
 			LOG.tracef( "Opened session at timestamp: %s", timestamp );
 		}
+
 	}
 
 	@Override
@@ -2385,8 +2386,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		protected TransactionImpl getTransactionImpl(){
-			return shareTransactionContext ? session.currentHibernateTransaction : super.getTransactionImpl();
+		protected Transaction getTransaction() {
+			return shareTransactionContext ? session.currentHibernateTransaction : super.getTransaction();
 		}
 
 		@Override

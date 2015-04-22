@@ -40,7 +40,7 @@ public class ExtractionContextImpl implements ExtractionContext {
 	private final ServiceRegistry serviceRegistry;
 	private final JdbcEnvironment jdbcEnvironment;
 	private final JdbcConnectionAccess jdbcConnectionAccess;
-	private final RegisteredObjectAccess registeredTableAccess;
+	private final DatabaseObjectAccess registeredTableAccess;
 	private final Identifier defaultCatalogName;
 	private final Identifier defaultSchemaName;
 
@@ -51,7 +51,7 @@ public class ExtractionContextImpl implements ExtractionContext {
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
 			JdbcConnectionAccess jdbcConnectionAccess,
-			RegisteredObjectAccess registeredTableAccess,
+			DatabaseObjectAccess registeredTableAccess,
 			Identifier defaultCatalogName,
 			Identifier defaultSchemaName) {
 		this.serviceRegistry = serviceRegistry;
@@ -109,7 +109,7 @@ public class ExtractionContextImpl implements ExtractionContext {
 	}
 
 	@Override
-	public RegisteredObjectAccess getRegisteredObjectAccess() {
+	public DatabaseObjectAccess getDatabaseObjectAccess() {
 		return registeredTableAccess;
 	}
 

@@ -47,10 +47,10 @@ public interface ExtractionContext {
 	Identifier getDefaultCatalog();
 	Identifier getDefaultSchema();
 
-	public static interface RegisteredObjectAccess {
-		public TableInformation locateRegisteredTableInformation(QualifiedTableName tableName);
-		public SequenceInformation locateRegisteredSequenceInformation(QualifiedSequenceName sequenceName);
+	public static interface DatabaseObjectAccess {
+		public TableInformation locateTableInformation(QualifiedTableName tableName);
+		public SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);
 	}
 
-	RegisteredObjectAccess getRegisteredObjectAccess();
+	DatabaseObjectAccess getDatabaseObjectAccess();
 }

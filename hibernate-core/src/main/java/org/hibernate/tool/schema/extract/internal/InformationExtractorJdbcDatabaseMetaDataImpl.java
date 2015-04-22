@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -444,8 +443,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 					final QualifiedTableName incomingPkTableName = extractKeyTableName( resultSet, "PK" );
 
-					final TableInformation pkTableInformation = extractionContext.getRegisteredObjectAccess()
-							.locateRegisteredTableInformation( incomingPkTableName );
+					final TableInformation pkTableInformation = extractionContext.getDatabaseObjectAccess()
+							.locateTableInformation( incomingPkTableName );
 
 					if ( pkTableInformation == null ) {
 						// the assumption here is that we have not seen this table already based on fully-qualified name
@@ -520,8 +519,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 	}
 
 	private QualifiedTableName extractKeyTableName(ResultSet resultSet, String prefix) throws SQLException {
-		final String incomingCatalogName = resultSet.getString( prefix + "TABLE_SCHEM" );
-		final String incomingSchemaName = resultSet.getString( prefix + "TABLE_CAT" );
+		final String incomingCatalogName = resultSet.getString( prefix + "TABLE_CAT" );
+		final String incomingSchemaName = resultSet.getString( prefix + "TABLE_SCHEM" );
 		final String incomingTableName = resultSet.getString( prefix + "TABLE_NAME" );
 
 		return new QualifiedTableName(

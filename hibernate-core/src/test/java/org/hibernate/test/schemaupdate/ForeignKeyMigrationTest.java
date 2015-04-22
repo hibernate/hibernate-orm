@@ -48,7 +48,7 @@ import org.junit.Test;
 public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9716" )
-	@FailureExpected( jiraKey = "HHH-9716" )
+//	@FailureExpected( jiraKey = "HHH-9716" )
 	public void testMigrationOfForeignKeys() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {

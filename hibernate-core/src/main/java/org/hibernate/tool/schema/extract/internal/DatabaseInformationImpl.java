@@ -38,7 +38,7 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 /**
  * @author Steve Ebersole
  */
-public class DatabaseInformationImpl implements DatabaseInformation, ExtractionContext.RegisteredObjectAccess {
+public class DatabaseInformationImpl implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
 	private final Map<QualifiedTableName,TableInformation> tableInformationMap = new HashMap<QualifiedTableName, TableInformation>();
 	private final Map<QualifiedSequenceName,SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
 
@@ -55,32 +55,32 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 
 	@Override
 	public TableInformation getTableInformation(Identifier catalogName, Identifier schemaName, Identifier tableName) {
-		return locateRegisteredTableInformation( new QualifiedTableName( catalogName, schemaName, tableName ) );
+		return locateTableInformation( new QualifiedTableName( catalogName, schemaName, tableName ) );
 	}
 
 	@Override
 	public TableInformation getTableInformation(Schema.Name schemaName, Identifier tableName) {
-		return locateRegisteredTableInformation( new QualifiedTableName( schemaName, tableName ) );
+		return locateTableInformation( new QualifiedTableName( schemaName, tableName ) );
 	}
 
 	@Override
 	public TableInformation getTableInformation(QualifiedTableName tableName) {
-		return locateRegisteredTableInformation( tableName );
+		return locateTableInformation( tableName );
 	}
 
 	@Override
 	public SequenceInformation getSequenceInformation(Identifier catalogName, Identifier schemaName, Identifier sequenceName) {
-		return locateRegisteredSequenceInformation( new QualifiedSequenceName( catalogName, schemaName, sequenceName ) );
+		return locateSequenceInformation( new QualifiedSequenceName( catalogName, schemaName, sequenceName ) );
 	}
 
 	@Override
 	public SequenceInformation getSequenceInformation(Schema.Name schemaName, Identifier sequenceName) {
-		return locateRegisteredSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
+		return locateSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
 	}
 
 	@Override
 	public SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName) {
-		return locateRegisteredSequenceInformation( sequenceName );
+		return locateSequenceInformation( sequenceName );
 	}
 
 
@@ -95,12 +95,12 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	}
 
 	@Override
-	public TableInformation locateRegisteredTableInformation(QualifiedTableName tableName) {
+	public TableInformation locateTableInformation(QualifiedTableName tableName) {
 		return tableInformationMap.get( tableName );
 	}
 
 	@Override
-	public SequenceInformation locateRegisteredSequenceInformation(QualifiedSequenceName sequenceName) {
+	public SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName) {
 		return sequenceInformationMap.get( sequenceName );
 	}
 

@@ -471,7 +471,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public boolean isTransactionInProgress() {
 		checkTransactionSynchStatus();
 		return !isClosed() && transactionCoordinator.getTransactionDriverControl()
-						.getStatus() == TransactionStatus.ACTIVE;
+				.getStatus() == TransactionStatus.ACTIVE && transactionCoordinator.isJoined();
 	}
 
 	@Override

@@ -101,7 +101,7 @@ public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoord
 	@Override
 	public boolean isJoined() {
 		log.debug( "Calling TransactionCoordinator#isJoined in resource-local mode always returns false" );
-		return false;
+		return isActive();
 	}
 
 	@Override

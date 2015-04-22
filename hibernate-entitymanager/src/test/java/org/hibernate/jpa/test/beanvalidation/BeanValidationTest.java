@@ -25,6 +25,7 @@ package org.hibernate.jpa.test.beanvalidation;
 
 import java.math.BigDecimal;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.validation.ConstraintViolationException;
 
@@ -77,8 +78,9 @@ public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		catch ( RollbackException e ) {
 			final Throwable cve = e.getCause();
-			assertTrue( cve instanceof ConstraintViolationException );
-			assertEquals( 1, ( (ConstraintViolationException) cve ).getConstraintViolations().size() );
+			assertTrue( cve instanceof PersistenceException );
+			assertTrue( cve.getCause() instanceof ConstraintViolationException );
+			assertEquals( 1, ( (ConstraintViolationException) cve.getCause() ).getConstraintViolations().size() );
 		}
 		em.close();
 	}

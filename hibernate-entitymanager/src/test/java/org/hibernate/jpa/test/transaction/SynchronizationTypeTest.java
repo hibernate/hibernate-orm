@@ -95,12 +95,12 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
 		assertFalse( "EM was auto joined on creation", transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( "EM was auto joined on creation", transactionCoordinator.isActive() );
+		assertTrue( "EM was auto joined on creation", transactionCoordinator.isActive() );
 		assertFalse( "EM was auto joined on creation", transactionCoordinator.isJoined() );
 
 		session.getFlushMode();
 		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( transactionCoordinator.isActive() );
+		assertTrue( transactionCoordinator.isActive() );
 		assertFalse( transactionCoordinator.isJoined() );
 
 		entityManager.joinTransaction();

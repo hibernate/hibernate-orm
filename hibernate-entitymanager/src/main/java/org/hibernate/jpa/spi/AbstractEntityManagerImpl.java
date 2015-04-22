@@ -82,6 +82,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
@@ -1645,55 +1646,59 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
-		if ( e instanceof StaleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( (StaleStateException) e );
+		Throwable cause = e;
+		if(e instanceof TransactionException){
+			cause = e.getCause();
+		}
+		if ( cause instanceof StaleStateException ) {
+			final PersistenceException converted = wrapStaleStateException( (StaleStateException) cause );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( e, lockOptions );
+		else if ( cause instanceof LockingStrategyException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
-			final PersistenceException converted = wrapLockException( e, lockOptions );
+		else if ( cause instanceof org.hibernate.exception.LockTimeoutException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( e, lockOptions );
+		else if ( cause instanceof org.hibernate.PessimisticLockException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.QueryTimeoutException ) {
-			final QueryTimeoutException converted = new QueryTimeoutException( e.getMessage(), e );
+		else if ( cause instanceof org.hibernate.QueryTimeoutException ) {
+			final QueryTimeoutException converted = new QueryTimeoutException( cause.getMessage(), cause );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+		else if ( cause instanceof ObjectNotFoundException ) {
+			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.NonUniqueObjectException ) {
-			final EntityExistsException converted = new EntityExistsException( e.getMessage() );
+		else if ( cause instanceof org.hibernate.NonUniqueObjectException ) {
+			final EntityExistsException converted = new EntityExistsException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
         }
-		else if ( e instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( e.getMessage() );
+		else if ( cause instanceof org.hibernate.NonUniqueResultException ) {
+			final NonUniqueResultException converted = new NonUniqueResultException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+		else if ( cause instanceof UnresolvableObjectException ) {
+			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof QueryException ) {
-			return new IllegalArgumentException( e );
+		else if ( cause instanceof QueryException ) {
+			return new IllegalArgumentException( cause );
 		}
-		else if ( e instanceof TransientObjectException ) {
+		else if ( cause instanceof TransientObjectException ) {
 			try {
 				markForRollbackOnly();
 			}
@@ -1704,7 +1709,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
 		else {
-			final PersistenceException converted = new PersistenceException( e );
+			final PersistenceException converted = new PersistenceException( cause );
 			handlePersistenceException( converted );
 			return converted;
 		}

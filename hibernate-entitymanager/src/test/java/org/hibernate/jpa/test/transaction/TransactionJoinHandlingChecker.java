@@ -49,7 +49,6 @@ public class TransactionJoinHandlingChecker {
 		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
-
 		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 		assertFalse( transactionCoordinator.isActive() );
 		assertFalse( transactionCoordinator.isJoined() );

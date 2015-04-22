@@ -23,9 +23,8 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.hibernate.dialect.Dialect;
 
@@ -35,20 +34,20 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class SQLFunctionRegistry {
-	private final Dialect dialect;
-	private final Map<String, SQLFunction> userFunctions;
+	private final Map<String,SQLFunction> functionMap = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
 
 	/**
 	 * Constructs a SQLFunctionRegistry
 	 *
 	 * @param dialect The dialect
-	 * @param userFunctions Any application-supplied function definitions
+	 * @param userFunctionMap Any application-supplied function definitions
 	 */
-	public SQLFunctionRegistry(Dialect dialect, Map<String, SQLFunction> userFunctions) {
-		this.dialect = dialect;
-		this.userFunctions = new HashMap<String, SQLFunction>();
-		if ( userFunctions != null ) {
-			this.userFunctions.putAll( userFunctions );
+	public SQLFunctionRegistry(Dialect dialect, Map<String, SQLFunction> userFunctionMap) {
+		// Apply the Dialect functions first
+		functionMap.putAll( dialect.getFunctions() );
+		// so that user supplied functions "override" them
+		if ( userFunctionMap != null ) {
+			functionMap.putAll( userFunctionMap );
 		}
 	}
 
@@ -60,11 +59,7 @@ public class SQLFunctionRegistry {
 	 * @return The located function, maye return {@code null}
 	 */
 	public SQLFunction findSQLFunction(String functionName) {
-		final String name = functionName.toLowerCase(Locale.ROOT);
-		final SQLFunction userFunction = userFunctions.get( name );
-		return userFunction != null
-				? userFunction
-				: dialect.getFunctions().get( name );
+		return functionMap.get( functionName );
 	}
 
 	/**
@@ -76,8 +71,7 @@ public class SQLFunctionRegistry {
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public boolean hasFunction(String functionName) {
-		final String name = functionName.toLowerCase(Locale.ROOT);
-		return userFunctions.containsKey( name ) || dialect.getFunctions().containsKey( name );
+		return functionMap.containsKey( functionName );
 	}
 
 }

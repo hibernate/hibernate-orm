@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
@@ -333,15 +332,9 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 	@Override
 	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
 		if ( this.options.sqlFunctionMap == null ) {
-			// need to use this form as we want to specify the "concurrency level" as 1
-			// since only one thread will ever (should) be updating this
 			this.options.sqlFunctionMap = new HashMap<String, SQLFunction>();
 		}
-
-		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
-		// just in case a user's customer dialect uses mixed cases.
-		this.options.sqlFunctionMap.put( functionName.toLowerCase(Locale.ROOT), function );
-
+		this.options.sqlFunctionMap.put( functionName, function );
 		return this;
 	}
 
@@ -351,7 +344,6 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 			this.options.auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
 		}
 		this.options.auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
-
 		return this;
 	}
 

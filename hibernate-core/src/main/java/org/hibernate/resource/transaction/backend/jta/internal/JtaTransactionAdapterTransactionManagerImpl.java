@@ -23,13 +23,14 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
+import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.jboss.logging.Logger;
 
 /**
  * JtaTransactionAdapter for coordinating with the JTA TransactionManager
@@ -44,7 +45,6 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	private boolean initiator;
 
 	public JtaTransactionAdapterTransactionManagerImpl(TransactionManager transactionManager) throws SystemException {
-		int status = transactionManager.getStatus();
 		this.transactionManager = transactionManager;
 	}
 
@@ -105,6 +105,9 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	@Override
 	public TransactionStatus getStatus() {
 		try {
+			if ( transactionManager.getTransaction() == null ) {
+				return StatusTranslator.translate( Status.STATUS_NO_TRANSACTION );
+			}
 			return StatusTranslator.translate( transactionManager.getStatus() );
 		}
 		catch (SystemException e) {

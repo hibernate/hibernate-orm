@@ -32,7 +32,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 /**
  * Extension of SynchronizationCallbackCoordinatorNonTrackingImpl that adds checking of whether a rollback comes from
  * a thread other than the application thread (thread used to register the Synchronization)
- * 
+ *
  * @author Steve Ebersole
  * @author Brett Meyer
  */
@@ -42,7 +42,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 	// magic number :(
 	private static final long NO_THREAD_ID = Long.MIN_VALUE;
 
-	private volatile long registrationThreadId;
+	private volatile long registrationThreadId = NO_THREAD_ID;
 	private volatile boolean delayedCompletionHandling;
 
 	public SynchronizationCallbackCoordinatorTrackingImpl(SynchronizationCallbackTarget target) {
@@ -93,7 +93,6 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 
 	@Override
 	public void synchronizationRegistered() {
-		// If this is the first call to synchronizationRegistered since an earlier call to reset, capture the current thread id
 		if ( registrationThreadId == NO_THREAD_ID ) {
 			registrationThreadId = Thread.currentThread().getId();
 		}

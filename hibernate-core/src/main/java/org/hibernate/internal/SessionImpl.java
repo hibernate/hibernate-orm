@@ -104,7 +104,6 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -2290,6 +2289,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void afterTransactionCompletion(boolean successful) {
 
 		LOG.trace( "after transaction completion" );
+
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 
@@ -2309,7 +2309,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}
-		else if ( autoClear ) {
+
+		if ( autoClear ) {
 			internalClear();
 		}
 	}

@@ -28,6 +28,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.hql.spi.id.IdTableSupport;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -36,7 +41,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Jay Nance
  */
-public class TeradataDialect extends Dialect {
+public class TeradataDialect extends Dialect implements IdTableSupport {
 	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
@@ -133,24 +138,29 @@ public class TeradataDialect extends Dialect {
 		return "Add Column";
 	}
 
-	public boolean supportsTemporaryTables() {
-		return true;
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy( this, AfterUseAction.CLEAN );
 	}
 
-	public String getCreateTemporaryTableString() {
+	@Override
+	public String generateIdTableName(String baseName) {
+		return IdTableSupportStandardImpl.INSTANCE.generateIdTableName( baseName );
+	}
+
+	@Override
+	public String getCreateIdTableCommand() {
 		return "create global temporary table";
 	}
 
-	public String getCreateTemporaryTablePostfix() {
+	@Override
+	public String getCreateIdTableStatementOptions() {
 		return " on commit preserve rows";
 	}
 
-	public Boolean performTemporaryTableDDLInIsolation() {
-		return Boolean.TRUE;
-	}
-
-	public boolean dropTemporaryTableAfterUse() {
-		return false;
+	@Override
+	public String getDropIdTableCommand() {
+		return "drop table";
 	}
 
 	/**

@@ -45,6 +45,10 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -403,23 +407,26 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String generateIdTableName(String baseName) {
+						return "session." + super.generateIdTableName( baseName );
+					}
 
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "declare global temporary table";
-	}
+					@Override
+					public String getCreateIdTableCommand() {
+						return "declare global temporary table";
+					}
 
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return "not logged";
-	}
-
-	@Override
-	public String generateTemporaryTableName(String baseTableName) {
-		return "session." + super.generateTemporaryTableName( baseTableName );
+					@Override
+					public String getCreateIdTableStatementOptions() {
+						return "not logged";
+					}
+				},
+				AfterUseAction.CLEAN
+		);
 	}
 
 	@Override

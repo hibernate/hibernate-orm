@@ -28,6 +28,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -42,6 +43,10 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
@@ -395,32 +400,24 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new LocalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create cached local temporary table if not exists";
+					}
 
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "create cached local temporary table if not exists";
-	}
-
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		// actually 2 different options are specified here:
-		//		1) [on commit drop] - says to drop the table on transaction commit
-		//		2) [transactional] - says to not perform an implicit commit of any current transaction
-		return "on commit drop transactional";
-	}
-
-	@Override
-	public Boolean performTemporaryTableDDLInIsolation() {
-		// explicitly create the table using the same connection and transaction
-		return Boolean.FALSE;
-	}
-
-	@Override
-	public boolean dropTemporaryTableAfterUse() {
-		return false;
+					@Override
+					public String getCreateIdTableStatementOptions() {
+						// actually 2 different options are specified here:
+						//		1) [on commit drop] - says to drop the table on transaction commit
+						//		2) [transactional] - says to not perform an implicit commit of any current transaction
+						return "on commit drop transactional";					}
+				},
+				AfterUseAction.CLEAN,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 
 	@Override

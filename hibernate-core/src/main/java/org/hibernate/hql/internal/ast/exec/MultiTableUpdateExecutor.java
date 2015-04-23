@@ -30,7 +30,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 
 /**
  * Implementation of MultiTableUpdateExecutor.

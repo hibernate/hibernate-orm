@@ -37,8 +37,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -265,6 +264,8 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#HQL_BULK_ID_STRATEGY
 	 */
 	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy);
+
+	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
 	 * What style of batching should be used?

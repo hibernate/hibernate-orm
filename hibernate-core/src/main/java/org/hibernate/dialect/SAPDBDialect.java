@@ -30,6 +30,11 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
@@ -220,18 +225,21 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new LocalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String generateIdTableName(String baseName) {
+						return "temp." + super.generateIdTableName( baseName );
+					}
 
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return "ignore rollback";
+					@Override
+					public String getCreateIdTableStatementOptions() {
+						return "ignore rollback";
+					}
+				},
+				AfterUseAction.DROP,
+				null
+		);
 	}
-
-	@Override
-	public String generateTemporaryTableName(String baseTableName) {
-		return "temp." + super.generateTemporaryTableName( baseTableName );
-	}
-
 }

@@ -30,6 +30,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.NullPrecedence;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -40,6 +41,11 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.hql.spi.id.IdTableSupport;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
@@ -314,25 +320,22 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new LocalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create temporary table if not exists";
+					}
 
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "create temporary table if not exists";
-	}
-
-	@Override
-	public String getDropTemporaryTableString() {
-		return "drop temporary table";
-	}
-
-	@Override
-	public Boolean performTemporaryTableDDLInIsolation() {
-		// because we [drop *temporary* table...] we do not
-		// have to doAfterTransactionCompletion these in isolation.
-		return Boolean.FALSE;
+					@Override
+					public String getDropIdTableCommand() {
+						return "drop temporary table";
+					}
+				},
+				AfterUseAction.DROP,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 
 	@Override

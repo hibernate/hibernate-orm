@@ -100,9 +100,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
-	private String temporaryIdTableName;
-	private String temporaryIdTableDDL;
-
 	private java.util.Map tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
@@ -796,28 +793,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	
 	public void setSubselectLoadableCollections(boolean hasSubselectCollections) {
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
-	}
-
-	public void prepareTemporaryTables(Mapping mapping, Dialect dialect) {
-		temporaryIdTableName = dialect.generateTemporaryTableName( getTable().getName() );
-		if ( dialect.supportsTemporaryTables() ) {
-			Table table = new Table();
-			table.setName( temporaryIdTableName );
-			Iterator itr = getTable().getPrimaryKey().getColumnIterator();
-			while( itr.hasNext() ) {
-				Column column = (Column) itr.next();
-				table.addColumn( column.clone()  );
-			}
-			temporaryIdTableDDL = table.sqlTemporaryTableCreateString( dialect, mapping );
-		}
-	}
-
-	public String getTemporaryIdTableName() {
-		return temporaryIdTableName;
-	}
-
-	public String getTemporaryIdTableDDL() {
-		return temporaryIdTableDDL;
 	}
 
 	public Component getIdentifierMapper() {

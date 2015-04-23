@@ -34,13 +34,14 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -81,6 +82,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private boolean checkNullability;
 	private final boolean initializeLazyStateOutsideTransactions;
 	private final MultiTableBulkIdStrategy multiTableBulkIdStrategy;
+	private final TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	private final BatchFetchStyle batchFetchStyle;
 	private final int defaultBatchFetchSize;
 	private final Integer maximumFetchDepth;
@@ -114,8 +116,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final SchemaAutoTooling schemaAutoTooling;
 
 	// JDBC Handling
-	private final boolean dataDefinitionImplicitCommit;			// not exposed on builder atm
-	private final boolean dataDefinitionInTransactionSupported;	// not exposed on builder atm
 	private final boolean getGeneratedKeysEnabled;
 	private final int jdbcBatchSize;
 	private final boolean jdbcBatchVersionedData;
@@ -154,6 +154,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.checkNullability = state.isCheckNullability();
 		this.initializeLazyStateOutsideTransactions = state.isInitializeLazyStateOutsideTransactionsEnabled();
 		this.multiTableBulkIdStrategy = state.getMultiTableBulkIdStrategy();
+		this.tempTableDdlTransactionHandling = state.getTempTableDdlTransactionHandling();
 		this.batchFetchStyle = state.getBatchFetchStyle();
 		this.defaultBatchFetchSize = state.getDefaultBatchFetchSize();
 		this.maximumFetchDepth = state.getMaximumFetchDepth();
@@ -182,8 +183,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
 
 		this.connectionReleaseMode = state.getConnectionReleaseMode();
-		this.dataDefinitionImplicitCommit = state.isDataDefinitionImplicitCommit();
-		this.dataDefinitionInTransactionSupported = state.isDataDefinitionInTransactionSupported();
 		this.getGeneratedKeysEnabled = state.isGetGeneratedKeysEnabled();
 		this.jdbcBatchSize = state.getJdbcBatchSize();
 		this.jdbcBatchVersionedData = state.isJdbcBatchVersionedData();
@@ -277,6 +276,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy() {
 		return multiTableBulkIdStrategy;
+	}
+
+	@Override
+	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
+		return tempTableDdlTransactionHandling;
 	}
 
 	@Override
@@ -381,16 +385,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return schemaAutoTooling;
-	}
-
-	@Override
-	public boolean isDataDefinitionImplicitCommit() {
-		return dataDefinitionImplicitCommit;
-	}
-
-	@Override
-	public boolean isDataDefinitionInTransactionSupported() {
-		return dataDefinitionInTransactionSupported;
 	}
 
 	@Override

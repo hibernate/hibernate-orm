@@ -21,11 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.hql.spi;
+package org.hibernate.hql.spi.id;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.QueryParameters;
@@ -60,31 +61,27 @@ public class TableBasedUpdateHandlerImpl
 	private final ParameterSpecification[][] assignmentParameterSpecifications;
 
 	@SuppressWarnings("unchecked")
-	public TableBasedUpdateHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		this( factory, walker, null, null );
-	}
-
 	public TableBasedUpdateHandlerImpl(
 			SessionFactoryImplementor factory,
 			HqlSqlWalker walker,
-			String catalog,
-			String schema) {
-		super( factory, walker, catalog, schema );
+			IdTableInfo idTableInfo) {
+		super( factory, walker );
 
 		UpdateStatement updateStatement = ( UpdateStatement ) walker.getAST();
 		FromElement fromElement = updateStatement.getFromClause().getFromElement();
 
 		this.targetedPersister = fromElement.getQueryable();
+
 		final String bulkTargetAlias = fromElement.getTableAlias();
 
 		final ProcessedWhereClause processedWhereClause = processWhereClause( updateStatement.getWhereClause() );
 		this.idSelectParameterSpecifications = processedWhereClause.getIdSelectParameterSpecifications();
-		this.idInsertSelect = generateIdInsertSelect( targetedPersister, bulkTargetAlias, processedWhereClause );
+		this.idInsertSelect = generateIdInsertSelect( bulkTargetAlias, idTableInfo, processedWhereClause );
 		log.tracev( "Generated ID-INSERT-SELECT SQL (multi-table update) : {0}", idInsertSelect );
 
 		String[] tableNames = targetedPersister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = targetedPersister.getContraintOrderedTableKeyColumnClosure();
-		String idSubselect = generateIdSubselect( targetedPersister );
+		String idSubselect = generateIdSubselect( targetedPersister, idTableInfo );
 
 		updates = new String[tableNames.length];
 		assignmentParameterSpecifications = new ParameterSpecification[tableNames.length][];
@@ -103,9 +100,7 @@ public class TableBasedUpdateHandlerImpl
 					affected = true;
 					update.appendAssignmentFragment( assignmentSpecification.getSqlAssignmentFragment() );
 					if ( assignmentSpecification.getParameters() != null ) {
-						for ( int paramIndex = 0; paramIndex < assignmentSpecification.getParameters().length; paramIndex++ ) {
-							parameterList.add( assignmentSpecification.getParameters()[paramIndex] );
-						}
+						Collections.addAll( parameterList, assignmentSpecification.getParameters() );
 					}
 				}
 			}

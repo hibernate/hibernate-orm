@@ -97,22 +97,6 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	public String[][] getContraintOrderedTableKeyColumnClosure();
 
 	/**
-	 * Get the name of the temporary table to be used to (potentially) store id values
-	 * when performing bulk update/deletes.
-	 *
-	 * @return The appropriate temporary table name.
-	 */
-	public String getTemporaryIdTableName();
-
-	/**
-	 * Get the appropriate DDL command for generating the temporary table to
-	 * be used to (potentially) store id values when performing bulk update/deletes.
-	 *
-	 * @return The appropriate temporary table creation command.
-	 */
-	public String getTemporaryIdTableDDL();
-
-	/**
 	 * Given a property name, determine the number of the table which contains the column
 	 * to which this property is mapped.
 	 * <p/>

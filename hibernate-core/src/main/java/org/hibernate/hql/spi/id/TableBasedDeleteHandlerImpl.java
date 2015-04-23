@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.hql.spi;
+package org.hibernate.hql.spi.id;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -58,16 +58,11 @@ public class TableBasedDeleteHandlerImpl
 	private final List<ParameterSpecification> idSelectParameterSpecifications;
 	private final List<String> deletes;
 
-	public TableBasedDeleteHandlerImpl(SessionFactoryImplementor factory, HqlSqlWalker walker) {
-		this( factory, walker, null, null );
-	}
-
 	public TableBasedDeleteHandlerImpl(
 			SessionFactoryImplementor factory,
 			HqlSqlWalker walker,
-			String catalog,
-			String schema) {
-		super( factory, walker, catalog, schema );
+			IdTableInfo idTableInfo) {
+		super( factory, walker );
 
 		DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();
 		FromElement fromElement = deleteStatement.getFromClause().getFromElement();
@@ -77,10 +72,10 @@ public class TableBasedDeleteHandlerImpl
 
 		final ProcessedWhereClause processedWhereClause = processWhereClause( deleteStatement.getWhereClause() );
 		this.idSelectParameterSpecifications = processedWhereClause.getIdSelectParameterSpecifications();
-		this.idInsertSelect = generateIdInsertSelect( targetedPersister, bulkTargetAlias, processedWhereClause );
+		this.idInsertSelect = generateIdInsertSelect( bulkTargetAlias, idTableInfo, processedWhereClause );
 		log.tracev( "Generated ID-INSERT-SELECT SQL (multi-table delete) : {0}", idInsertSelect );
 		
-		final String idSubselect = generateIdSubselect( targetedPersister );
+		final String idSubselect = generateIdSubselect( targetedPersister, idTableInfo );
 		deletes = new ArrayList<String>();
 		
 		// If many-to-many, delete the FK row in the collection table.

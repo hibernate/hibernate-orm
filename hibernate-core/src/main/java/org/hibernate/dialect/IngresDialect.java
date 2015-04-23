@@ -32,6 +32,10 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -268,24 +272,28 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String generateIdTableName(String baseName) {
+						return "session." + super.generateIdTableName( baseName );
+					}
+
+					@Override
+					public String getCreateIdTableCommand() {
+						return "declare global temporary table";
+					}
+
+					@Override
+					public String getCreateIdTableStatementOptions() {
+						return "on commit preserve rows with norecovery";
+					}
+				},
+				AfterUseAction.CLEAN
+		);
 	}
 
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "declare global temporary table";
-	}
-
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return "on commit preserve rows with norecovery";
-	}
-
-	@Override
-	public String generateTemporaryTableName(String baseTableName) {
-		return "session." + super.generateTemporaryTableName( baseTableName );
-	}
 
 	@Override
 	public String getCurrentTimestampSQLFunctionName() {

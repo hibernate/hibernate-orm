@@ -272,9 +272,6 @@ public abstract class AbstractEntityPersister
 
 	private UniqueEntityLoader queryLoader;
 
-	private final String temporaryIdTableName;
-	private final String temporaryIdTableDDL;
-
 	private final Map subclassPropertyAliases = new HashMap();
 	private final Map subclassPropertyColumnNames = new HashMap();
 
@@ -790,10 +787,6 @@ public abstract class AbstractEntityPersister
 
 		// Handle any filters applied to the class level
 		filterHelper = new FilterHelper( persistentClass.getFilters(), factory );
-
-		temporaryIdTableName = persistentClass.getTemporaryIdTableName();
-		temporaryIdTableDDL = persistentClass.getTemporaryIdTableDDL();
-
 
 		// Check if we can use Reference Cached entities in 2lc
 		// todo : should really validate that the cache access type is read-only
@@ -4407,14 +4400,6 @@ public abstract class AbstractEntityPersister
 
 	public boolean isMultiTable() {
 		return false;
-	}
-
-	public String getTemporaryIdTableName() {
-		return temporaryIdTableName;
-	}
-
-	public String getTemporaryIdTableDDL() {
-		return temporaryIdTableDDL;
 	}
 
 	protected int getPropertySpan() {

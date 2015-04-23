@@ -49,8 +49,10 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.GlobalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -586,33 +588,26 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new GlobalTemporaryTableBulkIdStrategy();
-	}
+		return new GlobalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String generateIdTableName(String baseName) {
+						final String name = super.generateIdTableName( baseName );
+						return name.length() > 30 ? name.substring( 0, 30 ) : name;
+					}
 
-	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create global temporary table";
+					}
 
-	@Override
-	public String generateTemporaryTableName(String baseTableName) {
-		final String name = super.generateTemporaryTableName( baseTableName );
-		return name.length() > 30 ? name.substring( 0, 30 ) : name;
-	}
-
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "create global temporary table";
-	}
-
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return "on commit delete rows";
-	}
-
-	@Override
-	public boolean dropTemporaryTableAfterUse() {
-		return false;
+					@Override
+					public String getCreateIdTableStatementOptions() {
+						return "on commit delete rows";
+					}
+				},
+				AfterUseAction.CLEAN
+		);
 	}
 
 	@Override

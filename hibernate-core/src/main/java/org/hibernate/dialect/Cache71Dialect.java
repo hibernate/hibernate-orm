@@ -53,6 +53,10 @@ import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Lockable;
@@ -458,38 +462,23 @@ public class Cache71Dialect extends Dialect {
 		return true;
 	}
 
-
-	// temporary table support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String generateIdTableName(String baseName) {
+						final String name = super.generateIdTableName( baseName );
+						return name.length() > 25 ? name.substring( 1, 25 ) : name;
+					}
 
-	@Override
-	public String generateTemporaryTableName(String baseTableName) {
-		final String name = super.generateTemporaryTableName( baseTableName );
-		return name.length() > 25 ? name.substring( 1, 25 ) : name;
-	}
-
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "create global temporary table";
-	}
-
-	@Override
-	public Boolean performTemporaryTableDDLInIsolation() {
-		return Boolean.FALSE;
-	}
-
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return "";
-	}
-
-	@Override
-	public boolean dropTemporaryTableAfterUse() {
-		return true;
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create global temporary table";
+					}
+				},
+				AfterUseAction.DROP
+		);
 	}
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

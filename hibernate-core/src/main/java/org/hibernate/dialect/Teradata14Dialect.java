@@ -109,11 +109,6 @@ public class Teradata14Dialect extends TeradataDialect {
 	}
 
 	@Override
-	public String getDropTemporaryTableString() {
-		return "drop temporary table";
-	}
-
-	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		return true;
 	}

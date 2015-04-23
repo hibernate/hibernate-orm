@@ -337,7 +337,6 @@ public final class SessionFactoryImpl
 		Map cacheAccessStrategiesMap = new HashMap();
 		Map<String,ClassMetadata> inFlightClassMetadataMap = new HashMap<String,ClassMetadata>();
 		for ( final PersistentClass model : metadata.getEntityBindings() ) {
-			model.prepareTemporaryTables( metadata, getDialect() );
 			final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
 			// cache region is defined by the root-class in the hierarchy...
 			final EntityRegionAccessStrategy accessStrategy = determineEntityRegionAccessStrategy(
@@ -445,7 +444,8 @@ public final class SessionFactoryImpl
 		settings.getMultiTableBulkIdStrategy().prepare(
 				jdbcServices,
 				buildLocalConnectionAccess(),
-				metadata
+				metadata,
+				sessionFactoryOptions
 		);
 
 

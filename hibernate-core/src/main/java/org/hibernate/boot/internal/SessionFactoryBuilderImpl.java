@@ -43,6 +43,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -60,7 +61,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
@@ -248,6 +249,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
 		this.options.multiTableBulkIdStrategy = strategy;
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
+		this.options.tempTableDdlTransactionHandling = handling;
 		return this;
 	}
 
@@ -481,6 +488,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean checkNullability;
 		private boolean initializeLazyStateOutsideTransactions;
 		private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
+		private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 		private BatchFetchStyle batchFetchStyle;
 		private int defaultBatchFetchSize;
 		private Integer maximumFetchDepth;
@@ -514,8 +522,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private SchemaAutoTooling schemaAutoTooling;
 
 		// JDBC Handling
-		private boolean dataDefinitionImplicitCommit;			// not exposed on builder atm
-		private boolean dataDefinitionInTransactionSupported;	// not exposed on builder atm
 		private boolean getGeneratedKeysEnabled;
 		private int jdbcBatchSize;
 		private boolean jdbcBatchVersionedData;
@@ -641,8 +647,16 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 
 			final ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
-			this.dataDefinitionImplicitCommit = meta.doesDataDefinitionCauseTransactionCommit();
-			this.dataDefinitionInTransactionSupported = meta.supportsDataDefinitionInTransaction();
+
+			this.tempTableDdlTransactionHandling = TempTableDdlTransactionHandling.NONE;
+			if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
+				if ( meta.supportsDataDefinitionInTransaction() ) {
+					this.tempTableDdlTransactionHandling = TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT;
+				}
+				else {
+					this.tempTableDdlTransactionHandling = TempTableDdlTransactionHandling.ISOLATE;
+				}
+			}
 
 			this.jdbcBatchSize = ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationSettings, 0 );
 			if ( !meta.supportsBatchUpdates() ) {
@@ -764,6 +778,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
+			return tempTableDdlTransactionHandling;
+		}
+
+		@Override
 		public BatchFetchStyle getBatchFetchStyle() {
 			return batchFetchStyle;
 		}
@@ -866,16 +885,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public SchemaAutoTooling getSchemaAutoTooling() {
 			return schemaAutoTooling;
-		}
-
-		@Override
-		public boolean isDataDefinitionImplicitCommit() {
-			return dataDefinitionImplicitCommit;
-		}
-
-		@Override
-		public boolean isDataDefinitionInTransactionSupported() {
-			return dataDefinitionInTransactionSupported;
 		}
 
 		@Override
@@ -1026,6 +1035,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
+		return options.getTempTableDdlTransactionHandling();
+	}
+
+	@Override
 	public BatchFetchStyle getBatchFetchStyle() {
 		return options.getBatchFetchStyle();
 	}
@@ -1128,16 +1142,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return options.getSchemaAutoTooling();
-	}
-
-	@Override
-	public boolean isDataDefinitionImplicitCommit() {
-		return options.isDataDefinitionImplicitCommit();
-	}
-
-	@Override
-	public boolean isDataDefinitionInTransactionSupported() {
-		return options.isDataDefinitionInTransactionSupported();
 	}
 
 	@Override

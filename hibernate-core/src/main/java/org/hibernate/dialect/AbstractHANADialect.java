@@ -53,6 +53,11 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.hql.spi.id.IdTableSupport;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -413,8 +418,16 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateTemporaryTableString() {
-		return "create global temporary table";
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new GlobalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create global temporary table";
+					}
+				},
+				AfterUseAction.CLEAN
+		);
 	}
 
 	@Override
@@ -645,11 +658,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public boolean supportsTableCheck() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
 	}
 
 	@Override

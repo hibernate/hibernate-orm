@@ -23,6 +23,24 @@
  */
 package org.hibernate.dialect;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -58,9 +76,8 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.PersistentTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -92,30 +109,12 @@ import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
-import org.hibernate.tool.schema.internal.TemporaryTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.jboss.logging.Logger;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import org.jboss.logging.Logger;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -1516,99 +1515,9 @@ public abstract class Dialect implements ConversionContext {
 		return getCreateTableString();
 	}
 
-
-	// temporary table support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		// mimic the old behavior for now...
-		return supportsTemporaryTables()
-				? LocalTemporaryTableBulkIdStrategy.INSTANCE
-				: new PersistentTableBulkIdStrategy();
+		return new PersistentTableBulkIdStrategy();
 	}
-
-	/**
-	 * Does this dialect support temporary tables?
-	 *
-	 * @return True if temp tables are supported; false otherwise.
-	 */
-	public boolean supportsTemporaryTables() {
-		return false;
-	}
-
-	/**
-	 * Generate a temporary table name given the base table.
-	 *
-	 * @param baseTableName The table name from which to base the temp table name.
-	 * @return The generated temp table name.
-	 */
-	public String generateTemporaryTableName(String baseTableName) {
-		return "HT_" + baseTableName;
-	}
-
-	/**
-	 * Command used to create a temporary table.
-	 *
-	 * @return The command used to create a temporary table.
-	 */
-	public String getCreateTemporaryTableString() {
-		return "create table";
-	}
-
-	/**
-	 * Get any fragments needing to be postfixed to the command for
-	 * temporary table creation.
-	 *
-	 * @return Any required postfix.
-	 */
-	public String getCreateTemporaryTablePostfix() {
-		return "";
-	}
-
-	/**
-	 * Command used to drop a temporary table.
-	 *
-	 * @return The command used to drop a temporary table.
-	 */
-	public String getDropTemporaryTableString() {
-		return "drop table";
-	}
-
-	/**
-	 * Does the dialect require that temporary table DDL statements occur in
-	 * isolation from other statements?  This would be the case if the creation
-	 * would cause any current transaction to get committed implicitly.
-	 * <p/>
-	 * JDBC defines a standard way to query for this information via the
-	 * {@link java.sql.DatabaseMetaData#dataDefinitionCausesTransactionCommit()}
-	 * method.  However, that does not distinguish between temporary table
-	 * DDL and other forms of DDL; MySQL, for example, reports DDL causing a
-	 * transaction commit via its driver, even though that is not the case for
-	 * temporary table DDL.
-	 * <p/>
-	 * Possible return values and their meanings:<ul>
-	 * <li>{@link Boolean#TRUE} - Unequivocally, perform the temporary table DDL
-	 * in isolation.</li>
-	 * <li>{@link Boolean#FALSE} - Unequivocally, do <b>not</b> perform the
-	 * temporary table DDL in isolation.</li>
-	 * <li><i>null</i> - defer to the JDBC driver response in regards to
-	 * {@link java.sql.DatabaseMetaData#dataDefinitionCausesTransactionCommit()}</li>
-	 * </ul>
-	 *
-	 * @return see the result matrix above.
-	 */
-	public Boolean performTemporaryTableDDLInIsolation() {
-		return null;
-	}
-
-	/**
-	 * Do we need to drop the temporary table after use?
-	 *
-	 * @return True if the table should be dropped.
-	 */
-	public boolean dropTemporaryTableAfterUse() {
-		return true;
-	}
-
 
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2007,14 +1916,9 @@ public abstract class Dialect implements ConversionContext {
 	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
 	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
-	private TemporaryTableExporter temporaryTableExporter = new TemporaryTableExporter( this );
 
 	public Exporter<Table> getTableExporter() {
 		return tableExporter;
-	}
-
-	public Exporter<Table> getTemporaryTableExporter() {
-		return temporaryTableExporter;
 	}
 
 	public Exporter<Sequence> getSequenceExporter() {

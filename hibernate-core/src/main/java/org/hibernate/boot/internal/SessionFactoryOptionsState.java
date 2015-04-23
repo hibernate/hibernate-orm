@@ -34,12 +34,13 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SchemaAutoTooling;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -84,6 +85,8 @@ public interface SessionFactoryOptionsState {
 
 	public MultiTableBulkIdStrategy getMultiTableBulkIdStrategy();
 
+	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
+
 	public BatchFetchStyle getBatchFetchStyle();
 
 	public int getDefaultBatchFetchSize();
@@ -125,10 +128,6 @@ public interface SessionFactoryOptionsState {
 	public boolean isAutoEvictCollectionCache();
 
 	public SchemaAutoTooling getSchemaAutoTooling();
-
-	public boolean isDataDefinitionImplicitCommit();
-
-	public boolean isDataDefinitionInTransactionSupported();
 
 	public int getJdbcBatchSize();
 

@@ -36,7 +36,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.hql.spi.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -279,14 +279,6 @@ public final class Settings {
 
 	public boolean isAutoValidateSchema() {
 		return sessionFactoryOptions.getSchemaAutoTooling() == SchemaAutoTooling.VALIDATE;
-	}
-
-	public boolean isDataDefinitionImplicitCommit() {
-		return sessionFactoryOptions.isDataDefinitionImplicitCommit();
-	}
-
-	public boolean isDataDefinitionInTransactionSupported() {
-		return sessionFactoryOptions.isDataDefinitionInTransactionSupported();
 	}
 
 	public int getJdbcBatchSize() {

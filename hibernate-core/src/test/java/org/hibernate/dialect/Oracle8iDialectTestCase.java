@@ -23,6 +23,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
+
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -35,7 +37,9 @@ public class Oracle8iDialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9290")
 	public void testTemporaryTableNameTruncation() throws Exception {
-		String temporaryTableName = new Oracle8iDialect().generateTemporaryTableName(
+		final AbstractMultiTableBulkIdStrategyImpl strategy = (AbstractMultiTableBulkIdStrategyImpl) new Oracle8iDialect().getDefaultMultiTableBulkIdStrategy();
+
+		String temporaryTableName = strategy.getIdTableSupport().generateIdTableName(
 				"TABLE_NAME_THAT_EXCEEDS_30_CHARACTERS"
 		);
 

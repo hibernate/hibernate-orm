@@ -41,7 +41,6 @@ import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -495,31 +494,6 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	public boolean hasPrimaryKey() {
 		return getPrimaryKey() != null;
-	}
-
-	public String sqlTemporaryTableCreateString(Dialect dialect, Mapping mapping) throws HibernateException {
-		StringBuilder buffer = new StringBuilder( dialect.getCreateTemporaryTableString() )
-				.append( ' ' )
-				.append( name )
-				.append( " (" );
-		Iterator itr = getColumnIterator();
-		while ( itr.hasNext() ) {
-			final Column column = (Column) itr.next();
-			buffer.append( column.getQuotedName( dialect ) ).append( ' ' );
-			buffer.append( column.getSqlType( dialect, mapping ) );
-			if ( column.isNullable() ) {
-				buffer.append( dialect.getNullColumnString() );
-			}
-			else {
-				buffer.append( " not null" );
-			}
-			if ( itr.hasNext() ) {
-				buffer.append( ", " );
-			}
-		}
-		buffer.append( ") " );
-		buffer.append( dialect.getCreateTemporaryTablePostfix() );
-		return buffer.toString();
 	}
 
 	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {

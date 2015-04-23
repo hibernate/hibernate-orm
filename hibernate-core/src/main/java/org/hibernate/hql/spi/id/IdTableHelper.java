@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.hql.spi;
+package org.hibernate.hql.spi.id;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -29,15 +29,12 @@ import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
 
 import org.jboss.logging.Logger;
@@ -45,15 +42,15 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class MultiTableBulkIdHelper {
-	private static final Logger log = Logger.getLogger( MultiTableBulkIdHelper.class );
+public class IdTableHelper {
+	private static final Logger log = Logger.getLogger( IdTableHelper.class );
 
 	/**
 	 * Singleton access
 	 */
-	public static final MultiTableBulkIdHelper INSTANCE = new MultiTableBulkIdHelper();
+	public static final IdTableHelper INSTANCE = new IdTableHelper();
 
-	private MultiTableBulkIdHelper() {
+	private IdTableHelper() {
 	}
 
 	public boolean needsIdTable(PersistentClass entityBinding) {
@@ -77,43 +74,10 @@ public class MultiTableBulkIdHelper {
 		return false;
 	}
 
-
-	public Table generateIdTableDefinition(
-			PersistentClass entityMapping,
-			String catalog,
-			String schema,
-			boolean generateSessionIdColumn) {
-		Table idTable = new Table( entityMapping.getTemporaryIdTableName() );
-		idTable.setComment( "Used to hold id values for the " + entityMapping.getEntityName() + " class" );
-
-		if ( catalog != null ) {
-			idTable.setCatalog( catalog );
-		}
-		if ( schema != null ) {
-			idTable.setSchema( schema );
-		}
-
-		Iterator itr = entityMapping.getTable().getPrimaryKey().getColumnIterator();
-		while( itr.hasNext() ) {
-			Column column = (Column) itr.next();
-			idTable.addColumn( column.clone()  );
-		}
-
-		if ( generateSessionIdColumn ) {
-			Column sessionIdColumn = new Column( "hib_sess_id" );
-			sessionIdColumn.setSqlType( "CHAR(36)" );
-			sessionIdColumn.setComment( "Used to hold the Hibernate Session identifier" );
-			idTable.addColumn( sessionIdColumn );
-		}
-
-		return idTable;
-	}
-
-	protected void exportTableDefinitions(
-			List<Table> idTableDefinitions,
+	public void executeIdTableCreationStatements(
+			List<String> creationStatements,
 			JdbcServices jdbcServices,
-			JdbcConnectionAccess connectionAccess,
-			MetadataImplementor metadata) {
+			JdbcConnectionAccess connectionAccess) {
 		try {
 			Connection connection;
 			try {
@@ -128,15 +92,14 @@ public class MultiTableBulkIdHelper {
 			try {
 				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				Statement statement = connection.createStatement();
-				for ( Table idTableDefinition : idTableDefinitions ) {
+				for ( String creationStatement : creationStatements ) {
 					try {
-						final String sql = idTableDefinition.sqlCreateString( jdbcServices.getDialect(), metadata, null, null );
-						jdbcServices.getSqlStatementLogger().logStatement( sql );
+						jdbcServices.getSqlStatementLogger().logStatement( creationStatement );
 						// TODO: ResultSetExtractor
-						statement.execute( sql );
+						statement.execute( creationStatement );
 					}
 					catch (SQLException e) {
-						log.debugf( "Error attempting to export id-table [%s] : %s", idTableDefinition.getName(), e.getMessage() );
+						log.debugf( "Error attempting to export id-table [%s] : %s", creationStatement, e.getMessage() );
 					}
 				}
 
@@ -160,11 +123,11 @@ public class MultiTableBulkIdHelper {
 		}
 	}
 
-	public void cleanupTableDefinitions(
+	public void executeIdTableDropStatements(
+			String[] dropStatements,
 			JdbcServices jdbcServices,
-			JdbcConnectionAccess connectionAccess,
-			List<String> tableCleanUpDdl) {
-		if ( tableCleanUpDdl == null ) {
+			JdbcConnectionAccess connectionAccess) {
+		if ( dropStatements == null ) {
 			return;
 		}
 
@@ -175,10 +138,10 @@ public class MultiTableBulkIdHelper {
 				// TODO: session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().createStatement();
 				Statement statement = connection.createStatement();
 
-				for ( String cleanupDdl : tableCleanUpDdl ) {
+				for ( String dropStatement : dropStatements ) {
 					try {
-						jdbcServices.getSqlStatementLogger().logStatement( cleanupDdl );
-						statement.execute( cleanupDdl );
+						jdbcServices.getSqlStatementLogger().logStatement( dropStatement );
+						statement.execute( dropStatement );
 					}
 					catch (SQLException e) {
 						log.debugf( "Error attempting to cleanup id-table : [%s]", e.getMessage() );
@@ -204,4 +167,5 @@ public class MultiTableBulkIdHelper {
 			log.error( "Unable obtain JDBC Connection", e );
 		}
 	}
+
 }

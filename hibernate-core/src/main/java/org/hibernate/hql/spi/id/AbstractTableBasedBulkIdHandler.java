@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.hql.spi;
+package org.hibernate.hql.spi.id;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -34,7 +34,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Table;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
@@ -45,24 +44,27 @@ import antlr.RecognitionException;
 import antlr.collections.AST;
 
 /**
+ * Convenience base class for {@link MultiTableBulkIdStrategy.UpdateHandler}
+ * and {@link MultiTableBulkIdStrategy.DeleteHandler} implementations through
+ * {@link TableBasedUpdateHandlerImpl} and {@link TableBasedDeleteHandlerImpl} respectively.
+ * <p/>
+ * Mainly supports common activities like:<ul>
+ *     <li>processing the original {@code WHERE} clause (if one) - {@link #processWhereClause}</li>
+ *     <li>generating the proper {@code SELECT} clause for the id-table insert - {@link #generateIdInsertSelect}</li>
+ *     <li>generating the sub-select from the id-table - {@link #generateIdSubselect}</li>
+ * </ul>
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractTableBasedBulkIdHandler {
 	private final SessionFactoryImplementor sessionFactory;
 	private final HqlSqlWalker walker;
 
-	private final String catalog;
-	private final String schema;
-
 	public AbstractTableBasedBulkIdHandler(
 			SessionFactoryImplementor sessionFactory,
-			HqlSqlWalker walker,
-			String catalog,
-			String schema) {
+			HqlSqlWalker walker) {
 		this.sessionFactory = sessionFactory;
 		this.walker = walker;
-		this.catalog = catalog;
-		this.schema = schema;
 	}
 
 	protected SessionFactoryImplementor factory() {
@@ -72,6 +74,8 @@ public abstract class AbstractTableBasedBulkIdHandler {
 	protected HqlSqlWalker walker() {
 		return walker;
 	}
+
+	public abstract Queryable getTargetedQueryable();
 
 	protected JDBCException convert(SQLException e, String message, String sql) {
 		throw factory().getSQLExceptionHelper().convert( e, message, sql );
@@ -101,11 +105,18 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		}
 	}
 
+	/**
+	 * Interprets the {@code WHERE} clause from the user-defined update/delete  query
+	 *
+	 * @param whereClause The user-defined {@code WHERE} clause
+	 *
+	 * @return The bulk-id-ready {@code WHERE} clause representation
+	 */
 	@SuppressWarnings("unchecked")
 	protected ProcessedWhereClause processWhereClause(AST whereClause) {
 		if ( whereClause.getNumberOfChildren() != 0 ) {
 			// If a where clause was specified in the update/delete query, use it to limit the
-			// returned ids here...
+			// ids that will be returned and inserted into the id table...
 			try {
 				SqlGenerator sqlGenerator = new SqlGenerator( sessionFactory );
 				sqlGenerator.whereClause( whereClause );
@@ -123,16 +134,33 @@ public abstract class AbstractTableBasedBulkIdHandler {
 		}
 	}
 
-	protected String generateIdInsertSelect(Queryable persister, String tableAlias, ProcessedWhereClause whereClause) {
+	/**
+	 * Generate the {@code INSERT}-{@code SELECT} statement for holding matching ids.  This is the
+	 * {@code INSERT} used to populate the bulk-id table with ids matching the restrictions defined in the
+	 * original {@code WHERE} clause
+	 *
+	 * @param tableAlias The table alias to use for the entity
+	 * @param whereClause The processed representation for the user-defined {@code WHERE} clause.
+	 *
+	 * @return The {@code INSERT}-{@code SELECT} for populating the bulk-id table.
+	 */
+	protected String generateIdInsertSelect(
+			String tableAlias,
+			IdTableInfo idTableInfo,
+			ProcessedWhereClause whereClause) {
+
 		Select select = new Select( sessionFactory.getDialect() );
-		SelectValues selectClause = new SelectValues( sessionFactory.getDialect() )
-				.addColumns( tableAlias, persister.getIdentifierColumnNames(), persister.getIdentifierColumnNames() );
+		SelectValues selectClause = new SelectValues( sessionFactory.getDialect() ).addColumns(
+				tableAlias,
+				getTargetedQueryable().getIdentifierColumnNames(),
+				getTargetedQueryable().getIdentifierColumnNames()
+		);
 		addAnyExtraIdSelectValues( selectClause );
 		select.setSelectClause( selectClause.render() );
 
-		String rootTableName = persister.getTableName();
-		String fromJoinFragment = persister.fromJoinFragment( tableAlias, true, false );
-		String whereJoinFragment = persister.whereJoinFragment( tableAlias, true, false );
+		String rootTableName = getTargetedQueryable().getTableName();
+		String fromJoinFragment = getTargetedQueryable().fromJoinFragment( tableAlias, true, false );
+		String whereJoinFragment = getTargetedQueryable().whereJoinFragment( tableAlias, true, false );
 
 		select.setFromClause( rootTableName + ' ' + tableAlias + fromJoinFragment );
 
@@ -155,24 +183,26 @@ public abstract class AbstractTableBasedBulkIdHandler {
 
 		InsertSelect insert = new InsertSelect( sessionFactory.getDialect() );
 		if ( sessionFactory.getSettings().isCommentsEnabled() ) {
-			insert.setComment( "insert-select for " + persister.getEntityName() + " ids" );
+			insert.setComment( "insert-select for " + getTargetedQueryable().getEntityName() + " ids" );
 		}
-		insert.setTableName( determineIdTableName( persister ) );
+		insert.setTableName( idTableInfo.getQualifiedIdTableName() );
 		insert.setSelect( select );
 		return insert.toStatementString();
 	}
 
+	/**
+	 * Used from {@link #generateIdInsertSelect} to allow subclasses to define any extra
+	 * values to be selected (and therefore stored into the bulk-id table).  Used to store
+	 * session identifier, e.g.
+	 *
+	 * @param selectClause The SelectValues that defines the select clause of the insert statement.
+	 */
 	protected void addAnyExtraIdSelectValues(SelectValues selectClause) {
 	}
 
-	protected String determineIdTableName(Queryable persister) {
-		// todo : use the identifier/name qualifier service once we pull that over to master
-		return Table.qualify( catalog, schema, persister.getTemporaryIdTableName() );
-	}
-
-	protected String generateIdSubselect(Queryable persister) {
+	protected String generateIdSubselect(Queryable persister, IdTableInfo idTableInfo) {
 		return "select " + StringHelper.join( ", ", persister.getIdentifierColumnNames() ) +
-				" from " + determineIdTableName( persister );
+				" from " + idTableInfo.getQualifiedIdTableName();
 	}
 
 	protected void prepareForUse(Queryable persister, SessionImplementor session) {

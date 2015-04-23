@@ -28,6 +28,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -35,6 +36,10 @@ import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
@@ -287,18 +292,22 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		return new LocalTemporaryTableBulkIdStrategy(
+				new IdTableSupportStandardImpl() {
+					@Override
+					public String getCreateIdTableCommand() {
+						return "create temp table";
+					}
 
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "create temp table";
-	}
-
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return "with no log";
+					@Override
+					public String getCreateIdTableStatementOptions() {
+						return "with no log";
+					}
+				},
+				AfterUseAction.CLEAN,
+				null
+		);
 	}
 	
 	@Override

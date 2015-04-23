@@ -105,9 +105,6 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	@Override
 	public TransactionStatus getStatus() {
 		try {
-			if ( transactionManager.getTransaction() == null ) {
-				return StatusTranslator.translate( Status.STATUS_NO_TRANSACTION );
-			}
 			return StatusTranslator.translate( transactionManager.getStatus() );
 		}
 		catch (SystemException e) {

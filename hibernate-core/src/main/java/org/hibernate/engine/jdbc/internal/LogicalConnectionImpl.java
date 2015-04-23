@@ -174,10 +174,12 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			physicalConnection = null;
 			isClosed = true;
 			LOG.trace( "Logical connection closed" );
-			for ( ConnectionObserver observer : observers ) {
-				observer.logicalConnectionClosed();
+			if(!observers.isEmpty()) {
+				for (ConnectionObserver observer : observers) {
+					observer.logicalConnectionClosed();
+				}
+				observers.clear();
 			}
-			observers.clear();
 		}
 	}
 
@@ -255,10 +257,12 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	private void releaseNonDurableObservers() {
-		Iterator observers = this.observers.iterator();
-		while ( observers.hasNext() ) {
-			if ( NonDurableConnectionObserver.class.isInstance( observers.next() ) ) {
-				observers.remove();
+		if(!this.observers.isEmpty()) {
+			Iterator observers = this.observers.iterator();
+			while (observers.hasNext()) {
+				if (NonDurableConnectionObserver.class.isInstance(observers.next())) {
+					observers.remove();
+				}
 			}
 		}
 	}

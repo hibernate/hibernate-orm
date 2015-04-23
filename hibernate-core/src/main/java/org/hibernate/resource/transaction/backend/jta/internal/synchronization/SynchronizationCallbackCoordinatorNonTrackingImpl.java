@@ -72,8 +72,11 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	}
 
 	protected void doAfterCompletion(boolean successful) {
-		reset();
-		target.afterCompletion( successful );
+		try {
+			target.afterCompletion( successful );
+		}finally {
+			reset();
+		}
 	}
 
 	@Override

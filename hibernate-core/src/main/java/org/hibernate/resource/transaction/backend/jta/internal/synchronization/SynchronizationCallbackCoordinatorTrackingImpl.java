@@ -60,7 +60,6 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// "lazily" be re-populated on the next synchronizationRegistered call to allow for the potential of the next Session transaction
 		// occurring on a different thread (though that transaction would need to completely operate on that thread).
 		delayedCompletionHandling = false;
-		registrationThreadId = NO_THREAD_ID;
 	}
 
 	@Override
@@ -102,6 +101,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 	public void processAnyDelayedAfterCompletion() {
 		if ( delayedCompletionHandling ) {
 			// false here because, as discussed above, the delayed logic should only ever occur during rollback
+			delayedCompletionHandling = false;
 			doAfterCompletion( false );
 			// NOTE : doAfterCompletion calls reset
 			throw new HibernateException( "Transaction was rolled back in a different thread!" );

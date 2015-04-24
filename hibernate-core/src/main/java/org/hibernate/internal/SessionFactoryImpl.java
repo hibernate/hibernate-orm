@@ -115,7 +115,6 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -183,7 +182,10 @@ import org.hibernate.type.TypeResolver;
 public final class SessionFactoryImpl
 		implements SessionFactoryImplementor {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			SessionFactoryImpl.class.getName()
+	);
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
 	private final String name;
@@ -214,7 +216,6 @@ public final class SessionFactoryImpl
 	private transient boolean isClosed;
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
-	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 
 	public SessionFactoryImpl(final MetadataImplementor metadata, SessionFactoryOptions options) {
@@ -516,7 +517,6 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
-		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 
 		SessionFactoryRegistry.INSTANCE.addSessionFactory(
@@ -689,10 +689,6 @@ public final class SessionFactoryImpl
 	@Override
 	public void addObserver(SessionFactoryObserver observer) {
 		this.observer.addObserver( observer );
-	}
-
-	public TransactionEnvironment getTransactionEnvironment() {
-		return transactionEnvironment;
 	}
 
 	public Properties getProperties() {

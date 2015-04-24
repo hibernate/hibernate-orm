@@ -28,7 +28,6 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -36,10 +35,6 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class JdbcConnectionAccessImpl implements JdbcConnectionAccess {
 	private final ConnectionProvider connectionProvider;
-
-	public JdbcConnectionAccessImpl(TransactionEnvironment transactionEnvironment) {
-		this( transactionEnvironment.getSessionFactory().getServiceRegistry() );
-	}
 
 	public JdbcConnectionAccessImpl(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;

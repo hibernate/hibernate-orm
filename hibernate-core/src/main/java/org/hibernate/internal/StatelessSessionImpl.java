@@ -64,7 +64,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -166,16 +165,16 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public void delete(Object entity) {
 		errorIfClosed();
-		delete(null, entity);
+		delete( null, entity );
 	}
 
 	@Override
 	public void delete(String entityName, Object entity) {
 		errorIfClosed();
-		EntityPersister persister = getEntityPersister(entityName, entity);
+		EntityPersister persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifier( entity, this );
 		Object version = persister.getVersion( entity );
-		persister.delete(id, version, entity, this);
+		persister.delete( id, version, entity, this );
 	}
 
 

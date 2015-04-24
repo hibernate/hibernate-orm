@@ -21,15 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.spatial.integration;
 
-package org.hibernate.spatial;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.service.spi.ServiceContributor;
 
 /**
- * A marker interface for spatial (geometric/geographic) types.
+ * Manages initialization of the hibernate-spatial integration
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 4/18/13
+ * @author Steve Ebersole
  */
-public interface Spatial {
+public class SpatialInitializer implements ServiceContributor {
+
+	@Override
+	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		final SpatialService spatialService = new SpatialService( serviceRegistryBuilder );
+		serviceRegistryBuilder.addService( SpatialService.class, spatialService );
+
+		if ( !spatialService.isEnabled() ) {
+			return;
+		}
+
+		serviceRegistryBuilder.addInitiator( SpatialDialectFactoryInitiator.INSTANCE );
+	}
 
 }

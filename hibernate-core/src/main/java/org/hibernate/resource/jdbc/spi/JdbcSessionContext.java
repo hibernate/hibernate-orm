@@ -45,8 +45,6 @@ public interface JdbcSessionContext {
 
 	public StatementInspector getStatementInspector();
 
-//	public SqlExceptionHelper getSqlExceptionHelper();
-//	public SqlStatementLogger getSqlStatementLogger();
 	public JdbcObserver getObserver();
 
 	/**

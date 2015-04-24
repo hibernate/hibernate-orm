@@ -71,4 +71,5 @@ public interface TransactionCoordinatorOwner {
 	 */
 	public void setTransactionTimeOut(int seconds);
 
+	public void flushBeforeTransactionCompletion();
 }

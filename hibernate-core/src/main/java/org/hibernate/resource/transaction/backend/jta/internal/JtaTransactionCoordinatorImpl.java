@@ -157,6 +157,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return synchronizationRegistered;
 	}
 
+	public TransactionCoordinatorOwner getTransactionCoordinatorOwner(){
+		return this.transactionCoordinatorOwner;
+	}
+
 	@Override
 	public LocalInflow getTransactionDriverControl() {
 		if ( physicalTransactionDelegate == null ) {
@@ -201,7 +205,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 				log.debug( "JtaPlatform#retrieveUserTransaction returned null" );
 			}
 			else {
-				return new JtaTransactionAdapterUserTransactionImpl( userTransaction );
+				return new JtaTransactionAdapterUserTransactionImpl( userTransaction, this );
 			}
 		}
 		catch (Exception ignore) {
@@ -218,7 +222,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 				log.debug( "JtaPlatform#retrieveTransactionManager returned null" );
 			}
 			else {
-				return new JtaTransactionAdapterTransactionManagerImpl( transactionManager );
+				return new JtaTransactionAdapterTransactionManagerImpl( transactionManager, this );
 			}
 		}
 		catch (Exception ignore) {
@@ -272,7 +276,11 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void beforeCompletion() {
-		transactionCoordinatorOwner.beforeTransactionCompletion();
+		try {
+			transactionCoordinatorOwner.beforeTransactionCompletion();
+		}catch (Exception e){
+			physicalTransactionDelegate.markRollbackOnly();
+		}
 		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
 	}
 

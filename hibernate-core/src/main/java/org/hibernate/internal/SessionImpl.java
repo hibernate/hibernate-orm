@@ -710,7 +710,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	private void fireLock(String entityName, Object object, LockOptions options) {
-		fireLock( new LockEvent( entityName, object, options, this) );
+		fireLock( new LockEvent( entityName, object, options, this ) );
 	}
 
 	private void fireLock( Object object, LockOptions options) {
@@ -1274,7 +1274,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			success = true;
 		}
 		finally {
-			afterOperation(success);
+			afterOperation( success );
 			delayedAfterCompletion();
 		}
 		return result;
@@ -1297,7 +1297,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
             result = plan.performExecuteUpdate(queryParameters, this);
             success = true;
         } finally {
-            afterOperation(success);
+            afterOperation( success );
     		delayedAfterCompletion();
         }
         return result;
@@ -2256,26 +2256,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	@Override
 	public void beforeTransactionCompletion() {
-		boolean flush = false;
-		try {
-			flush = (!isFlushModeNever() &&
-					!flushBeforeCompletionEnabled) || (
-					!isClosed()
-							&& !isFlushModeNever()
-							&& flushBeforeCompletionEnabled
-							&& !JtaStatusHelper.isRollback(
-							getSessionFactory().getSettings()
-									.getJtaPlatform()
-									.getCurrentStatus()
-					));
-		}
-		catch (SystemException se) {
-			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
-		}
-		if ( flush ) {
-			managedFlush();
-		}
 		LOG.trace( "before transaction completion" );
+		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		try {
 			interceptor.beforeTransactionCompletion( currentHibernateTransaction );
@@ -2876,5 +2858,28 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void afterTransactionBegin() {
 		errorIfClosed();
 		interceptor.afterTransactionBegin( currentHibernateTransaction );
+	}
+
+	@Override
+	public void flushBeforeTransactionCompletion() {
+		boolean flush = false;
+		try {
+			flush = (!isFlushModeNever() &&
+					!flushBeforeCompletionEnabled) || (
+					!isClosed()
+							&& !isFlushModeNever()
+							&& flushBeforeCompletionEnabled
+							&& !JtaStatusHelper.isRollback(
+							getSessionFactory().getSettings()
+									.getJtaPlatform()
+									.getCurrentStatus()
+					));
+		}
+		catch (SystemException se) {
+			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
+		}
+		if ( flush ) {
+			managedFlush();
+		}
 	}
 }

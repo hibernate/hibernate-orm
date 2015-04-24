@@ -272,6 +272,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	public void flushBeforeTransactionCompletion() {
+		getJdbcSessionOwner().flushBeforeTransactionCompletion();
+	}
+
+	@Override
 	public int determineRemainingTransactionTimeOutPeriod() {
 		if ( transactionTimeOutInstant < 0 ) {
 			return -1;

@@ -61,7 +61,8 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new TransactionException( "Transaction instance is no longer valid" );
 		}
 		if ( status == TransactionStatus.ACTIVE ) {
-			throw new TransactionException( "nested transactions not supported" );
+//			throw new TransactionException( "nested transactions not supported" );
+			return;
 		}
 
 		LOG.debug( "begin" );

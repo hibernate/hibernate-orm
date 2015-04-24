@@ -41,11 +41,16 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	private static final Logger log = Logger.getLogger( JtaTransactionAdapterUserTransactionImpl.class );
 
 	private final UserTransaction userTransaction;
+	private final JtaTransactionCoordinatorImpl transactionCoordinator;
+
 
 	private boolean initiator;
 
-	public JtaTransactionAdapterUserTransactionImpl(UserTransaction userTransaction) {
+	public JtaTransactionAdapterUserTransactionImpl(
+			UserTransaction userTransaction,
+			JtaTransactionCoordinatorImpl transactionCoordinator) {
 		this.userTransaction = userTransaction;
+		this.transactionCoordinator = transactionCoordinator;
 	}
 
 	@Override
@@ -69,7 +74,10 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	@Override
 	public void commit() {
 		try {
+			this.transactionCoordinator.getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
+
 			if ( initiator ) {
+				initiator = false;
 				log.trace( "Calling UserTransaction#commit" );
 				userTransaction.commit();
 				log.trace( "Called UserTransaction#commit" );
@@ -77,7 +85,6 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 			else {
 				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
 			}
-			initiator = false;
 		}
 		catch (Exception e) {
 			throw new TransactionException( "JTA UserTransaction#commit failed", e );
@@ -88,14 +95,14 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	public void rollback() {
 		try {
 			if ( initiator ) {
+				initiator = false;
 				log.trace( "Calling UserTransaction#rollback" );
 				userTransaction.rollback();
 				log.trace( "Called UserTransaction#rollback" );
 			}
 			else {
-				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				markRollbackOnly();
 			}
-			initiator = false;
 		}
 		catch (Exception e) {
 			throw new TransactionException( "JTA UserTransaction#rollback failed", e );

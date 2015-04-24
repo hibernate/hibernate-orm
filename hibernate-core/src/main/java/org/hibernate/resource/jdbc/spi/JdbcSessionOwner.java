@@ -57,4 +57,6 @@ public interface JdbcSessionOwner {
 	 * @param successful Was the transaction successful?
 	 */
 	public void afterTransactionCompletion(boolean successful);
+
+	public void flushBeforeTransactionCompletion();
 }

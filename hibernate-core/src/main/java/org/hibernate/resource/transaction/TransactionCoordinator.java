@@ -87,7 +87,6 @@ public interface TransactionCoordinator {
 	 */
 	public IsolationDelegate createIsolationDelegate();
 
-
 	/**
 	 * Adds an observer to the coordinator.
 	 * <p/>

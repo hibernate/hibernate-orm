@@ -784,4 +784,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			managedClose();
 		}
 	}
+
+	@Override
+	public void flushBeforeTransactionCompletion() {
+
+	}
 }

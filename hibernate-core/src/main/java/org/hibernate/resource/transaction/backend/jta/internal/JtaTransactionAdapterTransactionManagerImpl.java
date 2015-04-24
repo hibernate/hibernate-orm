@@ -41,11 +41,15 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	private static final Logger log = Logger.getLogger( JtaTransactionAdapterTransactionManagerImpl.class );
 
 	private final TransactionManager transactionManager;
+	private final JtaTransactionCoordinatorImpl transactionCoordinator;
 
 	private boolean initiator;
 
-	public JtaTransactionAdapterTransactionManagerImpl(TransactionManager transactionManager) throws SystemException {
+	public JtaTransactionAdapterTransactionManagerImpl(
+			TransactionManager transactionManager,
+			JtaTransactionCoordinatorImpl transactionCoordinator) throws SystemException {
 		this.transactionManager = transactionManager;
+		this.transactionCoordinator = transactionCoordinator;
 	}
 
 	@Override
@@ -69,7 +73,10 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	@Override
 	public void commit() {
 		try {
+			this.transactionCoordinator.getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
+
 			if ( initiator ) {
+				initiator = false;
 				log.trace( "Calling TransactionManager#commit" );
 				transactionManager.commit();
 				log.trace( "Called TransactionManager#commit" );
@@ -77,7 +84,6 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 			else {
 				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
 			}
-			initiator = false;
 		}
 		catch (Exception e) {
 			throw new TransactionException( "JTA TransactionManager#commit failed", e );
@@ -88,14 +94,14 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	public void rollback() {
 		try {
 			if ( initiator ) {
+				initiator = false;
 				log.trace( "Calling TransactionManager#rollback" );
 				transactionManager.rollback();
 				log.trace( "Called TransactionManager#rollback" );
 			}
 			else {
-				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				markRollbackOnly();
 			}
-			initiator = false;
 		}
 		catch (Exception e) {
 			throw new TransactionException( "JTA TransactionManager#rollback failed", e );

@@ -23,17 +23,15 @@
  */
 package org.hibernate.test.jpa.txn;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.test.jpa.AbstractJPATest;
+
+import org.junit.Test;
+
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.hibernate.test.jpa.AbstractJPATest;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -46,7 +44,7 @@ public class TransactionJoiningTest extends AbstractJPATest {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		TestingJtaBootstrap.prepare( cfg.getProperties() );
-//		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+//	git diff	cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 	}
 
 	@Test

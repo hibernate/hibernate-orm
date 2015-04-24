@@ -28,9 +28,8 @@ import javax.transaction.Synchronization;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -40,7 +39,7 @@ import static org.hibernate.resource.transaction.TransactionCoordinator.LocalInf
 /**
  * @author Andrea Boriero
  */
-public class TransactionImpl implements TransactionImplementor {
+public class TransactionImpl implements Transaction {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
@@ -141,10 +140,5 @@ public class TransactionImpl implements TransactionImplementor {
 
 	protected boolean allowFailedCommitToPhysicallyRollback() {
 		return false;
-	}
-
-	@Override
-	public IsolationDelegate createIsolationDelegate() {
-		return transactionCoordinator.createIsolationDelegate();
 	}
 }

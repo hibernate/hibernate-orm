@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.common;
 
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 
 /**

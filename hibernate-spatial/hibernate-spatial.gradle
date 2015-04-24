@@ -22,6 +22,13 @@
 apply plugin: 'java'
 apply plugin: 'hibernate-matrix-testing'
 
+//Temporary repository config, until geolatte-geom is released in maven central.
+repositories {
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+}
+
 dependencies {
     compile(project(':hibernate-core'))
     compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])

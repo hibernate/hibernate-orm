@@ -27,7 +27,7 @@ import java.util.Locale;
 
 /**
  * Defines the various policies by which Hibernate might release its underlying
- * JDBC connection.
+ * JDBC connection.  Inverse of {@link ConnectionAcquisitionMode}.
  *
  * @author Steve Ebersole
  */

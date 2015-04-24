@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
  * Base class for {@link SharedSessionBuilder} implementations that wish to implement only parts of that contract
@@ -94,6 +95,11 @@ public class ForwardingSharedSessionBuilder implements SharedSessionBuilder {
 	@Override
 	public SharedSessionBuilder noInterceptor() {
 		return delegate.noInterceptor();
+	}
+
+	@Override
+	public SessionBuilder statementInspector(StatementInspector statementInspector) {
+		return delegate.statementInspector( statementInspector );
 	}
 
 	@Override

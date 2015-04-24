@@ -97,6 +97,9 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 
 import org.jboss.logging.Logger;
 
@@ -161,7 +164,7 @@ public class StrategySelectorBuilder {
 		// build the baseline...
 		addDialects( strategySelector );
 		addJtaPlatforms( strategySelector );
-//		addTransactionFactories( strategySelector );
+		addTransactionCoordinatorBuilders( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
 		addEntityCopyObserverStrategies( strategySelector );
 
@@ -351,16 +354,18 @@ public class StrategySelectorBuilder {
 		}
 	}
 
-//	private void addTransactionFactories(StrategySelectorImpl strategySelector) {
-//		strategySelector.registerStrategyImplementor( TransactionFactory.class, JdbcTransactionFactory.SHORT_NAME, JdbcTransactionFactory.class );
-//		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.JDBCTransactionFactory", JdbcTransactionFactory.class );
-//
-//		strategySelector.registerStrategyImplementor( TransactionFactory.class, JtaTransactionFactory.SHORT_NAME, JtaTransactionFactory.class );
-//		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.JTATransactionFactory", JtaTransactionFactory.class );
-//
-//		strategySelector.registerStrategyImplementor( TransactionFactory.class, CMTTransactionFactory.SHORT_NAME, CMTTransactionFactory.class );
-//		strategySelector.registerStrategyImplementor( TransactionFactory.class, "org.hibernate.transaction.CMTTransactionFactory", CMTTransactionFactory.class );
-//	}
+	private void addTransactionCoordinatorBuilders(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				TransactionCoordinatorBuilder.class,
+				JdbcResourceLocalTransactionCoordinatorBuilderImpl.SHORT_NAME,
+				JdbcResourceLocalTransactionCoordinatorBuilderImpl.class
+		);
+		strategySelector.registerStrategyImplementor(
+				TransactionCoordinatorBuilder.class,
+				JtaTransactionCoordinatorBuilderImpl.SHORT_NAME,
+				JtaTransactionCoordinatorBuilderImpl.class
+		);
+	}
 
 	private void addMultiTableBulkIdStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(

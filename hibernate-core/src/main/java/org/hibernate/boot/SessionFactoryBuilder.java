@@ -40,6 +40,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -141,6 +142,18 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#INTERCEPTOR
 	 */
 	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor);
+
+	/**
+	 * Names a StatementInspector to be applied to the SessionFactory, which in turn means it will be used by all
+	 * Sessions unless one is explicitly specified in {@link org.hibernate.SessionBuilder#statementInspector}
+	 *
+	 * @param statementInspector The StatementInspector
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR
+	 */
+	public SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Specifies one or more observers to be applied to the SessionFactory.  Can be called multiple times to add
@@ -365,18 +378,29 @@ public interface SessionFactoryBuilder {
 	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
 
 	/**
-	 * Should we track JTA transactions to attempt to detect timeouts?
+	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it track JTA
+	 * transactions by thread in an attempt to detect timeouts?
 	 *
 	 * @param enabled {@code true} indicates we should track by thread; {@code false} indicates not
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JTA_TRACK_BY_THREAD
-	 *
-	 * @deprecated This should be replaced by new TransactionCoordinator work...
 	 */
-	@Deprecated
 	public SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled);
+
+	/**
+	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it prefer to use
+	 * {@link javax.transaction.UserTransaction} over {@link javax.transaction.Transaction}?
+	 *
+	 * @param preferUserTransactions {@code true} indicates we should prefer {@link javax.transaction.UserTransaction};
+	 * {@code false} indicates we should prefer {@link javax.transaction.Transaction}
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION
+	 */
+	public SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions);
 
 	/**
 	 * Apply query substitutions to use in HQL queries.  Note, this is a legacy feature and almost always

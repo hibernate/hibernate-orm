@@ -33,8 +33,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.backend.store.spi.DataStoreTransactionAccess;
+import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
 /**
@@ -43,7 +42,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwner, DataStoreTransactionAccess {
+public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwner, JdbcResourceTransactionAccess {
 //	/**
 //	 * Retrieve the transaction coordinator associated with this JDBC coordinator.
 //	 *

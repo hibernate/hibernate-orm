@@ -24,8 +24,6 @@
 package org.hibernate.hql.spi.id.global;
 
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -43,7 +41,6 @@ import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.UpdateStatement;
 import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
 import org.hibernate.hql.spi.id.IdTableHelper;
-import org.hibernate.hql.spi.id.IdTableInfo;
 import org.hibernate.hql.spi.id.IdTableSupport;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -188,13 +185,13 @@ public class GlobalTemporaryTableBulkIdStrategy
 		final String sql = "delete from " + tableName;
 		PreparedStatement ps = null;
 		try {
-			ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-			session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 		}
 		finally {
 			if ( ps != null ) {
 				try {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+					session.getJdbcCoordinator().getResourceRegistry().release( ps );
 				}
 				catch( Throwable ignore ) {
 					// ignore

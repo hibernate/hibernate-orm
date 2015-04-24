@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.resource.transaction.backend.store.spi;
+package org.hibernate;
 
 /**
- * Provides access to DataStoreTransaction (JDBC transaction stand-in) for use in building resource-local
- * TransactionCoordinator instances.
+ * Indicates the manner in which JDBC Connections should be acquired.  Inverse to
+ * {@link org.hibernate.ConnectionReleaseMode}.
+ * <p/>
+ * NOTE : Not yet used.  The only current behavior is the legacy behavior, which is
+ * {@link #AS_NEEDED}.
  *
  * @author Steve Ebersole
  */
-public interface DataStoreTransactionAccess {
+public enum ConnectionAcquisitionMode {
 	/**
-	 * Provides access to the resource local transaction of this data store, which is used by the TransactionCoordinator
-	 * to manage transactions against the data store when not using JTA.
-	 *
-	 * @return The resource-local transaction
+	 * The Connection will be acquired as soon as the Hibernate Session is opened.  This
+	 * also circumvents ConnectionReleaseMode, as the Connection will then be held until the
+	 * Session is closed.
 	 */
-	public DataStoreTransaction getResourceLocalTransaction();
+	IMMEDIATELY,
+	/**
+	 * The legacy behavior.  A Connection is only acquired when (if_) it is actually needed.
+	 */
+	AS_NEEDED,
+	/**
+	 * Not sure yet tbh :)
+	 */
+	DEFAULT
 }

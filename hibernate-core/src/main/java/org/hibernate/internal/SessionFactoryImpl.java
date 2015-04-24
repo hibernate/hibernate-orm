@@ -137,6 +137,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
@@ -1195,6 +1196,7 @@ public final class SessionFactoryImpl
 		private final SessionFactoryImpl sessionFactory;
 		private SessionOwner sessionOwner;
 		private Interceptor interceptor;
+		private StatementInspector statementInspector;
 		private Connection connection;
 		private ConnectionReleaseMode connectionReleaseMode;
 		private boolean autoClose;
@@ -1210,6 +1212,7 @@ public final class SessionFactoryImpl
 
 			// set up default builder values...
 			this.interceptor = sessionFactory.getInterceptor();
+			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
 			this.connectionReleaseMode = settings.getConnectionReleaseMode();
 			this.autoClose = settings.isAutoCloseSessionEnabled();
 			this.flushBeforeCompletion = settings.isFlushBeforeCompletionEnabled();
@@ -1251,6 +1254,7 @@ public final class SessionFactoryImpl
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),
 					interceptor,
+					statementInspector,
 					flushBeforeCompletion,
 					autoClose,
 					connectionReleaseMode,
@@ -1279,6 +1283,12 @@ public final class SessionFactoryImpl
 		@Override
 		public SessionBuilder noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder statementInspector(StatementInspector statementInspector) {
+			this.statementInspector = statementInspector;
 			return this;
 		}
 

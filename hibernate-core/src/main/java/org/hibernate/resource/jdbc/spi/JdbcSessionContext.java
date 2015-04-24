@@ -23,10 +23,8 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
@@ -55,10 +53,4 @@ public interface JdbcSessionContext {
 	public SessionFactoryImplementor getSessionFactory();
 
 	public ServiceRegistry getServiceRegistry();
-
-	public static enum ConnectionAcquisitionMode {
-		IMMEDIATELY,
-		AS_NEEDED,
-		DEFAULT
-	}
 }

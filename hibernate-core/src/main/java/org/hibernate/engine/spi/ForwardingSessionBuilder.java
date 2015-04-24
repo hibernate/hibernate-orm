@@ -30,6 +30,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
  * Base class for {@link SessionBuilder} implementations that wish to implement only parts of that contract themselves
@@ -58,6 +59,11 @@ public class ForwardingSessionBuilder implements SessionBuilder {
 	@Override
 	public SessionBuilder noInterceptor() {
 		return delegate.noInterceptor();
+	}
+
+	@Override
+	public SessionBuilder statementInspector(StatementInspector statementInspector) {
+		return delegate.statementInspector( statementInspector );
 	}
 
 	@Override

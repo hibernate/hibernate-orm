@@ -21,23 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.resource.jdbc.spi;
-
-import java.io.Serializable;
+package org.hibernate.resource.transaction.backend.jdbc.spi;
 
 /**
- * Contract to allow inspection (and swapping) of SQL to be prepared
+ * Provides access to DataStoreTransaction (JDBC transaction stand-in) for use in building resource-local
+ * TransactionCoordinator instances.
  *
  * @author Steve Ebersole
  */
-public interface StatementInspector extends Serializable {
+public interface JdbcResourceTransactionAccess {
 	/**
-	 * Inspect the given SQL, possibly returning a different SQL to be used instead.  Note that returning {@code null}
-	 * is interpreted as returning the same SQL as was passed.
+	 * Provides access to the resource local transaction of this data store, which is used by the TransactionCoordinator
+	 * to manage transactions against the data store when not using JTA.
 	 *
-	 * @param sql The SQL to inspect
-	 *
-	 * @return The SQL to use; may be {@code null}
+	 * @return The resource-local transaction
 	 */
-	public String inspect(String sql);
+	public JdbcResourceTransaction getResourceLocalTransaction();
 }

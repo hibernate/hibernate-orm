@@ -283,7 +283,15 @@ public interface AvailableSettings {
 
 	/**
 	 * Names the implementation of {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder} to use for
-	 * creating {@link org.hibernate.resource.transaction.TransactionCoordinator} instances
+	 * creating {@link org.hibernate.resource.transaction.TransactionCoordinator} instances.
+	 * <p/>
+	 * Can be<ul>
+	 *     <li>TransactionCoordinatorBuilder instance</li>
+	 *     <li>TransactionCoordinatorBuilder implementation {@link Class} reference</li>
+	 *     <li>TransactionCoordinatorBuilder implementation class name (FQN)</li>
+	 * </ul>
+	 *
+	 * @since 5.0
 	 */
 	String TRANSACTION_COORDINATOR_STRATEGY = "hibernate.transaction.coordinator_class";
 
@@ -291,9 +299,19 @@ public interface AvailableSettings {
 	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use for integrating
 	 * with {@literal JTA} systems.  Can reference either a {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
 	 * instance or the name of the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation class
+	 *
 	 * @since 4.0
 	 */
 	String JTA_PLATFORM = "hibernate.transaction.jta.platform";
+
+	/**
+	 * Used to specify if using {@link javax.transaction.UserTransaction}  class to use for JTA transaction management.
+	 *
+	 * Default is <code>false</code>
+	 *
+	 * @since 5.0
+	 */
+	String PREFER_USER_TRANSACTION = "hibernate.jta.prefer_user_transaction";
 
 	/**
 	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver} implementation to use.
@@ -661,6 +679,18 @@ public interface AvailableSettings {
 	 */
 	String INTERCEPTOR = "hibernate.session_factory.interceptor";
 
+	/**
+	 * Names a {@link org.hibernate.resource.jdbc.spi.StatementInspector} implementation to be applied to
+	 * the {@link org.hibernate.SessionFactory}.  Can reference<ul>
+	 *     <li>StatementInspector instance</li>
+	 *     <li>StatementInspector implementation {@link Class} reference</li>
+	 *     <li>StatementInspector implementation class name (FQN)</li>
+	 * </ul>
+	 *
+	 * @since 5.0
+	 */
+	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
+
     String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
@@ -807,13 +837,4 @@ public interface AvailableSettings {
 	 * annotations (combined with {@code orm.xml} mappings).
 	 */
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
-
-	/**
-	 * Used to specify if using {@link javax.transaction.UserTransaction}  class to use for JTA transaction management.
-	 *
-	 * Default is <code>false</code>
-	 *
-	 * @since 5.0
-	 */
-	String PREFER_USER_TRANSACTION = "hibernate.jta.prefer_user_transaction";
 }

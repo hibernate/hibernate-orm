@@ -43,6 +43,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
@@ -68,6 +69,8 @@ public interface SessionFactoryOptionsState {
 	public boolean isStatisticsEnabled();
 
 	public Interceptor getInterceptor();
+
+	public StatementInspector getStatementInspector();
 
 	public SessionFactoryObserver[] getSessionFactoryObservers();
 
@@ -152,4 +155,6 @@ public interface SessionFactoryOptionsState {
 	public EntityNotFoundDelegate getEntityNotFoundDelegate();
 
 	public Map<String, SQLFunction> getCustomSqlFunctionMap();
+
+	public boolean isPreferUserTransaction();
 }

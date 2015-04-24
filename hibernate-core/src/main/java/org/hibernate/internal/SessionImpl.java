@@ -202,6 +202,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private transient TransactionCoordinator transactionCoordinator;
 	private transient JdbcCoordinatorImpl jdbcCoordinator;
 	private transient Interceptor interceptor;
+	private StatementInspector statementInspector;
 	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
 	private transient ConnectionReleaseMode connectionReleaseMode;
@@ -251,6 +252,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			final boolean autoJoinTransactions,
 			final long timestamp,
 			final Interceptor interceptor,
+			final StatementInspector statementInspector,
 			final boolean flushBeforeCompletionEnabled,
 			final boolean autoCloseSessionEnabled,
 			final ConnectionReleaseMode connectionReleaseMode,
@@ -264,7 +266,19 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
-		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, getStatementInspector() );
+
+		if ( statementInspector == null ) {
+			this.statementInspector = new StatementInspector() {
+				@Override
+				public String inspect(String sql) {
+					return SessionImpl.this.interceptor.onPrepareStatement( sql );
+				}
+			};
+		}
+		else {
+			this.statementInspector = statementInspector;
+		}
+		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, this.statementInspector );
 
 		if ( transactionCoordinator == null ) {
 			this.isTransactionCoordinatorShared = false;
@@ -272,7 +286,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			this.autoJoinTransactions = autoJoinTransactions;
 
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
-			this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( this.jdbcCoordinator );
+			this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( this.jdbcCoordinator, this );
 			this.currentHibernateTransaction = getTransaction();
 		}
 		else {
@@ -2155,12 +2169,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		interceptor = (Interceptor) ois.readObject();
 
 		factory = SessionFactoryImpl.deserialize( ois );
-		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, interceptor );
+		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, statementInspector );
 		sessionOwner = (SessionOwner) ois.readObject();
 
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
-		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator );
+		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator, this );
 
 		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
@@ -2230,10 +2244,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public JdbcSessionContext getJdbcSessionContext() {
 		return this.jdbcSessionContext;
-	}
-
-	private StatementInspector getStatementInspector() {
-		return this.interceptor;
 	}
 
 	@Override
@@ -2410,6 +2420,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		@Override
 		public SharedSessionBuilder noInterceptor() {
 			return (SharedSessionBuilder) super.noInterceptor();
+		}
+
+		@Override
+		public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
+			return (SharedSessionBuilder) super.statementInspector( statementInspector );
 		}
 
 		@Override

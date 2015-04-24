@@ -23,15 +23,13 @@
  */
 package org.hibernate.internal;
 
-import javax.transaction.SystemException;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
+import javax.transaction.SystemException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -73,16 +71,17 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.Type;
 
 /**
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class StatelessSessionImpl extends AbstractSessionImpl implements StatelessSession {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, StatelessSessionImpl.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
 	private TransactionCoordinator transactionCoordinator;
 
@@ -104,10 +103,18 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			SessionFactoryImpl factory,
 			long timestamp) {
 		super( factory, tenantIdentifier );
-		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, EmptyInterceptor.INSTANCE );
+		this.jdbcSessionContext = new JdbcSessionContextImpl(
+				factory,
+				new StatementInspector() {
+					@Override
+					public String inspect(String sql) {
+						return null;
+					}
+				}
+		);
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
 
-		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator );
+		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator, this );
 		this.currentHibernateTransaction = getTransaction();
 		this.timestamp = timestamp;
 	}

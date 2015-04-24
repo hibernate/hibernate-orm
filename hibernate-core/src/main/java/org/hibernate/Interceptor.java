@@ -53,7 +53,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface Interceptor extends StatementInspector {
+public interface Interceptor {
 	/**
 	 * Called just before an object is initialized. The interceptor may change the <tt>state</tt>, which will
 	 * be propagated to the persistent object. Note that when this method is called, <tt>entity</tt> will be
@@ -273,6 +273,10 @@ public interface Interceptor extends StatementInspector {
 	 * Called when sql string is being prepared. 
 	 * @param sql sql to be prepared
 	 * @return original or modified sql
+	 *
+	 * @deprecated Supply a {@link org.hibernate.resource.jdbc.spi.StatementInspector} instead, if you wish
+	 * to inspect and alter SQL statements.
 	 */
+	@Deprecated
 	public String onPrepareStatement(String sql);
 }

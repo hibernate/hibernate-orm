@@ -1,19 +1,17 @@
 package org.hibernate.resource.transaction.backend.jta.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.TransactionException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.SynchronizationRegistry;
 import org.hibernate.resource.transaction.TransactionCoordinator;
@@ -26,6 +24,8 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.S
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.CoreLogging.logger;
 
@@ -59,25 +59,24 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 * builder.
 	 *
 	 * @param owner The transactionCoordinatorOwner
-	 * @param jtaPlatform The JtaPlatform to use
 	 * @param autoJoinTransactions Should JTA transactions be auto-joined?  Or should we wait for explicit join calls?
-	 * @param preferUserTransactions Should we prefer using UserTransaction, as opposed to TransactionManager?
-	 * @param performJtaThreadTracking Should we perform thread tracking?
 	 */
 	JtaTransactionCoordinatorImpl(
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
-			JtaPlatform jtaPlatform,
-			boolean autoJoinTransactions,
-			boolean preferUserTransactions,
-			boolean performJtaThreadTracking) {
+			boolean autoJoinTransactions) {
 		this.observers = new ArrayList<TransactionObserver>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
-		this.jtaPlatform = jtaPlatform;
 		this.autoJoinTransactions = autoJoinTransactions;
-		this.preferUserTransactions = preferUserTransactions;
-		this.performJtaThreadTracking = performJtaThreadTracking;
+
+		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
+
+		this.jtaPlatform = jdbcSessionContext.getServiceRegistry().getService( JtaPlatform.class );
+
+		final SessionFactoryOptions sessionFactoryOptions = jdbcSessionContext.getSessionFactory().getSessionFactoryOptions();
+		this.preferUserTransactions = sessionFactoryOptions.isPreferUserTransaction();
+		this.performJtaThreadTracking = sessionFactoryOptions.isJtaTrackByThread();
 
 		synchronizationRegistered = false;
 
@@ -282,6 +281,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			physicalTransactionDelegate.markRollbackOnly();
 		}
 		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
+
+		for ( TransactionObserver observer : observers ) {
+			observer.beforeCompletion();
+		}
 	}
 
 	@Override
@@ -290,6 +293,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 
 		transactionCoordinatorOwner.afterTransactionCompletion( successful );
+
+		for ( TransactionObserver observer : observers ) {
+			observer.afterCompletion( successful );
+		}
 
 		if ( physicalTransactionDelegate != null ) {
 			physicalTransactionDelegate.invalidate();

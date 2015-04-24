@@ -44,6 +44,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
@@ -66,9 +67,14 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean flushBeforeCompletionEnabled;
 	private final boolean autoCloseSessionEnabled;
 
+	// transaction handling
+	private final boolean jtaTrackByThread;
+	private final boolean preferUserTransaction;
+
 	// Statistics/Interceptor/observers
 	private final boolean statisticsEnabled;
 	private final Interceptor interceptor;
+	private final StatementInspector statementInspector;
 	private final SessionFactoryObserver[] sessionFactoryObserverList;
 	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
@@ -93,9 +99,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	// multi-tenancy
 	private final MultiTenancyStrategy multiTenancyStrategy;
 	private final CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
-
-	// JTA timeout detection
-	private final boolean jtaTrackByThread;
 
 	// Queries
 	private final Map querySubstitutions;
@@ -127,7 +130,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 	private final Map<String, SQLFunction> sqlFunctions;
 
-
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
 
@@ -140,8 +142,12 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.flushBeforeCompletionEnabled = state.isFlushBeforeCompletionEnabled();
 		this.autoCloseSessionEnabled = state.isAutoCloseSessionEnabled();
 
+		this.jtaTrackByThread = state.isJtaTrackByThread();
+		this.preferUserTransaction = state.isPreferUserTransaction();
+
 		this.statisticsEnabled = state.isStatisticsEnabled();
 		this.interceptor = state.getInterceptor();
+		this.statementInspector = state.getStatementInspector();
 		this.sessionFactoryObserverList = state.getSessionFactoryObservers();
 		this.baselineSessionEventsListenerBuilder = state.getBaselineSessionEventsListenerBuilder();
 
@@ -164,8 +170,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.multiTenancyStrategy = state.getMultiTenancyStrategy();
 		this.currentTenantIdentifierResolver = state.getCurrentTenantIdentifierResolver();
-
-		this.jtaTrackByThread = state.isJtaTrackByThread();
 
 		this.querySubstitutions = state.getQuerySubstitutions();
 		this.strictJpaQueryLanguageCompliance = state.isStrictJpaQueryLanguageCompliance();
@@ -237,6 +241,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Interceptor getInterceptor() {
 		return interceptor;
+	}
+
+	@Override
+	public StatementInspector getStatementInspector() {
+		return statementInspector;
 	}
 
 	@Override
@@ -451,5 +460,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public void setCheckNullability(boolean enabled) {
 		this.checkNullability = enabled;
+	}
+
+	@Override
+	public boolean isPreferUserTransaction() {
+		return preferUserTransaction;
 	}
 }

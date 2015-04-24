@@ -21,40 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.resource.transaction.backend.store.internal;
+package org.hibernate.resource.transaction.backend.jdbc.internal;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.backend.store.spi.DataStoreTransactionAccess;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
-import org.hibernate.resource.transaction.TransactionCoordinatorResourceLocalBuilder;
-
-import static org.hibernate.resource.jdbc.spi.JdbcSessionContext.ConnectionAcquisitionMode;
 
 /**
  * Concrete builder for resource-local TransactionCoordinator instances.
  *
  * @author Steve Ebersole
  */
-public class ResourceLocalTransactionCoordinatorBuilderImpl implements TransactionCoordinatorResourceLocalBuilder {
-	private DataStoreTransactionAccess providedDataStoreTransactionAccess;
+public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements TransactionCoordinatorBuilder {
+	public static final String SHORT_NAME = "jdbc";
+
+	/**
+	 * Singleton access
+	 */
+	public static final JdbcResourceLocalTransactionCoordinatorBuilderImpl INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
 
 	@Override
-	public void setResourceLocalTransactionAccess(DataStoreTransactionAccess dataStoreTransactionAccess) {
-		this.providedDataStoreTransactionAccess = dataStoreTransactionAccess;
-	}
-
-	@Override
-	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner) {
-		if ( providedDataStoreTransactionAccess != null ) {
-			return new ResourceLocalTransactionCoordinatorImpl( this, owner, providedDataStoreTransactionAccess );
-		}
-		else {
-			if ( owner instanceof DataStoreTransactionAccess ) {
-				return new ResourceLocalTransactionCoordinatorImpl( this, owner, (DataStoreTransactionAccess) owner );
-			}
+	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, TransactionCoordinatorOptions options) {
+		if ( owner instanceof JdbcResourceTransactionAccess ) {
+			return new JdbcResourceLocalTransactionCoordinatorImpl( this, owner, (JdbcResourceTransactionAccess) owner );
 		}
 
 		throw new HibernateException(
@@ -74,6 +67,6 @@ public class ResourceLocalTransactionCoordinatorBuilderImpl implements Transacti
 
 	@Override
 	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return null;
+		return ConnectionAcquisitionMode.DEFAULT;
 	}
 }

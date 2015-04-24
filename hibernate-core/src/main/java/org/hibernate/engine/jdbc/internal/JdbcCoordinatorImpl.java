@@ -61,7 +61,7 @@ import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.resource.transaction.backend.store.spi.DataStoreTransaction;
+import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 
 /**
  * Standard Hibernate implementation of {@link JdbcCoordinator}
@@ -517,7 +517,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public DataStoreTransaction getResourceLocalTransaction() {
+	public JdbcResourceTransaction getResourceLocalTransaction() {
 		return logicalConnection.getPhysicalJdbcTransaction();
 	}
 

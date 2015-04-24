@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.resource.transaction.backend.store.internal;
+package org.hibernate.resource.transaction.backend.jdbc.internal;
 
 import javax.transaction.Status;
 
@@ -36,8 +36,8 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.SynchronizationRegistry;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
-import org.hibernate.resource.transaction.backend.store.spi.DataStoreTransaction;
-import org.hibernate.resource.transaction.backend.store.spi.DataStoreTransactionAccess;
+import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
+import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -45,17 +45,18 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * An implementation of TransactionCoordinator based on managing a transaction through the data-store
- * specific ResourceLocalTransaction.
+ * An implementation of TransactionCoordinator based on managing a transaction through the JDBC Connection
+ * via {@link org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction}
  *
  * @author Steve Ebersole
- * @see org.hibernate.resource.transaction.backend.store.spi.DataStoreTransaction
+ *
+ * @see org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction
  */
-public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoordinator {
-	private static final CoreMessageLogger log = messageLogger( ResourceLocalTransactionCoordinatorImpl.class );
+public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionCoordinator {
+	private static final CoreMessageLogger log = messageLogger( JdbcResourceLocalTransactionCoordinatorImpl.class );
 
 	private final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	private final DataStoreTransactionAccess dataStoreTransactionAccess;
+	private final JdbcResourceTransactionAccess jdbcResourceTransactionAccess;
 	private final TransactionCoordinatorOwner transactionCoordinatorOwner;
 	private final SynchronizationRegistryStandardImpl synchronizationRegistry = new SynchronizationRegistryStandardImpl();
 
@@ -71,13 +72,13 @@ public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoord
 	 *
 	 * @param owner The transactionCoordinatorOwner
 	 */
-	ResourceLocalTransactionCoordinatorImpl(
+	JdbcResourceLocalTransactionCoordinatorImpl(
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
-			DataStoreTransactionAccess dataStoreTransactionAccess) {
+			JdbcResourceTransactionAccess jdbcResourceTransactionAccess) {
 		this.observers = new ArrayList<TransactionObserver>();
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
-		this.dataStoreTransactionAccess = dataStoreTransactionAccess;
+		this.jdbcResourceTransactionAccess = jdbcResourceTransactionAccess;
 		this.transactionCoordinatorOwner = owner;
 	}
 
@@ -87,7 +88,7 @@ public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoord
 		// coordinator.  We lazily build it as we invalidate each delegate after each transaction (a delegate is
 		// valid for just one transaction)
 		if ( physicalTransactionDelegate == null ) {
-			physicalTransactionDelegate = new TransactionDriverControlImpl( dataStoreTransactionAccess.getResourceLocalTransaction() );
+			physicalTransactionDelegate = new TransactionDriverControlImpl( jdbcResourceTransactionAccess.getResourceLocalTransaction() );
 		}
 		return physicalTransactionDelegate;
 	}
@@ -200,12 +201,12 @@ public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoord
 	 * transaction via the JDBC Connection.
 	 */
 	public class TransactionDriverControlImpl implements LocalInflow {
-		private final DataStoreTransaction dataStoreTransaction;
+		private final JdbcResourceTransaction jdbcResourceTransaction;
 		private boolean invalid;
 
-		public TransactionDriverControlImpl(DataStoreTransaction dataStoreTransaction) {
+		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
 			super();
-			this.dataStoreTransaction = dataStoreTransaction;
+			this.jdbcResourceTransaction = jdbcResourceTransaction;
 		}
 
 		protected void invalidate() {
@@ -216,8 +217,8 @@ public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoord
 		public void begin() {
 			errorIfInvalid();
 
-			dataStoreTransaction.begin();
-			ResourceLocalTransactionCoordinatorImpl.this.afterBeginCallback();
+			jdbcResourceTransaction.begin();
+			JdbcResourceLocalTransactionCoordinatorImpl.this.afterBeginCallback();
 		}
 
 		protected void errorIfInvalid() {
@@ -228,20 +229,20 @@ public class ResourceLocalTransactionCoordinatorImpl implements TransactionCoord
 
 		@Override
 		public void commit() {
-			ResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
-			dataStoreTransaction.commit();
-			ResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+			JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
+			jdbcResourceTransaction.commit();
+			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
 		}
 
 		@Override
 		public void rollback() {
-			dataStoreTransaction.rollback();
-			ResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+			jdbcResourceTransaction.rollback();
+			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
 		}
 
 		@Override
 		public TransactionStatus getStatus() {
-			return dataStoreTransaction.getStatus();
+			return jdbcResourceTransaction.getStatus();
 		}
 
 		@Override

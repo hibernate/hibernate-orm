@@ -28,37 +28,31 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilderFactory;
-import org.hibernate.resource.transaction.TransactionCoordinatorJtaBuilder;
-import org.hibernate.resource.transaction.backend.store.internal.ResourceLocalTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * StandardServiceInitiator for initiating the TransactionCoordinatorBuilder service.
+ *
  * @author Andrea Boriero
+ * @author Steve Ebersole
  */
 public class TransactionCoordinatorBuilderInitiator implements StandardServiceInitiator<TransactionCoordinatorBuilder> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger(TransactionCoordinatorBuilderInitiator.class);
-
-	public static final TransactionCoordinatorBuilderInitiator INSTANCE = 	new TransactionCoordinatorBuilderInitiator();
+	/**
+	 * Singleton access
+	 */
+	public static final TransactionCoordinatorBuilderInitiator INSTANCE = new TransactionCoordinatorBuilderInitiator();
 
 	@Override
-	public TransactionCoordinatorBuilder initiateService(
-			Map configurationValues, ServiceRegistryImplementor registry) {
+	public TransactionCoordinatorBuilder initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object strategy = configurationValues.get( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY );
 
-		if ( strategy == null ) {
-			return new ResourceLocalTransactionCoordinatorBuilderImpl() ;
-		}
-//		TransactionCoordinatorJtaBuilder transactionCoordinatorJtaBuilder = TransactionCoordinatorBuilderFactory.INSTANCE
-//				.forJta();
-
-		TransactionCoordinatorBuilder transactionCoordinatorBuilder = registry.getService( StrategySelector.class )
-				.resolveStrategy( TransactionCoordinatorBuilder.class, strategy );
-		return transactionCoordinatorBuilder;
+		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+				TransactionCoordinatorBuilder.class,
+				strategy,
+				JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE
+		);
 	}
 
 	@Override

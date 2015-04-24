@@ -65,6 +65,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -102,6 +103,7 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
@@ -173,6 +175,18 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled) {
+		this.options.jtaTrackByThread = enabled;
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions) {
+		this.options.preferUserTransaction = preferUserTransactions;
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyStatisticsSupport(boolean enabled) {
 		this.options.statisticsEnabled = enabled;
 		return this;
@@ -191,11 +205,16 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector) {
+		this.options.statementInspector = statementInspector;
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
 		this.options.customEntityDirtinessStrategy = strategy;
 		return this;
 	}
-
 
 	@Override
 	public SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers) {
@@ -304,12 +323,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
 		this.options.currentTenantIdentifierResolver = resolver;
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled) {
-		this.options.jtaTrackByThread = enabled;
 		return this;
 	}
 
@@ -473,9 +486,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean flushBeforeCompletionEnabled;
 		private boolean autoCloseSessionEnabled;
 
+		// (JTA) transaction handling
+		private boolean jtaTrackByThread;
+		private boolean preferUserTransaction;
+
 		// Statistics/Interceptor/observers
 		private boolean statisticsEnabled;
 		private Interceptor interceptor;
+		private StatementInspector statementInspector;
 		private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<SessionFactoryObserver>();
 		private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
@@ -500,9 +518,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		// multi-tenancy
 		private MultiTenancyStrategy multiTenancyStrategy;
 		private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
-
-		// JTA timeout detection
-		private boolean jtaTrackByThread;
 
 		// Queries
 		private Map querySubstitutions;
@@ -533,7 +548,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean wrapResultSetsEnabled;
 
 		private Map<String, SQLFunction> sqlFunctions;
-		private boolean preferUserTransaction;
 
 		public SessionFactoryOptionsStateStandardImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -569,6 +583,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					configurationSettings.get( INTERCEPTOR ),
 					EmptyInterceptor.INSTANCE
 			);
+			this.statementInspector = strategySelector.resolveStrategy(
+					StatementInspector.class,
+					configurationSettings.get( STATEMENT_INSPECTOR )
+			);
+
 			// todo : expose this from builder?
 			final String autoSessionEventsListenerName = (String) configurationSettings.get(
 					AUTO_SESSION_EVENTS_LISTENER
@@ -740,6 +759,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public Interceptor getInterceptor() {
 			return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+		}
+
+		@Override
+		public StatementInspector getStatementInspector() {
+			return statementInspector;
 		}
 
 		@Override
@@ -1004,6 +1028,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public StatementInspector getStatementInspector() {
+		return options.getStatementInspector();
+	}
+
+	@Override
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
 		return options.getSessionFactoryObservers();
 	}
@@ -1211,5 +1240,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public Map<String, SQLFunction> getCustomSqlFunctionMap() {
 		return options.getCustomSqlFunctionMap();
+	}
+
+	@Override
+	public boolean isPreferUserTransaction() {
+		return options.isPreferUserTransaction();
 	}
 }

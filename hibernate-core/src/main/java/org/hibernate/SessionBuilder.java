@@ -25,6 +25,8 @@ package org.hibernate;
 
 import java.sql.Connection;
 
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
 /**
  * Represents a consolidation of all session creation options into a builder style delegate.
  * 
@@ -59,6 +61,15 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public SessionBuilder noInterceptor();
+
+	/**
+	 * Applies a specific StatementInspector to the session options.
+	 *
+	 * @param statementInspector The StatementInspector to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SessionBuilder statementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Adds a specific connection to the session options.

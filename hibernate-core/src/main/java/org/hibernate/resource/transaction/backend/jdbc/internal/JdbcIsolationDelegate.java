@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.resource.transaction.backend.store.internal;
+package org.hibernate.resource.transaction.backend.jdbc.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;

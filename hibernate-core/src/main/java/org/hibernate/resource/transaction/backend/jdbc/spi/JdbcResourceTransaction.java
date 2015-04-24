@@ -21,16 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.resource.transaction.backend.store.spi;
+package org.hibernate.resource.transaction.backend.jdbc.spi;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
- * Models access to the resource transaction of the underlying data store (JDBC).
+ * Models access to the resource transaction of the underlying JDBC resource.
  *
  * @author Steve Ebersole
  */
-public interface DataStoreTransaction {
+public interface JdbcResourceTransaction {
 	/**
 	 * Begin the resource transaction
 	 */

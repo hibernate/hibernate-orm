@@ -171,10 +171,12 @@ class StatementPreparerImpl implements StatementPreparer {
 	private abstract class StatementPreparationTemplate {
 		protected final String sql;
 
-		protected StatementPreparationTemplate(String sql) {
-			this.sql = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getStatementInspector().inspect(
-					sql
-			);
+		protected StatementPreparationTemplate(String incomingSql) {
+			final String inspectedSql = jdbcCoordinator.getJdbcSessionOwner()
+					.getJdbcSessionContext()
+					.getStatementInspector()
+					.inspect( incomingSql );
+			this.sql = inspectedSql == null ? incomingSql : inspectedSql;
 		}
 
 		public PreparedStatement prepareStatement() {

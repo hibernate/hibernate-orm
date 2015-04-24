@@ -81,7 +81,7 @@ import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
-import org.hibernate.resource.transaction.backend.store.internal.ResourceLocalTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
@@ -560,7 +560,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class );
 			}
 			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, ResourceLocalTransactionCoordinatorBuilderImpl.class );
+				ssrBuilder.applySetting( Environment.TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
 			}
 		}
 	}

@@ -8,6 +8,7 @@ import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -53,7 +54,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this.connectionReleaseMode = jdbcSessionContext.getConnectionReleaseMode();
 		this.resourceRegistry = resourceRegistry;
 
-		if ( jdbcSessionContext.getConnectionAcquisitionMode() == JdbcSessionContext.ConnectionAcquisitionMode.IMMEDIATELY ) {
+		if ( jdbcSessionContext.getConnectionAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
 			if ( jdbcSessionContext.getConnectionReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
 				throw new IllegalStateException(
 						"Illegal combination of ConnectionAcquisitionMode#IMMEDIATELY with !ConnectionReleaseMode.ON_CLOSE"

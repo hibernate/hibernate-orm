@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -41,8 +42,8 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -71,7 +72,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
-import org.hibernate.resource.transaction.TransactionCoordinatorJtaBuilder;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder.TransactionCoordinatorOptions;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -82,7 +83,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public abstract class AbstractSessionImpl
-		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner {
+		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner, TransactionCoordinatorOptions {
 	protected transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
 	private boolean closed;
@@ -108,6 +109,7 @@ public abstract class AbstractSessionImpl
 		return factory;
 	}
 
+	@Override
 	public abstract boolean shouldAutoJoinTransaction();
 
 	@Override
@@ -482,6 +484,10 @@ public abstract class AbstractSessionImpl
 			this.inspector = inspector;
 			this.serviceRegistry = sessionFactory.getServiceRegistry();
 			this.jdbcObserver = new JdbcObserverImpl();
+
+			if ( inspector == null ) {
+				throw new IllegalArgumentException( "StatementInspector cannot be null" );
+			}
 		}
 
 		@Override
@@ -506,7 +512,7 @@ public abstract class AbstractSessionImpl
 
 		@Override
 		public ConnectionAcquisitionMode getConnectionAcquisitionMode() {
-			return null;
+			return ConnectionAcquisitionMode.DEFAULT;
 		}
 
 		@Override
@@ -529,8 +535,8 @@ public abstract class AbstractSessionImpl
 			return this.serviceRegistry;
 		}
 
-		private final Settings settings() {
-			return this.sessionFactory.getSettings();
+		private SessionFactoryOptions settings() {
+			return this.sessionFactory.getSessionFactoryOptions();
 		}
 	}
 
@@ -603,20 +609,7 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
-		TransactionCoordinatorBuilder transactionCoordinatorBuilder = factory.getServiceRegistry()
-				.getService( TransactionCoordinatorBuilder.class );
-
-		if ( transactionCoordinatorBuilder instanceof TransactionCoordinatorJtaBuilder ) {
-			((TransactionCoordinatorJtaBuilder) transactionCoordinatorBuilder).setJtaPlatform(
-					factory.getSettings()
-							.getJtaPlatform()
-			).setAutoJoinTransactions( shouldAutoJoinTransaction() ).setPerformJtaThreadTracking(
-					factory.getSettings()
-							.isJtaTrackByThread()
-			).setPreferUserTransactions( factory.getSettings().isPreferUserTransaction() );
-		}
-
-		return transactionCoordinatorBuilder;
+		return factory.getServiceRegistry().getService( TransactionCoordinatorBuilder.class );
 	}
 
 }

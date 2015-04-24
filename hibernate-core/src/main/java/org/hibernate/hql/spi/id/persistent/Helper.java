@@ -60,14 +60,14 @@ public class Helper {
 		try {
 			PreparedStatement ps = null;
 			try {
-				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+				ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				bindSessionIdentifier( ps, session, 1 );
-				session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+				session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 			}
 			finally {
 				if ( ps != null ) {
 					try {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( ps );
+						session.getJdbcCoordinator().getResourceRegistry().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore

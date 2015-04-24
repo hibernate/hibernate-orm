@@ -43,7 +43,6 @@ import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -82,7 +81,6 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			Session.class,
 			SessionImplementor.class,
 			EventSource.class,
-			TransactionContext.class,
 			LobCreationContext.class
 	};
 

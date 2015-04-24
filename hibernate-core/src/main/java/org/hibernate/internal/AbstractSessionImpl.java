@@ -59,8 +59,6 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
-import org.hibernate.engine.transaction.spi.TransactionContext;
-import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -84,7 +82,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public abstract class AbstractSessionImpl
-		implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext, JdbcSessionOwner {
+		implements Serializable, SharedSessionContract, SessionImplementor, JdbcSessionOwner {
 	protected transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
 	private boolean closed;
@@ -111,11 +109,6 @@ public abstract class AbstractSessionImpl
 	}
 
 	public abstract boolean shouldAutoJoinTransaction();
-
-	@Override
-	public TransactionEnvironment getTransactionEnvironment() {
-		return factory.getTransactionEnvironment();
-	}
 
 	@Override
 	public <T> T execute(final LobCreationContext.Callback<T> callback) {

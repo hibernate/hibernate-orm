@@ -23,6 +23,7 @@
  */
 package org.hibernate.internal;
 
+import javax.transaction.SystemException;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
@@ -62,6 +63,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
@@ -124,11 +126,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return true;
-	}
-
-	@Override
-	public TransactionEnvironment getTransactionEnvironment() {
-		return factory.getTransactionEnvironment();
 	}
 
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -369,13 +366,12 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		return isAutoCloseSessionEnabled() && !isClosed();
 	}
 
-	@Override
-	public boolean isFlushModeNever() {
+
+	private boolean isFlushModeNever() {
 		return false;
 	}
 
-	@Override
-	public void managedClose() {
+	private void managedClose() {
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed!" );
 		}
@@ -383,15 +379,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		setClosed();
 	}
 
-	@Override
-	public void managedFlush() {
+	private void managedFlush() {
 		errorIfClosed();
 		jdbcCoordinator.executeBatch();
-	}
-
-	@Override
-	public String onPrepareStatement(String sql) {
-		return sql;
 	}
 
 	private SessionEventListenerManagerImpl sessionEventsManager;
@@ -774,7 +764,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public void beforeTransactionCompletion() {
-
+		flushBeforeTransactionCompletion();
 	}
 
 	@Override
@@ -787,6 +777,22 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-
+		boolean flush = false;
+		try {
+			flush = (
+					!isClosed()
+							&& !isFlushModeNever()
+							&& !JtaStatusHelper.isRollback(
+							factory.getSettings()
+									.getJtaPlatform()
+									.getCurrentStatus()
+					));
+		}
+		catch (SystemException se) {
+			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
+		}
+		if ( flush ) {
+			managedFlush();
+		}
 	}
 }

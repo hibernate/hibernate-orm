@@ -421,13 +421,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return !isClosed();
 	}
 
-	@Override
-	public boolean isFlushModeNever() {
+	private boolean isFlushModeNever() {
 		return FlushMode.isManualFlushMode( getFlushMode() );
 	}
 
-	@Override
-	public void managedFlush() {
+	private void managedFlush() {
 		if ( isClosed() ) {
 			LOG.trace( "Skipping auto-flush due to session closed" );
 			return;
@@ -449,8 +447,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	@Override
-	public void managedClose() {
+	private void managedClose() {
 		LOG.trace( "Automatically closing session" );
 		close();
 	}
@@ -513,21 +510,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( ! isTransactionInProgress() ) {
 			jdbcCoordinator.afterTransaction();
 		}
-	}
-
-	@Override
-	public String onPrepareStatement(String sql) {
-		errorIfClosed();
-		if ( StringHelper.isEmpty( sql ) ) {
-			throw new AssertionFailure( "SQL to prepare was null." );
-		}
-
-		sql = interceptor.onPrepareStatement( sql );
-
-		if ( StringHelper.isEmpty( sql ) ) {
-			throw new AssertionFailure( "Interceptor.onPrepareStatement() returned null or empty string." );
-		}
-		return sql;
 	}
 
 	@Override

@@ -620,7 +620,7 @@ public abstract class AbstractSessionImpl
 			).setAutoJoinTransactions( shouldAutoJoinTransaction() ).setPerformJtaThreadTracking(
 					factory.getSettings()
 							.isJtaTrackByThread()
-			).setPreferUserTransactions( false );
+			).setPreferUserTransactions( factory.getSettings().isPreferUserTransaction() );
 		}
 
 		return transactionCoordinatorBuilder;

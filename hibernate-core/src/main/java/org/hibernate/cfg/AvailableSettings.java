@@ -807,4 +807,13 @@ public interface AvailableSettings {
 	 * annotations (combined with {@code orm.xml} mappings).
 	 */
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+
+	/**
+	 * Used to specify if using {@link javax.transaction.UserTransaction}  class to use for JTA transaction management.
+	 *
+	 * Default is <code>false</code>
+	 *
+	 * @since 5.0
+	 */
+	String PREFER_USER_TRANSACTION = "hibernate.jta.prefer_user_transaction";
 }

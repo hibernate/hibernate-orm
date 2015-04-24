@@ -113,6 +113,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 
 /**
  * @author Gail Badner
@@ -519,6 +520,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		private boolean wrapResultSetsEnabled;
 
 		private Map<String, SQLFunction> sqlFunctions;
+		private boolean preferUserTransaction;
 
 
 		public SessionFactoryOptionsImpl(StandardServiceRegistry serviceRegistry) {
@@ -672,6 +674,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 			}
 
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
+
+			this.preferUserTransaction = ConfigurationHelper.getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
 		}
 
 		@Override
@@ -936,6 +940,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		@Override
 		public void setCheckNullability(boolean enabled) {
 			this.checkNullability = enabled;
+		}
+
+		@Override
+		public boolean isPreferUserTransaction() {
+			return this.preferUserTransaction;
 		}
 	}
 

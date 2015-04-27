@@ -46,7 +46,8 @@ If you wish to alter how the `BootstrapServiceRegistry` is built, you would use 
 ====
 [source, JAVA]
 ----
-    BootstrapServiceRegistryBuilder bootstrapRegistryBuilder = new BootstrapServiceRegistryBuilder();
+    BootstrapServiceRegistryBuilder bootstrapRegistryBuilder
+            = new BootstrapServiceRegistryBuilder();
     // add a special ClassLoader
     bootstrapRegistryBuilder.applyClassLoader( mySpecialClassLoader );
     // manually add an Integrator
@@ -73,7 +74,8 @@ one of 2 ways:
 [source, JAVA]
 ----
     BootstrapServiceRegistry bootstrapRegistry = ...;
-    StandardServiceRegistryBuilder standardRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapRegistry );
+    StandardServiceRegistryBuilder standardRegistryBuilder
+            = new StandardServiceRegistryBuilder( bootstrapRegistry );
 ----
 ====
 
@@ -82,7 +84,8 @@ one of 2 ways:
 ====
 [source, JAVA]
 ----
-    StandardServiceRegistryBuilder standardRegistryBuilder = new StandardServiceRegistryBuilder();
+    StandardServiceRegistryBuilder standardRegistryBuilder
+            = new StandardServiceRegistryBuilder();
 ----
 ====
 
@@ -118,8 +121,8 @@ A `StandardServiceRegistry` is also highly configurable via the `StandardService
 
 The `org.hibernate.boot.Metadata` object contains the parsed representations of an application's
 domain model and its mapping to a database.  The first thing we obviously need to build a parsed
-representation is the source information to be parsed.  This is the purpose of
-`org.hibernate.boot.MetadataSources`.
+representation is the source information to be parsed (annotated classes, `hbm.xml` files, `orm.xml` files).  This is
+the purpose of `org.hibernate.boot.MetadataSources`.
 
 
 [[MetadataSources-example]]
@@ -168,7 +171,7 @@ all methods on `MetadataSources` allow for chaining should you prefer that style
 ====
 
 Once we have the sources of mapping information defined, we need to build the `Metadata` object.  If you are
-ok with the default behavior in building the `Metadata` (or if relying on a `MetadataBuilderContributor` - see below)
+ok with the default behavior in building the `Metadata` (or if relying on a `MetadataBuilderInitializer` - see below)
 then you can simply call `MetadataSources#buildMetadata`.
 
 NOTE : Notice that a ServiceRegistry can be passed at a number of points in this bootstrapping process.  The suggested
@@ -227,6 +230,38 @@ over the `SessionFactory` building process.
 
 == Putting It All Together
 
+The bootstrapping API is quite flexible, but in most cases it makes the most sense to think of
+it as a 3 step process:
+
+1. Build the `StandardServiceRegistry`
+2. Build the `Metadata`
+3. Use those 2 things to build the `SessionFactory`
+
+[[Putting-It-All-Together-ex1]]
+.Building SessionFactory via SessionFactoryBuilder
+====
+[source, JAVA]
+----
+    StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
+            .configure( "org/hibernate/example/MyCfg.xml" )
+            .build();
+
+    Metadata metadata = new MetadataSources( standardRegistry )
+            .addAnnotatedClass( MyEntity.class )
+            .addAnnotatedClassName( "org.hibernate.example.Customer" )
+            .addResource( "org/hibernate/example/Order.hbm.xml" )
+            .addResource( "org/hibernate/example/Product.orm.xml" )
+            .getMetadataBuilder()
+            .applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+            .build();
+
+    SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
+            .applyBeanManager( getBeanManagerFromSomewhere() )
+            .build();
+----
+====
+
+
 == Integration Points
 
 === Integrator
@@ -234,6 +269,5 @@ over the `SessionFactory` building process.
 === TypeContributor
 === MetadataSourcesContributor
 === MetadataBuilderInitializer
-=== SessionFactoryBuilderFactory
 === SessionFactoryBuilderInitializer (todo)
 === SessionFactoryObserver

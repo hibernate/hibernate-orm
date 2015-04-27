@@ -25,8 +25,8 @@ NOTE: This is still very much a work in progress. <<helping,Help>> is definitely
 
 
 == Integrator Guides
-
 * The <<registries/ServiceRegistries.adoc#,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
+* Providers of custom `SessionFactory` implementations should see <<sessionfactory/CustomSessionFactory.adoc#,Custom SessionFactory and Session Implementations Guide>>
 * Others coming soon
 
 

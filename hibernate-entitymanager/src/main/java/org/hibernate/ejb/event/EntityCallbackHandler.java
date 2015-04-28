@@ -140,9 +140,10 @@ public class EntityCallbackHandler implements Serializable {
 	private void addCallback(
 			XClass entity, HashMap<Class, Callback[]> map, Class annotation, ReflectionManager reflectionManager
 	) {
-		Callback[] callbacks = null;
-		callbacks = CallbackResolver.resolveCallback( entity, annotation, reflectionManager );
-		map.put( reflectionManager.toClass( entity ), callbacks );
+		Callback[] callbacks = CallbackResolver.resolveCallback( entity, annotation, reflectionManager );
+		if(callbacks != null && callbacks.length > 0) {
+			map.put(reflectionManager.toClass(entity), callbacks);
+		}
 	}
 
     private void addCallback( Class<?> entity,
@@ -150,6 +151,9 @@ public class EntityCallbackHandler implements Serializable {
                               Class annotation,
                               ClassLoaderService classLoaderService,
                               EntityBinding binding ) {
-        map.put(entity, CallbackResolver.resolveCallbacks(entity, annotation, classLoaderService, binding));
+		Callback[] callbacks = CallbackResolver.resolveCallbacks(entity, annotation, classLoaderService, binding);
+		if(callbacks != null && callbacks.length > 0) {
+			map.put(entity, callbacks);
+		}
     }
 }

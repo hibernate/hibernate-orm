@@ -26,10 +26,8 @@ package org.hibernate.test.idgen.biginteger.sequence;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -42,7 +40,6 @@ public class BigIntegerSequenceGeneratorTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@SkipForDialect( SQLServer2012Dialect.class )
 	public void testBasics() {
 		Session s = openSession();
 		s.beginTransaction();

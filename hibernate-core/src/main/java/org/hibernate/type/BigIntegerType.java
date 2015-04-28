@@ -28,6 +28,7 @@ import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 
 /**
@@ -43,7 +44,7 @@ public class BigIntegerType
 	public static final BigIntegerType INSTANCE = new BigIntegerType();
 
 	public BigIntegerType() {
-		super( NumericTypeDescriptor.INSTANCE, BigIntegerTypeDescriptor.INSTANCE );
+		super( BigIntTypeDescriptor.INSTANCE, BigIntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.id.entities;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -26,7 +27,7 @@ public class Bunny implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY, generator = "java5_uuid")
 	@GenericGenerator(name = "java5_uuid", strategy = "org.hibernate.test.annotations.id.UUIDGenerator")
 	@Column(name = "id", precision = 128, scale = 0)
-	private BigInteger id;
+	private BigDecimal id;
 
 	@OneToMany(mappedBy = "bunny", cascade = { CascadeType.PERSIST })
 	Set<PointyTooth> teeth;
@@ -38,7 +39,7 @@ public class Bunny implements Serializable {
 		this.teeth = teeth;
 	}
 
-	public BigInteger getId() {
+	public BigDecimal getId() {
 		return id;
 	}
 }

@@ -2,9 +2,9 @@
 :toc:
 
 The two main contracts of Hibernate, `org.hibernate.SessionFactory` and `org.hibernate.Session`, are both
-defined as interfaces which allows for custom implementations to be provided.  There are two high-leve ways
+defined as interfaces which allows for custom implementations to be provided.  There are two high-level ways
 in which custom implementations can be provided to users.  The first is to develop a custom bootstrap API
-specific to the custom implementation.  The second way is to integrate with Hibernate's bootstrapping API.
+specific to the custom implementation.  The second way is to integrate with the Hibernate bootstrap API.
 This guide will cover the second approach.
 
 

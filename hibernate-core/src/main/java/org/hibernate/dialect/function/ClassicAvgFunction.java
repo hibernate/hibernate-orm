@@ -34,7 +34,11 @@ import org.hibernate.type.Type;
  * Classic AVG sqlfunction that return types as it was done in Hibernate 3.1 
  * 
  * @author Max Rydahl Andersen
+ *
+ * @deprecated Use {@link org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions.AvgFunction}
+ * or {@link AvgWithArgumentCastFunction} instead.
  */
+@Deprecated
 public class ClassicAvgFunction extends StandardSQLFunction {
 	/**
 	 * Constructs a ClassicAvgFunction

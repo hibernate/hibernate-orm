@@ -31,7 +31,10 @@ import org.hibernate.type.Type;
  * Classic COUNT sqlfunction that return types as it was done in Hibernate 3.1 
  * 
  * @author Max Rydahl Andersen
+ *
+ * @deprecated Use {@link org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions.CountFunction} instead.
  */
+@Deprecated
 public class ClassicCountFunction extends StandardSQLFunction {
 	/**
 	 * Constructs a ClassicCountFunction

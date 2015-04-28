@@ -28,7 +28,9 @@ package org.hibernate.dialect.function;
  * 
  * @author Max Rydahl Andersen
  *
+ * @deprecated Use {@link org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions.SumFunction} instead.
  */
+@Deprecated
 public class ClassicSumFunction extends StandardSQLFunction {
 	/**
 	 * Constructs a ClassicSumFunction

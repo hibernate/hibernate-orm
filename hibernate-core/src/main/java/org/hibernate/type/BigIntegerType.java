@@ -29,7 +29,6 @@ import java.sql.Types;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 
 /**
  * A type that maps between a {@link Types#NUMERIC NUMERIC} and {@link BigInteger}.

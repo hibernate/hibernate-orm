@@ -25,6 +25,7 @@ Working list of changes for 5.0
     with `org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry`.  Applications using custom SqlTypeDescriptor
     implementations extending the built-in ones and relying on that behavior should be updated to call
     `SqlTypeDescriptorRegistry#addDescriptor` themselves.
+* The JDBC type for "big_integer" (org.hibernate.type.BigIntegerType) properties has changed from     java.sql.Types,NUMERIC to java.sql.Types.BIGINT.
 * Moving `org.hibernate.hql.spi.MultiTableBulkIdStrategy` and friends to new `org.hibernate.hql.spi.id` package
     and sub-packages
 

@@ -76,30 +76,51 @@ public class EntityCallbackHandler implements Serializable {
 	}
 
 	public boolean preCreate(Object bean) {
+		if(preCreates.isEmpty()) {
+			return false;
+		}
 		return callback( preCreates.get( bean.getClass() ), bean );
 	}
 
 	public boolean postCreate(Object bean) {
+		if(postCreates.isEmpty()) {
+			return false;
+		}
 		return callback( postCreates.get( bean.getClass() ), bean );
 	}
 
 	public boolean preRemove(Object bean) {
+		if(preRemoves.isEmpty()) {
+			return false;
+		}
 		return callback( preRemoves.get( bean.getClass() ), bean );
 	}
 
 	public boolean postRemove(Object bean) {
+		if(postRemoves.isEmpty()) {
+			return false;
+		}
 		return callback( postRemoves.get( bean.getClass() ), bean );
 	}
 
 	public boolean preUpdate(Object bean) {
+		if(preUpdates.isEmpty()) {
+			return false;
+		}
 		return callback( preUpdates.get( bean.getClass() ), bean );
 	}
 
 	public boolean postUpdate(Object bean) {
+		if(postUpdates.isEmpty()) {
+			return false;
+		}
 		return callback( postUpdates.get( bean.getClass() ), bean );
 	}
 
 	public boolean postLoad(Object bean) {
+		if(postLoads.isEmpty()) {
+			return false;
+		}
 		return callback( postLoads.get( bean.getClass() ), bean );
 	}
 

@@ -49,331 +49,341 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
  *
  * @author Steve Ebersole
+ * @author Gunnar Morling
+ * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
+ * to a specialization of {@link SessionFactoryBuilder}
  */
-public abstract class AbstractDelegatingSessionFactoryBuilder implements SessionFactoryBuilder {
+public abstract class AbstractDelegatingSessionFactoryBuilder<T extends AbstractDelegatingSessionFactoryBuilder<T>> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;
 
 	public AbstractDelegatingSessionFactoryBuilder(SessionFactoryBuilder delegate) {
 		this.delegate = delegate;
 	}
 
+	/**
+	 * Returns a specific implementation. See the <a
+	 * href="http://www.angelikalanger.com/GenericsFAQ/FAQSections/ProgrammingIdioms.html#FAQ206">What is the
+	 * "getThis trick?"</a>.
+	 */
+	protected abstract T getThis();
+
 	@Override
-	public SessionFactoryBuilder applyValidatorFactory(Object validatorFactory) {
+	public T applyValidatorFactory(Object validatorFactory) {
 		delegate.applyValidatorFactory( validatorFactory );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyBeanManager(Object beanManager) {
+	public T applyBeanManager(Object beanManager) {
 		delegate.applyBeanManager( beanManager );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyName(String sessionFactoryName) {
+	public T applyName(String sessionFactoryName) {
 		delegate.applyName( sessionFactoryName );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName) {
+	public T applyNameAsJndiName(boolean isJndiName) {
 		delegate.applyNameAsJndiName( isJndiName );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyAutoClosing(boolean enabled) {
+	public T applyAutoClosing(boolean enabled) {
 		delegate.applyAutoClosing( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyAutoFlushing(boolean enabled) {
+	public T applyAutoFlushing(boolean enabled) {
 		delegate.applyAutoFlushing( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyStatisticsSupport(boolean enabled) {
+	public T applyStatisticsSupport(boolean enabled) {
 		delegate.applyStatisticsSupport( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor) {
+	public T applyInterceptor(Interceptor interceptor) {
 		delegate.applyInterceptor( interceptor );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector) {
+	public T applyStatementInspector(StatementInspector statementInspector) {
 		delegate.applyStatementInspector( statementInspector );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers) {
+	public T addSessionFactoryObservers(SessionFactoryObserver... observers) {
 		delegate.addSessionFactoryObservers( observers );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
+	public T applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
 		delegate.applyCustomEntityDirtinessStrategy( strategy );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers) {
+	public T addEntityNameResolver(EntityNameResolver... entityNameResolvers) {
 		delegate.addEntityNameResolver( entityNameResolvers );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
+	public T applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
 		delegate.applyEntityNotFoundDelegate( entityNotFoundDelegate );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled) {
+	public T applyIdentifierRollbackSupport(boolean enabled) {
 		delegate.applyIdentifierRollbackSupport( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
 	@Deprecated
 	@SuppressWarnings("deprecation")
-	public SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode) {
+	public T applyDefaultEntityMode(EntityMode entityMode) {
 		delegate.applyDefaultEntityMode( entityMode );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled) {
+	public T applyNullabilityChecking(boolean enabled) {
 		delegate.applyNullabilityChecking( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled) {
+	public T applyLazyInitializationOutsideTransaction(boolean enabled) {
 		delegate.applyLazyInitializationOutsideTransaction( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
+	public T applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
 		delegate.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityTuplizer(
+	public T applyEntityTuplizer(
 			EntityMode entityMode,
 			Class<? extends EntityTuplizer> tuplizerClass) {
 		delegate.applyEntityTuplizer( entityMode, tuplizerClass );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
+	public T applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
 		delegate.applyMultiTableBulkIdStrategy( strategy );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
+	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		delegate.applyTempTableDdlTransactionHandling( handling );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style) {
+	public T applyBatchFetchStyle(BatchFetchStyle style) {
 		delegate.applyBatchFetchStyle( style );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultBatchFetchSize(int size) {
+	public T applyDefaultBatchFetchSize(int size) {
 		delegate.applyDefaultBatchFetchSize( size );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMaximumFetchDepth(int depth) {
+	public T applyMaximumFetchDepth(int depth) {
 		delegate.applyMaximumFetchDepth( depth );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public T applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
 		delegate.applyDefaultNullPrecedence( nullPrecedence );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyOrderingOfInserts(boolean enabled) {
+	public T applyOrderingOfInserts(boolean enabled) {
 		delegate.applyOrderingOfInserts( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled) {
+	public T applyOrderingOfUpdates(boolean enabled) {
 		delegate.applyOrderingOfUpdates( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
+	public T applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
 		delegate.applyMultiTenancyStrategy( strategy );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled) {
+	public T applyJtaTrackingByThread(boolean enabled) {
 		delegate.applyJtaTrackingByThread( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions) {
+	public T applyPreferUserTransactions(boolean preferUserTransactions) {
 		delegate.applyPreferUserTransactions( preferUserTransactions );
-		return this;
+		return getThis();
 	}
 
 	@Override
 	@Deprecated
 	@SuppressWarnings("deprecation")
-	public SessionFactoryBuilder applyQuerySubstitutions(Map substitutions) {
+	public T applyQuerySubstitutions(Map substitutions) {
 		delegate.applyQuerySubstitutions( substitutions );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled) {
+	public T applyStrictJpaQueryLanguageCompliance(boolean enabled) {
 		delegate.applyStrictJpaQueryLanguageCompliance( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled) {
+	public T applyNamedQueryCheckingOnStartup(boolean enabled) {
 		delegate.applyNamedQueryCheckingOnStartup( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applySecondLevelCacheSupport(boolean enabled) {
+	public T applySecondLevelCacheSupport(boolean enabled) {
 		delegate.applySecondLevelCacheSupport( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQueryCacheSupport(boolean enabled) {
+	public T applyQueryCacheSupport(boolean enabled) {
 		delegate.applyQueryCacheSupport( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQueryCacheFactory(QueryCacheFactory factory) {
+	public T applyQueryCacheFactory(QueryCacheFactory factory) {
 		delegate.applyQueryCacheFactory( factory );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCacheRegionPrefix(String prefix) {
+	public T applyCacheRegionPrefix(String prefix) {
 		delegate.applyCacheRegionPrefix( prefix );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMinimalPutsForCaching(boolean enabled) {
+	public T applyMinimalPutsForCaching(boolean enabled) {
 		delegate.applyMinimalPutsForCaching( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyStructuredCacheEntries(boolean enabled) {
+	public T applyStructuredCacheEntries(boolean enabled) {
 		delegate.applyStructuredCacheEntries( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled) {
+	public T applyDirectReferenceCaching(boolean enabled) {
 		delegate.applyDirectReferenceCaching( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyAutomaticEvictionOfCollectionCaches(boolean enabled) {
+	public T applyAutomaticEvictionOfCollectionCaches(boolean enabled) {
 		delegate.applyAutomaticEvictionOfCollectionCaches( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJdbcBatchSize(int size) {
+	public T applyJdbcBatchSize(int size) {
 		delegate.applyJdbcBatchSize( size );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled) {
+	public T applyJdbcBatchingForVersionedEntities(boolean enabled) {
 		delegate.applyJdbcBatchingForVersionedEntities( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
+	public T applyScrollableResultsSupport(boolean enabled) {
 		delegate.applyScrollableResultsSupport( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyResultSetsWrapping(boolean enabled) {
+	public T applyResultSetsWrapping(boolean enabled) {
 		delegate.applyResultSetsWrapping( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyGetGeneratedKeysSupport(boolean enabled) {
+	public T applyGetGeneratedKeysSupport(boolean enabled) {
 		delegate.applyGetGeneratedKeysSupport( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJdbcFetchSize(int size) {
+	public T applyJdbcFetchSize(int size) {
 		delegate.applyJdbcFetchSize( size );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
+	public T applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
 		delegate.applyConnectionReleaseMode( connectionReleaseMode );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlComments(boolean enabled) {
+	public T applySqlComments(boolean enabled) {
 		delegate.applySqlComments( enabled );
-		return this;
+		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlFunction(
+	public T applySqlFunction(
 			String registrationName,
 			SQLFunction sqlFunction) {
 		delegate.applySqlFunction( registrationName, sqlFunction );
-		return this;
+		return getThis();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T extends SessionFactoryBuilder> T unwrap(Class<T> type) {
-		return (T) this;
+	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
+		return (S) this;
 	}
 }

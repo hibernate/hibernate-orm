@@ -100,3 +100,8 @@ processResources.doLast {
 }
 
 processResources.dependsOn processPluginXml
+
+mavenPom {
+    name = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
+    description = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
+}

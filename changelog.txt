@@ -5,6 +5,43 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in 5.0.0.Beta2 (April 29, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/19550
+
+** Bug
+    * [HHH-9250] - BigIntegerSequenceGeneratorTest.testBasics fails on MS SQL Server 2012
+    * [HHH-9704] - Complete HHH-8805 work on 5.0
+    * [HHH-9709] - JPA @ForeignKey not consistently applied from annotation binding
+    * [HHH-9713] - Creating an index in the database incorrectly tries to qualify the index with table name for some databases
+    * [HHH-9716] - Previously working schema creation fails on 5.0
+    * [HHH-9722] - toLowerCase() still causes bugs in Turkish locale
+    * [HHH-9736] - BigIntegerType should use BigIntTypeDescriptor
+    * [HHH-9747] - Import initial reworking of transaction handling (based on JdbcSession work)
+
+** Improvement
+    * [HHH-9550] - Allow a dialect to specify the level of catalog/schema support
+    * [HHH-9726] - Rename MetadataBuilderContributor to MetadataBuilderInitializer and pass it the StandardServiceRegistry
+    * [HHH-9727] - Slight redesign to bootstrapping APIs to allow for OGM bootstrapping
+    * [HHH-9728] - Audit Settings to decide what should become a SessionFactoryServiceRegistry service
+    * [HHH-9746] - Improve hibernate-spatial integration
+
+** New Feature
+    * [HHH-9724] - More complete "temp table" coverage and allow Dialects to influence which strategy is used
+
+** Remove Feature
+    * [HHH-9753] - Remove ClassicAvgFunction, ClassicCountFunction, ClassicSumFunction
+
+** Task
+    * [HHH-6509] - import Hibernate Spatial into Hibernate core as a module
+    * [HHH-9701] - Develop "immutable EntityEntry" impl
+    * [HHH-9706] - Review concurrency of ClassLoaderService and warn against reuse
+    * [HHH-9717] - Build script improvements
+    * [HHH-9732] - Convert SQLFunctionRegistry to use a case-insensitive Map, rather than relying on code outside it using lower-case keys
+    * [HHH-9733] - Add checks for no-arg uses of String#toUpperCase and String#toLowerCase
+
+
+
 Changes in 5.0.0.Beta1 (March 31, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/18450

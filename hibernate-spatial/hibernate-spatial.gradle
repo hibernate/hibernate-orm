@@ -29,6 +29,11 @@ repositories {
     }
 }
 
+mavenPom {
+    name = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
+    description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
+}
+
 dependencies {
     compile(project(':hibernate-core'))
     compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])

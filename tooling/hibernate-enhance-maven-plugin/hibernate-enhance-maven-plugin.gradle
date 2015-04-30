@@ -75,6 +75,7 @@ processResources.doLast {
          groupId  project.group
          packaging 'maven-plugin'
          name 'Enhance Plugin of the Hibernate project for use with Maven build system.'
+         description 'Enhance Plugin of the Hibernate project for use with Maven build system.'
          properties {
             'project.build.sourceEncoding' 'UTF-8'
          }

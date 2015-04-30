@@ -35,7 +35,7 @@ import org.hibernate.usertype.UserType;
 public interface TypeContributions {
 	public void contributeType(BasicType type);
 
-	public void contributeType(UserType type, String[] keys);
+	public void contributeType(UserType type, String... keys);
 
-	public void contributeType(CompositeUserType type, String[] keys);
+	public void contributeType(CompositeUserType type, String... keys);
 }

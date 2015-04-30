@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  * 
  * JBoss, Home of Professional Open Source
- * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -20,39 +20,33 @@
  */
 package org.hibernate.osgi.test.client;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 
 /**
- * OSGi service interface providing multiple uses of Native and JPA functionality.  The use of a SF/EMF must occur in
- * this separate bundle, rather than attempting to programmatically create a bundle and obtain/use an SF/EMF there.
- * See comments on OsgiTestCase
- * 
  * @author Brett Meyer
  */
-public interface TestService {
-	public void saveJpa(DataPoint dp);
-	
-	public DataPoint getJpa(long id);
-	
-	public void updateJpa(DataPoint dp);
-	
-	public void deleteJpa();
-	
-	public void saveNative(DataPoint dp);
-	
-	public DataPoint getNative(long id);
-	
-	public void updateNative(DataPoint dp);
-	
-	public void deleteNative();
-	
-	public DataPoint lazyLoad(long id);
-	
-	public TestIntegrator getTestIntegrator();
-	
-	public TestStrategyRegistrationProvider getTestStrategyRegistrationProvider();
-	
-	public TestTypeContributor getTestTypeContributor();
+public class TestIntegrator implements Integrator {
+	private static boolean passed = false;
 
-	public boolean isCustomServiceContributorRegistered();
+	@Override
+	public void integrate(
+			Metadata metadata,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry) {
+		passed = true;
+	}
+
+	@Override
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		passed = true;
+	}
+	
+	public static boolean passed() {
+		return passed;
+	}
+
 }

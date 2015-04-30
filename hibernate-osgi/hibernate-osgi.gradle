@@ -1,3 +1,12 @@
+import java.util.jar.JarFile
+
+import groovy.xml.MarkupBuilder
+
+ext {
+	paxExamVersion = '4.0.0'
+	karafVersion = '3.0.3'
+}
+
 configurations {
 	osgiRuntime {
 		// Ignore the transitive dependencies.
@@ -9,44 +18,44 @@ configurations {
 	}
 }
 
-sourceSets {
-	testClientBundle
-}
+//sourceSets {
+//	testClientBundle
+//}
 
-sourceSets.test {
-	compileClasspath += sourceSets.testClientBundle.output
-	runtimeClasspath += sourceSets.testClientBundle.output
-}
+//sourceSets.test {
+//	compileClasspath += sourceSets.testClientBundle.output
+//	runtimeClasspath += sourceSets.testClientBundle.output
+//}
 
-test {
-	// for now, always disable!!
-	enabled = false
+//test {
+//	// for now, always disable!!
+//	enabled = false
+//
+//}
 
-}
-
-if ( project.properties.java6Home == null ) {
-	// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
-	// java6Home is not available
-	test.enabled = false
-}
-else {
-	compileTestJava {
-		options.fork = true
-		options.forkOptions.executable = project.properties.java6Home.javacExecutable
-		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
-	}
-	compileTestClientBundleJava {
-		options.fork = true
-		options.forkOptions.executable = project.properties.java6Home.javacExecutable
-		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
-	}
-
-	test {
-		executable = project.properties.java6Home
-		maxHeapSize = '2G'
-		jvmArgs += ['-XX:MaxPermGen=512M']
-	}
-}
+//if ( project.properties.java6Home == null ) {
+//	// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
+//	// java6Home is not available
+//	test.enabled = false
+//}
+//else {
+//	compileTestJava {
+//		options.fork = true
+//		options.forkOptions.executable = project.properties.java6Home.javacExecutable
+//		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
+//	}
+////	compileTestClientBundleJava {
+////		options.fork = true
+////		options.forkOptions.executable = project.properties.java6Home.javacExecutable
+////		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
+////	}
+//
+//	test {
+//		executable = project.properties.java6Home
+//		maxHeapSize = '2G'
+//		jvmArgs += ['-XX:MaxPermGen=512M']
+//	}
+//}
 
 dependencies {
 	compile( project( ':hibernate-core' ) )
@@ -55,46 +64,75 @@ dependencies {
 	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
 	compile( "org.osgi:org.osgi.core:4.3.1" )
 	compile( "org.osgi:org.osgi.compendium:4.3.1" )
-	
-	testCompile( libraries.shrinkwrap_api )
-	testCompile( libraries.shrinkwrap )
-	testCompile( "org.jboss.arquillian.junit:arquillian-junit-container:1.0.3.Final" )
-	testCompile( "org.jboss.osgi.metadata:jbosgi-metadata:3.0.0.CR1" )
-	testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
-	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
-	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
-	testRuntime( libraries.slf4j_api );
-	testRuntime( libraries.slf4j_log4j );
-	testRuntime( "org.jboss.logmanager:jboss-logmanager:2.0.0.Beta1" )
-	
-	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
-	// ORDER DEPENDENT!!!
-	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" )
-	osgiRuntime( libraries.jpa )
-	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" )
-	osgiRuntime( libraries.jta )
-	osgiRuntime( "com.h2database:h2:1.3.170" )
-	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" )
-	osgiRuntime( libraries.javassist )
-	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
-	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
-	osgiRuntime( libraries.commons_annotations )
-	osgiRuntime( libraries.classmate )
-    osgiRuntime( "org.apache.logging.log4j:log4j-api:2.0" )
-	osgiRuntime( libraries.logging )
-	osgiRuntime( libraries.woodstox )
-	osgiRuntime( 'org.codehaus.woodstox:stax2-api:3.1.4' )
+
+	// PaxExam and friends.  Not entirely sure yet of proper configuration
+	testCompile "org.ops4j.pax.exam:pax-exam:${paxExamVersion}"
+	testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxExamVersion}"
+	testCompile( "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz" ) {
+		transitive = false
+	}
+	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxExamVersion}"
+	testCompile 'org.ops4j.pax.url:pax-url-aether:1.6.0'
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//	testCompile( libraries.shrinkwrap_api )
+//	testCompile( libraries.shrinkwrap )
+//	testCompile( "org.jboss.arquillian.junit:arquillian-junit-container:1.0.3.Final" )
+//	testCompile( "org.jboss.osgi.metadata:jbosgi-metadata:3.0.0.CR1" )
+//	testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
+//	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
+//	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
+//	testRuntime( libraries.slf4j_api );
+//	testRuntime( libraries.slf4j_log4j );
+//	testRuntime( "org.jboss.logmanager:jboss-logmanager:2.0.0.Beta1" )
+//
+//	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
+//	// ORDER DEPENDENT!!!
+//	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" )
+//	osgiRuntime( libraries.jpa )
+//	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" )
+//	osgiRuntime( libraries.jta )
+//	osgiRuntime( "com.h2database:h2:1.3.170" )
+//	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" )
+//	osgiRuntime( libraries.javassist )
+//	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
+//	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
+//	osgiRuntime( libraries.commons_annotations )
+//	osgiRuntime( libraries.classmate )
+//    osgiRuntime( "org.apache.logging.log4j:log4j-api:2.0" )
+//	osgiRuntime( libraries.logging )
+//	osgiRuntime( libraries.woodstox )
+//	osgiRuntime( 'org.codehaus.woodstox:stax2-api:3.1.4' )
 
 	// needed for BND
 	osgiRuntimeBnd( libraries.jandex )
 	osgiRuntimeBnd( "javax.enterprise:cdi-api:1.1" )
 	osgiRuntimeBnd( "javax.el:el-api:2.2" )
 	
-	testClientBundleCompile( project( ':hibernate-core' ) )
-	testClientBundleCompile( project( ':hibernate-entitymanager' ) )
-	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
-	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
-	testClientBundleCompile( "org.osgi:org.osgi.core:4.3.1" )
+//	testClientBundleCompile( project( ':hibernate-core' ) )
+//	testClientBundleCompile( project( ':hibernate-entitymanager' ) )
+//	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
+//	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
+//	testClientBundleCompile( "org.osgi:org.osgi.core:4.3.1" )
 }
 
 mavenPom {
@@ -168,32 +206,32 @@ task felixProperties << {
 	propertiesFile << " \\\nfile:../hibernate-entitymanager/target/libs/hibernate-entitymanager-" + hibernateTargetVersion + ".jar"
 	propertiesFile << " \\\nfile:target/libs/hibernate-osgi-" + hibernateTargetVersion + ".jar"
 }
-
-task testClientBundleJar(type: Jar) {
-	from sourceSets.testClientBundle.output
-	destinationDir new File("$buildDir/osgi-lib")
-	archiveName "testClientBundle.jar"
-	
-	// The OSGi plugin acts up when we need to export multiple source sets.  Just do it manually.
-	manifest {
-		attributes("Export-Package" : "org.hibernate.osgi.test.client,org.hibernate.osgi.test.result",
-					"Bundle-Name" : "testClientBundle",
-					"Bundle-Activator" : "org.hibernate.osgi.test.client.OsgiTestActivator",
-					"Bundle-ManifestVersion" : "2",
-					"Bundle-SymbolicName" : "testClientBundle",
-					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.osgi.framework,"
-							+ "org.hibernate,"
-							+ "org.hibernate.boot.model,"
-							+ "org.hibernate.boot.registry.selector,"
-							+ "org.hibernate.boot.registry.selector.spi,"
-							+ "org.hibernate.cfg,"
-							+ "org.hibernate.engine.spi,"
-							+ "org.hibernate.integrator.spi,"
-							+ "org.hibernate.proxy,"
-							+ "org.hibernate.service,"
-							+ "org.hibernate.service.spi")
-	}
-}
+//
+//task testClientBundleJar(type: Jar) {
+//	from sourceSets.testClientBundle.output
+//	destinationDir new File("$buildDir/osgi-lib")
+//	archiveName "testClientBundle.jar"
+//
+//	// The OSGi plugin acts up when we need to export multiple source sets.  Just do it manually.
+//	manifest {
+//		attributes("Export-Package" : "org.hibernate.osgi.test.client,org.hibernate.osgi.test.result",
+//					"Bundle-Name" : "testClientBundle",
+//					"Bundle-Activator" : "org.hibernate.osgi.test.client.OsgiTestActivator",
+//					"Bundle-ManifestVersion" : "2",
+//					"Bundle-SymbolicName" : "testClientBundle",
+//					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.osgi.framework,"
+//							+ "org.hibernate,"
+//							+ "org.hibernate.boot.model,"
+//							+ "org.hibernate.boot.registry.selector,"
+//							+ "org.hibernate.boot.registry.selector.spi,"
+//							+ "org.hibernate.cfg,"
+//							+ "org.hibernate.engine.spi,"
+//							+ "org.hibernate.integrator.spi,"
+//							+ "org.hibernate.proxy,"
+//							+ "org.hibernate.service,"
+//							+ "org.hibernate.service.spi")
+//	}
+//}
 
 runBnd.dependsOn copyToLib
 runBnd.dependsOn copyBnd
@@ -201,6 +239,299 @@ copyBnd.dependsOn copyToLib
 
 felixProperties.dependsOn runBnd
 
+
+task generateVersionFile {
+	File outputFileDir = project.file( "${buildDir}/classes/test/META-INF/hibernate-osgi/" )
+	File outputFile = new File( outputFileDir, 'Version.txt' )
+
+	inputs.property( "version", project.version )
+	outputs.file outputFile
+
+	doFirst {
+		outputFileDir.mkdirs()
+
+		def writer = new FileWriter( outputFile )
+		try {
+			writer.write( "${project.version}" )
+			writer.flush()
+		}
+		finally {
+			writer.close()
+		}
+	}
+}
+
+task generateDependsFile {
+	// In order to fully use org.ops4j.pax.exam.CoreOptions.maven() stuff
+	// we need to generate a META-INF/maven/dependencies.properties file
+	// just like the generate-depends-file Maven goal from ServiceMix/Karaf
+
+	File outputFileDir = project.file( 'target/classes/test/META-INF/maven/' )
+	File outputFile = new File( outputFileDir, 'dependencies.properties' )
+
+	outputs.file outputFile
+
+	doFirst {
+		outputFileDir.mkdirs()
+
+		Properties properties = new Properties();
+
+		// first we add our GAV info
+		properties.setProperty( "groupId", "${project.group}" );
+		properties.setProperty( "artifactId", project.name );
+		properties.setProperty( "version", "${project.version}" );
+		properties.setProperty( "${project.group}/${project.name}/version", "${project.version}" );
+
+		// then for all our deps
+		project.configurations.testRuntime.resolvedConfiguration.resolvedArtifacts.each {
+			final String keyBase = it.moduleVersion.id.group + '/' + it.moduleVersion.id.name;
+			properties.setProperty( "${keyBase}/scope", "compile" )
+			properties.setProperty( "${keyBase}/type", it.extension )
+			properties.setProperty( "${keyBase}/version", it.moduleVersion.id.version )
+		}
+
+		FileOutputStream outputStream = new FileOutputStream( outputFile );
+		try {
+			properties.store( outputStream, "Generated from Gradle by Hibernate build for PaxExam testing of hibernate-osgi module" )
+		}
+		finally {
+			outputStream.close()
+		}
+	}
+}
+
+
+Project[] karafFeatureProjects = [
+		project.rootProject.project( "hibernate-core" ),
+		project.rootProject.project( "hibernate-entitymanager" ),
+		project.rootProject.project( "hibernate-envers" ),
+		project.rootProject.project( "hibernate-spatial" ),
+		project.rootProject.project( "hibernate-ehcache" ),
+		project.rootProject.project( "hibernate-infinispan" ),
+		project.rootProject.project( "hibernate-osgi" )
+]
+
+task generateKarafFeaturesXml(dependsOn: jar) {
+	File outputFileDir = project.libsDir
+	String fileName = "${project.name}-${project.version}-karaf.xml"
+	File outputFile = new File( outputFileDir, fileName )
+
+
+	outputs.file outputFile
+	inputs.files karafFeatureProjects*.configurations.runtime
+//	outputs.upToDateWhen(Specs.satisfyNone());
+
+	doFirst {
+		outputFileDir.mkdirs()
+
+		def writer = new BufferedWriter( new FileWriter( outputFile ) )
+		def builder = new MarkupBuilder( writer )
+
+		builder.features(xmlns:'http://karaf.apache.org/xmlns/features/v1.0.0') {
+//			extension.projects.each { project ->
+			karafFeatureProjects.each { selectedProject ->
+				// The LinkedHashSet here will hold the dependencies in order, transitivity depth first
+				LinkedHashSet<ResolvedComponentResult> orderedDependencies = new LinkedHashSet<ResolvedComponentResult>()
+				collectOrderedDependencies( orderedDependencies, selectedProject.configurations.runtime.incoming.resolutionResult.root )
+
+				builder.feature(name:"${selectedProject.name}", version:"${selectedProject.version}") {
+					generateBundles( selectedProject, builder, orderedDependencies )
+					// add bundle for this project
+
+//					generateBundles( builder, orderedDependencies, extension )
+//					extension.extraBundles.each { extraBundle ->
+//						builder.bundle( extraBundle )
+//					}
+				}
+			}
+		}
+
+
+		writer.close()
+
+//		if(project.karafFeatures.outputFile != null) {
+//			def out = new BufferedWriter(new FileWriter(project.karafFeatures.outputFile))
+//			out.write(writer.toString())
+//			out.close()
+//		} else {
+//			println writer.toString()
+//		}
+	}
+}
+
 test.dependsOn felixProperties
-test.dependsOn testClientBundleJar
+//test.dependsOn testClientBundleJar
 test.dependsOn jar
+test.dependsOn( [generateDependsFile, generateVersionFile, generateKarafFeaturesXml] )
+
+karafFeatureProjects.each {
+	generateKarafFeaturesXml.dependsOn it.tasks.jar
+}
+
+/**
+ * Recursive method walking the dependency graph depth first in order to build a a set of
+ * dependencies ordered by their transitivity depth.
+ *
+ * @param orderedDependencies The ordered set of dependencies being built
+ * @param resolvedComponentResult The dependency to process
+ * @param extension The karafFeatures extension
+ */
+static void collectOrderedDependencies(
+		LinkedHashSet<ResolvedComponentResult> orderedDependencies,
+		ResolvedComponentResult resolvedComponentResult) {
+//	if ( shouldExclude( resolvedComponentResult, extension ) ) {
+//		return;
+//	}
+
+	// add dependencies first
+	resolvedComponentResult.dependencies.each {
+		if ( it instanceof UnresolvedDependencyResult ) {
+			// skip it
+			logger.debug( "Skipping dependency [%s] as it is unresolved", it.requested.displayName )
+			return;
+		}
+
+		collectOrderedDependencies( orderedDependencies, ( (ResolvedDependencyResult) it ).selected )
+//		collectOrderedDependencies( orderedDependencies, ( (ResolvedDependencyResult) it ).selected, extension )
+	}
+
+	// then add this one
+	orderedDependencies.add( resolvedComponentResult )
+}
+
+
+/**
+ * Using the passed MarkupBuilder, generate {@code <bundle/>} element for each dependency.
+ *
+ * @param builder The MarkupBuilder to use.
+ * @param orderedDependencies The ordered set of dependencies
+ * @param extension The karafFeatures extension
+ */
+void generateBundles(
+		Project selectedProject,
+		MarkupBuilder builder,
+		LinkedHashSet<ResolvedComponentResult> orderedDependencies) {
+
+	// The determination of whether to wrap partially involves seeing if the
+	// artifact (file) resolved from the dependency defined OSGi metadata.  So we need a Map
+	// of the ResolvedArtifacts by their identifier (GAV)
+	def Map<ModuleVersionIdentifier,ResolvedArtifact> resolvedArtifactMap = new HashMap<ModuleVersionIdentifier,ResolvedArtifact>()
+	selectedProject.configurations.runtime.resolvedConfiguration.resolvedArtifacts.each {
+		resolvedArtifactMap.put( it.moduleVersion.id, it );
+	}
+
+	orderedDependencies.each { dep ->
+		logger.lifecycle( "  >> ($selectedProject.name) Starting dependency bundle generation : ${dep.moduleVersion}" )
+
+		def mavenUrl = "mvn:${dep.moduleVersion.group}/${dep.moduleVersion.name}/${dep.moduleVersion.version}"
+
+		if ( shouldWrap( dep, selectedProject, resolvedArtifactMap ) ) {
+			mavenUrl = "wrap:${mavenUrl}"
+		}
+
+		def startLevel = getBundleStartLevel(dep)
+		if ( startLevel == null ) {
+			builder.bundle(mavenUrl)
+		}
+		else {
+			builder.bundle("start-level": startLevel, mavenUrl)
+		}
+	}
+}
+
+/**
+ * Should the bundle generated from this dependency use the {@code wrap:} url scheme?
+ *
+ * @param dep The dependency to check
+ * @param extension The karafFeatures extension
+ * @param resolvedArtifactMap The map of GAV->ResolvedArtifact
+ *
+ * @return {@code true} to indicate that the dependency should be wrapped; {@code false} indicates it should not.
+ */
+boolean shouldWrap(
+		ResolvedComponentResult dep,
+		Project selectedProject,
+		Map<ModuleVersionIdentifier,ResolvedArtifact> resolvedArtifactMap) {
+//	if ( matchedPattern( dep, extension.wraps ) ) {
+//		return true;
+//	}
+	if ( matchesPattern( dep, "${selectedProject.group}/${selectedProject.name}/${selectedProject.version}") ) {
+		boolean hasHeader = hasOsgiManifestHeaders( ( selectedProject.tasks.jar as Jar ).archivePath )
+		logger.lifecycle( "    >> project artifact -> isOsgi = ${hasHeader}" )
+		return !hasHeader;
+	}
+
+	ResolvedArtifact resolvedArtifact = resolvedArtifactMap.get( dep.moduleVersion )
+	if ( resolvedArtifact != null ) {
+		boolean hasHeader = hasOsgiManifestHeaders( resolvedArtifact.file )
+		logger.lifecycle( "    >> dependency artifact -> isOsgi = ${hasHeader}" )
+		return !hasHeader;
+	}
+
+	return true
+}
+
+public boolean hasOsgiManifestHeaders(File file) {
+	JarFile jarFile = new JarFile( file );
+	java.util.jar.Manifest manifest = jarFile.getManifest();
+	if ( manifest != null ) {
+		logger.lifecycle( "Found manifest [${file.absolutePath}], checking for OSGi metadata" )
+		if ( hasAttribute( manifest, "Bundle-SymbolicName" ) ) {
+			logger.lifecycle( "    >> Found Bundle-SymbolicName" )
+			return true;
+		}
+		if ( hasAttribute( manifest, "Bundle-Name" ) ) {
+			logger.lifecycle( "    >> Found Bundle-Name" )
+			return true;
+		}
+	}
+
+	return false;
+}
+
+public boolean hasAttribute(java.util.jar.Manifest manifest, String attributeName) {
+	String value = manifest.mainAttributes.getValue( attributeName )
+	return value != null && !value.trim().isEmpty()
+}
+
+/**
+ * Method to determine if a given jar file is am OSGi bundle.
+ * This is useful for determining if we need to wrap it, determined by the existence
+ * of a Bundle-SymbolicName manifest attribute..
+ *
+ * @param dep The dependency to check.
+ * @param resolvedArtifactMap Map of dependency ids (GAV) to ResolvedArtifact
+ *
+ * @return True if this dependency resolved to a jar with an OSGi bundle
+ */
+public boolean isOsgi(ResolvedComponentResult dep, Map<ModuleVersionIdentifier,ResolvedArtifact> resolvedArtifactMap) {
+	JarFile jarFile = new JarFile( resolvedArtifact.file );
+	java.util.jar.Manifest manifest = jarFile.getManifest();
+	if ( manifest != null ) {
+		Object value = manifest.getMainAttributes().getValue( "Bundle-SymbolicName" )
+		logger.lifecycle( "Manifest Bundle-SymbolicName (${dep.moduleVersion}) : ${value}" )
+
+		if ( value != null && !value.toString().isEmpty() ) {
+			return true;
+		}
+	}
+	else {
+		logger.lifecycle( "No manifest found ${dep.moduleVersion}" )
+	}
+
+	return false;
+}
+
+static def getBundleStartLevel(ResolvedComponentResult dep) {
+	return null;
+}
+
+static boolean matchesPattern(ResolvedComponentResult dep, String... patterns) {
+	for(String pattern : patterns) {
+		if("${dep.moduleVersion.group}/${dep.moduleVersion.name}/${dep.moduleVersion.version}".matches(pattern)) {
+			return true;
+		}
+	}
+
+	return false
+}

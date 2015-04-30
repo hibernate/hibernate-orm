@@ -20,34 +20,35 @@
  */
 package org.hibernate.osgi.test.client;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import java.util.Hashtable;
 
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.boot.model.TypeContributor;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 /**
  * @author Brett Meyer
  */
-public class TestIntegrator implements Integrator {
-	
-	private boolean passed = false;
+public class OsgiTestActivator implements BundleActivator {
 
 	@Override
-	public void integrate(
-			Metadata metadata,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry) {
-		passed = true;
+	public void start(BundleContext context) throws Exception {
+		
+		final TestIntegrator integrator = new TestIntegrator();
+		final TestStrategyRegistrationProvider strategyRegistrationProvider = new TestStrategyRegistrationProvider();
+		final TestTypeContributor typeContributor = new TestTypeContributor();
+		
+		// register example extension point services
+		context.registerService( Integrator.class, integrator, new Hashtable() );
+		context.registerService( StrategyRegistrationProvider.class, strategyRegistrationProvider, new Hashtable() );
+		context.registerService( TypeContributor.class, typeContributor, new Hashtable() );
 	}
 
 	@Override
-	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		passed = true;
-	}
-	
-	public boolean passed() {
-		return passed;
+	public void stop(BundleContext context) throws Exception {
+
 	}
 
 }

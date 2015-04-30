@@ -20,8 +20,11 @@
  */
 package org.hibernate.osgi.test.client;
 
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 
@@ -29,15 +32,17 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
  * @author Brett Meyer
  */
 public class TestStrategyRegistrationProvider implements StrategyRegistrationProvider {
-	
-	private boolean passed = false;
 
+	public static final String GREGORIAN = "gregorian";
+
+	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		passed = true;
-		return Collections.EMPTY_LIST;
-	}
-	
-	public boolean passed() {
-		return passed;
+		return Collections.singletonList(
+				(StrategyRegistration) new SimpleStrategyRegistrationImpl(
+						Calendar.class,
+						GregorianCalendar.class,
+						GREGORIAN
+				)
+		);
 	}
 }

@@ -26,6 +26,7 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -37,6 +38,8 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.engine.jdbc.spi.TypeInfo;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Collection;
 
 /**
  * Standard implementation of ExtractedDatabaseMetaData
@@ -213,10 +216,12 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 
 		private Set<String> parseKeywords(String extraKeywordsString) {
-			final Set<String> keywordSet = new HashSet<String>();
-			for ( String keyword : extraKeywordsString.split( "," ) ) {
-				keywordSet.add( keyword.toUpperCase(Locale.ROOT) );
+			if ( StringHelper.isEmpty(  extraKeywordsString ) ) {
+				return Collections.emptySet();
 			}
+
+			final Set<String> keywordSet = new HashSet<String>();
+			keywordSet.addAll( Arrays.asList( extraKeywordsString.split( "\\s*,\\s*" ) ) );
 			return keywordSet;
 		}
 

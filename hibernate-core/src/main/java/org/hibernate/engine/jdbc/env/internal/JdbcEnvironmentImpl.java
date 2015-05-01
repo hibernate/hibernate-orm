@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -37,6 +38,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -67,8 +69,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
 	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
-	// todo : should really maintain a standard list of know ANSI-SQL defined keywords somewhere (currently rely on Dialect)
-	private final Set<String> reservedWords = new HashSet<String>();
+	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 
 	/**
 	 * Constructor form used when the JDBC {@link java.sql.DatabaseMetaData} is not available.
@@ -88,9 +89,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
-		for ( String keyword : dialect.getKeywords() ) {
-			reservedWords.add( keyword.toUpperCase(Locale.ROOT) );
-		}
+		reservedWords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
+		reservedWords.addAll( dialect.getKeywords() );
 
 		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
 				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );
@@ -142,10 +142,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
 
-		for ( String keyword : dialect.getKeywords() ) {
-			reservedWords.add( keyword.toUpperCase(Locale.ROOT) );
-		}
-		// ExtractedMetaDataSupport already capitalizes them
+		reservedWords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
+		reservedWords.addAll( dialect.getKeywords() );
 		reservedWords.addAll( extractedMetaDataSupport.getExtraKeywords() );
 
 		final boolean globallyQuoteIdentifiers = false;
@@ -219,10 +217,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
 
-		for ( String keyword : dialect.getKeywords() ) {
-			reservedWords.add( keyword.toUpperCase(Locale.ROOT) );
-		}
-		// ExtractedMetaDataSupport already capitalizes them
+		reservedWords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
+		reservedWords.addAll( dialect.getKeywords() );
 		reservedWords.addAll( extractedMetaDataSupport.getExtraKeywords() );
 
 		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
@@ -336,7 +332,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 	@Override
 	public boolean isReservedWord(String word) {
-		return reservedWords.contains( word.toUpperCase(Locale.ROOT) );
+		return reservedWords.contains( word );
 	}
 
 	@Override

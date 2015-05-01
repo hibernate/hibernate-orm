@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table( name = "`User`" )
 public class User {
 	private Long id;
 	private Set<Role> roles = new HashSet<Role>();

@@ -75,6 +75,7 @@ import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
@@ -101,7 +102,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -157,6 +158,9 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
@@ -222,6 +226,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private transient JdbcSessionContext jdbcSessionContext;
 
+	private transient ExceptionMapper exceptionMapper;
+	private transient ManagedFlushChecker managedFlushChecker;
+	private transient AfterCompletionAction afterCompletionAction;
+
 	/**
 	 * Constructor used for openSession(...) processing, as well as construction
 	 * of sessions for getCurrentSession().
@@ -263,6 +271,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
+
+		initializeFromSessionOwner( sessionOwner );
 
 		if ( statementInspector == null ) {
 			this.statementInspector = new StatementInspector() {
@@ -353,6 +363,34 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			LOG.tracef( "Opened session at timestamp: %s", timestamp );
 		}
 
+	}
+
+	private void initializeFromSessionOwner(SessionOwner sessionOwner) {
+		if ( sessionOwner != null ) {
+			if ( sessionOwner.getExceptionMapper() != null ) {
+				exceptionMapper = sessionOwner.getExceptionMapper();
+			}
+			else {
+				exceptionMapper = STANDARD_EXCEPTION_MAPPER;
+			}
+			if ( sessionOwner.getAfterCompletionAction() != null ) {
+				afterCompletionAction = sessionOwner.getAfterCompletionAction();
+			}
+			else {
+				afterCompletionAction = STANDARD_AFTER_COMPLETION_ACTION;
+			}
+			if ( sessionOwner.getManagedFlushChecker() != null ) {
+				managedFlushChecker = sessionOwner.getManagedFlushChecker();
+			}
+			else {
+				managedFlushChecker = STANDARD_MANAGED_FLUSH_CHECKER;
+			}
+		}
+		else {
+			exceptionMapper = STANDARD_EXCEPTION_MAPPER;
+			afterCompletionAction = STANDARD_AFTER_COMPLETION_ACTION;
+			managedFlushChecker = STANDARD_MANAGED_FLUSH_CHECKER;
+		}
 	}
 
 	@Override
@@ -707,7 +745,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		fireLock( new LockEvent( entityName, object, options, this ) );
 	}
 
-	private void fireLock( Object object, LockOptions options) {
+	private void fireLock(Object object, LockOptions options) {
 		fireLock( new LockEvent( object, options, this ) );
 	}
 
@@ -1209,7 +1247,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
 		errorIfClosed();
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Flushing to force deletion of re-saved object: %s",
+			LOG.debugf(
+					"Flushing to force deletion of re-saved object: %s",
 					MessageHelper.infoString( entityEntry.getPersister(), entityEntry.getId(), getFactory() ) );
 		}
 
@@ -1293,7 +1332,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         } finally {
             afterOperation( success );
     		delayedAfterCompletion();
-        }
+		}
         return result;
     }
 
@@ -2148,6 +2187,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.jdbcSessionContext = new JdbcSessionContextImpl( factory, statementInspector );
 		sessionOwner = (SessionOwner) ois.readObject();
 
+		initializeFromSessionOwner( sessionOwner );
+
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator, this );
@@ -2238,6 +2279,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		LOG.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+
+		afterCompletionAction.doAction( successful );
 
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
@@ -2834,24 +2877,65 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		boolean flush = false;
+		boolean flush = isTransactionFlushable() && managedFlushChecker.shouldDoManagedFlush( this );
 		try {
-			flush = (!isFlushModeNever() &&
-					!flushBeforeCompletionEnabled) || (
-					!isClosed()
-							&& !isFlushModeNever()
-							&& flushBeforeCompletionEnabled
-							&& !JtaStatusHelper.isRollback(
-							getSessionFactory().getSettings()
-									.getJtaPlatform()
-									.getCurrentStatus()
-					));
+			if ( flush ) {
+				managedFlush();
+			}
 		}
-		catch (SystemException se) {
-			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
+		catch (HibernateException he) {
+			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", he );
 		}
-		if ( flush ) {
-			managedFlush();
+		catch (RuntimeException re) {
+			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
 		}
+	}
+
+	private boolean isTransactionFlushable() {
+		if ( currentHibernateTransaction == null ) {
+			// assume it is flushable - CMT, auto-commit, etc
+			return true;
+		}
+		final TransactionStatus status = currentHibernateTransaction.getStatus();
+		return status == TransactionStatus.ACTIVE || status ==TransactionStatus.COMMITTING;
+	}
+
+	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
+		@Override
+		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
+			return new TransactionException(
+					"could not determine transaction status in beforeCompletion()",
+					systemException
+			);
+		}
+
+		@Override
+		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
+			LOG.unableToPerformManagedFlush( failure.getMessage() );
+			return failure;
+		}
+	};
+
+	private static final AfterCompletionAction STANDARD_AFTER_COMPLETION_ACTION = new AfterCompletionAction() {
+		@Override
+		public void doAction(boolean successful) {
+			// nothing to do by default.
+		}
+	};
+
+	private static final ManagedFlushChecker STANDARD_MANAGED_FLUSH_CHECKER = new ManagedFlushChecker() {
+		@Override
+		public boolean shouldDoManagedFlush(SessionImpl session) {
+			boolean isFlushModeNever = session.isFlushModeNever();
+			return (!isFlushModeNever &&
+					!session.flushBeforeCompletionEnabled) ||
+					!session.isClosed()
+							&& !isFlushModeNever
+							&& session.flushBeforeCompletionEnabled;
+		}
+	};
+
+	private JtaPlatform getJtaPlatform() {
+		return factory.getServiceRegistry().getService( JtaPlatform.class );
 	}
 }

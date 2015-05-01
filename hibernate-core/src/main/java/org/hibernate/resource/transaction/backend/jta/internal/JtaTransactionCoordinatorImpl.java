@@ -1,12 +1,15 @@
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -25,8 +28,6 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.S
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.CoreLogging.logger;
 
@@ -231,7 +232,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 				log.debug( "JtaPlatform#retrieveUserTransaction returned null" );
 			}
 			else {
-				return new JtaTransactionAdapterUserTransactionImpl( userTransaction, this );
+				return new JtaTransactionAdapterUserTransactionImpl( userTransaction );
 			}
 		}
 		catch (Exception ignore) {
@@ -248,7 +249,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 				log.debug( "JtaPlatform#retrieveTransactionManager returned null" );
 			}
 			else {
-				return new JtaTransactionAdapterTransactionManagerImpl( transactionManager, this );
+				return new JtaTransactionAdapterTransactionManagerImpl( transactionManager );
 			}
 		}
 		catch (Exception ignore) {
@@ -305,13 +306,19 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
-		catch (Exception e) {
+		catch (HibernateException e) {
 			physicalTransactionDelegate.markRollbackOnly();
+			throw e;
 		}
-		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-
-		for ( TransactionObserver observer : observers ) {
-			observer.beforeCompletion();
+		catch (RuntimeException re) {
+			physicalTransactionDelegate.markRollbackOnly();
+			throw re;
+		}
+		finally {
+			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
+			for ( TransactionObserver observer : observers ) {
+				observer.beforeCompletion();
+			}
 		}
 	}
 
@@ -384,6 +391,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		@Override
 		public void commit() {
 			errorIfInvalid();
+			getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
 
 			// we don't have to perform any before/after completion processing here.  We leave that for
 			// the Synchronization callbacks

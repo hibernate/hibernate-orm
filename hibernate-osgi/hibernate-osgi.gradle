@@ -1,6 +1,4 @@
-import java.util.jar.JarFile
-
-import groovy.xml.MarkupBuilder
+apply plugin: 'karaf-featuresgen'
 
 ext {
 	paxExamVersion = '4.0.0'
@@ -8,6 +6,9 @@ ext {
 }
 
 configurations {
+	aries {
+		description = 'Runtime dependencies for Aries for the hibernate-jpa-aries Karaf feature'
+	}
 	osgiRuntime {
 		// Ignore the transitive dependencies.
 		transitive = false
@@ -74,6 +75,7 @@ dependencies {
 	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxExamVersion}"
 	testCompile 'org.ops4j.pax.url:pax-url-aether:1.6.0'
 
+	karafFeaturesBundles "org.apache.logging.log4j:log4j-api:2.0"
 //
 //
 //
@@ -101,9 +103,9 @@ dependencies {
 //	testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
 //	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
 //	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
-//	testRuntime( libraries.slf4j_api );
-//	testRuntime( libraries.slf4j_log4j );
-//	testRuntime( "org.jboss.logmanager:jboss-logmanager:2.0.0.Beta1" )
+	testRuntime( libraries.slf4j_api );
+	testRuntime( libraries.slf4j_log4j );
+	testRuntime( "org.jboss.logmanager:jboss-logmanager:2.0.0.Beta1" )
 //
 //	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
 //	// ORDER DEPENDENT!!!
@@ -300,238 +302,54 @@ task generateDependsFile {
 	}
 }
 
-
-Project[] karafFeatureProjects = [
-		project.rootProject.project( "hibernate-core" ),
-		project.rootProject.project( "hibernate-entitymanager" ),
-		project.rootProject.project( "hibernate-envers" ),
-		project.rootProject.project( "hibernate-spatial" ),
-		project.rootProject.project( "hibernate-ehcache" ),
-		project.rootProject.project( "hibernate-infinispan" ),
-		project.rootProject.project( "hibernate-osgi" )
-]
-
-task generateKarafFeaturesXml(dependsOn: jar) {
-	File outputFileDir = project.libsDir
-	String fileName = "${project.name}-${project.version}-karaf.xml"
-	File outputFile = new File( outputFileDir, fileName )
-
-
-	outputs.file outputFile
-	inputs.files karafFeatureProjects*.configurations.runtime
-//	outputs.upToDateWhen(Specs.satisfyNone());
-
-	doFirst {
-		outputFileDir.mkdirs()
-
-		def writer = new BufferedWriter( new FileWriter( outputFile ) )
-		def builder = new MarkupBuilder( writer )
-
-		builder.features(xmlns:'http://karaf.apache.org/xmlns/features/v1.0.0') {
-//			extension.projects.each { project ->
-			karafFeatureProjects.each { selectedProject ->
-				// The LinkedHashSet here will hold the dependencies in order, transitivity depth first
-				LinkedHashSet<ResolvedComponentResult> orderedDependencies = new LinkedHashSet<ResolvedComponentResult>()
-				collectOrderedDependencies( orderedDependencies, selectedProject.configurations.runtime.incoming.resolutionResult.root )
-
-				builder.feature(name:"${selectedProject.name}", version:"${selectedProject.version}") {
-					generateBundles( selectedProject, builder, orderedDependencies )
-					// add bundle for this project
-
-//					generateBundles( builder, orderedDependencies, extension )
-//					extension.extraBundles.each { extraBundle ->
-//						builder.bundle( extraBundle )
-//					}
-				}
-			}
+karafFeatures {
+	features {
+		// NOTE : would like to include spatial as well, but we need to wait for
+		//		it to not define dependency on postgresql driver
+		hibernateNative {
+			name = 'hibernate-native'
+			projects = [
+					rootProject.childProjects.'hibernate-core',
+					rootProject.childProjects.'hibernate-envers',
+					project
+			]
 		}
-
-
-		writer.close()
-
-//		if(project.karafFeatures.outputFile != null) {
-//			def out = new BufferedWriter(new FileWriter(project.karafFeatures.outputFile))
-//			out.write(writer.toString())
-//			out.close()
-//		} else {
-//			println writer.toString()
-//		}
+		hibernateJpa {
+			name = 'hibernate-jpa'
+			projects = [
+					rootProject.childProjects.'hibernate-entitymanager',
+					rootProject.childProjects.'hibernate-envers',
+					project
+			]
+		}
+		hibernateJpaAries {
+			name = 'hibernate-jpa-aries'
+			projects = [
+					rootProject.childProjects.'hibernate-entitymanager',
+					rootProject.childProjects.'hibernate-envers',
+					project
+			]
+			extraBundleDependencies = [project.configurations.aries]
+		}
+		hibernateInfinispan {
+			name = 'hibernate-infinispan'
+			projects = [
+					rootProject.childProjects.'hibernate-infinispan',
+					project
+			]
+		}
+		hibernateEhcache {
+			name = 'hibernate-ehcache'
+			projects = [
+					rootProject.childProjects.'hibernate-ehcache',
+					project
+			]
+		}
 	}
 }
+
 
 test.dependsOn felixProperties
 //test.dependsOn testClientBundleJar
 test.dependsOn jar
-test.dependsOn( [generateDependsFile, generateVersionFile, generateKarafFeaturesXml] )
-
-karafFeatureProjects.each {
-	generateKarafFeaturesXml.dependsOn it.tasks.jar
-}
-
-/**
- * Recursive method walking the dependency graph depth first in order to build a a set of
- * dependencies ordered by their transitivity depth.
- *
- * @param orderedDependencies The ordered set of dependencies being built
- * @param resolvedComponentResult The dependency to process
- * @param extension The karafFeatures extension
- */
-static void collectOrderedDependencies(
-		LinkedHashSet<ResolvedComponentResult> orderedDependencies,
-		ResolvedComponentResult resolvedComponentResult) {
-//	if ( shouldExclude( resolvedComponentResult, extension ) ) {
-//		return;
-//	}
-
-	// add dependencies first
-	resolvedComponentResult.dependencies.each {
-		if ( it instanceof UnresolvedDependencyResult ) {
-			// skip it
-			logger.debug( "Skipping dependency [%s] as it is unresolved", it.requested.displayName )
-			return;
-		}
-
-		collectOrderedDependencies( orderedDependencies, ( (ResolvedDependencyResult) it ).selected )
-//		collectOrderedDependencies( orderedDependencies, ( (ResolvedDependencyResult) it ).selected, extension )
-	}
-
-	// then add this one
-	orderedDependencies.add( resolvedComponentResult )
-}
-
-
-/**
- * Using the passed MarkupBuilder, generate {@code <bundle/>} element for each dependency.
- *
- * @param builder The MarkupBuilder to use.
- * @param orderedDependencies The ordered set of dependencies
- * @param extension The karafFeatures extension
- */
-void generateBundles(
-		Project selectedProject,
-		MarkupBuilder builder,
-		LinkedHashSet<ResolvedComponentResult> orderedDependencies) {
-
-	// The determination of whether to wrap partially involves seeing if the
-	// artifact (file) resolved from the dependency defined OSGi metadata.  So we need a Map
-	// of the ResolvedArtifacts by their identifier (GAV)
-	def Map<ModuleVersionIdentifier,ResolvedArtifact> resolvedArtifactMap = new HashMap<ModuleVersionIdentifier,ResolvedArtifact>()
-	selectedProject.configurations.runtime.resolvedConfiguration.resolvedArtifacts.each {
-		resolvedArtifactMap.put( it.moduleVersion.id, it );
-	}
-
-	orderedDependencies.each { dep ->
-		logger.lifecycle( "  >> ($selectedProject.name) Starting dependency bundle generation : ${dep.moduleVersion}" )
-
-		def mavenUrl = "mvn:${dep.moduleVersion.group}/${dep.moduleVersion.name}/${dep.moduleVersion.version}"
-
-		if ( shouldWrap( dep, selectedProject, resolvedArtifactMap ) ) {
-			mavenUrl = "wrap:${mavenUrl}"
-		}
-
-		def startLevel = getBundleStartLevel(dep)
-		if ( startLevel == null ) {
-			builder.bundle(mavenUrl)
-		}
-		else {
-			builder.bundle("start-level": startLevel, mavenUrl)
-		}
-	}
-}
-
-/**
- * Should the bundle generated from this dependency use the {@code wrap:} url scheme?
- *
- * @param dep The dependency to check
- * @param extension The karafFeatures extension
- * @param resolvedArtifactMap The map of GAV->ResolvedArtifact
- *
- * @return {@code true} to indicate that the dependency should be wrapped; {@code false} indicates it should not.
- */
-boolean shouldWrap(
-		ResolvedComponentResult dep,
-		Project selectedProject,
-		Map<ModuleVersionIdentifier,ResolvedArtifact> resolvedArtifactMap) {
-//	if ( matchedPattern( dep, extension.wraps ) ) {
-//		return true;
-//	}
-	if ( matchesPattern( dep, "${selectedProject.group}/${selectedProject.name}/${selectedProject.version}") ) {
-		boolean hasHeader = hasOsgiManifestHeaders( ( selectedProject.tasks.jar as Jar ).archivePath )
-		logger.lifecycle( "    >> project artifact -> isOsgi = ${hasHeader}" )
-		return !hasHeader;
-	}
-
-	ResolvedArtifact resolvedArtifact = resolvedArtifactMap.get( dep.moduleVersion )
-	if ( resolvedArtifact != null ) {
-		boolean hasHeader = hasOsgiManifestHeaders( resolvedArtifact.file )
-		logger.lifecycle( "    >> dependency artifact -> isOsgi = ${hasHeader}" )
-		return !hasHeader;
-	}
-
-	return true
-}
-
-public boolean hasOsgiManifestHeaders(File file) {
-	JarFile jarFile = new JarFile( file );
-	java.util.jar.Manifest manifest = jarFile.getManifest();
-	if ( manifest != null ) {
-		logger.lifecycle( "Found manifest [${file.absolutePath}], checking for OSGi metadata" )
-		if ( hasAttribute( manifest, "Bundle-SymbolicName" ) ) {
-			logger.lifecycle( "    >> Found Bundle-SymbolicName" )
-			return true;
-		}
-		if ( hasAttribute( manifest, "Bundle-Name" ) ) {
-			logger.lifecycle( "    >> Found Bundle-Name" )
-			return true;
-		}
-	}
-
-	return false;
-}
-
-public boolean hasAttribute(java.util.jar.Manifest manifest, String attributeName) {
-	String value = manifest.mainAttributes.getValue( attributeName )
-	return value != null && !value.trim().isEmpty()
-}
-
-/**
- * Method to determine if a given jar file is am OSGi bundle.
- * This is useful for determining if we need to wrap it, determined by the existence
- * of a Bundle-SymbolicName manifest attribute..
- *
- * @param dep The dependency to check.
- * @param resolvedArtifactMap Map of dependency ids (GAV) to ResolvedArtifact
- *
- * @return True if this dependency resolved to a jar with an OSGi bundle
- */
-public boolean isOsgi(ResolvedComponentResult dep, Map<ModuleVersionIdentifier,ResolvedArtifact> resolvedArtifactMap) {
-	JarFile jarFile = new JarFile( resolvedArtifact.file );
-	java.util.jar.Manifest manifest = jarFile.getManifest();
-	if ( manifest != null ) {
-		Object value = manifest.getMainAttributes().getValue( "Bundle-SymbolicName" )
-		logger.lifecycle( "Manifest Bundle-SymbolicName (${dep.moduleVersion}) : ${value}" )
-
-		if ( value != null && !value.toString().isEmpty() ) {
-			return true;
-		}
-	}
-	else {
-		logger.lifecycle( "No manifest found ${dep.moduleVersion}" )
-	}
-
-	return false;
-}
-
-static def getBundleStartLevel(ResolvedComponentResult dep) {
-	return null;
-}
-
-static boolean matchesPattern(ResolvedComponentResult dep, String... patterns) {
-	for(String pattern : patterns) {
-		if("${dep.moduleVersion.group}/${dep.moduleVersion.name}/${dep.moduleVersion.version}".matches(pattern)) {
-			return true;
-		}
-	}
-
-	return false
-}
+test.dependsOn( [generateDependsFile, generateVersionFile, generateKarafFeatures] )

@@ -23,6 +23,7 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
+		classpath 'com.github.lburgazzoli:lb-karaf-features-gen:1.0.0.SNAPSHOT'
 	}
 }
 

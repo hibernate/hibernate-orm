@@ -25,6 +25,7 @@ package org.hibernate.resource.transaction;
 
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
@@ -112,6 +113,8 @@ public interface TransactionCoordinator {
 	public void setTimeOut(int seconds);
 
 	public int getTimeOut();
+
+	public void setExceptionMapper(ExceptionMapper exceptionMapper);
 
 	/**
 	 * Provides the means for "local transactions" (as transaction drivers) to control the

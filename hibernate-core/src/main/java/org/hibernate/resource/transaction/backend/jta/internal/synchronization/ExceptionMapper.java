@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) {DATE}, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,24 +23,33 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import java.io.Serializable;
 
 /**
- * Manages funneling JTA Synchronization callbacks back into the Hibernate transaction engine.
+ * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate handles
+ * exceptions.
  *
  * @author Steve Ebersole
  */
-public interface SynchronizationCallbackCoordinator extends Synchronization {
+public interface ExceptionMapper extends Serializable {
 	/**
-	 * Called by the TransactionCoordinator when it registers the Synchronization with the JTA system
+	 * Map a JTA {@link javax.transaction.SystemException} to the appropriate runtime-based exception.
+	 *
+	 * @param message The message to use for the returned exception
+	 * @param systemException The causal exception
+	 *
+	 * @return The appropriate exception to throw
 	 */
-	public void synchronizationRegistered();
+	public RuntimeException mapStatusCheckFailure(String message, SystemException systemException);
 
 	/**
-	 * Called by the TransactionCoordinator to allow the SynchronizationCallbackCoordinator to process any
-	 * after-completion handling that it may have delayed due to thread affinity
+	 * Map an exception encountered during a managed flush to the appropriate runtime-based exception.
+	 *
+	 * @param message The message to use for the returned exception
+	 * @param failure The causal exception
+	 *
+	 * @return The appropriate exception to throw
 	 */
-	public void processAnyDelayedAfterCompletion();
-
-	void setExceptionMapper(ExceptionMapper exceptionMapper);
+	public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure);
 }

@@ -2848,6 +2848,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 					));
 		}
 		catch (SystemException se) {
+			LOG.error( LOG.unableToDetermineTransactionStatus(), se );
 			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
 		}
 		if ( flush ) {

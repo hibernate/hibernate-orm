@@ -38,6 +38,7 @@ import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -143,6 +144,11 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	@Override
 	public int getTimeOut() {
 		return this.timeOut;
+	}
+
+	@Override
+	public void setExceptionMapper(ExceptionMapper exceptionMapper) {
+		// nothing to do here
 	}
 
 	// PhysicalTransactionDelegate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

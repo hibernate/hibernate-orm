@@ -23,11 +23,13 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
+import javax.transaction.SystemException;
+
+import org.hibernate.HibernateException;
+import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-
-import org.jboss.logging.Logger;
-
-import static org.hibernate.internal.CoreLogging.logger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
@@ -35,9 +37,13 @@ import static org.hibernate.internal.CoreLogging.logger;
  * @author Steve Ebersole
  */
 public class SynchronizationCallbackCoordinatorNonTrackingImpl implements SynchronizationCallbackCoordinator {
-	private static final Logger log = logger( SynchronizationCallbackCoordinatorNonTrackingImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger(
+			SynchronizationCallbackCoordinatorNonTrackingImpl.class
+	);
 
 	private final SynchronizationCallbackTarget target;
+
+	private ExceptionMapper exceptionMapper;
 
 	public SynchronizationCallbackCoordinatorNonTrackingImpl(SynchronizationCallbackTarget target) {
 		this.target = target;
@@ -45,6 +51,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	}
 
 	public void reset() {
+		exceptionMapper = STANDARD_EXCEPTION_MAPPER;
 	}
 
 	@Override
@@ -61,10 +68,22 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 		if ( !target.isActive() ) {
 			return;
 		}
+		try {
+			target.beforeCompletion();
+		}
+		catch (HibernateException he) {
+			if ( he.getCause() instanceof SystemException ) {
+				throw exceptionMapper.mapStatusCheckFailure( he.getMessage(), (SystemException) he.getCause() );
+			}
+			else {
+				throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", he );
+			}
 
-		target.beforeCompletion();
+		}
+		catch (RuntimeException re) {
+			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
+		}
 	}
-
 
 	@Override
 	public void afterCompletion(int status) {
@@ -86,4 +105,23 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	@Override
 	public void processAnyDelayedAfterCompletion() {
 	}
+
+	@Override
+	public void setExceptionMapper(ExceptionMapper exceptionMapper) {
+		this.exceptionMapper = exceptionMapper;
+	}
+
+	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
+		@Override
+		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
+			return new TransactionException( "could not determine transaction status in beforeCompletion()",
+											 systemException );
+		}
+
+		@Override
+		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
+			log.unableToPerformManagedFlush( failure.getMessage() );
+			return failure;
+		}
+	};
 }

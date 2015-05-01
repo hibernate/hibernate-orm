@@ -1874,6 +1874,10 @@ public abstract class Dialect implements ConversionContext {
 	 *     <li>all "extra" keywords reported by the JDBC driver </li>
 	 *     <li>all Dialect-registered "extra" keywords</li>
 	 * </ul>
+	 * <p/>
+	 * Subclasses are free to override this as they see fit.  Just be aware that overriding this
+	 * does affect what identifiers are auto-quoted based on being seen as a keyword.
+	 * <p/>
 	 * NOTE: The code that ultimately consumes these and uses them stores them in a case-insensitive
 	 * Set, so case here does not matter.
 	 *

@@ -69,6 +69,7 @@ import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
+import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -713,7 +714,7 @@ public abstract class Dialect implements ConversionContext {
 	protected void registerFunction(String name, SQLFunction function) {
 		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
 		// just in case a user's customer dialect uses mixed cases.
-		sqlFunctions.put( name.toLowerCase(Locale.ROOT), function );
+		sqlFunctions.put( name.toLowerCase( Locale.ROOT ), function );
 	}
 
 	/**
@@ -724,17 +725,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public final Map<String, SQLFunction> getFunctions() {
 		return sqlFunctions;
-	}
-
-
-	// keyword support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	protected void registerKeyword(String word) {
-		sqlKeywords.add( word );
-	}
-
-	public Set<String> getKeywords() {
-		return sqlKeywords;
 	}
 
 
@@ -1860,6 +1850,43 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String toBooleanValueString(boolean bool) {
 		return bool ? "1" : "0";
+	}
+
+
+	// keyword support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	protected void registerKeyword(String word) {
+		sqlKeywords.add( word );
+	}
+
+	/**
+	 * @deprecated See {@link #determineKeywordsForAutoQuoting} instead
+	 */
+	@Deprecated
+	public Set<String> getKeywords() {
+		return sqlKeywords;
+	}
+
+	/**
+	 * Hook into auto-quoting of identifiers that are deemed to be keywords.  By default we
+	 * return all of the following here:<ul>
+	 *     <li>all keywords as defined by ANSI SQL:2003 specification</li>
+	 *     <li>all "extra" keywords reported by the JDBC driver </li>
+	 *     <li>all Dialect-registered "extra" keywords</li>
+	 * </ul>
+	 * NOTE: The code that ultimately consumes these and uses them stores them in a case-insensitive
+	 * Set, so case here does not matter.
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords#sql2003()
+	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
+	 * @see #registerKeyword
+	 */
+	public Set<String> determineKeywordsForAutoQuoting(Set<String> databaseMetadataReportedKeywords) {
+		final Set<String> keywords = new HashSet<String>();
+		keywords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
+		keywords.addAll( databaseMetadataReportedKeywords );
+		keywords.addAll( sqlKeywords );
+		return keywords;
 	}
 
 

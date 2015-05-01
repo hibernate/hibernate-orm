@@ -130,10 +130,20 @@ class HibernateBuildPlugin implements Plugin<Project> {
 		SourceSet mainSourceSet = project.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.findByName( "main" )
 		JavaCompile compileTask = project.tasks.findByName( mainSourceSet.compileJavaTaskName ) as JavaCompile
 
+		// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
+		//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
+		//		which cannot happen until... ugh
+		File aptDir = project.file( "${project.buildDir}/generated-src/apt/main" )
+		mainSourceSet.allJava.srcDir( aptDir )
+
 		compileTask.options.compilerArgs += [
 				"-nowarn",
-				"-encoding", "UTF-8"
+				"-encoding", "UTF-8",
+				"-s", "${aptDir.absolutePath}"
 		]
+		compileTask.doFirst {
+			aptDir.mkdirs()
+		}
 
 		if ( javaTargetExtension.version.java8Compatible ) {
 			compileTask.options.compilerArgs += [
@@ -160,6 +170,25 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			}
 		}
 
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Apply to test compile task
+
+		SourceSet testSourceSet = project.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.findByName( "test" )
+		JavaCompile compileTestTask = project.tasks.findByName( testSourceSet.compileJavaTaskName ) as JavaCompile
+
+		// NOTE : see the note abovewrt aptDir
+		File testAptDir = project.file( "${project.buildDir}/generated-src/apt/test" )
+		testSourceSet.allJava.srcDir( testAptDir )
+
+		compileTestTask.options.compilerArgs += [
+				"-nowarn",
+				"-encoding", "UTF-8",
+				"-s", "${testAptDir.absolutePath}"
+		]
+		compileTestTask.doFirst {
+			testAptDir.mkdirs()
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Apply to test tasks

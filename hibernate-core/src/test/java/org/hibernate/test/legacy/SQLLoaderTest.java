@@ -6,21 +6,24 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TimesTenDialect;
+
+import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -695,8 +698,17 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
+	public static class DoubleQuoteDialect implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return '"' == dialect.openQuote() && '"' == dialect.closeQuote();
+		}
+	}
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-21" )
+	// because the XML mapping defines the loader for CompositeIdId using a column name that needs to be quoted
+	@RequiresDialectFeature( DoubleQuoteDialect.class )
     public void testCompositeIdId() throws HibernateException, SQLException {
         Session s = openSession();
 		s.beginTransaction();
@@ -711,7 +723,17 @@ public class SQLLoaderTest extends LegacyTestCase {
         s = openSession();
 		s.beginTransaction();
         // having a composite id with one property named id works since the map used by sqlloader to map names to properties handles it.
-		String sql = "select system as {c.system}, id as {c.id}, name as {c.name}, foo as {c.composite.foo}, bar as {c.composite.bar} from CompositeIdId where system=? and id=?";
+		// NOTE : SYSTEM is an ANSI SQL defined keyword, so it gets quoted; so it needs to get quoted here too
+		String sql = String.format(
+				"select %1$s as {c.system}, " +
+						"  id as {c.id}, name as {c.name}, " +
+						"  foo as {c.composite.foo}, " +
+						"  bar as {c.composite.bar} " +
+						"from CompositeIdId " +
+						"where %1$s=? and id=?",
+				getDialect().openQuote() + "system" + getDialect().closeQuote()
+		);
+
 		SQLQuery query = s.createSQLQuery( sql ).addEntity( "c", CompositeIdId.class );
         query.setString(0, "c64");
         query.setString(1, "games");

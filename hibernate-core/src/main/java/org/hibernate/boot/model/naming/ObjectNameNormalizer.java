@@ -110,6 +110,12 @@ public abstract class ObjectNameNormalizer {
 		return logicalName;
 	}
 
+	public String applyGlobalQuoting(String text) {
+		return database().getJdbcEnvironment().getIdentifierHelper().applyGlobalQuoting( text )
+				.render( database().getDialect() );
+	}
+
+
 	/**
 	 * Access the contextual information related to the current process of building metadata.  Here,
 	 * that typically might be needed for accessing:<ul>

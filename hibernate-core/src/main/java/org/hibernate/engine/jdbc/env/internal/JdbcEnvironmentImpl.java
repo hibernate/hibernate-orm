@@ -26,9 +26,9 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -38,7 +38,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -89,8 +88,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
-		reservedWords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
-		reservedWords.addAll( dialect.getKeywords() );
+		reservedWords.addAll( dialect.determineKeywordsForAutoQuoting( Collections.<String>emptySet() ) );
 
 		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
 				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );
@@ -142,9 +140,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
 
-		reservedWords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
-		reservedWords.addAll( dialect.getKeywords() );
-		reservedWords.addAll( extractedMetaDataSupport.getExtraKeywords() );
+		reservedWords.addAll( dialect.determineKeywordsForAutoQuoting( extractedMetaDataSupport.getExtraKeywords() ) );
 
 		final boolean globallyQuoteIdentifiers = false;
 
@@ -217,9 +213,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
 
-		reservedWords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
-		reservedWords.addAll( dialect.getKeywords() );
-		reservedWords.addAll( extractedMetaDataSupport.getExtraKeywords() );
+		reservedWords.addAll( dialect.determineKeywordsForAutoQuoting( extractedMetaDataSupport.getExtraKeywords() ) );
 
 		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
 				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );

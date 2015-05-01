@@ -555,7 +555,7 @@ public class Ejb3Column {
 						sqlType = null;
 					}
 					else {
-						sqlType = normalizer.toDatabaseIdentifierText( col.columnDefinition() );
+						sqlType = normalizer.applyGlobalQuoting( col.columnDefinition() );
 					}
 
 					final String tableName;

@@ -124,6 +124,11 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		return normalizeQuoting( Identifier.toIdentifier( text, quoted ) );
 	}
 
+	@Override
+	public Identifier applyGlobalQuoting(String text) {
+		return Identifier.toIdentifier( text, globallyQuoteIdentifiers );
+	}
+
 	// In the DatabaseMetaData method params for catalog and schema name have the following meaning:
 	//		1) <""> means to match things "without a catalog/schema"
 	//		2) <null> means to not limit results based on this field

@@ -70,6 +70,17 @@ public interface IdentifierHelper {
 	public Identifier toIdentifier(String text, boolean quoted);
 
 	/**
+	 * Needed to account for certain fields ({@link javax.persistence.Column#columnDefinition()} comes to mind)
+	 * that need to be quoted id global identifier quoting is requested, but only for spec compliance.  TBH, I can
+	 * not think of a argument why column-definitions should ever be *globally* quoted, but the spec is the spec.
+	 *
+	 * @param text The text to be (possibly) quoted
+	 *
+	 * @return The identifier form
+	 */
+	public Identifier applyGlobalQuoting(String text);
+
+	/**
 	 * Render the Identifier representation of a catalog name into the String form needed
 	 * in {@link java.sql.DatabaseMetaData} calls.
 	 *

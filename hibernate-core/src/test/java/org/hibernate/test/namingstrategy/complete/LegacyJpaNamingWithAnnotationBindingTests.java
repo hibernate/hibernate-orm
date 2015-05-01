@@ -85,7 +85,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateOrderPrimaryTableName(String name) {
-		assertEquals( "Order", name );
+		assertEquals( "`Order`", name );
 	}
 
 	@Override
@@ -189,7 +189,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateCustomerOrdersTableName(String name) {
-		assertEquals( "Order", name );
+		assertEquals( "`Order`", name );
 	}
 
 	@Override

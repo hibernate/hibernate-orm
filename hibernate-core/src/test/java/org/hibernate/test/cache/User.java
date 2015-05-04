@@ -7,18 +7,39 @@
 
 package org.hibernate.test.cache;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Version;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 @Entity
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Table(name="`User`")
 public class User {
 	@Id
 	int id;
 
+	
+	@Version
+	@Column(name="OPTLOCK")
+	private int version;
+
+	
+	
+	@Column
+	private String name;
+	
+	
 	@ManyToOne(fetch = FetchType.LAZY)
 	Company company;
 
@@ -48,5 +69,19 @@ public class User {
 
 	public void setCompany(Company group) {
 		this.company = group;
+	}
+	
+	
+
+	public int getVersion() {
+		return version;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

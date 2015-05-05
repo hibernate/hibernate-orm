@@ -17,3 +17,4 @@
 /**
  * XML helper classes. Used for parsing persistence.xml and orm.xml.
  */
+package org.hibernate.jpamodelgen.util.xml;

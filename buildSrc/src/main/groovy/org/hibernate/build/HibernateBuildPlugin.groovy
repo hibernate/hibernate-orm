@@ -101,6 +101,7 @@ class HibernateBuildPlugin implements Plugin<Project> {
 
 	def applyJavaTarget(JavaTargetExtension javaTargetExtension, Project project, Jvm java6Home) {
 
+		project.logger.info( "Setting target Java version : ${javaTargetExtension.version} (${project.name})" )
 		project.properties.put( 'sourceCompatibility', "${javaTargetExtension.version}" )
 		project.properties.put( 'targetCompatibility', "${javaTargetExtension.version}" )
 
@@ -125,47 +126,49 @@ class HibernateBuildPlugin implements Plugin<Project> {
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Apply to compile task (just for main sourceSet)
+		// Apply to compile task
 
-		SourceSet mainSourceSet = project.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.findByName( "main" )
-		JavaCompile compileTask = project.tasks.findByName( mainSourceSet.compileJavaTaskName ) as JavaCompile
+		project.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
+			JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
 
-		// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
-		//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
-		//		which cannot happen until... ugh
-		File aptDir = project.file( "${project.buildDir}/generated-src/apt/main" )
-		mainSourceSet.allJava.srcDir( aptDir )
+			// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
+			//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
+			//		which cannot happen until... ugh
+			File aptDir = project.file( "${project.buildDir}/generated-src/apt/main" )
+			sourceSet.allJava.srcDir( aptDir )
 
-		compileTask.options.compilerArgs += [
-				"-nowarn",
-				"-encoding", "UTF-8",
-				"-s", "${aptDir.absolutePath}"
-		]
-		compileTask.doFirst {
-			aptDir.mkdirs()
-		}
-
-		if ( javaTargetExtension.version.java8Compatible ) {
-			compileTask.options.compilerArgs += [
-					"-source", '1.8',
-					"-target", '1.8'
+			javaCompileTask.options.compilerArgs += [
+					"-nowarn",
+					"-encoding", "UTF-8",
+					"-s", "${aptDir.absolutePath}"
 			]
-		}
-		else {
-			compileTask.options.compilerArgs += [
-					"-source", '1.6',
-					"-target", '1.6'
-			]
+			javaCompileTask.doFirst {
+				aptDir.mkdirs()
+			}
 
-			if ( java6Home != null ) {
-				if ( javaTargetExtension.shouldApplyTargetToCompile ) {
-					// Technically we need only one here between:
-					//      1) setting the javac executable
-					//      2) setting the bootClasspath
-					// However, (1) requires fork=true whereas (2) does not.
-//					compileTask.options.fork = true
-//					compileTask.options.forkOptions.executable = java6Home.javacExecutable
-					compileTask.options.bootClasspath = java6Home.runtimeJar.absolutePath
+
+			if ( javaTargetExtension.version.java8Compatible ) {
+				javaCompileTask.options.compilerArgs += [
+						"-source", '1.8',
+						"-target", '1.8'
+				]
+			}
+			else {
+				javaCompileTask.options.compilerArgs += [
+						"-source", '1.6',
+						"-target", '1.6'
+				]
+
+				if ( java6Home != null ) {
+					if ( javaTargetExtension.shouldApplyTargetToCompile ) {
+						// Technically we need only one here between:
+						//      1) setting the javac executable
+						//      2) setting the bootClasspath
+						// However, (1) requires fork=true whereas (2) does not.
+//					javaCompileTask.options.fork = true
+//					javaCompileTask.options.forkOptions.executable = java6Home.javacExecutable
+						javaCompileTask.options.bootClasspath = java6Home.runtimeJar.absolutePath
+					}
 				}
 			}
 		}

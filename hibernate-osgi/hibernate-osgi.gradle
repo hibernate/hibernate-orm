@@ -1,9 +1,5 @@
 apply plugin: 'karaf-featuresgen'
 
-ext {
-	paxExamVersion = '4.0.0'
-	karafVersion = '3.0.3'
-}
 
 configurations {
 	aries {
@@ -59,6 +55,12 @@ configurations {
 //}
 
 dependencies {
+	ext {
+		paxExamVersion = '4.4.0'
+		paxExamUrlVersion = '2.4.1'
+		karafVersion = '3.0.3'
+	}
+
 	compile( project( ':hibernate-core' ) )
 	compile( project( ':hibernate-entitymanager' ) )
 	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
@@ -69,13 +71,23 @@ dependencies {
 	// PaxExam and friends.  Not entirely sure yet of proper configuration
 	testCompile "org.ops4j.pax.exam:pax-exam:${paxExamVersion}"
 	testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxExamVersion}"
-	testCompile( "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz" ) {
-		transitive = false
-	}
 	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxExamVersion}"
-	testCompile 'org.ops4j.pax.url:pax-url-aether:1.6.0'
+	testCompile 'javax.inject:javax.inject:1'
+
+	testRuntime "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz"
+	testRuntime "org.ops4j.pax.exam:pax-exam-link-mvn:${paxExamVersion}"
+	testRuntime "org.ops4j.pax.url:pax-url-aether:${paxExamUrlVersion}"
+	testRuntime "org.ops4j.pax.url:pax-url-reference:${paxExamUrlVersion}"
+	testRuntime "org.ops4j.pax.url:pax-url-wrap:${paxExamUrlVersion}"
+
+//	testCompile( "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz" ) {
+//		transitive = false
+//	}
 
 	karafFeaturesBundles "org.apache.logging.log4j:log4j-api:2.0"
+//	karafFeaturesBundles libraries.log4j
+//	karafFeaturesBundles libraries.slf4j_api
+//	karafFeaturesBundles libraries.slf4j_log4j
 //
 //
 //
@@ -347,6 +359,7 @@ karafFeatures {
 		}
 	}
 }
+
 
 
 test.dependsOn felixProperties

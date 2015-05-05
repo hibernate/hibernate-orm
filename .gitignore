@@ -33,6 +33,7 @@ bin
 # Miscellaneous
 *.log
 .clover
+.DS_Store
 
 # JBoss Transactions
 ObjectStore

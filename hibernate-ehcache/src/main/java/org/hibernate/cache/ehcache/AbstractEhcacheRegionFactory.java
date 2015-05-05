@@ -31,6 +31,7 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.nonstop.NonstopAccessStrategyFactory;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
@@ -50,7 +51,6 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Settings;
 import org.hibernate.service.spi.InjectService;
 
 import org.jboss.logging.Logger;
@@ -93,7 +93,7 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 	/**
 	 * Settings object for the Hibernate persistence unit.
 	 */
-	protected Settings settings;
+	protected SessionFactoryOptions settings;
 
 	/**
 	 * {@link EhcacheAccessStrategyFactory} for creating various access strategies

@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * Ehcache specific read/write NaturalId region access strategy
@@ -46,7 +46,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * @param region The wrapped region
 	 * @param settings The Hibernate settings
 	 */
-	public ReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Settings settings) {
+	public ReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, SessionFactoryOptions settings) {
 		super( region, settings );
 	}
 

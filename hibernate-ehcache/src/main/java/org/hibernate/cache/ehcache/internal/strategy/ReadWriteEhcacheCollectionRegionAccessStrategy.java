@@ -23,10 +23,10 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cfg.Settings;
 
 /**
  * Ehcache specific read/write collection region access strategy
@@ -44,7 +44,7 @@ public class ReadWriteEhcacheCollectionRegionAccessStrategy
 	 * @param region The wrapped region
 	 * @param settings The Hibernate settings
 	 */
-	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
+	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, SessionFactoryOptions settings) {
 		super( region, settings );
 	}
 

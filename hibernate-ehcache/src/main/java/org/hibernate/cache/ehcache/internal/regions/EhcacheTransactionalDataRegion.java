@@ -32,12 +32,12 @@ import net.sf.ehcache.concurrent.LockType;
 import net.sf.ehcache.concurrent.StripedReadWriteLockSync;
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.TransactionalDataRegion;
-import org.hibernate.cfg.Settings;
 
 /**
  * An Ehcache specific TransactionalDataRegion.
@@ -53,7 +53,7 @@ import org.hibernate.cfg.Settings;
 public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements TransactionalDataRegion {
 	private static final int LOCAL_LOCK_PROVIDER_CONCURRENCY = 128;
 
-	private final Settings settings;
+	private final SessionFactoryOptions settings;
 
 	/**
 	 * Metadata associated with the objects stored in the region.
@@ -66,7 +66,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 * Construct an transactional Hibernate cache region around the given Ehcache instance.
 	 */
 	EhcacheTransactionalDataRegion(
-			EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, Settings settings,
+			EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache cache, SessionFactoryOptions settings,
 			CacheDataDescription metadata, Properties properties) {
 		super( accessStrategyFactory, cache, properties );
 		this.settings = settings;
@@ -86,7 +86,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 *
 	 * @return settings
 	 */
-	public Settings getSettings() {
+	public SessionFactoryOptions getSettings() {
 		return settings;
 	}
 

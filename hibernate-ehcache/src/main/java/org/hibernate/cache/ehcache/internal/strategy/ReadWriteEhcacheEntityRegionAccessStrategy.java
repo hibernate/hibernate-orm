@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * Ehcache specific read/write entity region access strategy
@@ -46,7 +46,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * @param region The wrapped region
 	 * @param settings The Hibernate settings
 	 */
-	public ReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
+	public ReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, SessionFactoryOptions settings) {
 		super( region, settings );
 	}
 

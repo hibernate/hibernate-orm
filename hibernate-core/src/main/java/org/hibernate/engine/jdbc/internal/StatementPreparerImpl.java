@@ -31,7 +31,7 @@ import java.sql.Statement;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
-import org.hibernate.cfg.Settings;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
@@ -56,8 +56,8 @@ class StatementPreparerImpl implements StatementPreparer {
 		this.jdbcCoordinator = jdbcCoordinator;
 	}
 
-	protected final Settings settings() {
-		return jdbcCoordinator.sessionFactory().getSettings();
+	protected final SessionFactoryOptions settings() {
+		return jdbcCoordinator.sessionFactory().getSessionFactoryOptions();
 	}
 
 	protected final Connection connection() {

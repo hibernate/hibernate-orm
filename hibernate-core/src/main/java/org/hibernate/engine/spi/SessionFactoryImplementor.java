@@ -247,6 +247,10 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 */
 	public SqlExceptionHelper getSQLExceptionHelper();
 
+	/**
+	 * @deprecated Use {@link #getSessionFactoryOptions()} instead
+	 */
+	@Deprecated
 	public Settings getSettings();
 
 	/**

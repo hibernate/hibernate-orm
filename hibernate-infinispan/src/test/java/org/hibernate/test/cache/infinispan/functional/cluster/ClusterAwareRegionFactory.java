@@ -24,6 +24,7 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import java.util.Hashtable;
 import java.util.Properties;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -34,8 +35,9 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Settings;
+
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -78,7 +80,7 @@ public class ClusterAwareRegionFactory implements RegionFactory {
       cacheManagers.clear();      
    }
 
-   public void start(Settings settings, Properties properties) throws CacheException {
+   public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
       cacheManagerName = properties.getProperty(DualNodeTestCase.NODE_ID_PROP);
       
       EmbeddedCacheManager existing = getCacheManager(cacheManagerName);

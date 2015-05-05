@@ -31,12 +31,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -55,7 +55,7 @@ public class CacheImpl implements CacheImplementor {
 			CacheImpl.class.getName()
 	);
 	private final SessionFactoryImplementor sessionFactory;
-	private final Settings settings;
+	private final SessionFactoryOptions settings;
 	private final transient QueryCache queryCache;
 	private final transient RegionFactory regionFactory;
 	private final transient UpdateTimestampsCache updateTimestampsCache;
@@ -64,9 +64,9 @@ public class CacheImpl implements CacheImplementor {
 
 	public CacheImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		this.settings = sessionFactory.getSettings();
+		this.settings = sessionFactory.getSessionFactoryOptions();
 		//todo should get this from service registry
-		this.regionFactory = settings.getRegionFactory();
+		this.regionFactory = settings.getServiceRegistry().getService( RegionFactory.class );
 		regionFactory.start( settings, sessionFactory.getProperties() );
 		if ( settings.isQueryCacheEnabled() ) {
 			updateTimestampsCache = new UpdateTimestampsCache(

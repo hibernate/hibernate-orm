@@ -32,12 +32,13 @@ import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
@@ -75,7 +76,7 @@ public class StandardQueryCache implements QueryCache {
 	 * @param regionName The base query cache region name
 	 */
 	public StandardQueryCache(
-			final Settings settings,
+			final SessionFactoryOptions settings,
 			final Properties props,
 			final UpdateTimestampsCache updateTimestampsCache,
 			final String regionName) {
@@ -89,7 +90,10 @@ public class StandardQueryCache implements QueryCache {
 		}
 		LOG.startingQueryCache( regionNameToUse );
 
-		this.cacheRegion = settings.getRegionFactory().buildQueryResultsRegion( regionNameToUse, props );
+		this.cacheRegion = settings.getServiceRegistry().getService( RegionFactory.class ).buildQueryResultsRegion(
+				regionNameToUse,
+				props
+		);
 		this.updateTimestampsCache = updateTimestampsCache;
 	}
 

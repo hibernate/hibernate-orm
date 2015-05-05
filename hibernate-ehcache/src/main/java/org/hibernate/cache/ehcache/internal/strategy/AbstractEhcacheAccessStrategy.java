@@ -23,10 +23,10 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * Ultimate superclass for all Ehcache specific Hibernate AccessStrategy implementations.
@@ -38,7 +38,7 @@ import org.hibernate.cfg.Settings;
  */
 abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion> {
 	private final T region;
-	private final Settings settings;
+	private final SessionFactoryOptions settings;
 
 	/**
 	 * Create an access strategy wrapping the given region.
@@ -46,7 +46,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @param region The wrapped region.  Accessible to subclasses via {@link #region()}
 	 * @param settings The Hibernate settings.  Accessible to subclasses via {@link #settings()}
 	 */
-	AbstractEhcacheAccessStrategy(T region, Settings settings) {
+	AbstractEhcacheAccessStrategy(T region, SessionFactoryOptions settings) {
 		this.region = region;
 		this.settings = settings;
 	}
@@ -61,7 +61,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	/**
 	 * The settings for this persistence unit.
 	 */
-	protected Settings settings() {
+	protected SessionFactoryOptions settings() {
 		return settings;
 	}
 

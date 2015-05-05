@@ -27,13 +27,13 @@ import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cfg.Settings;
 
 /**
  * An entity region specific wrapper around an Ehcache instance.
@@ -58,7 +58,7 @@ public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implemen
 	public EhcacheEntityRegion(
 			EhcacheAccessStrategyFactory accessStrategyFactory,
 			Ehcache underlyingCache,
-			Settings settings,
+			SessionFactoryOptions settings,
 			CacheDataDescription metadata,
 			Properties properties) {
 		super( accessStrategyFactory, underlyingCache, settings, metadata, properties );

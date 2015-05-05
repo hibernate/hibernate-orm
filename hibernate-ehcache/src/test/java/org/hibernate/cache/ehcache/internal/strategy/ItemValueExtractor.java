@@ -1,7 +1,7 @@
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cfg.Settings;
 
 
 /**
@@ -13,7 +13,7 @@ public class ItemValueExtractor extends AbstractReadWriteEhcacheAccessStrategy {
 	/**
 	 * Creates a read/write cache access strategy around the given cache region.
 	 */
-	public ItemValueExtractor(EhcacheTransactionalDataRegion region, Settings settings) {
+	public ItemValueExtractor(EhcacheTransactionalDataRegion region, SessionFactoryOptions settings) {
 		super(region, settings);
 	}
 

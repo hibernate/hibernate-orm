@@ -25,20 +25,20 @@ package org.hibernate.cache.spi;
 
 import java.util.Properties;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Settings;
 import org.hibernate.service.Service;
 
 /**
  * Contract for building second level cache regions.
  * <p/>
  * Implementors should define a constructor in one of two forms:<ul>
- * <li>MyRegionFactoryImpl({@link java.util.Properties})</li>
- * <li>MyRegionFactoryImpl()</li>
+ *     <li>MyRegionFactoryImpl({@link java.util.Properties})</li>
+ *     <li>MyRegionFactoryImpl()</li>
  * </ul>
  * Use the first when we need to read config properties prior to
- * {@link #start(Settings, Properties)} being called.
+ * {@link #start(SessionFactoryOptions, Properties)} being called.
  *
  * @author Steve Ebersole
  */
@@ -56,7 +56,7 @@ public interface RegionFactory extends Service {
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
 	 */
-	public void start(Settings settings, Properties properties) throws CacheException;
+	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException;
 
 	/**
 	 * Lifecycle callback to perform any necessary cleanup of the underlying

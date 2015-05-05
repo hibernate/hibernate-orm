@@ -767,6 +767,7 @@ public final class SessionFactoryImpl
 		return result;
 	}
 
+	@Deprecated
 	public Settings getSettings() {
 		return settings;
 	}

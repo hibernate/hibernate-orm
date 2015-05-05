@@ -25,7 +25,7 @@ package org.hibernate.cache.spi;
 
 import java.util.Properties;
 
-import org.hibernate.cfg.Settings;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 
 /**
  * Defines a factory for query cache instances.  These factories are responsible for
@@ -47,6 +47,6 @@ public interface QueryCacheFactory {
 	public QueryCache getQueryCache(
 			String regionName,
 			UpdateTimestampsCache updateTimestampsCache,
-			Settings settings,
+			SessionFactoryOptions settings,
 			Properties props);
 }

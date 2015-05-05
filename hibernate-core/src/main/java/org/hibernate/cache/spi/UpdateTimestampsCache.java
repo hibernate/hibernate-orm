@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.Set;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -64,13 +64,14 @@ public class UpdateTimestampsCache {
 	 * @param props Any properties
 	 * @param factory The SessionFactory
 	 */
-	public UpdateTimestampsCache(Settings settings, Properties props, final SessionFactoryImplementor factory) {
+	public UpdateTimestampsCache(SessionFactoryOptions settings, Properties props, final SessionFactoryImplementor factory) {
 		this.factory = factory;
 		final String prefix = settings.getCacheRegionPrefix();
 		final String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
 
 		LOG.startingUpdateTimestampsCache( regionName );
-		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
+
+		this.region = settings.getServiceRegistry().getService( RegionFactory.class ).buildTimestampsRegion( regionName, props );
 	}
 
 	/**
@@ -80,7 +81,7 @@ public class UpdateTimestampsCache {
 	 * @param props Any properties
 	 */
 	@SuppressWarnings({"UnusedDeclaration"})
-	public UpdateTimestampsCache(Settings settings, Properties props) {
+	public UpdateTimestampsCache(SessionFactoryOptions settings, Properties props) {
 		this( settings, props, null );
 	}
 

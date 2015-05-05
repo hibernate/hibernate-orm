@@ -33,7 +33,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Settings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.service.ServiceRegistry;
@@ -109,10 +108,9 @@ public class CacheTestUtil {
                          (StandardServiceRegistry) serviceRegistry
                  )
          );
-         final Settings settings = new Settings( sessionFactoryOptions );
          final Properties properties = toProperties( cfgService.getSettings() );
 
-         regionFactory.start( settings, properties );
+         regionFactory.start( sessionFactoryOptions, properties );
 
          return regionFactory;
       }

@@ -14,6 +14,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
@@ -34,7 +35,6 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
@@ -316,7 +316,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void start(Settings settings, Properties properties) throws CacheException {
+	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		log.debug( "Starting Infinispan region factory" );
 		try {
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
@@ -358,7 +358,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(
-			Settings settings, Properties properties) {
+			SessionFactoryOptions settings, Properties properties) {
 		return new HibernateTransactionManagerLookup( settings, properties );
 	}
 

@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * Ehcache specific read-only collection region access strategy
@@ -46,7 +46,7 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	 * @param region The wrapped region
 	 * @param settings The Hibernate settings
 	 */
-	public ReadOnlyEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
+	public ReadOnlyEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, SessionFactoryOptions settings) {
 		super( region, settings );
 	}
 

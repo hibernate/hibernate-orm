@@ -25,6 +25,7 @@ package org.hibernate.testing.cache;
 
 import java.util.Properties;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
@@ -34,7 +35,6 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Settings;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -47,7 +47,7 @@ public class CachingRegionFactory implements RegionFactory {
 			CoreMessageLogger.class, CachingRegionFactory.class.getName()
 	);
 	public static String DEFAULT_ACCESSTYPE = "DefaultAccessType";
-	private Settings settings;
+	private SessionFactoryOptions settings;
 	private Properties properties;
 	public CachingRegionFactory() {
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
@@ -60,7 +60,7 @@ public class CachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void start(Settings settings, Properties properties) throws CacheException {
+	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		this.settings=settings;
 		this.properties=properties; 
 	}

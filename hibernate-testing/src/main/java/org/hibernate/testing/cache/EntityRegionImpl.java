@@ -23,12 +23,12 @@
  */
 package org.hibernate.testing.cache;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cfg.Settings;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -40,16 +40,16 @@ class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegi
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, EntityRegionImpl.class.getName()
 	);
-	private final Settings settings;
 
+	private final SessionFactoryOptions settings;
 
-	EntityRegionImpl(String name, CacheDataDescription metadata, Settings settings) {
+	EntityRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
 		super( name, metadata );
 		this.settings = settings;
 
 	}
 
-	public Settings getSettings() {
+	public SessionFactoryOptions getSettings() {
 		return settings;
 	}
 

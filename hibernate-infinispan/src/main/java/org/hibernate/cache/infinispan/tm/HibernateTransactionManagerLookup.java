@@ -24,7 +24,7 @@ package org.hibernate.cache.infinispan.tm;
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 
-import org.hibernate.cfg.Settings;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 /**
@@ -43,8 +43,8 @@ public class HibernateTransactionManagerLookup implements org.infinispan.transac
     * @param settings for the Hibernate application
     * @param properties for the Hibernate application
     */
-	public HibernateTransactionManagerLookup(Settings settings, Properties properties) {
-		this.jtaPlatform = settings != null ? settings.getJtaPlatform() : null;
+	public HibernateTransactionManagerLookup(SessionFactoryOptions settings, Properties properties) {
+		this.jtaPlatform = settings != null ? settings.getServiceRegistry().getService( JtaPlatform.class ) : null;
 	}
 
 	@Override

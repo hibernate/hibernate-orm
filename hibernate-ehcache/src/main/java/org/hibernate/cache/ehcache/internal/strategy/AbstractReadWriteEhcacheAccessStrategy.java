@@ -28,11 +28,11 @@ import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 import org.jboss.logging.Logger;
 
@@ -61,7 +61,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T
 	/**
 	 * Creates a read/write cache access strategy around the given cache region.
 	 */
-	public AbstractReadWriteEhcacheAccessStrategy(T region, Settings settings) {
+	public AbstractReadWriteEhcacheAccessStrategy(T region, SessionFactoryOptions settings) {
 		super( region, settings );
 		this.versionComparator = region.getCacheDataDescription().getVersionComparator();
 	}

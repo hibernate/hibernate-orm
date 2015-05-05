@@ -23,12 +23,12 @@
  */
 package org.hibernate.testing.cache;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cfg.Settings;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -40,13 +40,15 @@ class CollectionRegionImpl extends BaseTransactionalDataRegion implements Collec
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, CollectionRegionImpl.class.getName()
 	);
-	private final Settings settings;
-	CollectionRegionImpl(String name, CacheDataDescription metadata, Settings settings) {
+
+	private final SessionFactoryOptions settings;
+
+	CollectionRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
 		super( name, metadata );
 		this.settings=settings;
 	}
 
-	public Settings getSettings() {
+	public SessionFactoryOptions getSettings() {
 		return settings;
 	}
 

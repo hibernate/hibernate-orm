@@ -26,12 +26,12 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * JTA NaturalIdRegionAccessStrategy.
@@ -56,7 +56,7 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	public TransactionalEhcacheNaturalIdRegionAccessStrategy(
 			EhcacheNaturalIdRegion region,
 			Ehcache ehcache,
-			Settings settings) {
+			SessionFactoryOptions settings) {
 		super( region, settings );
 		this.ehcache = ehcache;
 	}

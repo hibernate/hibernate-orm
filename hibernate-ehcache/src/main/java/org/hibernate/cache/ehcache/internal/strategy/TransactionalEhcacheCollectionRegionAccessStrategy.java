@@ -26,12 +26,12 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * JTA CollectionRegionAccessStrategy.
@@ -56,7 +56,7 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	public TransactionalEhcacheCollectionRegionAccessStrategy(
 			EhcacheCollectionRegion region,
 			Ehcache ehcache,
-			Settings settings) {
+			SessionFactoryOptions settings) {
 		super( region, settings );
 		this.ehcache = ehcache;
 	}

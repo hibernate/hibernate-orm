@@ -17,3 +17,4 @@
 /**
  * Implementation of the model classes backed by annotations.
  */
+package org.hibernate.jpamodelgen.xml;

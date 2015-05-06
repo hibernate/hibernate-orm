@@ -23,12 +23,16 @@
  */
 package org.hibernate.bytecode.enhance.plugins;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +72,8 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 	 */
 	private List<File> classes = new ArrayList<File>();
 	private ClassPool pool = new ClassPool( false );
-    private final Enhancer enhancer = new Enhancer( this);
+	private ClassLoader loadingClassLoader;
+    private Enhancer enhancer;
 
 	private static final String CLASS_EXTENSION = ".class";
 
@@ -79,15 +84,66 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 		getLog().info( "Started enhance plugin....." );
 		/** Perform a depth first search for files. */
 		File root = new File( this.dir ); 
-		walkDir( root );
 
-		if ( 0 < classes.size() ) {
-			for ( File file : classes ) {
-				processClassFile(file);
+		/* Enhancer's ClassPool instance uses this loadingClassLoader through a WeakReference. 
+		 * See javassist.LoaderClassPath(ClassLoader)
+		 */
+		this.loadingClassLoader = createLoadingClassLoader( root );
+		try {
+			this.enhancer = new Enhancer(this);
+			
+			walkDir( root );
+	
+			if ( 0 < classes.size() ) {
+				for ( File file : classes ) {
+					processClassFile(file);
+				}
 			}
 		}
-
+		finally {
+			closeClassLoader( this.loadingClassLoader );
+		}
 		getLog().info( "Enhance plugin completed." );
+	}
+
+	/**
+	 * Creates a {@code ClassLoader} that combines this plugin's class path
+	 * with the path to the classes to enhance.
+	 * 
+	 * <p>By default, a plugin's {@code ClassLoader} does not have access to the project's classes: 
+	 * it only has access to its own classes and dependencies. </p>
+	 * 
+	 * @param root {@code dir} plugin parameter
+	 * @return new URLClassLoader instance, that should be closed after use
+	 * @throws MojoExecutionException
+	 */
+	private ClassLoader createLoadingClassLoader(final File root) throws MojoExecutionException {
+		final ClassLoader parentClassLoader = getClass().getClassLoader();
+
+		final URL rootURL;
+		try {
+			rootURL = root.toURI().toURL();
+		}
+		catch (MalformedURLException e) {
+			throw new MojoExecutionException( String.format( "Invalid parameter 'dir' [%s]", root.getAbsolutePath() ), e );
+		}
+		return new URLClassLoader( new URL[] { rootURL }, parentClassLoader );
+	}
+
+	/**
+	 * Closes the given {@code ClassLoader} if it implements {@code java.io.Closeable}.
+	 * 
+	 * @param classLoader {@code ClassLoader} instance to close
+	 */
+	private void closeClassLoader(ClassLoader classLoader) {
+		if ( classLoader instanceof Closeable ) {
+			try {
+				( (Closeable) classLoader ).close();
+			}
+			catch (IOException e) {
+				getLog().warn( "Failed to close loadingClassLoader", e );
+			}
+		}
 	}
 
 	/**
@@ -215,7 +271,7 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 
 	@Override
 	public ClassLoader getLoadingClassLoader() {
-		return getClass().getClassLoader();
+		return this.loadingClassLoader;
 	}
 
 	@Override

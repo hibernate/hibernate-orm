@@ -36,25 +36,4 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 	protected Class<?> getCollectionOwnerClass() {
 		return UnversionedNoCascadeOne.class;
 	}
-
-	@Override
-	@Test
-	@FailureExpected(jiraKey = "HHH-9777")
-	public void testMergeNullCollection() {
-		super.testMergeNullCollection();
-	}
-
-	@Override
-	@Test
-	@FailureExpected(jiraKey = "HHH-9777")
-	public void testGetAndNullifyCollection() {
-		super.testGetAndNullifyCollection();
-	}
-
-	@Override
-	@Test
-	@FailureExpected(jiraKey = "HHH-9777")
-	public void testGetAndReplaceCollection() {
-		super.testGetAndReplaceCollection();
-	}
 }

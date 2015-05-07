@@ -31,7 +31,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import java.lang.InstantiationException;
@@ -49,7 +48,6 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractDereferencedCollectionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9777")
 	public void testMergeNullCollection() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -123,7 +121,6 @@ public abstract class AbstractDereferencedCollectionTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9777")
 	public void testGetAndNullifyCollection() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -199,7 +196,7 @@ public abstract class AbstractDereferencedCollectionTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-9777")
+	//@FailureExpected( jiraKey = "HHH-9777")
 	public void testGetAndReplaceCollection() {
 		Session s = openSession();
 		s.getTransaction().begin();

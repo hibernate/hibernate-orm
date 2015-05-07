@@ -133,6 +133,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-9777")
 	public void testSaveOrUpdateCopyAny() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();

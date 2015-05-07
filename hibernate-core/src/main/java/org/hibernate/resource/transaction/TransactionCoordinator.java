@@ -58,7 +58,7 @@ public interface TransactionCoordinator {
 	 *
 	 * @return The control delegate.
 	 */
-	public LocalInflow getTransactionDriverControl();
+	public TransactionDriver getTransactionDriverControl();
 
 	/**
 	 * Get access to the local registry of Synchronization instances
@@ -119,7 +119,7 @@ public interface TransactionCoordinator {
 	 *
 	 * @author Steve Ebersole
 	 */
-	public interface LocalInflow {
+	public interface TransactionDriver {
 		/**
 		 * Begin the physical transaction
 		 */

@@ -34,7 +34,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import static org.hibernate.resource.transaction.TransactionCoordinator.LocalInflow;
+import static org.hibernate.resource.transaction.TransactionCoordinator.TransactionDriver;
 
 /**
  * @author Andrea Boriero
@@ -43,7 +43,7 @@ public class TransactionImpl implements Transaction {
 	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
-	private final LocalInflow transactionDriverControl;
+	private final TransactionDriver transactionDriverControl;
 
 	private boolean valid = true;
 

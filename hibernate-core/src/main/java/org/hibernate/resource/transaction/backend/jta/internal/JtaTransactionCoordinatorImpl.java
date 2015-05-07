@@ -1,6 +1,7 @@
 package org.hibernate.resource.transaction.backend.jta.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
@@ -83,6 +84,32 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		pulse();
 	}
 
+	public JtaTransactionCoordinatorImpl(
+			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
+			TransactionCoordinatorOwner owner,
+			boolean autoJoinTransactions,
+			JtaPlatform jtaPlatform,
+			boolean preferUserTransactions,
+			boolean performJtaThreadTracking,
+			TransactionObserver... observers) {
+		this.observers = new ArrayList<TransactionObserver>();
+		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
+		this.transactionCoordinatorOwner = owner;
+		this.autoJoinTransactions = autoJoinTransactions;
+		this.jtaPlatform = jtaPlatform;
+		this.preferUserTransactions = preferUserTransactions;
+		this.performJtaThreadTracking = performJtaThreadTracking;
+
+		if ( observers != null ) {
+			Collections.addAll( this.observers, observers );
+		}
+
+		synchronizationRegistered = false;
+
+		pulse();
+
+	}
+
 	public SynchronizationCallbackCoordinator getSynchronizationCallbackCoordinator() {
 		if ( callbackCoordinator == null ) {
 			callbackCoordinator = performJtaThreadTracking
@@ -133,7 +160,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 			return;
 		}
 
-		if ( physicalTransactionDelegate.getStatus() != TransactionStatus.ACTIVE ) {
+		if ( getTransactionDriverControl().getStatus() != TransactionStatus.ACTIVE ) {
 			return;
 		}
 
@@ -161,7 +188,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	@Override
-	public LocalInflow getTransactionDriverControl() {
+	public TransactionDriver getTransactionDriverControl() {
 		if ( physicalTransactionDelegate == null ) {
 			physicalTransactionDelegate = makePhysicalTransactionDelegate();
 		}
@@ -320,7 +347,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 * local transaction ({@link org.hibernate.Transaction} to callback into this
 	 * TransactionCoordinator for the purpose of driving the underlying JTA transaction.
 	 */
-	public class TransactionDriverControlImpl implements LocalInflow {
+	public class TransactionDriverControlImpl implements TransactionDriver {
 		private final JtaTransactionAdapter jtaTransactionAdapter;
 		private boolean invalid;
 

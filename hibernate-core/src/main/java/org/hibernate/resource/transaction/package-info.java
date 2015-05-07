@@ -37,7 +37,7 @@
  * The local transaction is the idea of transactionality exposed to the application (as
  * {@link org.hibernate.Transaction}) as a means to control the underlying transaction.  That
  * control flows from the {@link org.hibernate.Transaction} into the TransactionCoordinator
- * through the {@link org.hibernate.resource.transaction.TransactionCoordinator.LocalInflow} it exposes.
+ * through the {@link org.hibernate.resource.transaction.TransactionCoordinator.TransactionDriver} it exposes.
  *
  * <h2>Physical transaction</h2>
  *

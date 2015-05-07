@@ -83,7 +83,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	@Override
-	public LocalInflow getTransactionDriverControl() {
+	public TransactionDriver getTransactionDriverControl() {
 		// Again, this PhysicalTransactionDelegate will act as the bridge from the local transaction back into the
 		// coordinator.  We lazily build it as we invalidate each delegate after each transaction (a delegate is
 		// valid for just one transaction)
@@ -200,7 +200,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	 * The delegate bridging between the local (application facing) transaction and the "physical" notion of a
 	 * transaction via the JDBC Connection.
 	 */
-	public class TransactionDriverControlImpl implements LocalInflow {
+	public class TransactionDriverControlImpl implements TransactionDriver {
 		private final JdbcResourceTransaction jdbcResourceTransaction;
 		private boolean invalid;
 

@@ -26,11 +26,11 @@ package org.hibernate.cfg;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -64,7 +64,7 @@ public class AttributeConverterDefinition {
 							+ "] specified more than 2 parameterized types"
 			);
 		}
-		entityAttributeType = (Class) attributeConverterSignature.getActualTypeArguments()[0];
+		entityAttributeType = extractClass(attributeConverterSignature.getActualTypeArguments()[0]);
 		if ( entityAttributeType == null ) {
 			throw new AnnotationException(
 					"Could not determine 'entity attribute' type from given AttributeConverter [" +
@@ -72,7 +72,7 @@ public class AttributeConverterDefinition {
 			);
 		}
 
-		databaseColumnType = (Class) attributeConverterSignature.getActualTypeArguments()[1];
+		databaseColumnType = extractClass(attributeConverterSignature.getActualTypeArguments()[1]);
 		if ( databaseColumnType == null ) {
 			throw new AnnotationException(
 					"Could not determine 'database column' type from given AttributeConverter [" +
@@ -120,6 +120,15 @@ public class AttributeConverterDefinition {
 		}
 
 		return (Class) boundTypes[0];
+	}
+	
+	private static Class extractClass(Type type) {
+		if(type instanceof Class) {
+			return (Class) type;
+		} else if (type instanceof ParameterizedType) {
+			return extractClass(((ParameterizedType) type).getRawType());
+		}
+		return null;
 	}
 
 	@Override

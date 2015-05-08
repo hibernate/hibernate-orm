@@ -90,7 +90,7 @@ public class TransactionCoordinatorOwnerTestingImpl implements TransactionCoordi
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		log.debug( "#afterTransactionCompletion called" );
 		if ( successful ) {
 			successfulCompletionCount++;

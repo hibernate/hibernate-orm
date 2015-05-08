@@ -50,9 +50,9 @@ import static org.junit.Assert.fail;
 public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
-		super.addConfigOptions(options);
-		TestingJtaBootstrap.prepare(options);
-		options.put(AvailableSettings.TRANSACTION_TYPE, "JTA");
+		super.addConfigOptions( options );
+		TestingJtaBootstrap.prepare( options );
+		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
 	}
 
 	@Test
@@ -85,25 +85,32 @@ public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManage
 					em.joinTransaction();
 					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setRollbackOnly();
 					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-				} catch (javax.persistence.PersistenceException e) {
-					if (e.getCause() instanceof HibernateException &&
-							e.getCause().getMessage().equals("Transaction was rolled back in a different thread!")) {
+				}
+				catch (javax.persistence.PersistenceException e) {
+					if ( e.getCause() instanceof HibernateException &&
+							e.getCause().getMessage().equals( "Transaction was rolled back in a different thread!" ) ) {
 						/**
 						 * Save the exception for the main test thread to fail
 						 */
 						e.printStackTrace();    // show the error first
 						transactionRolledBackInDifferentThreadException[0] = (HibernateException) e.getCause();
 					}
-				} catch (RollbackException ignored) {
+				}
+				catch (RollbackException ignored) {
 					// expected to see RollbackException: ARJUNA016053: Could not commit transaction.
 
-				} catch (Throwable throwable) {
+				}
+				catch (Throwable throwable) {
 					throwable.printStackTrace();
-				} finally {
+				}
+				finally {
 					try {
-						if (TestingJtaPlatformImpl.INSTANCE.getTransactionManager().getStatus() != Status.STATUS_NO_TRANSACTION)
+						if ( TestingJtaPlatformImpl.INSTANCE.getTransactionManager()
+								.getStatus() != Status.STATUS_NO_TRANSACTION ) {
 							TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-					} catch (SystemException ignore) {
+						}
+					}
+					catch (SystemException ignore) {
 
 					}
 				}
@@ -123,45 +130,56 @@ public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManage
 					 */
 					em.joinTransaction();
 					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-				} catch (javax.persistence.PersistenceException e) {
-					if (e.getCause() instanceof HibernateException &&
-							e.getCause().getMessage().equals("Transaction was rolled back in a different thread!")) {
+				}
+				catch (javax.persistence.PersistenceException e) {
+					if ( e.getCause() instanceof HibernateException &&
+							e.getCause().getMessage().equals( "Transaction was rolled back in a different thread!" ) ) {
 						/**
 						 * Save the exception for the main test thread to fail
 						 */
 						e.printStackTrace();    // show the error first
 						transactionRolledBackInDifferentThreadException[1] = (HibernateException) e.getCause();
 					}
-				} catch (Throwable throwable) {
+				}
+				catch (Throwable throwable) {
 					throwable.printStackTrace();
-				} finally {
+				}
+				finally {
 					try {
-						if (TestingJtaPlatformImpl.INSTANCE.getTransactionManager().getStatus() != Status.STATUS_NO_TRANSACTION)
+						if ( TestingJtaPlatformImpl.INSTANCE.getTransactionManager()
+								.getStatus() != Status.STATUS_NO_TRANSACTION ) {
 							TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-					} catch (SystemException ignore) {
+						}
+					}
+					catch (SystemException ignore) {
 
 					}
 				}
 			}
 		};
 
-		Thread thread = new Thread(run1, "test thread1");
+		Thread thread = new Thread( run1, "test thread1" );
 		thread.start();
 		thread.join();
 
-		Thread thread2 = new Thread(run2, "test thread2");
+		Thread thread2 = new Thread( run2, "test thread2" );
 		thread2.start();
 		thread2.join();
 
 		// show failure for exception caught in run2.run()
-		if (transactionRolledBackInDifferentThreadException[0] != null
-				|| transactionRolledBackInDifferentThreadException[1] != null)
+		if ( transactionRolledBackInDifferentThreadException[0] != null
+				|| transactionRolledBackInDifferentThreadException[1] != null )
 
 		{
-			fail("failure in test thread 1 = " +
-						 (transactionRolledBackInDifferentThreadException[0] != null ? transactionRolledBackInDifferentThreadException[0].getMessage() : "(none)")
-						 + ", failure in test thread 2 = " +
-						 (transactionRolledBackInDifferentThreadException[1] != null ? transactionRolledBackInDifferentThreadException[1].getMessage() : "(none)")
+			fail(
+					"failure in test thread 1 = " +
+							( transactionRolledBackInDifferentThreadException[0] != null ?
+									transactionRolledBackInDifferentThreadException[0].getMessage() :
+									"(none)" )
+							+ ", failure in test thread 2 = " +
+							( transactionRolledBackInDifferentThreadException[1] != null ?
+									transactionRolledBackInDifferentThreadException[1].getMessage() :
+									"(none)" )
 			);
 		}
 
@@ -171,7 +189,7 @@ public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManage
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 
 		};
 	}

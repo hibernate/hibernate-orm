@@ -36,6 +36,7 @@ import org.hibernate.TransientPropertyValueException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.FailureExpected;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -257,10 +258,8 @@ public class MultiCircleJpaCascadeTest extends BaseEntityManagerFunctionalTestCa
 			// because e is not in the process of being saved yet.
 			// when HHH-6999 is fixed, this test should be changed to
 			// check for g and f.g
-			assertTrue( ise.getCause() instanceof TransactionException );
-			Throwable cause = ise.getCause().getCause();
-			assertTrue( cause instanceof TransientPropertyValueException );
-			TransientPropertyValueException tpve = ( TransientPropertyValueException ) cause;
+			//noinspection ThrowableResultOfMethodCallIgnored
+			TransientPropertyValueException tpve = assertTyping( TransientPropertyValueException.class, ise.getCause() );
 			assertEquals( E.class.getName(), tpve.getTransientEntityName() );
 			assertEquals( D.class.getName(), tpve.getPropertyOwnerEntityName() );
 			assertEquals( "e", tpve.getPropertyName() );

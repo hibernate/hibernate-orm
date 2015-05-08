@@ -935,11 +935,11 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 			t.commit();
 			assertFalse( isContractVersioned );
 		}
-		catch (TransactionException e){
+		catch (StaleStateException ex) {
 			t.rollback();
 			assertTrue( isContractVersioned );
-			if ( ! sessionFactory().getSettings().isJdbcBatchVersionedData() ) {
-				assertTrue( StaleObjectStateException.class.isInstance( e.getCause() ) );
+			if ( ! sessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
+				assertTrue( StaleObjectStateException.class.isInstance( ex ) );
 			}
 		}
 		s.close();

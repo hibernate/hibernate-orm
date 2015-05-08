@@ -157,17 +157,11 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
             fail( "Transaction should have timed out" );
         }
 		catch (TransactionException e) {
-			// Insure that the Exception is "transaction timeout expired"
-			String exceptionActual = e.getCause().toString();
-			String exceptionExpected = "org.hibernate.TransactionException: transaction timeout expired";
-			if ( !exceptionActual.contains( exceptionExpected ) ) {
-				String msg = String.format(
-						"Transaction failed for the wrong reason.  Expected [%s] but received [%s]",
-						exceptionExpected, exceptionActual
-				);
-				fail( msg );
-
-			}
+			assertTrue(
+					"Transaction failed for the wrong reason.  Expecting transaction timeout, but found [" +
+							e.getMessage() + "]"					,
+					e.getMessage().contains( "transaction timeout expired" )
+			);
 		}
 	}
 

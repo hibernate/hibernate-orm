@@ -304,7 +304,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	public void beforeCompletion() {
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
-		}catch (Exception e){
+		}
+		catch (Exception e) {
 			physicalTransactionDelegate.markRollbackOnly();
 		}
 		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
@@ -315,19 +316,26 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	@Override
-	public void afterCompletion(boolean successful) {
+	public void afterCompletion(boolean successful, boolean delayed) {
+		if ( !transactionCoordinatorOwner.isActive() ) {
+			return;
+		}
+
 		final int statusToSend =  successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 
-		transactionCoordinatorOwner.afterTransactionCompletion( successful );
+//		afterCompletionAction.doAction( this, statusToSend );
+
+		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
 
 		for ( TransactionObserver observer : observers ) {
-			observer.afterCompletion( successful );
+			observer.afterCompletion( successful, delayed );
 		}
 
 		if ( physicalTransactionDelegate != null ) {
 			physicalTransactionDelegate.invalidate();
 		}
+
 		physicalTransactionDelegate = null;
 		synchronizationRegistered = false;
 	}

@@ -195,8 +195,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch (TransactionException e) {
-			assertTrue( e.getCause() instanceof TransientObjectException );
+		catch (TransientObjectException expected) {
+			// expected
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -244,8 +244,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch (TransactionException e) {
-			assertTrue( e.getCause() instanceof TransientObjectException );
+		catch (TransientObjectException expected) {
+			// expected
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -293,8 +293,8 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch (TransactionException e) {
-			assertTrue( e.getCause() instanceof TransientObjectException );
+		catch (TransientObjectException expected) {
+			// expected
 		}
 		finally {
 			s.getTransaction().rollback();

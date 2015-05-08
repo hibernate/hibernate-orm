@@ -33,15 +33,18 @@ public class JournalingTransactionObserver implements TransactionObserver {
 	private int beforeCompletions = 0;
 	private int afterCompletions = 0;
 
+	@Override
 	public void afterBegin() {
 		begins++;
 	}
 
+	@Override
 	public void beforeCompletion() {
 		beforeCompletions++;
 	}
 
-	public void afterCompletion(boolean successful) {
+	@Override
+	public void afterCompletion(boolean successful, boolean delayed) {
 		afterCompletions++;
 	}
 

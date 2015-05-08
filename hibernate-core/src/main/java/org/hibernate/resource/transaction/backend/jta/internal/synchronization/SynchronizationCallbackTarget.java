@@ -52,7 +52,7 @@ package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 public interface SynchronizationCallbackTarget {
 	/**
 	 * Is the callback target still active?  Generally this is checked by the caller prior to calling
-	 * {@link #beforeCompletion()} or {@link #afterCompletion(boolean)}
+	 * {@link #beforeCompletion} or {@link #afterCompletion}
 	 *
 	 * @return {@code true} indicates the target is active; {@code false} indicates it is not.
 	 */
@@ -72,5 +72,5 @@ public interface SynchronizationCallbackTarget {
 	 *
 	 * @see javax.transaction.Synchronization#afterCompletion
 	 */
-	void afterCompletion(boolean successful);
+	void afterCompletion(boolean successful, boolean delayed);
 }

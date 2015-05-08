@@ -59,8 +59,9 @@ public interface TransactionCoordinatorOwner {
 	 * An after-completion callback from the coordinator to its owner.
 	 *
 	 * @param successful Was the transaction successful?
+	 * @param delayed Is this a delayed after transaction completion call (aka after a timeout)?
 	 */
-	public void afterTransactionCompletion(boolean successful);
+	public void afterTransactionCompletion(boolean successful, boolean delayed);
 
 	public JdbcSessionOwner getJdbcSessionOwner();
 

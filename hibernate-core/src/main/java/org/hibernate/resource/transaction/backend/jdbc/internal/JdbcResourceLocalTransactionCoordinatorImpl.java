@@ -171,9 +171,9 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 
-		transactionCoordinatorOwner.afterTransactionCompletion( successful );
+		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
 		for ( TransactionObserver observer : observers ) {
-			observer.afterCompletion( successful );
+			observer.afterCompletion( successful, false );
 		}
 		invalidateDelegate();
 	}

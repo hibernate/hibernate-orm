@@ -291,8 +291,8 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 			tx.commit();
 			fail( "Optimistic locking should work" );
 		}
-		catch (TransactionException e) {
-			assertTrue( e.getCause() instanceof StaleStateException );
+		catch (StaleStateException expected) {
+			// expected exception
 		}
 		finally {
 			if ( tx != null ) {

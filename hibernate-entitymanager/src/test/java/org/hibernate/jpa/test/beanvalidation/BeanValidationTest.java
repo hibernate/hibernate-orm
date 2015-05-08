@@ -78,9 +78,8 @@ public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		catch ( RollbackException e ) {
 			final Throwable cve = e.getCause();
-			assertTrue( cve instanceof PersistenceException );
-			assertTrue( cve.getCause() instanceof ConstraintViolationException );
-			assertEquals( 1, ( (ConstraintViolationException) cve.getCause() ).getConstraintViolations().size() );
+			assertTrue( cve instanceof ConstraintViolationException );
+			assertEquals( 1, ( (ConstraintViolationException) cve ).getConstraintViolations().size() );
 		}
 		em.close();
 	}

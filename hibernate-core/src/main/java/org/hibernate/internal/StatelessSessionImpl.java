@@ -774,9 +774,8 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful) {
-		if ( shouldAutoClose()
-				&& !isClosed() ) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}
 	}

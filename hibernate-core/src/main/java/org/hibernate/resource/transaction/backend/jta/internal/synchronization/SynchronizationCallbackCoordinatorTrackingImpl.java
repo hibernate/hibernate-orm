@@ -39,13 +39,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class SynchronizationCallbackCoordinatorTrackingImpl extends SynchronizationCallbackCoordinatorNonTrackingImpl {
 	private static final CoreMessageLogger log = messageLogger( SynchronizationCallbackCoordinatorTrackingImpl.class );
 
-	// magic number :(
-	private static final long NO_THREAD_ID = Long.MIN_VALUE;
-
-	private volatile long registrationThreadId = NO_THREAD_ID;
+	private volatile long registrationThreadId;
 	private volatile boolean delayedCompletionHandling;
 
 	public SynchronizationCallbackCoordinatorTrackingImpl(SynchronizationCallbackTarget target) {
+		// super ctor calls reset() followed by pulse()
 		super( target );
 	}
 
@@ -57,13 +55,16 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// 		2) after "after completion" handling is finished.
 		//
 		// Here we use that to "clear out" all 'delayed after-completion" state.  The registrationThreadId will
-		// "lazily" be re-populated on the next synchronizationRegistered call to allow for the potential of the next Session transaction
-		// occurring on a different thread (though that transaction would need to completely operate on that thread).
+		// "lazily" be re-populated on the next synchronizationRegistered call to allow for the potential of the
+		// next Session transaction occurring on a different thread (though that transaction would need to completely
+		// operate on that thread).
 		delayedCompletionHandling = false;
 	}
 
 	@Override
 	public void afterCompletion(int status) {
+		log.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
+
 		// The whole concept of "tracking" comes down to this code block..
 		// Essentially we need to see if we can process the callback immediately.  So here we check whether the
 		// current call is happening on the same thread as the thread under which we registered the Synchronization.
@@ -79,30 +80,29 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 				// check for it in SessionImpl. See HHH-7910.
 				delayedCompletionHandling = true;
 
-				// todo : update code to use message logger
-				//log.rollbackFromBackgroundThread( status );
-				log.warn( "Rollback from background thread (update code to use message logger)" );
+				log.rollbackFromBackgroundThread( status );
 				return;
 			}
 		}
 
 		// otherwise, do the callback immediately
-		doAfterCompletion( JtaStatusHelper.isCommitted( status ) );
+		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
 	}
 
 	@Override
 	public void synchronizationRegistered() {
-		if ( registrationThreadId == NO_THREAD_ID ) {
-			registrationThreadId = Thread.currentThread().getId();
-		}
+		registrationThreadId = Thread.currentThread().getId();
 	}
 
 	@Override
 	public void processAnyDelayedAfterCompletion() {
 		if ( delayedCompletionHandling ) {
-			// false here because, as discussed above, the delayed logic should only ever occur during rollback
 			delayedCompletionHandling = false;
-			doAfterCompletion( false );
+
+			// false here (rather than how we used to keep and check the status) because as discussed above
+			// the delayed logic should only ever occur during rollback
+			doAfterCompletion( false, true );
+
 			// NOTE : doAfterCompletion calls reset
 			throw new HibernateException( "Transaction was rolled back in a different thread!" );
 		}

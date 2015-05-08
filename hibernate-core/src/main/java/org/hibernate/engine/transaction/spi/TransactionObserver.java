@@ -47,6 +47,6 @@ public interface TransactionObserver {
 	 *
 	 * @param successful Was the transaction successful?
 	 */
-	public void afterCompletion(boolean successful);
+	public void afterCompletion(boolean successful, boolean delayed);
 }
 

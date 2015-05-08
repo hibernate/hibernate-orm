@@ -335,9 +335,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				}
 
 				@Override
-				public void afterCompletion(boolean successful) {
-					afterTransactionCompletion( successful );
-					if ( isOpen() && autoCloseSessionEnabled ) {
+				public void afterCompletion(boolean successful, boolean delayed) {
+					afterTransactionCompletion( successful, delayed );
+					if ( !isClosed() && autoCloseSessionEnabled ) {
 						managedClose();
 					}
 				}
@@ -2248,7 +2248,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	@Override
 	public void beforeTransactionCompletion() {
-		LOG.trace( "before transaction completion" );
+		LOG.tracef( "SessionImpl#beforeTransactionCompletion()" );
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		try {
@@ -2260,9 +2260,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful) {
-
-		LOG.trace( "after transaction completion" );
+	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		LOG.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
@@ -2280,8 +2279,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			LOG.exceptionInAfterTransactionCompletionInterceptor( t );
 		}
 
-		if ( shouldAutoClose() && !isClosed() ) {
-			managedClose();
+		if ( !delayed ) {
+			if ( shouldAutoClose() && !isClosed() ) {
+				managedClose();
+			}
 		}
 
 		if ( autoClear ) {

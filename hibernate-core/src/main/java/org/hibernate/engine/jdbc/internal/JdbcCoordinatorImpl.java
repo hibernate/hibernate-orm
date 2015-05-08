@@ -506,9 +506,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		afterTransaction();
-		owner.afterTransactionCompletion( successful );
+		owner.afterTransactionCompletion( successful, delayed );
 	}
 
 	@Override
@@ -541,7 +541,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * JDK deserialization hook
 	 *
 	 * @param ois The stream into which to write our state
-	 * @param JdbcSessionOwner The Jdbc Session owner which owns the JdbcCoordinatorImpl to be deserialized.
+	 * @param owner The Jdbc Session owner which owns the JdbcCoordinatorImpl to be deserialized.
 	 *
 	 * @return The deserialized JdbcCoordinatorImpl
 	 *

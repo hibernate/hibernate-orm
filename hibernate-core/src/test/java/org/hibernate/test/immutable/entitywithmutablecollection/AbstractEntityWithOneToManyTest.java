@@ -1162,11 +1162,11 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 			t.commit();
 			assertFalse( isContractVersioned );
 		}
-		catch (TransactionException ex) {
+		catch (StaleStateException ex) {
 			t.rollback();
 			assertTrue( isContractVersioned );
-			if ( ! sessionFactory().getSettings().isJdbcBatchVersionedData() ) {
-				assertTrue( StaleObjectStateException.class.isInstance( ex.getCause() ) );
+			if ( ! sessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
+				assertTrue( StaleObjectStateException.class.isInstance( ex ) );
 			}
 		}
 		s.close();

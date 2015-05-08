@@ -80,9 +80,6 @@ public class TransactionImpl implements Transaction {
 		try {
 			this.transactionDriverControl.commit();
 		}
-		catch (Exception e) {
-			throw new TransactionException( "commit failed", e );
-		}
 		finally {
 			invalidate();
 		}
@@ -99,9 +96,6 @@ public class TransactionImpl implements Transaction {
 		if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
 			try {
 				this.transactionDriverControl.rollback();
-			}
-			catch (Exception e) {
-				throw new TransactionException( "rollback failed", e );
 			}
 			finally {
 				invalidate();

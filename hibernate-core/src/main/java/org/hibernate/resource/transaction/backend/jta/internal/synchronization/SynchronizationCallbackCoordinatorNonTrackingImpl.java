@@ -68,13 +68,17 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void afterCompletion(int status) {
-		doAfterCompletion( JtaStatusHelper.isCommitted( status ) );
+		log.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
+		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
 	}
 
-	protected void doAfterCompletion(boolean successful) {
+	protected void doAfterCompletion(boolean successful, boolean delayed) {
+		log.tracef( "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)", successful, delayed );
+
 		try {
-			target.afterCompletion( successful );
-		}finally {
+			target.afterCompletion( successful, delayed );
+		}
+		finally {
 			reset();
 		}
 	}

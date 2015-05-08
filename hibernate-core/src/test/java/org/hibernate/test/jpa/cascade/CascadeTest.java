@@ -70,9 +70,8 @@ public class CascadeTest extends AbstractJPATest {
 				s.getTransaction().commit();
 				fail( "expecting TransientObjectException on flush" );
 			}
-			catch (TransactionException te) {
-				assertTrue( te.getCause() instanceof TransientObjectException );
-				log.trace( "handled expected exception", te );
+			catch (TransientObjectException toe) {
+				log.trace( "handled expected exception", toe );
 				s.getTransaction().rollback();
 			}
 			finally {

@@ -25,7 +25,6 @@ package org.hibernate.cache.infinispan.impl;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
@@ -85,7 +84,8 @@ public abstract class BaseRegion implements Region {
 		this.tm = cache.getTransactionManager();
 		this.factory = factory;
 		this.regionClearCache = cache.withFlags(
-				Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT
+				Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT,
+				Flag.SKIP_CACHE_LOAD
 		);
 	}
 
@@ -170,27 +170,21 @@ public abstract class BaseRegion implements Region {
 						// (without forcing autoCommit cache configuration).
 						Transaction tx = getCurrentTransaction();
 						if ( tx != null ) {
-							regionClearCache.clear();
+							log.tracef("Transaction, clearing one element at the time");
+							Caches.removeAll(regionClearCache);
 						} else {
-							Caches.withinTx( cache, new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									regionClearCache.clear();
-									return null;
-								}
-							} );
+							log.tracef("Non-transactional, clear in one go");
+							regionClearCache.clear();
 						}
 
+						log.tracef("Transition state from CLEARING to VALID");
 						invalidateState.compareAndSet(
 								InvalidateState.CLEARING, InvalidateState.VALID
 						);
 					}
 					catch ( Exception e ) {
 						if ( log.isTraceEnabled() ) {
-							log.trace(
-									"Could not invalidate region: "
-											+ e.getLocalizedMessage()
-							);
+							log.trace("Could not invalidate region: ", e);
 						}
 					}
 				}

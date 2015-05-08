@@ -27,6 +27,7 @@ import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.AdvancedCache;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.infinispan.remoting.rpc.RpcManager;
 
@@ -263,6 +264,18 @@ public class Caches {
 	public static boolean isClustered(AdvancedCache cache) {
 		return cache.getCacheConfiguration()
 				.clustering().cacheMode().isClustered();
+	}
+
+	public static void removeAll(AdvancedCache cache) {
+		CloseableIterator it = cache.keySet().iterator();
+		try {
+			while (it.hasNext()) {
+				it.next(); // Necessary to get next element
+				it.remove();
+			}
+		} finally {
+			it.close();
+		}
 	}
 
 }

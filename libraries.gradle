@@ -30,7 +30,7 @@ ext {
 //    h2Version = '1.2.145'
     h2Version = '1.3.176'
     bytemanVersion = '2.1.2'
-    infinispanVersion = '7.1.0.Final'
+    infinispanVersion = '7.2.1.Final'
     jnpVersion = '5.0.6.CR1'
 
     libraries = [

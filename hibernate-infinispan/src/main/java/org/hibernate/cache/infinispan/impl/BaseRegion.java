@@ -59,7 +59,7 @@ public abstract class BaseRegion implements Region {
 	}
 
 	private final String name;
-	private final AdvancedCache regionClearCache;
+	private final AdvancedCache localAndSkipLoadCache;
 	private final TransactionManager tm;
 
 	private final Object invalidationMutex = new Object();
@@ -83,7 +83,7 @@ public abstract class BaseRegion implements Region {
 		this.name = name;
 		this.tm = cache.getTransactionManager();
 		this.factory = factory;
-		this.regionClearCache = cache.withFlags(
+		this.localAndSkipLoadCache = cache.withFlags(
 				Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT,
 				Flag.SKIP_CACHE_LOAD
 		);
@@ -97,7 +97,7 @@ public abstract class BaseRegion implements Region {
 	@Override
 	public long getElementCountInMemory() {
 		if ( checkValid() ) {
-			return cache.size();
+			return localAndSkipLoadCache.size();
 		}
 
 		return 0;
@@ -171,10 +171,10 @@ public abstract class BaseRegion implements Region {
 						Transaction tx = getCurrentTransaction();
 						if ( tx != null ) {
 							log.tracef("Transaction, clearing one element at the time");
-							Caches.removeAll(regionClearCache);
+							Caches.removeAll(localAndSkipLoadCache);
 						} else {
 							log.tracef("Non-transactional, clear in one go");
-							regionClearCache.clear();
+							localAndSkipLoadCache.clear();
 						}
 
 						log.tracef("Transition state from CLEARING to VALID");

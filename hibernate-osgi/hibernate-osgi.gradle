@@ -1,58 +1,33 @@
 apply plugin: 'karaf-featuresgen'
 
 
-configurations {
-	aries {
-		description = 'Runtime dependencies for Aries for the hibernate-jpa-aries Karaf feature'
-	}
-	osgiRuntime {
-		// Ignore the transitive dependencies.
-		transitive = false
-	}
-	osgiRuntimeBnd {
-		// Ignore the transitive dependencies.
-		transitive = false
+sourceSets {
+	test {
+		// send javac output and resource copying to the same output directory for test
+		// so Pax Exam can more easily find it without explicit TinyBundle hooks
+		output.classesDir = "${buildDir}/classes/test"
+		output.resourcesDir = output.classesDir
 	}
 }
 
-//sourceSets {
-//	testClientBundle
-//}
+configurations {
+	karafDistro {
+		description = 'Configuration used to isolate the dependency on the Karaf distro'
+		transitive = false
+	}
+	aries {
+		description = 'Runtime dependencies for Aries for the hibernate-jpa-aries Karaf feature'
+	}
+}
 
-//sourceSets.test {
-//	compileClasspath += sourceSets.testClientBundle.output
-//	runtimeClasspath += sourceSets.testClientBundle.output
-//}
-
-//test {
-//	// for now, always disable!!
-//	enabled = false
-//
-//}
-
-//if ( project.properties.java6Home == null ) {
-//	// hibernate-osgi *must* be run using Java 6 or 7.  So disable its tests if
-//	// java6Home is not available
-//	test.enabled = false
-//}
-//else {
-//	compileTestJava {
-//		options.fork = true
-//		options.forkOptions.executable = project.properties.java6Home.javacExecutable
-//		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
-//	}
-////	compileTestClientBundleJava {
-////		options.fork = true
-////		options.forkOptions.executable = project.properties.java6Home.javacExecutable
-////		options.bootClasspath = project.properties.java6Home.runtimeJar.absolutePath
-////	}
-//
-//	test {
-//		executable = project.properties.java6Home
-//		maxHeapSize = '2G'
-//		jvmArgs += ['-XX:MaxPermGen=512M']
-//	}
-//}
+ext {
+	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
+	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
+	osgiCoreVersion = '4.3.1'
+	karafVersion = '3.0.3'
+	paxExamVersion = '4.4.0'
+	paxUrlVersion = '2.4.1'
+}
 
 dependencies {
 	ext {
@@ -63,90 +38,28 @@ dependencies {
 
 	compile( project( ':hibernate-core' ) )
 	compile( project( ':hibernate-entitymanager' ) )
+
 	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
 	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
-	compile( "org.osgi:org.osgi.core:4.3.1" )
-	compile( "org.osgi:org.osgi.compendium:4.3.1" )
+	compile "org.osgi:org.osgi.core:${osgiCoreVersion}"
+	compile "org.osgi:org.osgi.compendium:${osgiCoreVersion}"
 
-	// PaxExam and friends.  Not entirely sure yet of proper configuration
 	testCompile "org.ops4j.pax.exam:pax-exam:${paxExamVersion}"
-	testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxExamVersion}"
 	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxExamVersion}"
+	testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxExamVersion}"
+	// Need this explicitly in order to use @Inject -> shouldn't this be a transtive dep of pax-exam?
+	//      is there ever a pax exam test that *does not* use this?
 	testCompile 'javax.inject:javax.inject:1'
 
-	testRuntime "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz"
-	testRuntime "org.ops4j.pax.exam:pax-exam-link-mvn:${paxExamVersion}"
-	testRuntime "org.ops4j.pax.url:pax-url-aether:${paxExamUrlVersion}"
-	testRuntime "org.ops4j.pax.url:pax-url-reference:${paxExamUrlVersion}"
-	testRuntime "org.ops4j.pax.url:pax-url-wrap:${paxExamUrlVersion}"
+	testCompile( "org.apache.karaf:apache-karaf:${karafVersion}" ) {
+		// having trouble finding this one locally
+		exclude group: 'org.eclipse', module: 'org.eclipse.osgi'
+	}
 
-//	testCompile( "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz" ) {
-//		transitive = false
-//	}
+	karafDistro "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz"
 
-	karafFeaturesBundles "org.apache.logging.log4j:log4j-api:2.0"
-//	karafFeaturesBundles libraries.log4j
-//	karafFeaturesBundles libraries.slf4j_api
-//	karafFeaturesBundles libraries.slf4j_log4j
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//	testCompile( libraries.shrinkwrap_api )
-//	testCompile( libraries.shrinkwrap )
-//	testCompile( "org.jboss.arquillian.junit:arquillian-junit-container:1.0.3.Final" )
-//	testCompile( "org.jboss.osgi.metadata:jbosgi-metadata:3.0.0.CR1" )
-//	testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
-//	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
-//	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
-	testRuntime( libraries.slf4j_api );
-	testRuntime( libraries.slf4j_log4j );
-	testRuntime( "org.jboss.logmanager:jboss-logmanager:2.0.0.Beta1" )
-//
-//	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
-//	// ORDER DEPENDENT!!!
-//	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" )
-//	osgiRuntime( libraries.jpa )
-//	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" )
-//	osgiRuntime( libraries.jta )
-//	osgiRuntime( "com.h2database:h2:1.3.170" )
-//	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" )
-//	osgiRuntime( libraries.javassist )
-//	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
-//	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
-//	osgiRuntime( libraries.commons_annotations )
-//	osgiRuntime( libraries.classmate )
-//    osgiRuntime( "org.apache.logging.log4j:log4j-api:2.0" )
-//	osgiRuntime( libraries.logging )
-//	osgiRuntime( libraries.woodstox )
-//	osgiRuntime( 'org.codehaus.woodstox:stax2-api:3.1.4' )
-
-	// needed for BND
-	osgiRuntimeBnd( libraries.jandex )
-	osgiRuntimeBnd( "javax.enterprise:cdi-api:1.1" )
-	osgiRuntimeBnd( "javax.el:el-api:2.2" )
-	
-//	testClientBundleCompile( project( ':hibernate-core' ) )
-//	testClientBundleCompile( project( ':hibernate-entitymanager' ) )
-//	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
-//	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
-//	testClientBundleCompile( "org.osgi:org.osgi.core:4.3.1" )
+	aries 'org.apache.aries.transaction:org.apache.aries.transaction.blueprint:1.0.0'
+	aries 'org.apache.aries.transaction:org.apache.aries.transaction.manager:1.0.1'
 }
 
 mavenPom {
@@ -170,89 +83,6 @@ jar {
 	}
 }
 
-test {
-	systemProperties['java.util.logging.manager'] = "org.jboss.logmanager.LogManager"
-	systemProperties['log4j.configuration'] = "file://$projectDir/src/test/resources/logging.properties"
-}
-
-task copyBnd(type: Copy) {
-	from "src/test/resources/bnd"
-	into "$buildDir/osgi-lib/bnd"
-}
-
-task runBnd(type: JavaExec) {
-	main = "-jar"
-	args "$buildDir/osgi-lib/bnd/bnd-2.1.0.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd"
-}
-
-task copyToLib(type: Copy) {
-	from configurations.osgiRuntime
-	from configurations.osgiRuntimeBnd
-	into "$buildDir/osgi-lib"
-}
-
-task felixProperties << {
-	copy {
-		from "src/test/resources/felix-framework.properties-ORIGINAL"
-		into "$buildDir/osgi-lib"
-		rename { String fileName ->
-			fileName.replace("-ORIGINAL", "")
-		}
-	}
-	
-	File propertiesFile = file("$buildDir/osgi-lib/felix-framework.properties")
-	
-	// append jars wrapped using BND
-	FileTree tree = fileTree(dir: "$buildDir/osgi-lib/bnd")
-	tree.exclude "*bnd*"
-	tree.each {File file ->
-		propertiesFile << " \\\nfile:target/osgi-lib/bnd/" + file.name
-	}
-	
-	// append all jars in osgiRuntime configuration
-	configurations.osgiRuntime.each { File file ->
-		propertiesFile << " \\\nfile:target/osgi-lib/" + file.name
-	}
-	
-	// append ORM jars
-	// TODO: Is there a better, dynamic way of doing this?
-	propertiesFile << " \\\nfile:../hibernate-core/target/libs/hibernate-core-" + hibernateTargetVersion + ".jar"
-	propertiesFile << " \\\nfile:../hibernate-entitymanager/target/libs/hibernate-entitymanager-" + hibernateTargetVersion + ".jar"
-	propertiesFile << " \\\nfile:target/libs/hibernate-osgi-" + hibernateTargetVersion + ".jar"
-}
-//
-//task testClientBundleJar(type: Jar) {
-//	from sourceSets.testClientBundle.output
-//	destinationDir new File("$buildDir/osgi-lib")
-//	archiveName "testClientBundle.jar"
-//
-//	// The OSGi plugin acts up when we need to export multiple source sets.  Just do it manually.
-//	manifest {
-//		attributes("Export-Package" : "org.hibernate.osgi.test.client,org.hibernate.osgi.test.result",
-//					"Bundle-Name" : "testClientBundle",
-//					"Bundle-Activator" : "org.hibernate.osgi.test.client.OsgiTestActivator",
-//					"Bundle-ManifestVersion" : "2",
-//					"Bundle-SymbolicName" : "testClientBundle",
-//					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.osgi.framework,"
-//							+ "org.hibernate,"
-//							+ "org.hibernate.boot.model,"
-//							+ "org.hibernate.boot.registry.selector,"
-//							+ "org.hibernate.boot.registry.selector.spi,"
-//							+ "org.hibernate.cfg,"
-//							+ "org.hibernate.engine.spi,"
-//							+ "org.hibernate.integrator.spi,"
-//							+ "org.hibernate.proxy,"
-//							+ "org.hibernate.service,"
-//							+ "org.hibernate.service.spi")
-//	}
-//}
-
-runBnd.dependsOn copyToLib
-runBnd.dependsOn copyBnd
-copyBnd.dependsOn copyToLib
-
-felixProperties.dependsOn runBnd
-
 
 task generateVersionFile {
 	File outputFileDir = project.file( "${buildDir}/classes/test/META-INF/hibernate-osgi/" )
@@ -271,6 +101,56 @@ task generateVersionFile {
 		}
 		finally {
 			writer.close()
+		}
+	}
+}
+
+karafFeatures {
+	features {
+		// NOTE : would like to include spatial as well, but we need to wait for
+		//		it to not define dependency on postgresql driver
+		hibernateNative {
+			name = 'hibernate-native'
+			projects = [
+					rootProject.childProjects.'hibernate-core',
+					project
+			]
+		}
+		hibernateJpa {
+			name = 'hibernate-jpa'
+			projects = [
+					rootProject.childProjects.'hibernate-entitymanager',
+					project
+			]
+		}
+		hibernateJpaAries {
+			name = 'hibernate-jpa-aries'
+			projects = [
+					rootProject.childProjects.'hibernate-entitymanager',
+					project
+			]
+			extraBundleDependencies = [project.configurations.aries]
+		}
+		hibernateEnvers {
+			name = 'hibernate-envers'
+			projects = [
+					rootProject.childProjects.'hibernate-envers',
+					project
+			]
+		}
+		hibernateInfinispan {
+			name = 'hibernate-infinispan'
+			projects = [
+					rootProject.childProjects.'hibernate-infinispan',
+					project
+			]
+		}
+		hibernateEhcache {
+			name = 'hibernate-ehcache'
+			projects = [
+					rootProject.childProjects.'hibernate-ehcache',
+					project
+			]
 		}
 	}
 }
@@ -314,55 +194,43 @@ task generateDependsFile {
 	}
 }
 
-karafFeatures {
-	features {
-		// NOTE : would like to include spatial as well, but we need to wait for
-		//		it to not define dependency on postgresql driver
-		hibernateNative {
-			name = 'hibernate-native'
-			projects = [
-					rootProject.childProjects.'hibernate-core',
-					rootProject.childProjects.'hibernate-envers',
-					project
-			]
+task generatePaxExamEnvironmentFile {
+	// I found this better/easier than duplicating information...
+	description = 'Generates a Properties file that the Pax Exam test can access to know information about the test environment'
+
+	File outputFile = new File( sourceSets.test.output.resourcesDir, 'pax-exam-environment.properties' )
+	File karafUnpackDirectory = file( "${buildDir}/karaf-unpack" )
+
+	// set up up-to-date checks
+	inputs.files( configurations.testRuntime )
+	inputs.property( 'karafUnpackDirectory', karafUnpackDirectory )
+	outputs.file( outputFile )
+
+	doFirst {
+		// should only be one artifacts..
+		File karafDistroFile = configurations.karafDistro.resolvedConfiguration.resolvedArtifacts[0].file
+
+		Properties properties = new Properties();
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.distroUrl', karafDistroFile.toURI().toURL().toExternalForm() )
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.unpackDir', karafUnpackDirectory.absolutePath )
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.version', karafVersion as String )
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.classesDir', sourceSets.test.output.classesDir.absolutePath )
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.resourcesDir', sourceSets.test.output.resourcesDir.absolutePath )
+		properties.setProperty( 'org.hibernate.osgi.test.karafFeatureFile', karafFeatures.featuresXmlFile.absolutePath )
+
+		outputFile.parentFile.mkdirs()
+
+		FileOutputStream outputStream = new FileOutputStream( outputFile );
+		try {
+			properties.store( outputStream, "Generated from Gradle by Hibernate build for PaxExam testing of hibernate-osgi module" )
 		}
-		hibernateJpa {
-			name = 'hibernate-jpa'
-			projects = [
-					rootProject.childProjects.'hibernate-entitymanager',
-					rootProject.childProjects.'hibernate-envers',
-					project
-			]
-		}
-		hibernateJpaAries {
-			name = 'hibernate-jpa-aries'
-			projects = [
-					rootProject.childProjects.'hibernate-entitymanager',
-					rootProject.childProjects.'hibernate-envers',
-					project
-			]
-			extraBundleDependencies = [project.configurations.aries]
-		}
-		hibernateInfinispan {
-			name = 'hibernate-infinispan'
-			projects = [
-					rootProject.childProjects.'hibernate-infinispan',
-					project
-			]
-		}
-		hibernateEhcache {
-			name = 'hibernate-ehcache'
-			projects = [
-					rootProject.childProjects.'hibernate-ehcache',
-					project
-			]
+		finally {
+			outputStream.close()
 		}
 	}
 }
 
-
-
-test.dependsOn felixProperties
-//test.dependsOn testClientBundleJar
-test.dependsOn jar
-test.dependsOn( [generateDependsFile, generateVersionFile, generateKarafFeatures] )
+tasks.test.dependsOn tasks.generateKarafFeatures
+tasks.test.dependsOn tasks.jar
+tasks.test.dependsOn tasks.generateDependsFile
+tasks.test.dependsOn tasks.generatePaxExamEnvironmentFile

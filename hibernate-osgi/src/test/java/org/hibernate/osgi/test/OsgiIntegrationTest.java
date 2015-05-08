@@ -24,14 +24,11 @@
 package org.hibernate.osgi.test;
 
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.StringTokenizer;
+import java.util.Properties;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -43,11 +40,8 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.osgi.OsgiSessionFactoryService;
 import org.hibernate.osgi.test.client.DataPoint;
-import org.hibernate.osgi.test.client.OsgiTestActivator;
 import org.hibernate.osgi.test.client.SomeService;
-import org.hibernate.osgi.test.client.SomeServiceContributor;
 import org.hibernate.osgi.test.client.TestIntegrator;
 import org.hibernate.osgi.test.client.TestStrategyRegistrationProvider;
 import org.hibernate.osgi.test.client.TestTypeContributor;
@@ -61,16 +55,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
+import org.apache.karaf.features.BootFinished;
+import org.apache.karaf.features.FeaturesService;
 import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.Customizer;
-import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption;
-import org.ops4j.pax.exam.options.MavenUrlReference;
-import org.ops4j.pax.exam.options.UrlReference;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 
@@ -78,18 +70,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.bundle;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.repositories;
 import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
@@ -104,13 +90,15 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 @ExamReactorStrategy( PerClass.class )
 public class OsgiIntegrationTest {
 
+	private static final boolean DEBUG = false;
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Prepare the Karaf container
 
-	private static final boolean DEBUG = false;
-
 	@Configuration
 	public Option[] config() throws Exception {
+		final Properties paxExamEnvironment = loadPaxExamEnvironmentProperties();
+
 		final boolean debug = ConfigurationHelper.getBoolean(
 				"org.hibernate.testing.osgi.paxExam.debug",
 				Environment.getProperties(),
@@ -120,197 +108,74 @@ public class OsgiIntegrationTest {
 		return options(
 				when( debug ).useOptions( debugConfiguration( "5005", true ) ),
 				karafDistributionConfiguration()
-						.karafVersion( karafVersion() )
-						.frameworkUrl( karafDistributionUrl() )
-						.unpackDirectory( new File( "target/karaf" ) )
+						.frameworkUrl( paxExamEnvironment.getProperty( "org.ops4j.pax.exam.container.karaf.distroUrl" ) )
+						.karafVersion( paxExamEnvironment.getProperty( "org.ops4j.pax.exam.container.karaf.version" ) )
+						.name( "Apache Karaf" )
+						.unpackDirectory( new File( paxExamEnvironment.getProperty( "org.ops4j.pax.exam.container.karaf.unpackDir" ) ) )
 						.useDeployFolder( false ),
 				repositories(
 						repository( "https://repository.jboss.org/nexus/content/groups/public-jboss/" )
 								.id( "jboss-nexus" )
 								.allowSnapshots()
 				),
-//				features( karafStandardRepo(), "standard,scr" ),
-//				features( karafFrameworkRepo(), "framework" ),
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),
 				logLevel( LogLevelOption.LogLevel.INFO ),
-				// avoiding additional boot features; specifically "enterprise"
-//				editConfigurationFilePut(
-//						"etc/org.apache.karaf.features.cfg",
-//						"featuresBoot",
-//						"standard,karaf-framework"
-//				),
-				mavenBundle().groupId( "com.h2database" ).artifactId( "h2" ).version( "1.3.170" ).start(),
-				junitBundles(),
-				features( hibernateKarafFeatureFile(), "hibernate-native", "hibernate-jpa" ),
-				new Customizer() {
-					@Override
-					public void customizeEnvironment(File workingFolder) {
-						super.customizeEnvironment( workingFolder );
-						Locale.setDefault( Locale.ENGLISH );
-					}
-
-					@Override
-					public InputStream customizeTestProbe(InputStream testProbe) throws Exception {
-						return org.ops4j.pax.tinybundles.core.TinyBundles.bundle()
-								.read( super.customizeTestProbe( testProbe ) )
-								.add( "/hibernate.cfg.xml", probeCfgXmlFile().toURI().toURL() )
-								.add( "/META-INF/persistence.xml", probePersistenceXmlFile().toURI().toURL() )
-								.add( "/OSGI-INF/blueprint/blueprint.xml", probeBlueprintXmlFile().toURI().toURL() )
-								.add( DataPoint.class )
-								.add( OsgiTestActivator.class )
-								.add( SomeService.class )
-								.add( SomeServiceContributor.class )
-								.add( TestIntegrator.class )
-								.add( TestStrategyRegistrationProvider.class )
-								.add( TestTypeContributor.class )
-								.build();
-					}
-				}
+				features( featureXmlUrl( paxExamEnvironment ), "hibernate-native", "hibernate-jpa" ),
+				features( testingFeatureXmlUrl(), "hibernate-osgi-testing" )
 		);
 	}
 
-	private MavenUrlReference karafDistributionUrl() {
-		return maven()
-				.groupId( "org.apache.karaf" )
-				.artifactId( "apache-karaf" )
-				.version( karafVersion() )
-				.type( "tar.gz" );
+	private static Properties loadPaxExamEnvironmentProperties() throws IOException {
+		Properties props = new Properties();
+		props.load( OsgiIntegrationTest.class.getResourceAsStream( "/pax-exam-environment.properties" ) );
+		return props;
 	}
 
-	private String karafVersion() {
-		return MavenUtils.getArtifactVersion( "org.apache.karaf", "apache-karaf" );
+	private static String featureXmlUrl(Properties paxExamEnvironment) throws MalformedURLException {
+		return new File( paxExamEnvironment.getProperty( "org.hibernate.osgi.test.karafFeatureFile" ) ).toURI().toURL().toExternalForm();
 	}
 
-	private MavenUrlReference karafStandardRepo() {
-		return maven()
-				.groupId( "org.apache.karaf.features" )
-				.artifactId( "standard" )
-				.version( karafVersion() )
-				.classifier( "features" )
-				.type( "xml" );
+	private String testingFeatureXmlUrl() {
+		return OsgiIntegrationTest.class.getClassLoader().getResource( "org/hibernate/osgi/test/testing-bundles.xml" )
+				.toExternalForm();
 	}
 
-	private MavenUrlReference karafFrameworkRepo() {
-		return maven()
-				.groupId( "org.apache.karaf.features" )
-				.artifactId( "framework" )
-				.version( karafVersion() )
-				.classifier( "features" )
-				.type( "xml" );
-	}
-
-	private UrlReference hibernateKarafFeatureFile() throws Exception {
-		File dir = resolveBuildDir();
-
-		// go to the `karafFeatures` dir...
-		dir = new File( dir, "karafFeatures" );
-
-		// and look for the feature file there...
-		final String featureFileName = String.format(
-				Locale.ENGLISH,
-				"hibernate-osgi-%s-karaf.xml",
-				determineProjectVersion()
-		);
-
-		final URL url = new File( dir, featureFileName ).toURI().toURL();
-
-		System.out.println( "hibernate-osgi karaf feature file for Pax-Exam testing : " + url.toExternalForm() );
-		return new UrlReference() {
-			@Override
-			public String getURL() {
-				return url.toExternalForm();
-			}
-		};
-	}
-
-	private static File resolveBuildDir() {
-		// get a URL reference to something we now is part of the classpath (us)
-		final URL classUrl = OsgiSessionFactoryService.class.getClassLoader().getResource(
-				OsgiSessionFactoryService.class.getName().replace( '.', '/' ) + ".class"
-		);
-		if ( classUrl == null ) {
-			fail( "Unable to setup hibernate-osgi feature for PaxExam : could not resolve 'known class' url" );
-		}
-
-		// and convert it to a File
-		final File classFile = new File( classUrl.getFile() );
-		if ( !classFile.exists() ) {
-			fail( "Unable to setup hibernate-osgi feature for PaxExam : could not resolve 'known class' url to File" );
-		}
-
-		// DoTheRightThing(tm) in case of refactoring...
-		final int packageCount = new StringTokenizer( OsgiSessionFactoryService.class.getPackage().getName(), ".", false ).countTokens();
-		File dir = classFile.getParentFile();
-		for ( int i = 0; i < packageCount; i++ ) {
-			dir = dir.getParentFile();
-		}
-
-		// dir now points to the root classes output dir, go up 2 more...
-		dir = dir.getParentFile().getParentFile();
-		return dir;
-	}
-
-	private String determineProjectVersion() throws Exception {
-		URL url = getClass().getClassLoader().getResource( "META-INF/hibernate-osgi/Version.txt" );
-		InputStreamReader reader = new InputStreamReader( url.openStream() );
-		char[] buffer = new char[50];
-		int count = reader.read( buffer );
-		return String.valueOf( buffer, 0, count );
-	}
-
-	private static File probeCfgXmlFile() {
-		File dir = resolveBuildDir();
-		dir = new File( dir, "resources" );
-		dir = new File( dir, "test" );
-		return new File( dir, "hibernate.cfg.xml" );
-	}
-
-	private static File probePersistenceXmlFile() {
-		File dir = resolveBuildDir();
-		dir = new File( dir, "resources" );
-		dir = new File( dir, "test" );
-		dir = new File( dir, "META-INF" );
-		return new File( dir, "persistence.xml" );
-	}
-
-	private static File probeBlueprintXmlFile() {
-		File dir = resolveBuildDir();
-		dir = new File( dir, "resources" );
-		dir = new File( dir, "test" );
-		dir = new File( dir, "OSGI-INF" );
-		dir = new File( dir, "blueprint" );
-		return new File( dir, "blueprint.xml" );
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Prepare the PaxExam probe (the bundle to deploy)
 
+
 	@ProbeBuilder
-	 public TestProbeBuilder probeConfiguration(TestProbeBuilder probe) {
+	public TestProbeBuilder probeConfiguration(TestProbeBuilder probe) {
 		System.out.println( "Configuring probe..." );
 
-		// attempt to override PaxExam's default of dynamically importing everything
-		probe.setHeader( Constants.DYNAMICIMPORT_PACKAGE, "" );
-		// and use defined imports instead
-		probe.setHeader(
-				Constants.IMPORT_PACKAGE,
-				"javassist.util.proxy" +
-						",javax.persistence" +
-						",javax.persistence.spi" +
-						",org.h2" +
-						",org.osgi.framework" +
-						",org.hibernate" +
-						",org.hibernate.boot.model" +
-						",org.hibernate.boot.registry.selector" +
-						",org.hibernate.boot.registry.selector.spi" +
-						",org.hibernate.cfg" +
-						",org.hibernate.engine.spi" +
-						",org.hibernate.integrator.spi" +
-						",org.hibernate.proxy" +
-						",org.hibernate.service" +
-						",org.hibernate.service.spi"
-		);
+		// Note : I found locally that this part is not needed.  But I am leaving this here as I might
+		// 		someday have a need for tweaking the probe and I want to remember how it is done...
+
+//		// attempt to override PaxExam's default of dynamically importing everything
+//		probe.setHeader( Constants.DYNAMICIMPORT_PACKAGE, "" );
+//		// and use defined imports instead
+//		probe.setHeader(
+//				Constants.IMPORT_PACKAGE,
+//				"javassist.util.proxy"
+//						+ ",javax.persistence"
+//						+ ",javax.persistence.spi"
+//						+ ",org.h2"
+//						+ ",org.osgi.framework"
+//						+ ",org.hibernate"
+////						+ ",org.hibernate.boot.model"
+////						+ ",org.hibernate.boot.registry.selector"
+////						+ ",org.hibernate.boot.registry.selector.spi"
+////						+ ",org.hibernate.cfg"
+////						+ ",org.hibernate.engine.spi"
+////						+ ",org.hibernate.integrator.spi"
+////						+ ",org.hibernate.proxy"
+////						+ ",org.hibernate.service"
+////						+ ",org.hibernate.service.spi"
+////						+ ",org.ops4j.pax.exam.options"
+////						+ ",org.ops4j.pax.exam"
+//		);
 		probe.setHeader( Constants.BUNDLE_ACTIVATOR, "org.hibernate.osgi.test.client.OsgiTestActivator" );
 		return probe;
 	}
@@ -325,8 +190,20 @@ public class OsgiIntegrationTest {
 	// The tests
 
 	@Inject
+	protected FeaturesService featuresService;
+
+	@Inject
+	BootFinished bootFinished;
+
+	@Inject
 	@SuppressWarnings("UnusedDeclaration")
 	private BundleContext bundleContext;
+
+	@Test
+	public void testFeatureInstallation() throws Exception {
+		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-jpa" ) ) );
+		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-native" ) ) );
+	}
 
 	@Test
 	public void testJpa() throws Exception {

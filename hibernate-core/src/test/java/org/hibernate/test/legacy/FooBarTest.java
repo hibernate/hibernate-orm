@@ -4075,7 +4075,7 @@ public class FooBarTest extends LegacyTestCase {
 			throw e;
 		}
 		finally {
-			assertTrue( s.close()==null );
+			s.close();
 		}
 	}
 
@@ -4489,7 +4489,6 @@ public class FooBarTest extends LegacyTestCase {
 		tx = s.beginTransaction();
 		s.createQuery( "from Fo" ).list();
 		tx.commit();
-		assertTrue( s.close() == c );
 		c.close();
 	}
 

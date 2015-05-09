@@ -473,8 +473,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public Connection close() throws HibernateException {
-		return session.close();
+	public void close() throws HibernateException {
+		session.close();
 	}
 
 	@Override

@@ -89,7 +89,7 @@ import org.hibernate.stat.SessionStatistics;
  * @see SessionFactory
  * @author Gavin King
  */
-public interface Session extends SharedSessionContract {
+public interface Session extends SharedSessionContract, java.io.Closeable {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *
@@ -164,10 +164,9 @@ public interface Session extends SharedSessionContract {
 	 * not strictly necessary to close the session but you must at least
 	 * {@link #disconnect()} it.
 	 *
-	 * @return the connection provided by the application or null.
 	 * @throws HibernateException Indicates problems cleaning up.
 	 */
-	public Connection close() throws HibernateException;
+	public void close() throws HibernateException;
 
 	/**
 	 * Cancel the execution of the current query.

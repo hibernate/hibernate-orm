@@ -389,7 +389,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	@Override
-	public Connection close() throws HibernateException {
+	public void close() throws HibernateException {
 		LOG.trace( "Closing session" );
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed" );
@@ -402,7 +402,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		try {
 			if ( !isTransactionCoordinatorShared ) {
-				return jdbcCoordinator.close();
+				jdbcCoordinator.close();
+				return;
 			}
 			else {
 				if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
@@ -410,7 +411,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 							"On close, shared Session had before / after transaction actions that have not yet been processed"
 					);
 				}
-				return null;
+				return;
 			}
 		}
 		finally {

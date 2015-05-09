@@ -51,7 +51,7 @@ import org.hibernate.stat.Statistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactory extends Referenceable, Serializable {
+public interface SessionFactory extends Referenceable, Serializable, java.io.Closeable {
 
 	/**
 	 * Get the special options used to build the factory.

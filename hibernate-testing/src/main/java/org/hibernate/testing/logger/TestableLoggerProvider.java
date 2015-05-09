@@ -59,6 +59,11 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 		return logger;
 	}
 
+	@Override
+	public void clearMdc() {
+		MDC.clear();
+	}
+
 	public Object getMdc(String key) {
 		return MDC.get( key );
 	}

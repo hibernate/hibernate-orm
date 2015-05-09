@@ -46,7 +46,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface ScrollableResults {
+public interface ScrollableResults extends java.io.Closeable {
 	/**
 	 * Advance to the next result.
 	 *

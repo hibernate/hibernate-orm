@@ -1321,7 +1321,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		HQLQueryPlan plan = getHQLQueryPlan( query, false );
+		
+		HQLQueryPlan plan = queryParameters.getQueryPlan();
+		if (plan == null) {
+			plan = getHQLQueryPlan( query, false );
+		}
+		
 		autoFlushIfRequired( plan.getQuerySpaces() );
 		dontFlushFromFind++;
 		try {

@@ -43,6 +43,9 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			if ( java6HomeDirSetting == null ) {
 				java6HomeDirSetting = System.getProperty( "JAVA6_HOME" );
 			}
+			if ( java6HomeDirSetting == null ) {
+				java6HomeDirSetting = System.getenv( "JAVA6_HOME" );
+			}
 
 			if ( java6HomeDirSetting != null ) {
 				project.logger.info( "Using JAVA6_HOME setting [${java6HomeDirSetting}]" )

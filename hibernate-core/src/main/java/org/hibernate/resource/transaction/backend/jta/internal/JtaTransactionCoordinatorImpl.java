@@ -317,14 +317,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void afterCompletion(boolean successful, boolean delayed) {
-		if ( !transactionCoordinatorOwner.isActive() ) {
-			return;
-		}
-
 		final int statusToSend =  successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
-
-//		afterCompletionAction.doAction( this, statusToSend );
 
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
 

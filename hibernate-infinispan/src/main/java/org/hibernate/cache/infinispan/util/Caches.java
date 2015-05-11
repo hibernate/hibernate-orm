@@ -22,6 +22,7 @@
  */
 package org.hibernate.cache.infinispan.util;
 
+import java.util.Iterator;
 import java.util.concurrent.Callable;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
@@ -263,6 +264,19 @@ public class Caches {
 	public static boolean isClustered(AdvancedCache cache) {
 		return cache.getCacheConfiguration()
 				.clustering().cacheMode().isClustered();
+	}
+
+	public static void removeAll(AdvancedCache cache) {
+		try {
+			Iterator it = cache.keySet().iterator();
+			while (it.hasNext()) {
+				it.next(); // Necessary to get next element
+				it.remove();
+				}
+		} catch (UnsupportedOperationException e) {
+			// Fallback on using clear for older version
+			cache.clear();
+		}
 	}
 
 }

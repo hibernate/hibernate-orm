@@ -22,18 +22,6 @@ configurations {
 		description = 'Used in Karaf feature generation to define the Hibernate JPA dependencies'
 		transitive = false
 	}
-	hibernateEnvers {
-		description = 'Used in Karaf feature generation to define the Hibernate Envers dependencies'
-		transitive = false
-	}
-	hibernateEhcache {
-		description = 'Used in Karaf feature generation to define the Hibernate Ehcache dependencies'
-		transitive = false
-	}
-	hibernateInfinispan {
-		description = 'Used in Karaf feature generation to define the Hibernate Infinispan dependencies'
-		transitive = false
-	}
 }
 
 ext {

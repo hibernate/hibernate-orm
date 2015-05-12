@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+import java.io.IOException;
 import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -32,6 +33,7 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
 import org.infinispan.Cache;
+import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -98,7 +100,11 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 				props.put( "java.naming.factory.initial", "org.jnp.interfaces.NamingContextFactory" );
 				props.put( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
 
-				manager = new DefaultCacheManager( InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE, false );
+				try {
+					manager = new DefaultCacheManager( InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE, false );
+				} catch (CacheConfigurationException e) {
+					manager = new DefaultCacheManager( "org/hibernate/cache/infinispan/builder/infinispan-7-configs.xml", false );
+				}
 				Context ctx = new InitialContext( props );
 				bind( JNDI_NAME, manager, EmbeddedCacheManager.class, ctx );
 			}

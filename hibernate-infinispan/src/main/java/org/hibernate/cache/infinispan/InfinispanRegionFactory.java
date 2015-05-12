@@ -40,6 +40,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
+import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -317,7 +318,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	@Override
 	public void start(Settings settings, Properties properties) throws CacheException {
-		log.debug( "Starting Infinispan region factory" );
+		log.debug("Starting Infinispan region factory");
 		try {
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
 			manager = createCacheManager( properties );
@@ -372,7 +373,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	protected void stopCacheRegions() {
 		log.debug( "Clear region references" );
 		getCacheCommandFactory( manager.getCache().getAdvancedCache() )
-				.clearRegions( regionNames );
+				.clearRegions(regionNames);
 		regionNames.clear();
 	}
 
@@ -388,7 +389,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 * @return an unmodifiable map.
 	 */
 	public Map<String, TypeOverrides> getTypeOverrides() {
-		return Collections.unmodifiableMap( typeOverrides );
+		return Collections.unmodifiableMap(typeOverrides);
 	}
 
 	public Set<String> getDefinedConfigurations() {
@@ -398,7 +399,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
 		try {
 			final String configLoc = ConfigurationHelper.getString(
-					INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE
+				INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE
 			);
 			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
 			InputStream is;
@@ -412,7 +413,19 @@ public class InfinispanRegionFactory implements RegionFactory {
 				is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
 			}
 			final ParserRegistry parserRegistry = new ParserRegistry( classLoader );
-			final ConfigurationBuilderHolder holder = parserRegistry.parse( is );
+			ConfigurationBuilderHolder holder;
+			try {
+				holder = parserRegistry.parse( is );
+			} catch (CacheConfigurationException e) {
+				if (configLoc.equals(DEF_INFINISPAN_CONFIG_RESOURCE)) {
+					// Try a more recent configuration
+					String infinispan7ConfigLoc = "org/hibernate/cache/infinispan/builder/infinispan-7-configs.xml";
+					is = FileLookupFactory.newInstance().lookupFileStrict( infinispan7ConfigLoc, classLoader );
+					holder = parserRegistry.parse(is);
+				} else {
+					throw e;
+				}
+			}
 
 			// Override global jmx statistics exposure
 			final String globalStats = extractProperty( INFINISPAN_GLOBAL_STATISTICS_PROP, properties );

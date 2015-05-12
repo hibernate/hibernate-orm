@@ -35,7 +35,7 @@ import org.hibernate.JDBCException;
  *
  * @author Gavin King
  */
-public interface HibernateIterator extends Iterator {
+public interface HibernateIterator extends Iterator, java.io.Closeable {
 	/**
 	 * Close the Hibernate query result iterator
 	 *

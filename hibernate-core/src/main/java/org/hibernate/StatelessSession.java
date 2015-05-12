@@ -42,7 +42,7 @@ import java.sql.Connection;
  *
  * @author Gavin King
  */
-public interface StatelessSession extends SharedSessionContract {
+public interface StatelessSession extends SharedSessionContract, java.io.Closeable {
 	/**
 	 * Close the stateless session and release the JDBC connection.
 	 */

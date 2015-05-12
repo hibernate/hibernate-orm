@@ -78,8 +78,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			JdbcCoordinatorImpl.class.getName()
 	);
 
-	private boolean closed;
-
 	private transient LogicalConnectionImplementor logicalConnection;
 	private transient JdbcSessionOwner owner;
 	private final ConnectionReleaseMode connectionReleaseMode;
@@ -209,7 +207,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			currentBatch.release();
 		}
 		cleanup();
-		closed = true;
 		return logicalConnection.close();
 	}
 
@@ -492,7 +489,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public boolean isActive() {
-		return !closed;
+		return !sessionFactory().isClosed();
 	}
 
 	@Override

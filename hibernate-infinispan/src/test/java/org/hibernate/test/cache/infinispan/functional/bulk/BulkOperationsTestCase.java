@@ -143,10 +143,11 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 
 			List<Integer> updated = getContactsByTLF( "Updated" );
 			assertNotNull( "Got updated contacts", updated );
-			assertEquals( "Updated contacts", 5, updated.size() );
+			assertEquals("Updated contacts", 5, updated.size());
 
+			assertEquals( 10, contactSlcs.getElementCountInMemory() );
 			updateContactsWithOneManual( "Kabir", "UpdatedAgain" );
-			assertEquals( contactSlcs.getElementCountInMemory(), 0 );
+			assertEquals( 0, contactSlcs.getElementCountInMemory());
 			for ( Integer id : jbContacts ) {
 				Contact contact = getContact( id );
 				assertNotNull( "JBoss contact " + id + " exists", contact );

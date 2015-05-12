@@ -62,11 +62,6 @@ dependencies {
 
 	karafDistro "org.apache.karaf:apache-karaf:${karafVersion}@tar.gz"
 
-	hibernateEntityManager project( ':hibernate-entitymanager' )
-	hibernateEnvers project( ':hibernate-envers' )
-	hibernateEhcache project( ':hibernate-ehcache' )
-	hibernateInfinispan project( ':hibernate-infinispan' )
-
 	aries 'org.apache.aries.transaction:org.apache.aries.transaction.blueprint:1.0.0'
 	aries 'org.apache.aries.transaction:org.apache.aries.transaction.manager:1.0.1'
 }
@@ -121,6 +116,7 @@ karafFeatures {
 			description = 'Isolates all Hibernate core dependencies into a single feature'
 			projects = [
 					rootProject.childProjects.'hibernate-core',
+					rootProject.childProjects.'hibernate-entitymanager',
 					project
 			]
 			bundle {
@@ -152,14 +148,13 @@ karafFeatures {
 		hibernateJpa {
 			name = 'hibernate-jpa'
 			description = 'Defines support for using Hibernate JPA implementation in user applications/bundles in an unmanaged manner'
-			bundleDependencies = [project.configurations.hibernateEntityManager]
 			dependencyFeatureNames = ['hibernate-base']
 			projects = []
 		}
 		hibernateJpaAries {
 			name = 'hibernate-jpa-aries'
 			description = 'Defines support for using Hibernate JPA implementation in user applications/bundles in an managed manner using Aries for OSGi JPA support'
-			bundleDependencies = [project.configurations.aries, project.configurations.hibernateEntityManager]
+			bundleDependencies = [project.configurations.aries]
 			dependencyFeatureNames = ['hibernate-base']
 			projects = []
 		}
@@ -333,6 +328,10 @@ tasks.test.dependsOn tasks.generateKarafFeatures
 tasks.test.dependsOn tasks.jar
 tasks.test.dependsOn tasks.generateDependsFile
 tasks.test.dependsOn tasks.generatePaxExamEnvironmentFile
+
+// we also need to make sure that core and HEM are published before running tests
+tasks.test.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
+tasks.test.dependsOn rootProject.childProjects.'hibernate-entitymanager'.tasks.publishToMavenLocal
 
 publishing {
 	publications {

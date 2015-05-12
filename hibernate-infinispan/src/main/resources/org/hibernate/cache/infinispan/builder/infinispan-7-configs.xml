@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns="urn:infinispan:config:7.2"
+            xsi:schemaLocation="urn:infinispan:config:7.2 http://www.infinispan.org/schemas/infinispan-config-7.2.xsd">
+
+   <jgroups>
+      <stack-file name="hibernate-jgroups" path="${hibernate.cache.infinispan.jgroups_cfg:default-configs/default-jgroups-tcp.xml}"/>
+   </jgroups>
+
+   <cache-container name="SampleCacheManager" statistics="false" default-cache="the-default-cache" shutdown-hook="DEFAULT">
+      <transport stack="hibernate-jgroups" cluster="infinispan-hibernate-cluster"/>
+
+      <local-cache name="the-default-cache" statistics="false" />
+
+      <!-- Default configuration is appropriate for entity/collection caching. -->
+      <invalidation-cache name="entity" mode="SYNC" remote-timeout="20000">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+      </invalidation-cache>
+
+      <!-- Default configuration is appropriate for entity/collection caching. -->
+      <invalidation-cache name="entity-repeatable" mode="SYNC" remote-timeout="20000">
+         <locking isolation="REPEATABLE_READ" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+      </invalidation-cache>
+
+      <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
+      <replicated-cache name="replicated-entity" mode="SYNC" remote-timeout="20000">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+         <state-transfer enabled="false"/>
+      </replicated-cache>
+
+      <!-- A config appropriate for query caching. Does not replicate queries. -->
+      <local-cache name="local-query">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+      </local-cache>
+
+      <!-- A query cache that replicates queries. Replication is asynchronous. -->
+      <replicated-cache name="replicated-query" mode="ASYNC">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
+         <eviction max-entries="10000" strategy="LRU"/>
+         <expiration max-idle="100000" interval="5000"/>
+         <persistence passivation="false">
+            <!-- State transfer forces all replication calls to be synchronous,
+                 so for calls to remain async, use a cluster cache loader instead -->
+            <cluster-loader remote-timeout="20000"/>
+         </persistence>
+      </replicated-cache>
+
+      <!-- Optimized for timestamp caching. A clustered timestamp cache
+           is required if query caching is used, even if the query cache
+           itself is configured with CacheMode=LOCAL. -->
+      <replicated-cache name="timestamps" mode="ASYNC">
+         <locking isolation="READ_COMMITTED" concurrency-level="1000" acquire-timeout="15000" striping="false"/>
+         <!-- Explicitly non transactional -->
+         <transaction mode="NONE"/>
+         <!--  Don't ever evict modification timestamps -->
+         <eviction strategy="NONE"/>
+         <expiration interval="0"/>
+         <persistence passivation="false">
+            <!-- State transfer forces all replication calls to be synchronous,
+                 so for calls to remain async, use a cluster cache loader instead -->
+            <cluster-loader remote-timeout="20000"/>
+         </persistence>
+         <state-transfer enabled="false"/>
+      </replicated-cache>
+   </cache-container>
+
+</infinispan>

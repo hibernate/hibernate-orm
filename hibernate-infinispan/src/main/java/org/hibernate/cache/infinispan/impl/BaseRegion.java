@@ -174,13 +174,18 @@ public abstract class BaseRegion implements Region {
 							log.tracef("Transaction, clearing one element at the time");
 							Caches.removeAll(localAndSkipLoadCache);
 						} else {
-							Caches.withinTx( cache, new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									localAndSkipLoadCache.clear();
-									return null;
-								}
-							} );
+							try {
+								Caches.withinTx( cache, new Callable<Void>() {
+									@Override
+									public Void call() throws Exception {
+										localAndSkipLoadCache.clear();
+										return null;
+									}
+								} );
+							} catch (Exception e) {
+								// If get any exceptions, try clearing directly
+								localAndSkipLoadCache.clear();
+							}
 						}
 
 						log.tracef("Transition state from CLEARING to VALID");

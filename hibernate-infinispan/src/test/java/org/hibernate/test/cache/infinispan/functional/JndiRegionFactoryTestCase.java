@@ -98,7 +98,13 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 				props.put( "java.naming.factory.initial", "org.jnp.interfaces.NamingContextFactory" );
 				props.put( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
 
-				manager = new DefaultCacheManager( InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE, false );
+				final String cfgFileName = (String) mappings.getConfigurationProperties().get(
+						InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP
+				);
+				manager = new DefaultCacheManager(
+						cfgFileName == null ? InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE : cfgFileName,
+						false
+				);
 				Context ctx = new InitialContext( props );
 				bind( JNDI_NAME, manager, EmbeddedCacheManager.class, ctx );
 			}

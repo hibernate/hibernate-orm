@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,6 +27,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -70,7 +71,7 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 				}
 
 				if ( ! file.exists() ) {
-					throw new IllegalArgumentException(
+					throw new ArchiveException(
 							String.format(
 									"File [%s] referenced by given URL [%s] does not exist",
 									filePart,
@@ -80,7 +81,7 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 				}
 			}
 			catch (URISyntaxException e) {
-				throw new IllegalArgumentException(
+				throw new ArchiveException(
 						"Unable to visit JAR " + url + ". Cause: " + e.getMessage(), e
 				);
 			}

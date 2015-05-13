@@ -32,6 +32,7 @@ import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 
@@ -68,7 +69,7 @@ public class InfinispanRegionFactoryTestCase  {
    public void testConfigurationProcessing() {
       final String person = "com.acme.Person";
       final String addresses = "com.acme.Person.addresses";
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.cfg", "person-cache");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.eviction.strategy", "LRU");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.eviction.wake_up_interval", "2000");
@@ -117,7 +118,7 @@ public class InfinispanRegionFactoryTestCase  {
       final String car = "com.acme.Car";
       final String addresses = "com.acme.Person.addresses";
       final String parts = "com.acme.Car.parts";
-      Properties p = new Properties();
+      Properties p = createProperties();
       // First option, cache defined for entity and overrides for generic entity data type and entity itself.
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.cfg", "person-cache");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.eviction.strategy", "LRU");
@@ -228,7 +229,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildEntityCollectionRegionOverridesOnly() {
       AdvancedCache cache;
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.entity.eviction.strategy", "LIRS");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.wake_up_interval", "3000");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.max_entries", "30000");
@@ -264,7 +265,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildEntityRegionPersonPlusEntityOverridesWithoutCfg() {
       final String person = "com.acme.Person";
-      Properties p = new Properties();
+      Properties p = createProperties();
       // Third option, no cache defined for entity and overrides for generic entity data type and entity itself.
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.eviction.strategy", "LRU");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.expiration.lifespan", "60000");
@@ -295,7 +296,7 @@ public class InfinispanRegionFactoryTestCase  {
 
    @Test(expected = CacheException.class)
    public void testTimestampValidation() {
-      Properties p = new Properties();
+      Properties p = createProperties();
       final DefaultCacheManager manager = new DefaultCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder().build());
       try {
          InfinispanRegionFactory factory = createRegionFactory(manager, p);
@@ -312,7 +313,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildDefaultTimestampsRegion() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
-      Properties p = new Properties();
+      Properties p = createProperties();
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
          assertTrue(factory.getDefinedConfigurations().contains("timestamps"));
@@ -333,7 +334,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildDiffCacheNameTimestampsRegion() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "unrecommended-timestamps");
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
@@ -360,7 +361,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildTimestamRegionWithCacheNameOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "mytimestamps-cache");
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
@@ -374,7 +375,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildTimestamRegionWithFifoEvictionOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "mytimestamps-cache");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.wake_up_interval", "3000");
@@ -394,7 +395,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildTimestamRegionWithNoneEvictionOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "timestamps-none-eviction");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.strategy", "NONE");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.wake_up_interval", "3000");
@@ -411,7 +412,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildQueryRegion() {
       final String query = "org.hibernate.cache.internal.StandardQueryCache";
-      Properties p = new Properties();
+      Properties p = createProperties();
       InfinispanRegionFactory factory = createRegionFactory(p);
       try {
          assertTrue(factory.getDefinedConfigurations().contains("local-query"));
@@ -428,7 +429,7 @@ public class InfinispanRegionFactoryTestCase  {
    @Test
    public void testBuildQueryRegionWithCustomRegionName() {
       final String queryRegionName = "myquery";
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.myquery.cfg", "timestamps-none-eviction");
       p.setProperty("hibernate.cache.infinispan.myquery.eviction.strategy", "LIRS");
       p.setProperty("hibernate.cache.infinispan.myquery.eviction.wake_up_interval", "2222");
@@ -450,7 +451,7 @@ public class InfinispanRegionFactoryTestCase  {
    }
    @Test
    public void testEnableStatistics() {
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.statistics", "true");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.expiration.lifespan", "60000");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.expiration.max_idle", "30000");
@@ -501,7 +502,7 @@ public class InfinispanRegionFactoryTestCase  {
 
    @Test
    public void testDisableStatistics() {
-      Properties p = new Properties();
+      Properties p = createProperties();
       p.setProperty("hibernate.cache.infinispan.statistics", "false");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.expiration.lifespan", "60000");
       p.setProperty("hibernate.cache.infinispan.com.acme.Person.expiration.max_idle", "30000");
@@ -580,4 +581,14 @@ public class InfinispanRegionFactoryTestCase  {
       return factory;
    }
 
+   private static Properties createProperties() {
+      final Properties properties = new Properties();
+      // If configured in the environment, add configuration file name to properties.
+      final String cfgFileName =
+              (String) Environment.getProperties().get( InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP );
+      if ( cfgFileName != null ) {
+         properties.put( InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP, cfgFileName );
+      }
+      return properties;
+   }
 }

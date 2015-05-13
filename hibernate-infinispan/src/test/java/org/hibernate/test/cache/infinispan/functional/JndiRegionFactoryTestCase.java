@@ -38,6 +38,7 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.Statistics;
 
@@ -100,7 +101,13 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 				props.put( "java.naming.factory.initial", "org.jnp.interfaces.NamingContextFactory" );
 				props.put( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
 
-				manager = new DefaultCacheManager( InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE, false );
+				final String cfgFileName = (String) ssr.getService( ConfigurationService.class ).getSettings().get(
+						InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP
+				);
+				manager = new DefaultCacheManager(
+						cfgFileName == null ? InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE : cfgFileName,
+						false
+				);
 				Context ctx = new InitialContext( props );
 				bind( JNDI_NAME, manager, EmbeddedCacheManager.class, ctx );
 			}

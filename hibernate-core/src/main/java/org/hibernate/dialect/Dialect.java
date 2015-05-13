@@ -72,6 +72,7 @@ import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -592,7 +593,9 @@ public abstract class Dialect implements ConversionContext {
 				return null;
 			}
 			try {
-				final LobCreator lobCreator = session.getFactory().getJdbcServices().getLobCreator( session );
+				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator(
+						session
+				);
 				return original == null
 						? lobCreator.createBlob( ArrayHelper.EMPTY_BYTE_ARRAY )
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
@@ -608,7 +611,7 @@ public abstract class Dialect implements ConversionContext {
 				return null;
 			}
 			try {
-				final LobCreator lobCreator = session.getFactory().getJdbcServices().getLobCreator( session );
+				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator( session );
 				return original == null
 						? lobCreator.createClob( "" )
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
@@ -624,7 +627,7 @@ public abstract class Dialect implements ConversionContext {
 				return null;
 			}
 			try {
-				final LobCreator lobCreator = session.getFactory().getJdbcServices().getLobCreator( session );
+				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator( session );
 				return original == null
 						? lobCreator.createNClob( "" )
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );

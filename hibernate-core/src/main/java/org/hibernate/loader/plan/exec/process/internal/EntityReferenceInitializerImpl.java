@@ -32,6 +32,7 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.engine.internal.TwoPhaseLoad;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -336,7 +337,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			context.getProcessingState( entityReference ).registerHydratedState( values );
 		}
 		catch (SQLException e) {
-			throw context.getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
 					e,
 					"Could not read entity state from ResultSet : " + entityKey
 			);
@@ -349,7 +350,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 					: null;
 		}
 		catch (SQLException e) {
-			throw context.getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
 					e,
 					"Could not read entity row-id from ResultSet : " + entityKey
 			);
@@ -415,7 +416,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			);
 		}
 		catch (SQLException e) {
-			throw context.getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
 					e,
 					"Could not read discriminator value from ResultSet"
 			);
@@ -486,7 +487,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				);
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+				throw session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(
 						e,
 						"Could not read version value from result set"
 				);

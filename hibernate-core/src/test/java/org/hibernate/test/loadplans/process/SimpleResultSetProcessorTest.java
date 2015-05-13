@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
@@ -86,7 +87,11 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 					new Work() {
 						@Override
 						public void execute(Connection connection) throws SQLException {
-							( (SessionImplementor) workSession ).getFactory().getJdbcServices().getSqlStatementLogger().logStatement( sql );
+							( (SessionImplementor) workSession ).getFactory()
+									.getServiceRegistry()
+									.getService( JdbcServices.class )
+									.getSqlStatementLogger()
+									.logStatement( sql );
 							PreparedStatement ps = connection.prepareStatement( sql );
 							ps.setInt( 1, 1 );
 							ResultSet resultSet = ps.executeQuery();

@@ -64,14 +64,14 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @return The tenant identifier of this session
 	 */
-	public String getTenantIdentifier();
+	String getTenantIdentifier();
 
 	/**
 	 * Provides access to JDBC connections
 	 *
 	 * @return The contract for accessing JDBC connections.
 	 */
-	public JdbcConnectionAccess getJdbcConnectionAccess();
+	JdbcConnectionAccess getJdbcConnectionAccess();
 
 	/**
 	 * Hide the changing requirements of entity key creation
@@ -81,7 +81,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @return The entity key
 	 */
-	public EntityKey generateEntityKey(Serializable id, EntityPersister persister);
+	EntityKey generateEntityKey(Serializable id, EntityPersister persister);
 
 	/**
 	 * Hide the changing requirements of cache key creation.
@@ -92,20 +92,20 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @return The cache key
 	 */
-	public CacheKey generateCacheKey(Serializable id, final Type type, final String entityOrRoleName);
+	CacheKey generateCacheKey(Serializable id, final Type type, final String entityOrRoleName);
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.
 	 *
 	 * @return The interceptor.
 	 */
-	public Interceptor getInterceptor();
+	Interceptor getInterceptor();
 
 	/**
 	 * Enable/disable automatic cache clearing from after transaction
 	 * completion (for EJB3)
 	 */
-	public void setAutoClear(boolean enabled);
+	void setAutoClear(boolean enabled);
 
 	/**
 	 * Disable automatic transaction joining.  The really only has any effect for CMT transactions.  The default
@@ -114,18 +114,18 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * <p/>
 	 * See javax.persistence.EntityManager#joinTransaction
 	 */
-	public void disableTransactionAutoJoin();
+	void disableTransactionAutoJoin();
 
 	/**
 	 * Does this <tt>Session</tt> have an active Hibernate transaction
 	 * or is there a JTA transaction in progress?
 	 */
-	public boolean isTransactionInProgress();
+	boolean isTransactionInProgress();
 
 	/**
 	 * Initialize the collection (if not already initialized)
 	 */
-	public void initializeCollection(PersistentCollection collection, boolean writing)
+	void initializeCollection(PersistentCollection collection, boolean writing)
 			throws HibernateException;
 
 	/**
@@ -140,59 +140,59 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * <p/>
 	 * When <tt>eager</tt> is enabled, the object is eagerly fetched
 	 */
-	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
+	Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
 			throws HibernateException;
 
 	/**
 	 * Load an instance immediately. This method is only called when lazily initializing a proxy.
 	 * Do not return the proxy.
 	 */
-	public Object immediateLoad(String entityName, Serializable id) throws HibernateException;
+	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
 
 	/**
 	 * System time before the start of the transaction
 	 */
-	public long getTimestamp();
+	long getTimestamp();
 
 	/**
 	 * Get the creating <tt>SessionFactoryImplementor</tt>
 	 */
-	public SessionFactoryImplementor getFactory();
+	SessionFactoryImplementor getFactory();
 
 	/**
 	 * Execute a <tt>find()</tt> query
 	 */
-	public List list(String query, QueryParameters queryParameters) throws HibernateException;
+	List list(String query, QueryParameters queryParameters) throws HibernateException;
 
 	/**
 	 * Execute an <tt>iterate()</tt> query
 	 */
-	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
+	Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
 
 	/**
 	 * Execute a <tt>scroll()</tt> query
 	 */
-	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException;
+	ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException;
 
 	/**
 	 * Execute a criteria query
 	 */
-	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode);
+	ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode);
 
 	/**
 	 * Execute a criteria query
 	 */
-	public List list(Criteria criteria);
+	List list(Criteria criteria);
 
 	/**
 	 * Execute a filter
 	 */
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
+	List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
 
 	/**
 	 * Iterate a filter
 	 */
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
+	Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
 			throws HibernateException;
 
 	/**
@@ -201,45 +201,45 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
+	EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
 
 	/**
 	 * Get the entity instance associated with the given <tt>Key</tt>,
 	 * calling the Interceptor if necessary
 	 */
-	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
+	Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
 
 	/**
 	 * Return the identifier of the persistent object, or null if
 	 * not associated with the session
 	 */
-	public Serializable getContextEntityIdentifier(Object object);
+	Serializable getContextEntityIdentifier(Object object);
 
 	/**
 	 * The best guess entity name for an entity not in an association
 	 */
-	public String bestGuessEntityName(Object object);
+	String bestGuessEntityName(Object object);
 
 	/**
 	 * The guessed entity name for an entity not in an association
 	 */
-	public String guessEntityName(Object entity) throws HibernateException;
+	String guessEntityName(Object entity) throws HibernateException;
 
 	/**
 	 * Instantiate the entity class, initializing with the given identifier
 	 */
-	public Object instantiate(String entityName, Serializable id) throws HibernateException;
+	Object instantiate(String entityName, Serializable id) throws HibernateException;
 
 	/**
 	 * Execute an SQL Query
 	 */
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 			throws HibernateException;
 
 	/**
 	 * Execute an SQL Query
 	 */
-	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+	ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 			throws HibernateException;
 
 	/**
@@ -252,7 +252,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @throws HibernateException
 	 */
-	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
+	List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
 			throws HibernateException;
 
 	/**
@@ -265,16 +265,16 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @throws HibernateException
 	 */
-	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
+	ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
 
-	public int getDontFlushFromFind();
+	int getDontFlushFromFind();
 
 	//TODO: temporary
 
 	/**
 	 * Get the persistence context for this session
 	 */
-	public PersistenceContext getPersistenceContext();
+	PersistenceContext getPersistenceContext();
 
 	/**
 	 * Execute a HQL update or delete query
@@ -290,44 +290,44 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 
 	// copied from Session:
 
-	public CacheMode getCacheMode();
+	CacheMode getCacheMode();
 
-	public void setCacheMode(CacheMode cm);
+	void setCacheMode(CacheMode cm);
 
-	public boolean isOpen();
+	boolean isOpen();
 
-	public boolean isConnected();
+	boolean isConnected();
 
-	public FlushMode getFlushMode();
+	FlushMode getFlushMode();
 
-	public void setFlushMode(FlushMode fm);
+	void setFlushMode(FlushMode fm);
 
-	public Connection connection();
+	Connection connection();
 
-	public void flush();
+	void flush();
 
 	/**
 	 * Get a Query instance for a named query or named native SQL query
 	 */
-	public Query getNamedQuery(String name);
+	Query getNamedQuery(String name);
 
 	/**
 	 * Get a Query instance for a named native SQL query
 	 */
-	public Query getNamedSQLQuery(String name);
+	Query getNamedSQLQuery(String name);
 
-	public boolean isEventSource();
+	boolean isEventSource();
 
-	public void afterScrollOperation();
+	void afterScrollOperation();
 
 	/**
 	 * Retrieve access to the session's transaction coordinator.
 	 *
 	 * @return The transaction coordinator.
 	 */
-	public TransactionCoordinator getTransactionCoordinator();
+	TransactionCoordinator getTransactionCoordinator();
 
-	public JdbcCoordinator getJdbcCoordinator();
+	JdbcCoordinator getJdbcCoordinator();
 
 	/**
 	 * Determine whether the session is closed.  Provided separately from
@@ -337,11 +337,11 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @return True if the session is closed; false otherwise.
 	 */
-	public boolean isClosed();
+	boolean isClosed();
 
-	public boolean shouldAutoClose();
+	boolean shouldAutoClose();
 
-	public boolean isAutoCloseSessionEnabled();
+	boolean isAutoCloseSessionEnabled();
 
 	/**
 	 * Get the load query influencers associated with this session.
@@ -349,7 +349,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * @return the load query influencers associated with this session;
 	 *         should never be null.
 	 */
-	public LoadQueryInfluencers getLoadQueryInfluencers();
+	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	/**
 	 * Used from EntityManager
@@ -369,5 +369,5 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 */
 	SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition);
 
-	public SessionEventListenerManager getEventListenerManager();
+	SessionEventListenerManager getEventListenerManager();
 }

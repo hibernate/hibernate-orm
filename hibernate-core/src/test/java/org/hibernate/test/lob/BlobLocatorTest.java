@@ -22,21 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.lob;
+
 import java.sql.Blob;
 
-import junit.framework.AssertionFailedError;
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.testing.SkipForDialect;
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -76,7 +77,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
+		entity = s.get( LobHolder.class, entity.getId() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
 		s.getTransaction().commit();
@@ -86,7 +87,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		if ( getDialect().supportsLobValueChangePropogation() ) {
 			s = openSession();
 			s.beginTransaction();
-			entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
+			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
 			entity.getBlobLocator().truncate( 1 );
 			entity.getBlobLocator().setBytes( 1, changed );
 			s.getTransaction().commit();
@@ -94,7 +95,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 			s = openSession();
 			s.beginTransaction();
-			entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
+			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
 			assertNotNull( entity.getBlobLocator() );
 			Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 			assertEquals( changed, extractData( entity.getBlobLocator() ) );
@@ -107,7 +108,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// test mutation via supplying a new clob locator instance...
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
+		entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
 		assertNotNull( entity.getBlobLocator() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
@@ -118,7 +119,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// test empty blob
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
+		entity = s.get( LobHolder.class, entity.getId() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( changed, extractData( entity.getBlobLocator() ) );
 		entity.setBlobLocator( s.getLobHelper().createBlob( empty ) );
@@ -127,7 +128,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
+		entity = s.get( LobHolder.class, entity.getId() );
 		if ( entity.getBlobLocator() != null) {
 			Assert.assertEquals( empty.length, entity.getBlobLocator().length() );
 			assertEquals( empty, extractData( entity.getBlobLocator() ) );
@@ -162,7 +163,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// at that point it is unbounded...
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
+		entity = s.get( LobHolder.class, entity.getId() );
 		s.getTransaction().commit();
 		s.close();
 

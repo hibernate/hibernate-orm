@@ -565,8 +565,13 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	private List<X> list() {
 		if (getEntityGraphQueryHint() != null) {
 			SessionImplementor sessionImpl = (SessionImplementor) getEntityManager().getSession();
-			HQLQueryPlan entityGraphQueryPlan = new HQLQueryPlan( getHibernateQuery().getQueryString(), false,
-					sessionImpl.getEnabledFilters(), sessionImpl.getFactory(), getEntityGraphQueryHint() );
+			HQLQueryPlan entityGraphQueryPlan = new HQLQueryPlan(
+					getHibernateQuery().getQueryString(),
+					false,
+					sessionImpl.getLoadQueryInfluencers().getEnabledFilters(),
+					sessionImpl.getFactory(),
+					getEntityGraphQueryHint()
+			);
 			// Safe to assume QueryImpl at this point.
 			unwrap( org.hibernate.internal.QueryImpl.class ).setQueryPlan( entityGraphQueryPlan );
 		}

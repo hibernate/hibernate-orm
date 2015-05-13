@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -663,7 +664,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						Statement stmt = ((SessionImplementor)s).getJdbcCoordinator().getStatementPreparer().createStatement();
+						Statement stmt = ( (SessionImplementor) s ).getJdbcCoordinator()
+								.getStatementPreparer()
+								.createStatement();
 						String create_function = "CREATE FUNCTION SQLUser.TestInterSystemsFunctionsClass_spLock\n" +
 								"     ( INOUT pHandle %SQLProcContext, \n" +
 								"       ROWID INTEGER \n" +
@@ -675,7 +678,10 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 								"    {\n" +
 								"        q 0\n" +
 								"     }";
-						((SessionImplementor)s).getJdbcCoordinator().getResultSetReturn().executeUpdate( stmt, create_function );
+						( (SessionImplementor) s ).getJdbcCoordinator().getResultSetReturn().executeUpdate(
+								stmt,
+								create_function
+						);
 					}
 				}
 		);
@@ -684,7 +690,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
         s.beginTransaction();
 
         TestInterSystemsFunctionsClass object = new TestInterSystemsFunctionsClass( Long.valueOf( 10 ) );
-        object.setDateText("1977-07-03");
+        object.setDateText( "1977-07-03" );
         object.setDate1( testvalue );
         object.setDate3( testvalue3 );
         s.save( object );
@@ -693,9 +699,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
         Session s2 = openSession();
         s2.beginTransaction();
-        TestInterSystemsFunctionsClass test = (TestInterSystemsFunctionsClass) s2.get(TestInterSystemsFunctionsClass.class, Long.valueOf(10));
+        TestInterSystemsFunctionsClass test = s2.get(TestInterSystemsFunctionsClass.class, 10L );
         assertTrue( test.getDate1().equals(testvalue));
-        test = (TestInterSystemsFunctionsClass) s2.get(TestInterSystemsFunctionsClass.class, Long.valueOf(10), LockMode.UPGRADE);
+        test = (TestInterSystemsFunctionsClass) s2.byId( TestInterSystemsFunctionsClass.class ).with( LockOptions.NONE ).load( 10L );
         assertTrue( test.getDate1().equals(testvalue));
         Date value = (Date) s2.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
 				.list()

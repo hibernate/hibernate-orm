@@ -42,6 +42,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
@@ -1100,13 +1101,13 @@ public class ParentChildTest extends LegacyTestCase {
 		Simple s4 = new Simple( Long.valueOf(4) );
 		s4.setCount(4);
 		Simple s5 = new Simple( Long.valueOf(5) );
-		s5.setCount(5);
+		s5.setCount( 5 );
 		s.save( s1 );
 		s.save( s2 );
 		s.save( s3 );
 		s.save( s4 );
 		s.save( s5 );
-		assertTrue( s.getCurrentLockMode(s1)==LockMode.WRITE );
+		assertTrue( s.getCurrentLockMode( s1 ) == LockMode.WRITE );
 		tx.commit();
 		s.close();
 
@@ -1118,9 +1119,9 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(s2)==LockMode.READ );
 		s3 = (Simple) s.load(Simple.class, new Long(3), LockMode.UPGRADE);
 		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
-		s4 = (Simple) s.get(Simple.class, new Long(4), LockMode.UPGRADE_NOWAIT);
+		s4 = (Simple) s.byId( Simple.class ).with( new LockOptions( LockMode.UPGRADE_NOWAIT ) ).load( 4L );
 		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
-		s5 = (Simple) s.get(Simple.class, new Long(5), LockMode.UPGRADE_SKIPLOCKED);
+		s5 = (Simple) s.byId( Simple.class ).with( new LockOptions( LockMode.UPGRADE_SKIPLOCKED ) ).load( 5L );
 		assertTrue( s.getCurrentLockMode(s5)==LockMode.UPGRADE_SKIPLOCKED );
 
 		s1 = (Simple) s.load(Simple.class, new Long(1), LockMode.UPGRADE); //upgrade

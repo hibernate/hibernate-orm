@@ -25,12 +25,6 @@ package org.hibernate.test.locking;
 
 import java.util.concurrent.TimeoutException;
 
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.testing.SkipForDialects;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -38,11 +32,14 @@ import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
+
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.async.Executable;
 import org.hibernate.testing.async.TimedExecutor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -55,7 +52,7 @@ import static org.junit.Assert.fail;
 @TestForIssue( jiraKey = "HHH-5275")
 @SkipForDialects( {
 @SkipForDialect(value=SybaseASE15Dialect.class, strictMatching=true,
-		comment = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820"),
+		comment = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
 })
 public class LockModeTest extends BaseCoreFunctionalTestCase {
 	private Long id;
@@ -83,7 +80,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		Session s1 = sessionFactory().openSession();
 		s1.beginTransaction();
 		try {
-			A it = (A) s1.get( A.class, id, LockMode.PESSIMISTIC_WRITE );
+			A it = (A) s1.byId( A.class ).with( LockOptions.UPGRADE ).load( id );
 			// make sure we got it
 			assertNotNull( it );
 

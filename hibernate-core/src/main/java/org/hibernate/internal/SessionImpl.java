@@ -23,8 +23,6 @@
  */
 package org.hibernate.internal;
 
-import javax.persistence.EntityNotFoundException;
-import javax.transaction.SystemException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -44,10 +42,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityNotFoundException;
+import javax.transaction.SystemException;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -142,7 +139,6 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutor;
@@ -164,7 +160,8 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
-import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Concrete implementation of a Session.
@@ -1022,7 +1019,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	@Override
-	public IdentifierLoadAccessImpl byId(Class entityClass) {
+	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
 		return new IdentifierLoadAccessImpl( entityClass );
 	}
 
@@ -1250,7 +1247,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		finally {
 			dontFlushFromFind--;
-			afterOperation(success);
+			afterOperation( success );
 			delayedAfterCompletion();
 		}
 		return results;
@@ -1503,12 +1500,22 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			if ( roleAfterFlush == null ) {
 				throw new QueryException( "The collection was unreferenced" );
 			}
-			plan = factory.getQueryPlanCache().getFilterQueryPlan( filter, roleAfterFlush.getRole(), shallow, getEnabledFilters() );
+			plan = factory.getQueryPlanCache().getFilterQueryPlan(
+					filter,
+					roleAfterFlush.getRole(),
+					shallow,
+					getLoadQueryInfluencers().getEnabledFilters()
+			);
 		}
 		else {
 			// otherwise, we only need to flush if there are in-memory changes
 			// to the queried tables
-			plan = factory.getQueryPlanCache().getFilterQueryPlan( filter, roleBeforeFlush.getRole(), shallow, getEnabledFilters() );
+			plan = factory.getQueryPlanCache().getFilterQueryPlan(
+					filter,
+					roleBeforeFlush.getRole(),
+					shallow,
+					getLoadQueryInfluencers().getEnabledFilters()
+			);
 			if ( autoFlushIfRequired( plan.getQuerySpaces() ) ) {
 				// might need to run a different filter entirely after the flush
 				// because the collection role may have changed
@@ -1518,7 +1525,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 					if ( roleAfterFlush == null ) {
 						throw new QueryException( "The collection was dereferenced" );
 					}
-					plan = factory.getQueryPlanCache().getFilterQueryPlan( filter, roleAfterFlush.getRole(), shallow, getEnabledFilters() );
+					plan = factory.getQueryPlanCache().getFilterQueryPlan(
+							filter,
+							roleAfterFlush.getRole(),
+							shallow,
+							getLoadQueryInfluencers().getEnabledFilters()
+					);
 				}
 			}
 		}
@@ -2080,43 +2092,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		loadQueryInfluencers.disableFilter( filterName );
 	}
 
-	@Override
-	public Object getFilterParameterValue(String filterParameterName) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		return loadQueryInfluencers.getFilterParameterValue( filterParameterName );
-	}
-
-	@Override
-	public Type getFilterParameterType(String filterParameterName) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		return loadQueryInfluencers.getFilterParameterType( filterParameterName );
-	}
-
-	@Override
-	public Map getEnabledFilters() {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		return loadQueryInfluencers.getEnabledFilters();
-	}
-
-
-	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String getFetchProfile() {
-		checkTransactionSynchStatus();
-		return loadQueryInfluencers.getInternalFetchProfile();
-	}
-
-	@Override
-	public void setFetchProfile(String fetchProfile) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		loadQueryInfluencers.setInternalFetchProfile( fetchProfile );
-	}
-
 
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2542,7 +2517,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class IdentifierLoadAccessImpl implements IdentifierLoadAccess {
+	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
 
@@ -2554,22 +2529,23 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			this( locateEntityPersister( entityName ) );
 		}
 
-		private IdentifierLoadAccessImpl(Class entityClass) {
-			this( entityClass.getName() );
+		private IdentifierLoadAccessImpl(Class<T> entityClass) {
+			this( locateEntityPersister( entityClass ) );
 		}
 
 		@Override
-		public final IdentifierLoadAccessImpl with(LockOptions lockOptions) {
+		public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
 			this.lockOptions = lockOptions;
 			return this;
 		}
 
 		@Override
-		public final Object getReference(Serializable id) {
+		@SuppressWarnings("unchecked")
+		public final T getReference(Serializable id) {
 			if ( this.lockOptions != null ) {
 				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.LOAD );
-				return event.getResult();
+				return (T) event.getResult();
 			}
 
 			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this );
@@ -2580,7 +2556,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 					getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityPersister.getEntityName(), id );
 				}
 				success = true;
-				return event.getResult();
+				return (T) event.getResult();
 			}
 			finally {
 				afterOperation( success );
@@ -2588,11 +2564,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		public final Object load(Serializable id) {
+		@SuppressWarnings("unchecked")
+		public final T load(Serializable id) {
 			if ( this.lockOptions != null ) {
 				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.GET );
-				return event.getResult();
+				return (T) event.getResult();
 			}
 
 			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this );
@@ -2607,19 +2584,19 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			finally {
 				afterOperation( success );
 			}
-			return event.getResult();
+			return (T) event.getResult();
 		}
+	}
+
+	private EntityPersister locateEntityPersister(Class entityClass) {
+		return factory.locateEntityPersister( entityClass );
 	}
 
 	private EntityPersister locateEntityPersister(String entityName) {
-		final EntityPersister entityPersister = factory.getEntityPersister( entityName );
-		if ( entityPersister == null ) {
-			throw new HibernateException( "Unable to locate persister: " + entityName );
-		}
-		return entityPersister;
+		return factory.locateEntityPersister( entityName );
 	}
 
-	private abstract class BaseNaturalIdLoadAccessImpl  {
+	private abstract class BaseNaturalIdLoadAccessImpl<T>  {
 		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
 		private boolean synchronizationEnabled = true;
@@ -2634,15 +2611,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			}
 		}
 
-		private BaseNaturalIdLoadAccessImpl(String entityName) {
-			this( locateEntityPersister( entityName ) );
-		}
-
-		private BaseNaturalIdLoadAccessImpl(Class entityClass) {
-			this( entityClass.getName() );
-		}
-
-		public BaseNaturalIdLoadAccessImpl with(LockOptions lockOptions) {
+		public BaseNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
 			this.lockOptions = lockOptions;
 			return this;
 		}
@@ -2726,7 +2695,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class NaturalIdLoadAccessImpl extends BaseNaturalIdLoadAccessImpl implements NaturalIdLoadAccess {
+	private class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
 		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
 
 		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
@@ -2738,43 +2707,45 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		private NaturalIdLoadAccessImpl(Class entityClass) {
-			this( entityClass.getName() );
+			this( locateEntityPersister( entityClass ) );
 		}
 		
 		@Override
-		public NaturalIdLoadAccessImpl with(LockOptions lockOptions) {
-			return (NaturalIdLoadAccessImpl) super.with( lockOptions );
+		public NaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
+			return (NaturalIdLoadAccessImpl<T>) super.with( lockOptions );
 		}
 
 		@Override
-		public NaturalIdLoadAccess using(String attributeName, Object value) {
+		public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
 			naturalIdParameters.put( attributeName, value );
 			return this;
 		}
 
 		@Override
-		public NaturalIdLoadAccessImpl setSynchronizationEnabled(boolean synchronizationEnabled) {
+		public NaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
 			super.synchronizationEnabled( synchronizationEnabled );
 			return this;
 		}
 
 		@Override
-		public final Object getReference() {
+		@SuppressWarnings("unchecked")
+		public final T getReference() {
 			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
 			}
-			return this.getIdentifierLoadAccess().getReference( entityId );
+			return (T) this.getIdentifierLoadAccess().getReference( entityId );
 		}
 
 		@Override
-		public final Object load() {
+		@SuppressWarnings("unchecked")
+		public final T load() {
 			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
 			}
 			try {
-				return this.getIdentifierLoadAccess().load( entityId );
+				return (T) this.getIdentifierLoadAccess().load( entityId );
 			}
 			catch (EntityNotFoundException enf) {
 				// OK
@@ -2786,7 +2757,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class SimpleNaturalIdLoadAccessImpl extends BaseNaturalIdLoadAccessImpl implements SimpleNaturalIdLoadAccess {
+	private class SimpleNaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements SimpleNaturalIdLoadAccess<T> {
 		private final String naturalIdAttributeName;
 
 		private SimpleNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
@@ -2807,12 +2778,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		private SimpleNaturalIdLoadAccessImpl(Class entityClass) {
-			this( entityClass.getName() );
+			this( locateEntityPersister( entityClass ) );
 		}
 
 		@Override
-		public final SimpleNaturalIdLoadAccessImpl with(LockOptions lockOptions) {
-			return (SimpleNaturalIdLoadAccessImpl) super.with( lockOptions );
+		public final SimpleNaturalIdLoadAccessImpl<T> with(LockOptions lockOptions) {
+			return (SimpleNaturalIdLoadAccessImpl<T>) super.with( lockOptions );
 		}
 		
 		private Map<String, Object> getNaturalIdParameters(Object naturalIdValue) {
@@ -2820,28 +2791,30 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		public SimpleNaturalIdLoadAccessImpl setSynchronizationEnabled(boolean synchronizationEnabled) {
+		public SimpleNaturalIdLoadAccessImpl<T> setSynchronizationEnabled(boolean synchronizationEnabled) {
 			super.synchronizationEnabled( synchronizationEnabled );
 			return this;
 		}
 
 		@Override
-		public Object getReference(Object naturalIdValue) {
+		@SuppressWarnings("unchecked")
+		public T getReference(Object naturalIdValue) {
 			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
 			if ( entityId == null ) {
 				return null;
 			}
-			return this.getIdentifierLoadAccess().getReference( entityId );
+			return (T) this.getIdentifierLoadAccess().getReference( entityId );
 		}
 
 		@Override
-		public Object load(Object naturalIdValue) {
+		@SuppressWarnings("unchecked")
+		public T load(Object naturalIdValue) {
 			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
 			if ( entityId == null ) {
 				return null;
 			}
 			try {
-				return this.getIdentifierLoadAccess().load( entityId );
+				return (T) this.getIdentifierLoadAccess().load( entityId );
 			}
 			catch (EntityNotFoundException enf) {
 				// OK

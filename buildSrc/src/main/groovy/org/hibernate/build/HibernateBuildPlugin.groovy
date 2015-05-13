@@ -147,51 +147,53 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			}
 
 
-			if ( javaTargetExtension.version.java8Compatible ) {
-				javaCompileTask.options.compilerArgs += [
-						"-source", '1.8',
-						"-target", '1.8'
-				]
-			}
-			else {
-				javaCompileTask.options.compilerArgs += [
-						"-source", '1.6',
-						"-target", '1.6'
-				]
+			if ( sourceSet.name == 'main' ) {
+				if ( javaTargetExtension.version.java8Compatible ) {
+					javaCompileTask.options.compilerArgs += [
+							"-source", '1.8',
+							"-target", '1.8'
+					]
+				}
+				else {
+					javaCompileTask.options.compilerArgs += [
+							"-source", '1.6',
+							"-target", '1.6'
+					]
 
-				if ( java6Home != null ) {
-					if ( javaTargetExtension.shouldApplyTargetToCompile ) {
-						// Technically we need only one here between:
-						//      1) setting the javac executable
-						//      2) setting the bootClasspath
-						// However, (1) requires fork=true whereas (2) does not.
-//					javaCompileTask.options.fork = true
-//					javaCompileTask.options.forkOptions.executable = java6Home.javacExecutable
-						javaCompileTask.options.bootClasspath = java6Home.runtimeJar.absolutePath
+					if ( java6Home != null ) {
+						if ( javaTargetExtension.shouldApplyTargetToCompile ) {
+							// Technically we need only one here between:
+							//      1) setting the javac executable
+							//      2) setting the bootClasspath
+							// However, (1) requires fork=true whereas (2) does not.
+							//					javaCompileTask.options.fork = true
+							//					javaCompileTask.options.forkOptions.executable = java6Home.javacExecutable
+							javaCompileTask.options.bootClasspath = java6Home.runtimeJar.absolutePath
+						}
 					}
 				}
 			}
 		}
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Apply to test compile task
-
-		SourceSet testSourceSet = project.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.findByName( "test" )
-		JavaCompile compileTestTask = project.tasks.findByName( testSourceSet.compileJavaTaskName ) as JavaCompile
-
-		// NOTE : see the note abovewrt aptDir
-		File testAptDir = project.file( "${project.buildDir}/generated-src/apt/test" )
-		testSourceSet.allJava.srcDir( testAptDir )
-
-		compileTestTask.options.compilerArgs += [
-				"-nowarn",
-				"-encoding", "UTF-8",
-				"-s", "${testAptDir.absolutePath}"
-		]
-		compileTestTask.doFirst {
-			testAptDir.mkdirs()
-		}
+//
+//
+//		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//		// Apply to test compile task
+//
+//		SourceSet testSourceSet = project.getConvention().findPlugin( JavaPluginConvention.class ).sourceSets.findByName( "test" )
+//		JavaCompile compileTestTask = project.tasks.findByName( testSourceSet.compileJavaTaskName ) as JavaCompile
+//
+//		// NOTE : see the note above wrt aptDir
+//		File testAptDir = project.file( "${project.buildDir}/generated-src/apt/test" )
+//		testSourceSet.allJava.srcDir( testAptDir )
+//
+//		compileTestTask.options.compilerArgs += [
+//				"-nowarn",
+//				"-encoding", "UTF-8",
+//				"-s", "${testAptDir.absolutePath}"
+//		]
+//		compileTestTask.doFirst {
+//			testAptDir.mkdirs()
+//		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Apply to test tasks

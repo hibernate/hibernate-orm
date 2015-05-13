@@ -265,46 +265,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 *
 	 * @throws HibernateException
 	 */
-	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Retreive the currently set value for a filter parameter.
-	 *
-	 * @param filterParameterName The filter parameter name in the format
-	 * {FILTER_NAME.PARAMETER_NAME}.
-	 *
-	 * @return The filter parameter value.
-	 *
-	 * @deprecated use #getLoadQueryInfluencers instead
-	 */
-	@Deprecated
-	public Object getFilterParameterValue(String filterParameterName);
-
-	/**
-	 * Retrieve the type for a given filter parameter.
-	 *
-	 * @param filterParameterName The filter parameter name in the format
-	 * {FILTER_NAME.PARAMETER_NAME}.
-	 *
-	 * @return The filter param type
-	 *
-	 * @deprecated use #getLoadQueryInfluencers instead
-	 */
-	@Deprecated
-	public Type getFilterParameterType(String filterParameterName);
-
-	/**
-	 * Return the currently enabled filters.  The filter map is keyed by filter
-	 * name, with values corresponding to the {@link org.hibernate.internal.FilterImpl}
-	 * instance.
-	 *
-	 * @return The currently enabled filters.
-	 *
-	 * @deprecated use #getLoadQueryInfluencers instead
-	 */
-	@Deprecated
-	public Map getEnabledFilters();
+	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
 
 	public int getDontFlushFromFind();
 
@@ -358,26 +319,6 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	public boolean isEventSource();
 
 	public void afterScrollOperation();
-
-	/**
-	 * Get the <i>internal</i> fetch profile currently associated with this session.
-	 *
-	 * @return The current internal fetch profile, or null if none currently associated.
-	 *
-	 * @deprecated use #getLoadQueryInfluencers instead
-	 */
-	@Deprecated
-	public String getFetchProfile();
-
-	/**
-	 * Set the current <i>internal</i> fetch profile for this session.
-	 *
-	 * @param name The internal fetch profile name to use
-	 *
-	 * @deprecated use {@link #getLoadQueryInfluencers} instead
-	 */
-	@Deprecated
-	public void setFetchProfile(String name);
 
 	/**
 	 * Retrieve access to the session's transaction coordinator.

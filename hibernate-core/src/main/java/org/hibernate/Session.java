@@ -275,6 +275,8 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
+	 * <p/>
+	 * Convenient form of {@link #load(Class, Serializable, LockOptions)}
 	 *
 	 * @param theClass a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -282,10 +284,9 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @return the persistent instance or proxy
 	 *
-	 * @deprecated LockMode parameter should be replaced with LockOptions
+	 * @see #load(Class, Serializable, LockOptions)
 	 */
-	@Deprecated
-	public Object load(Class theClass, Serializable id, LockMode lockMode);
+	public <T> T load(Class<T> theClass, Serializable id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -296,11 +297,13 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * @param lockOptions contains the lock level
 	 * @return the persistent instance or proxy
 	 */
-	public Object load(Class theClass, Serializable id, LockOptions lockOptions);
+	public <T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
+	 * <p/>
+	 * Convenient form of {@link #load(String, Serializable, LockOptions)}
 	 *
 	 * @param entityName a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -308,9 +311,8 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @return the persistent instance or proxy
 	 *
-	 * @deprecated LockMode parameter should be replaced with LockOptions
+	 * @see #load(String, Serializable, LockOptions)
 	 */
-	@Deprecated
 	public Object load(String entityName, Serializable id, LockMode lockMode);
 
 	/**
@@ -339,7 +341,7 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	public Object load(Class theClass, Serializable id);
+	public <T> T load(Class<T> theClass, Serializable id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -548,13 +550,15 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
 	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
 	 * instances if the association is mapped with <tt>cascade="lock"</tt>.
+	 * <p/>
+	 * Convenient form of {@link LockRequest#lock(Object)} via {@link #buildLockRequest(LockOptions)}
 	 *
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
 	 *
-	 * @deprecated instead call buildLockRequest(LockMode).lock(object)
+	 * @see #buildLockRequest(LockOptions)
+	 * @see LockRequest#lock(Object)
 	 */
-	@Deprecated
 	public void lock(Object object, LockMode lockMode);
 
 	/**
@@ -563,15 +567,16 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
 	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
 	 * instances if the association is mapped with <tt>cascade="lock"</tt>.
+	 * <p/>
+	 * Convenient form of {@link LockRequest#lock(String, Object)} via {@link #buildLockRequest(LockOptions)}
 	 *
 	 * @param entityName The name of the entity
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
 	 *
-	 * @deprecated instead call buildLockRequest(LockMode).lock(entityName, object)
+	 * @see #buildLockRequest(LockOptions)
+	 * @see LockRequest#lock(String, Object)
 	 */
-	@SuppressWarnings( {"JavaDoc"})
-	@Deprecated
 	public void lock(String entityName, Object object, LockMode lockMode);
 
 	/**
@@ -624,13 +629,14 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * the given <tt>LockMode</tt>. It is inadvisable to use this to implement
 	 * long-running sessions that span many business tasks. This method is, however,
 	 * useful in certain special circumstances.
+	 * <p/>
+	 * Convenient form of {@link #refresh(Object, LockOptions)}
 	 *
 	 * @param object a persistent or detached instance
 	 * @param lockMode the lock mode to use
 	 *
-	 * @deprecated LockMode parameter should be replaced with LockOptions
+	 * @see #refresh(Object, LockOptions)
 	 */
-	@Deprecated
 	public void refresh(Object object, LockMode lockMode);
 
 	/**
@@ -689,29 +695,30 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * or null if there is no such persistent instance. (If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 *
-	 * @param clazz a persistent class
+	 * @param entityType The entity type
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
 	 */
-	public Object get(Class clazz, Serializable id);
+	public <T> T get(Class<T> entityType, Serializable id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. (If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
+	 * <p/>
+	 * Convenient form of {@link #get(Class, Serializable, LockOptions)}
 	 *
-	 * @param clazz a persistent class
+	 * @param entityType The entity type
 	 * @param id an identifier
 	 * @param lockMode the lock mode
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @deprecated LockMode parameter should be replaced with LockOptions
+	 * @see #get(Class, Serializable, LockOptions)
 	 */
-	@Deprecated
-	public Object get(Class clazz, Serializable id, LockMode lockMode);
+	public <T> T get(Class<T> entityType, Serializable id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -719,13 +726,13 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
 	 *
-	 * @param clazz a persistent class
+	 * @param entityType The entity type
 	 * @param id an identifier
 	 * @param lockOptions the lock mode
 	 *
 	 * @return a persistent instance or null
 	 */
-	public Object get(Class clazz, Serializable id, LockOptions lockOptions);
+	public <T> T get(Class<T> entityType, Serializable id, LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
@@ -744,6 +751,8 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * or null if there is no such persistent instance. (If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
+	 * <p/>
+	 * Convenient form of {@link #get(String, Serializable, LockOptions)}
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -751,9 +760,8 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @deprecated LockMode parameter should be replaced with LockOptions
+	 * @see #get(String, Serializable, LockOptions)
 	 */
-	@Deprecated
 	public Object get(String entityName, Serializable id, LockMode lockMode);
 
 	/**
@@ -801,7 +809,7 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
 	 */
-	public IdentifierLoadAccess byId(Class entityClass);
+	public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
 
 	/**
 	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
@@ -825,7 +833,7 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
 	 */
-	public NaturalIdLoadAccess byNaturalId(Class entityClass);
+	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
 	 * Create an {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
@@ -851,7 +859,7 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
 	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
 	 */
-	public SimpleNaturalIdLoadAccess bySimpleNaturalId(Class entityClass);
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 
 	/**
 	 * Enable the named filter for this current session.

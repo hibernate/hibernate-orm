@@ -297,14 +297,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			}
 		}
 
-		String previousFetchProfile = source.getFetchProfile();
-		source.setFetchProfile( "merge" );
+		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
+		source.getLoadQueryInfluencers().setInternalFetchProfile( "merge" );
 		//we must clone embedded composite identifiers, or
 		//we will get back the same instance that we pass in
 		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
 				.deepCopy( id, source.getFactory() );
 		final Object result = source.get( entityName, clonedIdentifier );
-		source.setFetchProfile( previousFetchProfile );
+		source.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
 
 		if ( result == null ) {
 			//TODO: we should throw an exception if we really *know* for sure

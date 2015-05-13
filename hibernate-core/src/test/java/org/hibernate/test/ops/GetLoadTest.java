@@ -129,7 +129,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		s.delete( emp );
-		emp = ( Employer ) s.get( Employee.class, emp.getId() );
+		emp = s.get( Employer.class, emp.getId() );
 		s.getTransaction().commit();
 		s.close();
 

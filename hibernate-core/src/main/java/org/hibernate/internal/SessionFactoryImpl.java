@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -124,6 +125,7 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -194,6 +196,7 @@ public final class SessionFactoryImpl
 
 	private final transient Map<String,EntityPersister> entityPersisters;
 	private final transient Map<String,ClassMetadata> classMetadata;
+	private final transient Map<Class,String> entityProxyInterfaceMap;
 	private final transient Map<String,CollectionPersister> collectionPersisters;
 	private final transient Map<String,CollectionMetadata> collectionMetadata;
 	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
@@ -339,6 +342,7 @@ public final class SessionFactoryImpl
 		this.entityPersisters = new HashMap<String,EntityPersister>();
 		Map cacheAccessStrategiesMap = new HashMap();
 		Map<String,ClassMetadata> inFlightClassMetadataMap = new HashMap<String,ClassMetadata>();
+		this.entityProxyInterfaceMap = CollectionHelper.concurrentMap( metadata.getEntityBindings().size() );
 		for ( final PersistentClass model : metadata.getEntityBindings() ) {
 			final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
 			// cache region is defined by the root-class in the hierarchy...
@@ -364,6 +368,35 @@ public final class SessionFactoryImpl
 			);
 			entityPersisters.put( model.getEntityName(), cp );
 			inFlightClassMetadataMap.put( model.getEntityName(), cp.getClassMetadata() );
+
+			if ( cp.getConcreteProxyClass() != null
+					&& cp.getConcreteProxyClass().isInterface()
+					&& !Map.class.isAssignableFrom( cp.getConcreteProxyClass() )
+					&& cp.getMappedClass() != cp.getConcreteProxyClass() ) {
+				// IMPL NOTE : we exclude Map based proxy interfaces here because that should
+				//		indicate MAP entity mode.0
+
+				if ( cp.getMappedClass().equals( cp.getConcreteProxyClass() ) ) {
+					// this part handles an odd case in the Hibernate test suite where we map an interface
+					// as the class and the proxy.  I cannot think of a real life use case for that
+					// specific test, but..
+					LOG.debugf( "Entity [%s] mapped same interface [%s] as class and proxy", cp.getEntityName(), cp.getMappedClass() );
+				}
+				else {
+					final String old = entityProxyInterfaceMap.put( cp.getConcreteProxyClass(), cp.getEntityName() );
+					if ( old != null ) {
+						throw new HibernateException(
+								String.format(
+										Locale.ENGLISH,
+										"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
+										old,
+										cp.getEntityName(),
+										cp.getConcreteProxyClass().getName()
+								)
+						);
+					}
+				}
+			}
 		}
 		this.classMetadata = Collections.unmodifiableMap( inFlightClassMetadataMap );
 
@@ -741,8 +774,14 @@ public final class SessionFactoryImpl
 		return namedQueryRepository.checkNamedQueries( queryPlanCache );
 	}
 
+	@Override
+	public Map<String, EntityPersister> getEntityPersisters() {
+		return entityPersisters;
+	}
+
+	@Override
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
-		EntityPersister result = entityPersisters.get(entityName);
+		EntityPersister result = entityPersisters.get( entityName );
 		if ( result == null ) {
 			throw new MappingException( "Unknown entity: " + entityName );
 		}
@@ -750,13 +789,34 @@ public final class SessionFactoryImpl
 	}
 
 	@Override
-	public Map<String, CollectionPersister> getCollectionPersisters() {
-		return collectionPersisters;
+	public EntityPersister locateEntityPersister(Class byClass) {
+		EntityPersister entityPersister = entityPersisters.get( byClass.getName() );
+		if ( entityPersister == null ) {
+			String mappedEntityName = entityProxyInterfaceMap.get( byClass );
+			if ( mappedEntityName != null ) {
+				entityPersister = entityPersisters.get( mappedEntityName );
+			}
+		}
+
+		if ( entityPersister == null ) {
+			throw new HibernateException( "Unable to locate persister: " + byClass.getName() );
+		}
+
+		return entityPersister;
 	}
 
 	@Override
-	public Map<String, EntityPersister> getEntityPersisters() {
-		return entityPersisters;
+	public EntityPersister locateEntityPersister(String byName) {
+		final EntityPersister entityPersister = entityPersisters.get( byName );
+		if ( entityPersister == null ) {
+			throw new HibernateException( "Unable to locate persister: " + byName );
+		}
+		return entityPersister;
+	}
+
+	@Override
+	public Map<String, CollectionPersister> getCollectionPersisters() {
+		return collectionPersisters;
 	}
 
 	public CollectionPersister getCollectionPersister(String role) throws MappingException {
@@ -865,7 +925,7 @@ public final class SessionFactoryImpl
 	}
 
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return collectionMetadata.get(roleName);
+		return collectionMetadata.get( roleName );
 	}
 
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {

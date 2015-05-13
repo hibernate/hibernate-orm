@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -251,21 +250,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public Object getFilterParameterValue(String filterParameterName) {
-		return sessionImplementor.getFilterParameterValue( filterParameterName );
-	}
-
-	@Override
-	public Type getFilterParameterType(String filterParameterName) {
-		return sessionImplementor.getFilterParameterType( filterParameterName );
-	}
-
-	@Override
-	public Map getEnabledFilters() {
-		return sessionImplementor.getEnabledFilters();
-	}
-
-	@Override
 	public int getDontFlushFromFind() {
 		return sessionImplementor.getDontFlushFromFind();
 	}
@@ -343,16 +327,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public void afterScrollOperation() {
 		sessionImplementor.afterScrollOperation();
-	}
-
-	@Override
-	public String getFetchProfile() {
-		return sessionImplementor.getFetchProfile();
-	}
-
-	@Override
-	public void setFetchProfile(String name) {
-		sessionImplementor.setFetchProfile( name );
 	}
 
 	@Override
@@ -513,12 +487,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public Object load(Class theClass, Serializable id, LockMode lockMode) {
+	public <T> T load(Class<T> theClass, Serializable id, LockMode lockMode) {
 		return session.load( theClass, id, lockMode );
 	}
 
 	@Override
-	public Object load(Class theClass, Serializable id, LockOptions lockOptions) {
+	public <T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions) {
 		return session.load( theClass, id, lockOptions );
 	}
 
@@ -533,7 +507,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public Object load(Class theClass, Serializable id) {
+	public <T> T load(Class<T> theClass, Serializable id) {
 		return session.load( theClass, id );
 	}
 
@@ -673,18 +647,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public Object get(Class clazz, Serializable id) {
-		return session.get( clazz, id );
+	public <T> T get(Class<T> theClass, Serializable id) {
+		return session.get( theClass, id );
 	}
 
 	@Override
-	public Object get(Class clazz, Serializable id, LockMode lockMode) {
-		return session.get( clazz, id, lockMode );
+	public <T> T get(Class<T> theClass, Serializable id, LockMode lockMode) {
+		return session.get( theClass, id, lockMode );
 	}
 
 	@Override
-	public Object get(Class clazz, Serializable id, LockOptions lockOptions) {
-		return session.get( clazz, id, lockOptions );
+	public <T> T get(Class<T> theClass, Serializable id, LockOptions lockOptions) {
+		return session.get( theClass, id, lockOptions );
 	}
 
 	@Override
@@ -713,7 +687,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public IdentifierLoadAccess byId(Class entityClass) {
+	public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass) {
 		return session.byId( entityClass );
 	}
 
@@ -723,7 +697,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public NaturalIdLoadAccess byNaturalId(Class entityClass) {
+	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
 		return session.byNaturalId( entityClass );
 	}
 
@@ -733,7 +707,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess bySimpleNaturalId(Class entityClass) {
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
 		return session.bySimpleNaturalId( entityClass );
 	}
 

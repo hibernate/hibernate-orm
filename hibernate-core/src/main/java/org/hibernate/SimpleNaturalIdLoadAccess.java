@@ -32,7 +32,7 @@ package org.hibernate;
  * @see org.hibernate.annotations.NaturalId
  * @see NaturalIdLoadAccess
  */
-public interface SimpleNaturalIdLoadAccess {
+public interface SimpleNaturalIdLoadAccess<T> {
 	/**
 	 * Specify the {@link org.hibernate.LockOptions} to use when retrieving the entity.
 	 *
@@ -40,7 +40,7 @@ public interface SimpleNaturalIdLoadAccess {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SimpleNaturalIdLoadAccess with(LockOptions lockOptions);
+	public SimpleNaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing 
@@ -53,7 +53,7 @@ public interface SimpleNaturalIdLoadAccess {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SimpleNaturalIdLoadAccess setSynchronizationEnabled(boolean enabled);
+	public SimpleNaturalIdLoadAccess<T> setSynchronizationEnabled(boolean enabled);
 
 	/**
 	 * Return the persistent instance with the given natural id value, assuming that the instance exists. This method
@@ -67,7 +67,7 @@ public interface SimpleNaturalIdLoadAccess {
 	 *
 	 * @return The persistent instance or proxy, if an instance exists.  Otherwise, {@code null}.
 	 */
-	public Object getReference(Object naturalIdValue);
+	public T getReference(Object naturalIdValue);
 
 	/**
 	 * Return the persistent instance with the given natural id value, or {@code null} if there is no such persistent
@@ -78,6 +78,6 @@ public interface SimpleNaturalIdLoadAccess {
 	 * 
 	 * @return The persistent instance or {@code null}
 	 */
-	public Object load(Object naturalIdValue);
+	public T load(Object naturalIdValue);
 
 }

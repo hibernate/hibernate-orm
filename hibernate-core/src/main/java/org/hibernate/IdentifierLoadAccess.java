@@ -31,7 +31,7 @@ import java.io.Serializable;
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
-public interface IdentifierLoadAccess {
+public interface IdentifierLoadAccess<T> {
 	/**
 	 * Specify the {@link LockOptions} to use when retrieving the entity.
 	 *
@@ -39,7 +39,7 @@ public interface IdentifierLoadAccess {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IdentifierLoadAccess with(LockOptions lockOptions);
+	public IdentifierLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance with the given identifier, assuming that the instance exists. This method
@@ -53,7 +53,7 @@ public interface IdentifierLoadAccess {
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	public Object getReference(Serializable id);
+	public T getReference(Serializable id);
 
 	/**
 	 * Return the persistent instance with the given identifier, or null if there is no such persistent instance.
@@ -64,5 +64,5 @@ public interface IdentifierLoadAccess {
 	 *
 	 * @return The persistent instance or {@code null}
 	 */
-	public Object load(Serializable id);
+	public T load(Serializable id);
 }

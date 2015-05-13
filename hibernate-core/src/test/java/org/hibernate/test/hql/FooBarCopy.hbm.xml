@@ -84,7 +84,7 @@
 
 		<subclass
 			name="Trivial"
-			proxy="FooProxy"
+			proxy="TrivialProxy"
 			discriminator-value="T"/>
 
 		<subclass

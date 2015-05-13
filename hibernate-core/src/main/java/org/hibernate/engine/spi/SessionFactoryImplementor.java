@@ -295,4 +295,28 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public NamedQueryRepository getNamedQueryRepository();
 
 	Iterable<EntityNameResolver> iterateEntityNameResolvers();
+
+	/**
+	 * Locate an EntityPersister by the entity class.  The passed Class might refer to either
+	 * the entity name directly, or it might name a proxy interface for the entity.  This
+	 * method accounts for both, preferring the direct named entity name.
+	 *
+	 * @param byClass The concrete Class or proxy interface for the entity to locate the persister for.
+	 *
+	 * @return The located EntityPersister, never {@code null}
+	 *
+	 * @throws HibernateException If a matching EntityPersister cannot be located
+	 */
+	EntityPersister locateEntityPersister(Class byClass);
+
+	/**
+	 * Locate the entity persister by name.
+	 *
+	 * @param byName The entity name
+	 *
+	 * @return The located EntityPersister, never {@code null}
+	 *
+	 * @throws HibernateException If a matching EntityPersister cannot be located
+	 */
+	EntityPersister locateEntityPersister(String byName);
 }

@@ -28,7 +28,6 @@ import java.sql.Connection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import javax.transaction.SystemException;
 
 import org.hibernate.CacheMode;
@@ -74,7 +73,6 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.type.Type;
 
 /**
  * @author Gavin King
@@ -89,6 +87,17 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 	private long timestamp;
 	private JdbcSessionContext jdbcSessionContext;
+
+	private LoadQueryInfluencers statelessLoadQueryInfluencers = new LoadQueryInfluencers( null ) {
+		@Override
+		public String getInternalFetchProfile() {
+			return null;
+		}
+
+		@Override
+		public void setInternalFetchProfile(String internalFetchProfile) {
+		}
+	};
 
 	StatelessSessionImpl(
 			Connection connection,
@@ -277,15 +286,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			final CacheKey ck = generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 			persister.getCacheAccessStrategy().evict( ck );
 		}
-
-		String previousFetchProfile = this.getFetchProfile();
+		String previousFetchProfile = this.getLoadQueryInfluencers().getInternalFetchProfile();
 		Object result = null;
 		try {
-			this.setFetchProfile( "refresh" );
+			this.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
 			result = persister.load( id, entity, lockMode, this );
 		}
 		finally {
-			this.setFetchProfile( previousFetchProfile );
+			this.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
 		}
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
@@ -444,11 +452,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public Map getEnabledFilters() {
-		return Collections.EMPTY_MAP;
-	}
-
-	@Override
 	public Serializable getContextEntityIdentifier(Object object) {
 		errorIfClosed();
 		return null;
@@ -474,16 +477,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
 		errorIfClosed();
 		return null;
-	}
-
-	@Override
-	public Type getFilterParameterType(String filterParameterName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Object getFilterParameterValue(String filterParameterName) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -726,17 +719,8 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public String getFetchProfile() {
-		return null;
-	}
-
-	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return LoadQueryInfluencers.NONE;
-	}
-
-	@Override
-	public void setFetchProfile(String name) {
+		return statelessLoadQueryInfluencers;
 	}
 
 	@Override

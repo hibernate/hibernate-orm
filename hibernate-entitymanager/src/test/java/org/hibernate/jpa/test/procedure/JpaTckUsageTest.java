@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.dialect.DerbyTenSevenDialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
@@ -316,9 +318,10 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 	private void createProcedures(HibernateEntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
+		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
-			conn = sf.getConnectionProvider().getConnection();
+			conn = connectionAccess.obtainConnection();
 			conn.setAutoCommit( false );
 
 			try {
@@ -348,7 +351,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 				}
 
 				try {
-					sf.getConnectionProvider().closeConnection( conn );
+					connectionAccess.releaseConnection( conn );
 				}
 				catch (SQLException ignore) {
 				}
@@ -429,11 +432,11 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	private void dropProcedures(HibernateEntityManagerFactory emf) {
-
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
+		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
-			conn = sf.getConnectionProvider().getConnection();
+			conn = connectionAccess.obtainConnection();
 			conn.setAutoCommit( false );
 
 			try {
@@ -454,7 +457,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 				}
 
 				try {
-					sf.getConnectionProvider().closeConnection( conn );
+					connectionAccess.releaseConnection( conn );
 				}
 				catch (SQLException ignore) {
 				}

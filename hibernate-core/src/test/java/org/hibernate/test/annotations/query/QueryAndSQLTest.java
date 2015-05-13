@@ -407,9 +407,9 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.persist( chaos );
 		s.flush();
 		s.clear();
-		s.getSessionFactory().evict( Chaos.class );
+		s.getSessionFactory().getCache().evictEntityRegion( Chaos.class );
 
-		Chaos resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
+		Chaos resultChaos = s.load( Chaos.class, chaos.getId() );
 		assertEquals( upperName, resultChaos.getName() );
 		assertEquals( "nickname", resultChaos.getNickname() );
 
@@ -439,16 +439,16 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		chaos.getParticles().add( p );
 		s.flush();
 		s.clear();
-		s.getSessionFactory().evict( Chaos.class );
+		s.getSessionFactory().getCache().evictEntityRegion( Chaos.class );
 
-		Chaos resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
+		Chaos resultChaos = s.load( Chaos.class, chaos.getId() );
 		assertEquals( 2, resultChaos.getParticles().size() );
 		resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 		resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 		s.flush();
 
 		s.clear();
-		resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
+		resultChaos = s.load( Chaos.class, chaos.getId() );
 		assertEquals( 0, resultChaos.getParticles().size() );
 
 		tx.rollback();

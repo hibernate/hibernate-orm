@@ -96,10 +96,6 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 		return jdbcEnvironment;
 	}
 
-	public ConnectionProvider getConnectionProvider() {
-		return connectionProvider;
-	}
-
 	@Override
 	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess() {
 		return jdbcConnectionAccess;

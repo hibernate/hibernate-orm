@@ -279,7 +279,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 		sessionFactory().getStatistics().clear();
 		sessionFactory().getStatistics().setStatisticsEnabled( true );
-		sessionFactory().evict( ZipCode.class );
+		sessionFactory().getCache().evictEntityRegion( ZipCode.class );
 		s = openSession();
 		tx = s.beginTransaction();
 		s.get( ZipCode.class, zc.code );

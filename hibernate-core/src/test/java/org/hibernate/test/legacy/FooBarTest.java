@@ -307,7 +307,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
+		sessionFactory().getCache().evictCollectionRegion("org.hibernate.test.legacy.Baz.fooSet");
 
 		s = openSession();
 		s.beginTransaction();
@@ -356,7 +356,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
+		sessionFactory().getCache().evictCollectionRegion("org.hibernate.test.legacy.Baz.fooSet");
 
 		s = openSession();
 		s.beginTransaction();
@@ -1560,7 +1560,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evict(Foo.class);
+		sessionFactory().getCache().evictEntityRegion(Foo.class);
 
 		s = openSession();
 		s.beginTransaction();
@@ -3255,7 +3255,7 @@ public class FooBarTest extends LegacyTestCase {
 		txn.commit();
 		s.close();
 
-		sessionFactory().evict(Glarch.class);
+		sessionFactory().getCache().evictEntityRegion(Glarch.class);
 
 		s = openSession();
 		txn = s.beginTransaction();
@@ -3274,7 +3274,7 @@ public class FooBarTest extends LegacyTestCase {
 		txn.commit();
 		s.close();
 
-		sessionFactory().evict(Glarch.class);
+		sessionFactory().getCache().evictEntityRegion(Glarch.class);
 
 		s = openSession();
 		txn = s.beginTransaction();

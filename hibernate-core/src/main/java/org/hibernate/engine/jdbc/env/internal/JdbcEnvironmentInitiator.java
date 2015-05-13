@@ -181,11 +181,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 	}
 
-	private static class ConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
+	public static class ConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
 		private final ConnectionProvider connectionProvider;
 
 		public ConnectionProviderJdbcConnectionAccess(ConnectionProvider connectionProvider) {
 			this.connectionProvider = connectionProvider;
+		}
+
+		public ConnectionProvider getConnectionProvider() {
+			return connectionProvider;
 		}
 
 		@Override
@@ -204,11 +208,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 	}
 
-	private static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
+	public static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
 		private final MultiTenantConnectionProvider connectionProvider;
 
 		public MultiTenantConnectionProviderJdbcConnectionAccess(MultiTenantConnectionProvider connectionProvider) {
 			this.connectionProvider = connectionProvider;
+		}
+
+		public MultiTenantConnectionProvider getConnectionProvider() {
+			return connectionProvider;
 		}
 
 		@Override

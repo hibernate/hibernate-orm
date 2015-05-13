@@ -108,7 +108,7 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testEmptySecondLevelCacheEntry() throws Exception {
-		sessionFactory().evictEntity( Item.class.getName() );
+		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( REGION_PREFIX + Item.class.getName() );

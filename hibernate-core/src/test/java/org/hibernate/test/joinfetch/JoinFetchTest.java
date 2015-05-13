@@ -91,11 +91,11 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 		
-		sessionFactory().evict(Item.class);
+		sessionFactory().getCache().evictEntityRegion(Item.class);
 
 		s = openSession();
 		t = s.beginTransaction();
-		i = (Item) s.get( Item.class, i.getId() );
+		i = s.get( Item.class, i.getId() );
 		assertTrue( Hibernate.isInitialized( i.getBids() ) );
 		assertEquals( i.getBids().size(), 2 );
 		assertTrue( Hibernate.isInitialized( i.getComments() ) );
@@ -103,11 +103,11 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		sessionFactory().evict(Bid.class);
+		sessionFactory().getCache().evictEntityRegion(Bid.class);
 
 		s = openSession();
 		t = s.beginTransaction();
-		b = (Bid) s.get( Bid.class, b.getId() );
+		b = s.get( Bid.class, b.getId() );
 		assertTrue( Hibernate.isInitialized( b.getItem() ) );
 		assertTrue( Hibernate.isInitialized( b.getItem().getComments() ) );
 		assertEquals( b.getItem().getComments().size(), 3 );
@@ -115,7 +115,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		sessionFactory().evictCollection(Item.class.getName() + ".bids");
+		sessionFactory().getCache().evictCollectionRegion(Item.class.getName() + ".bids");
 		
 		s = openSession();
 		t = s.beginTransaction();
@@ -254,11 +254,11 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		
 		s = openSession();
 		t = s.beginTransaction();
-		hb = (Group) s.get(Group.class, "hibernate");
+		hb = s.get(Group.class, "hibernate");
 		assertTrue( Hibernate.isInitialized( hb.getUsers() ) );
 		gavin = (User) hb.getUsers().get("gavin");
 		assertFalse( Hibernate.isInitialized( gavin.getGroups() ) );
-		max = (User) s.get(User.class, "max");
+		max = s.get(User.class, "max");
 		assertFalse( Hibernate.isInitialized( max.getGroups() ) );
 		t.commit();
 		s.close();
@@ -272,7 +272,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( hb.getUsers() ) );
 		gavin = (User) hb.getUsers().get("gavin");
 		assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
-		max = (User) s.get(User.class, "max");
+		max = s.get(User.class, "max");
 		assertTrue( Hibernate.isInitialized( max.getGroups() ) );
 		t.commit();
 		s.close();

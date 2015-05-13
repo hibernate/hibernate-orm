@@ -132,7 +132,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "JBPAPP-4224" )
 	public void testHitCacheInSameSession() {
-		sessionFactory().evictQueries();
+		sessionFactory().getCache().evictQueryRegions();
 		sessionFactory().getStatistics().clear();
 		Session s = openSession();
 		List list = new ArrayList();
@@ -178,7 +178,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
 
-		sessionFactory().evictQueries();
+		sessionFactory().getCache().evictQueryRegions();
 		sessionFactory().getStatistics().clear();
 
 		final String queryString = "from Item i where i.name='widget'";
@@ -278,7 +278,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testQueryCacheFetch() throws Exception {
-		sessionFactory().evictQueries();
+		sessionFactory().getCache().evictQueryRegions();
 		sessionFactory().getStatistics().clear();
 
 		// persist our 2 items.  This saves them to the db, but also into the second level entity cache region
@@ -314,7 +314,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 
 		// evict the Items from the second level entity cache region
-		sessionFactory().evict(Item.class);
+		sessionFactory().getCache().evictEntityRegion( Item.class );
 
 		// now, perform the cacheable query again.  this time we should not execute the query (query cache hit).
 		// However, the Items will not be found in second level entity cache region this time (we evicted them above)
@@ -341,7 +341,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testProjectionCache() throws Exception {
-		sessionFactory().evictQueries();
+		sessionFactory().getCache().evictQueryRegions();
         sessionFactory().getStatistics().clear();
 
 		final String queryString = "select i.description as desc from Item i where i.name='widget'";

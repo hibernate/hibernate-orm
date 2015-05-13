@@ -31,14 +31,14 @@ import javax.management.ObjectName;
 
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -50,8 +50,12 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
     @Test
     public void testC3P0isDefaultWhenThereIsC3P0Properties() {
         JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
-        ConnectionProvider provider = jdbcServices.getConnectionProvider();
-        assertTrue( provider instanceof C3P0ConnectionProvider );
+        ConnectionProviderJdbcConnectionAccess connectionAccess =
+				assertTyping(
+						ConnectionProviderJdbcConnectionAccess.class,
+						jdbcServices.getBootstrapJdbcConnectionAccess()
+				);
+        assertTrue( connectionAccess.getConnectionProvider() instanceof C3P0ConnectionProvider );
 
     }
 

@@ -23,21 +23,23 @@
  */
 package org.hibernate.test.hikaricp;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Brett Meyer
@@ -47,10 +49,13 @@ public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testHikariCPConnectionProvider() throws Exception {
 		JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
-		ConnectionProvider provider = jdbcServices.getConnectionProvider();
-		assertTrue( provider instanceof HikariCPConnectionProvider );
+		ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
+				ConnectionProviderJdbcConnectionAccess.class,
+				jdbcServices.getBootstrapJdbcConnectionAccess()
+		);
+		assertTyping( HikariCPConnectionProvider.class, connectionAccess.getConnectionProvider() );
 
-		HikariCPConnectionProvider hikariCP = (HikariCPConnectionProvider) provider;
+		HikariCPConnectionProvider hikariCP = (HikariCPConnectionProvider) connectionAccess.getConnectionProvider();
 		// For simplicity's sake, using the following in hibernate.properties:
 		// hibernate.hikari.minimumPoolSize 2
 		// hibernate.hikari.maximumPoolSize 2

@@ -59,7 +59,7 @@ public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
 		Connection connection = null;
 		Statement stmnt = null;
 		try {
-			connection = services.getConnectionProvider().getConnection();
+			connection = services.getBootstrapJdbcConnectionAccess().obtainConnection();
 			stmnt = connection.createStatement();
 			stmnt.execute( "drop table SANDBOX_JDBC_TST if exists" );
 			stmnt.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
@@ -74,7 +74,7 @@ public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
 			}
 			if ( connection != null ) {
 				try {
-					connection.close();
+					services.getBootstrapJdbcConnectionAccess().releaseConnection( connection );
 				}
 				catch ( SQLException ignore ) {
 				}
@@ -87,7 +87,7 @@ public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
 		Connection connection = null;
 		Statement stmnt = null;
 		try {
-			connection = services.getConnectionProvider().getConnection();
+			connection = services.getBootstrapJdbcConnectionAccess().obtainConnection();
 			stmnt = connection.createStatement();
 			stmnt.execute( "drop table SANDBOX_JDBC_TST if exists" );
 		}
@@ -101,7 +101,7 @@ public class AggressiveReleaseTest extends BaseCoreFunctionalTestCase {
 			}
 			if ( connection != null ) {
 				try {
-					connection.close();
+					services.getBootstrapJdbcConnectionAccess().releaseConnection( connection );
 				}
 				catch ( SQLException ignore ) {
 				}

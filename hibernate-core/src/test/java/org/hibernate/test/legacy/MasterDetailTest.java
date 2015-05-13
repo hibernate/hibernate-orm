@@ -44,6 +44,8 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.AbstractWork;
 
 import org.hibernate.testing.SkipLog;
@@ -883,15 +885,16 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	protected boolean isSerializableIsolationEnforced() throws Exception {
+		JdbcConnectionAccess connectionAccess = sessionFactory().getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		Connection conn = null;
 		try {
-			conn = sessionFactory().getConnectionProvider().getConnection();
+			conn = connectionAccess.obtainConnection();
 			return conn.getTransactionIsolation() >= Connection.TRANSACTION_SERIALIZABLE;
 		}
 		finally {
 			if ( conn != null ) {
 				try {
-					sessionFactory().getConnectionProvider().closeConnection( conn );
+					connectionAccess.releaseConnection( conn );
 				}
 				catch ( Throwable ignore ) {
 					// ignore...

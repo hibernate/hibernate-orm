@@ -182,8 +182,7 @@ import org.hibernate.type.TypeResolver;
  * @see org.hibernate.persister.collection.CollectionPersister
  * @author Gavin King
  */
-public final class SessionFactoryImpl
-		implements SessionFactoryImplementor {
+public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -1020,10 +1019,6 @@ public final class SessionFactoryImpl
 	public Type getReferencedPropertyType(String className, String propertyName)
 		throws MappingException {
 		return getEntityPersister( className ).getPropertyType( propertyName );
-	}
-
-	public ConnectionProvider getConnectionProvider() {
-		return jdbcServices.getConnectionProvider();
 	}
 
 	/**

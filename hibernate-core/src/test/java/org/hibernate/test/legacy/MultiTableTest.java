@@ -127,7 +127,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evict(SubMulti.class);
+		sessionFactory().getCache().evictEntityRegion(SubMulti.class);
 
 		final Session s2 = openSession();
 		s2.beginTransaction();

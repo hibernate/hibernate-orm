@@ -30,7 +30,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -55,7 +54,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	private MultiTenancyStrategy multiTenancyStrategy;
 
-	private ConnectionProvider connectionProvider;
 	private SqlStatementLogger sqlStatementLogger;
 
 	@Override
@@ -69,9 +67,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found!";
 
 		this.multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configValues );
-		this.connectionProvider = MultiTenancyStrategy.NONE == multiTenancyStrategy ?
-				serviceRegistry.getService( ConnectionProvider.class ) :
-				null;
 
 		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
@@ -82,11 +77,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Override
 	public JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
-	}
-
-	@Override
-	public ConnectionProvider getConnectionProvider() {
-		return connectionProvider;
 	}
 
 	@Override

@@ -153,16 +153,6 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public String[] getReturnAliases(String queryString) throws HibernateException;
 
 	/**
-	 * Get the connection provider
-	 *
-	 * @deprecated Access to connections via {@link org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess} should
-	 * be preferred over access via {@link ConnectionProvider}, whenever possible.
-	 * {@link org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess} is tied to the Hibernate Session to
-	 * properly account for contextual information.  See {@link SessionImplementor#getJdbcConnectionAccess()}
-	 */
-	@Deprecated
-	public ConnectionProvider getConnectionProvider();
-	/**
 	 * Get the names of all persistent classes that implement/extend the given interface/class
 	 */
 	public String[] getImplementors(String className) throws MappingException;
@@ -236,19 +226,25 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The SQLExceptionConverter for this SessionFactory.
 	 *
+	 * @deprecated since 5.0; use {@link JdbcServices#getSqlExceptionHelper()} ->
+	 * {@link SqlExceptionHelper#getSqlExceptionConverter()} instead as obtained from {@link #getServiceRegistry()}
 	 */
+	@Deprecated
 	public SQLExceptionConverter getSQLExceptionConverter();
-	   // TODO: deprecate???
 
 	/**
 	 * Retrieves the SqlExceptionHelper in effect for this SessionFactory.
 	 *
 	 * @return The SqlExceptionHelper for this SessionFactory.
+	 *
+	 * @deprecated since 5.0; use {@link JdbcServices#getSqlExceptionHelper()} instead as
+	 * obtained from {@link #getServiceRegistry()}
 	 */
+	@Deprecated
 	public SqlExceptionHelper getSQLExceptionHelper();
 
 	/**
-	 * @deprecated Use {@link #getSessionFactoryOptions()} instead
+	 * @deprecated since 5.0; use {@link #getSessionFactoryOptions()} instead
 	 */
 	@Deprecated
 	public Settings getSettings();

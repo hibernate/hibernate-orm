@@ -82,9 +82,11 @@ public class XaTransactionImpl implements Transaction {
       } else {
          status = Status.STATUS_PREPARING;
 
-         for (int i = 0; i < synchronizations.size(); i++) {
-            Synchronization s = (Synchronization) synchronizations.get(i);
-            s.beforeCompletion();
+         if ( synchronizations != null ) {
+            for ( int i = 0; i < synchronizations.size(); i++ ) {
+               Synchronization s = (Synchronization) synchronizations.get( i );
+               s.beforeCompletion();
+            }
          }
          
          if (!runXaResourcePrepare()) {
@@ -109,9 +111,11 @@ public class XaTransactionImpl implements Transaction {
 
          status = Status.STATUS_COMMITTED;
 
-         for (int i = 0; i < synchronizations.size(); i++) {
-            Synchronization s = (Synchronization) synchronizations.get(i);
-            s.afterCompletion(status);
+         if ( synchronizations != null ) {
+            for ( int i = 0; i < synchronizations.size(); i++ ) {
+               Synchronization s = (Synchronization) synchronizations.get( i );
+               s.afterCompletion( status );
+            }
          }
 
          // status = Status.STATUS_NO_TRANSACTION;

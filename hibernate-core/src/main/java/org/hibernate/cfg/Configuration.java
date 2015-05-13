@@ -287,28 +287,6 @@ public class Configuration {
 		return standardServiceRegistryBuilder;
 	}
 
-	//	private void doConfigure(JaxbHibernateConfiguration jaxbHibernateConfiguration) {
-//		standardServiceRegistryBuilder.configure( jaxbHibernateConfiguration );
-//
-//		for ( JaxbMapping jaxbMapping : jaxbHibernateConfiguration.getSessionFactory().getMapping() ) {
-//			if ( StringHelper.isNotEmpty( jaxbMapping.getClazz() ) ) {
-//				addResource( jaxbMapping.getClazz().replace( '.', '/' ) + ".hbm.xml" );
-//			}
-//			else if ( StringHelper.isNotEmpty( jaxbMapping.getFile() ) ) {
-//				addFile( jaxbMapping.getFile() );
-//			}
-//			else if ( StringHelper.isNotEmpty( jaxbMapping.getJar() ) ) {
-//				addJar( new File( jaxbMapping.getJar() ) );
-//			}
-//			else if ( StringHelper.isNotEmpty( jaxbMapping.getPackage() ) ) {
-//				addPackage( jaxbMapping.getPackage() );
-//			}
-//			else if ( StringHelper.isNotEmpty( jaxbMapping.getResource() ) ) {
-//				addResource( jaxbMapping.getResource() );
-//			}
-//		}
-//	}
-
 	/**
 	 * Use the mappings and properties specified in the given document. The format of the document is defined in
 	 * <tt>hibernate-configuration-3.0.dtd</tt>.
@@ -878,45 +856,6 @@ public class Configuration {
 	 */
 	@Deprecated
 	public void buildMappings() {
-	}
-
-
-
-
-
-
-
-
-
-
-
-	/**
-	 * Generate DDL for dropping tables
-	 *
-	 * @param dialect The dialect for which to generate the drop script
-
-	 * @return The sequence of DDL commands to drop the schema objects
-
-	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
-
-	 * @see org.hibernate.tool.hbm2ddl.SchemaExport
-	 */
-	public String[] generateDropSchemaScript(Dialect dialect) throws HibernateException {
-		return new String[0];
-	}
-
-	/**
-	 * @param dialect The dialect for which to generate the creation script
-	 *
-	 * @return The sequence of DDL commands to create the schema objects
-	 *
-	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
-	 *
-	 * @see org.hibernate.tool.hbm2ddl.SchemaExport
-	 */
-	@SuppressWarnings({ "unchecked" })
-	public String[] generateSchemaCreationScript(Dialect dialect) throws HibernateException {
-		return new String[0];
 	}
 
 	/**

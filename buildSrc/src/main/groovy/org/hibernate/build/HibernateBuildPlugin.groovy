@@ -30,7 +30,6 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.jvm.Jvm
@@ -134,7 +133,7 @@ class HibernateBuildPlugin implements Plugin<Project> {
 			// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
 			//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
 			//		which cannot happen until... ugh
-			File aptDir = project.file( "${project.buildDir}/generated-src/apt/main" )
+			File aptDir = project.file( "${project.buildDir}/generated-src/apt/${sourceSet.name}" )
 			sourceSet.allJava.srcDir( aptDir )
 
 			javaCompileTask.options.compilerArgs += [

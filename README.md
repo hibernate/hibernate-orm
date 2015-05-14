@@ -6,10 +6,7 @@ to applications and other components/libraries.  It is also provides an implemen
 JPA specification, which is the standardized Java specification for ORM.  See 
 [Hibernate.org](http://hibernate.org/orm/) for additional information. 
 
-### protected
 [![Build Status](http://ci.hibernate.org/job/hibernate-orm-master-h2/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-master-h2/)
-### unprotected
-[![Build Status](http://ci.hibernate.org/buildStatus/icon?job=hibernate-orm-master-h2)](http://ci.hibernate.org/job/hibernate-orm-master-h2/)
 
 
 Quickstart
@@ -38,7 +35,7 @@ is somewhat outdated, but still has
 CI Builds
 =========
 
-Hibernate makes use of [Jenkins](http://jenkins.org) for its CI needs.  The project is built continuous on each 
+Hibernate makes use of [Jenkins](http://jenkins-ci.org) for its CI needs.  The project is built continuous on each 
 push to the upstream repository.   Overall there are a few different jobs, all of which can be seen at 
 [http://ci.hibernate.org/view/ORM/](http://ci.hibernate.org/view/ORM/)
 

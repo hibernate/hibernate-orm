@@ -33,7 +33,7 @@ import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.graph.spi.GraphNodeImplementor;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -44,7 +44,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	private final String name;
 	private final EntityType<T> entityType;
 
-	public EntityGraphImpl(String name, EntityType<T> entityType, HibernateEntityManagerFactory entityManagerFactory) {
+	public EntityGraphImpl(String name, EntityType<T> entityType, EntityManagerFactoryImpl entityManagerFactory) {
 		super( entityManagerFactory, true );
 		this.name = name;
 		this.entityType = entityType;

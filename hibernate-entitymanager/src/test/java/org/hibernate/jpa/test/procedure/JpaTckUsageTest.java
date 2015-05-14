@@ -44,7 +44,6 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.After;
@@ -272,10 +271,10 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	@Before
 	public void startUp() {
 		// create the EMF
-		entityManagerFactory = (EntityManagerFactoryImpl) Bootstrap.getEntityManagerFactoryBuilder(
+		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettingsMap()
-		).build();
+		).build().unwrap( HibernateEntityManagerFactory.class );
 
 		// create the procedures
 		createTestUser( entityManagerFactory );

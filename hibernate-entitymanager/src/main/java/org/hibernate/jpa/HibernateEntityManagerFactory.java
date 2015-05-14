@@ -24,10 +24,12 @@
 package org.hibernate.jpa;
 
 import java.io.Serializable;
+import java.util.List;
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
@@ -40,15 +42,32 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	 *
 	 * @return The underlying Hibernate SessionFactory
 	 */
-	public SessionFactory getSessionFactory();
+	SessionFactoryImplementor getSessionFactory();
 
 	/**
-	 * Retrieve the EntityTypeImpl by name.  Use of the Hibernate O/RM notion the "entity name" allows support
-	 * for non-strictly-JPA models to be used in JPA APIs
+	 * Find all  {@code EntityGraph}s associated with a given entity type.
 	 *
-	 * @param entityName The entity name
+	 * @param entityClass the entity type for which to find all {@code EntityGraph}s.
 	 *
-	 * @return The EntityTypeImpl
+	 * @return A list of {@code EntityGraph} instances associated with the given entity type. The empty list is
+	 * returned in case there are not entity graphs.
 	 */
-	public EntityTypeImpl getEntityTypeByName(String entityName);
+	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
+
+	/**
+	 * Returns the name of the factory. The name is either can be specified via the property <i>hibernate.ejb.entitymanager_factory_name</i>.
+	 * If the property is not set the persistence unit name is used. If persistence unit name is not available, a unique
+	 * name will be generated.
+	 *
+	 * @return the name of the factory.
+	 */
+	String getEntityManagerFactoryName();
+
+	/**
+	 * Find an entity type by name
+	 *
+	 * @param entityName entity name
+	 * @return the {@code EntityType} for the specified name
+	 */
+	EntityType getEntityTypeByName(String entityName);
 }

@@ -66,6 +66,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
@@ -474,17 +475,29 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		if ( SessionFactory.class.isAssignableFrom( cls ) ) {
-			return ( T ) sessionFactory;
+	public <T> T unwrap(Class<T> type) {
+
+		if ( type.isAssignableFrom( SessionFactory.class ) ) {
+			return type.cast( sessionFactory);
 		}
-		if ( SessionFactoryImplementor.class.isAssignableFrom( cls ) ) {
-			return ( T ) sessionFactory;
+
+		if ( type.isAssignableFrom( SessionFactoryImplementor.class ) ) {
+			return type.cast( sessionFactory );
 		}
-		if ( EntityManager.class.isAssignableFrom( cls ) ) {
-			return ( T ) this;
+
+		if ( type.isAssignableFrom( SessionFactoryImpl.class ) ) {
+			return type.cast( sessionFactory );
 		}
-		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as " + cls.getName() );
+
+		if ( type.isAssignableFrom( HibernateEntityManagerFactory.class ) ) {
+			return type.cast( this );
+		}
+
+		if ( type.isAssignableFrom( EntityManagerFactoryImpl.class ) ) {
+			return type.cast( this );
+		}
+
+		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as '" + type.getName() + "'" );
 	}
 
 	@Override
@@ -505,6 +518,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return entityGraphs.get( name );
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		final EntityType<T> entityType = getMetamodel().entity( entityClass );
@@ -532,7 +546,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	@Override
-	public EntityTypeImpl getEntityTypeByName(String entityName) {
+	public EntityType getEntityTypeByName(String entityName) {
 		final EntityTypeImpl entityType = metamodel.getEntityTypeByName( entityName );
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "[" + entityName + "] did not refer to EntityType" );
@@ -540,6 +554,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return entityType;
 	}
 
+	@Override
 	public String getEntityManagerFactoryName() {
 		return entityManagerFactoryName;
 	}
@@ -615,7 +630,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private Object readResolve() throws InvalidObjectException {
 		return getNamedEntityManagerFactory(entityManagerFactoryName);
 	}
-
 
 	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {
 		private final HibernateEntityManagerFactory emf;

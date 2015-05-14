@@ -136,6 +136,8 @@ public class EntityBinder {
 	private boolean lazy;
 	private XClass proxyClass;
 	private String where;
+	// todo : we should defer to InFlightMetadataCollector.EntityTableXref for secondary table tracking;
+	//		atm we use both from here; HBM binding solely uses InFlightMetadataCollector.EntityTableXref
 	private java.util.Map<String, Join> secondaryTables = new HashMap<String, Join>();
 	private java.util.Map<String, Object> secondaryTableJoins = new HashMap<String, Object>();
 	private String cacheConcurrentStrategy;
@@ -698,7 +700,6 @@ public class EntityBinder {
 			Join join = (Join) joins.next();
 			createPrimaryColumnsToSecondaryTable( uncastedColumn, propertyHolder, join );
 		}
-		context.getMetadataCollector().addJoins( persistentClass, secondaryTables );
 	}
 
 	private void createPrimaryColumnsToSecondaryTable(Object uncastedColumn, PropertyHolder propertyHolder, Join join) {

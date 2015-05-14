@@ -1,47 +1,72 @@
-//$Id: Employee.java 4364 2004-08-17 12:10:32Z oneovthafew $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.join;
+
 import java.math.BigDecimal;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SecondaryTable;
 
 /**
  * @author Gavin King
+ * @author Steve Ebersole
  */
+@Entity
+@DiscriminatorValue( "E" )
+@SecondaryTable( name = "employee" )
 public class Employee extends Person {
 	private String title;
 	private BigDecimal salary;
 	private Employee manager;
-	/**
-	 * @return Returns the title.
-	 */
+
+	@Column( table = "employee", name = "`title`")
 	public String getTitle() {
 		return title;
 	}
-	/**
-	 * @param title The title to set.
-	 */
+
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	/**
-	 * @return Returns the manager.
-	 */
+
+	@ManyToOne
+	@JoinColumn( table = "employee" )
 	public Employee getManager() {
 		return manager;
 	}
-	/**
-	 * @param manager The manager to set.
-	 */
+
 	public void setManager(Employee manager) {
 		this.manager = manager;
 	}
-	/**
-	 * @return Returns the salary.
-	 */
+
+	@Column( table = "employee" )
 	public BigDecimal getSalary() {
 		return salary;
 	}
-	/**
-	 * @param salary The salary to set.
-	 */
+
 	public void setSalary(BigDecimal salary) {
 		this.salary = salary;
 	}

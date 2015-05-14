@@ -1371,34 +1371,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return xrefEntry == null ? null : xrefEntry.secondaryTableJoinMap;
 	}
 
-	@Override
-	public void addJoins(PersistentClass persistentClass, Map<String, Join> joins) {
-		// this part about resolving the super-EntityTableXref is a best effort.  But
-		// really annotation binding is the only thing calling this, and it does not
-		// directly use the EntityTableXref stuff, so its all good.
-		final EntityTableXrefImpl superEntityTableXref;
-		if ( persistentClass.getSuperclass() == null ) {
-			superEntityTableXref = null;
-		}
-		else {
-			superEntityTableXref = entityTableXrefMap.get( persistentClass.getSuperclass().getEntityName() );
-		}
-
-		final String primaryTableLogicalName = getLogicalTableName( persistentClass.getTable() );
-		final EntityTableXrefImpl xrefEntry = new EntityTableXrefImpl(
-				getDatabase().toIdentifier( primaryTableLogicalName ),
-				persistentClass.getTable(),
-				superEntityTableXref
-		);
-
-		final EntityTableXrefImpl old = entityTableXrefMap.put( persistentClass.getEntityName(), xrefEntry );
-		if ( old != null ) {
-			log.duplicateJoins( persistentClass.getEntityName() );
-		}
-
-		xrefEntry.secondaryTableJoinMap = joins;
-	}
-
 	private final class EntityTableXrefImpl implements EntityTableXref {
 		private final Identifier primaryTableLogicalName;
 		private final Table primaryTable;

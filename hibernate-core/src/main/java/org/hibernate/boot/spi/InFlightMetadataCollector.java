@@ -292,10 +292,10 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
 
-	public static interface DelayedPropertyReferenceHandler extends Serializable {
-		public void process(InFlightMetadataCollector metadataCollector);
+	interface DelayedPropertyReferenceHandler extends Serializable {
+		void process(InFlightMetadataCollector metadataCollector);
 	}
-	public void addDelayedPropertyReferenceHandler(DelayedPropertyReferenceHandler handler);
+	void addDelayedPropertyReferenceHandler(DelayedPropertyReferenceHandler handler);
 	void addPropertyReference(String entityName, String propertyName);
 	void addUniquePropertyReference(String entityName, String propertyName);
 
@@ -310,7 +310,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
 
 
-	public static interface EntityTableXref {
+	interface EntityTableXref {
 		void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin);
 		void addSecondaryTable(Identifier logicalName, Join secondaryTableJoin);
 		Table resolveTable(Identifier tableName);
@@ -318,7 +318,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 		Join locateJoin(Identifier tableName);
 	}
 
-	public static class DuplicateSecondaryTableException extends HibernateException {
+	class DuplicateSecondaryTableException extends HibernateException {
 		private final Identifier tableName;
 
 		public DuplicateSecondaryTableException(Identifier tableName) {
@@ -333,8 +333,11 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 		}
 	}
 
-	public EntityTableXref getEntityTableXref(String entityName);
-	public EntityTableXref addEntityTableXref(String entityName, Identifier primaryTableLogicalName, Table primaryTable, EntityTableXref superEntityTableXref);
-	void addJoins(PersistentClass persistentClass, Map<String, Join> secondaryTables);
+	EntityTableXref getEntityTableXref(String entityName);
+	EntityTableXref addEntityTableXref(
+			String entityName,
+			Identifier primaryTableLogicalName,
+			Table primaryTable,
+			EntityTableXref superEntityTableXref);
 	Map<String,Join> getJoins(String entityName);
 }

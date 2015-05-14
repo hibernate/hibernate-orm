@@ -107,14 +107,6 @@ public class EntityManagerFactoryUnwrapTest extends BaseEntityManagerFunctionalT
 
 	@Test
 	public void testEntityManagerCanBeUnwrappedToEntityManagerFactoryImpl() {
-		try {
-			entityManagerFactory.unwrap( EntityManagerFactoryImpl.class );
-			fail( "It should not be possible to unwrap to an internal type." );
-		}
-		catch ( PersistenceException e ) {
-			// ignore
-		}
-
 		EntityManagerFactoryImpl entityManager = entityManagerFactory.unwrap( EntityManagerFactoryImpl.class );
 		assertNotNull(
 				"Unwrapping to EntityManagerFactoryImpl should be ok",

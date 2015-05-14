@@ -146,11 +146,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		return this.timeOut;
 	}
 
-	@Override
-	public void setExceptionMapper(ExceptionMapper exceptionMapper) {
-		// nothing to do here
-	}
-
 	// PhysicalTransactionDelegate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private void afterBeginCallback() {

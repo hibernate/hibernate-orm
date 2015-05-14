@@ -23,10 +23,6 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.transaction.SystemException;
-
-import org.hibernate.HibernateException;
-import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -43,15 +39,12 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	private final SynchronizationCallbackTarget target;
 
-	private ExceptionMapper exceptionMapper;
-
 	public SynchronizationCallbackCoordinatorNonTrackingImpl(SynchronizationCallbackTarget target) {
 		this.target = target;
 		reset();
 	}
 
 	public void reset() {
-		exceptionMapper = STANDARD_EXCEPTION_MAPPER;
 	}
 
 	@Override
@@ -68,21 +61,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 		if ( !target.isActive() ) {
 			return;
 		}
-		try {
-			target.beforeCompletion();
-		}
-		catch (HibernateException he) {
-			if ( he.getCause() instanceof SystemException ) {
-				throw exceptionMapper.mapStatusCheckFailure( he.getMessage(), (SystemException) he.getCause() );
-			}
-			else {
-				throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", he );
-			}
-
-		}
-		catch (RuntimeException re) {
-			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
-		}
+		target.beforeCompletion();
 	}
 
 	@Override
@@ -105,23 +84,4 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	@Override
 	public void processAnyDelayedAfterCompletion() {
 	}
-
-	@Override
-	public void setExceptionMapper(ExceptionMapper exceptionMapper) {
-		this.exceptionMapper = exceptionMapper;
-	}
-
-	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
-		@Override
-		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-			return new TransactionException( "could not determine transaction status in beforeCompletion()",
-											 systemException );
-		}
-
-		@Override
-		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
-			log.unableToPerformManagedFlush( failure.getMessage() );
-			return failure;
-		}
-	};
 }

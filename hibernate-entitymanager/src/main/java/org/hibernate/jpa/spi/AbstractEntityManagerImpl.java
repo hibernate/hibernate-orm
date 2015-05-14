@@ -100,7 +100,9 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
@@ -122,7 +124,6 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 
@@ -1570,7 +1571,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			final TransactionCoordinator transactionCoordinator = ((SessionImplementor) internalGetSession()).getTransactionCoordinator();
 			transactionCoordinator.explicitJoin();
-			transactionCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
 		}
 		catch (HibernateException he) {
 			throw convert( he );
@@ -1792,23 +1792,5 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			pe = new OptimisticLockException( e );
 		}
 		return pe;
-	}
-
-	private class CallbackExceptionMapperImpl implements ExceptionMapper {
-		@Override
-		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-			throw new PersistenceException( message, systemException );
-		}
-
-		@Override
-		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
-			if ( HibernateException.class.isInstance( failure ) ) {
-				throw convert( failure );
-			}
-			if ( PersistenceException.class.isInstance( failure ) ) {
-				throw failure;
-			}
-			throw new PersistenceException( message, failure );
-		}
 	}
 }

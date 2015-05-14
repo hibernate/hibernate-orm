@@ -1,11 +1,13 @@
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -18,7 +20,6 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.SynchronizationRegistry;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.RegisteredSynchronization;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinator;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorNonTrackingImpl;
@@ -27,8 +28,6 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.S
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.CoreLogging.logger;
 
@@ -300,11 +299,6 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return this.timeOut;
 	}
 
-	@Override
-	public void setExceptionMapper(ExceptionMapper exceptionMapper) {
-		getSynchronizationCallbackCoordinator().setExceptionMapper(exceptionMapper);
-	}
-
 	// SynchronizationCallbackTarget ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -312,9 +306,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
-		catch (HibernateException he) {
+		catch (HibernateException e) {
 			physicalTransactionDelegate.markRollbackOnly();
-			throw he;
+			throw e;
 		}
 		catch (RuntimeException re) {
 			physicalTransactionDelegate.markRollbackOnly();

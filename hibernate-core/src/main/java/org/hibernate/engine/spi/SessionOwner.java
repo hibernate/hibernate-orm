@@ -23,6 +23,10 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
+
 /**
  * The contract for a Session owner.  Typically this is something that wraps the Session.
  *
@@ -37,4 +41,10 @@ public interface SessionOwner {
 	 * @return {@literal true}/{@literal false} appropriately.
 	 */
 	public boolean shouldAutoCloseSession();
+
+	public ExceptionMapper getExceptionMapper();
+
+	public AfterCompletionAction getAfterCompletionAction();
+
+	public ManagedFlushChecker getManagedFlushChecker();
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) {DATE}, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,22 +23,18 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.transaction.Synchronization;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.io.Serializable;
+
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * Manages funneling JTA Synchronization callbacks back into the Hibernate transaction engine.
+ * A pluggable strategy for defining any actions to be performed during
+ * {@link javax.transaction.Synchronization#afterCompletion} processing from the the
+ * {@link javax.transaction.Synchronization} registered by Hibernate with the underlying JTA platform.
  *
  * @author Steve Ebersole
  */
-public interface SynchronizationCallbackCoordinator extends Synchronization {
-	/**
-	 * Called by the TransactionCoordinator when it registers the Synchronization with the JTA system
-	 */
-	public void synchronizationRegistered();
-
-	/**
-	 * Called by the TransactionCoordinator to allow the SynchronizationCallbackCoordinator to process any
-	 * after-completion handling that it may have delayed due to thread affinity
-	 */
-	public void processAnyDelayedAfterCompletion();
+public interface AfterCompletionAction extends Serializable {
+	public void doAction(boolean successful);
 }

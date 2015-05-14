@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) {DATE}, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,22 +23,25 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.transaction.Synchronization;
+import java.io.Serializable;
+
+import org.hibernate.internal.SessionImpl;
 
 /**
- * Manages funneling JTA Synchronization callbacks back into the Hibernate transaction engine.
+ * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate determines
+ * whether to perform a managed flush.  An exceptions from either this delegate or the subsequent flush are routed
+ * through the sister strategy {@link ExceptionMapper}.
  *
  * @author Steve Ebersole
  */
-public interface SynchronizationCallbackCoordinator extends Synchronization {
+public interface ManagedFlushChecker extends Serializable {
 	/**
-	 * Called by the TransactionCoordinator when it registers the Synchronization with the JTA system
+	 * Check whether we should perform the managed flush
+	 *
+	 * @param session The Session
+	 * @param jtaStatus The status of the current JTA transaction.
+	 *
+	 * @return True to indicate to perform the managed flush; false otherwise.
 	 */
-	public void synchronizationRegistered();
-
-	/**
-	 * Called by the TransactionCoordinator to allow the SynchronizationCallbackCoordinator to process any
-	 * after-completion handling that it may have delayed due to thread affinity
-	 */
-	public void processAnyDelayedAfterCompletion();
+	public boolean shouldDoManagedFlush(SessionImpl session, int jtaStatus);
 }

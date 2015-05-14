@@ -57,11 +57,6 @@
          <transaction mode="NON_XA" locking="OPTIMISTIC" auto-commit="false"/>
          <eviction max-entries="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
-         <persistence passivation="false">
-            <!-- State transfer forces all replication calls to be synchronous,
-                 so for calls to remain async, use a cluster cache loader instead -->
-            <cluster-loader remote-timeout="20000"/>
-         </persistence>
       </replicated-cache>
 
       <!-- Optimized for timestamp caching. A clustered timestamp cache
@@ -74,12 +69,6 @@
          <!--  Don't ever evict modification timestamps -->
          <eviction strategy="NONE"/>
          <expiration interval="0"/>
-         <persistence passivation="false">
-            <!-- State transfer forces all replication calls to be synchronous,
-                 so for calls to remain async, use a cluster cache loader instead -->
-            <cluster-loader remote-timeout="20000"/>
-         </persistence>
-         <state-transfer enabled="false"/>
       </replicated-cache>
    </cache-container>
 

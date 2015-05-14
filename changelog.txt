@@ -5,6 +5,25 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.10.Final (2015.05.14)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-9250] - BigIntegerSequenceGeneratorTest.testBasics fails on MS SQL Server 2012
+    [HHH-9722] - toLowerCase() still causes bugs in Turkish locale
+    [HHH-9737] - Miscellaneous bugs in unit tests when using non-default dialects
+    [HHH-9758] - Broken SQL generated for dynamic batch fetching entities with a composite ID
+    [HHH-9776] - org.hibernate.cache.infinispan.impl.BaseRegion.getElementCountInMemory() is no longer correct
+
+** Deprecation
+    [HHH-9752] - Deprecate ClassicAvgFunction, ClassicCountFunction, ClassicSumFunction
+
+** Improvement
+    [HHH-9781] - Upgrade Hibernate to support Infinispan 7.2.1.Final configurations
+
+** Task
+    [HHH-9796] - Allow running hibernate-infinspan tests using Infinispan configuration specified by hibernate.cache.infinispan.cfg
+
 Changes in version 4.3.9.Final (2015.04.15)
 ------------------------------------------------------------------------------------------------------------------------
 

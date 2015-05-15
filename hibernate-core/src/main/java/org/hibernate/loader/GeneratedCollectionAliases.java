@@ -129,7 +129,9 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	}
 
 	private String join(String[] aliases) {
-		if ( aliases == null) return null;
+		if ( aliases == null) {
+			return null;
+		}
 
 		return StringHelper.join( ", ", aliases );
 	}

@@ -88,7 +88,9 @@ public class CollectionFilterImpl extends QueryImpl {
 		List typeList = getTypes();
 		int size = typeList.size();
 		Type[] result = new Type[size+1];
-		for (int i=0; i<size; i++) result[i+1] = (Type) typeList.get(i);
+		for (int i=0; i<size; i++) {
+			result[i+1] = (Type) typeList.get(i);
+		}
 		return result;
 	}
 
@@ -96,7 +98,9 @@ public class CollectionFilterImpl extends QueryImpl {
 		List valueList = getValues();
 		int size = valueList.size();
 		Object[] result = new Object[size+1];
-		for (int i=0; i<size; i++) result[i+1] = valueList.get(i);
+		for (int i=0; i<size; i++) {
+			result[i+1] = valueList.get(i);
+		}
 		return result;
 	}
 

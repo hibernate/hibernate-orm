@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id;
+
 import java.net.InetAddress;
 
 import org.hibernate.internal.util.BytesHelper;
@@ -35,7 +35,6 @@ import org.hibernate.internal.util.BytesHelper;
  * @see UUIDHexGenerator
  * @author Gavin King
  */
-
 public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 
 	private static final int IP;
@@ -49,6 +48,7 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 		}
 		IP = ipadd;
 	}
+
 	private static short counter = (short) 0;
 	private static final int JVM = (int) ( System.currentTimeMillis() >>> 8 );
 
@@ -69,7 +69,9 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	 */
 	protected short getCount() {
 		synchronized(AbstractUUIDGenerator.class) {
-			if (counter<0) counter=0;
+			if ( counter < 0 ) {
+				counter=0;
+			}
 			return counter++;
 		}
 	}
@@ -87,10 +89,10 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 	protected short getHiTime() {
 		return (short) ( System.currentTimeMillis() >>> 32 );
 	}
+
 	protected int getLoTime() {
 		return (int) System.currentTimeMillis();
 	}
-
 
 }
 

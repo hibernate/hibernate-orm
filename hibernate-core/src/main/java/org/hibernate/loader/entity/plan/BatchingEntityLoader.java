@@ -65,7 +65,6 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 	}
 
 	@Override
-	@Deprecated
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
 		return load( id, optionalObject, session, LockOptions.NONE );
 	}

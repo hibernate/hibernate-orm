@@ -116,7 +116,9 @@ public class Index implements RelationalModel, Exportable, Serializable {
 			if ( columnOrderMap.containsKey( column ) ) {
 				buf.append( " " ).append( columnOrderMap.get( column ) );
 			}
-			if ( columns.hasNext() ) buf.append( ", " );
+			if ( columns.hasNext() ) {
+				buf.append( ", " );
+			}
 		}
 		buf.append( ")" );
 		return buf.toString();
@@ -204,7 +206,9 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) columns.add( column );
+		if ( !columns.contains( column ) ) {
+			columns.add( column );
+		}
 	}
 
 	public void addColumn(Column column, String order) {

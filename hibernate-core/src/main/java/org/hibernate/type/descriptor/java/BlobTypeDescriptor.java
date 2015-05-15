@@ -53,18 +53,22 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 	public static class BlobMutabilityPlan implements MutabilityPlan<Blob> {
 		public static final BlobMutabilityPlan INSTANCE = new BlobMutabilityPlan();
 
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
 
+		@Override
 		public Blob deepCopy(Blob value) {
 			return value;
 		}
 
+		@Override
 		public Serializable disassemble(Blob value) {
 			throw new UnsupportedOperationException( "Blobs are not cacheable" );
 		}
 
+		@Override
 		public Blob assemble(Serializable cached) {
 			throw new UnsupportedOperationException( "Blobs are not cacheable" );
 		}
@@ -74,9 +78,7 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 		super( Blob.class, BlobMutabilityPlan.INSTANCE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String toString(Blob value) {
 		final byte[] bytes;
 		try {
@@ -88,9 +90,7 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.toString( bytes );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Blob fromString(String string) {
 		return BlobProxy.generateProxy( PrimitiveByteArrayTypeDescriptor.INSTANCE.fromString( string ) );
 	}
@@ -111,6 +111,7 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 		return one == another;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> X unwrap(Blob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -152,6 +153,7 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Blob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

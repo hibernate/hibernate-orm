@@ -382,16 +382,10 @@ public class ElementWrapper implements Element, Serializable {
 		return element.attributeValue( qName, defaultValue );
 	}
 
-	/**
-	 * @deprecated
-	 */
 	public void setAttributeValue(String name, String value) {
 		element.setAttributeValue( name, value );
 	}
 
-	/**
-	 * @deprecated
-	 */
 	public void setAttributeValue(QName qName, String value) {
 		element.setAttributeValue( qName, value );
 	}

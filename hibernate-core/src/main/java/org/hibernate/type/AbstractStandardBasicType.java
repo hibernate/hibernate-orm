@@ -55,7 +55,7 @@ import org.dom4j.Node;
  * @author Brett Meyer
  */
 public abstract class AbstractStandardBasicType<T>
-		implements BasicType, StringRepresentableType<T>, XmlRepresentableType<T>, ProcedureParameterExtractionAware<T> {
+		implements BasicType, StringRepresentableType<T>, ProcedureParameterExtractionAware<T> {
 
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
@@ -83,14 +83,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	public T fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
-	}
-
-	public String toXMLString(T value, SessionFactoryImplementor factory) throws HibernateException {
-		return toString( value );
-	}
-
-	public T fromXMLString(String xml, Mapping factory) throws HibernateException {
-		return StringHelper.isEmpty( xml ) ? null : fromStringValue( xml );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {

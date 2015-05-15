@@ -266,7 +266,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
-			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin(join) ) hasDeferred = true;
+			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin(join) ) {
+				hasDeferred = true;
+			}
 			subclassTables.add( join.getTable().getQualifiedName( 
 					factory.getDialect(), 
 					factory.getSettings().getDefaultCatalogName(), 
@@ -512,7 +514,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			String result = (String) subclassesByDiscriminatorValue.get(value);
-			if (result==null) result = (String) subclassesByDiscriminatorValue.get(NOT_NULL_DISCRIMINATOR);
+			if (result==null) {
+				result = (String) subclassesByDiscriminatorValue.get(NOT_NULL_DISCRIMINATOR);
+			}
 			return result;
 		}
 	}
@@ -560,7 +564,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String filterFragment(String alias) throws MappingException {
 		String result = discriminatorFilterFragment(alias);
-		if ( hasWhere() ) result += " and " + getSQLWhereString(alias);
+		if ( hasWhere() ) {
+			result += " and " + getSQLWhereString(alias);
+		}
 		return result;
 	}
 
@@ -704,7 +710,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	
 	private int getSubclassPropertyTableNumber(String propertyName, String entityName) {
 		Type type = propertyMapping.toType(propertyName);
-		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) return 0;
+		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) {
+			return 0;
+		}
 		final Integer tabnum = (Integer) propertyTableNumbersByNameAndSubclass.get(entityName + '.' + propertyName);
 		return tabnum==null ? 0 : tabnum;
 	}
@@ -730,7 +738,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				tableNumbers.add( propTableNumber);
 			}
 		}
-		if ( tableNumbers.isEmpty() ) return null;
+		if ( tableNumbers.isEmpty() ) {
+			return null;
+		}
 		
 		//figure out which columns are needed
 		ArrayList columnNumbers = new ArrayList();
@@ -789,7 +799,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	public String getPropertyTableName(String propertyName) {
 		Integer index = getEntityMetamodel().getPropertyIndexOrNull(propertyName);
-		if (index==null) return null;
+		if (index==null) {
+			return null;
+		}
 		return qualifiedTableNames[ propertyTableNumbers[index] ];
 	}
 	

@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
@@ -63,11 +64,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * a unique hash using the table and column names.
 	 * Static so the name can be generated prior to creating the Constraint.
 	 * They're cached, keyed by name, in multiple locations.
-	 * 
-	 * @param prefix
-	 *            Appended to the beginning of the generated name
-	 * @param table
-	 * @param columns
+	 *
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, Column... columns) {
@@ -84,18 +81,14 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
 		for ( Column column : alphabeticalColumns ) {
 			String columnName = column == null ? "" : column.getName();
-			sb.append( "column`" + columnName + "`" );
+			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
 		return prefix + hashedName( sb.toString() );
 	}
 
 	/**
 	 * Helper method for {@link #generateName(String, Table, Column...)}.
-	 * 
-	 * @param prefix
-	 *            Appended to the beginning of the generated name
-	 * @param table
-	 * @param columns
+	 *
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
@@ -138,18 +131,21 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	}
 
 	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) columns.add( column );
+		if ( !columns.contains( column ) ) {
+			columns.add( column );
+		}
 	}
 
 	public void addColumns(Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			Selectable col = (Selectable) columnIterator.next();
-			if ( !col.isFormula() ) addColumn( (Column) col );
+			if ( !col.isFormula() ) {
+				addColumn( (Column) col );
+			}
 		}
 	}
 
 	/**
-	 * @param column
 	 * @return true if this constraint already contains a column with same name.
 	 */
 	public boolean containsColumn(Column column) {
@@ -186,12 +182,12 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
-			return new StringBuilder()
-					.append( "alter table " )
-					.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-					.append( " drop constraint " )
-					.append( dialect.quote( getName() ) )
-					.toString();
+			return String.format(
+					Locale.ROOT,
+					"alter table %s drop constraint %s",
+					getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ),
+					dialect.quote( getName() )
+			);
 		}
 		else {
 			return null;
@@ -205,10 +201,8 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			// empty string.  Prevent blank "alter table" statements.
 			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
 			if ( !StringHelper.isEmpty( constraintString ) ) {
-				StringBuilder buf = new StringBuilder( "alter table " )
-						.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-						.append( constraintString );
-				return buf.toString();
+				return "alter table " + getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema )
+						+ constraintString;
 			}
 		}
 		return null;
@@ -218,8 +212,11 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns;
 	}
 
-	public abstract String sqlConstraintString(Dialect d, String constraintName, String defaultCatalog,
-											   String defaultSchema);
+	public abstract String sqlConstraintString(
+			Dialect d,
+			String constraintName,
+			String defaultCatalog,
+			String defaultSchema);
 
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;

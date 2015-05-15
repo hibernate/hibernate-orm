@@ -75,7 +75,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 							true,
 							clazz,
 							propertyName
-						);
+					);
 				}
 				else {
 					throw new PropertyAccessException(
@@ -84,7 +84,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 							true,
 							clazz,
 							propertyName
-						);
+					);
 				}
 			}
 			catch (InvocationTargetException ite) {
@@ -94,7 +94,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 						true,
 						clazz,
 						propertyName
-					);
+				);
 			}
 			catch (IllegalAccessException iae) {
 				throw new PropertyAccessException(
@@ -103,7 +103,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 						true,
 						clazz,
 						propertyName
-					);
+				);
 				//cannot occur
 			}
 			catch (IllegalArgumentException iae) {
@@ -114,7 +114,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 							true,
 							clazz,
 							propertyName
-						);
+					);
 				}
 				else {
 					final Class expectedType = method.getParameterTypes()[0];
@@ -127,7 +127,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 							expectedType,
 							target,
 							value
-						);
+					);
 				}
 			}
 		}
@@ -175,7 +175,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 						false,
 						clazz,
 						propertyName
-					);
+				);
 			}
 			catch (IllegalAccessException iae) {
 				throw new PropertyAccessException(
@@ -184,7 +184,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 						false,
 						clazz,
 						propertyName
-					);
+				);
 				//cannot occur
 			}
 			catch (IllegalArgumentException iae) {
@@ -195,7 +195,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 						false,
 						clazz,
 						propertyName
-					);
+				);
 			}
 		}
 
@@ -248,14 +248,15 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 					propertyName +
 					" in class " +
 					theClass.getName()
-				);
+			);
 		}
 		return result;
 	}
 
 	private static BasicSetter getSetterOrNull(Class theClass, String propertyName) {
-
-		if (theClass==Object.class || theClass==null) return null;
+		if (theClass==Object.class || theClass==null) {
+			return null;
+		}
 
 		Method method = setterMethod(theClass, propertyName);
 
@@ -284,7 +285,6 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		Method potentialSetter = null;
 		for ( Method method : methods ) {
 			final String methodName = method.getName();
-
 			if ( method.getParameterTypes().length == 1 && methodName.startsWith( "set" ) ) {
 				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
 				String testOldMethod = methodName.substring( 3 );

@@ -425,6 +425,7 @@ public interface AvailableSettings {
 	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor
 	 * @deprecated if possible wait of Hibernate 4.1 and theService registry (MutableIdentifierGeneratorStrategy service)
 	 */
+	@Deprecated
 	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.ejb.identifier_generator_strategy_provider";
 
 	/**

@@ -177,6 +177,7 @@ public class Select {
 	 * @return LockMode
 	 * @deprecated Instead use getLockOptions
 	 */
+	@Deprecated
 	public LockMode getLockMode() {
 		return lockOptions.getLockMode();
 	}
@@ -187,6 +188,7 @@ public class Select {
 	 * @return this object
 	 * @deprecated Instead use setLockOptions
 	 */
+	@Deprecated
 	public Select setLockMode(LockMode lockMode) {
 		lockOptions.setLockMode(lockMode);
 		return this;

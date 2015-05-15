@@ -31,6 +31,8 @@ import org.hibernate.type.Type;
  * Represents a non-identifier property within the Hibernate runtime-metamodel.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use one of the {@link org.hibernate.tuple.Attribute}-based impls instead.
  */
 @Deprecated
 public class StandardProperty extends AbstractNonIdentifierAttribute implements NonIdentifierAttribute {

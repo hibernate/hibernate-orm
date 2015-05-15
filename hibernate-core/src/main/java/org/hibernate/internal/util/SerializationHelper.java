@@ -35,6 +35,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.hibernate.Hibernate;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
 
@@ -63,8 +64,7 @@ import org.jboss.logging.Logger;
  * @since 1.0
  */
 public final class SerializationHelper {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SerializationHelper.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SerializationHelper.class );
 
 	private SerializationHelper() {
 	}
@@ -371,7 +371,9 @@ public final class SerializationHelper {
 		}
 
 		private boolean different(ClassLoader one, ClassLoader other) {
-            if (one == null) return other != null;
+            if (one == null) {
+				return other != null;
+			}
             return !one.equals(other);
 		}
 	}

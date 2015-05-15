@@ -117,9 +117,10 @@ public class MetaType extends AbstractType {
 			Object value,
 			int index,
 			boolean[] settable, 
-			SessionImplementor session)
-	throws HibernateException, SQLException {
-		if ( settable[0] ) nullSafeSet(st, value, index, session);
+			SessionImplementor session) throws HibernateException, SQLException {
+		if ( settable[0] ) {
+			nullSafeSet(st, value, index, session);
+		}
 	}
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
@@ -150,8 +151,7 @@ public class MetaType extends AbstractType {
 			Object target,
 			SessionImplementor session, 
 			Object owner, 
-			Map copyCache
-	) {
+			Map copyCache) {
 		return original;
 	}
 	

@@ -1500,17 +1500,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsId_secondPassList;
-	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueType_secondPassList;
-	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponent_secondPasList;
-	private ArrayList<FkSecondPass> fk_secondPassList;
-	private ArrayList<CreateKeySecondPass> createKey_secondPasList;
-	private ArrayList<SecondaryTableSecondPass> secondaryTable_secondPassList;
-	private ArrayList<QuerySecondPass> query_secondPassList;
-	private ArrayList<ConstraintSecondPass> constraint_secondPassList;
-	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNaming_secondPassList;
+	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsIdSecondPassList;
+	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueTypeSecondPassList;
+	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
+	private ArrayList<FkSecondPass> fkSecondPassList;
+	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
+	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
+	private ArrayList<QuerySecondPass> querySecondPassList;
+	private ArrayList<ConstraintSecondPass> constraintSecondPassList;
+	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
 
-	private ArrayList<SecondPass> general_secondPassList;
+	private ArrayList<SecondPass> generalSecondPassList;
 
 	@Override
 	public void addSecondPass(SecondPass secondPass) {
@@ -1548,20 +1548,20 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else {
 			// add to the general SecondPass list
-			if ( general_secondPassList == null ) {
-				general_secondPassList = new ArrayList<SecondPass>();
+			if ( generalSecondPassList == null ) {
+				generalSecondPassList = new ArrayList<SecondPass>();
 			}
-			addSecondPass( secondPass, general_secondPassList, onTopOfTheQueue );
+			addSecondPass( secondPass, generalSecondPassList, onTopOfTheQueue );
 		}
 	}
 
 	private void addPkDrivenByDefaultMapsIdSecondPass(
 			PkDrivenByDefaultMapsIdSecondPass secondPass,
 			boolean onTopOfTheQueue) {
-		if ( pkDrivenByDefaultMapsId_secondPassList == null ) {
-			pkDrivenByDefaultMapsId_secondPassList = new ArrayList<PkDrivenByDefaultMapsIdSecondPass>();
+		if ( pkDrivenByDefaultMapsIdSecondPassList == null ) {
+			pkDrivenByDefaultMapsIdSecondPassList = new ArrayList<PkDrivenByDefaultMapsIdSecondPass>();
 		}
-		addSecondPass( secondPass, pkDrivenByDefaultMapsId_secondPassList, onTopOfTheQueue );
+		addSecondPass( secondPass, pkDrivenByDefaultMapsIdSecondPassList, onTopOfTheQueue );
 	}
 
 	private <T extends SecondPass> void addSecondPass(T secondPass, ArrayList<T> secondPassList, boolean onTopOfTheQueue) {
@@ -1574,61 +1574,61 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private void addSetSimpleValueTypeSecondPass(SetSimpleValueTypeSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( setSimpleValueType_secondPassList == null ) {
-			setSimpleValueType_secondPassList = new ArrayList<SetSimpleValueTypeSecondPass>();
+		if ( setSimpleValueTypeSecondPassList == null ) {
+			setSimpleValueTypeSecondPassList = new ArrayList<SetSimpleValueTypeSecondPass>();
 		}
-		addSecondPass( secondPass, setSimpleValueType_secondPassList, onTopOfTheQueue );
+		addSecondPass( secondPass, setSimpleValueTypeSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addCopyIdentifierComponentSecondPass(
 			CopyIdentifierComponentSecondPass secondPass,
 			boolean onTopOfTheQueue) {
-		if ( copyIdentifierComponent_secondPasList == null ) {
-			copyIdentifierComponent_secondPasList = new ArrayList<CopyIdentifierComponentSecondPass>();
+		if ( copyIdentifierComponentSecondPasList == null ) {
+			copyIdentifierComponentSecondPasList = new ArrayList<CopyIdentifierComponentSecondPass>();
 		}
-		addSecondPass( secondPass, copyIdentifierComponent_secondPasList, onTopOfTheQueue );
+		addSecondPass( secondPass, copyIdentifierComponentSecondPasList, onTopOfTheQueue );
 	}
 
 	private void addFkSecondPass(FkSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( fk_secondPassList == null ) {
-			fk_secondPassList = new ArrayList<FkSecondPass>();
+		if ( fkSecondPassList == null ) {
+			fkSecondPassList = new ArrayList<FkSecondPass>();
 		}
-		addSecondPass( secondPass, fk_secondPassList, onTopOfTheQueue );
+		addSecondPass( secondPass, fkSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addCreateKeySecondPass(CreateKeySecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( createKey_secondPasList == null ) {
-			createKey_secondPasList = new ArrayList<CreateKeySecondPass>();
+		if ( createKeySecondPasList == null ) {
+			createKeySecondPasList = new ArrayList<CreateKeySecondPass>();
 		}
-		addSecondPass( secondPass, createKey_secondPasList, onTopOfTheQueue );
+		addSecondPass( secondPass, createKeySecondPasList, onTopOfTheQueue );
 	}
 
 	private void addSecondaryTableSecondPass(SecondaryTableSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondaryTable_secondPassList == null ) {
-			secondaryTable_secondPassList = new ArrayList<SecondaryTableSecondPass>();
+		if ( secondaryTableSecondPassList == null ) {
+			secondaryTableSecondPassList = new ArrayList<SecondaryTableSecondPass>();
 		}
-		addSecondPass( secondPass, secondaryTable_secondPassList, onTopOfTheQueue );
+		addSecondPass( secondPass, secondaryTableSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addQuerySecondPass(QuerySecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( query_secondPassList == null ) {
-			query_secondPassList = new ArrayList<QuerySecondPass>();
+		if ( querySecondPassList == null ) {
+			querySecondPassList = new ArrayList<QuerySecondPass>();
 		}
-		addSecondPass( secondPass, query_secondPassList, onTopOfTheQueue );
+		addSecondPass( secondPass, querySecondPassList, onTopOfTheQueue );
 	}
 
 	private void addConstraintSecondPass(ConstraintSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( constraint_secondPassList == null ) {
-			constraint_secondPassList = new ArrayList<ConstraintSecondPass>();
+		if ( constraintSecondPassList == null ) {
+			constraintSecondPassList = new ArrayList<ConstraintSecondPass>();
 		}
-		addSecondPass( secondPass, constraint_secondPassList, onTopOfTheQueue );
+		addSecondPass( secondPass, constraintSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addImplicitColumnNamingSecondPass(ImplicitColumnNamingSecondPass secondPass) {
-		if ( implicitColumnNaming_secondPassList == null ) {
-			implicitColumnNaming_secondPassList = new ArrayList<ImplicitColumnNamingSecondPass>();
+		if ( implicitColumnNamingSecondPassList == null ) {
+			implicitColumnNamingSecondPassList = new ArrayList<ImplicitColumnNamingSecondPass>();
 		}
-		implicitColumnNaming_secondPassList.add( secondPass );
+		implicitColumnNamingSecondPassList.add( secondPass );
 	}
 
 
@@ -1642,25 +1642,25 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		inSecondPass = true;
 
 		try {
-			processSecondPasses( implicitColumnNaming_secondPassList );
+			processSecondPasses( implicitColumnNamingSecondPassList );
 
-			processSecondPasses( pkDrivenByDefaultMapsId_secondPassList );
-			processSecondPasses( setSimpleValueType_secondPassList );
-			processSecondPasses( copyIdentifierComponent_secondPasList );
+			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
+			processSecondPasses( setSimpleValueTypeSecondPassList );
+			processSecondPasses( copyIdentifierComponentSecondPasList );
 
 			processFkSecondPassesInOrder();
 
-			processSecondPasses( createKey_secondPasList );
-			processSecondPasses( secondaryTable_secondPassList );
+			processSecondPasses( createKeySecondPasList );
+			processSecondPasses( secondaryTableSecondPassList );
 
-			processSecondPasses( query_secondPassList );
-			processSecondPasses( general_secondPassList );
+			processSecondPasses( querySecondPassList );
+			processSecondPasses( generalSecondPassList );
 
 			processPropertyReferences();
 
 			secondPassCompileForeignKeys( buildingContext );
 
-			processSecondPasses( constraint_secondPassList );
+			processSecondPasses( constraintSecondPassList );
 			processUniqueConstraintHolders( buildingContext );
 			processJPAIndexHolders( buildingContext );
 
@@ -1686,15 +1686,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private void processFkSecondPassesInOrder() {
-		if ( fk_secondPassList == null || fk_secondPassList.isEmpty() ) {
+		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {
 			return;
 		}
 
 		// split FkSecondPass instances into primary key and non primary key FKs.
 		// While doing so build a map of class names to FkSecondPass instances depending on this class.
 		Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<String, Set<FkSecondPass>>();
-		List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<FkSecondPass>( fk_secondPassList.size() );
-		for ( FkSecondPass sp : fk_secondPassList ) {
+		List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<FkSecondPass>( fkSecondPassList.size() );
+		for ( FkSecondPass sp : fkSecondPassList ) {
 			if ( sp.isInPrimaryKey() ) {
 				final String referenceEntityName = sp.getReferencedEntityName();
 				final PersistentClass classMapping = getEntityBinding( referenceEntityName );
@@ -1710,7 +1710,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		// using the isADependencyOf map we order the FkSecondPass recursively instances into the right order for processing
-		List<FkSecondPass> orderedFkSecondPasses = new ArrayList<FkSecondPass>( fk_secondPassList.size() );
+		List<FkSecondPass> orderedFkSecondPasses = new ArrayList<FkSecondPass>( fkSecondPassList.size() );
 		for ( String tableName : isADependencyOf.keySet() ) {
 			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, tableName, tableName );
 		}
@@ -1722,7 +1722,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		processEndOfQueue( endOfQueueFkSecondPasses );
 
-		fk_secondPassList.clear();
+		fkSecondPassList.clear();
 	}
 
 	/**

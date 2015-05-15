@@ -32,19 +32,17 @@ import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * Renders entities and query parameters to a nicely readable string.
  * @author Gavin King
  */
 public final class EntityPrinter {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityPrinter.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
     private SessionFactoryImplementor factory;
 
@@ -100,9 +98,9 @@ public final class EntityPrinter {
 		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
 			result.put(
 					entry.getKey(), entry.getValue().getType().toLoggableString(
-					entry.getValue().getValue(),
-					factory
-			)
+							entry.getValue().getValue(),
+							factory
+					)
 			);
 		}
 		return result.toString();
@@ -110,7 +108,10 @@ public final class EntityPrinter {
 
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
 	public void toString(Iterable<Map.Entry<EntityKey,Object>> entitiesByEntityKey) throws HibernateException {
-        if ( ! LOG.isDebugEnabled() || ! entitiesByEntityKey.iterator().hasNext() ) return;
+        if ( ! LOG.isDebugEnabled() || ! entitiesByEntityKey.iterator().hasNext() ) {
+			return;
+		}
+
         LOG.debug( "Listing entities:" );
 		int i=0;
 		for (  Map.Entry<EntityKey,Object> entityKeyAndEntity : entitiesByEntityKey ) {

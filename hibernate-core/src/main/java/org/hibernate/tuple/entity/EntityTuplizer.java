@@ -51,7 +51,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @return The entity-mode
 	 */
-	public EntityMode getEntityMode();
+	EntityMode getEntityMode();
 
     /**
      * Create an entity instance initialized with the given identifier.
@@ -62,8 +62,9 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @deprecated Use {@link #instantiate(Serializable, SessionImplementor)} instead.
      */
+	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
-	public Object instantiate(Serializable id) throws HibernateException;
+	Object instantiate(Serializable id) throws HibernateException;
 
     /**
      * Create an entity instance initialized with the given identifier.
@@ -73,7 +74,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
      * @return The instantiated entity.
      */
-	public Object instantiate(Serializable id, SessionImplementor session);
+	Object instantiate(Serializable id, SessionImplementor session);
 
     /**
      * Extract the identifier value from the given entity.
@@ -87,7 +88,8 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead.
      */
-	public Serializable getIdentifier(Object entity) throws HibernateException;
+	@Deprecated
+	Serializable getIdentifier(Object entity) throws HibernateException;
 
     /**
      * Extract the identifier value from the given entity.
@@ -97,7 +99,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
      * @return The identifier value.
      */
-	public Serializable getIdentifier(Object entity, SessionImplementor session);
+	Serializable getIdentifier(Object entity, SessionImplementor session);
 
     /**
      * Inject the identifier value into the given entity.
@@ -109,8 +111,9 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SessionImplementor)} instead.
      */
+	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
-	public void setIdentifier(Object entity, Serializable id) throws HibernateException;
+	void setIdentifier(Object entity, Serializable id) throws HibernateException;
 
     /**
      * Inject the identifier value into the given entity.
@@ -121,7 +124,7 @@ public interface EntityTuplizer extends Tuplizer {
      * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
      */
-	public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
+	void setIdentifier(Object entity, Serializable id, SessionImplementor session);
 
 	/**
 	 * Inject the given identifier and version into the entity, in order to
@@ -133,8 +136,9 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @deprecated Use {@link #resetIdentifier(Object, Serializable, Object, SessionImplementor)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion);
+	void resetIdentifier(Object entity, Serializable currentId, Object currentVersion);
 
 	/**
 	 * Inject the given identifier and version into the entity, in order to
@@ -145,7 +149,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @param currentVersion The version value to inject into the entity.
 	 * @param session The session from which the request originated
 	 */
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session);
+	void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session);
 
     /**
      * Extract the value of the version property from the given entity.
@@ -154,7 +158,7 @@ public interface EntityTuplizer extends Tuplizer {
      * @return The value of the version property, or null if not versioned.
 	 * @throws HibernateException Indicates a problem accessing the version property
      */
-	public Object getVersion(Object entity) throws HibernateException;
+	Object getVersion(Object entity) throws HibernateException;
 
 	/**
 	 * Inject the value of a particular property.
@@ -164,7 +168,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @param value The property value to inject.
 	 * @throws HibernateException Indicates a problem access the property
 	 */
-	public void setPropertyValue(Object entity, int i, Object value) throws HibernateException;
+	void setPropertyValue(Object entity, int i, Object value) throws HibernateException;
 
 	/**
 	 * Inject the value of a particular property.
@@ -174,7 +178,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @param value The property value to inject.
 	 * @throws HibernateException Indicates a problem access the property
 	 */
-	public void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException;
+	void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException;
 
 	/**
 	 * Extract the values of the insertable properties of the entity (including backrefs)
@@ -185,7 +189,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The insertable property values.
 	 * @throws HibernateException Indicates a problem access the properties
 	 */
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
+	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
 	throws HibernateException;
 
 	/**
@@ -196,7 +200,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The current value of the given property on the given entity.
 	 * @throws HibernateException Indicates a problem access the property
 	 */
-	public Object getPropertyValue(Object entity, String propertyName) throws HibernateException;
+	Object getPropertyValue(Object entity, String propertyName) throws HibernateException;
 
     /**
      * Called just after the entities properties have been initialized.
@@ -205,14 +209,14 @@ public interface EntityTuplizer extends Tuplizer {
      * @param lazyPropertiesAreUnfetched Are defined lazy properties currently unfecthed
      * @param session The session initializing this entity.
      */
-	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session);
+	void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session);
 
 	/**
 	 * Does this entity, for this mode, present a possibility for proxying?
 	 *
 	 * @return True if this tuplizer can generate proxies for this entity.
 	 */
-	public boolean hasProxy();
+	boolean hasProxy();
 
 	/**
 	 * Generates an appropriate proxy representation of this entity for this
@@ -223,7 +227,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The generate proxies.
 	 * @throws HibernateException Indicates an error generating the proxy.
 	 */
-	public Object createProxy(Serializable id, SessionImplementor session) throws HibernateException;
+	Object createProxy(Serializable id, SessionImplementor session) throws HibernateException;
 
 	/**
 	 * Does the {@link #getMappedClass() class} managed by this tuplizer implement
@@ -231,7 +235,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @return True if the Lifecycle interface is implemented; false otherwise.
 	 */
-	public boolean isLifecycleImplementor();
+	boolean isLifecycleImplementor();
 
 	/**
 	 * Returns the java class to which generated proxies will be typed.
@@ -241,7 +245,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @return The java class to which generated proxies will be typed
 	 */
-	public Class getConcreteProxyClass();
+	Class getConcreteProxyClass();
 	
     /**
      * Does the given entity instance have any currently uninitialized lazy properties?
@@ -249,21 +253,21 @@ public interface EntityTuplizer extends Tuplizer {
      * @param entity The entity to be check for uninitialized lazy properties.
      * @return True if uninitialized lazy properties were found; false otherwise.
      */
-	public boolean hasUninitializedLazyProperties(Object entity);
+	boolean hasUninitializedLazyProperties(Object entity);
 	
 	/**
 	 * Is it an instrumented POJO?
 	 *
 	 * @return {@code true} if the entity class is instrumented; {@code false} otherwise.
 	 */
-	public boolean isInstrumented();
+	boolean isInstrumented();
 
 	/**
 	 * Get any {@link EntityNameResolver EntityNameResolvers} associated with this {@link Tuplizer}.
 	 *
 	 * @return The associated resolvers.  May be null or empty.
 	 */
-	public EntityNameResolver[] getEntityNameResolvers();
+	EntityNameResolver[] getEntityNameResolvers();
 
 	/**
 	 * Given an entity instance, determine the most appropriate (most targeted) entity-name which represents it.
@@ -287,19 +291,19 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @throws HibernateException If we are unable to determine an entity-name within the inheritence hierarchy.
 	 */
-	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory);
+	String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory);
 
 	/**
 	 * Retrieve the getter for the identifier property.  May return null.
 	 *
 	 * @return The getter for the identifier property.
 	 */
-	public Getter getIdentifierGetter();
+	Getter getIdentifierGetter();
 
 	/**
 	 * Retrieve the getter for the version property.  May return null.
 	 *
 	 * @return The getter for the version property.
 	 */
-	public Getter getVersionGetter();
+	Getter getVersionGetter();
 }

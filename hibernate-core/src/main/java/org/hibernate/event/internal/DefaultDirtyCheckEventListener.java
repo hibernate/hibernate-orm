@@ -26,9 +26,8 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default dirty-check event listener used by hibernate for
@@ -38,8 +37,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListener implements DirtyCheckEventListener {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DefaultDirtyCheckEventListener.class.getName() );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultDirtyCheckEventListener.class );
 
 	/**
 	 * Handle the given dirty-check event.
@@ -48,21 +46,21 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 	 * @throws HibernateException
 	 */
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
-
 		int oldSize = event.getSession().getActionQueue().numberOfCollectionRemovals();
 
 		try {
 			flushEverythingToExecutions(event);
 			boolean wasNeeded = event.getSession().getActionQueue().hasAnyQueuedActions();
-			if ( wasNeeded )
+			if ( wasNeeded ) {
 				LOG.debug( "Session dirty" );
-			else
+			}
+			else {
 				LOG.debug( "Session not dirty" );
+			}
 			event.setDirty( wasNeeded );
 		}
 		finally {
 			event.getSession().getActionQueue().clearFromFlushNeededCheck( oldSize );
 		}
-
 	}
 }

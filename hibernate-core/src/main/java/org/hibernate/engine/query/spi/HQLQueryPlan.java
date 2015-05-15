@@ -78,7 +78,7 @@ public class HQLQueryPlan implements Serializable {
 	/**
 	* We'll check the trace level only once per instance
 	*/
-	private final boolean TRACE_ENABLED = LOG.isTraceEnabled();
+	private final boolean traceEnabled = LOG.isTraceEnabled();
 
 	/**
 	 * Constructs a HQLQueryPlan
@@ -121,8 +121,9 @@ public class HQLQueryPlan implements Serializable {
 		final Set<Serializable> combinedQuerySpaces = new HashSet<Serializable>();
 
 		final boolean hasCollectionRole = (collectionRole == null);
-		final Map querySubstitutions = factory.getSettings().getQuerySubstitutions();
-		final QueryTranslatorFactory queryTranslatorFactory = factory.getSettings().getQueryTranslatorFactory();
+		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
+		final QueryTranslatorFactory queryTranslatorFactory = factory.getServiceRegistry().getService( QueryTranslatorFactory.class );
+
 
 		for ( int i=0; i<length; i++ ) {
 			if ( hasCollectionRole ) {
@@ -205,7 +206,7 @@ public class HQLQueryPlan implements Serializable {
 	public List performList(
 			QueryParameters queryParameters,
 			SessionImplementor session) throws HibernateException {
-		if ( TRACE_ENABLED ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Find: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -276,7 +277,8 @@ public class HQLQueryPlan implements Serializable {
 	 * @param rowSelection
 	 * @return a reasonable size to use for allocation
 	 */
-	private final int guessResultSize(RowSelection rowSelection) {
+	@SuppressWarnings("UnnecessaryUnboxing")
+	private int guessResultSize(RowSelection rowSelection) {
 		if ( rowSelection != null ) {
 			final int maxReasonableAllocation = rowSelection.getFetchSize() != null ? rowSelection.getFetchSize().intValue() : 100;
 			if ( rowSelection.getMaxRows() != null && rowSelection.getMaxRows().intValue() > 0 ) {
@@ -303,7 +305,7 @@ public class HQLQueryPlan implements Serializable {
 	public Iterator performIterate(
 			QueryParameters queryParameters,
 			EventSource session) throws HibernateException {
-		if ( TRACE_ENABLED ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -341,7 +343,7 @@ public class HQLQueryPlan implements Serializable {
 	public ScrollableResults performScroll(
 			QueryParameters queryParameters,
 			SessionImplementor session) throws HibernateException {
-		if ( TRACE_ENABLED ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -367,7 +369,7 @@ public class HQLQueryPlan implements Serializable {
 	 */
 	public int performExecuteUpdate(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
-		if ( TRACE_ENABLED ) {
+		if ( traceEnabled ) {
 			LOG.tracev( "Execute update: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
@@ -382,10 +384,10 @@ public class HQLQueryPlan implements Serializable {
 	}
 
 	private ParameterMetadata buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
-		final long start = TRACE_ENABLED ? System.nanoTime() : 0;
+		final long start = traceEnabled ? System.nanoTime() : 0;
 		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
 
-		if ( TRACE_ENABLED ) {
+		if ( traceEnabled ) {
 			final long end = System.nanoTime();
 			LOG.tracev( "HQL param location recognition took {0} nanoseconds ({1})", ( end - start ), hql );
 		}

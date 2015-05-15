@@ -197,7 +197,9 @@ public class Join implements AttributeContainer, Serializable {
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
-			if ( !prop.isLazy() ) return false;
+			if ( !prop.isLazy() ) {
+				return false;
+			}
 		}
 		return true;
 	}

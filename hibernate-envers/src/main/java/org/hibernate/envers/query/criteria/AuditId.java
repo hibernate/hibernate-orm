@@ -63,17 +63,6 @@ public class AuditId<T> extends AuditProperty<T> {
 
 	// Projections
 
-	/**
-	 * Projection counting the values
-	 *
-	 * @param idPropertyName Name of the identifier property
-	 *
-	 * @deprecated Use {@link #count()}.
-	 */
-	public AuditProjection count(String idPropertyName) {
-		return new PropertyAuditProjection( new OriginalIdPropertyName( idPropertyName ), "count", false );
-	}
-
 	@Override
 	public AuditCriterion hasChanged() {
 		throw new UnsupportedOperationException();

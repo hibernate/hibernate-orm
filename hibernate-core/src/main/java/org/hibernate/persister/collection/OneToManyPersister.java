@@ -96,17 +96,20 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateDeleteString() {
-		
-		Update update = new Update( getDialect() )
+		final Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames, "null" )
 				.addPrimaryKeyColumns( keyColumnNames );
 		
-		if ( hasIndex && !indexContainsFormula ) update.addColumns( indexColumnNames, "null" );
+		if ( hasIndex && !indexContainsFormula ) {
+			update.addColumns( indexColumnNames, "null" );
+		}
 		
-		if ( hasWhere ) update.setWhere( sqlWhereString );
+		if ( hasWhere ) {
+			update.setWhere( sqlWhereString );
+		}
 		
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "delete one-to-many " + getRole() );
 		}
 		
@@ -118,15 +121,17 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateInsertRowString() {
-		
-		Update update = new Update( getDialect() )
+		final Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames );
 		
-		if ( hasIndex && !indexContainsFormula ) update.addColumns( indexColumnNames );
+		if ( hasIndex && !indexContainsFormula ) {
+			update.addColumns( indexColumnNames );
+		}
 		
 		//identifier collections not supported for 1-to-many
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "create one-to-many row " + getRole() );
 		}
 		
@@ -139,7 +144,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateUpdateRowString() {
-		Update update = new Update( getDialect() ).setTableName( qualifiedTableName );
+		final Update update = new Update( getDialect() ).setTableName( qualifiedTableName );
 		update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
 		if ( hasIdentifier ) {
 			update.addPrimaryKeyColumns( new String[]{ identifierColumnName } );
@@ -157,14 +162,15 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateDeleteRowString() {
-		
-		Update update = new Update( getDialect() )
+		final Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames, "null" );
 		
-		if ( hasIndex && !indexContainsFormula ) update.addColumns( indexColumnNames, "null" );
+		if ( hasIndex && !indexContainsFormula ) {
+			update.addColumns( indexColumnNames, "null" );
+		}
 		
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "delete one-to-many row " + getRole() );
 		}
 		
@@ -246,8 +252,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								offset = writeElement( st, collection.getElement( entry ), offset, session );
 
 								if ( useBatch ) {
-									session
-											.getJdbcCoordinator()
+									session.getJdbcCoordinator()
 											.getBatch( recreateBatchKey )
 											.addToBatch();
 								}
@@ -279,7 +284,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 						"could not update collection: " +
 								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLUpdateRowString()
-						);
+				);
 			}
 		}
 	}

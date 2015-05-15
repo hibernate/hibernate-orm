@@ -81,7 +81,9 @@ public class SelectFragment {
 	}
 
 	public SelectFragment addColumns(String[] columnNames) {
-		for (int i=0; i<columnNames.length; i++) addColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addColumn( columnName );
+		}
 		return this;
 	}
 
@@ -98,13 +100,17 @@ public class SelectFragment {
 	}
 
 	public SelectFragment addColumns(String tableAlias, String[] columnNames) {
-		for (int i=0; i<columnNames.length; i++) addColumn( tableAlias, columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addColumn( tableAlias, columnName );
+		}
 		return this;
 	}
 
 	public SelectFragment addColumns(String tableAlias, String[] columnNames, String[] columnAliases) {
 		for (int i=0; i<columnNames.length; i++) {
-			if ( columnNames[i]!=null ) addColumn( tableAlias, columnNames[i], columnAliases[i] );
+			if ( columnNames[i]!=null ) {
+				addColumn( tableAlias, columnNames[i], columnAliases[i] );
+			}
 		}
 		return this;
 	}
@@ -138,7 +144,9 @@ public class SelectFragment {
 		Iterator columnAliasIter = columnAliases.iterator();
 		//HashMap columnsUnique = new HashMap();
 		HashSet columnsUnique = new HashSet();
-		if (usedAliases!=null) columnsUnique.addAll( Arrays.asList(usedAliases) );
+		if (usedAliases!=null) {
+			columnsUnique.addAll( Arrays.asList(usedAliases) );
+		}
 		while ( iter.hasNext() ) {
 			String column = (String) iter.next();
 			String columnAlias = (String) columnAliasIter.next();

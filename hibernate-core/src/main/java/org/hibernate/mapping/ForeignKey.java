@@ -35,11 +35,10 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gavin King
  */
 public class ForeignKey extends Constraint {
-
 	private Table referencedTable;
 	private String referencedEntityName;
 	private boolean cascadeDeleteEnabled;
-	private List referencedColumns = new ArrayList();
+	private List<Column> referencedColumns = new ArrayList<Column>();
 	private boolean creationEnabled = true;
 
 	public ForeignKey() {
@@ -73,7 +72,7 @@ public class ForeignKey extends Constraint {
 		String[] columnNames = new String[ getColumnSpan() ];
 		String[] referencedColumnNames = new String[ getColumnSpan() ];
 
-		final Iterator referencedColumnItr;
+		final Iterator<Column> referencedColumnItr;
 		if ( isReferenceToPrimaryKey() ) {
 			referencedColumnItr = referencedTable.getPrimaryKey().getColumnIterator();
 		} 
@@ -85,7 +84,7 @@ public class ForeignKey extends Constraint {
 		int i=0;
 		while ( columnItr.hasNext() ) {
 			columnNames[i] = ( (Column) columnItr.next() ).getQuotedName(dialect);
-			referencedColumnNames[i] = ( (Column) referencedColumnItr.next() ).getQuotedName(dialect);
+			referencedColumnNames[i] = referencedColumnItr.next().getQuotedName(dialect);
 			i++;
 		}
 
@@ -109,7 +108,9 @@ public class ForeignKey extends Constraint {
 		while( columns.hasNext() ) {
 			Column column = (Column) columns.next();
 			buf.append( column.getName() );
-			if ( columns.hasNext() ) buf.append(",");
+			if ( columns.hasNext() ) {
+				buf.append(",");
+			}
 		}
 	}
 
@@ -125,7 +126,9 @@ public class ForeignKey extends Constraint {
 	 * Furthermore it aligns the length of the underlying tables columns.
 	 */
 	public void alignColumns() {
-		if ( isReferenceToPrimaryKey() ) alignColumns(referencedTable);
+		if ( isReferenceToPrimaryKey() ) {
+			alignColumns(referencedTable);
+		}
 	}
 	
 	private void alignColumns(Table referencedTable) {
@@ -133,13 +136,13 @@ public class ForeignKey extends Constraint {
 		if ( referencedPkColumnSpan != getColumnSpan() ) {
 			StringBuilder sb = new StringBuilder();
 			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
-				.append( getTable().getName() )
-				.append(" [");
+					.append( getTable().getName() )
+					.append( " [" );
 			appendColumns( sb, getColumnIterator() );
 			sb.append("])")
-				.append(") must have same number of columns as the referenced primary key (")
-				.append( referencedTable.getName() )
-				.append(" [");
+					.append( ") must have same number of columns as the referenced primary key (" )
+					.append( referencedTable.getName() )
+					.append( " [" );
 			appendColumns( sb, referencedTable.getPrimaryKey().getColumnIterator() );
 			sb.append("])");
 			throw new MappingException( sb.toString() );
@@ -214,10 +217,9 @@ public class ForeignKey extends Constraint {
 	
 	public String toString() {
 		if(!isReferenceToPrimaryKey() ) {
-			StringBuilder result = new StringBuilder(getClass().getName() + '(' + getTable().getName() + getColumns() );
-			result.append( " ref-columns:" + '(' + getReferencedColumns() );
-			result.append( ") as " + getName() );
-			return result.toString();
+			return getClass().getName()
+					+ '(' + getTable().getName() + getColumns()
+					+ " ref-columns:" + '(' + getReferencedColumns() + ") as " + getName() + ")";
 		} 
 		else {
 			return super.toString();

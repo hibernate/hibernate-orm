@@ -72,7 +72,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private boolean lazy;
 	private ArrayList properties = new ArrayList();
 	private ArrayList declaredProperties = new ArrayList();
-	private final ArrayList subclasses = new ArrayList();
+	private final ArrayList<Subclass> subclasses = new ArrayList<Subclass>();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
 	private boolean dynamicInsert;
@@ -80,7 +80,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private int batchSize=-1;
 	private boolean selectBeforeUpdate;
 	private java.util.Map metaAttributes;
-	private ArrayList joins = new ArrayList();
+	private ArrayList<Join> joins = new ArrayList<Join>();
 	private final ArrayList subclassJoins = new ArrayList();
 	private final java.util.List filters = new ArrayList();
 	protected final java.util.Set synchronizedTables = new HashSet();
@@ -125,9 +125,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	public Class getMappedClass() throws MappingException {
-		if (className==null) return null;
+		if (className==null) {
+			return null;
+		}
 		try {
-			if(mappedClass == null) {
+			if (mappedClass == null) {
 				mappedClass = ReflectHelper.classForName(className);
 			}
 			return mappedClass;
@@ -138,9 +140,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	public Class getProxyInterface() {
-		if (proxyInterfaceName==null) return null;
+		if (proxyInterfaceName==null) {
+			return null;
+		}
 		try {
-			if(proxyInterface == null) {
+			if (proxyInterface == null) {
 				proxyInterface = ReflectHelper.classForName( proxyInterfaceName );
 			}
 			return proxyInterface;
@@ -149,6 +153,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			throw new MappingException("proxy class not found: " + proxyInterfaceName, cnfe);
 		}
 	}
+
 	public boolean useDynamicInsert() {
 		return dynamicInsert;
 	}
@@ -177,7 +182,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		// inheritance cycle detection (paranoid check)
 		PersistentClass superclass = getSuperclass();
 		while (superclass!=null) {
-			if( subclass.getEntityName().equals( superclass.getEntityName() ) ) {
+			if ( subclass.getEntityName().equals( superclass.getEntityName() ) ) {
 				throw new MappingException(
 					"Circular inheritance mapping detected: " +
 					subclass.getEntityName() +
@@ -461,8 +466,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		Iterator iter = getPropertyClosureIterator();
 		Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null
-				&& identifierProperty.getName().equals( StringHelper.root(propertyName) )
-				) {
+				&& identifierProperty.getName().equals( StringHelper.root(propertyName) ) ) {
 			return identifierProperty;
 		}
 		else {
@@ -470,11 +474,17 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
+	/**
+	 * @deprecated prefer {@link #getOptimisticLockStyle}
+	 */
 	@Deprecated
 	public int getOptimisticLockMode() {
 		return getOptimisticLockStyle().getOldCode();
 	}
 
+	/**
+	 * @deprecated prefer {@link #setOptimisticLockStyle}
+	 */
 	@Deprecated
 	public void setOptimisticLockMode(int optimisticLockMode) {
 		setOptimisticLockStyle( OptimisticLockStyle.interpretOldCode( optimisticLockMode ) );
@@ -498,7 +508,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 						StringHelper.qualify( getEntityName(), prop.getName() ) +
 						" type: " +
 						prop.getType().getName()
-					);
+				);
 			}
 		}
 		checkPropertyDuplication();
@@ -506,7 +516,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 	
 	private void checkPropertyDuplication() throws MappingException {
-		HashSet names = new HashSet();
+		HashSet<String> names = new HashSet<String>();
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
@@ -561,8 +571,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public int getPropertyClosureSpan() {
 		int span = properties.size();
-		for ( int i=0; i<joins.size(); i++ ) {
-			Join join = (Join) joins.get(i);
+		for ( Join join : joins ) {
 			span += join.getPropertySpan();
 		}
 		return span;
@@ -573,7 +582,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		Iterator iter = getSubclassJoinClosureIterator();
 		while ( iter.hasNext() ) {
 			Join join = (Join) iter.next();
-			if ( join.containsProperty(prop) ) return result;
+			if ( join.containsProperty(prop) ) {
+				return result;
+			}
 			result++;
 		}
 		return 0;

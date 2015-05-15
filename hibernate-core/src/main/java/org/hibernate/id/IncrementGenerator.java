@@ -34,12 +34,11 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * <b>increment</b><br>
@@ -56,8 +55,7 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IncrementGenerator.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	private Class returnClass;
 	private String sql;
@@ -128,8 +126,12 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 			try {
 				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
-                    if (rs.next()) previousValueHolder.initialize(rs, 0L).increment();
-                    else previousValueHolder.initialize(1L);
+                    if (rs.next()) {
+						previousValueHolder.initialize(rs, 0L).increment();
+					}
+                    else {
+						previousValueHolder.initialize(1L);
+					}
 					sql = null;
 					if ( debugEnabled ) {
 						LOG.debugf( "First free id: %s", previousValueHolder.makeValue() );

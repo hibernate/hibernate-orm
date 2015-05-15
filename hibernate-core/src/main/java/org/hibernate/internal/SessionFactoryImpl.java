@@ -826,7 +826,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return result;
 	}
 
-	@Deprecated
+	@SuppressWarnings("deprecation")
 	public Settings getSettings() {
 		return settings;
 	}

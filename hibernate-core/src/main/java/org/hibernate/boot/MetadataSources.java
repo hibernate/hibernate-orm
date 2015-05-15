@@ -428,6 +428,8 @@ public class MetadataSources implements Serializable {
 	 * @param document The DOM document
 	 *
 	 * @return this (for method chaining purposes)
+	 *
+	 * @deprecated since 5.0.  Use one of the other methods for passing mapping source(s).
 	 */
 	@Deprecated
 	public MetadataSources addDocument(Document document) {

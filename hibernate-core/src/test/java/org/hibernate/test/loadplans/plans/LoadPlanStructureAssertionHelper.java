@@ -80,7 +80,7 @@ public class LoadPlanStructureAssertionHelper {
 //		final EntityLoader loader = new EntityLoader( persister, lockMode, sf, influencers );
 
 		LoadPlan plan = buildLoadPlan( sf, persister, influencers, lockMode );
-		LoadQueryDetails details = BatchingLoadQueryDetailsFactory.makeEntityLoadQueryDetails(
+		LoadQueryDetails details = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				plan,
 				persister.getKeyColumnNames(),
 				new QueryBuildingParameters() {

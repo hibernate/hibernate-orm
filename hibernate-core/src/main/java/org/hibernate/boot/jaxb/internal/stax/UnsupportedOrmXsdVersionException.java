@@ -28,6 +28,7 @@ import org.hibernate.boot.jaxb.Origin;
 
 /**
  * @author Steve Ebersole
+ *
  * @deprecated Use {@link org.hibernate.boot.UnsupportedOrmXsdVersionException} instead
  */
 @Deprecated

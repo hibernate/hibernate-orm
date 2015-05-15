@@ -96,9 +96,11 @@
             <property name="severity" value="warning" />
         </module>
         <module name="EqualsHashCode" />
+<!--
         <module name="FinalLocalVariable">
             <property name="severity" value="warning" />
         </module>
+-->
         <module name="MissingSwitchDefault">
             <property name="severity" value="warning" />
         </module>
@@ -219,10 +221,11 @@
         See http://checkstyle.sourceforge.net/config_javadoc.html
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     -->
+<!--
     <module name="JavadocPackage">
         <property name="allowLegacy" value="true" />
     </module>
-
+-->
 
     <!--
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

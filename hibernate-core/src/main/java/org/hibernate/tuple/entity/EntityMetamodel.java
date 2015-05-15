@@ -241,7 +241,9 @@ public class EntityMetamodel implements Serializable {
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			boolean lazy = prop.isLazy() && instrumentationMetadata.isInstrumented();
-			if ( lazy ) hasLazy = true;
+			if ( lazy ) {
+				hasLazy = true;
+			}
 			propertyLaziness[i] = lazy;
 
 			propertyNames[i] = properties[i].getName();
@@ -330,7 +332,9 @@ public class EntityMetamodel implements Serializable {
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
-        if (hasLazyProperties) LOG.lazyPropertyFetchingAvailable(name);
+        if (hasLazyProperties) {
+			LOG.lazyPropertyFetchingAvailable(name);
+		}
 
 		lazy = persistentClass.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:

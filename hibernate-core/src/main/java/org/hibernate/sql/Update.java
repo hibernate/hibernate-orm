@@ -79,15 +79,17 @@ public class Update {
 	}	
 	
 	public Update addPrimaryKeyColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addPrimaryKeyColumn( columnNames[i], "?" );
+		for ( String columnName : columnNames ) {
+			addPrimaryKeyColumn( columnName, "?" );
 		}
 		return this;
 	}
 	
 	public Update addPrimaryKeyColumns(String[] columnNames, boolean[] includeColumns, String[] valueExpressions) {
 		for ( int i=0; i<columnNames.length; i++ ) {
-			if( includeColumns[i] ) addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+			if( includeColumns[i] ) {
+				addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+			}
 		}
 		return this;
 	}
@@ -116,22 +118,24 @@ public class Update {
 	}
 	
 	public Update addColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addColumn( columnName );
 		}
 		return this;
 	}
 
 	public Update addColumns(String[] columnNames, boolean[] updateable, String[] valueExpressions) {
 		for ( int i=0; i<columnNames.length; i++ ) {
-			if ( updateable[i] ) addColumn( columnNames[i], valueExpressions[i] );
+			if ( updateable[i] ) {
+				addColumn( columnNames[i], valueExpressions[i] );
+			}
 		}
 		return this;
 	}
 
 	public Update addColumns(String[] columnNames, String valueExpression) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i], valueExpression );
+		for ( String columnName : columnNames ) {
+			addColumn( columnName, valueExpression );
 		}
 		return this;
 	}
@@ -150,15 +154,15 @@ public class Update {
 	}
 
 	public Update addWhereColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addWhereColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addWhereColumn( columnName );
 		}
 		return this;
 	}
 
 	public Update addWhereColumns(String[] columnNames, String valueExpression) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addWhereColumn( columnNames[i], valueExpression );
+		for ( String columnName : columnNames ) {
+			addWhereColumn( columnName, valueExpression );
 		}
 		return this;
 	}

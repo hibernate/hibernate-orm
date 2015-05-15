@@ -80,14 +80,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateDeleteString() {
-		
-		Delete delete = new Delete()
+		final Delete delete = new Delete()
 				.setTableName( qualifiedTableName )
 				.addPrimaryKeyColumns( keyColumnNames );
 		
-		if ( hasWhere ) delete.setWhere( sqlWhereString );
+		if ( hasWhere ) {
+			delete.setWhere( sqlWhereString );
+		}
 		
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			delete.setComment( "delete collection " + getRole() );
 		}
 		
@@ -99,18 +100,19 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateInsertRowString() {
-		
-		Insert insert = new Insert( getDialect() )
+		final Insert insert = new Insert( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames );
 		
-		if ( hasIdentifier) insert.addColumn( identifierColumnName );
+		if ( hasIdentifier) {
+			insert.addColumn( identifierColumnName );
+		}
 		
 		if ( hasIndex /*&& !indexIsFormula*/ ) {
 			insert.addColumns( indexColumnNames, indexColumnIsSettable );
 		}
 		
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			insert.setComment( "insert collection row " + getRole() );
 		}
 		
@@ -126,8 +128,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateUpdateRowString() {
-		
-		Update update = new Update( getDialect() )
+		final Update update = new Update( getDialect() )
 			.setTableName( qualifiedTableName );
 		
 		//if ( !elementIsFormula ) {
@@ -145,7 +146,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsInPrimaryKey, elementColumnWriters );
 		}
 		
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "update collection row " + getRole() );
 		}
 		
@@ -163,9 +164,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	 */
 	@Override
     protected String generateDeleteRowString() {
-		
-		Delete delete = new Delete()
-			.setTableName( qualifiedTableName );
+		final Delete delete = new Delete().setTableName( qualifiedTableName );
 		
 		if ( hasIdentifier ) {
 			delete.addPrimaryKeyColumns( new String[]{ identifierColumnName } );
@@ -178,7 +177,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			delete.addPrimaryKeyColumns( elementColumnNames, elementColumnIsInPrimaryKey, elementColumnWriters );
 		}
 		
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			delete.setComment( "delete collection row " + getRole() );
 		}
 		
@@ -206,10 +205,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private BasicBatchKey updateBatchKey;
 
 	@Override
-    protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session)
-			throws HibernateException {
-		
-		if ( ArrayHelper.isAllFalse(elementColumnIsSettable) ) return 0;
+    protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session) throws HibernateException {
+		if ( ArrayHelper.isAllFalse(elementColumnIsSettable) ) {
+			return 0;
+		}
 
 		try {
 			PreparedStatement st = null;
@@ -261,8 +260,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 						}
 
 						if ( useBatch ) {
-							session
-									.getJdbcCoordinator()
+							session.getJdbcCoordinator()
 									.getBatch( updateBatchKey )
 									.addToBatch();
 						}
@@ -293,7 +291,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					sqle,
 					"could not update collection rows: " + MessageHelper.collectionInfoString( this, collection, id, session ),
 					getSQLUpdateRowString()
-				);
+			);
 		}
 	}
 

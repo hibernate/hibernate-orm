@@ -28,6 +28,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
@@ -42,23 +43,21 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public class EvictVisitor extends AbstractVisitor {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EvictVisitor.class.getName() );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
 
 	EvictVisitor(EventSource session) {
 		super(session);
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type)
-		throws HibernateException {
-
-		if (collection!=null) evictCollection(collection, type);
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+		if (collection != null) {
+			evictCollection(collection, type);
+		}
 
 		return null;
 	}
 	public void evictCollection(Object value, CollectionType type) {
-
 		final Object pc;
 		if ( type.hasHolder() ) {
 			pc = getSession().getPersistenceContext().removeCollectionHolder(value);
@@ -71,13 +70,16 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 
 		PersistentCollection collection = (PersistentCollection) pc;
-		if ( collection.unsetSession( getSession() ) ) evictCollection(collection);
+		if ( collection.unsetSession( getSession() ) ) {
+			evictCollection(collection);
+		}
 	}
 
 	private void evictCollection(PersistentCollection collection) {
 		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove(collection);
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Evicting collection: %s",
+			LOG.debugf(
+					"Evicting collection: %s",
 					MessageHelper.collectionInfoString( ce.getLoadedPersister(),
 							collection,
 							ce.getLoadedKey(),

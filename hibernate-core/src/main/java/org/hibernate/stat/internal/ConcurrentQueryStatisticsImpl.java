@@ -109,7 +109,8 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 				avgExecutionTime = totalExecutionTime.get() / executionCount.get();
 			}
 			return avgExecutionTime;
-		} finally {
+		}
+		finally {
 			writeLock.unlock();
 		}
 	}
@@ -140,29 +141,28 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 		readLock.lock();
 		try {
 			// Less chances for a context switch
-			for (long old = executionMinTime.get(); (time < old) && !executionMinTime.compareAndSet(old, time); old = executionMinTime.get());
-			for (long old = executionMaxTime.get(); (time > old) && !executionMaxTime.compareAndSet(old, time); old = executionMaxTime.get());
+			for (long old = executionMinTime.get(); (time < old) && !executionMinTime.compareAndSet(old, time); old = executionMinTime.get()) {}
+			for (long old = executionMaxTime.get(); (time > old) && !executionMaxTime.compareAndSet(old, time); old = executionMaxTime.get()) {}
 			executionCount.getAndIncrement();
 			executionRowCount.addAndGet(rows);
 			totalExecutionTime.addAndGet(time);
-		} finally {
+		}
+		finally {
 			readLock.unlock();
 		}
 	}
 
 	public String toString() {
-		return new StringBuilder()
-				.append("QueryStatistics")
-				.append("[cacheHitCount=").append(this.cacheHitCount)
-				.append(",cacheMissCount=").append(this.cacheMissCount)
-				.append(",cachePutCount=").append(this.cachePutCount)
-				.append(",executionCount=").append(this.executionCount)
-				.append(",executionRowCount=").append(this.executionRowCount)
-				.append(",executionAvgTime=").append(this.getExecutionAvgTime())
-				.append(",executionMaxTime=").append(this.executionMaxTime)
-				.append(",executionMinTime=").append(this.executionMinTime)
-				.append(']')
-				.toString();
+		return "QueryStatistics"
+				+ "[cacheHitCount=" + this.cacheHitCount
+				+ ",cacheMissCount=" + this.cacheMissCount
+				+ ",cachePutCount=" + this.cachePutCount
+				+ ",executionCount=" + this.executionCount
+				+ ",executionRowCount=" + this.executionRowCount
+				+ ",executionAvgTime=" + this.getExecutionAvgTime()
+				+ ",executionMaxTime=" + this.executionMaxTime
+				+ ",executionMinTime=" + this.executionMinTime
+				+ ']';
 	}
 
 	void incrementCacheHitCount() {

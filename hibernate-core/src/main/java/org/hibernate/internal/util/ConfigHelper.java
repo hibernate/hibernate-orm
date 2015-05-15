@@ -45,7 +45,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public final class ConfigHelper {
-
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ConfigHelper.class.getName());
 
 	/** Try to locate a local URL representing the incoming path.  The first attempt
@@ -82,13 +81,15 @@ public final class ConfigHelper {
 		if (contextClassLoader!=null) {
 			url = contextClassLoader.getResource(path);
 		}
-		if (url != null)
+		if (url != null) {
 			return url;
+		}
 
 		// Next, try to locate this resource through this class's classloader
 		url = ConfigHelper.class.getClassLoader().getResource(path);
-		if (url != null)
+		if (url != null) {
 			return url;
+		}
 
 		// Next, try to locate this resource through the system classloader
 		url = ClassLoader.getSystemClassLoader().getResource(path);
@@ -155,8 +156,9 @@ public final class ConfigHelper {
 	private ConfigHelper() {}
 
 	public static InputStream getResourceAsStream(String resource) {
-		String stripped = resource.startsWith("/") ?
-				resource.substring(1) : resource;
+		String stripped = resource.startsWith("/")
+				? resource.substring(1)
+				: resource;
 
 		InputStream stream = null;
 		ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();

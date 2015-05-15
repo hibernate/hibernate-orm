@@ -43,7 +43,7 @@ public class QuerySelect {
 	private String comment;
 	private boolean distinct;
 
-	private static final HashSet DONT_SPACE_TOKENS = new HashSet();
+	private static final HashSet<String> DONT_SPACE_TOKENS = new HashSet<String>();
 	static {
 		//dontSpace.add("'");
 		DONT_SPACE_TOKENS.add(".");
@@ -82,10 +82,14 @@ public class QuerySelect {
 	}
 
 	public void addSelectFragmentString(String fragment) {
-		if ( fragment.length()>0 && fragment.charAt(0)==',' ) fragment = fragment.substring(1);
+		if ( fragment.length()>0 && fragment.charAt(0)==',' ) {
+			fragment = fragment.substring(1);
+		}
 		fragment = fragment.trim();
 		if ( fragment.length()>0 ) {
-			if ( select.length()>0 ) select.append(", ");
+			if ( select.length()>0 ) {
+				select.append(", ");
+			}
 			select.append(fragment);
 		}
 	}
@@ -128,15 +132,21 @@ public class QuerySelect {
 	}
 
 	public void addOrderBy(String orderByString) {
-		if ( orderBy.length() > 0 ) orderBy.append(", ");
+		if ( orderBy.length() > 0 ) {
+			orderBy.append(", ");
+		}
 		orderBy.append(orderByString);
 	}
 
 	public String toQueryString() {
 		StringBuilder buf = new StringBuilder(50);
-		if (comment!=null) buf.append("/* ").append(comment).append(" */ ");
+		if (comment!=null) {
+			buf.append("/* ").append(comment).append(" */ ");
+		}
 		buf.append("select ");
-		if (distinct) buf.append("distinct ");
+		if (distinct) {
+			buf.append("distinct ");
+		}
 		String from = joins.toFromFragmentString();
 		if ( from.startsWith(",") ) {
 			from = from.substring(1);
@@ -169,9 +179,15 @@ public class QuerySelect {
 			}
 		}
 
-		if ( groupBy.length() > 0 ) buf.append(" group by ").append( groupBy.toString() );
-		if ( having.length() > 0 ) buf.append(" having ").append( having.toString() );
-		if ( orderBy.length() > 0 ) buf.append(" order by ").append( orderBy.toString() );
+		if ( groupBy.length() > 0 ) {
+			buf.append(" group by ").append( groupBy.toString() );
+		}
+		if ( having.length() > 0 ) {
+			buf.append(" having ").append( having.toString() );
+		}
+		if ( orderBy.length() > 0 ) {
+			buf.append(" order by ").append( orderBy.toString() );
+		}
 
 		return dialect.transformSelectString( buf.toString() );
 	}

@@ -64,7 +64,7 @@ public class Helper implements QueryBuildingParameters {
 	}
 
 	public LoadQueryDetails buildLoadQueryDetails(LoadPlan loadPlan, SessionFactoryImplementor sf) {
-		return BatchingLoadQueryDetailsFactory.makeEntityLoadQueryDetails(
+		return BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				loadPlan,
 				null,
 				this,

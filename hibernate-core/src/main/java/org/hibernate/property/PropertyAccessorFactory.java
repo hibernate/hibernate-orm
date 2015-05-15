@@ -38,7 +38,6 @@ import org.hibernate.mapping.Property;
  * @author Steve Ebersole
  */
 public final class PropertyAccessorFactory {
-
 	private static final PropertyAccessor BASIC_PROPERTY_ACCESSOR = new BasicPropertyAccessor();
 	private static final PropertyAccessor DIRECT_PROPERTY_ACCESSOR = new DirectPropertyAccessor();
 	private static final PropertyAccessor MAP_ACCESSOR = new MapAccessor();
@@ -129,17 +128,29 @@ public final class PropertyAccessorFactory {
 
 	// todo : this eventually needs to be removed
 	public static PropertyAccessor getPropertyAccessor(Class optionalClass, String type) throws MappingException {
-		if ( type==null ) type = optionalClass==null || optionalClass==Map.class ? "map" : "property";
+		if ( type==null ) {
+			type = optionalClass==null || optionalClass==Map.class ? "map" : "property";
+		}
 		return getPropertyAccessor(type);
 	}
 
 	// todo : this eventually needs to be removed
 	public static PropertyAccessor getPropertyAccessor(String type) throws MappingException {
-		if ( type==null || "property".equals(type) ) return BASIC_PROPERTY_ACCESSOR;
-		if ( "field".equals(type) ) return DIRECT_PROPERTY_ACCESSOR;
-		if ( "map".equals(type) ) return MAP_ACCESSOR;
-		if ( "embedded".equals(type) ) return EMBEDDED_PROPERTY_ACCESSOR;
-		if ( "noop".equals(type)) return NOOP_ACCESSOR;
+		if ( type==null || "property".equals(type) ) {
+			return BASIC_PROPERTY_ACCESSOR;
+		}
+		if ( "field".equals(type) ) {
+			return DIRECT_PROPERTY_ACCESSOR;
+		}
+		if ( "map".equals(type) ) {
+			return MAP_ACCESSOR;
+		}
+		if ( "embedded".equals(type) ) {
+			return EMBEDDED_PROPERTY_ACCESSOR;
+		}
+		if ( "noop".equals(type)) {
+			return NOOP_ACCESSOR;
+		}
 
 		return resolveCustomAccessor(type);
 	}

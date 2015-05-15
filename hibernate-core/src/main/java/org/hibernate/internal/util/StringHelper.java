@@ -43,26 +43,23 @@ public final class StringHelper {
 
 	private StringHelper() { /* static methods only - hide constructor */
 	}
-	
-	/*public static boolean containsDigits(String string) {
-		for ( int i=0; i<string.length(); i++ ) {
-			if ( Character.isDigit( string.charAt(i) ) ) return true;
-		}
-		return false;
-	}*/
 
 	public static int lastIndexOfLetter(String string) {
 		for ( int i=0; i<string.length(); i++ ) {
 			char character = string.charAt(i);
 			// Include "_".  See HHH-8073
-			if ( !Character.isLetter(character) && !('_'==character) ) return i-1;
+			if ( !Character.isLetter(character) && !('_'==character) ) {
+				return i-1;
+			}
 		}
 		return string.length()-1;
 	}
 
 	public static String join(String seperator, String[] strings) {
 		int length = strings.length;
-		if ( length == 0 ) return "";
+		if ( length == 0 ) {
+			return "";
+		}
 		StringBuilder buf = new StringBuilder( length * strings[0].length() )
 				.append( strings[0] );
 		for ( int i = 1; i < length; i++ ) {
@@ -73,7 +70,9 @@ public final class StringHelper {
 
 	public static String joinWithQualifierAndSuffix(String[] values, String qualifier, String suffix, String deliminator) {
 		int length = values.length;
-		if ( length == 0 ) return "";
+		if ( length == 0 ) {
+			return "";
+		}
 		StringBuilder buf = new StringBuilder( length * ( values[0].length() + suffix.length() ) )
 				.append( qualify( qualifier, values[0] ) ).append( suffix );
 		for ( int i = 1; i < length; i++ ) {
@@ -84,7 +83,9 @@ public final class StringHelper {
 
 	public static String join(String seperator, Iterator objects) {
 		StringBuilder buf = new StringBuilder();
-		if ( objects.hasNext() ) buf.append( objects.next() );
+		if ( objects.hasNext() ) {
+			buf.append( objects.next() );
+		}
 		while ( objects.hasNext() ) {
 			buf.append( seperator ).append( objects.next() );
 		}
@@ -105,7 +106,9 @@ public final class StringHelper {
 
 	public static String repeat(String string, int times) {
 		StringBuilder buf = new StringBuilder( string.length() * times );
-		for ( int i = 0; i < times; i++ ) buf.append( string );
+		for ( int i = 0; i < times; i++ ) {
+			buf.append( string );
+		}
 		return buf.toString();
 	}
 
@@ -141,13 +144,14 @@ public final class StringHelper {
 		return replace( template, placeholder, replacement, wholeWords, false );
 	}
 
-	public static String replace(String template,
-								 String placeholder,
-								 String replacement,
-								 boolean wholeWords,
-								 boolean encloseInParensIfNecessary) {
+	public static String replace(
+			String template,
+			String placeholder,
+			String replacement,
+			boolean wholeWords,
+			boolean encloseInParensIfNecessary) {
 		if ( template == null ) {
-			return template;
+			return null;
 		}
 		int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
@@ -161,21 +165,22 @@ public final class StringHelper {
 	}
 
 
-	public static String replace(String beforePlaceholder,
-								 String afterPlaceholder,
-								 String placeholder,
-								 String replacement,
-								 boolean wholeWords,
-								 boolean encloseInParensIfNecessary) {
+	public static String replace(
+			String beforePlaceholder,
+			String afterPlaceholder,
+			String placeholder,
+			String replacement,
+			boolean wholeWords,
+			boolean encloseInParensIfNecessary) {
 		final boolean actuallyReplace =
-				! wholeWords ||
-				afterPlaceholder.length() == 0 ||
-				! Character.isJavaIdentifierPart( afterPlaceholder.charAt( 0 ) );
+				! wholeWords
+						|| afterPlaceholder.length() == 0
+						|| ! Character.isJavaIdentifierPart( afterPlaceholder.charAt( 0 ) );
 		boolean encloseInParens =
-				actuallyReplace &&
-				encloseInParensIfNecessary &&
-				! ( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) &&
-				! ( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );		
+				actuallyReplace
+						&& encloseInParensIfNecessary
+						&& ! ( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' )
+						&& ! ( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );
 		StringBuilder buf = new StringBuilder( beforePlaceholder );
 		if ( encloseInParens ) {
 			buf.append( '(' );
@@ -222,17 +227,14 @@ public final class StringHelper {
 
 	public static String replaceOnce(String template, String placeholder, String replacement) {
 		if ( template == null ) {
-			return template; // returnign null!
+			return null;  // returnign null!
 		}
         int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
 			return template;
 		}
 		else {
-			return new StringBuilder( template.substring( 0, loc ) )
-					.append( replacement )
-					.append( template.substring( loc + placeholder.length() ) )
-					.toString();
+			return template.substring( 0, loc ) + replacement + template.substring( loc + placeholder.length() );
 		}
 	}
 
@@ -357,13 +359,15 @@ public final class StringHelper {
 	}
 
 	public static boolean booleanValue(String tfString) {
-		String trimmed = tfString.trim().toLowerCase(Locale.ROOT);
+		String trimmed = tfString.trim().toLowerCase( Locale.ROOT );
 		return trimmed.equals( "true" ) || trimmed.equals( "t" );
 	}
 
 	public static String toString(Object[] array) {
 		int len = array.length;
-		if ( len == 0 ) return "";
+		if ( len == 0 ) {
+			return "";
+		}
 		StringBuilder buf = new StringBuilder( len * 12 );
 		for ( int i = 0; i < len - 1; i++ ) {
 			buf.append( array[i] ).append(", ");
@@ -382,9 +386,9 @@ public final class StringHelper {
 	private static String[] multiply(String[] strings, String placeholder, String[] replacements) {
 		String[] results = new String[replacements.length * strings.length];
 		int n = 0;
-		for ( int i = 0; i < replacements.length; i++ ) {
-			for ( int j = 0; j < strings.length; j++ ) {
-				results[n++] = replaceOnce( strings[j], placeholder, replacements[i] );
+		for ( String replacement : replacements ) {
+			for ( String string : strings ) {
+				results[n++] = replaceOnce( string, placeholder, replacement );
 			}
 		}
 		return results;
@@ -541,9 +545,9 @@ public final class StringHelper {
 	 * @return an alias of the form <samp>foo1_</samp>
 	 */
 	public static String generateAlias(String description, int unique) {
-		return generateAliasRoot(description) +
-			Integer.toString(unique) +
-			'_';
+		return generateAliasRoot(description)
+				+ Integer.toString(unique)
+				+ '_';
 	}
 
 	/**
@@ -602,7 +606,9 @@ public final class StringHelper {
 	public static String moveAndToBeginning(String filter) {
 		if ( filter.trim().length()>0 ){
 			filter += " and ";
-			if ( filter.startsWith(" and ") ) filter = filter.substring(4);
+			if ( filter.startsWith(" and ") ) {
+				filter = filter.substring(4);
+			}
 		}
 		return filter;
 	}
@@ -635,7 +641,7 @@ public final class StringHelper {
             name = name.substring( 1, name.length() - 1 );
         }
 
-		return new StringBuilder( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
+		return "`" + name + '`';
 	}
 
 	/**

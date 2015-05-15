@@ -40,8 +40,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
-import org.hibernate.type.XmlRepresentableType;
 
 import org.dom4j.Element;
 
@@ -204,7 +204,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 
 		final Type indexType = persister.getIndexType();
 		final Object indexValue = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-		final String index = ( (XmlRepresentableType) indexType ).toXMLString( indexValue, factory );
+		final String index = ( (StringRepresentableType) indexType ).toString( indexValue );
 		setIndex( elem, indexNode, index );
 		return object;
 	}
@@ -251,7 +251,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 			final Map.Entry me = (Map.Entry) o;
 			final Object object = indexIsFormula
 					? me.getValue()
-					: ( (XmlRepresentableType) indexType ).fromXMLString( (String) me.getKey(), persister.getFactory() );
+					: ( (StringRepresentableType) indexType ).fromStringValue( (String) me.getKey() );
 			if ( object != null ) {
 				deleteList.add( object );
 			}
@@ -279,7 +279,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
 		final String index = ( (IndexedValue) entry ).index;
 		final Type indexType = persister.getIndexType();
-		return ( (XmlRepresentableType) indexType ).fromXMLString( index, persister.getFactory() );
+		return ( (StringRepresentableType) indexType ).fromStringValue( index );
 	}
 
 	@Override

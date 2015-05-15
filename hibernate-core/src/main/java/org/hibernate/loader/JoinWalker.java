@@ -745,8 +745,12 @@ public class JoinWalker {
 			return false;
 		}
 		else {
-			if (config==FetchMode.JOIN) return true;
-			if (config==FetchMode.SELECT) return false;
+			if (config==FetchMode.JOIN) {
+				return true;
+			}
+			if (config==FetchMode.SELECT) {
+				return false;
+			}
 			if ( type.isEntityType() ) {
 				//TODO: look at the owning property and check that it 
 				//      isn't lazy (by instrumentation)
@@ -844,7 +848,7 @@ public class JoinWalker {
 			return true;
 		}
 
-		Integer maxFetchDepth = getFactory().getSettings().getMaximumFetchDepth();
+		Integer maxFetchDepth = getFactory().getSessionFactoryOptions().getMaximumFetchDepth();
 		final boolean tooDeep = maxFetchDepth!=null && depth >= maxFetchDepth;
 		
 		return !tooDeep && !isDuplicateAssociation(lhsTable, lhsColumnNames, type);
@@ -875,7 +879,7 @@ public class JoinWalker {
 		Iterator iter = associations.iterator();
 		OuterJoinableAssociation last = null;
 		while ( iter.hasNext() ) {
-			OuterJoinableAssociation oj = (OuterJoinableAssociation) iter.next();
+			final OuterJoinableAssociation oj = (OuterJoinableAssociation) iter.next();
 			if ( last != null && last.isManyToManyWith( oj ) ) {
 				oj.addManyToManyJoin( outerjoin, ( QueryableCollection ) last.getJoinable() );
 			}
@@ -892,12 +896,11 @@ public class JoinWalker {
 	 * Count the number of instances of Joinable which are actually
 	 * also instances of Loadable, or are one-to-many associations
 	 */
-	protected static final int countEntityPersisters(List associations)
+	protected static int countEntityPersisters(List associations)
 	throws MappingException {
 		int result = 0;
-		Iterator iter = associations.iterator();
-		while ( iter.hasNext() ) {
-			OuterJoinableAssociation oj = (OuterJoinableAssociation) iter.next();
+		for ( Object association : associations ) {
+			final OuterJoinableAssociation oj = (OuterJoinableAssociation) association;
 			if ( oj.getJoinable().consumesEntityAlias() ) {
 				result++;
 			}
@@ -910,15 +913,14 @@ public class JoinWalker {
 	 * also instances of PersistentCollection which are being fetched
 	 * by outer join
 	 */
-	protected static final int countCollectionPersisters(List associations)
+	protected static int countCollectionPersisters(List associations)
 	throws MappingException {
 		int result = 0;
-		Iterator iter = associations.iterator();
-		while ( iter.hasNext() ) {
-			OuterJoinableAssociation oj = (OuterJoinableAssociation) iter.next();
-			if ( oj.getJoinType()==JoinType.LEFT_OUTER_JOIN &&
+		for ( Object association : associations ) {
+			final OuterJoinableAssociation oj = (OuterJoinableAssociation) association;
+			if ( oj.getJoinType() == JoinType.LEFT_OUTER_JOIN &&
 					oj.getJoinable().isCollection() &&
-					! oj.hasRestriction() ) {
+					!oj.hasRestriction() ) {
 				result++;
 			}
 		}
@@ -928,7 +930,7 @@ public class JoinWalker {
 	/**
 	 * Get the order by string required for collection fetching
 	 */
-	protected static final String orderBy(List associations)
+	protected static String orderBy(List associations)
 	throws MappingException {
 		StringBuilder buf = new StringBuilder();
 		Iterator iter = associations.iterator();
@@ -959,7 +961,9 @@ public class JoinWalker {
 			}
 			last = oj;
 		}
-		if ( buf.length()>0 ) buf.setLength( buf.length()-2 );
+		if ( buf.length()>0 ) {
+			buf.setLength( buf.length()-2 );
+		}
 		return buf.toString();
 	}
 
@@ -971,7 +975,9 @@ public class JoinWalker {
 			// if not a composite key, use "foo in (?, ?, ?)" for batching
 			// if no batch, and not a composite key, use "foo = ?"
 			InFragment in = new InFragment().setColumn( alias, columnNames[0] );
-			for ( int i=0; i<batchSize; i++ ) in.addValue("?");
+			for ( int i=0; i<batchSize; i++ ) {
+				in.addValue("?");
+			}
 			return new StringBuilder( in.toFragmentString() );
 		}
 		else {
@@ -1004,13 +1010,13 @@ public class JoinWalker {
 		initPersisters( associations, new LockOptions(lockMode));
 	}
 
-	protected static interface AssociationInitCallback {
-		public static final AssociationInitCallback NO_CALLBACK = new AssociationInitCallback() {
+	protected interface AssociationInitCallback {
+		AssociationInitCallback NO_CALLBACK = new AssociationInitCallback() {
 			public void associationProcessed(OuterJoinableAssociation oja, int position) {
 			}
 		};
 
-		public void associationProcessed(OuterJoinableAssociation oja, int position);
+		void associationProcessed(OuterJoinableAssociation oja, int position);
 	}
 	protected void initPersisters(final List associations, final LockOptions lockOptions) throws MappingException {
 		initPersisters( associations, lockOptions, AssociationInitCallback.NO_CALLBACK );
@@ -1069,7 +1075,9 @@ public class JoinWalker {
 			}
 		}
 
-		if ( ArrayHelper.isAllNegative(owners) ) owners = null;
+		if ( ArrayHelper.isAllNegative(owners) ) {
+			owners = null;
+		}
 		if ( collectionOwners!=null && ArrayHelper.isAllNegative(collectionOwners) ) {
 			collectionOwners = null;
 		}
@@ -1078,8 +1086,7 @@ public class JoinWalker {
 	/**
 	 * Generate a select list of columns containing all properties of the entity classes
 	 */
-	protected final String selectString(List associations)
-	throws MappingException {
+	protected final String selectString(List associations) throws MappingException {
 
 		if ( associations.size()==0 ) {
 			return "";
@@ -1111,7 +1118,9 @@ public class JoinWalker {
 				if (selectFragment.trim().length() > 0) {
 					buf.append(", ").append(selectFragment);
 				}
-				if ( joinable.consumesEntityAlias() ) entityAliasCount++;
+				if ( joinable.consumesEntityAlias() ) {
+					entityAliasCount++;
+				}
 				if ( joinable.consumesCollectionAlias() &&
 						join.getJoinType()==JoinType.LEFT_OUTER_JOIN &&
 						!join.hasRestriction() ) {

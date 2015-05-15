@@ -122,7 +122,9 @@ public class PathExpressionParser implements Parser {
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 
-		if ( token != null ) path.append( token );
+		if ( token != null ) {
+			path.append( token );
+		}
 
 		String alias = q.getPathAlias( path.toString() );
 		if ( alias != null ) {
@@ -148,7 +150,9 @@ public class PathExpressionParser implements Parser {
 		else {
 			if ( dotcount == 0 ) {
 				if ( !continuation ) {
-					if ( !q.isName( token ) ) throw new QueryException( "undefined alias: " + token );
+					if ( !q.isName( token ) ) {
+						throw new QueryException( "undefined alias: " + token );
+					}
 					currentName = token;
 					currentPropertyMapping = q.getPropertyMapping( currentName );
 				}
@@ -178,14 +182,18 @@ public class PathExpressionParser implements Parser {
 					dereferenceComponent( token );
 				}
 				else if ( propertyType.isEntityType() ) {
-					if ( !isCollectionValued() ) dereferenceEntity( token, ( EntityType ) propertyType, q );
+					if ( !isCollectionValued() ) {
+						dereferenceEntity( token, ( EntityType ) propertyType, q );
+					}
 				}
 				else if ( propertyType.isCollectionType() ) {
 					dereferenceCollection( token, ( ( CollectionType ) propertyType ).getRole(), q );
 
 				}
 				else {
-					if ( token != null ) throw new QueryException( "dereferenced: " + path );
+					if ( token != null ) {
+						throw new QueryException( "dereferenced: " + path );
+					}
 				}
 
 			}
@@ -197,8 +205,8 @@ public class PathExpressionParser implements Parser {
 		//NOTE: we avoid joining to the next table if the named property is just the foreign key value
 
 		//if its "id"
-		boolean isIdShortcut = EntityPersister.ENTITY_ID.equals( propertyName ) &&
-				propertyType.isReferenceToPrimaryKey();
+		boolean isIdShortcut = EntityPersister.ENTITY_ID.equals( propertyName )
+				&& propertyType.isReferenceToPrimaryKey();
 
 		//or its the id property name
 		final String idPropertyName;
@@ -216,7 +224,9 @@ public class PathExpressionParser implements Parser {
 		if ( isIdShortcut || isNamedIdPropertyShortcut ) {
 			// special shortcut for id properties, skip the join!
 			// this must only occur at the _end_ of a path expression
-			if ( componentPath.length() > 0 ) componentPath.append( '.' );
+			if ( componentPath.length() > 0 ) {
+				componentPath.append( '.' );
+			}
 			componentPath.append( propertyName );
 		}
 		else {
@@ -224,7 +234,9 @@ public class PathExpressionParser implements Parser {
 			String name = q.createNameFor( entityClass );
 			q.addType( name, entityClass );
 			addJoin( name, propertyType );
-			if ( propertyType.isOneToOne() ) oneToOneOwnerName = currentName;
+			if ( propertyType.isOneToOne() ) {
+				oneToOneOwnerName = currentName;
+			}
 			ownerAssociationType = propertyType;
 			currentName = name;
 			currentProperty = propertyName;
@@ -236,7 +248,9 @@ public class PathExpressionParser implements Parser {
 
 	private void dereferenceComponent(String propertyName) {
 		if ( propertyName != null ) {
-			if ( componentPath.length() > 0 ) componentPath.append( '.' );
+			if ( componentPath.length() > 0 ) {
+				componentPath.append( '.' );
+			}
 			componentPath.append( propertyName );
 		}
 	}
@@ -261,11 +275,7 @@ public class PathExpressionParser implements Parser {
 		}
 		else {
 			if ( componentPath.length() > 0 ) {
-				return new StringBuilder()
-						.append( currentProperty )
-						.append( '.' )
-						.append( componentPath.toString() )
-						.toString();
+				return currentProperty + '.' + componentPath.toString();
 			}
 			else {
 				return currentProperty;
@@ -351,9 +361,14 @@ public class PathExpressionParser implements Parser {
 
 		QueryableCollection collPersister = q.getCollectionPersister( collectionRole );
 
-		if ( !collPersister.hasIndex() ) throw new QueryException( "unindexed collection before []: " + path );
+		if ( !collPersister.hasIndex() ) {
+			throw new QueryException( "unindexed collection before []: " + path );
+		}
+
 		String[] indexCols = collPersister.getIndexColumnNames();
-		if ( indexCols.length != 1 ) throw new QueryException( "composite-index appears in []: " + path );
+		if ( indexCols.length != 1 ) {
+			throw new QueryException( "composite-index appears in []: " + path );
+		}
 		//String[] keyCols = collPersister.getKeyColumnNames();
 
 		JoinSequence fromJoins = new JoinSequence( q.getFactory() )
@@ -361,7 +376,9 @@ public class PathExpressionParser implements Parser {
 				.setRoot( collPersister, collectionName )
 				.setNext( joinSequence.copy() );
 
-		if ( !continuation ) addJoin( collectionName, collPersister.getCollectionType() );
+		if ( !continuation ) {
+			addJoin( collectionName, collPersister.getCollectionType() );
+		}
 
 		joinSequence.addCondition( collectionName + '.' + indexCols[0] + " = " ); //TODO: get SQL rendering out of here
 

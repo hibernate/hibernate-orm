@@ -77,8 +77,10 @@ public class SimpleSelect {
 	}
 
 	public SimpleSelect addColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			if ( columnNames[i]!=null ) addColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			if ( columnName != null ) {
+				addColumn( columnName );
+			}
 		}
 		return this;
 	}
@@ -140,8 +142,10 @@ public class SimpleSelect {
 	}
 
 	public SimpleSelect addCondition(String[] lhs, String condition) {
-		for ( int i=0; i<lhs.length; i++ ) {
-			if ( lhs[i]!=null ) addCondition( lhs[i], condition );
+		for ( String lh : lhs ) {
+			if ( lh != null ) {
+				addCondition( lh, condition );
+			}
 		}
 		return this;
 	}
@@ -152,7 +156,7 @@ public class SimpleSelect {
 				tableName.length() + 
 				whereTokens.size() * 10 + 
 				10 
-			);
+		);
 		
 		if ( comment!=null ) {
 			buf.append("/* ").append(comment).append(" */ ");
@@ -184,7 +188,9 @@ public class SimpleSelect {
 				.append( toWhereClause() );
 		}
 		
-		if (orderBy!=null) buf.append(orderBy);
+		if (orderBy!=null) {
+			buf.append(orderBy);
+		}
 		
 		if (lockOptions!=null) {
 			buf.append( dialect.getForUpdateString(lockOptions) );
@@ -198,7 +204,9 @@ public class SimpleSelect {
 		Iterator iter = whereTokens.iterator();
 		while ( iter.hasNext() ) {
 			buf.append( iter.next() );
-			if ( iter.hasNext() ) buf.append(' ');
+			if ( iter.hasNext() ) {
+				buf.append(' ');
+			}
 		}
 		return buf.toString();
 	}

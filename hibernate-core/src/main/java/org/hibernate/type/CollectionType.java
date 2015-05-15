@@ -125,9 +125,13 @@ public abstract class CollectionType extends AbstractType implements Association
 			// worrying about proxies is perhaps a little bit of overkill here...
 			if ( element instanceof HibernateProxy ) {
 				LazyInitializer li = ( (HibernateProxy) element ).getHibernateLazyInitializer();
-				if ( !li.isUninitialized() ) element = li.getImplementation();
+				if ( !li.isUninitialized() ) {
+					element = li.getImplementation();
+				}
 			}
-			if ( element == childObject ) return true;
+			if ( element == childObject ) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -167,7 +171,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner) throws SQLException {
-		return nullSafeGet( rs, new String[] { name }, session, owner );
+		return nullSafeGet( rs, new String[] {name}, session, owner );
 	}
 
 	@Override
@@ -250,7 +254,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The iterator.
 	 */
 	public Iterator getElementsIterator(Object collection, SessionImplementor session) {
-		return getElementsIterator(collection);
+		return getElementsIterator( collection );
 	}
 
 	/**
@@ -380,8 +384,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Serializable getKeyOfOwner(Object owner, SessionImplementor session) {
 		
 		EntityEntry entityEntry = session.getPersistenceContext().getEntry( owner );
-		if ( entityEntry == null ) return null; // This just handles a particular case of component
-									  // projection, perhaps get rid of it and throw an exception
+		if ( entityEntry == null ) {
+			// This just handles a particular case of component
+			// projection, perhaps get rid of it and throw an exception
+			return null;
+		}
 		
 		if ( foreignKeyPropertyName == null ) {
 			return entityEntry.getId();
@@ -408,7 +415,7 @@ public abstract class CollectionType extends AbstractType implements Association
 						entityEntry.getLoadedValue( foreignKeyPropertyName ),
 						session,
 						owner 
-					);
+				);
 			}
 
 			return (Serializable) id;
@@ -511,7 +518,7 @@ public abstract class CollectionType extends AbstractType implements Association
 				throw new MappingException( 
 						"collection was not an association: " + 
 						collectionPersister.getRole() 
-					);
+				);
 			}
 			
 			return collectionPersister.getElementPersister().getEntityName();

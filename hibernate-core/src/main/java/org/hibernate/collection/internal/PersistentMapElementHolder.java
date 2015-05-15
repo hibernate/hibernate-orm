@@ -29,8 +29,8 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
-import org.hibernate.type.XmlRepresentableType;
 
 import org.dom4j.Element;
 
@@ -84,7 +84,7 @@ public class PersistentMapElementHolder extends PersistentIndexedElementHolder {
 			final Element subElement = element.addElement( persister.getElementNodeName() );
 			elementType.setToXMLNode( subElement, object, persister.getFactory() );
 
-			final String indexString = ( (XmlRepresentableType) indexType ).toXMLString( index, persister.getFactory() );
+			final String indexString = ( (StringRepresentableType) indexType ).toString( index );
 			setIndex( subElement, indexNodeName, indexString );
 		}
 	}
@@ -104,7 +104,7 @@ public class PersistentMapElementHolder extends PersistentIndexedElementHolder {
 			final Element elem = (Element) elements.get( i/2 );
 			final Object object = elementType.fromXMLNode( elem, persister.getFactory() );
 			final String indexString = getIndex( elem, indexNodeName, i );
-			final Object index = ( (XmlRepresentableType) indexType ).fromXMLString( indexString, persister.getFactory() );
+			final Object index = ( (StringRepresentableType) indexType ).fromStringValue( indexString );
 			result[i++] = indexType.disassemble( index, getSession(), null );
 			result[i++] = elementType.disassemble( object, getSession(), null );
 		}

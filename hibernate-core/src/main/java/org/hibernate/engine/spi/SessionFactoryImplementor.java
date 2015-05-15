@@ -124,6 +124,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @deprecated since 5.0; use {@link #getServiceRegistry()} instead to locate the JdbcServices
 	 */
+	@Deprecated
 	JdbcServices getJdbcServices();
 
 	/**

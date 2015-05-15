@@ -152,7 +152,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	@Deprecated
 	@SuppressWarnings("deprecation")
 	public T applyDefaultEntityMode(EntityMode entityMode) {
 		delegate.applyDefaultEntityMode( entityMode );
@@ -258,7 +257,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
-	@Deprecated
 	@SuppressWarnings("deprecation")
 	public T applyQuerySubstitutions(Map substitutions) {
 		delegate.applyQuerySubstitutions( substitutions );

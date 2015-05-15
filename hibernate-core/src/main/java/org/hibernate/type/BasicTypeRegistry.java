@@ -145,10 +145,14 @@ public class BasicTypeRegistry implements Serializable {
 
 		for ( String key : type.getRegistrationKeys() ) {
 			// be safe...
-            if (key == null) continue;
+            if (key == null) {
+				continue;
+			}
             LOG.debugf("Adding type registration %s -> %s", key, type);
 			final Type old = registry.put( key, type );
-            if (old != null && old != type) LOG.typeRegistrationOverridesPrevious(key, old);
+            if (old != null && old != type) {
+				LOG.typeRegistrationOverridesPrevious(key, old);
+			}
 		}
 	}
 

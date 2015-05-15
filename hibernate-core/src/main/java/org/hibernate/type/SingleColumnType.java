@@ -31,20 +31,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * Provide convenient methods for binding and extracting values for use with {@link BasicType}.  Most of this
- * is copied from the (now deprecated) {@link NullableType}.
- * <p/>
- * Glaring omission are the forms that do not take
+ * Provide convenient methods for binding and extracting values for use with {@link BasicType}.
  *
  * @author Steve Ebersole
  */
 public interface SingleColumnType<T> extends Type {
 
-	public int sqlType();
+	int sqlType();
 
-	public String toString(T value) throws HibernateException;
+	String toString(T value) throws HibernateException;
 
-	public T fromStringValue(String xml) throws HibernateException;
+	T fromStringValue(String xml) throws HibernateException;
 
 	/**
 	 * Get a column value from a result set by name.
@@ -58,7 +55,7 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
-	public T nullSafeGet(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
+	T nullSafeGet(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Get a column value from a result set, without worrying about the possibility of null values.
@@ -72,7 +69,7 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
-	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
+	Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Set a parameter value without worrying about the possibility of null
@@ -87,5 +84,5 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
-	public void set(PreparedStatement st, T value, int index, SessionImplementor session) throws HibernateException, SQLException;
+	void set(PreparedStatement st, T value, int index, SessionImplementor session) throws HibernateException, SQLException;
 }

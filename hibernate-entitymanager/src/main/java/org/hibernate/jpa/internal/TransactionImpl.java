@@ -121,9 +121,11 @@ public class TransactionImpl implements EntityTransaction {
 		}
 		finally {
 			try {
-				if (entityManager !=  null) {
+				if ( entityManager != null ) {
 					Session session = getSession();
-					if ( session != null && session.isOpen() ) session.clear();
+					if ( session != null && session.isOpen() ) {
+						session.clear();
+					}
 				}
 			}
 			catch (Throwable t) {
@@ -134,12 +136,16 @@ public class TransactionImpl implements EntityTransaction {
 	}
 
 	public void setRollbackOnly() {
-		if ( ! isActive() ) throw new IllegalStateException( "Transaction not active" );
+		if ( !isActive() ) {
+			throw new IllegalStateException( "Transaction not active" );
+		}
 		this.rollbackOnly = true;
 	}
 
 	public boolean getRollbackOnly() {
-		if ( ! isActive() ) throw new IllegalStateException( "Transaction not active" );
+		if ( !isActive() ) {
+			throw new IllegalStateException( "Transaction not active" );
+		}
 		return rollbackOnly;
 	}
 

@@ -37,7 +37,6 @@ import org.hibernate.loader.JoinWalker;
  * @author Gavin King
  */
 public abstract class CollectionJoinWalker extends JoinWalker {
-	
 	public CollectionJoinWalker(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
 		super( factory, loadQueryInfluencers );
 	}
@@ -48,9 +47,13 @@ public abstract class CollectionJoinWalker extends JoinWalker {
 		}
 		else {
 			StringBuilder buf = new StringBuilder();
-			if (columnNames.length>1) buf.append('(');
+			if (columnNames.length>1) {
+				buf.append('(');
+			}
 			buf.append( StringHelper.join(", ", StringHelper.qualify(alias, columnNames) ) );
-			if (columnNames.length>1) buf.append(')');
+			if (columnNames.length>1) {
+				buf.append(')');
+			}
 			buf.append(" in ")
 				.append('(')
 				.append(subselect) 

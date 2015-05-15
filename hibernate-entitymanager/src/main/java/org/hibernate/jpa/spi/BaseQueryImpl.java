@@ -320,7 +320,7 @@ public abstract class BaseQueryImpl implements Query {
 				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
 			}
 			else if ( AvailableSettings.SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString () ) : null;
+				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
 				final CacheRetrieveMode retrieveMode = getHint( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.class );
 				applied = applyCacheModeHint( CacheModeHelper.interpretCacheMode( storeMode, retrieveMode ) );
 			}

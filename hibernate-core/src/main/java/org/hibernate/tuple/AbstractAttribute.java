@@ -38,7 +38,6 @@ public abstract class AbstractAttribute implements Attribute, Property {
 	}
 
 	@Override
-	@Deprecated
 	public String getNode() {
 		return null;
 	}

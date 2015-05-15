@@ -36,7 +36,6 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class InsertSelect {
-
 	private Dialect dialect;
 	private String tableName;
 	private String comment;
@@ -75,8 +74,12 @@ public class InsertSelect {
 	}
 
 	public String toStatementString() {
-		if ( tableName == null ) throw new HibernateException( "no table name defined for insert-select" );
-		if ( select == null ) throw new HibernateException( "no select defined for insert-select" );
+		if ( tableName == null ) {
+			throw new HibernateException( "no table name defined for insert-select" );
+		}
+		if ( select == null ) {
+			throw new HibernateException( "no select defined for insert-select" );
+		}
 
 		StringBuilder buf = new StringBuilder( (columnNames.size() * 15) + tableName.length() + 10 );
 		if ( comment!=null ) {

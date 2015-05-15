@@ -36,9 +36,14 @@ import org.hibernate.persister.entity.Queryable;
  * A factory class for creating a {@link org.hibernate.loader.plan.exec.spi.LoadQueryDetails} object.
  */
 public class BatchingLoadQueryDetailsFactory {
-	public final BatchingLoadQueryDetailsFactory INSTANCE = new BatchingLoadQueryDetailsFactory();
+	/**
+	 * Singleton access
+	 */
+	public static final BatchingLoadQueryDetailsFactory INSTANCE = new BatchingLoadQueryDetailsFactory();
 
-	// protect against external instantiation.
+	/**
+	 * Private to disallow instantiation
+	 */
 	private BatchingLoadQueryDetailsFactory() {
 	}
 
@@ -53,7 +58,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @return The EntityLoadQueryDetails
 	 */
-	public static LoadQueryDetails makeEntityLoadQueryDetails(
+	public LoadQueryDetails makeEntityLoadQueryDetails(
 			LoadPlan loadPlan,
 			String[] keyColumnNames,
 			QueryBuildingParameters buildingParameters,
@@ -90,7 +95,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @return The EntityLoadQueryDetails
 	 */
-	public static LoadQueryDetails makeCollectionLoadQueryDetails(
+	public LoadQueryDetails makeCollectionLoadQueryDetails(
 			CollectionPersister collectionPersister,
 			LoadPlan loadPlan,
 			QueryBuildingParameters buildingParameters) {

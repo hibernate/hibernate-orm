@@ -64,7 +64,9 @@ public abstract class IndexedCollection extends Collection {
 			boolean isFormula = false;
 			Iterator iter = getIndex().getColumnIterator();
 			while ( iter.hasNext() ) {
-				if ( ( (Selectable) iter.next() ).isFormula() ) isFormula=true;
+				if ( ( (Selectable) iter.next() ).isFormula() ) {
+					isFormula=true;
+				}
 			}
 			if (isFormula) {
 				//if it is a formula index, use the element columns in the PK

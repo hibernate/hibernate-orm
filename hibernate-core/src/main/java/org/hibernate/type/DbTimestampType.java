@@ -50,7 +50,10 @@ import org.jboss.logging.Logger;
 public class DbTimestampType extends TimestampType {
 	public static final DbTimestampType INSTANCE = new DbTimestampType();
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DbTimestampType.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			DbTimestampType.class.getName()
+	);
 
 	@Override
 	public String getName() {
@@ -59,7 +62,7 @@ public class DbTimestampType extends TimestampType {
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return new String[] { getName() };
+		return new String[] {getName()};
 	}
 
 	@Override
@@ -80,8 +83,10 @@ public class DbTimestampType extends TimestampType {
 	private Date getCurrentTimestamp(SessionImplementor session) {
 		Dialect dialect = session.getFactory().getDialect();
 		String timestampSelectString = dialect.getCurrentTimestampSelectString();
-        if (dialect.isCurrentTimestampSelectStringCallable()) return useCallableStatement(timestampSelectString, session);
-        return usePreparedStatement(timestampSelectString, session);
+		if ( dialect.isCurrentTimestampSelectStringCallable() ) {
+			return useCallableStatement( timestampSelectString, session );
+		}
+		return usePreparedStatement( timestampSelectString, session );
 	}
 
 	private Timestamp usePreparedStatement(String timestampSelectString, SessionImplementor session) {
@@ -95,15 +100,20 @@ public class DbTimestampType extends TimestampType {
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Current timestamp retreived from db : {0} (nanos={1}, time={2})", ts, ts.getNanos(), ts.getTime() );
+				LOG.tracev(
+						"Current timestamp retreived from db : {0} (nanos={1}, time={2})",
+						ts,
+						ts.getNanos(),
+						ts.getTime()
+				);
 			}
 			return ts;
 		}
-		catch( SQLException e ) {
+		catch (SQLException e) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        e,
-			        "could not select current db timestamp",
-			        timestampSelectString
+					e,
+					"could not select current db timestamp",
+					timestampSelectString
 			);
 		}
 		finally {
@@ -125,15 +135,20 @@ public class DbTimestampType extends TimestampType {
 			session.getJdbcCoordinator().getResultSetReturn().execute( cs );
 			Timestamp ts = cs.getTimestamp( 1 );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Current timestamp retreived from db : {0} (nanos={1}, time={2})", ts, ts.getNanos(), ts.getTime() );
+				LOG.tracev(
+						"Current timestamp retreived from db : {0} (nanos={1}, time={2})",
+						ts,
+						ts.getNanos(),
+						ts.getTime()
+				);
 			}
 			return ts;
 		}
-		catch( SQLException e ) {
+		catch (SQLException e) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        e,
-			        "could not call current db timestamp function",
-			        callString
+					e,
+					"could not call current db timestamp function",
+					callString
 			);
 		}
 		finally {

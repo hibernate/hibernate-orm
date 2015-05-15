@@ -73,7 +73,9 @@ public class FromParser implements Parser {
 		// start by looking for HQL keywords...
 		String lcToken = token.toLowerCase(Locale.ROOT);
 		if ( lcToken.equals( "," ) ) {
-			if ( !( expectingJoin | expectingAs ) ) throw new QueryException( "unexpected token: ," );
+			if ( !( expectingJoin | expectingAs ) ) {
+				throw new QueryException( "unexpected token: ," );
+			}
 			expectingJoin = false;
 			expectingAs = false;
 		}
@@ -90,8 +92,12 @@ public class FromParser implements Parser {
 			}
 		}
 		else if ( lcToken.equals( "fetch" ) ) {
-			if ( q.isShallowQuery() ) throw new QueryException( QueryTranslator.ERROR_CANNOT_FETCH_WITH_ITERATE );
-			if ( joinType == JoinType.NONE ) throw new QueryException( "unexpected token: fetch" );
+			if ( q.isShallowQuery() ) {
+				throw new QueryException( QueryTranslator.ERROR_CANNOT_FETCH_WITH_ITERATE );
+			}
+			if ( joinType == JoinType.NONE ) {
+				throw new QueryException( "unexpected token: fetch" );
+			}
 			if ( joinType == JoinType.FULL_JOIN || joinType == JoinType.RIGHT_OUTER_JOIN ) {
 				throw new QueryException( "fetch may only be used with inner join or left outer join" );
 			}
@@ -106,15 +112,21 @@ public class FromParser implements Parser {
 			}
 		}
 		else if ( JOIN_TYPES.containsKey( lcToken ) ) {
-			if ( !( expectingJoin | expectingAs ) ) throw new QueryException( "unexpected token: " + token );
+			if ( !( expectingJoin | expectingAs ) ) {
+				throw new QueryException( "unexpected token: " + token );
+			}
 			joinType = JOIN_TYPES.get( lcToken );
 			afterJoinType = true;
 			expectingJoin = false;
 			expectingAs = false;
 		}
 		else if ( lcToken.equals( "class" ) ) {
-			if ( !afterIn ) throw new QueryException( "unexpected token: class" );
-			if ( joinType != JoinType.NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
+			if ( !afterIn ) {
+				throw new QueryException( "unexpected token: class" );
+			}
+			if ( joinType != JoinType.NONE ) {
+				throw new QueryException( "outer or full join must be followed by path expression" );
+			}
 			afterClass = true;
 		}
 		else if ( lcToken.equals( "in" ) ) {
@@ -124,18 +136,23 @@ public class FromParser implements Parser {
 			}
 			else if ( !expectingIn ) {
 				throw new QueryException( "unexpected token: in" );
-			} else {
+			}
+			else {
 				afterIn = true;
 				expectingIn = false;
 			}
 		}
 		else if ( lcToken.equals( "as" ) ) {
-			if ( !expectingAs ) throw new QueryException( "unexpected token: as" );
+			if ( !expectingAs ) {
+				throw new QueryException( "unexpected token: as" );
+			}
 			afterAs = true;
 			expectingAs = false;
 		}
 		else if ( "(".equals( token ) ){
-			if( !memberDeclarations ) throw new QueryException( "unexpected token: (" );
+			if( !memberDeclarations ) {
+				throw new QueryException( "unexpected token: (" );
+			}
 			//TODO alias should be null here
 			expectingPathExpression = true;
 			
@@ -146,10 +163,15 @@ public class FromParser implements Parser {
 			afterMemberDeclarations = true;
 		}
 		else {
-
-			if ( afterJoinType ) throw new QueryException( "join expected: " + token );
-			if ( expectingJoin ) throw new QueryException( "unexpected token: " + token );
-			if ( expectingIn ) throw new QueryException( "in expected: " + token );
+			if ( afterJoinType ) {
+				throw new QueryException( "join expected: " + token );
+			}
+			if ( expectingJoin ) {
+				throw new QueryException( "unexpected token: " + token );
+			}
+			if ( expectingIn ) {
+				throw new QueryException( "in expected: " + token );
+			}
 
 			// now anything that is not a HQL keyword
 
@@ -185,9 +207,13 @@ public class FromParser implements Parser {
 				// process the "old" HQL style where aliases appear _first_
 				// ie. using the IN or IN CLASS constructions
 
-				if ( alias == null ) throw new QueryException( "alias not specified for: " + token );
+				if ( alias == null ) {
+					throw new QueryException( "alias not specified for: " + token );
+				}
 
-				if ( joinType != JoinType.NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
+				if ( joinType != JoinType.NONE ) {
+					throw new QueryException( "outer or full join must be followed by path expression" );
+				}
 
 				if ( afterClass ) {
 					// treat it as a classname
@@ -215,7 +241,9 @@ public class FromParser implements Parser {
 				peParser.setJoinType( JoinType.INNER_JOIN );
 				peParser.setUseThetaStyleJoin( false );
 				ParserHelper.parse( peParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
-				if ( !peParser.isCollectionValued() ) throw new QueryException( "path expression did not resolve to collection: " + token );
+				if ( !peParser.isCollectionValued() ) {
+					throw new QueryException( "path expression did not resolve to collection: " + token );
+				}
 				collectionName = peParser.addFromCollection( q );
 				expectingPathExpression = false;
 				memberDeclarations = false;
@@ -230,7 +258,9 @@ public class FromParser implements Parser {
 				Queryable p = q.getEntityPersisterUsingImports( token );
 				if ( p != null ) {
 					// starts with the name of a mapped class (new style)
-					if ( joinType != JoinType.NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
+					if ( joinType != JoinType.NONE ) {
+						throw new QueryException( "outer or full join must be followed by path expression" );
+					}
 					entityName = q.createNameFor( p.getEntityName() );
 					q.addFromClass( entityName, p );
 					expectingAs = true;
@@ -293,7 +323,7 @@ public class FromParser implements Parser {
 	}
 
 	public void end(QueryTranslatorImpl q) {
-		if( afterMemberDeclarations ){
+		if( afterMemberDeclarations ) {
 			//The exception throwned by the AST query translator contains the error token location, respensent by line and colum, 
 			//but it hard to get that info here.
 			throw new QueryException("alias not specified for IN");

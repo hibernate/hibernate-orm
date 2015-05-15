@@ -115,7 +115,9 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 					session.getFactory().getEntityPersister( getEntityName() )
 			);
 			final Object entity = session.getPersistenceContext().getEntity(key);
-			if (entity!=null) setImplementation( entity );
+			if (entity!=null) {
+				setImplementation( entity );
+			}
 		}
 
 		if ( isUninitialized() ) {

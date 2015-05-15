@@ -40,7 +40,7 @@ public interface StringRepresentableType<T> {
 	 *
 	 * @throws HibernateException Problem rendering
 	 */
-	public abstract String toString(T value) throws HibernateException;
+	String toString(T value) throws HibernateException;
 
 	/**
 	 * Consume the given string representation back into this types java form.
@@ -51,5 +51,5 @@ public interface StringRepresentableType<T> {
 	 *
 	 * @throws HibernateException Problem consuming
 	 */
-	public abstract T fromStringValue(String string) throws HibernateException;
+	T fromStringValue(String string) throws HibernateException;
 }

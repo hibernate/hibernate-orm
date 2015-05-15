@@ -415,7 +415,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			Table table = (Table) titer.next();
 			if ( !table.isAbstractUnionTable() ) {
 				Iterator citer = table.getColumnIterator();
-				while ( citer.hasNext() ) columns.add( citer.next() );
+				while ( citer.hasNext() ) {
+					columns.add( citer.next() );
+				}
 			}
 		}
 
@@ -468,12 +470,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected String[] getSubclassTableKeyColumns(int j) {
-		if (j!=0) throw new AssertionFailure("only one table");
+		if (j!=0) {
+			throw new AssertionFailure("only one table");
+		}
 		return getIdentifierColumnNames();
 	}
 
 	public String getSubclassTableName(int j) {
-		if (j!=0) throw new AssertionFailure("only one table");
+		if (j!=0) {
+			throw new AssertionFailure("only one table");
+		}
 		return tableName;
 	}
 
@@ -482,7 +488,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected boolean isClassOrSuperclassTable(int j) {
-		if (j!=0) throw new AssertionFailure("only one table");
+		if (j!=0) {
+			throw new AssertionFailure("only one table");
+		}
 		return true;
 	}
 
@@ -492,7 +500,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String[] getConstraintOrderedTableNameClosure() {
-			return constraintOrderedTableNames;
+		return constraintOrderedTableNames;
 	}
 
 	public String[][] getContraintOrderedTableKeyColumnClosure() {

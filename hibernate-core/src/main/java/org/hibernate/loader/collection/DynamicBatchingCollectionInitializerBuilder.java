@@ -190,9 +190,12 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				final Serializable[] ids,
 				final Type type) throws HibernateException {
 
-			if ( LOG.isDebugEnabled() )
-				LOG.debugf( "Batch loading collection: %s",
-							MessageHelper.collectionInfoString( getCollectionPersisters()[0], ids, getFactory() ) );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Batch loading collection: %s",
+						MessageHelper.collectionInfoString( getCollectionPersisters()[0], ids, getFactory() )
+				);
+			}
 
 			final Type[] idTypes = new Type[ids.length];
 			Arrays.fill( idTypes, type );

@@ -24,13 +24,11 @@
 package org.hibernate.envers.query.internal.property;
 
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.query.criteria.AuditId;
 
 /**
  * Used for specifying restrictions on the identifier.
  *
  * @author Adam Warski (adam at warski dot org)
- * @deprecated To be removed together with {@link AuditId#count(String)} in version 5.0.
  */
 public class OriginalIdPropertyName implements PropertyNameGetter {
 	private final String idPropertyName;

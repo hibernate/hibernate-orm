@@ -273,6 +273,9 @@ public final class PropertyFactory {
 		}
 	}
 
+	/**
+	 * @deprecated See mainly {@link #buildEntityBasedAttribute}
+	 */
 	@Deprecated
 	public static StandardProperty buildStandardProperty(Property property, boolean lazyAvailable) {
 		final Type type = property.getValue().getType();

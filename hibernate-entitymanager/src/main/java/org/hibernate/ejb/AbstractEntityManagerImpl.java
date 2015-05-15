@@ -34,6 +34,7 @@ import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 /**
  * @deprecated Use {@link org.hibernate.jpa.spi.AbstractEntityManagerImpl} instead
  */
+@Deprecated
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl
 		extends org.hibernate.jpa.spi.AbstractEntityManagerImpl

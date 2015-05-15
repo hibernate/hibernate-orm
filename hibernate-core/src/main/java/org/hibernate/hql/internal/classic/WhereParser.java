@@ -69,10 +69,10 @@ public class WhereParser implements Parser {
 		pathExpressionParser.setUseThetaStyleJoin( true ); //Need this, since join condition can appear inside parens!
 	}
 
-	private static final Set EXPRESSION_TERMINATORS = new HashSet();   //tokens that close a sub expression
-	private static final Set EXPRESSION_OPENERS = new HashSet();       //tokens that open a sub expression
-	private static final Set BOOLEAN_OPERATORS = new HashSet();        //tokens that would indicate a sub expression is a boolean expression
-	private static final Map NEGATIONS = new HashMap();
+	private static final Set<String> EXPRESSION_TERMINATORS = new HashSet<String>();   //tokens that close a sub expression
+	private static final Set<String> EXPRESSION_OPENERS = new HashSet<String>();       //tokens that open a sub expression
+	private static final Set<String> BOOLEAN_OPERATORS = new HashSet<String>();        //tokens that would indicate a sub expression is a boolean expression
+	private static final Map<String,String> NEGATIONS = new HashMap<String,String>();
 
 	static {
 		EXPRESSION_TERMINATORS.add( "and" );
@@ -188,7 +188,7 @@ public class WhereParser implements Parser {
 	// in the list of nested subexpressions we are currently processing.
 
 	private LinkedList<Boolean> nots = new LinkedList<Boolean>();           //were an odd or even number of NOTs encountered
-	private LinkedList joins = new LinkedList();          //the join string built up by compound paths inside this expression
+	private LinkedList<StringBuilder> joins = new LinkedList<StringBuilder>();          //the join string built up by compound paths inside this expression
 	private LinkedList<Boolean> booleanTests = new LinkedList<Boolean>();   //a flag indicating if the subexpression is known to be boolean
 
 	private String getElementName(PathExpressionParser.CollectionElement element, QueryTranslatorImpl q) throws QueryException {
@@ -210,13 +210,14 @@ public class WhereParser implements Parser {
 	}
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
-
 		String lcToken = token.toLowerCase(Locale.ROOT);
 
 		//Cope with [,]
 		if ( token.equals( "[" ) && !expectingPathContinuation ) {
 			expectingPathContinuation = false;
-			if ( expectingIndex == 0 ) throw new QueryException( "unexpected [" );
+			if ( expectingIndex == 0 ) {
+				throw new QueryException( "unexpected [" );
+			}
 			return;
 		}
 		else if ( token.equals( "]" ) ) {
@@ -228,7 +229,9 @@ public class WhereParser implements Parser {
 		//Cope with a continued path expression (ie. ].baz)
 		if ( expectingPathContinuation ) {
 			boolean pathExpressionContinuesFurther = continuePathExpression( token, q );
-			if ( pathExpressionContinuesFurther ) return; //NOTE: early return
+			if ( pathExpressionContinuesFurther ) {
+				return; //NOTE: early return
+			}
 		}
 
 		//Cope with a subselect
@@ -257,7 +260,9 @@ public class WhereParser implements Parser {
 			}
 		}
 		if ( inSubselect ) {
-			if ( token.equals( "(" ) ) bracketsSinceSelect++;
+			if ( token.equals( "(" ) ) {
+				bracketsSinceSelect++;
+			}
 			subselect.append( token ).append( ' ' );
 			return;
 		}
@@ -303,7 +308,9 @@ public class WhereParser implements Parser {
 		if ( expectingPathContinuation ) {
 			expectingPathContinuation = false;
 			PathExpressionParser.CollectionElement element = pathExpressionParser.lastCollectionElement();
-			if ( element.elementColumns.length != 1 ) throw new QueryException( "path expression ended in composite collection element" );
+			if ( element.elementColumns.length != 1 ) {
+				throw new QueryException( "path expression ended in composite collection element" );
+			}
 			appendToken( q, element.elementColumns[0] );
 			addToCurrentJoin( element );
 		}
@@ -324,20 +331,26 @@ public class WhereParser implements Parser {
 
 		}
 		else {
-			StringBuilder join = ( StringBuilder ) joins.removeLast();
-			( ( StringBuilder ) joins.getLast() ).append( join.toString() );
+			StringBuilder join = joins.removeLast();
+			joins.getLast().append( join.toString() );
 		}
 
-		if ( nots.removeLast() ) negated = !negated;
+		if ( nots.removeLast() ) {
+			negated = !negated;
+		}
 
-		if ( !")".equals( lcToken ) ) appendToken( q, ")" );
+		if ( !")".equals( lcToken ) ) {
+			appendToken( q, ")" );
+		}
 	}
 
 	private void openExpression(QueryTranslatorImpl q, String lcToken) {
 		nots.addLast( Boolean.FALSE );
 		booleanTests.addLast( Boolean.FALSE );
 		joins.addLast( new StringBuilder() );
-		if ( !"(".equals( lcToken ) ) appendToken( q, "(" );
+		if ( !"(".equals( lcToken ) ) {
+			appendToken( q, "(" );
+		}
 	}
 
 	private void preprocess(String token, QueryTranslatorImpl q) throws QueryException {
@@ -434,6 +447,7 @@ public class WhereParser implements Parser {
 					}
 					if ( type == null ) throw new QueryException( QueryTranslator.ERROR_CANNOT_DETERMINE_TYPE + token );
 					try {
+						//noinspection unchecked
 						appendToken( q, ( ( LiteralType ) type ).objectToSQLString( constant, q.getFactory().getDialect() ) );
 					}
 					catch ( Exception e ) {
@@ -442,7 +456,7 @@ public class WhereParser implements Parser {
 				}
 				else { //anything else
 
-					String negatedToken = negated ? ( String ) NEGATIONS.get( token.toLowerCase(Locale.ROOT) ) : null;
+					String negatedToken = negated ? NEGATIONS.get( token.toLowerCase(Locale.ROOT) ) : null;
 					if ( negatedToken != null && ( !betweenSpecialCase || !"or".equals( negatedToken ) ) ) {
 						appendToken( q, negatedToken );
 					}
@@ -455,7 +469,7 @@ public class WhereParser implements Parser {
 	}
 
 	private void addToCurrentJoin(String sql) {
-		( ( StringBuilder ) joins.getLast() ).append( sql );
+		joins.getLast().append( sql );
 	}
 
 	private void addToCurrentJoin(PathExpressionParser.CollectionElement ce)

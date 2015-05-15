@@ -184,7 +184,9 @@ public class CriteriaLoader extends OuterJoinLoader {
 			Object[] result = new Object[ resultRowLength ];
 			int j = 0;
 			for ( int i = 0; i < row.length; i++ ) {
-				if ( includeInResultRow[i] ) result[j++] = row[i];
+				if ( includeInResultRow[i] ) {
+					result[j++] = row[i];
+				}
 			}
 			return result;
 		}

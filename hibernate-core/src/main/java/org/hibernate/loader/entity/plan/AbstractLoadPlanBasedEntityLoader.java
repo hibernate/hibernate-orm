@@ -97,7 +97,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		}
 
 		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.makeEntityLoadQueryDetails(
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				plan,
 				uniqueKeyColumnNames,
 				buildingParameters,
@@ -165,7 +165,6 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	}
 
 	@Override
-	@Deprecated
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) throws HibernateException {
 		return load( id, optionalObject, session, LockOptions.NONE );
 	}

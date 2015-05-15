@@ -45,7 +45,9 @@ public class IndexMetadata {
 	}
 
 	void addColumn(ColumnMetadata column) {
-		if (column != null) columns.add(column);
+		if (column != null) {
+			columns.add(column);
+		}
 	}
 
 	public ColumnMetadata[] getColumns() {

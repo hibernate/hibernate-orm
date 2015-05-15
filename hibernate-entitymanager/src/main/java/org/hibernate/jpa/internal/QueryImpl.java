@@ -165,11 +165,13 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 	private boolean mightNeedRedefinition(Class javaType, Type expectedType) {
 		// only redefine dates/times/timestamps that are not wrapped in a CompositeCustomType
-		if ( expectedType == null )
+		if ( expectedType == null ) {
 			return java.util.Date.class.isAssignableFrom( javaType );
-		else
+		}
+		else {
 			return java.util.Date.class.isAssignableFrom( javaType )
 					&& !CompositeCustomType.class.isAssignableFrom( expectedType.getClass() );
+		}
 	}
 
 	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {

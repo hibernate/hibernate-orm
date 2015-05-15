@@ -310,6 +310,7 @@ public class ModelBinder {
 							false,
 							TruthValue.UNKNOWN
 					);
+					break;
 				}
 				case NONE: {
 					// Ideally we'd disable all caching...
@@ -1633,6 +1634,7 @@ public class ModelBinder {
 							false,
 							TruthValue.UNKNOWN
 					);
+					break;
 				}
 				case NONE: {
 					// Ideally we'd disable all caching...

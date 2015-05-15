@@ -49,7 +49,9 @@ public final class XmlHelper {
 	public static Iterator getChildrenByTagName(
 			Element element,
 			String tagName) {
-		if ( element == null ) return null;
+		if ( element == null ) {
+			return null;
+		}
 		// getElementsByTagName gives the corresponding elements in the whole
 		// descendance. We want only children
 

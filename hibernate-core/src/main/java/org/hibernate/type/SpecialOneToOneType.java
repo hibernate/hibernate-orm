@@ -142,7 +142,9 @@ public class SpecialOneToOneType extends OneToOneType {
 		//      change to unique key property of the associated object)
 		Serializable id = (Serializable) getIdentifierType(session).assemble(oid, session, null); //the owner of the association is not the owner of the id
 
-		if ( isNotEmbedded(session) ) return id;
+		if ( isNotEmbedded(session) ) {
+			return id;
+		}
 		
 		if (id==null) {
 			return null;

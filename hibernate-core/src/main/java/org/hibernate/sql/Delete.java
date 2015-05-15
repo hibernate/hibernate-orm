@@ -108,15 +108,17 @@ public class Delete {
 	}	
 
 	public Delete addPrimaryKeyColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addPrimaryKeyColumn( columnNames[i], "?" );
+		for ( String columnName : columnNames ) {
+			addPrimaryKeyColumn( columnName, "?" );
 		}
 		return this;
 	}
 	
 	public Delete addPrimaryKeyColumns(String[] columnNames, boolean[] includeColumns, String[] valueExpressions) {
 		for ( int i=0; i<columnNames.length; i++ ) {
-			if( includeColumns[i] ) addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+			if( includeColumns[i] ) {
+				addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+			}
 		}
 		return this;
 	}

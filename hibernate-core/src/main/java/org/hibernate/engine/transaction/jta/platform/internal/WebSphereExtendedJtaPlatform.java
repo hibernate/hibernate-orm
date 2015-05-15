@@ -204,7 +204,9 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 
 			@Override
 			public boolean equals(Object other) {
-				if ( !(other instanceof TransactionAdapter) ) return false;
+				if ( !(other instanceof TransactionAdapter) ) {
+					return false;
+				}
 				TransactionAdapter that = (TransactionAdapter) other;
 				return getLocalId().equals( that.getLocalId() );
 			}

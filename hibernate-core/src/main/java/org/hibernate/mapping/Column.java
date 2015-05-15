@@ -177,11 +177,16 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return object instanceof Column && equals( (Column) object );
 	}
 
+	@SuppressWarnings("SimplifiableIfStatement")
 	public boolean equals(Column column) {
-		if (null == column) return false;
-		if (this == column) return true;
+		if (null == column) {
+			return false;
+		}
+		if (this == column) {
+			return true;
+		}
 
-		return isQuoted() ? 
+		return isQuoted() ?
 			name.equals(column.name) :
 			name.equalsIgnoreCase(column.name);
 	}

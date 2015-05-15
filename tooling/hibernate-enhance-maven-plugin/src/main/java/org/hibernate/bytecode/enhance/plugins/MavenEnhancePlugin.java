@@ -26,6 +26,7 @@ package org.hibernate.bytecode.enhance.plugins;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -33,6 +34,7 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
@@ -49,16 +51,17 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * This plugin will enhance Entity objects.
- * 
+ *
  * @author Jeremy Whiting
  * @phase "compile"
  */
-@Mojo ( name="enhance", defaultPhase = LifecyclePhase.COMPILE )
-@Execute ( goal ="enhance" , phase = LifecyclePhase.COMPILE )
+@Mojo(name = "enhance", defaultPhase = LifecyclePhase.COMPILE)
+@Execute(goal = "enhance", phase = LifecyclePhase.COMPILE)
 public class MavenEnhancePlugin extends AbstractMojo implements EnhancementContext {
 
 	/**
@@ -66,22 +69,22 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 	 */
 	private List<File> classes = new ArrayList<File>();
 	private ClassPool pool = new ClassPool( false );
-    private final Enhancer enhancer = new Enhancer( this);
+	private final Enhancer enhancer = new Enhancer( this );
 
 	private static final String CLASS_EXTENSION = ".class";
 
-	@Parameter(property="dir", defaultValue="${project.build.outputDirectory}")
+	@Parameter(property = "dir", defaultValue = "${project.build.outputDirectory}")
 	private String dir = null;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info( "Started enhance plugin....." );
 		/** Perform a depth first search for files. */
-		File root = new File( this.dir ); 
+		File root = new File( this.dir );
 		walkDir( root );
 
 		if ( 0 < classes.size() ) {
 			for ( File file : classes ) {
-				processClassFile(file);
+				processClassFile( file );
 			}
 		}
 
@@ -92,121 +95,119 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 	 * Expects a directory.
 	 */
 	private void walkDir(File dir) {
-
-		walkDir( dir, new FileFilter() {
-
-			@Override
-			public boolean accept(File pathname) {
-				return ( pathname.isFile() && pathname.getName().endsWith( CLASS_EXTENSION ) );
-			}
-		}, new FileFilter() {
-
-			@Override
-			public boolean accept(File pathname) {
-				return ( pathname.isDirectory() );
-			}
-		} );
+		walkDir(
+				dir,
+				new FileFilter() {
+					@Override
+					public boolean accept(File pathname) {
+						return ( pathname.isFile() && pathname.getName().endsWith( CLASS_EXTENSION ) );
+					}
+				},
+				new FileFilter() {
+					@Override
+					public boolean accept(File pathname) {
+						return ( pathname.isDirectory() );
+					}
+				}
+		);
 	}
 
 	private void walkDir(File dir, FileFilter classesFilter, FileFilter dirFilter) {
-
 		File[] dirs = dir.listFiles( dirFilter );
-		for ( int i = 0; i < dirs.length; i++ ) {
-			walkDir( dirs[i], classesFilter, dirFilter );
+		for ( File dir1 : dirs ) {
+			walkDir( dir1, classesFilter, dirFilter );
 		}
-		dirs = null;
 		File[] files = dir.listFiles( classesFilter );
-		for ( int i = 0; i < files.length; i++ ) {
-			this.classes.add( files[i] );
-		}
+		Collections.addAll( this.classes, files );
 	}
 
 
-    /**
-     * Atm only process files annotated with either @Entity or @Embeddable
-     * @param javaClassFile
-     */
-    private void processClassFile(File javaClassFile)
-            throws MojoExecutionException {
+	/**
+	 * Atm only process files annotated with either @Entity or @Embeddable
+	 */
+	private void processClassFile(File javaClassFile) throws MojoExecutionException {
 		try {
 			final CtClass ctClass = getClassPool().makeClass( new FileInputStream( javaClassFile ) );
-            if(this.isEntityClass(ctClass))
-                processEntityClassFile(javaClassFile, ctClass);
-            else if(this.isCompositeClass(ctClass))
-                processCompositeClassFile(javaClassFile, ctClass);
+			if ( this.isEntityClass( ctClass ) ) {
+				processEntityClassFile( javaClassFile, ctClass );
+			}
+			else if ( this.isCompositeClass( ctClass ) ) {
+				processCompositeClassFile( javaClassFile, ctClass );
+			}
 
-        }
-        catch (IOException e) {
-            throw new MojoExecutionException(
-                    String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e );
-        }
-    }
+		}
+		catch (IOException e) {
+			throw new MojoExecutionException(
+					String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e
+			);
+		}
+	}
 
-    private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
-        try {
-            getLog().info( String.format("Processing Entity class file [%1$s].", ctClass.getName()) );
-            byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
-            if(result != null)
-                writeEnhancedClass(javaClassFile, result);
-        }
-        catch (Exception e) {
-            getLog().error( "Unable to enhance class [" + ctClass.getName() + "]", e);
-            return;
-        }
-    }
+	private void processEntityClassFile(File javaClassFile, CtClass ctClass) {
+		try {
+			getLog().info( String.format( "Processing Entity class file [%1$s].", ctClass.getName() ) );
+			byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+			if ( result != null ) {
+				writeEnhancedClass( javaClassFile, result );
+			}
+		}
+		catch (Exception e) {
+			getLog().error( "Unable to enhance class [" + ctClass.getName() + "]", e );
+		}
+	}
 
-    private void processCompositeClassFile(File javaClassFile, CtClass ctClass) {
-        try {
-            getLog().info( String.format("Processing Composite class file [%1$s].", ctClass.getName()) );
-            byte[] result = enhancer.enhanceComposite(ctClass.getName(), ctClass.toBytecode());
-            if(result != null)
-                writeEnhancedClass(javaClassFile, result);
-        }
-        catch (Exception e) {
-            getLog().error( "Unable to enhance class [" + ctClass.getName() + "]", e);
-            return;
-        }
-    }
+	private void processCompositeClassFile(File javaClassFile, CtClass ctClass) {
+		try {
+			getLog().info( String.format( "Processing Composite class file [%1$s].", ctClass.getName() ) );
+			byte[] result = enhancer.enhanceComposite( ctClass.getName(), ctClass.toBytecode() );
+			if ( result != null ) {
+				writeEnhancedClass( javaClassFile, result );
+			}
+		}
+		catch (Exception e) {
+			getLog().error( "Unable to enhance class [" + ctClass.getName() + "]", e );
+		}
+	}
 
-    private void writeEnhancedClass(File javaClassFile, byte[] result)
-            throws MojoExecutionException {
-        try {
+	private void writeEnhancedClass(File javaClassFile, byte[] result) throws MojoExecutionException {
+		try {
 			if ( javaClassFile.delete() ) {
-                    if ( ! javaClassFile.createNewFile() ) {
-                        getLog().error( "Unable to recreate class file [" + javaClassFile.getName() + "]");
-                    }
-            }
+				if ( !javaClassFile.createNewFile() ) {
+					getLog().error( "Unable to recreate class file [" + javaClassFile.getName() + "]" );
+				}
+			}
 			else {
-				getLog().error( "Unable to delete class file [" + javaClassFile.getName() + "]");
+				getLog().error( "Unable to delete class file [" + javaClassFile.getName() + "]" );
 			}
 
 			FileOutputStream outputStream = new FileOutputStream( javaClassFile, false );
 			try {
-				outputStream.write( result);
+				outputStream.write( result );
 				outputStream.flush();
 			}
 			finally {
 				try {
 					outputStream.close();
 				}
-				catch ( IOException ignore) {
+				catch (IOException ignore) {
 				}
 			}
-        }
-        catch (FileNotFoundException ignore) {
-            // should not ever happen because of explicit checks
-        }
-        catch (IOException e) {
-            throw new MojoExecutionException(
-                    String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e );
-        }
-    }
+		}
+		catch (FileNotFoundException ignore) {
+			// should not ever happen because of explicit checks
+		}
+		catch (IOException e) {
+			throw new MojoExecutionException(
+					String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e
+			);
+		}
+	}
 
 	private ClassPool getClassPool() {
 		return this.pool;
 	}
 
-    private boolean shouldInclude(CtClass ctClass) {
+	private boolean shouldInclude(CtClass ctClass) {
 		// we currently only handle entity enhancement
 		return ctClass.hasAnnotation( Entity.class );
 	}
@@ -218,12 +219,12 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 
 	@Override
 	public boolean isEntityClass(CtClass classDescriptor) {
-        return classDescriptor.hasAnnotation(Entity.class);
-    }
+		return classDescriptor.hasAnnotation( Entity.class );
+	}
 
 	@Override
 	public boolean isCompositeClass(CtClass classDescriptor) {
-        return classDescriptor.hasAnnotation(Embeddable.class);
+		return classDescriptor.hasAnnotation( Embeddable.class );
 	}
 
 	@Override
@@ -249,20 +250,20 @@ public class MavenEnhancePlugin extends AbstractMojo implements EnhancementConte
 	@Override
 	public boolean isPersistentField(CtField ctField) {
 		// current check is to look for @Transient
-		return ! ctField.hasAnnotation( Transient.class );
+		return !ctField.hasAnnotation( Transient.class );
 	}
 
-    @Override
-    public boolean isMappedCollection(CtField field) {
-        try {
-            return (field.getAnnotation(OneToMany.class) != null ||
-                    field.getAnnotation(ManyToMany.class) != null ||
-                    field.getAnnotation(ElementCollection.class) != null);
-        }
-        catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
+	@Override
+	public boolean isMappedCollection(CtField field) {
+		try {
+			return ( field.getAnnotation( OneToMany.class ) != null ||
+					field.getAnnotation( ManyToMany.class ) != null ||
+					field.getAnnotation( ElementCollection.class ) != null );
+		}
+		catch (ClassNotFoundException e) {
+			return false;
+		}
+	}
 
 	@Override
 	public CtField[] order(CtField[] persistentFields) {

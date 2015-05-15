@@ -74,7 +74,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 		);
 
 		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, collectionPersister );
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.makeCollectionLoadQueryDetails(
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeCollectionLoadQueryDetails(
 				collectionPersister,
 				plan,
 				buildingParameters

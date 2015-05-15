@@ -174,7 +174,9 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 													.getName() + " - " + method
 									);
 								}
-								if (!method.isAccessible()) method.setAccessible(true);
+								if (!method.isAccessible()) {
+									method.setAccessible(true);
+								}
 								log.debugf("Adding %s as %s callback for entity %s",
 										   methodName,
 										   annotation.getSimpleName(),
@@ -204,7 +206,9 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 		Target target = EntityListeners.class.getAnnotation( Target.class );
 		if ( target != null ) {
 			for ( ElementType type : target.value() ) {
-				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) useAnnotationAnnotatedByListener = true;
+				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) {
+					useAnnotationAnnotatedByListener = true;
+				}
 			}
 		}
 	}

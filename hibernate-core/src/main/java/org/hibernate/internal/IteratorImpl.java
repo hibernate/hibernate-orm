@@ -37,16 +37,13 @@ import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
 /**
  * An implementation of <tt>java.util.Iterator</tt> that is
  * returned by <tt>iterate()</tt> query execution methods.
  * @author Gavin King
  */
 public final class IteratorImpl implements HibernateIterator {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IteratorImpl.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IteratorImpl.class );
 
 	private ResultSet rs;
 	private final EventSource session;
@@ -84,12 +81,8 @@ public final class IteratorImpl implements HibernateIterator {
 
 	public void close() throws JDBCException {
 		if (ps!=null) {
-			LOG.debug("Closing iterator");
+			LOG.debug( "Closing iterator" );
 			session.getJdbcCoordinator().getResourceRegistry().release( ps );
-			session.getJdbcCoordinator().afterStatementExecution();
-			ps = null;
-			rs = null;
-			hasNext = false;
 			try {
 				session.getPersistenceContext().getLoadContexts().cleanup( rs );
 			}
@@ -97,6 +90,10 @@ public final class IteratorImpl implements HibernateIterator {
 				// ignore this error for now
                 LOG.debugf("Exception trying to cleanup load context : %s", ignore.getMessage());
 			}
+			session.getJdbcCoordinator().afterStatementExecution();
+			ps = null;
+			rs = null;
+			hasNext = false;
 		}
 	}
 
@@ -106,7 +103,10 @@ public final class IteratorImpl implements HibernateIterator {
 		if (!hasNext) {
 			LOG.debug("Exhausted results");
 			close();
-		} else LOG.debug("Retrieved next results");
+		}
+		else {
+			LOG.debug("Retrieved next results");
+		}
 	}
 
 	public boolean hasNext() {
@@ -114,7 +114,9 @@ public final class IteratorImpl implements HibernateIterator {
 	}
 
 	public Object next() throws HibernateException {
-		if ( !hasNext ) throw new NoSuchElementException("No more results");
+		if ( !hasNext ) {
+			throw new NoSuchElementException("No more results");
+		}
 		boolean sessionDefaultReadOnlyOrig = session.isDefaultReadOnly();
 		session.setDefaultReadOnly( readOnly );
 		try {
@@ -169,6 +171,6 @@ public final class IteratorImpl implements HibernateIterator {
 				currentResult,
 				false,
 		        null
-			);
+		);
 	}
 }

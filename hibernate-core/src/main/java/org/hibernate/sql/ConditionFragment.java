@@ -73,7 +73,9 @@ public class ConditionFragment {
 				.append( lhs[i] )
 				.append(op)
 				.append( rhs[i] );
-			if (i<lhs.length-1) buf.append(" and ");
+			if (i<lhs.length-1) {
+				buf.append(" and ");
+			}
 		}
 		return buf.toString();
 	}

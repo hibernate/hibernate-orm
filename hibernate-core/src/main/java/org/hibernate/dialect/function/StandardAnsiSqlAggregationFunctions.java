@@ -68,7 +68,9 @@ public class StandardAnsiSqlAggregationFunctions {
 		private String renderCountDistinct(List arguments, Dialect dialect) {
 			final StringBuilder buffer = new StringBuilder();
 			buffer.append( "count(distinct " );
-			if (dialect.requiresParensForTupleDistinctCounts()) buffer.append("(");
+			if (dialect.requiresParensForTupleDistinctCounts()) {
+				buffer.append("(");
+			}
 			String sep = "";
 			final Iterator itr = arguments.iterator();
 			// intentionally skip first
@@ -77,7 +79,9 @@ public class StandardAnsiSqlAggregationFunctions {
 				buffer.append( sep ).append( itr.next() );
 				sep = ", ";
 			}
-			if (dialect.requiresParensForTupleDistinctCounts()) buffer.append(")");
+			if (dialect.requiresParensForTupleDistinctCounts()) {
+				buffer.append(")");
+			}
 			return buffer.append( ")" ).toString();
 		}
 	}

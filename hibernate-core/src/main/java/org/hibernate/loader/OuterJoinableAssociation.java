@@ -163,10 +163,12 @@ public final class OuterJoinableAssociation {
 	 */
 	private static int getPosition(String lhsAlias, List associations) {
 		int result = 0;
-		for ( int i=0; i<associations.size(); i++ ) {
-			OuterJoinableAssociation oj = (OuterJoinableAssociation) associations.get(i);
+		for ( Object association : associations ) {
+			final OuterJoinableAssociation oj = (OuterJoinableAssociation) association;
 			if ( oj.getJoinable().consumesEntityAlias() /*|| oj.getJoinable().consumesCollectionAlias() */ ) {
-				if ( oj.rhsAlias.equals(lhsAlias) ) return result;
+				if ( oj.rhsAlias.equals( lhsAlias ) ) {
+					return result;
+				}
 				result++;
 			}
 		}

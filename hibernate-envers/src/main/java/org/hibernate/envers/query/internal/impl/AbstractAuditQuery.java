@@ -218,6 +218,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 	 *
 	 * @deprecated Instead use setLockOptions
 	 */
+	@Deprecated
 	public AuditQuery setLockMode(LockMode lockMode) {
 		lockOptions.setLockMode( lockMode );
 		return this;

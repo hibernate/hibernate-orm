@@ -69,13 +69,21 @@ public final class Log4DelegatingLogger extends Logger {
 	protected void doLog(final Level level, final String loggerClassName, final Object message, final Object[] parameters, final Throwable thrown) {
 		final org.apache.log4j.Level translatedLevel = translate( level );
 		intercept( level, parameters == null || parameters.length == 0 ? String.valueOf( message ) : MessageFormat.format( String.valueOf( message ), parameters ), thrown );
-		if ( logger.isEnabledFor( translatedLevel ) )
-			try {
-				logger.log( loggerClassName, translatedLevel,
-						parameters == null || parameters.length == 0 ? String.valueOf( message ) : MessageFormat.format( String.valueOf( message ), parameters ), thrown );
-			}
-			catch (Throwable ignored) {
-			}
+		if ( !logger.isEnabledFor( translatedLevel ) ) {
+			return;
+		}
+		try {
+			logger.log(
+					loggerClassName,
+					translatedLevel,
+					parameters == null || parameters.length == 0
+							? String.valueOf( message )
+							: MessageFormat.format(String.valueOf( message ), parameters ),
+					thrown
+			);
+		}
+		catch (Throwable ignored) {
+		}
 	}
 
 	private void intercept(Level level, String renderedMessage, Throwable thrown) {
@@ -88,31 +96,42 @@ public final class Log4DelegatingLogger extends Logger {
 
 	protected void doLogf(final Level level, final String loggerClassName, final String format, final Object[] parameters, final Throwable thrown) {
 		final org.apache.log4j.Level translatedLevel = translate( level );
-		intercept( level, parameters == null ? String.format( format ) : String.format( format, parameters ), thrown );
-		if ( logger.isEnabledFor( translatedLevel ) )
-			try {
-				logger.log( loggerClassName, translatedLevel, parameters == null ? String.format( format ) : String.format( format, parameters ), thrown );
-			}
-			catch (Throwable ignored) {
-			}
+		intercept( level, parameters == null ? format : String.format( format, parameters ), thrown );
+		if ( !logger.isEnabledFor( translatedLevel ) ) {
+			return;
+		}
+		try {
+			logger.log(
+					loggerClassName,
+					translatedLevel,
+					parameters == null ? format : String.format( format, parameters ),
+					thrown
+			);
+		}
+		catch (Throwable ignored) {
+		}
 	}
 
 	private static org.apache.log4j.Level translate(final Level level) {
-		if ( level != null )
-			switch ( level ) {
-				case FATAL:
-					return org.apache.log4j.Level.FATAL;
-				case ERROR:
-					return org.apache.log4j.Level.ERROR;
-				case WARN:
-					return org.apache.log4j.Level.WARN;
-				case INFO:
-					return org.apache.log4j.Level.INFO;
-				case DEBUG:
-					return org.apache.log4j.Level.DEBUG;
-				case TRACE:
-					return org.apache.log4j.Level.TRACE;
-			}
+		if ( level == null ) {
+			return org.apache.log4j.Level.ALL;
+		}
+
+		switch ( level ) {
+			case FATAL:
+				return org.apache.log4j.Level.FATAL;
+			case ERROR:
+				return org.apache.log4j.Level.ERROR;
+			case WARN:
+				return org.apache.log4j.Level.WARN;
+			case INFO:
+				return org.apache.log4j.Level.INFO;
+			case DEBUG:
+				return org.apache.log4j.Level.DEBUG;
+			case TRACE:
+				return org.apache.log4j.Level.TRACE;
+		}
+
 		return org.apache.log4j.Level.ALL;
 	}
 

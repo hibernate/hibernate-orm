@@ -140,10 +140,12 @@ public class TransactionalAccessDelegate {
 			// evicted in the current transaction, do a put instead of a
 			// putForExternalRead to make it stick, otherwise the current
 			// transaction won't see it.
-			if ( region.isRegionInvalidatedInCurrentTx() )
+			if ( region.isRegionInvalidatedInCurrentTx() ) {
 				writeCache.put( key, value );
-			else
+			}
+			else {
 				writeCache.putForExternalRead( key, value );
+			}
 		}
 		finally {
 			putValidator.releasePutFromLoadLock( key );

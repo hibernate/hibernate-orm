@@ -32,7 +32,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class CollectionPropertyMapping implements PropertyMapping {
-
 	private final QueryableCollection memberPersister;
 
 	public CollectionPropertyMapping(QueryableCollection memberPersister) {
@@ -73,7 +72,9 @@ public class CollectionPropertyMapping implements PropertyMapping {
 			return memberPersister.getElementColumnNames(alias);
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_INDICES) ) {
-			if ( !memberPersister.hasIndex() ) throw new QueryException("unindexed collection in indices()");
+			if ( !memberPersister.hasIndex() ) {
+				throw new QueryException("unindexed collection in indices()");
+			}
 			return memberPersister.getIndexColumnNames(alias);
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_SIZE) ) {
@@ -81,25 +82,37 @@ public class CollectionPropertyMapping implements PropertyMapping {
 			return new String[] { "count(" + alias + '.' + cols[0] + ')' };
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MAX_INDEX) ) {
-			if ( !memberPersister.hasIndex() ) throw new QueryException("unindexed collection in maxIndex()");
+			if ( !memberPersister.hasIndex() ) {
+				throw new QueryException("unindexed collection in maxIndex()");
+			}
 			String[] cols = memberPersister.getIndexColumnNames(alias);
-			if ( cols.length!=1 ) throw new QueryException("composite collection index in maxIndex()");
+			if ( cols.length!=1 ) {
+				throw new QueryException("composite collection index in maxIndex()");
+			}
 			return new String[] { "max(" + cols[0] + ')' };
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MIN_INDEX) ) {
-			if ( !memberPersister.hasIndex() ) throw new QueryException("unindexed collection in minIndex()");
+			if ( !memberPersister.hasIndex() ) {
+				throw new QueryException("unindexed collection in minIndex()");
+			}
 			String[] cols = memberPersister.getIndexColumnNames(alias);
-			if ( cols.length!=1 ) throw new QueryException("composite collection index in minIndex()");
+			if ( cols.length!=1 ) {
+				throw new QueryException("composite collection index in minIndex()");
+			}
 			return new String[] { "min(" + cols[0] + ')' };
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MAX_ELEMENT) ) {
 			String[] cols = memberPersister.getElementColumnNames(alias);
-			if ( cols.length!=1 ) throw new QueryException("composite collection element in maxElement()");
+			if ( cols.length!=1 ) {
+				throw new QueryException("composite collection element in maxElement()");
+			}
 			return new String[] { "max(" + cols[0] + ')' };
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MIN_ELEMENT) ) {
 			String[] cols = memberPersister.getElementColumnNames(alias);
-			if ( cols.length!=1 ) throw new QueryException("composite collection element in minElement()");
+			if ( cols.length!=1 ) {
+				throw new QueryException("composite collection element in minElement()");
+			}
 			return new String[] { "min(" + cols[0] + ')' };
 		}
 		else {

@@ -30,6 +30,7 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -47,9 +48,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class AbstractPropertyMapping implements PropertyMapping {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       AbstractPropertyMapping.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPropertyMapping.class );
 
 	private final Map typesByPropertyPath = new HashMap();
 	private final Map columnsByPropertyPath = new HashMap();
@@ -202,7 +201,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			}
 		}
 
-		if (path!=null) addPropertyPath(path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates);
+		if (path!=null) {
+			addPropertyPath(path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates);
+		}
 
 		if ( type.isComponentType() ) {
 			CompositeType actype = (CompositeType) type;

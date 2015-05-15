@@ -46,88 +46,88 @@ public interface ClassMetadata {
 	/**
 	 * The name of the entity
 	 */
-	public String getEntityName();
+	String getEntityName();
 
 	/**
 	 * Get the name of the identifier property (or return null)
 	 */
-	public String getIdentifierPropertyName();
+	String getIdentifierPropertyName();
 
 	/**
 	 * Get the names of the class' persistent properties
 	 */
-	public String[] getPropertyNames();
+	String[] getPropertyNames();
 
 	/**
 	 * Get the identifier Hibernate type
 	 */
-	public Type getIdentifierType();
+	Type getIdentifierType();
 
 	/**
 	 * Get the Hibernate types of the class properties
 	 */
-	public Type[] getPropertyTypes();
+	Type[] getPropertyTypes();
 
 	/**
 	 * Get the type of a particular (named) property
 	 */
-	public Type getPropertyType(String propertyName) throws HibernateException;
+	Type getPropertyType(String propertyName) throws HibernateException;
 
 	/**
 	 * Does this class support dynamic proxies?
 	 */
-	public boolean hasProxy();
+	boolean hasProxy();
 
 	/**
 	 * Are instances of this class mutable?
 	 */
-	public boolean isMutable();
+	boolean isMutable();
 
 	/**
 	 * Are instances of this class versioned by a timestamp or version number column?
 	 */
-	public boolean isVersioned();
+	boolean isVersioned();
 
 	/**
 	 * Get the index of the version property
 	 */
-	public int getVersionProperty();
+	int getVersionProperty();
 
 	/**
 	 * Get the nullability of the class' persistent properties
 	 */
-	public boolean[] getPropertyNullability();
+	boolean[] getPropertyNullability();
 
 
 	/**
 	 * Get the "laziness" of the properties of this class
 	 */
-	public boolean[] getPropertyLaziness();
+	boolean[] getPropertyLaziness();
 
 	/**
 	 * Does this class have an identifier property?
 	 */
-	public boolean hasIdentifierProperty();
+	boolean hasIdentifierProperty();
 
 	/**
 	 * Does this entity declare a natural id?
 	 */
-	public boolean hasNaturalIdentifier();
+	boolean hasNaturalIdentifier();
 
 	/**
 	 * Which properties hold the natural id?
 	 */
-	public int[] getNaturalIdentifierProperties();
+	int[] getNaturalIdentifierProperties();
 	
 	/**
 	 * Does this entity have mapped subclasses?
 	 */
-	public boolean hasSubclasses();
+	boolean hasSubclasses();
 	
 	/**
 	 * Does this entity extend a mapped superclass?
 	 */
-	public boolean isInherited();
+	boolean isInherited();
 	
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// stuff that is tuplizer-centric, but is passed a session ~~~~~~~~~~~~~~~~
@@ -137,7 +137,7 @@ public interface ClassMetadata {
 	 * Return the values of the mapped properties of the object
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
+	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
 	throws HibernateException;
 
 
@@ -148,7 +148,7 @@ public interface ClassMetadata {
 	/**
 	 * The persistent class, or null
 	 */
-	public Class getMappedClass();
+	Class getMappedClass();
 
 	/**
 	 * Create a class instance initialized with the given identifier
@@ -158,12 +158,12 @@ public interface ClassMetadata {
 	 *
 	 * @return The instantiated entity.
 	 */
-	public Object instantiate(Serializable id, SessionImplementor session);
+	Object instantiate(Serializable id, SessionImplementor session);
 
 	/**
 	 * Get the value of a particular (named) property
 	 */
-	public Object getPropertyValue(Object object, String propertyName) throws HibernateException;
+	Object getPropertyValue(Object object, String propertyName) throws HibernateException;
 
 	/**
 	 * Extract the property values from the given entity.
@@ -172,25 +172,26 @@ public interface ClassMetadata {
 	 * @return The property values.
 	 * @throws HibernateException
 	 */
-	public Object[] getPropertyValues(Object entity) throws HibernateException;
+	Object[] getPropertyValues(Object entity) throws HibernateException;
 
 	/**
 	 * Set the value of a particular (named) property
 	 */
-	public void setPropertyValue(Object object, String propertyName, Object value) throws HibernateException;
+	void setPropertyValue(Object object, String propertyName, Object value) throws HibernateException;
 
 	/**
 	 * Set the given values to the mapped properties of the given object
 	 */
-	public void setPropertyValues(Object object, Object[] values) throws HibernateException;
+	void setPropertyValues(Object object, Object[] values) throws HibernateException;
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead
 	 */
+	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
-	public Serializable getIdentifier(Object object) throws HibernateException;
+	Serializable getIdentifier(Object object) throws HibernateException;
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
@@ -200,7 +201,7 @@ public interface ClassMetadata {
 	 *
 	 * @return The identifier
 	 */
-	public Serializable getIdentifier(Object entity, SessionImplementor session);
+	Serializable getIdentifier(Object entity, SessionImplementor session);
 
 	/**
 	 * Inject the identifier value into the given entity.
@@ -209,19 +210,19 @@ public interface ClassMetadata {
 	 * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
 	 */
-	public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
+	void setIdentifier(Object entity, Serializable id, SessionImplementor session);
 
 
 	/**
 	 * Does the class implement the <tt>Lifecycle</tt> interface?
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public boolean implementsLifecycle();
+	boolean implementsLifecycle();
 
 	/**
 	 * Get the version number (or timestamp) from the object's version property
 	 * (or return null if not versioned)
 	 */
-	public Object getVersion(Object object) throws HibernateException;
+	Object getVersion(Object object) throws HibernateException;
 
 }

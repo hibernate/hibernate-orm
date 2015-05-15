@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.lob;
+
 import java.io.IOException;
 import java.io.Reader;
 
@@ -31,6 +31,7 @@ import java.io.Reader;
  *
  * @deprecated Should not be used anymore. 
  */
+@Deprecated
 public class ReaderInputStream extends org.hibernate.engine.jdbc.ReaderInputStream {
 
 	public ReaderInputStream(Reader reader) {

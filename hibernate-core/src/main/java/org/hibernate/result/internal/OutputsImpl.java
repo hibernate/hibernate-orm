@@ -114,14 +114,15 @@ public class OutputsImpl implements Outputs {
 			return false;
 		}
 
-		if ( currentReturnState.indicatesMoreOutputs() )
-		// prepare the next return state
-		try {
-			final boolean isResultSet = jdbcStatement.getMoreResults();
-			currentReturnState = buildCurrentReturnState( isResultSet );
-		}
-		catch (SQLException e) {
-			throw convert( e, "Error calling CallableStatement.getMoreResults" );
+		if ( currentReturnState.indicatesMoreOutputs() ) {
+			// prepare the next return state
+			try {
+				final boolean isResultSet = jdbcStatement.getMoreResults();
+				currentReturnState = buildCurrentReturnState( isResultSet );
+			}
+			catch (SQLException e) {
+				throw convert( e, "Error calling CallableStatement.getMoreResults" );
+			}
 		}
 
 		// and return

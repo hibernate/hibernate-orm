@@ -879,9 +879,11 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 
-		return renderSelect( ArrayHelper.toIntArray( tableNumbers ),
+		return renderSelect(
+				ArrayHelper.toIntArray( tableNumbers ),
 				ArrayHelper.toIntArray( columnNumbers ),
-				ArrayHelper.toIntArray( formulaNumbers ) );
+				ArrayHelper.toIntArray( formulaNumbers )
+		);
 
 	}
 
@@ -922,7 +924,9 @@ public abstract class AbstractEntityPersister
 			final Serializable id,
 			final EntityEntry entry) {
 
-		if ( !hasLazyProperties() ) throw new AssertionFailure( "no lazy properties" );
+		if ( !hasLazyProperties() ) {
+			throw new AssertionFailure( "no lazy properties" );
+		}
 
 		LOG.trace( "Initializing lazy properties from datastore" );
 
@@ -1345,7 +1349,7 @@ public abstract class AbstractEntityPersister
 		else {
 			select.addColumns( rootTableKeyColumnNames );
 		}
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get version " + getEntityName() );
 		}
 		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
@@ -1366,7 +1370,7 @@ public abstract class AbstractEntityPersister
 	private String generateGeneratedValuesSelectString(final GenerationTiming generationTimingToMatch) {
 		Select select = new Select( getFactory().getDialect() );
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get generated state " + getEntityName() );
 		}
 
@@ -1447,7 +1451,7 @@ public abstract class AbstractEntityPersister
 
 		Select select = new Select( getFactory().getDialect() );
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get current state " + getEntityName() );
 		}
 
@@ -1490,9 +1494,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		Object nextVersion = getVersionType().next( currentVersion, session );
-        if (LOG.isTraceEnabled()) LOG.trace("Forcing version increment [" + MessageHelper.infoString(this, id, getFactory()) + "; "
-                                            + getVersionType().toLoggableString(currentVersion, getFactory()) + " -> "
-                                            + getVersionType().toLoggableString(nextVersion, getFactory()) + "]");
+        if ( LOG.isTraceEnabled() ) {
+			LOG.trace(
+					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
+							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+			);
+		}
 
 		// todo : cache this sql...
 		String versionIncrementString = generateVersionIncrementUpdateString();
@@ -1522,7 +1530,7 @@ public abstract class AbstractEntityPersister
 					"could not retrieve version: " +
 					MessageHelper.infoString( this, id, getFactory() ),
 					getVersionSelectString()
-				);
+			);
 		}
 
 		return nextVersion;
@@ -1531,7 +1539,7 @@ public abstract class AbstractEntityPersister
 	private String generateVersionIncrementUpdateString() {
 		Update update = new Update( getFactory().getDialect() );
 		update.setTableName( getTableName( 0 ) );
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "forced version increment" );
 		}
 		update.addColumn( getVersionColumnName() );
@@ -1660,7 +1668,7 @@ public abstract class AbstractEntityPersister
 	 * which takes the entity name.
 	 */
 	public int getSubclassPropertyTableNumber(String propertyPath) {
-		String rootPropertyName = StringHelper.root(propertyPath);
+		String rootPropertyName = StringHelper.root( propertyPath );
 		Type type = propertyMapping.toType(rootPropertyName);
 		if ( type.isAssociationType() ) {
 			AssociationType assocType = ( AssociationType ) type;
@@ -1830,8 +1838,9 @@ public abstract class AbstractEntityPersister
 		int counter = 0;
 		while(iter.hasNext()) {
 			Integer index = entityMetamodel.getPropertyIndexOrNull( iter.next() );
-			if ( index != null )
+			if ( index != null ) {
 				fields[counter++] = index;
+			}
 		}
 		return fields;
 	}
@@ -2085,13 +2094,15 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void initDiscriminatorPropertyPath(Mapping mapping) throws MappingException {
-		propertyMapping.initPropertyPaths( ENTITY_CLASS,
+		propertyMapping.initPropertyPaths(
+				ENTITY_CLASS,
 				getDiscriminatorType(),
-				new String[]{getDiscriminatorColumnName()},
-				new String[]{getDiscriminatorColumnReaders()},
-				new String[]{getDiscriminatorColumnReaderTemplate()},
-				new String[]{getDiscriminatorFormulaTemplate()},
-				getFactory() );
+				new String[] {getDiscriminatorColumnName()},
+				new String[] {getDiscriminatorColumnReaders()},
+				new String[] {getDiscriminatorColumnReaderTemplate()},
+				new String[] {getDiscriminatorFormulaTemplate()},
+				getFactory()
+		);
 	}
 
 	protected void initPropertyPaths(Mapping mapping) throws MappingException {
@@ -2324,7 +2335,7 @@ public abstract class AbstractEntityPersister
 			insert.addColumns( getKeyColumns( j ) );
 		}
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			insert.setComment( "insert " + getEntityName() );
 		}
 		
@@ -2387,7 +2398,7 @@ public abstract class AbstractEntityPersister
 
 		// delegate already handles PK columns
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			insert.setComment( "insert " + getEntityName() );
 		}
 
@@ -2398,13 +2409,13 @@ public abstract class AbstractEntityPersister
 	 * Generate the SQL that deletes a row by id (and version)
 	 */
 	protected String generateDeleteString(int j) {
-		Delete delete = new Delete()
+		final Delete delete = new Delete()
 				.setTableName( getTableName( j ) )
 				.addPrimaryKeyColumns( getKeyColumns( j ) );
 		if ( j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
 		}
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			delete.setComment( "delete " + getEntityName() );
 		}
 		return delete.toStatementString();
@@ -2641,8 +2652,8 @@ public abstract class AbstractEntityPersister
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
 		return getFactory().getDialect().getIdentitySelectString(
-				getTableName(0),
-				getKeyColumns(0)[0],
+				getTableName( 0 ),
+				getKeyColumns( 0 )[0],
 				getIdentifierType().sqlTypes( getFactory() )[0]
 		);
 	}
@@ -2684,8 +2695,9 @@ public abstract class AbstractEntityPersister
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Inserting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
-			if ( j == 0 && isVersioned() )
+			if ( j == 0 && isVersioned() ) {
 				LOG.tracev( "Version: {0}", Versioning.getVersion( fields, this ) );
+			}
 		}
 
 		// TODO : shouldn't inserts be Expectations.NONE?
@@ -2912,7 +2924,7 @@ public abstract class AbstractEntityPersister
 					e,
 					"could not update: " + MessageHelper.infoString( this, id, getFactory() ),
 					sql
-				);
+			);
 		}
 	}
 
@@ -3032,7 +3044,7 @@ public abstract class AbstractEntityPersister
 					"could not delete: " +
 					MessageHelper.infoString( this, id, getFactory() ),
 					sql
-				);
+			);
 
 		}
 
@@ -3142,7 +3154,7 @@ public abstract class AbstractEntityPersister
 						object,
 						updateStrings[j],
 						session
-					);
+				);
 			}
 		}
 	}
@@ -3253,7 +3265,7 @@ public abstract class AbstractEntityPersister
 			Delete delete = new Delete()
 					.setTableName( getTableName( j ) )
 					.addPrimaryKeyColumns( getKeyColumns( j ) );
-			if ( getFactory().getSettings().isCommentsEnabled() ) {
+			if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 				delete.setComment( "delete " + getEntityName() + " [" + j + "]" );
 			}
 
@@ -3856,7 +3868,7 @@ public abstract class AbstractEntityPersister
 				propertyColumnUpdateable,
 				hasUninitializedLazyProperties( entity ),
 				session
-			);
+		);
 		if ( props == null ) {
 			return null;
 		}
@@ -3885,7 +3897,7 @@ public abstract class AbstractEntityPersister
 				propertyColumnUpdateable,
 				hasUninitializedLazyProperties( entity ),
 				session
-			);
+		);
 		if ( props == null ) {
 			return null;
 		}
@@ -4126,7 +4138,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isModifiableEntity(EntityEntry entry) {
-
 		return ( entry == null ? isMutable() : entry.isModifiableEntity() );
 	}
 
@@ -4289,11 +4300,17 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertyInsertability();
 	}
 
+	/**
+	 * @deprecated no simple, direct replacement
+	 */
 	@Deprecated
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
 		return null;
 	}
 
+	/**
+	 * @deprecated no simple, direct replacement
+	 */
 	@Deprecated
 	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
 		return null;
@@ -4737,7 +4754,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		Select select = new Select( getFactory().getDialect() );
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get current natural-id->entity-id state " + getEntityName() );
 		}
 
@@ -4832,10 +4849,9 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Consolidated these onto a single helper because the 2 pieces work in tandem.
 	 */
-	public static interface CacheEntryHelper {
-		public CacheEntryStructure getCacheEntryStructure();
-
-		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session);
+	public interface CacheEntryHelper {
+		CacheEntryStructure getCacheEntryStructure();
+		CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session);
 	}
 
 	private static class StandardCacheEntryHelper implements CacheEntryHelper {

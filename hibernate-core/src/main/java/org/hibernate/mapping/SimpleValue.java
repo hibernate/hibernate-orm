@@ -110,7 +110,9 @@ public class SimpleValue implements KeyValue {
 	}
 	
 	public void addColumn(Column column) {
-		if ( !columns.contains(column) ) columns.add(column);
+		if ( !columns.contains(column) ) {
+			columns.add(column);
+		}
 		column.setValue(this);
 		column.setTypeIndex( columns.size()-1 );
 	}
@@ -124,7 +126,9 @@ public class SimpleValue implements KeyValue {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			Object o = iter.next();
-			if (o instanceof Formula) return true;
+			if (o instanceof Formula) {
+				return true;
+			}
 		}
 		return false;
 	}

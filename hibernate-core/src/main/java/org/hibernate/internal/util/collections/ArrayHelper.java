@@ -45,8 +45,9 @@ public final class ArrayHelper {
 	
 	public static int indexOf(Object[] array, Object object) {
 		for ( int i = 0; i < array.length; i++ ) {
-			if ( array[i].equals( object ) )
+			if ( array[i].equals( object ) ) {
 				return i;
+			}
 		}
 		return -1;
 	}
@@ -205,7 +206,9 @@ public final class ArrayHelper {
 		sb.append("[");
 		for (int i = 0; i < array.length; i++) {
 			sb.append( array[i] );
-			if( i<array.length-1 ) sb.append(",");
+			if( i<array.length-1 ) {
+				sb.append(",");
+			}
 		}
 		sb.append("]");
 		return sb.toString();
@@ -256,7 +259,7 @@ public final class ArrayHelper {
 		return true;
 	}
 
-	public static void addAll(Collection collection, Object[] array) {
+	public static <T> void addAll(Collection<T> collection, T[] array) {
 		collection.addAll( Arrays.asList( array ) );
 	}
 
@@ -343,12 +346,20 @@ public final class ArrayHelper {
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(Object[] o1, Object[] o2) {
-		if (o1 == o2) return true;
-		if (o1 == null || o2 == null) return false;
+		if (o1 == o2) {
+			return true;
+		}
+		if (o1 == null || o2 == null) {
+			return false;
+		}
 		int length = o1.length;
-		if (length != o2.length) return false;
+		if (length != o2.length) {
+			return false;
+		}
 		for (int index = 0 ; index < length ; index++) {
-			if ( ! o1[index].equals( o2[index] ) ) return false;
+			if ( ! o1[index].equals( o2[index] ) ) {
+				return false;
+			}
 		}
         return true;
 	}
@@ -357,12 +368,20 @@ public final class ArrayHelper {
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(char[] o1, char[] o2) {
-		if (o1 == o2) return true;
-		if (o1 == null || o2 == null) return false;
+		if (o1 == o2) {
+			return true;
+		}
+		if (o1 == null || o2 == null) {
+			return false;
+		}
 		int length = o1.length;
-		if (length != o2.length) return false;
+		if (length != o2.length) {
+			return false;
+		}
 		for (int index = 0 ; index < length ; index++) {
-			if ( ! ( o1[index] == o2[index] ) ) return false;
+			if ( ! ( o1[index] == o2[index] ) ) {
+				return false;
+			}
 		}
         return true;
 	}
@@ -371,12 +390,20 @@ public final class ArrayHelper {
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(byte[] b1, byte[] b2) {
-		if (b1 == b2) return true;
-		if (b1 == null || b2 == null) return false;
+		if (b1 == b2) {
+			return true;
+		}
+		if (b1 == null || b2 == null) {
+			return false;
+		}
 		int length = b1.length;
-		if (length != b2.length) return false;
+		if (length != b2.length) {
+			return false;
+		}
 		for (int index = 0 ; index < length ; index++) {
-			if ( ! ( b1[index] == b2[index] ) ) return false;
+			if ( ! ( b1[index] == b2[index] ) ) {
+				return false;
+			}
 		}
         return true;
 	}

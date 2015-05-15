@@ -45,7 +45,7 @@ public class SelectParser implements Parser {
 
 	//TODO: arithmetic expressions, multiple new Foo(...)
 
-	private static final Set COUNT_MODIFIERS = new HashSet();
+	private static final Set<String> COUNT_MODIFIERS = new HashSet<String>();
 
 	static {
 		COUNT_MODIFIERS.add( "distinct" );
@@ -53,7 +53,7 @@ public class SelectParser implements Parser {
 		COUNT_MODIFIERS.add( "*" );
 	}
 
-	private LinkedList aggregateFuncTokenList = new LinkedList();
+	private LinkedList<String> aggregateFuncTokenList = new LinkedList<String>();
 
 	private boolean ready;
 	private boolean aggregate;
@@ -75,7 +75,6 @@ public class SelectParser implements Parser {
 	}
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
-
 		String lctoken = token.toLowerCase(Locale.ROOT);
 
 		if ( first ) {
@@ -98,12 +97,16 @@ public class SelectParser implements Parser {
 			catch ( ClassNotFoundException cnfe ) {
 				throw new QueryException( cnfe );
 			}
-			if ( holderClass == null ) throw new QueryException( "class not found: " + token );
+			if ( holderClass == null ) {
+				throw new QueryException( "class not found: " + token );
+			}
 			q.setHolderClass( holderClass );
 			insideNew = true;
 		}
 		else if ( token.equals( "," ) ) {
-			if ( !aggregate && ready ) throw new QueryException( "alias or expression expected in SELECT" );
+			if ( !aggregate && ready ) {
+				throw new QueryException( "alias or expression expected in SELECT" );
+			}
 			q.appendScalarSelectToken( ", " );
 			ready = true;
 		}
@@ -175,7 +178,9 @@ public class SelectParser implements Parser {
 		}
 		else if ( aggregate ) {
 			boolean constantToken = false;
-			if ( !ready ) throw new QueryException( "( expected after aggregate function in SELECT" );
+			if ( !ready ) {
+				throw new QueryException( "( expected after aggregate function in SELECT" );
+			}
 			try {
 				ParserHelper.parse( aggregatePathExpressionParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
 			}
@@ -200,7 +205,9 @@ public class SelectParser implements Parser {
 			}
 		}
 		else {
-			if ( !ready ) throw new QueryException( ", expected in SELECT" );
+			if ( !ready ) {
+				throw new QueryException( ", expected in SELECT" );
+			}
 			ParserHelper.parse( pathExpressionParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
 			if ( pathExpressionParser.isCollectionValued() ) {
 				q.addCollection( pathExpressionParser.getCollectionName(),

@@ -30,6 +30,8 @@ import org.hibernate.boot.jaxb.Origin;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated since 5.0; no longer used internally.
  */
 @Deprecated
 public enum SupportedOrmXsdVersion {

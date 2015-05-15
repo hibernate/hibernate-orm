@@ -67,14 +67,12 @@ public class ListType extends CollectionType {
 		List list = (List) collection;
 		for ( int i=0; i<list.size(); i++ ) {
 			//TODO: proxies!
-			if ( list.get(i)==element ) return i;
+			if ( list.get(i)==element ) {
+				return i;
+			}
 		}
 		return null;
 	}
 	
 }
-
-
-
-
 

@@ -38,7 +38,9 @@ public class PrimaryKey extends Constraint {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) buf.append(", ");
+			if ( iter.hasNext() ) {
+				buf.append(", ");
+			}
 		}
 		return buf.append(')').toString();
 	}
@@ -50,7 +52,9 @@ public class PrimaryKey extends Constraint {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) buf.append(", ");
+			if ( iter.hasNext() ) {
+				buf.append(", ");
+			}
 		}
 		return buf.append(')').toString();
 	}

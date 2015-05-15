@@ -2,6 +2,8 @@ package org.hibernate.test.type;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -11,7 +13,8 @@ import org.junit.Test;
 
 /**
  * Test the ability to interpret and understand AttributeConverter impls when the base class does not
- * explicitly implement AttributeConverter but implements it via an interface or superclass.
+ * explicitly implement AttributeConverter but implements it via an interface or superclass. This also
+ * involves resolving any TypeVariables to Class or ParameterizedType.
  * 
  * @author Svein Baardsen
  */
@@ -62,4 +65,38 @@ public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 		assertEquals( String.class, def.getEntityAttributeType() );
 	}
 
+	public static class NoopAttributeConverter<T> implements AttributeConverter<T, T> {
+
+		@Override
+		public T convertToDatabaseColumn(T attribute) {
+			return attribute;
+		}
+
+		@Override
+		public T convertToEntityAttribute(T dbData) {
+			return dbData;
+		}
+	}
+
+	public static class StringNoopAttributeConverter extends NoopAttributeConverter<String> {
+	}
+
+	@Test
+	public void testTypeVariableAttributeConverterTypeArguments() {
+		AttributeConverterDefinition def = AttributeConverterDefinition.from( StringNoopAttributeConverter.class );
+		assertEquals( String.class, def.getEntityAttributeType() );
+	}
+
+	public static class ListNoopAttributeConverter<T> extends NoopAttributeConverter<List<T>> {
+	}
+
+	public static class StringListNoopAttributeConverter extends ListNoopAttributeConverter<String> {
+	}
+
+	@Test
+	public void testParameterizedTypeWithTypeVariableAttributeConverterTypeArguments() {
+		AttributeConverterDefinition def = AttributeConverterDefinition.from( StringListNoopAttributeConverter.class );
+		assertEquals( List.class, def.getEntityAttributeType() );
+	}
+	
 }

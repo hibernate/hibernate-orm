@@ -156,6 +156,7 @@ public class AttributeConverterDefinition {
 			types.add( clazz.getGenericSuperclass() );
 			types.addAll( Arrays.asList( clazz.getGenericInterfaces() ) );
 			for ( Type type : types ) {
+				type = resolveType( type, base );
 				if ( ParameterizedType.class.isInstance( type ) ) {
 					final ParameterizedType parameterizedType = (ParameterizedType) type;
 					if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
@@ -169,6 +170,54 @@ public class AttributeConverterDefinition {
 			}
 		}
 		return null;
+	}
+
+	private static Type resolveType(Type target, Type context) {
+		if ( target instanceof ParameterizedType ) {
+			return resolveParameterizedType( (ParameterizedType) target, context );
+		}
+		else if ( target instanceof TypeVariable ) {
+			return resolveTypeVariable( (TypeVariable) target, (ParameterizedType) context );
+		}
+		return target;
+	}
+
+	private static ParameterizedType resolveParameterizedType(final ParameterizedType parameterizedType, Type context) {
+		Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+
+		final Type[] resolvedTypeArguments = new Type[actualTypeArguments.length];
+		for ( int idx = 0; idx < actualTypeArguments.length; idx++ ) {
+			resolvedTypeArguments[idx] = resolveType( actualTypeArguments[idx], context );
+		}
+		return new ParameterizedType() {
+
+			@Override
+			public Type[] getActualTypeArguments() {
+				return resolvedTypeArguments;
+			}
+
+			@Override
+			public Type getRawType() {
+				return parameterizedType.getRawType();
+			}
+
+			@Override
+			public Type getOwnerType() {
+				return parameterizedType.getOwnerType();
+			}
+
+		};
+	}
+
+	private static Type resolveTypeVariable(TypeVariable typeVariable, ParameterizedType context) {
+		Class clazz = extractClass( context.getRawType() );
+		TypeVariable[] typeParameters = clazz.getTypeParameters();
+		for ( int idx = 0; idx < typeParameters.length; idx++ ) {
+			if ( typeVariable.getName().equals( typeParameters[idx].getName() ) ) {
+				return resolveType( context.getActualTypeArguments()[idx], context );
+			}
+		}
+		return typeVariable;
 	}
 
 	public AttributeConverter getAttributeConverter() {

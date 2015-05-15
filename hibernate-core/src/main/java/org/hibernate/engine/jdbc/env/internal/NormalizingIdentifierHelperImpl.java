@@ -268,7 +268,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 //			return null;
 //		}
 
-		return toIdentifier( schemaName );
+		return toIdentifierFromMetaData( schemaName );
 	}
 
 	@Override
@@ -277,6 +277,6 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 
-		return toIdentifier( objectName );
+		return toIdentifierFromMetaData( objectName );
 	}
 }

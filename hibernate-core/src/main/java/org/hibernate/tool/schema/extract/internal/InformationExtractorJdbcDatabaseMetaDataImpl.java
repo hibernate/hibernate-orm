@@ -37,7 +37,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -140,7 +139,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			);
 			try {
 				while ( resultSet.next() ) {
-					final TableInformation tableInformation = extractTableInformation( resultSet );
+					final TableInformation tableInformation = extractTableInformation(
+							catalog,
+							schema,
+							null,
+							resultSet
+					);
 					results.add( tableInformation );
 				}
 			}
@@ -177,20 +181,23 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
 	}
 
-	public TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
-		final Identifier catalogIdentifier = identifierHelper().fromMetaDataCatalogName(
-				resultSet.getString( "TABLE_CAT" )
-		);
-		final Identifier schemaIdentifier = identifierHelper().fromMetaDataSchemaName(
-				resultSet.getString( "TABLE_SCHEM" )
-		);
-		final Identifier tableIdentifier = identifierHelper().fromMetaDataObjectName(
-				resultSet.getString( "TABLE_NAME" )
-		);
-		final QualifiedTableName tableName = new QualifiedTableName(
-				new Schema.Name( catalogIdentifier, schemaIdentifier ),
-				tableIdentifier
-		);
+	public TableInformation extractTableInformation(
+			Identifier catalog,
+			Identifier schema,
+			Identifier name,
+			ResultSet resultSet) throws SQLException {
+		if ( catalog == null ) {
+			catalog = identifierHelper().fromMetaDataCatalogName( resultSet.getString( "TABLE_CAT" ) );
+		}
+		if ( schema == null ) {
+			schema = identifierHelper().fromMetaDataSchemaName( resultSet.getString( "TABLE_SCHEM" ) );
+		}
+		if ( name == null ) {
+			name = identifierHelper().fromMetaDataObjectName( resultSet.getString( "TABLE_NAME" ) );
+		}
+
+		final QualifiedTableName tableName = new QualifiedTableName( catalog, schema, name );
+
 		return new TableInformationImpl(
 				this,
 				tableName,
@@ -218,7 +225,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					return null;
 				}
 
-				final TableInformation tableInformation = extractTableInformation( resultSet );
+				final TableInformation tableInformation = extractTableInformation(
+						catalog,
+						schema,
+						tableName,
+						resultSet
+				);
 
 				if ( resultSet.next() ) {
 					log.multipleTablesFound( tableName.render() );
@@ -265,7 +277,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					results.add(
 							new ColumnInformationImpl(
 									tableInformation,
-									Identifier.toIdentifier( columnName ),
+									identifierHelper().fromMetaDataObjectName( columnName ),
 									resultSet.getInt( "DATA_TYPE" ),
 									new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
 									resultSet.getInt( "COLUMN_SIZE" ),
@@ -382,14 +394,18 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						continue;
 					}
 
-					final Identifier indexIdentifier = Identifier.toIdentifier( resultSet.getString( "INDEX_NAME" ) );
+					final Identifier indexIdentifier = identifierHelper().fromMetaDataObjectName(
+							resultSet.getString(
+									"INDEX_NAME"
+							)
+					);
 					IndexInformationImpl.Builder builder = builders.get( indexIdentifier );
 					if ( builder == null ) {
 						builder = IndexInformationImpl.builder( indexIdentifier );
 						builders.put( indexIdentifier, builder );
 					}
 
-					final Identifier columnIdentifier = Identifier.toIdentifier( resultSet.getString( "COLUMN_NAME" ) );
+					final Identifier columnIdentifier = identifierHelper().fromMetaDataObjectName( resultSet.getString( "COLUMN_NAME" ) );
 					final ColumnInformation columnInformation = tableInformation.getColumn( columnIdentifier );
 					if ( columnInformation == null ) {
 						throw new SchemaManagementException(
@@ -434,7 +450,9 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			try {
 				while ( resultSet.next() ) {
 					// IMPL NOTE : The builder is mainly used to collect the column reference mappings
-					final Identifier fkIdentifier = Identifier.toIdentifier( resultSet.getString( "FK_NAME" ) );
+					final Identifier fkIdentifier = identifierHelper().fromMetaDataObjectName(
+							resultSet.getString( "FK_NAME" )
+					);
 					ForeignKeyBuilder fkBuilder = fkBuilders.get( fkIdentifier );
 					if ( fkBuilder == null ) {
 						fkBuilder = generateForeignKeyBuilder( fkIdentifier );
@@ -454,8 +472,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						continue;
 					}
 
-					final Identifier fkColumnIdentifier = Identifier.toIdentifier( resultSet.getString( "FKCOLUMN_NAME" ) );
-					final Identifier pkColumnIdentifier = Identifier.toIdentifier( resultSet.getString( "PKCOLUMN_NAME" ) );
+					final Identifier fkColumnIdentifier = identifierHelper().fromMetaDataObjectName(
+							resultSet.getString( "FKCOLUMN_NAME" )
+					);
+					final Identifier pkColumnIdentifier = identifierHelper().fromMetaDataObjectName(
+							resultSet.getString( "PKCOLUMN_NAME" )
+					);
 
 					fkBuilder.addColumnMapping(
 							tableInformation.getColumn( fkColumnIdentifier ),
@@ -486,10 +508,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		return new ForeignKeyBuilderImpl( fkIdentifier );
 	}
 
-	protected static interface ForeignKeyBuilder {
-		public ForeignKeyBuilder addColumnMapping(ColumnInformation referencing, ColumnInformation referenced);
+	protected interface ForeignKeyBuilder {
+		ForeignKeyBuilder addColumnMapping(ColumnInformation referencing, ColumnInformation referenced);
 
-		public ForeignKeyInformation build();
+		ForeignKeyInformation build();
 	}
 
 	protected static class ForeignKeyBuilderImpl implements ForeignKeyBuilder {
@@ -524,11 +546,9 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		final String incomingTableName = resultSet.getString( prefix + "TABLE_NAME" );
 
 		return new QualifiedTableName(
-				new Schema.Name(
-						Identifier.toIdentifier( incomingCatalogName ),
-						Identifier.toIdentifier( incomingSchemaName )
-				),
-				Identifier.toIdentifier( incomingTableName )
+				identifierHelper().fromMetaDataCatalogName( incomingCatalogName ),
+				identifierHelper().fromMetaDataSchemaName( incomingSchemaName ),
+				identifierHelper().fromMetaDataObjectName( incomingTableName )
 		);
 	}
 }

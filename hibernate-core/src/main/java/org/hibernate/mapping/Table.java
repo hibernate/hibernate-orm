@@ -42,9 +42,12 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+
+import org.jboss.logging.Logger;
 
 /**
  * A relational table
@@ -53,7 +56,6 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
  */
 @SuppressWarnings("unchecked")
 public class Table implements RelationalModel, Serializable, Exportable {
-
 	private Identifier catalog;
 	private Identifier schema;
 	private Identifier name;
@@ -441,7 +443,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		
 		while ( iter.hasNext() ) {
 			final Column column = (Column) iter.next();
-			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName() ) );
+			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName(), column.isQuoted() ) );
 
 			if ( columnInfo == null ) {
 				// the column doesnt exist at all.
@@ -487,6 +489,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				results.add( alter.toString() );
 			}
 
+		}
+
+		if ( results.isEmpty() ) {
+			Logger.getLogger( SchemaUpdate.class ).debugf( "No alter strings for table : %s", getQuotedName() );
 		}
 
 		return results.iterator();

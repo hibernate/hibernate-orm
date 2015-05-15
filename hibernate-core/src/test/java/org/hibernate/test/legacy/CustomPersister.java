@@ -222,6 +222,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public boolean hasUninitializedLazyProperties(Object object, Object[] state) {
+		return false;
+	}
+
+	@Override
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
 		( ( Custom ) entity ).id = ( String ) currentId;
 	}
@@ -595,7 +600,7 @@ public class CustomPersister implements EntityPersister {
 		return new StandardCacheEntryImpl(
 				state,
 				this,
-				this.hasUninitializedLazyProperties( entity ),
+				this.hasUninitializedLazyProperties( entity, state ),
 				version,
 				session,
 				entity

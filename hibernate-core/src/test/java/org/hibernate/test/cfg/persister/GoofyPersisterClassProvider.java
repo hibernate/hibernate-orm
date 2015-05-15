@@ -555,6 +555,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public boolean hasUninitializedLazyProperties(Object object) {
 			return false;
 		}
+		@Override
+		public boolean hasUninitializedLazyProperties(Object object, Object[] state) {
+			return false;
+		}
 
 		@Override
 		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {

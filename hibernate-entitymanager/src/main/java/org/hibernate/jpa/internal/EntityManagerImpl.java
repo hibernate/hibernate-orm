@@ -41,7 +41,6 @@ import org.hibernate.ejb.AbstractEntityManagerImpl;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
@@ -274,10 +273,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 
 	private class ManagedFlushCheckerImpl implements ManagedFlushChecker {
 		@Override
-		public boolean shouldDoManagedFlush(SessionImpl session, int jtaStatus) {
+		public boolean shouldDoManagedFlush(SessionImpl session) {
 			return !session.isClosed()
-					&& !isManualFlushMode( session.getFlushMode() )
-					&& !JtaStatusHelper.isRollback( jtaStatus );
+					&& !isManualFlushMode( session.getFlushMode() );
 		}
 	}
 

@@ -39,9 +39,8 @@ public interface ManagedFlushChecker extends Serializable {
 	 * Check whether we should perform the managed flush
 	 *
 	 * @param session The Session
-	 * @param jtaStatus The status of the current JTA transaction.
 	 *
 	 * @return True to indicate to perform the managed flush; false otherwise.
 	 */
-	public boolean shouldDoManagedFlush(SessionImpl session, int jtaStatus);
+	public boolean shouldDoManagedFlush(SessionImpl session);
 }

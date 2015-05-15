@@ -102,7 +102,6 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -2878,17 +2877,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		boolean flush = false;
-		try {
-			int status = getJtaPlatform().getCurrentStatus();
-			flush = managedFlushChecker.shouldDoManagedFlush( this, status );
-		}
-		catch (SystemException se) {
-			throw exceptionMapper.mapStatusCheckFailure(
-					"could not determine transaction status in beforeCompletion()",
-					se
-			);
-		}
+		boolean flush = isTransactionFlushable() && managedFlushChecker.shouldDoManagedFlush( this );
 		try {
 			if ( flush ) {
 				managedFlush();
@@ -2900,6 +2889,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		catch (RuntimeException re) {
 			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
 		}
+	}
+
+	private boolean isTransactionFlushable(){
+		if(currentHibernateTransaction == null){
+			return false;
+		}
+		final TransactionStatus status = currentHibernateTransaction.getStatus();
+		return status == TransactionStatus.ACTIVE || status ==TransactionStatus.COMMITTING;
 	}
 
 	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
@@ -2927,14 +2924,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private static final ManagedFlushChecker STANDARD_MANAGED_FLUSH_CHECKER = new ManagedFlushChecker() {
 		@Override
-		public boolean shouldDoManagedFlush(SessionImpl session, int jtaStatus) {
+		public boolean shouldDoManagedFlush(SessionImpl session) {
 			boolean isFlushModeNever = session.isFlushModeNever();
 			return (!isFlushModeNever &&
 					!session.flushBeforeCompletionEnabled) ||
 					!session.isClosed()
 							&& !isFlushModeNever
-							&& session.flushBeforeCompletionEnabled
-							&& !JtaStatusHelper.isRollback( jtaStatus );
+							&& session.flushBeforeCompletionEnabled;
 		}
 	};
 

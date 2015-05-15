@@ -9,12 +9,15 @@ package org.hibernate.cfg;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -109,6 +112,12 @@ public class AttributeConverterDefinition {
 
 		final Class attributeConverterClass = attributeConverter.getClass();
 		final ParameterizedType attributeConverterSignature = extractAttributeConverterParameterizedType( attributeConverterClass );
+		if ( attributeConverterSignature == null ) {
+			throw new AssertionFailure(
+					"Could not extract ParameterizedType representation of AttributeConverter definition " +
+							"from AttributeConverter implementation class [" + attributeConverterClass.getName() + "]"
+			);
+		}
 
 		if ( attributeConverterSignature.getActualTypeArguments().length < 2 ) {
 			throw new AnnotationException(
@@ -140,20 +149,26 @@ public class AttributeConverterDefinition {
 		}
 	}
 
-	private ParameterizedType extractAttributeConverterParameterizedType(Class attributeConverterClass) {
-		for ( Type type : attributeConverterClass.getGenericInterfaces() ) {
-			if ( ParameterizedType.class.isInstance( type ) ) {
-				final ParameterizedType parameterizedType = (ParameterizedType) type;
-				if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
+	private ParameterizedType extractAttributeConverterParameterizedType(Type base) {
+		if ( base != null ) {
+			Class clazz = extractClass( base );
+			List<Type> types = new ArrayList<Type>();
+			types.add( clazz.getGenericSuperclass() );
+			types.addAll( Arrays.asList( clazz.getGenericInterfaces() ) );
+			for ( Type type : types ) {
+				if ( ParameterizedType.class.isInstance( type ) ) {
+					final ParameterizedType parameterizedType = (ParameterizedType) type;
+					if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
+						return parameterizedType;
+					}
+				}
+				ParameterizedType parameterizedType = extractAttributeConverterParameterizedType( type );
+				if ( parameterizedType != null ) {
 					return parameterizedType;
 				}
 			}
 		}
-
-		throw new AssertionFailure(
-				"Could not extract ParameterizedType representation of AttributeConverter definition " +
-						"from AttributeConverter implementation class [" + attributeConverterClass.getName() + "]"
-		);
+		return null;
 	}
 
 	public AttributeConverter getAttributeConverter() {

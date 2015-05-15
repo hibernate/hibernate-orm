@@ -23,7 +23,6 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
@@ -41,15 +40,11 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	private static final Logger log = Logger.getLogger( JtaTransactionAdapterTransactionManagerImpl.class );
 
 	private final TransactionManager transactionManager;
-	private final JtaTransactionCoordinatorImpl transactionCoordinator;
 
 	private boolean initiator;
 
-	public JtaTransactionAdapterTransactionManagerImpl(
-			TransactionManager transactionManager,
-			JtaTransactionCoordinatorImpl transactionCoordinator) throws SystemException {
+	public JtaTransactionAdapterTransactionManagerImpl(TransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
-		this.transactionCoordinator = transactionCoordinator;
 	}
 
 	@Override
@@ -73,8 +68,6 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	@Override
 	public void commit() {
 		try {
-			this.transactionCoordinator.getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
-
 			if ( initiator ) {
 				initiator = false;
 				log.trace( "Calling TransactionManager#commit" );

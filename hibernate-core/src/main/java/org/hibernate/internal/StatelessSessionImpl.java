@@ -61,6 +61,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -772,9 +773,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 					!isClosed()
 							&& !isFlushModeNever()
 							&& !JtaStatusHelper.isRollback(
-							factory.getSettings()
-									.getJtaPlatform()
-									.getCurrentStatus()
+							getJtaPlatform().getCurrentStatus()
 					));
 		}
 		catch (SystemException se) {
@@ -783,5 +782,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		if ( flush ) {
 			managedFlush();
 		}
+	}
+
+	private JtaPlatform getJtaPlatform() {
+		return factory.getServiceRegistry().getService( JtaPlatform.class );
 	}
 }

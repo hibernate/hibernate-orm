@@ -26,11 +26,10 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
-import org.hibernate.TransactionException;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.TransactionException;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
  * JtaTransactionAdapter for coordinating with the JTA UserTransaction
@@ -41,16 +40,12 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	private static final Logger log = Logger.getLogger( JtaTransactionAdapterUserTransactionImpl.class );
 
 	private final UserTransaction userTransaction;
-	private final JtaTransactionCoordinatorImpl transactionCoordinator;
 
 
 	private boolean initiator;
 
-	public JtaTransactionAdapterUserTransactionImpl(
-			UserTransaction userTransaction,
-			JtaTransactionCoordinatorImpl transactionCoordinator) {
+	public JtaTransactionAdapterUserTransactionImpl(UserTransaction userTransaction) {
 		this.userTransaction = userTransaction;
-		this.transactionCoordinator = transactionCoordinator;
 	}
 
 	@Override
@@ -74,8 +69,6 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	@Override
 	public void commit() {
 		try {
-			this.transactionCoordinator.getTransactionCoordinatorOwner().flushBeforeTransactionCompletion();
-
 			if ( initiator ) {
 				initiator = false;
 				log.trace( "Calling UserTransaction#commit" );

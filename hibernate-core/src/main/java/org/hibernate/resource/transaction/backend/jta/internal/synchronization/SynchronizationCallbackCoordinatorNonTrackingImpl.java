@@ -24,10 +24,8 @@
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-
-import org.jboss.logging.Logger;
-
-import static org.hibernate.internal.CoreLogging.logger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
@@ -35,7 +33,9 @@ import static org.hibernate.internal.CoreLogging.logger;
  * @author Steve Ebersole
  */
 public class SynchronizationCallbackCoordinatorNonTrackingImpl implements SynchronizationCallbackCoordinator {
-	private static final Logger log = logger( SynchronizationCallbackCoordinatorNonTrackingImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger(
+			SynchronizationCallbackCoordinatorNonTrackingImpl.class
+	);
 
 	private final SynchronizationCallbackTarget target;
 
@@ -61,10 +61,8 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 		if ( !target.isActive() ) {
 			return;
 		}
-
 		target.beforeCompletion();
 	}
-
 
 	@Override
 	public void afterCompletion(int status) {

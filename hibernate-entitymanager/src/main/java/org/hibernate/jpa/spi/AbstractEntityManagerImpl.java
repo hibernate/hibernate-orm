@@ -100,7 +100,9 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
@@ -121,6 +123,7 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 
@@ -772,7 +775,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return createNamedJpqlQuery( jpqlDefinition, resultType );
 		}
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
+		final NamedSQLQueryDefinition nativeQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition(	name );
 		if ( nativeQueryDefinition != null ) {
 			return createNamedSqlQuery( nativeQueryDefinition, resultType );
 		}
@@ -1560,13 +1563,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private void joinTransaction(boolean explicitRequest) {
 		if ( transactionType != PersistenceUnitTransactionType.JTA ) {
 			if ( explicitRequest ) {
-			    LOG.callingJoinTransactionOnNonJtaEntityManager();
+				LOG.callingJoinTransactionOnNonJtaEntityManager();
 			}
 			return;
 		}
 
-		final SessionImplementor session = (SessionImplementor) internalGetSession();
-		session.getTransactionCoordinator().explicitJoin();
+		try {
+			final TransactionCoordinator transactionCoordinator = ((SessionImplementor) internalGetSession()).getTransactionCoordinator();
+			transactionCoordinator.explicitJoin();
+		}
+		catch (HibernateException he) {
+			throw convert( he );
+		}
 	}
 
 	/**

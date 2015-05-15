@@ -30,16 +30,23 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.SynchronizationType;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.transaction.SystemException;
 
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.ejb.AbstractEntityManagerImpl;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -210,9 +217,69 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 		return !isOpen();
 	}
 
+	@Override
+	public ExceptionMapper getExceptionMapper() {
+		return new CallbackExceptionMapperImpl();
+	}
+
+	@Override
+	public AfterCompletionAction getAfterCompletionAction() {
+		return new AfterCompletionActionImpl();
+	}
+
+	@Override
+	public ManagedFlushChecker getManagedFlushChecker() {
+		return new ManagedFlushCheckerImpl();
+	}
+
 	private void checkEntityManagerFactory() {
 		if ( ! internalGetEntityManagerFactory().isOpen() ) {
 			open = false;
 		}
+	}
+
+	private class CallbackExceptionMapperImpl implements ExceptionMapper {
+		@Override
+		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
+			throw new PersistenceException( message, systemException );
+		}
+
+		@Override
+		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
+			if ( HibernateException.class.isInstance( failure ) ) {
+				throw convert( failure );
+			}
+			if ( PersistenceException.class.isInstance( failure ) ) {
+				throw failure;
+			}
+			throw new PersistenceException( message, failure );
+		}
+	}
+
+	private class AfterCompletionActionImpl implements AfterCompletionAction {
+
+		@Override
+		public void doAction( boolean successful) {
+			if ( ((SessionImplementor)EntityManagerImpl.this.session).isClosed()) {
+				LOG.trace( "Session was closed; nothing to do" );
+				return;
+			}
+
+			if ( !successful && EntityManagerImpl.this.getTransactionType() == PersistenceUnitTransactionType.JTA ) {
+				((Session) session).clear();
+			}
+		}
+	}
+
+	private class ManagedFlushCheckerImpl implements ManagedFlushChecker {
+		@Override
+		public boolean shouldDoManagedFlush(SessionImpl session) {
+			return !session.isClosed()
+					&& !isManualFlushMode( session.getFlushMode() );
+		}
+	}
+
+	private boolean isManualFlushMode(FlushMode mode){
+		return FlushMode.MANUAL == mode;
 	}
 }

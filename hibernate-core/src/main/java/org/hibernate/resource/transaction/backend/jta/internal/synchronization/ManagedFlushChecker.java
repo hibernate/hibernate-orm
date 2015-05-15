@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) {DATE}, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,30 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.spi;
+package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
+import java.io.Serializable;
+
+import org.hibernate.internal.SessionImpl;
 
 /**
- * The contract for a Session owner.  Typically this is something that wraps the Session.
+ * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate determines
+ * whether to perform a managed flush.  An exceptions from either this delegate or the subsequent flush are routed
+ * through the sister strategy {@link ExceptionMapper}.
  *
- * @author Gail Badner
- *
- * @see SessionBuilderImplementor#owner
+ * @author Steve Ebersole
  */
-public interface SessionOwner {
+public interface ManagedFlushChecker extends Serializable {
 	/**
-	 * Should session automatically be closed after transaction completion?
+	 * Check whether we should perform the managed flush
 	 *
-	 * @return {@literal true}/{@literal false} appropriately.
+	 * @param session The Session
+	 *
+	 * @return True to indicate to perform the managed flush; false otherwise.
 	 */
-	public boolean shouldAutoCloseSession();
-
-	public ExceptionMapper getExceptionMapper();
-
-	public AfterCompletionAction getAfterCompletionAction();
-
-	public ManagedFlushChecker getManagedFlushChecker();
+	public boolean shouldDoManagedFlush(SessionImpl session);
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) {DATE}, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,30 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.spi;
+package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.io.Serializable;
+
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * The contract for a Session owner.  Typically this is something that wraps the Session.
+ * A pluggable strategy for defining any actions to be performed during
+ * {@link javax.transaction.Synchronization#afterCompletion} processing from the the
+ * {@link javax.transaction.Synchronization} registered by Hibernate with the underlying JTA platform.
  *
- * @author Gail Badner
- *
- * @see SessionBuilderImplementor#owner
+ * @author Steve Ebersole
  */
-public interface SessionOwner {
-	/**
-	 * Should session automatically be closed after transaction completion?
-	 *
-	 * @return {@literal true}/{@literal false} appropriately.
-	 */
-	public boolean shouldAutoCloseSession();
-
-	public ExceptionMapper getExceptionMapper();
-
-	public AfterCompletionAction getAfterCompletionAction();
-
-	public ManagedFlushChecker getManagedFlushChecker();
+public interface AfterCompletionAction extends Serializable {
+	public void doAction(boolean successful);
 }

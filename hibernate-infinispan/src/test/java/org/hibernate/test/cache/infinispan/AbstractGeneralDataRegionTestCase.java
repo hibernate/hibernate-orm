@@ -34,6 +34,7 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.infinispan.AdvancedCache;
@@ -78,6 +79,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	}
 
 	@Test
+	@Ignore // currently ignored because of HHH-9800
 	public void testEvict() throws Exception {
 		evictOrRemoveTest();
 	}

@@ -239,7 +239,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 		}
 	}
 
-	public class CallbackExceptionMapperImpl implements ExceptionMapper {
+	private class CallbackExceptionMapperImpl implements ExceptionMapper {
 		@Override
 		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
 			throw new PersistenceException( message, systemException );
@@ -257,7 +257,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 		}
 	}
 
-	public class AfterCompletionActionImpl implements AfterCompletionAction {
+	private class AfterCompletionActionImpl implements AfterCompletionAction {
 
 		@Override
 		public void doAction( boolean successful) {
@@ -272,12 +272,16 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 		}
 	}
 
-	public static class ManagedFlushCheckerImpl implements ManagedFlushChecker {
+	private class ManagedFlushCheckerImpl implements ManagedFlushChecker {
 		@Override
 		public boolean shouldDoManagedFlush(SessionImpl session, int jtaStatus) {
 			return !session.isClosed()
-					&& !FlushMode.isManualFlushMode( session.getFlushMode() )
+					&& !isManualFlushMode( session.getFlushMode() )
 					&& !JtaStatusHelper.isRollback( jtaStatus );
 		}
+	}
+
+	private boolean isManualFlushMode(FlushMode mode){
+		return FlushMode.MANUAL == mode;
 	}
 }

@@ -103,6 +103,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -2879,9 +2880,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void flushBeforeTransactionCompletion() {
 		boolean flush = false;
 		try {
-			int status = getSessionFactory().getSettings()
-					.getJtaPlatform()
-					.getCurrentStatus();
+			int status = getJtaPlatform().getCurrentStatus();
 			flush = managedFlushChecker.shouldDoManagedFlush( this, status );
 		}
 		catch (SystemException se) {
@@ -2938,4 +2937,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 							&& !JtaStatusHelper.isRollback( jtaStatus );
 		}
 	};
+
+	private JtaPlatform getJtaPlatform() {
+		return factory.getServiceRegistry().getService( JtaPlatform.class );
+	}
 }

@@ -125,6 +125,9 @@ subprojects { subProject ->
 		testRuntime( libraries.javassist )
 		testRuntime( libraries.h2 )
 		testRuntime( libraries.woodstox )
+
+		// 6.6 gave me some NPE problems from within checkstyle...
+		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

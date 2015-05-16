@@ -185,7 +185,6 @@
 
         <module name="AbbreviationAsWordInName">
             <property name="severity" value="warning" />
-            <property name="ignoreOverriddenMethod" value="true" />
         </module>
 
         <module name="MethodParamPad">

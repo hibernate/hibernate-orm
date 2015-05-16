@@ -95,7 +95,7 @@
                 information.  Consider reading <biblioref linkend="biblio-JPwH"/>
                 if you need more help with application design, or if you prefer
                 a step-by-step tutorial. Also visit
-                <link xlink:href="http://caveatemptor.hibernate.org"/>
+                <link xlink:href="http://downloads.jboss.org/hibernate/caveatemptor"/>
                 and download the example application from <biblioref linkend="biblio-JPwH"/>.
             </para>
         </listitem>

@@ -16,6 +16,7 @@ public class CupHolder {
 	//@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Integer id;
 	private BigDecimal radius;
+	private String title;
 
 	public Integer getId() {
 		return id;
@@ -34,4 +35,10 @@ public class CupHolder {
 	public void setRadius(BigDecimal radius) {
 		this.radius = radius;
 	}
+
+	@NotNull
+	@ValidTitle
+	public String getTitle() { return title; }
+
+	public void setTitle(String title) { this.title = title; }
 }

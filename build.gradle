@@ -254,16 +254,28 @@ subprojects { subProject ->
 		toolVersion = '3.0.1'
 		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
 		reportLevel = 'low'
+		// remove all low level bug warnings except DM_CONVERT_CASE
+		excludeFilterConfig=resources.text.fromString(excludeAllLowLevelBugsExcept('DM_CONVERT_CASE'))
 	}
-	// exclude generated java sources - by explicitly setting the base source dir
-	findbugsMain.source = 'src/main/java'
 
+	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
+	findbugsMain.doFirst {
+		classes = classes.filter {
+			!it.path.contains( 'org/hibernate/hql/internal/antlr' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/cfg/spi' ) &&
+					!it.path.contains( 'org/hibernate/sql/ordering/antlr/Generated' ) &&
+					!it.path.contains( 'org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Jaxb' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/Adapter' ) &&
+					!it.path.contains( 'org/hibernate/boot/jaxb/hbm/spi/ObjectFactory' ) &&
+					!it.path.contains( 'org/hibernate/cfg' ) &&
+					!it.path.contains( '_\$logger' )
+		}
+	}
 
-	// because cfg package is a mess mainly from annotation stuff
+		// because cfg package is a mess mainly from annotation stuff
 	checkstyleMain.exclude '**/org/hibernate/cfg/**'
 	checkstyleMain.exclude '**/org/hibernate/cfg/*'
-	findbugsMain.exclude '**/org/hibernate/cfg/**'
-	findbugsMain.exclude '**/org/hibernate/cfg/*'
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -302,4 +314,20 @@ task release(type: Task, dependsOn: 'release:release')
 
 task wrapper(type: Wrapper) {
     gradleVersion = expectedGradleVersion
+}
+
+def excludeAllLowLevelBugsExcept(String[] bugTypes){
+	def writer = new StringWriter()
+	def xml = new groovy.xml.MarkupBuilder(writer);
+	xml.FindBugsFilter {
+		Match {
+			Confidence( value: '3' )
+			bugTypes.each { bug ->
+				Not {
+					Bug( pattern: "${bug}" )
+				}
+			}
+		}
+	}
+	return writer.toString(  )
 }

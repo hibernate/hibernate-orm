@@ -33,6 +33,7 @@ class NonstrictReadWriteCollectionRegionAccessStrategy extends BaseCollectionReg
 	NonstrictReadWriteCollectionRegionAccessStrategy(CollectionRegionImpl region) {
 		super( region );
 	}
+
 	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		evict( key );

@@ -25,7 +25,6 @@ package org.hibernate.jpa.criteria.predicate;
 
 import java.io.Serializable;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.ParameterRegistry;
@@ -33,7 +32,7 @@ import org.hibernate.jpa.criteria.Renderable;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
 
 /**
- * Defines a {@link Predicate} used to wrap an {@link Expression Expression&lt;Boolean&gt;}.
+ * Defines a {@link javax.persistence.criteria.Predicate} used to wrap an {@link Expression Expression&lt;Boolean&gt;}.
  * 
  * @author Steve Ebersole
  */

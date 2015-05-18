@@ -29,7 +29,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -37,15 +36,13 @@ import org.jboss.logging.Logger;
  * @author Eric Dalquist
  */
 class NaturalIdRegionImpl extends BaseTransactionalDataRegion implements NaturalIdRegion {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, NaturalIdRegionImpl.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( NaturalIdRegionImpl.class.getName() );
 
 	private final SessionFactoryOptions settings;
 
 	NaturalIdRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
 		super( name, metadata );
-		this.settings=settings;
+		this.settings = settings;
 	}
 
 	public SessionFactoryOptions getSettings() {
@@ -61,7 +58,7 @@ class NaturalIdRegionImpl extends BaseTransactionalDataRegion implements Natural
 				}
 				return new ReadOnlyNaturalIdRegionAccessStrategy( this );
 			case READ_WRITE:
-				 return new ReadWriteNaturalIdRegionAccessStrategy( this );
+				return new ReadWriteNaturalIdRegionAccessStrategy( this );
 			case NONSTRICT_READ_WRITE:
 				return new NonstrictReadWriteNaturalIdRegionAccessStrategy( this );
 			case TRANSACTIONAL:

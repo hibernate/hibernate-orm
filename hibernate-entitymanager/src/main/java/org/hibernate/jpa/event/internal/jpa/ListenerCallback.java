@@ -44,7 +44,7 @@ public class ListenerCallback implements Callback {
 	}
 
 	@Override
-    public boolean performCallback(Object entity) {
+	public boolean performCallback(Object entity) {
 		try {
 			callbackMethod.invoke( listenerInstance, entity );
 			return true;

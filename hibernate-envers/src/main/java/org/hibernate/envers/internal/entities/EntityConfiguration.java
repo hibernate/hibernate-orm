@@ -46,8 +46,12 @@ public class EntityConfiguration {
 	private Map<String, RelationDescription> relations;
 	private String parentEntityName;
 
-	public EntityConfiguration(String versionsEntityName, String entityClassName, IdMappingData idMappingData,
-							   ExtendedPropertyMapper propertyMapper, String parentEntityName) {
+	public EntityConfiguration(
+			String versionsEntityName,
+			String entityClassName,
+			IdMappingData idMappingData,
+			ExtendedPropertyMapper propertyMapper,
+			String parentEntityName) {
 		this.versionsEntityName = versionsEntityName;
 		this.entityClassName = entityClassName;
 		this.idMappingData = idMappingData;
@@ -57,8 +61,12 @@ public class EntityConfiguration {
 		this.relations = new HashMap<String, RelationDescription>();
 	}
 
-	public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper, boolean insertable,
-								 boolean ignoreNotFound) {
+	public void addToOneRelation(
+			String fromPropertyName,
+			String toEntityName,
+			IdMapper idMapper,
+			boolean insertable,
+			boolean ignoreNotFound) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toOne(
@@ -68,8 +76,12 @@ public class EntityConfiguration {
 		);
 	}
 
-	public void addToOneNotOwningRelation(String fromPropertyName, String mappedByPropertyName,
-										  String toEntityName, IdMapper idMapper, boolean ignoreNotFound) {
+	public void addToOneNotOwningRelation(
+			String fromPropertyName,
+			String mappedByPropertyName,
+			String toEntityName,
+			IdMapper idMapper,
+			boolean ignoreNotFound) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toOne(
@@ -79,9 +91,13 @@ public class EntityConfiguration {
 		);
 	}
 
-	public void addToManyNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
-										   IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
-										   PropertyMapper fakeBidirectionalRelationIndexMapper) {
+	public void addToManyNotOwningRelation(
+			String fromPropertyName,
+			String mappedByPropertyName,
+			String toEntityName,
+			IdMapper idMapper,
+			PropertyMapper fakeBidirectionalRelationMapper,
+			PropertyMapper fakeBidirectionalRelationIndexMapper) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(

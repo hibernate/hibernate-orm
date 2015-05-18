@@ -35,7 +35,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -61,8 +60,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	public static boolean useThetaStyleImplicitJoins;
 	public static boolean regressionStyleJoinSuppression;
 
-	public static interface IllegalCollectionDereferenceExceptionBuilder {
-		public QueryException buildIllegalCollectionDereferenceException(
+	public interface IllegalCollectionDereferenceExceptionBuilder {
+		QueryException buildIllegalCollectionDereferenceException(
 				String collectionPropertyName,
 				FromReferenceNode lhs);
 	}
@@ -126,7 +125,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	 *
 	 * @param joinType The type of join to use.
 	 *
-	 * @see JoinFragment
+	 * @see org.hibernate.sql.JoinFragment
 	 */
 	public void setJoinType(JoinType joinType) {
 		this.joinType = joinType;

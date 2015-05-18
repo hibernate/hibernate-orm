@@ -24,14 +24,13 @@
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
-import javax.persistence.OneToOne;
 
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.AuditEntity;
 
 /**
- * Property mapper for not owning side of {@link OneToOne} relation.
+ * Property mapper for not owning side of {@link javax.persistence.OneToOne} relation.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
@@ -42,7 +41,9 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
 	private final String owningReferencePropertyName;
 
 	public OneToOneNotOwningMapper(
-			String notOwningEntityName, String owningEntityName, String owningReferencePropertyName,
+			String notOwningEntityName,
+			String owningEntityName,
+			String owningReferencePropertyName,
 			PropertyData propertyData) {
 		super( notOwningEntityName, owningEntityName, propertyData );
 		this.owningReferencePropertyName = owningReferencePropertyName;
@@ -50,8 +51,10 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
 
 	@Override
 	protected Object queryForReferencedEntity(
-			AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
-			Serializable primaryKey, Number revision) {
+			AuditReaderImplementor versionsReader,
+			EntityInfo referencedEntity,
+			Serializable primaryKey,
+			Number revision) {
 		return versionsReader.createQuery().forEntitiesAtRevision(
 				referencedEntity.getEntityClass(),
 				referencedEntity.getEntityName(), revision

@@ -63,7 +63,8 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			if(aud.modifiedColumnName() != null && !"".equals(aud.modifiedColumnName())) {
 				propertyData.setModifiedFlagName(aud.modifiedColumnName());
-			} else {
+			}
+			else {
 				propertyData.setModifiedFlagName(
 						MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix )
 				);

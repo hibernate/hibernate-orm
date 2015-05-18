@@ -25,10 +25,7 @@ package org.hibernate.envers.query.criteria;
 
 import org.hibernate.envers.query.criteria.internal.IdentifierEqAuditExpression;
 import org.hibernate.envers.query.internal.property.EntityPropertyName;
-import org.hibernate.envers.query.internal.property.OriginalIdPropertyName;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
-import org.hibernate.envers.query.projection.AuditProjection;
-import org.hibernate.envers.query.projection.internal.PropertyAuditProjection;
 
 /**
  * Create restrictions and projections for the id of an audited entity.

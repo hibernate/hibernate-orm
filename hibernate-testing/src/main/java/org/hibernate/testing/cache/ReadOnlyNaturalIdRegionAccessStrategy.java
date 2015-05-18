@@ -25,18 +25,11 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Eric Dalquist
  */
 class ReadOnlyNaturalIdRegionAccessStrategy extends BaseNaturalIdRegionAccessStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, ReadOnlyNaturalIdRegionAccessStrategy.class.getName()
-	);
-
 	ReadOnlyNaturalIdRegionAccessStrategy(NaturalIdRegionImpl region) {
 		super( region );
 	}

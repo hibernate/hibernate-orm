@@ -31,12 +31,12 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.Type;
 
@@ -87,7 +87,7 @@ public class DiscriminatorType extends AbstractType {
 			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
 		}
 		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
-        return ( EntityMode.POJO == entityPersister.getEntityMode() ) ? entityPersister.getMappedClass() : entityName;
+		return ( EntityMode.POJO == entityPersister.getEntityMode() ) ? entityPersister.getMappedClass() : entityName;
 	}
 
 	public void nullSafeSet(

@@ -198,7 +198,7 @@ public class Property implements Serializable, MetaAttributable {
 		this.valueGenerationStrategy = valueGenerationStrategy;
 	}
 
-    public void setUpdateable(boolean mutable) {
+	public void setUpdateable(boolean mutable) {
 		this.updateable = mutable;
 	}
 

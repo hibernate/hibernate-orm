@@ -197,7 +197,7 @@ public class SchemaExportTask extends MatchingTask {
 	 * Execute the task
 	 */
 	@Override
-    public void execute() throws BuildException {
+	public void execute() throws BuildException {
 		try {
 			buildSchemaExport().execute( !quiet, !text, drop, create );
 		}

@@ -42,31 +42,31 @@ public class Array extends List {
 	}
 
 	public Class getElementClass() throws MappingException {
-		if (elementClassName==null) {
+		if ( elementClassName == null ) {
 			org.hibernate.type.Type elementType = getElement().getType();
-			return isPrimitiveArray() ?
-				( (PrimitiveType) elementType ).getPrimitiveClass() :
-				elementType.getReturnedClass();
+			return isPrimitiveArray()
+					? ( (PrimitiveType) elementType ).getPrimitiveClass()
+					: elementType.getReturnedClass();
 		}
 		else {
 			try {
-				return ReflectHelper.classForName(elementClassName);
+				return ReflectHelper.classForName( elementClassName );
 			}
 			catch (ClassNotFoundException cnfe) {
-				throw new MappingException(cnfe);
+				throw new MappingException( cnfe );
 			}
 		}
 	}
 
 	@Override
-    public CollectionType getDefaultCollectionType() throws MappingException {
+	public CollectionType getDefaultCollectionType() throws MappingException {
 		return getMetadata().getTypeResolver()
 				.getTypeFactory()
 				.array( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 
 	@Override
-    public boolean isArray() {
+	public boolean isArray() {
 		return true;
 	}
 
@@ -76,6 +76,7 @@ public class Array extends List {
 	public String getElementClassName() {
 		return elementClassName;
 	}
+
 	/**
 	 * @param elementClassName The elementClassName to set.
 	 */
@@ -84,7 +85,7 @@ public class Array extends List {
 	}
 
 	@Override
-    public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
+	public Object accept(ValueVisitor visitor) {
+		return visitor.accept( this );
 	}
 }

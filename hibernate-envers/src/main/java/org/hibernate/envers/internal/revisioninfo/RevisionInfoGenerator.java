@@ -26,7 +26,6 @@ package org.hibernate.envers.internal.revisioninfo;
 import java.io.Serializable;
 
 import org.hibernate.Session;
-import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionType;
 
 /**
@@ -38,7 +37,7 @@ public interface RevisionInfoGenerator {
 	Object generate();
 
 	/**
-	 * @see EntityTrackingRevisionListener#entityChanged(Class, String, Serializable, RevisionType, Object)
+	 * @see org.hibernate.envers.EntityTrackingRevisionListener#entityChanged(Class, String, Serializable, RevisionType, Object)
 	 */
 	void entityChanged(
 			Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,

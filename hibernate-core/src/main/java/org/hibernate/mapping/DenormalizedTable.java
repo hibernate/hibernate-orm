@@ -36,9 +36,9 @@ import org.hibernate.internal.util.collections.JoinedIterator;
  */
 @SuppressWarnings("unchecked")
 public class DenormalizedTable extends Table {
-	
+
 	private final Table includedTable;
-	
+
 	public DenormalizedTable(Table includedTable) {
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -50,7 +50,12 @@ public class DenormalizedTable extends Table {
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Schema schema, Identifier physicalTableName, String subselectFragment, boolean isAbstract, Table includedTable) {
+	public DenormalizedTable(
+			Schema schema,
+			Identifier physicalTableName,
+			String subselectFragment,
+			boolean isAbstract,
+			Table includedTable) {
 		super( schema, physicalTableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -63,28 +68,28 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-    public void createForeignKeys() {
+	public void createForeignKeys() {
 		includedTable.createForeignKeys();
 		Iterator iter = includedTable.getForeignKeyIterator();
 		while ( iter.hasNext() ) {
 			ForeignKey fk = (ForeignKey) iter.next();
-			createForeignKey( 
+			createForeignKey(
 					Constraint.generateName(
 							fk.generatedConstraintNamePrefix(),
 							this,
 							fk.getColumns()
 					),
-					fk.getColumns(), 
+					fk.getColumns(),
 					fk.getReferencedEntityName(),
 					fk.getReferencedColumns()
-				);
+			);
 		}
 	}
 
 	@Override
-    public Column getColumn(Column column) {
+	public Column getColumn(Column column) {
 		Column superColumn = super.getColumn( column );
-		if (superColumn != null) {
+		if ( superColumn != null ) {
 			return superColumn;
 		}
 		else {
@@ -103,25 +108,25 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-    public Iterator getColumnIterator() {
+	public Iterator getColumnIterator() {
 		return new JoinedIterator(
 				includedTable.getColumnIterator(),
 				super.getColumnIterator()
-			);
+		);
 	}
 
 	@Override
-    public boolean containsColumn(Column column) {
-		return super.containsColumn(column) || includedTable.containsColumn(column);
+	public boolean containsColumn(Column column) {
+		return super.containsColumn( column ) || includedTable.containsColumn( column );
 	}
 
 	@Override
-    public PrimaryKey getPrimaryKey() {
+	public PrimaryKey getPrimaryKey() {
 		return includedTable.getPrimaryKey();
 	}
 
 	@Override
-    public Iterator getUniqueKeyIterator() {
+	public Iterator getUniqueKeyIterator() {
 		Iterator iter = includedTable.getUniqueKeyIterator();
 		while ( iter.hasNext() ) {
 			UniqueKey uk = (UniqueKey) iter.next();
@@ -131,21 +136,21 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
-    public Iterator getIndexIterator() {
+	public Iterator getIndexIterator() {
 		List indexes = new ArrayList();
 		Iterator iter = includedTable.getIndexIterator();
 		while ( iter.hasNext() ) {
 			Index parentIndex = (Index) iter.next();
 			Index index = new Index();
 			index.setName( getName() + parentIndex.getName() );
-			index.setTable(this);
+			index.setTable( this );
 			index.addColumns( parentIndex.getColumnIterator() );
 			indexes.add( index );
 		}
 		return new JoinedIterator(
 				indexes.iterator(),
 				super.getIndexIterator()
-			);
+		);
 	}
 
 	public Table getIncludedTable() {

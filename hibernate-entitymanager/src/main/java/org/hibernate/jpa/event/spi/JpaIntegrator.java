@@ -94,7 +94,7 @@ public class JpaIntegrator implements Integrator {
 		// first, register the JPA-specific persist cascade style
 		CascadeStyles.registerCascadeStyle(
 				"persist",
-                new PersistCascadeStyle()
+				new PersistCascadeStyle()
 		);
 
 
@@ -122,12 +122,12 @@ public class JpaIntegrator implements Integrator {
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 
-		for ( Map.Entry entry : ( (Map<?,?>) cfgService.getSettings() ).entrySet() ) {
-			if ( ! String.class.isInstance( entry.getKey() ) ) {
+		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
 				continue;
 			}
 			final String propertyName = (String) entry.getKey();
-			if ( ! propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+			if ( !propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
 				continue;
 			}
 			final String eventTypeName = propertyName.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
@@ -139,7 +139,8 @@ public class JpaIntegrator implements Integrator {
 		}
 
 		// handle JPA "entity listener classes"...
-		final ReflectionManager reflectionManager = ( (MetadataImpl) metadata ).getMetadataBuildingOptions().getReflectionManager();
+		final ReflectionManager reflectionManager = ( (MetadataImpl) metadata ).getMetadataBuildingOptions()
+				.getReflectionManager();
 
 		this.callbackRegistry = new CallbackRegistryImpl();
 		final Object beanManagerRef = sessionFactory.getSessionFactoryOptions().getBeanManagerReference();
@@ -186,13 +187,19 @@ public class JpaIntegrator implements Integrator {
 			}
 		}
 		catch (ClassNotFoundException e) {
-			throw new HibernateException( "Could not locate BeanManagerListenerFactory class to handle CDI extensions", e );
+			throw new HibernateException(
+					"Could not locate BeanManagerListenerFactory class to handle CDI extensions",
+					e
+			);
 		}
 		catch (HibernateException e) {
 			throw e;
 		}
 		catch (Throwable e) {
-			throw new HibernateException( "Could not access BeanManagerListenerFactory class to handle CDI extensions", e );
+			throw new HibernateException(
+					"Could not access BeanManagerListenerFactory class to handle CDI extensions",
+					e
+			);
 		}
 	}
 
@@ -215,32 +222,32 @@ public class JpaIntegrator implements Integrator {
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
-        }
-    }
+		}
+	}
 
-    private static class PersistCascadeStyle extends CascadeStyles.BaseCascadeStyle {
-        @Override
-        public boolean doCascade(CascadingAction action) {
-            return action == JpaPersistEventListener.PERSIST_SKIPLAZY
-                    || action == CascadingActions.PERSIST_ON_FLUSH;
-        }
+	private static class PersistCascadeStyle extends CascadeStyles.BaseCascadeStyle {
+		@Override
+		public boolean doCascade(CascadingAction action) {
+			return action == JpaPersistEventListener.PERSIST_SKIPLAZY
+					|| action == CascadingActions.PERSIST_ON_FLUSH;
+		}
 
-        @Override
-        public String toString() {
-            return "STYLE_PERSIST_SKIPLAZY";
-        }
-    }
+		@Override
+		public String toString() {
+			return "STYLE_PERSIST_SKIPLAZY";
+		}
+	}
 
-    private static class JPADuplicationStrategy implements DuplicationStrategy {
-        @Override
-        public boolean areMatch(Object listener, Object original) {
-            return listener.getClass().equals( original.getClass() ) &&
-                    HibernateEntityManagerEventListener.class.isInstance( original );
-        }
+	private static class JPADuplicationStrategy implements DuplicationStrategy {
+		@Override
+		public boolean areMatch(Object listener, Object original) {
+			return listener.getClass().equals( original.getClass() ) &&
+					HibernateEntityManagerEventListener.class.isInstance( original );
+		}
 
-        @Override
-        public Action getAction() {
-            return Action.KEEP_ORIGINAL;
-        }
-    }
+		@Override
+		public Action getAction() {
+			return Action.KEEP_ORIGINAL;
+		}
+	}
 }

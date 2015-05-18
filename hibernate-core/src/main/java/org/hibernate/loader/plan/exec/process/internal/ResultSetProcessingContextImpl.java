@@ -47,14 +47,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.EntityType;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class ResultSetProcessingContextImpl implements ResultSetProcessingContext {
-	private static final Logger LOG = Logger.getLogger( ResultSetProcessingContextImpl.class );
-
 	private final ResultSet resultSet;
 	private final SessionImplementor session;
 	private final LoadPlan loadPlan;
@@ -74,18 +70,9 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	/**
 	 * Builds a ResultSetProcessingContextImpl
 	 *
-	 * @param resultSet
-	 * @param session
-	 * @param loadPlan
-	 * @param readOnly
 	 * @param shouldUseOptionalEntityInformation There are times when the "optional entity information" on
 	 * QueryParameters should be used and times when they should not.  Collection initializers, batch loaders, etc
 	 * are times when it should NOT be used.
-	 * @param forceFetchLazyAttributes
-	 * @param shouldReturnProxies
-	 * @param queryParameters
-	 * @param namedParameterContext
-	 * @param hadSubselectFetches
 	 */
 	public ResultSetProcessingContextImpl(
 			final ResultSet resultSet,
@@ -305,8 +292,9 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				subselectLoadableEntityKeyMap = new HashMap<EntityPersister, Set<EntityKey>>();
 			}
 			for ( HydratedEntityRegistration registration : currentRowHydratedEntityRegistrationList ) {
-				Set<EntityKey> entityKeys = subselectLoadableEntityKeyMap.get( registration.getEntityReference()
-																					   .getEntityPersister() );
+				Set<EntityKey> entityKeys = subselectLoadableEntityKeyMap.get(
+						registration.getEntityReference().getEntityPersister()
+				);
 				if ( entityKeys == null ) {
 					entityKeys = new HashSet<EntityKey>();
 					subselectLoadableEntityKeyMap.put( registration.getEntityReference().getEntityPersister(), entityKeys );

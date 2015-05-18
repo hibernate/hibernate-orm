@@ -86,7 +86,7 @@ public abstract class BasicInstrumentationTask extends Task implements Instrumen
 	protected abstract Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options);
 
 	@Override
-    public void execute() throws BuildException {
+	public void execute() throws BuildException {
 		try {
 			buildInstrumenter( logger, this )
 					.execute( collectSpecifiedFiles() );

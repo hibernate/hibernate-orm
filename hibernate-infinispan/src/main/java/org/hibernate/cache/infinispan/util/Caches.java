@@ -273,7 +273,8 @@ public class Caches {
 				it.next(); // Necessary to get next element
 				it.remove();
 			}
-		} finally {
+		}
+		finally {
 			it.close();
 		}
 	}

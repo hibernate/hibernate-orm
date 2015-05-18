@@ -55,7 +55,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 		}
 
 		@Override
-        @SuppressWarnings({ "unchecked" })
+		@SuppressWarnings({ "unchecked" })
 		public S deepCopyNotNull(S value) {
 			return (S) SerializationHelper.clone( value );
 		}

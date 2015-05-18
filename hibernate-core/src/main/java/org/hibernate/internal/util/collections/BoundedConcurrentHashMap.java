@@ -1504,9 +1504,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 						// Reuse trailing consecutive sequence at same slot
 						HashEntry<K, V> lastRun = e;
 						int lastIdx = idx;
-						for ( HashEntry<K, V> last = next;
-							  last != null;
-							  last = last.next ) {
+						for ( HashEntry<K, V> last = next; last != null; last = last.next ) {
 							int k = last.hash & sizeMask;
 							if ( k != lastIdx ) {
 								lastIdx = k;

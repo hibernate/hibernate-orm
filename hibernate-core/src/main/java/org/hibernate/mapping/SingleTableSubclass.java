@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
@@ -32,18 +33,19 @@ import org.hibernate.internal.util.collections.JoinedIterator;
  * @author Gavin King
  */
 public class SingleTableSubclass extends Subclass {
-	
+
 	public SingleTableSubclass(PersistentClass superclass) {
-		super(superclass);
+		super( superclass );
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	protected Iterator getNonDuplicatedPropertyIterator() {
 		return new JoinedIterator(
 				getSuperclass().getUnjoinedPropertyIterator(),
 				getUnjoinedPropertyIterator()
 		);
 	}
-	
+
 	protected Iterator getDiscriminatorColumnIterator() {
 		if ( isDiscriminatorInsertable() && !getDiscriminator().hasFormula() ) {
 			return getDiscriminator().getColumnIterator();
@@ -54,13 +56,17 @@ public class SingleTableSubclass extends Subclass {
 	}
 
 	public Object accept(PersistentClassVisitor mv) {
-		return mv.accept(this);
+		return mv.accept( this );
 	}
-    
-    public void validate(Mapping mapping) throws MappingException {
-        if(getDiscriminator()==null) {
-            throw new MappingException("No discriminator found for " + getEntityName() + ". Discriminator is needed when 'single-table-per-hierarchy' is used and a class has subclasses");
-        }
-        super.validate(mapping);
-    }
+
+	public void validate(Mapping mapping) throws MappingException {
+		if ( getDiscriminator() == null ) {
+			throw new MappingException(
+					"No discriminator found for " + getEntityName()
+							+ ". Discriminator is needed when 'single-table-per-hierarchy' "
+							+ "is used and a class has subclasses"
+			);
+		}
+		super.validate( mapping );
+	}
 }

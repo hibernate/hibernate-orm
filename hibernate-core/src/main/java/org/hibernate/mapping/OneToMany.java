@@ -34,6 +34,7 @@ import org.hibernate.type.Type;
 
 /**
  * A mapping for a one-to-many association
+ *
  * @author Gavin King
  */
 public class OneToMany implements Value {
@@ -47,28 +48,28 @@ public class OneToMany implements Value {
 
 	public OneToMany(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
 		this.metadata = metadata;
-		this.referencingTable = (owner==null) ? null : owner.getTable();
+		this.referencingTable = ( owner == null ) ? null : owner.getTable();
 	}
 
 	private EntityType getEntityType() {
 		return metadata.getTypeResolver().getTypeFactory().manyToOne(
 				getReferencedEntityName(),
-				true, 
-				null, 
+				true,
+				null,
 				false,
 				false,
 				isIgnoreNotFound(),
 				false
-			);
+		);
 	}
 
 	public PersistentClass getAssociatedClass() {
 		return associatedClass;
 	}
 
-    /**
-     * Associated entity on the many side
-     */
+	/**
+	 * Associated entity on the many side
+	 */
 	public void setAssociatedClass(PersistentClass associatedClass) {
 		this.associatedClass = associatedClass;
 	}
@@ -89,9 +90,9 @@ public class OneToMany implements Value {
 		return FetchMode.JOIN;
 	}
 
-    /** 
-     * Table of the owner entity (the "one" side)
-     */
+	/**
+	 * Table of the owner entity (the "one" side)
+	 */
 	public Table getTable() {
 		return referencingTable;
 	}
@@ -115,37 +116,38 @@ public class OneToMany implements Value {
 	public boolean hasFormula() {
 		return false;
 	}
-	
+
 	public boolean isValid(Mapping mapping) throws MappingException {
-		if (referencedEntityName==null) {
-			throw new MappingException("one to many association must specify the referenced entity");
+		if ( referencedEntityName == null ) {
+			throw new MappingException( "one to many association must specify the referenced entity" );
 		}
 		return true;
 	}
 
-    public String getReferencedEntityName() {
+	public String getReferencedEntityName() {
 		return referencedEntityName;
 	}
 
-    /** 
-     * Associated entity on the "many" side
-     */    
+	/**
+	 * Associated entity on the "many" side
+	 */
 	public void setReferencedEntityName(String referencedEntityName) {
-		this.referencedEntityName = referencedEntityName==null ? null : referencedEntityName.intern();
+		this.referencedEntityName = referencedEntityName == null ? null : referencedEntityName.intern();
 	}
 
-	public void setTypeUsingReflection(String className, String propertyName) {}
-	
-	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
+	public void setTypeUsingReflection(String className, String propertyName) {
 	}
-	
-	
+
+	public Object accept(ValueVisitor visitor) {
+		return visitor.accept( this );
+	}
+
+
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
 		throw new UnsupportedOperationException();
@@ -176,5 +178,5 @@ public class OneToMany implements Value {
 	public void setIgnoreNotFound(boolean ignoreNotFound) {
 		this.ignoreNotFound = ignoreNotFound;
 	}
-	
+
 }

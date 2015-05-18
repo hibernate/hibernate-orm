@@ -27,6 +27,8 @@ package org.hibernate.tuple;
  * Defines the basic contract of a Property within the runtime metamodel.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use the direct {@link Attribute} hierarchy
  */
 @Deprecated
 public interface Property extends Attribute {

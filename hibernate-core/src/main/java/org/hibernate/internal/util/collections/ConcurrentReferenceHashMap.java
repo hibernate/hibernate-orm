@@ -42,7 +42,6 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Enumeration;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -181,7 +180,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	public static enum Option {
 		/**
 		 * Indicates that referential-equality (== instead of .equals()) should
-		 * be used when locating keys. This offers similar behavior to {@link IdentityHashMap}
+		 * be used when locating keys. This offers similar behavior to {@link java.util.IdentityHashMap}
 		 */
 		IDENTITY_COMPARISONS
 	}
@@ -814,9 +813,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 						// Reuse trailing consecutive sequence at same slot
 						HashEntry<K, V> lastRun = e;
 						int lastIdx = idx;
-						for ( HashEntry<K, V> last = next;
-							  last != null;
-							  last = last.next ) {
+						for ( HashEntry<K, V> last = next; last != null; last = last.next ) {
 							int k = last.hash & sizeMask;
 							if ( k != lastIdx ) {
 								lastIdx = k;
@@ -1674,8 +1671,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	/*
 		  * This class is needed for JDK5 compatibility.
 		  */
-	static class SimpleEntry<K, V> implements Entry<K, V>,
-											  java.io.Serializable {
+	static class SimpleEntry<K, V> implements Entry<K, V>, java.io.Serializable {
 		private static final long serialVersionUID = -8499721149061103585L;
 
 		private final K key;

@@ -126,7 +126,8 @@ public class TrimFunction
 			// do not support parameters as trim() arguments.
 			renderedTrimChar = ( ( LiteralExpression<Character> ) 
 					trimCharacter ).getLiteral().toString();
-		} else {
+		}
+		else {
 			renderedTrimChar = ( (Renderable) trimCharacter ).render( 
 					renderingContext );
 		}

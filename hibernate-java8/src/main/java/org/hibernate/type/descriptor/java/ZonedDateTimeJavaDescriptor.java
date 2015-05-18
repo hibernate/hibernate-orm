@@ -26,13 +26,11 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import org.hibernate.type.InstantType;
 import org.hibernate.type.ZonedDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 

@@ -25,7 +25,6 @@ package org.hibernate.tuple;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.HibernateException;
 
 /**
  * A {@link ValueGeneration} based on a custom Java generator annotation type.
@@ -44,8 +43,8 @@ public interface AnnotationValueGeneration<A extends Annotation> extends ValueGe
 	 * @param propertyType the type of the property annotated with the generator annotation. Implementations may use
 	 * the type to determine the right {@link ValueGenerator} to be applied.
 	 *
-	 * @throws HibernateException in case an error occurred during initialization, e.g. if an implementation can't
-	 * create a value for the given property type.
+	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
+	 * an implementation can't create a value for the given property type.
 	 */
 	void initialize(A annotation, Class<?> propertyType);
 }

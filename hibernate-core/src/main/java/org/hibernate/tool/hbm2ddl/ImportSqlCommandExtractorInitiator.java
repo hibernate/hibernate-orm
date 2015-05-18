@@ -29,12 +29,13 @@ public class ImportSqlCommandExtractorInitiator implements StandardServiceInitia
 		return instantiateExplicitCommandExtractor( extractorClassName, classLoaderService );
 	}
 
-	private ImportSqlCommandExtractor instantiateExplicitCommandExtractor(String extractorClassName,
-																		  ClassLoaderService classLoaderService) {
+	private ImportSqlCommandExtractor instantiateExplicitCommandExtractor(
+			String extractorClassName,
+			ClassLoaderService classLoaderService) {
 		try {
 			return (ImportSqlCommandExtractor) classLoaderService.classForName( extractorClassName ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new HibernateException(
 					"Could not instantiate import sql command extractor [" + extractorClassName + "]", e
 			);

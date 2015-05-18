@@ -45,11 +45,8 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 @SuppressWarnings("serial")
 public class JpaPostUpdateEventListener
-		implements PostUpdateEventListener,
-				   CallbackRegistryConsumer,
-				   PostCollectionRecreateEventListener,
-				   PostCollectionRemoveEventListener,
-				   PostCollectionUpdateEventListener {
+		implements PostUpdateEventListener, CallbackRegistryConsumer, PostCollectionRecreateEventListener,
+				PostCollectionRemoveEventListener, PostCollectionUpdateEventListener {
 	private CallbackRegistry callbackRegistry;
 
 	@Override

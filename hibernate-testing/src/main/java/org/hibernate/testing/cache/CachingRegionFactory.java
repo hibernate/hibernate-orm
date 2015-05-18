@@ -35,7 +35,6 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -43,12 +42,12 @@ import org.jboss.logging.Logger;
  * @author Strong Liu
  */
 public class CachingRegionFactory implements RegionFactory {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, CachingRegionFactory.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( CachingRegionFactory.class.getName() );
+
 	public static String DEFAULT_ACCESSTYPE = "DefaultAccessType";
 	private SessionFactoryOptions settings;
 	private Properties properties;
+
 	public CachingRegionFactory() {
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
 	}
@@ -56,13 +55,13 @@ public class CachingRegionFactory implements RegionFactory {
 	public CachingRegionFactory(Properties properties) {
 		//add here to avoid run into catch
 		LOG.warn( "CachingRegionFactory should be only used for testing." );
-		this.properties=properties; 
+		this.properties = properties;
 	}
 
 	@Override
 	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
-		this.settings=settings;
-		this.properties=properties; 
+		this.settings = settings;
+		this.properties = properties;
 	}
 
 	@Override
@@ -76,8 +75,8 @@ public class CachingRegionFactory implements RegionFactory {
 
 	@Override
 	public AccessType getDefaultAccessType() {
-		if (properties != null && properties.get(DEFAULT_ACCESSTYPE) != null) {
-			return AccessType.fromExternalName(properties.getProperty(DEFAULT_ACCESSTYPE));
+		if ( properties != null && properties.get( DEFAULT_ACCESSTYPE ) != null ) {
+			return AccessType.fromExternalName( properties.getProperty( DEFAULT_ACCESSTYPE ) );
 		}
 		return AccessType.READ_WRITE;
 	}
@@ -92,15 +91,18 @@ public class CachingRegionFactory implements RegionFactory {
 			throws CacheException {
 		return new EntityRegionImpl( regionName, metadata, settings );
 	}
-	
-	@Override
-    public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
-            throws CacheException {
-        return new NaturalIdRegionImpl( regionName, metadata, settings );
-    }
 
-    @Override
-	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
+	@Override
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException {
+		return new NaturalIdRegionImpl( regionName, metadata, settings );
+	}
+
+	@Override
+	public CollectionRegion buildCollectionRegion(
+			String regionName,
+			Properties properties,
+			CacheDataDescription metadata)
 			throws CacheException {
 		return new CollectionRegionImpl( regionName, metadata, settings );
 	}

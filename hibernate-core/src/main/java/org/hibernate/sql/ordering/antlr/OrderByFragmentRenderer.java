@@ -51,22 +51,22 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 	}
 
 	@Override
-    protected void out(AST ast) {
-		out( ( ( Node ) ast ).getRenderableText() );
+	protected void out(AST ast) {
+		out( ( (Node) ast ).getRenderableText() );
 	}
 
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    private int traceDepth = 0;
+	private int traceDepth = 0;
 
 	@Override
-    public void traceIn(String ruleName, AST tree) {
+	public void traceIn(String ruleName, AST tree) {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
-		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
+		String prefix = StringHelper.repeat( '-', ( traceDepth++ * 2 ) ) + "-> ";
+		String traceText = ruleName + " (" + buildTraceNodeName( tree ) + ")";
 		LOG.trace( prefix + traceText );
 	}
 
@@ -77,17 +77,20 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 	}
 
 	@Override
-    public void traceOut(String ruleName, AST tree) {
+	public void traceOut(String ruleName, AST tree) {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
-		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+		String prefix = "<-" + StringHelper.repeat( '-', ( --traceDepth * 2 ) ) + " ";
 		LOG.trace( prefix + ruleName );
 	}
 
 	@Override
 	protected String renderOrderByElement(String expression, String collation, String order, String nulls) {
-		final NullPrecedence nullPrecedence = NullPrecedence.parse( nulls, sessionFactory.getSettings().getDefaultNullPrecedence() );
+		final NullPrecedence nullPrecedence = NullPrecedence.parse(
+				nulls,
+				sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence()
+		);
 		return sessionFactory.getDialect().renderOrderByElement( expression, collation, order, nullPrecedence );
 	}
 }

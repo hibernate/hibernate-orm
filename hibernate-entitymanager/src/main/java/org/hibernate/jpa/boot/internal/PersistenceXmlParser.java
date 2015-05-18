@@ -43,16 +43,14 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.xml.XsdException;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
-import org.hibernate.internal.util.xml.XsdException;
-
-import org.jboss.logging.Logger;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -63,16 +61,15 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import static org.hibernate.jpa.internal.HEMLogging.messageLogger;
+
 /**
  * Used by Hibernate to parse {@code persistence.xml} files in SE environments.
  *
  * @author Steve Ebersole
  */
 public class PersistenceXmlParser {
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(
-			EntityManagerMessageLogger.class,
-			PersistenceXmlParser.class.getName()
-	);
+    private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
 
 	private final ClassLoaderService classLoaderService;
 	private final PersistenceUnitTransactionType defaultTransactionType;
@@ -182,7 +179,7 @@ public class PersistenceXmlParser {
 	private void bindPersistenceUnit(ParsedPersistenceXmlDescriptor persistenceUnit, Element persistenceUnitElement) {
 		final String name = persistenceUnitElement.getAttribute( "name" );
 		if ( StringHelper.isNotEmpty( name ) ) {
-            LOG.tracef( "Persistence unit name from persistence.xml : %s", name );
+			LOG.tracef( "Persistence unit name from persistence.xml : %s", name );
 			persistenceUnit.setName( name );
 		}
 

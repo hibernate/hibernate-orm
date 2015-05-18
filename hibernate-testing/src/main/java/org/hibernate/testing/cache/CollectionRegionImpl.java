@@ -29,7 +29,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -37,15 +36,13 @@ import org.jboss.logging.Logger;
  * @author Strong Liu
  */
 class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, CollectionRegionImpl.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( CollectionRegionImpl.class.getName() );
 
 	private final SessionFactoryOptions settings;
 
 	CollectionRegionImpl(String name, CacheDataDescription metadata, SessionFactoryOptions settings) {
 		super( name, metadata );
-		this.settings=settings;
+		this.settings = settings;
 	}
 
 	public SessionFactoryOptions getSettings() {
@@ -55,22 +52,26 @@ class CollectionRegionImpl extends BaseTransactionalDataRegion implements Collec
 	@Override
 	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		switch ( accessType ) {
-			case READ_ONLY:
+			case READ_ONLY: {
 				if ( getCacheDataDescription().isMutable() ) {
 					LOG.warnf( "read-only cache configured for mutable collection [ %s ]", getName() );
 				}
 				return new ReadOnlyCollectionRegionAccessStrategy( this );
-			case READ_WRITE:
-				 return new ReadWriteCollectionRegionAccessStrategy( this );
-			case NONSTRICT_READ_WRITE:
+			}
+			case READ_WRITE: {
+				return new ReadWriteCollectionRegionAccessStrategy( this );
+			}
+			case NONSTRICT_READ_WRITE: {
 				return new NonstrictReadWriteCollectionRegionAccessStrategy( this );
-			case TRANSACTIONAL:
+			}
+			case TRANSACTIONAL: {
 				return new TransactionalCollectionRegionAccessStrategy( this );
 //				throw new UnsupportedOperationException( "doesn't support this access strategy" );
-			default:
+			}
+			default: {
 				throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
+			}
 		}
 	}
-
 
 }

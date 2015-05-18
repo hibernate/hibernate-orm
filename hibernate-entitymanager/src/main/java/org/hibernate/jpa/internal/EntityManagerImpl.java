@@ -48,14 +48,15 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.A
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 
+import static org.hibernate.jpa.internal.HEMLogging.messageLogger;
+
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
  *
  * @author Gavin King
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl implements SessionOwner {
-
-    public static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( EntityManagerImpl.class.getName() );
+	public static final EntityManagerMessageLogger LOG = messageLogger( EntityManagerImpl.class.getName() );
 
 	protected Session session;
 	protected boolean open;
@@ -114,13 +115,13 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	}
 
 	@Override
-    public Session getSession() {
+	public Session getSession() {
 		checkOpen();
 		return internalGetSession();
 	}
 
 	@Override
-    protected Session getRawSession() {
+	protected Session getRawSession() {
 		return internalGetSession();
 	}
 

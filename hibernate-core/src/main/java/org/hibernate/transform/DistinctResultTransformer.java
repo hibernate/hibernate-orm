@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Distinctions the result tuples in the final result based on the defined
@@ -43,11 +43,9 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DistinctResultTransformer extends BasicTransformerAdapter {
-
 	public static final DistinctResultTransformer INSTANCE = new DistinctResultTransformer();
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DistinctResultTransformer.class.getName());
+	private static final CoreMessageLogger LOG = messageLogger( DistinctResultTransformer.class );
 
 	/**
 	 * Helper class to handle distincting
@@ -59,20 +57,14 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 			this.entity = entity;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-        public boolean equals(Object other) {
+		public boolean equals(Object other) {
 			return Identity.class.isInstance( other )
-					&& this.entity == ( ( Identity ) other ).entity;
+					&& this.entity == ( (Identity) other ).entity;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-        public int hashCode() {
+		public int hashCode() {
 			return System.identityHashCode( entity );
 		}
 	}
@@ -87,11 +79,10 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 	 * Uniquely distinct each tuple row here.
 	 */
 	@Override
-    public List transformList(List list) {
-		List result = new ArrayList( list.size() );
-		Set distinct = new HashSet();
-		for ( int i = 0; i < list.size(); i++ ) {
-			Object entity = list.get( i );
+	public List transformList(List list) {
+		List<Object> result = new ArrayList<Object>( list.size() );
+		Set<Identity> distinct = new HashSet<Identity>();
+		for ( Object entity : list ) {
 			if ( distinct.add( new Identity( entity ) ) ) {
 				result.add( entity );
 			}

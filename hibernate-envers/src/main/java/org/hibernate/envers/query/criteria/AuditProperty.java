@@ -95,16 +95,16 @@ public class AuditProperty<T> implements AuditProjection {
     /**
      *  Apply an "ilike" constraint
      */
-    public AuditCriterion ilike(T value) {
-        return new IlikeAuditExpression(propertyNameGetter, value.toString());
-    }
+	public AuditCriterion ilike(T value) {
+		return new IlikeAuditExpression(propertyNameGetter, value.toString());
+	}
 
     /**
      *  Apply an "ilike" constraint
      */
-    public AuditCriterion ilike(String value, MatchMode matchMode) {
-        return new IlikeAuditExpression( propertyNameGetter, matchMode.toMatchString( value ));
-    }
+	public AuditCriterion ilike(String value, MatchMode matchMode) {
+		return new IlikeAuditExpression( propertyNameGetter, matchMode.toMatchString( value ));
+	}
 
 	/**
 	 * Apply a "greater than" constraint

@@ -26,16 +26,12 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.jboss.logging.Logger;
-
-import java.io.Serializable;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A registry of {@link BasicType} instances
@@ -43,10 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Steve Ebersole
  */
 public class BasicTypeRegistry implements Serializable {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicTypeRegistry.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicTypeRegistry.class );
 
 	// TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
-	private Map<String,BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
+	private Map<String, BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
 	private boolean locked;
 
 	public BasicTypeRegistry() {
@@ -124,7 +120,7 @@ public class BasicTypeRegistry implements Serializable {
 	 *
 	 * @param registeredTypes The type map to copy over
 	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings({"UnusedDeclaration"})
 	private BasicTypeRegistry(Map<String, BasicType> registeredTypes) {
 		registry.putAll( registeredTypes );
 		locked = true;
@@ -145,13 +141,13 @@ public class BasicTypeRegistry implements Serializable {
 
 		for ( String key : type.getRegistrationKeys() ) {
 			// be safe...
-            if (key == null) {
+			if ( key == null ) {
 				continue;
 			}
-            LOG.debugf("Adding type registration %s -> %s", key, type);
+			LOG.debugf( "Adding type registration %s -> %s", key, type );
 			final Type old = registry.put( key, type );
-            if (old != null && old != type) {
-				LOG.typeRegistrationOverridesPrevious(key, old);
+			if ( old != null && old != type ) {
+				LOG.typeRegistrationOverridesPrevious( key, old );
 			}
 		}
 	}

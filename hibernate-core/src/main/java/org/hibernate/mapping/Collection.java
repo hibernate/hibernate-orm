@@ -43,7 +43,7 @@ import org.hibernate.type.Type;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
- * 
+ *
  * @author Gavin King
  */
 public abstract class Collection implements Fetchable, Value, Filterable {
@@ -145,10 +145,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			try {
 				setComparator( (Comparator) ReflectHelper.classForName( comparatorClassName ).newInstance() );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				throw new MappingException(
 						"Could not instantiate comparator class [" + comparatorClassName
-						+ "] for collection " + getRole()  
+								+ "] for collection " + getRole()
 				);
 			}
 		}
@@ -230,12 +230,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	/**
-	 * @deprecated Inject the owner into constructor.
-	 *
 	 * @param owner The owner
+	 *
+	 * @deprecated Inject the owner into constructor.
 	 */
 	@Deprecated
-    public void setOwner(PersistentClass owner) {
+	public void setOwner(PersistentClass owner) {
 		this.owner = owner;
 	}
 
@@ -305,34 +305,37 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 		if ( getKey().isCascadeDeleteEnabled() && ( !isInverse() || !isOneToMany() ) ) {
 			throw new MappingException(
-				"only inverse one-to-many associations may use on-delete=\"cascade\": " 
-				+ getRole() );
+					"only inverse one-to-many associations may use on-delete=\"cascade\": "
+							+ getRole()
+			);
 		}
 		if ( !getKey().isValid( mapping ) ) {
 			throw new MappingException(
-				"collection foreign key mapping has wrong number of columns: "
-				+ getRole()
-				+ " type: "
-				+ getKey().getType().getName() );
+					"collection foreign key mapping has wrong number of columns: "
+							+ getRole()
+							+ " type: "
+							+ getKey().getType().getName()
+			);
 		}
 		if ( !getElement().isValid( mapping ) ) {
-			throw new MappingException( 
-				"collection element mapping has wrong number of columns: "
-				+ getRole()
-				+ " type: "
-				+ getElement().getType().getName() );
+			throw new MappingException(
+					"collection element mapping has wrong number of columns: "
+							+ getRole()
+							+ " type: "
+							+ getElement().getType().getName()
+			);
 		}
 
 		checkColumnDuplication();
-		
-		if ( elementNodeName!=null && elementNodeName.startsWith("@") ) {
-			throw new MappingException("element node must not be an attribute: " + elementNodeName );
+
+		if ( elementNodeName != null && elementNodeName.startsWith( "@" ) ) {
+			throw new MappingException( "element node must not be an attribute: " + elementNodeName );
 		}
-		if ( elementNodeName!=null && elementNodeName.equals(".") ) {
-			throw new MappingException("element node must not be the parent: " + elementNodeName );
+		if ( elementNodeName != null && elementNodeName.equals( "." ) ) {
+			throw new MappingException( "element node must not be the parent: " + elementNodeName );
 		}
-		if ( nodeName!=null && nodeName.indexOf('@')>-1 ) {
-			throw new MappingException("collection node must not be an attribute: " + elementNodeName );
+		if ( nodeName != null && nodeName.indexOf( '@' ) > -1 ) {
+			throw new MappingException( "collection node must not be an attribute: " + elementNodeName );
 		}
 	}
 
@@ -343,10 +346,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			if ( !s.isFormula() ) {
 				Column col = (Column) s;
 				if ( !distinctColumns.add( col.getName() ) ) {
-					throw new MappingException( "Repeated column in mapping for collection: "
-						+ getRole()
-						+ " column: "
-						+ col.getName() );
+					throw new MappingException(
+							"Repeated column in mapping for collection: "
+									+ getRole()
+									+ " column: "
+									+ col.getName()
+					);
 				}
 			}
 		}
@@ -356,14 +361,18 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		HashSet cols = new HashSet();
 		checkColumnDuplication( cols, getKey().getColumnIterator() );
 		if ( isIndexed() ) {
-			checkColumnDuplication( cols, ( (IndexedCollection) this )
-				.getIndex()
-				.getColumnIterator() );
+			checkColumnDuplication(
+					cols, ( (IndexedCollection) this )
+							.getIndex()
+							.getColumnIterator()
+			);
 		}
 		if ( isIdentified() ) {
-			checkColumnDuplication( cols, ( (IdentifierCollection) this )
-				.getIdentifier()
-				.getColumnIterator() );
+			checkColumnDuplication(
+					cols, ( (IdentifierCollection) this )
+							.getIdentifier()
+							.getColumnIterator()
+			);
 		}
 		if ( !isOneToMany() ) {
 			checkColumnDuplication( cols, getElement().getColumnIterator() );
@@ -454,7 +463,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 
-
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
@@ -509,7 +517,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteCheckStyle;
 	}
 
-	public void setCustomSQLDeleteAll(String customSQLDeleteAll, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLDeleteAll(
+			String customSQLDeleteAll,
+			boolean callable,
+			ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDeleteAll = customSQLDeleteAll;
 		this.customDeleteAllCallable = callable;
 		this.deleteAllCheckStyle = checkStyle;
@@ -527,15 +538,44 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteAllCheckStyle;
 	}
 
-	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
-		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
+	public void addFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			java.util.Map<String, String> aliasTableMap,
+			java.util.Map<String, String> aliasEntityMap) {
+		filters.add(
+				new FilterConfiguration(
+						name,
+						condition,
+						autoAliasInjection,
+						aliasTableMap,
+						aliasEntityMap,
+						null
+				)
+		);
 	}
+
 	public java.util.List getFilters() {
 		return filters;
 	}
 
-	public void addManyToManyFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
-		manyToManyFilters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
+	public void addManyToManyFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			java.util.Map<String, String> aliasTableMap,
+			java.util.Map<String, String> aliasEntityMap) {
+		manyToManyFilters.add(
+				new FilterConfiguration(
+						name,
+						condition,
+						autoAliasInjection,
+						aliasTableMap,
+						aliasEntityMap,
+						null
+				)
+		);
 	}
 
 	public java.util.List getManyToManyFilters() {
@@ -543,7 +583,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return getClass().getName() + '(' + getRole() + ')';
 	}
 
@@ -650,7 +690,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public boolean isSubselectLoadable() {
 		return subselectLoadable;
 	}
-	
+
 
 	public void setSubselectLoadable(boolean subqueryLoadable) {
 		this.subselectLoadable = subqueryLoadable;
@@ -671,15 +711,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public void setExtraLazy(boolean extraLazy) {
 		this.extraLazy = extraLazy;
 	}
-	
+
 	public boolean hasOrder() {
-		return orderBy!=null || manyToManyOrderBy!=null;
+		return orderBy != null || manyToManyOrderBy != null;
 	}
 
 	public void setComparatorClassName(String comparatorClassName) {
-		this.comparatorClassName = comparatorClassName;		
+		this.comparatorClassName = comparatorClassName;
 	}
-	
+
 	public String getComparatorClassName() {
 		return comparatorClassName;
 	}

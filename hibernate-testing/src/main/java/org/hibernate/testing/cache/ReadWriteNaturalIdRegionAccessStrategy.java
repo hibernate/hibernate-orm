@@ -43,17 +43,17 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 	}
 
 	@Override
-	public boolean insert(Object key, Object value ) throws CacheException {
+	public boolean insert(Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(Object key, Object value ) throws CacheException {
+	public boolean update(Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value ) throws CacheException {
+	public boolean afterInsert(Object key, Object value) throws CacheException {
 
 		try {
 			writeLock.lock();

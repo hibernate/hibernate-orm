@@ -23,8 +23,10 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import org.dom4j.Document;
-import org.dom4j.Element;
+import java.util.Date;
+import java.util.Set;
+import javax.persistence.Column;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -56,9 +58,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
-import javax.persistence.Column;
-import java.util.Date;
-import java.util.Set;
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -383,7 +384,8 @@ public class RevisionInfoConfiguration {
 								modifiedEntityNamesData
 						);
 						globalCfg.setTrackEntitiesChangedInRevision(true);
-					} else {
+					}
+					else {
 						revisionInfoGenerator = new DefaultRevisionInfoGenerator(
 								revisionInfoEntityName, revisionInfoClass,
 								revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate()

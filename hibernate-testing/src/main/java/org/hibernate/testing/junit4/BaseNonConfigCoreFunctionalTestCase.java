@@ -467,7 +467,9 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	}
 
-	protected boolean isCleanupTestDataRequired() { return false; }
+	protected boolean isCleanupTestDataRequired() {
+		return false;
+	}
 
 	protected void cleanupTestData() throws Exception {
 		Session s = openSession();

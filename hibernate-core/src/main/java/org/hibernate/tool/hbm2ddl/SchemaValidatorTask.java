@@ -130,7 +130,7 @@ public class SchemaValidatorTask extends MatchingTask {
 	 * Execute the task
 	 */
 	@Override
-    public void execute() throws BuildException {
+	public void execute() throws BuildException {
 		try {
 			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder();
 			configure( ssrBuilder );

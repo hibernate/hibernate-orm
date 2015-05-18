@@ -299,7 +299,7 @@ public class ElementWrapper implements Element, Serializable {
 	}
 
 	public Node selectSingleNode(String xpath) {
-        return element.selectSingleNode( xpath );
+		return element.selectSingleNode( xpath );
 	}
 
 	public String valueOf(String xpath) {

@@ -64,7 +64,7 @@ import org.hibernate.tool.schema.spi.SchemaMigrator;
  * @author Steve Ebersole
  */
 public class SchemaUpdate {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
 
 	private final MetadataImplementor metadata;
 	private final ServiceRegistry serviceRegistry;
@@ -113,9 +113,9 @@ public class SchemaUpdate {
 	public void execute(boolean script, boolean doUpdate) {
 		execute( Target.interpret( script, doUpdate ) );
 	}
-	
+
 	public void execute(Target target) {
-        LOG.runningHbm2ddlSchemaUpdate();
+		LOG.runningHbm2ddlSchemaUpdate();
 
 		exceptions.clear();
 
@@ -203,8 +203,8 @@ public class SchemaUpdate {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
-		catch ( Exception e ) {
-			LOG.unableToRunSchemaUpdate(e);
+		catch (Exception e) {
+			LOG.unableToRunSchemaUpdate( e );
 			e.printStackTrace();
 		}
 	}

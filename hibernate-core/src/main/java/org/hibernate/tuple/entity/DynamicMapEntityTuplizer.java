@@ -52,7 +52,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DynamicMapEntityTuplizer.class );
 
 	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
-		super(entityMetamodel, mappedEntity);
+		super( entityMetamodel, mappedEntity );
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	private PropertyAccessor buildPropertyAccessor(Property mappedProperty) {
 		if ( mappedProperty.isBackRef() ) {
-			return mappedProperty.getPropertyAccessor(null);
+			return mappedProperty.getPropertyAccessor( null );
 		}
 		else {
 			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
@@ -70,22 +70,22 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-    protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
+	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
+		return buildPropertyAccessor( mappedProperty ).getGetter( null, mappedProperty.getName() );
 	}
 
 	@Override
-    protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
+	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
+		return buildPropertyAccessor( mappedProperty ).getSetter( null, mappedProperty.getName() );
 	}
 
 	@Override
-    protected Instantiator buildInstantiator(PersistentClass mappingInfo) {
-        return new DynamicMapInstantiator( mappingInfo );
+	protected Instantiator buildInstantiator(PersistentClass mappingInfo) {
+		return new DynamicMapInstantiator( mappingInfo );
 	}
 
 	@Override
-    protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
+	protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
 
 		ProxyFactory pf = new MapProxyFactory();
 		try {
@@ -99,7 +99,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 					null
 			);
 		}
-		catch ( HibernateException he ) {
+		catch (HibernateException he) {
 			LOG.unableToCreateProxyFactory( getEntityName(), he );
 			pf = null;
 		}
@@ -123,16 +123,16 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
-		return new EntityNameResolver[] { BasicEntityNameResolver.INSTANCE };
+		return new EntityNameResolver[] {BasicEntityNameResolver.INSTANCE};
 	}
 
 	@Override
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
-		return extractEmbeddedEntityName( ( Map ) entityInstance );
+		return extractEmbeddedEntityName( (Map) entityInstance );
 	}
 
 	public static String extractEmbeddedEntityName(Map entity) {
-		return ( String ) entity.get( DynamicMapInstantiator.KEY );
+		return (String) entity.get( DynamicMapInstantiator.KEY );
 	}
 
 	public static class BasicEntityNameResolver implements EntityNameResolver {
@@ -140,10 +140,10 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 		@Override
 		public String resolveEntityName(Object entity) {
-			if ( ! Map.class.isInstance( entity ) ) {
+			if ( !Map.class.isInstance( entity ) ) {
 				return null;
 			}
-			final String entityName = extractEmbeddedEntityName( ( Map ) entity );
+			final String entityName = extractEmbeddedEntityName( (Map) entity );
 			if ( entityName == null ) {
 				throw new HibernateException( "Could not determine type of dynamic map entity" );
 			}
@@ -151,12 +151,12 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		}
 
 		@Override
-        public boolean equals(Object obj) {
+		public boolean equals(Object obj) {
 			return getClass().equals( obj.getClass() );
 		}
 
 		@Override
-        public int hashCode() {
+		public int hashCode() {
 			return getClass().hashCode();
 		}
 	}

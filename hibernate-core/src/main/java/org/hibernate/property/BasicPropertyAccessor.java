@@ -37,9 +37,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * Accesses property values via a get/set pair, which may be nonpublic.
@@ -56,19 +53,19 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		private final String propertyName;
 
 		private BasicSetter(Class clazz, Method method, String propertyName) {
-			this.clazz=clazz;
-			this.method=method;
-			this.propertyName=propertyName;
+			this.clazz = clazz;
+			this.method = method;
+			this.propertyName = propertyName;
 		}
 
 		@Override
 		public void set(Object target, Object value, SessionFactoryImplementor factory)
-		throws HibernateException {
+				throws HibernateException {
 			try {
 				method.invoke( target, value );
 			}
 			catch (NullPointerException npe) {
-				if ( value==null && method.getParameterTypes()[0].isPrimitive() ) {
+				if ( value == null && method.getParameterTypes()[0].isPrimitive() ) {
 					throw new PropertyAccessException(
 							npe,
 							"Null value was assigned to a property of primitive type",
@@ -107,7 +104,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 				//cannot occur
 			}
 			catch (IllegalArgumentException iae) {
-				if ( value==null && method.getParameterTypes()[0].isPrimitive() ) {
+				if ( value == null && method.getParameterTypes()[0].isPrimitive() ) {
 					throw new PropertyAccessException(
 							iae,
 							"Null value was assigned to a property of primitive type",
@@ -143,11 +140,11 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		}
 
 		Object readResolve() {
-			return createSetter(clazz, propertyName);
+			return createSetter( clazz, propertyName );
 		}
 
 		@Override
-        public String toString() {
+		public String toString() {
 			return "BasicSetter(" + clazz.getName() + '.' + propertyName + ')';
 		}
 	}
@@ -158,9 +155,9 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		private final String propertyName;
 
 		private BasicGetter(Class clazz, Method method, String propertyName) {
-			this.clazz=clazz;
-			this.method=method;
-			this.propertyName=propertyName;
+			this.clazz = clazz;
+			this.method = method;
+			this.propertyName = propertyName;
 		}
 
 		@Override
@@ -188,7 +185,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 				//cannot occur
 			}
 			catch (IllegalArgumentException iae) {
-                LOG.illegalPropertyGetterArgument(clazz.getName(), propertyName);
+				LOG.illegalPropertyGetterArgument( clazz.getName(), propertyName );
 				throw new PropertyAccessException(
 						iae,
 						"IllegalArgumentException occurred calling",
@@ -225,51 +222,51 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		}
 
 		@Override
-        public String toString() {
+		public String toString() {
 			return "BasicGetter(" + clazz.getName() + '.' + propertyName + ')';
 		}
 
 		Object readResolve() {
-			return createGetter(clazz, propertyName);
+			return createGetter( clazz, propertyName );
 		}
 	}
 
 
 	@Override
 	public Setter getSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return createSetter(theClass, propertyName);
+		return createSetter( theClass, propertyName );
 	}
 
 	private static Setter createSetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		BasicSetter result = getSetterOrNull(theClass, propertyName);
-		if (result==null) {
+		BasicSetter result = getSetterOrNull( theClass, propertyName );
+		if ( result == null ) {
 			throw new PropertyNotFoundException(
 					"Could not find a setter for property " +
-					propertyName +
-					" in class " +
-					theClass.getName()
+							propertyName +
+							" in class " +
+							theClass.getName()
 			);
 		}
 		return result;
 	}
 
 	private static BasicSetter getSetterOrNull(Class theClass, String propertyName) {
-		if (theClass==Object.class || theClass==null) {
+		if ( theClass == Object.class || theClass == null ) {
 			return null;
 		}
 
-		Method method = setterMethod(theClass, propertyName);
+		Method method = setterMethod( theClass, propertyName );
 
-		if (method!=null) {
-			method.setAccessible(true);
-			return new BasicSetter(theClass, method, propertyName);
+		if ( method != null ) {
+			method.setAccessible( true );
+			return new BasicSetter( theClass, method, propertyName );
 		}
 		else {
 			BasicSetter setter = getSetterOrNull( theClass.getSuperclass(), propertyName );
-			if (setter==null) {
+			if ( setter == null ) {
 				Class[] interfaces = theClass.getInterfaces();
-				for ( int i=0; setter==null && i<interfaces.length; i++ ) {
-					setter=getSetterOrNull( interfaces[i], propertyName );
+				for ( int i = 0; setter == null && i < interfaces.length; i++ ) {
+					setter = getSetterOrNull( interfaces[i], propertyName );
 				}
 			}
 			return setter;
@@ -278,8 +275,8 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 	}
 
 	private static Method setterMethod(Class theClass, String propertyName) {
-		BasicGetter getter = getGetterOrNull(theClass, propertyName);
-		Class returnType = (getter==null) ? null : getter.getReturnType();
+		BasicGetter getter = getGetterOrNull( theClass, propertyName );
+		Class returnType = ( getter == null ) ? null : getter.getReturnType();
 
 		Method[] methods = theClass.getDeclaredMethods();
 		Method potentialSetter = null;
@@ -301,39 +298,39 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 
 	@Override
 	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		return createGetter(theClass, propertyName);
+		return createGetter( theClass, propertyName );
 	}
 
 	public static Getter createGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
-		BasicGetter result = getGetterOrNull(theClass, propertyName);
-		if (result==null) {
+		BasicGetter result = getGetterOrNull( theClass, propertyName );
+		if ( result == null ) {
 			throw new PropertyNotFoundException(
 					"Could not find a getter for " +
-					propertyName +
-					" in class " +
-					theClass.getName()
+							propertyName +
+							" in class " +
+							theClass.getName()
 			);
 		}
 		return result;
 	}
 
 	private static BasicGetter getGetterOrNull(Class theClass, String propertyName) {
-		if (theClass==Object.class || theClass==null) {
+		if ( theClass == Object.class || theClass == null ) {
 			return null;
 		}
 
-		Method method = getterMethod(theClass, propertyName);
+		Method method = getterMethod( theClass, propertyName );
 
-		if (method!=null) {
-			method.setAccessible(true);
-			return new BasicGetter(theClass, method, propertyName);
+		if ( method != null ) {
+			method.setAccessible( true );
+			return new BasicGetter( theClass, method, propertyName );
 		}
 		else {
 			BasicGetter getter = getGetterOrNull( theClass.getSuperclass(), propertyName );
-			if (getter==null) {
+			if ( getter == null ) {
 				Class[] interfaces = theClass.getInterfaces();
-				for ( int i=0; getter==null && i<interfaces.length; i++ ) {
-					getter=getGetterOrNull( interfaces[i], propertyName );
+				for ( int i = 0; getter == null && i < interfaces.length; i++ ) {
+					getter = getGetterOrNull( interfaces[i], propertyName );
 				}
 			}
 			return getter;

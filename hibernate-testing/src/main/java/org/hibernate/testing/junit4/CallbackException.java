@@ -31,19 +31,19 @@ import java.lang.reflect.Method;
  * @author Steve Ebersole
  */
 public class CallbackException extends RuntimeException {
-    public CallbackException(Method method) {
-        this( Helper.extractMethodName( method ) );
-    }
+	public CallbackException(Method method) {
+		this( Helper.extractMethodName( method ) );
+	}
 
-    public CallbackException(String message) {
-        super( message );
-    }
+	public CallbackException(String message) {
+		super( message );
+	}
 
-    public CallbackException(Method method, Throwable cause) {
+	public CallbackException(Method method, Throwable cause) {
 		this( Helper.extractMethodName( method ), cause );
 	}
 
-    public CallbackException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public CallbackException(String message, Throwable cause) {
+		super( message, cause );
+	}
 }

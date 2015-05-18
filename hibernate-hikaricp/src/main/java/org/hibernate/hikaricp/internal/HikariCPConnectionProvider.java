@@ -21,23 +21,25 @@
 
 package org.hibernate.hikaricp.internal;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import javax.sql.DataSource;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
+
 import org.jboss.logging.Logger;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * HikariCP Connection provider for Hibernate.
- * 
+ *
  * @author Brett Wooldridge
  * @author Luca Burgazzoli
  */
@@ -107,22 +109,22 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	public boolean isUnwrappableAs(Class unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType )
 				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
-                || DataSource.class.isAssignableFrom( unwrapType );
+				|| DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-        if ( ConnectionProvider.class.equals( unwrapType ) ||
-                HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
-            return (T) this;
-        }
-        else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
-            return (T) hds;
-        }
-        else {
-            throw new UnknownUnwrapTypeException( unwrapType );
-        }
+		if ( ConnectionProvider.class.equals( unwrapType ) ||
+				HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+			return (T) hds;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
 	}
 
 	// *************************************************************************

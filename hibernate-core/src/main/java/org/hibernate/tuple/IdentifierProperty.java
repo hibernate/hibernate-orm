@@ -35,7 +35,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class IdentifierProperty extends AbstractAttribute implements IdentifierAttribute {
-
 	private boolean virtual;
 	private boolean embedded;
 	private IdentifierValue unsavedValue;
@@ -82,11 +81,11 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
 	public IdentifierProperty(
-	        Type type,
-	        boolean embedded,
+			Type type,
+			boolean embedded,
 			boolean hasIdentifierMapper,
 			IdentifierValue unsavedValue,
-	        IdentifierGenerator identifierGenerator) {
+			IdentifierGenerator identifierGenerator) {
 		super( null, type );
 		this.virtual = true;
 		this.embedded = embedded;

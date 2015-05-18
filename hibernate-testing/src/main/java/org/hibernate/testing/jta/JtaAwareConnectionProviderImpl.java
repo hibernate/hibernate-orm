@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.sql.DataSource;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.xa.XAException;
@@ -44,7 +43,7 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * A {@link DataSource} implementation intended for testing Hibernate/JTA interaction.  In that limited scope we
+ * A {@link ConnectionProvider} implementation intended for testing Hibernate/JTA interaction.  In that limited scope we
  * only ever have one single resource (the database connection) so we do not at all care about full-blown XA
  * semantics.  This class behaves accordingly.  This class also assumes usage of and access to JBossTS/Arjuna.
  *

@@ -304,7 +304,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
-        if ( serviceRegistry != null ) {
+		if ( serviceRegistry != null ) {
 			if ( serviceRegistry.isActive() ) {
 				try {
 					serviceRegistry.destroy();
@@ -314,7 +314,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				fail( "StandardServiceRegistry was not closed down as expected" );
 			}
 		}
-        serviceRegistry=null;
+		serviceRegistry=null;
 	}
 
 	@OnFailure
@@ -356,7 +356,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 	}
 	
-	protected boolean isCleanupTestDataRequired() { return false; }
+	protected boolean isCleanupTestDataRequired() {
+		return false;
+	}
 	
 	protected void cleanupTestData() throws Exception {
 		Session s = openSession();

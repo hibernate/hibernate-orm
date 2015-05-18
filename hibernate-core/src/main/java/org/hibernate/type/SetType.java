@@ -60,8 +60,8 @@ public class SetType extends CollectionType {
 
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0
-		       ? new HashSet()
-		       : new HashSet( anticipatedSize + (int)( anticipatedSize * .75f ), .75f );
+				? new HashSet()
+				: new HashSet( anticipatedSize + (int)( anticipatedSize * .75f ), .75f );
 	}
 	
 }

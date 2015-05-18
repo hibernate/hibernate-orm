@@ -27,17 +27,11 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu
  */
 class BaseEntityRegionAccessStrategy extends BaseRegionAccessStrategy implements EntityRegionAccessStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, BaseEntityRegionAccessStrategy.class.getName()
-	);
 	private final EntityRegionImpl region;
 
 	BaseEntityRegionAccessStrategy(EntityRegionImpl region) {

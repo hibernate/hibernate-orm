@@ -33,17 +33,17 @@ import javax.persistence.metamodel.Type;
  * @author Brad Koehn
  */
 public abstract class AbstractType<X> implements Type<X>, Serializable {
-    private final Class<X> javaType;
-    private final String typeName;
+	private final Class<X> javaType;
+	private final String typeName;
 
 	/**
 	 * Instantiates the type based on the given Java type.
 	 *
 	 * @param javaType The Java type of the JPA model type.
 	 */
-    protected AbstractType(Class<X> javaType) {
+	protected AbstractType(Class<X> javaType) {
 		this( javaType, javaType != null ? javaType.getName() : null );
-    }
+	}
 
 	/**
 	 * Instantiates the type based on the given Java type.
@@ -64,16 +64,16 @@ public abstract class AbstractType<X> implements Type<X>, Serializable {
 	 * should be used.
 	 */
 	@Override
-    public Class<X> getJavaType() {
-        return javaType;
-    }
+	public Class<X> getJavaType() {
+		return javaType;
+	}
 
 	/**
 	 * Obtains the type name.  See notes on {@link #getJavaType()} for details
 	 *
 	 * @return The type name
 	 */
-    public String getTypeName() {
-        return typeName;
-    }
+	public String getTypeName() {
+		return typeName;
+	}
 }

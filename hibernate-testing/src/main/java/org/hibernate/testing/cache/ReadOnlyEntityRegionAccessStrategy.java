@@ -25,7 +25,6 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -33,13 +32,13 @@ import org.jboss.logging.Logger;
  * @author Strong Liu
  */
 class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, ReadOnlyEntityRegionAccessStrategy.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( ReadOnlyEntityRegionAccessStrategy.class );
+
 
 	ReadOnlyEntityRegionAccessStrategy(EntityRegionImpl region) {
 		super( region );
 	}
+
 	/**
 	 * This cache is asynchronous hence a no-op
 	 */
@@ -67,7 +66,7 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 	@Override
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
-		LOG.invalidEditOfReadOnlyItem( key );
+		LOG.info( "Illegal attempt to update item cached as read-only : " + key );
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
@@ -79,7 +78,7 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 	@Override
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
-		LOG.invalidEditOfReadOnlyItem( key );
+		LOG.info( "Illegal attempt to update item cached as read-only : " + key );
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 

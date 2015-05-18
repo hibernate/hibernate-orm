@@ -24,14 +24,13 @@
 package org.hibernate.type;
 
 import java.math.BigInteger;
-import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 
 /**
- * A type that maps between a {@link Types#NUMERIC NUMERIC} and {@link BigInteger}.
+ * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigInteger}.
  *
  * @author Gavin King
  * @author Steve Ebersole

@@ -73,7 +73,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
  * @author Steve Ebersole
  */
 public class SchemaExport {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaExport.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaExport.class );
 
 	private static final String DEFAULT_IMPORT_FILE = "/import.sql";
 
@@ -236,6 +236,7 @@ public class SchemaExport {
 	 *
 	 * @param metadata The metadata object holding the mapping info to be exported
 	 * @param connection The JDBC connection to use.
+	 *
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
 	public SchemaExport(MetadataImplementor metadata, Connection connection) throws HibernateException {
@@ -295,6 +296,7 @@ public class SchemaExport {
 	 * For generating a export script file, this is the file which will be written.
 	 *
 	 * @param filename The name of the file to which to write the export script.
+	 *
 	 * @return this
 	 */
 	public SchemaExport setOutputFile(String filename) {
@@ -306,6 +308,7 @@ public class SchemaExport {
 	 * Set the end of statement delimiter
 	 *
 	 * @param delimiter The delimiter
+	 *
 	 * @return this
 	 */
 	public SchemaExport setDelimiter(String delimiter) {
@@ -317,6 +320,7 @@ public class SchemaExport {
 	 * Should we format the sql strings?
 	 *
 	 * @param format Should we format SQL strings
+	 *
 	 * @return this
 	 */
 	public SchemaExport setFormat(boolean format) {
@@ -328,6 +332,7 @@ public class SchemaExport {
 	 * Set <i>import.sql</i> command extractor. By default {@link SingleLineSqlCommandExtractor} is used.
 	 *
 	 * @param importSqlCommandExtractor <i>import.sql</i> command extractor.
+	 *
 	 * @return this
 	 */
 	public SchemaExport setImportSqlCommandExtractor(ImportSqlCommandExtractor importSqlCommandExtractor) {
@@ -339,6 +344,7 @@ public class SchemaExport {
 	 * Should we stop once an error occurs?
 	 *
 	 * @param haltOnError True if export should stop after error.
+	 *
 	 * @return this
 	 */
 	public SchemaExport setHaltOnError(boolean haltOnError) {
@@ -399,7 +405,7 @@ public class SchemaExport {
 	}
 
 	public void execute(Target output, Type type) {
-		if ( (outputFile == null && output == Target.NONE) || type == SchemaExport.Type.NONE ) {
+		if ( ( outputFile == null && output == Target.NONE ) || type == SchemaExport.Type.NONE ) {
 			return;
 		}
 		exceptions.clear();
@@ -407,14 +413,14 @@ public class SchemaExport {
 		LOG.runningHbm2ddlSchemaExport();
 
 		final List<NamedReader> importFileReaders = new ArrayList<NamedReader>();
-		for ( String currentFile : importFiles.split(",") ) {
+		for ( String currentFile : importFiles.split( "," ) ) {
 			try {
 				final String resourceName = currentFile.trim();
 				InputStream stream = ConfigHelper.getResourceAsStream( resourceName );
 				importFileReaders.add( new NamedReader( resourceName, stream ) );
 			}
-			catch ( HibernateException e ) {
-				LOG.debugf("Import file not found: %s", currentFile);
+			catch (HibernateException e) {
+				LOG.debugf( "Import file not found: %s", currentFile );
 			}
 		}
 
@@ -437,7 +443,7 @@ public class SchemaExport {
 			}
 			if ( type.doCreate() ) {
 				perform( createSQL, exporters );
-				if ( ! importFileReaders.isEmpty() ) {
+				if ( !importFileReaders.isEmpty() ) {
 					for ( NamedReader namedReader : importFileReaders ) {
 						importScript( namedReader, exporters );
 					}
@@ -466,14 +472,14 @@ public class SchemaExport {
 				catch (Exception ignore) {
 				}
 			}
-            LOG.schemaExportComplete();
+			LOG.schemaExportComplete();
 		}
 	}
 
 	private void perform(String[] sqlCommands, List<Exporter> exporters) {
 		for ( String sqlCommand : sqlCommands ) {
 			String formatted = formatter.format( sqlCommand );
-	        if ( delimiter != null ) {
+			if ( delimiter != null ) {
 				formatted += delimiter;
 			}
 			sqlStatementLogger.logStatement( sqlCommand, formatter );
@@ -496,11 +502,11 @@ public class SchemaExport {
 	private void importScript(NamedReader namedReader, List<Exporter> exporters) throws Exception {
 		BufferedReader reader = new BufferedReader( namedReader.getReader() );
 		String[] statements = importSqlCommandExtractor.extractCommands( reader );
-		if (statements != null) {
+		if ( statements != null ) {
 			for ( String statement : statements ) {
 				if ( statement != null ) {
 					String trimmedSql = statement.trim();
-					if ( trimmedSql.endsWith( ";" )) {
+					if ( trimmedSql.endsWith( ";" ) ) {
 						trimmedSql = trimmedSql.substring( 0, statement.length() - 1 );
 					}
 					if ( !StringHelper.isEmpty( trimmedSql ) ) {
@@ -511,14 +517,16 @@ public class SchemaExport {
 								}
 							}
 						}
-						catch ( Exception e ) {
-						  	if (haltOnError) {
-						  		throw new ImportScriptException( "Error during statement execution (file: '"
-						  				+ namedReader.getName() + "'): " + trimmedSql, e );
+						catch (Exception e) {
+							if ( haltOnError ) {
+								throw new ImportScriptException(
+										"Error during statement execution (file: '"
+												+ namedReader.getName() + "'): " + trimmedSql, e
+								);
 							}
-						  	exceptions.add(e);
-						  	LOG.unsuccessful(trimmedSql);
-						  	LOG.error(e.getMessage());
+							exceptions.add( e );
+							LOG.unsuccessful( trimmedSql );
+							LOG.error( e.getMessage() );
 						}
 					}
 				}
@@ -557,14 +565,19 @@ public class SchemaExport {
 						.setDelimiter( commandLineArgs.delimiter )
 						.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
 						.setFormat( commandLineArgs.format );
-				schemaExport.execute( commandLineArgs.script, commandLineArgs.export, commandLineArgs.drop, commandLineArgs.create );
+				schemaExport.execute(
+						commandLineArgs.script,
+						commandLineArgs.export,
+						commandLineArgs.drop,
+						commandLineArgs.create
+				);
 			}
 			finally {
 				StandardServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
-		catch ( Exception e ) {
-            LOG.unableToCreateSchema( e );
+		catch (Exception e) {
+			LOG.unableToCreateSchema( e );
 			e.printStackTrace();
 		}
 	}

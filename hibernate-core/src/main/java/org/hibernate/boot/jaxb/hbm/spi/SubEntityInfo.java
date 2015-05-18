@@ -29,5 +29,5 @@ package org.hibernate.boot.jaxb.hbm.spi;
  * @author Steve Ebersole
  */
 public interface SubEntityInfo extends EntityInfo {
-    String getExtends();
+	String getExtends();
 }

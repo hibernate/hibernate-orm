@@ -29,16 +29,15 @@ import java.util.Iterator;
 /**
  * @author Gavin King
  */
-public final class SingletonIterator implements Iterator {
-
-	private Object value;
+public final class SingletonIterator<T> implements Iterator<T> {
+	private T value;
 	private boolean hasNext = true;
 
 	public boolean hasNext() {
 		return hasNext;
 	}
 
-	public Object next() {
+	public T next() {
 		if (hasNext) {
 			hasNext = false;
 			return value;
@@ -52,7 +51,7 @@ public final class SingletonIterator implements Iterator {
 		throw new UnsupportedOperationException();
 	}
 
-	public SingletonIterator(Object value) {
+	public SingletonIterator(T value) {
 		this.value = value;
 	}
 

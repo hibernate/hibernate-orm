@@ -39,7 +39,7 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
@@ -48,8 +48,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings({ "unchecked" })
 public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ConcurrentStatisticsImpl.class.getName());
+	private static final CoreMessageLogger LOG = messageLogger( ConcurrentStatisticsImpl.class );
 
 	private SessionFactoryImplementor sessionFactory;
 
@@ -393,7 +392,8 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	@Override
 	public void naturalIdQueryExecuted(String regionName, long time) {
 		naturalIdQueryExecutionCount.getAndIncrement();
-		boolean isLongestQuery = false;
+		boolean isLongestQuery;
+		//noinspection StatementWithEmptyBody
 		for ( long old = naturalIdQueryExecutionMaxTime.get();
 			  ( isLongestQuery = time > old ) && ( !naturalIdQueryExecutionMaxTime.compareAndSet( old, time ) );
 			  old = naturalIdQueryExecutionMaxTime.get() ) {
@@ -411,7 +411,8 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	public void queryExecuted(String hql, int rows, long time) {
         LOG.hql(hql, time, (long) rows );
 		queryExecutionCount.getAndIncrement();
-		boolean isLongestQuery = false;
+		boolean isLongestQuery;
+		//noinspection StatementWithEmptyBody
 		for ( long old = queryExecutionMaxTime.get();
 			  ( isLongestQuery = time > old ) && ( !queryExecutionMaxTime.compareAndSet( old, time ) );
 			  old = queryExecutionMaxTime.get() ) {

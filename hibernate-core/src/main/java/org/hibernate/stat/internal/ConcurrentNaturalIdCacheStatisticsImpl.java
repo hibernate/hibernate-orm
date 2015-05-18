@@ -24,7 +24,6 @@
 package org.hibernate.stat.internal;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -140,11 +139,11 @@ public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistic
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Map getEntries() {
 		final Map map = new HashMap();
-		final Iterator iter = this.region.toMap().entrySet().iterator();
-		while ( iter.hasNext() ) {
-			final Map.Entry me = (Map.Entry) iter.next();
+		for ( Object o : this.region.toMap().entrySet() ) {
+			final Map.Entry me = (Map.Entry) o;
 			map.put( ( (NaturalIdCacheKey) me.getKey() ).getNaturalIdValues(), me.getValue() );
 		}
 		return map;
@@ -189,8 +188,12 @@ public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistic
 		this.readLock.lock();
 		try {
 			// Less chances for a context switch
-			for ( long old = this.executionMinTime.get(); time < old && !this.executionMinTime.compareAndSet( old, time ); old = this.executionMinTime.get() ) {;}
-			for ( long old = this.executionMaxTime.get(); time > old && !this.executionMaxTime.compareAndSet( old, time ); old = this.executionMaxTime.get() ) {;}
+			//noinspection StatementWithEmptyBody
+			for ( long old = this.executionMinTime.get(); time < old && !this.executionMinTime.compareAndSet( old, time ); old = this.executionMinTime.get() ) {
+			}
+			//noinspection StatementWithEmptyBody
+			for ( long old = this.executionMaxTime.get(); time > old && !this.executionMaxTime.compareAndSet( old, time ); old = this.executionMaxTime.get() ) {
+			}
 			this.executionCount.getAndIncrement();
 			this.totalExecutionTime.addAndGet( time );
 		}

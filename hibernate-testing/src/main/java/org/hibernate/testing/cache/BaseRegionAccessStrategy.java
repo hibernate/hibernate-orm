@@ -26,7 +26,6 @@ package org.hibernate.testing.cache;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -34,9 +33,8 @@ import org.jboss.logging.Logger;
  * @author Strong Liu
  */
 abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, BaseRegionAccessStrategy.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( BaseRegionAccessStrategy.class );
+
 
 	protected abstract BaseGeneralDataRegion getInternalRegion();
 
@@ -112,7 +110,8 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	@Override
 	public void remove(Object key) throws CacheException {
 	}
-		/**
+
+	/**
 	 * Called to evict data from the entire region
 	 *
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}

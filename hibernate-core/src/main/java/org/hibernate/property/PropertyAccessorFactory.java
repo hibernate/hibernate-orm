@@ -57,26 +57,28 @@ public final class PropertyAccessorFactory {
 	//      3) Code can then simply call PropertyAccess.getGetter() with no parameters; likewise with
 	//          PropertyAccessor.getSetter()
 
-    /**
-     * Retrieves a PropertyAccessor instance based on the given property definition and
-     * entity mode.
-     *
-     * @param property The property for which to retrieve an accessor.
-     * @param mode The mode for the resulting entity.
-     * @return An appropriate accessor.
-     * @throws MappingException
-     */
+	/**
+	 * Retrieves a PropertyAccessor instance based on the given property definition and
+	 * entity mode.
+	 *
+	 * @param property The property for which to retrieve an accessor.
+	 * @param mode The mode for the resulting entity.
+	 *
+	 * @return An appropriate accessor.
+	 *
+	 * @throws MappingException
+	 */
 	public static PropertyAccessor getPropertyAccessor(Property property, EntityMode mode) throws MappingException {
 		//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
-	    if ( null == mode || EntityMode.POJO.equals( mode ) ) {
-		    return getPojoPropertyAccessor( property.getPropertyAccessorName() );
-	    }
-	    else if ( EntityMode.MAP.equals( mode ) ) {
-		    return getDynamicMapPropertyAccessor();
-	    }
-	    else {
-		    throw new MappingException( "Unknown entity mode [" + mode + "]" );
-	    }
+		if ( null == mode || EntityMode.POJO.equals( mode ) ) {
+			return getPojoPropertyAccessor( property.getPropertyAccessorName() );
+		}
+		else if ( EntityMode.MAP.equals( mode ) ) {
+			return getDynamicMapPropertyAccessor();
+		}
+		else {
+			throw new MappingException( "Unknown entity mode [" + mode + "]" );
+		}
 	}
 
 
@@ -84,6 +86,7 @@ public final class PropertyAccessorFactory {
 	 * Retreives a PropertyAccessor specific for a PojoRepresentation with the given access strategy.
 	 *
 	 * @param pojoAccessorStrategy The access strategy.
+	 *
 	 * @return An appropriate accessor.
 	 */
 	private static PropertyAccessor getPojoPropertyAccessor(String pojoAccessorStrategy) {
@@ -96,7 +99,7 @@ public final class PropertyAccessorFactory {
 		else if ( "embedded".equals( pojoAccessorStrategy ) ) {
 			return EMBEDDED_PROPERTY_ACCESSOR;
 		}
-		else if ( "noop".equals(pojoAccessorStrategy) ) {
+		else if ( "noop".equals( pojoAccessorStrategy ) ) {
 			return NOOP_ACCESSOR;
 		}
 		else {
@@ -114,44 +117,45 @@ public final class PropertyAccessorFactory {
 			accessorClass = ReflectHelper.classForName( accessorName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			throw new MappingException("could not find PropertyAccessor class: " + accessorName, cnfe);
+			throw new MappingException( "could not find PropertyAccessor class: " + accessorName, cnfe );
 		}
 		try {
 			return (PropertyAccessor) accessorClass.newInstance();
 		}
 		catch (Exception e) {
-			throw new MappingException("could not instantiate PropertyAccessor class: " + accessorName, e);
+			throw new MappingException( "could not instantiate PropertyAccessor class: " + accessorName, e );
 		}
 	}
 
-	private PropertyAccessorFactory() {}
+	private PropertyAccessorFactory() {
+	}
 
 	// todo : this eventually needs to be removed
 	public static PropertyAccessor getPropertyAccessor(Class optionalClass, String type) throws MappingException {
-		if ( type==null ) {
-			type = optionalClass==null || optionalClass==Map.class ? "map" : "property";
+		if ( type == null ) {
+			type = optionalClass == null || optionalClass == Map.class ? "map" : "property";
 		}
-		return getPropertyAccessor(type);
+		return getPropertyAccessor( type );
 	}
 
 	// todo : this eventually needs to be removed
 	public static PropertyAccessor getPropertyAccessor(String type) throws MappingException {
-		if ( type==null || "property".equals(type) ) {
+		if ( type == null || "property".equals( type ) ) {
 			return BASIC_PROPERTY_ACCESSOR;
 		}
-		if ( "field".equals(type) ) {
+		if ( "field".equals( type ) ) {
 			return DIRECT_PROPERTY_ACCESSOR;
 		}
-		if ( "map".equals(type) ) {
+		if ( "map".equals( type ) ) {
 			return MAP_ACCESSOR;
 		}
-		if ( "embedded".equals(type) ) {
+		if ( "embedded".equals( type ) ) {
 			return EMBEDDED_PROPERTY_ACCESSOR;
 		}
-		if ( "noop".equals(type)) {
+		if ( "noop".equals( type ) ) {
 			return NOOP_ACCESSOR;
 		}
 
-		return resolveCustomAccessor(type);
+		return resolveCustomAccessor( type );
 	}
 }

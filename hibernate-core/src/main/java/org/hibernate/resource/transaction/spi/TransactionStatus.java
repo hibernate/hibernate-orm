@@ -63,5 +63,5 @@ public enum TransactionStatus {
 	 *  Status code indicating a transaction that is in the process of
 	 *  rolling back.
 	 */
-	 ROLLING_BACK
+	ROLLING_BACK
 }

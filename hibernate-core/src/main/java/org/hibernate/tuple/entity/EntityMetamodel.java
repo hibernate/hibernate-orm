@@ -25,7 +25,6 @@ package org.hibernate.tuple.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -345,13 +344,13 @@ public class EntityMetamodel implements Serializable {
 		if ( persistentClass.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)
 			isAbstract = persistentClass.hasPojoRepresentation() &&
-			             ReflectHelper.isAbstractClass( persistentClass.getMappedClass() );
+					ReflectHelper.isAbstractClass( persistentClass.getMappedClass() );
 		}
 		else {
 			isAbstract = persistentClass.isAbstract().booleanValue();
 			if ( !isAbstract && persistentClass.hasPojoRepresentation() &&
-			     ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
-                LOG.entityMappedAsNonAbstract(name);
+					ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
+				LOG.entityMappedAsNonAbstract(name);
 			}
 		}
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
@@ -1033,7 +1032,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return "EntityMetamodel(" + name + ':' + ArrayHelper.toString(properties) + ')';
 	}
 

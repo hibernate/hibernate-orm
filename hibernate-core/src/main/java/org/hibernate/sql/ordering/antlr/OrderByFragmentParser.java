@@ -46,7 +46,7 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
-    private static final Logger LOG = Logger.getLogger(OrderByFragmentParser.class.getName());
+	private static final Logger LOG = Logger.getLogger( OrderByFragmentParser.class.getName() );
 
 	private final TranslationContext context;
 
@@ -63,7 +63,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	}
 
 	@Override
-    protected AST quotedIdentifier(AST ident) {
+	protected AST quotedIdentifier(AST ident) {
 		/*
 		 * Semantic action used during recognition of quoted identifiers (quoted column names)
 		 */
@@ -74,7 +74,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	}
 
 	@Override
-    protected AST quotedString(AST ident) {
+	protected AST quotedString(AST ident) {
 		/*
 		 * Semantic action used during recognition of quoted strings (string literals)
 		 */
@@ -103,19 +103,19 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		}
 		else {
 			// if function.hasParenthesesIfNoArguments() is true, then assume the node is not a function
-			return ! function.hasParenthesesIfNoArguments();
+			return !function.hasParenthesesIfNoArguments();
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-    protected AST resolveFunction(AST ast) {
+	protected AST resolveFunction(AST ast) {
 		/*
 		 * Semantic action used during recognition of a *known* function
 		 */
 		AST child = ast.getFirstChild();
 		if ( child != null ) {
-			assert "{param list}".equals(  child.getText() );
+			assert "{param list}".equals( child.getText() );
 			child = child.getFirstChild();
 		}
 
@@ -173,7 +173,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	}
 
 	@Override
-    protected AST resolveIdent(AST ident) {
+	protected AST resolveIdent(AST ident) {
 		/*
 		 * Semantic action used during recognition of an identifier.  This identifier might be a column name, it might
 		 * be a property name.
@@ -183,7 +183,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		try {
 			sqlValueReferences = context.getColumnMapper().map( text );
 		}
-		catch( Throwable t ) {
+		catch (Throwable t) {
 			sqlValueReferences = null;
 		}
 
@@ -261,9 +261,9 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	}
 
 	@Override
-    protected AST postProcessSortSpecification(AST sortSpec) {
+	protected AST postProcessSortSpecification(AST sortSpec) {
 		assert SORT_SPEC == sortSpec.getType();
-		SortSpecification sortSpecification = ( SortSpecification ) sortSpec;
+		SortSpecification sortSpecification = (SortSpecification) sortSpec;
 		AST sortKey = sortSpecification.getSortKey();
 		if ( IDENT_LIST == sortKey.getFirstChild().getType() ) {
 			AST identList = sortKey.getFirstChild();
@@ -299,9 +299,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		if ( orderingSpecification != null ) {
 			sortSpecification.addChild( orderingSpecification );
 		}
-		return ( SortSpecification ) sortSpecification;
+		return (SortSpecification) sortSpecification;
 	}
-
 
 
 	// trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -314,8 +313,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
-		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		LOG.trace(prefix + ruleName);
+		String prefix = StringHelper.repeat( '-', ( traceDepth++ * 2 ) ) + "-> ";
+		LOG.trace( prefix + ruleName );
 	}
 
 	@Override
@@ -323,8 +322,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
-		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		LOG.trace(prefix + ruleName);
+		String prefix = "<-" + StringHelper.repeat( '-', ( --traceDepth * 2 ) ) + " ";
+		LOG.trace( prefix + ruleName );
 	}
 
 	@Override

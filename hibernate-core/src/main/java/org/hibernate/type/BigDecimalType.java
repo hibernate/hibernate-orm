@@ -24,13 +24,12 @@
 package org.hibernate.type;
 
 import java.math.BigDecimal;
-import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 
 /**
- * A type that maps between a {@link Types#NUMERIC NUMERIC} and {@link BigDecimal}.
+ * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigDecimal}.
  *
  * @author Gavin King
  * @author Steve Ebersole

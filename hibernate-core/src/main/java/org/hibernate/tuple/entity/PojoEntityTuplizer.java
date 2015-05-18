@@ -67,7 +67,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private final Class mappedClass;
 	private final Class proxyInterface;
 	private final boolean lifecycleImplementor;
-	private final Set lazyPropertyNames = new HashSet();
+	private final Set<String> lazyPropertyNames = new HashSet<String>();
 	private final ReflectionOptimizer optimizer;
 	private final boolean isInstrumented;
 
@@ -100,7 +100,12 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 		else {
 			// todo : YUCK!!!
-			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer( mappedClass, getterNames, setterNames, propTypes );
+			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
+					mappedClass,
+					getterNames,
+					setterNames,
+					propTypes
+			);
 //			optimizer = getFactory().getSettings().getBytecodeProvider().getReflectionOptimizer(
 //					mappedClass, getterNames, setterNames, propTypes
 //			);
@@ -108,9 +113,9 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-    protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
+	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
-        // determine all interfaces needed by the resulting proxy
+		// determine all interfaces needed by the resulting proxy
 		
 		/*
 		 * We need to preserve the order of the interfaces they were put into the set, since javassist will choose the
@@ -123,7 +128,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		Class mappedClass = persistentClass.getMappedClass();
 		Class proxyInterface = persistentClass.getProxyInterface();
 
-		if ( proxyInterface!=null && !mappedClass.equals( proxyInterface ) ) {
+		if ( proxyInterface != null && !mappedClass.equals( proxyInterface ) ) {
 			if ( !proxyInterface.isInterface() ) {
 				throw new MappingException(
 						"proxy must be either an interface, or the class itself: " + getEntityName()
@@ -136,12 +141,12 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			proxyInterfaces.add( mappedClass );
 		}
 
-		Iterator subclasses = persistentClass.getSubclassIterator();
+		Iterator<Subclass> subclasses = persistentClass.getSubclassIterator();
 		while ( subclasses.hasNext() ) {
-			final Subclass subclass = ( Subclass ) subclasses.next();
+			final Subclass subclass = subclasses.next();
 			final Class subclassProxy = subclass.getProxyInterface();
 			final Class subclassClass = subclass.getMappedClass();
-			if ( subclassProxy!=null && !subclassClass.equals( subclassProxy ) ) {
+			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
 				if ( !subclassProxy.isInterface() ) {
 					throw new MappingException(
 							"proxy must be either an interface, or the class itself: " + subclass.getEntityName()
@@ -157,25 +162,25 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		Class clazz = persistentClass.getMappedClass();
 		while ( properties.hasNext() ) {
 			Property property = (Property) properties.next();
-			Method method = property.getGetter(clazz).getMethod();
+			Method method = property.getGetter( clazz ).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-                LOG.gettersOfLazyClassesCannotBeFinal(persistentClass.getEntityName(), property.getName());
+				LOG.gettersOfLazyClassesCannotBeFinal( persistentClass.getEntityName(), property.getName() );
 			}
-			method = property.getSetter(clazz).getMethod();
-            if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-                LOG.settersOfLazyClassesCannotBeFinal(persistentClass.getEntityName(), property.getName());
+			method = property.getSetter( clazz ).getMethod();
+			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
+				LOG.settersOfLazyClassesCannotBeFinal( persistentClass.getEntityName(), property.getName() );
 			}
 		}
 
-		Method idGetterMethod = idGetter==null ? null : idGetter.getMethod();
-		Method idSetterMethod = idSetter==null ? null : idSetter.getMethod();
+		Method idGetterMethod = idGetter == null ? null : idGetter.getMethod();
+		Method idSetterMethod = idSetter == null ? null : idSetter.getMethod();
 
-		Method proxyGetIdentifierMethod = idGetterMethod==null || proxyInterface==null ?
+		Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null ?
 				null :
-		        ReflectHelper.getMethod(proxyInterface, idGetterMethod);
-		Method proxySetIdentifierMethod = idSetterMethod==null || proxyInterface==null  ?
+				ReflectHelper.getMethod( proxyInterface, idGetterMethod );
+		Method proxySetIdentifierMethod = idSetterMethod == null || proxyInterface == null ?
 				null :
-		        ReflectHelper.getMethod(proxyInterface, idSetterMethod);
+				ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 
 		ProxyFactory pf = buildProxyFactoryInternal( persistentClass, idGetter, idSetter );
 		try {
@@ -186,25 +191,28 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 					proxyGetIdentifierMethod,
 					proxySetIdentifierMethod,
 					persistentClass.hasEmbeddedIdentifier() ?
-			                (CompositeType) persistentClass.getIdentifier().getType() :
-			                null
+							(CompositeType) persistentClass.getIdentifier().getType() :
+							null
 			);
 		}
-		catch ( HibernateException he ) {
-            LOG.unableToCreateProxyFactory(getEntityName(), he);
+		catch (HibernateException he) {
+			LOG.unableToCreateProxyFactory( getEntityName(), he );
 			pf = null;
 		}
 		return pf;
 	}
 
-	protected ProxyFactory buildProxyFactoryInternal(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
+	protected ProxyFactory buildProxyFactoryInternal(
+			PersistentClass persistentClass,
+			Getter idGetter,
+			Setter idSetter) {
 		// TODO : YUCK!!!  fix after HHH-1907 is complete
 		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 //		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 	}
 
 	@Override
-    protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		if ( optimizer == null ) {
 			return new PojoInstantiator( persistentClass, null );
 		}
@@ -214,7 +222,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-    public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
+	public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
 		if ( !getEntityMetamodel().hasLazyProperties() && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			setPropertyValuesWithOptimizer( entity, values );
 		}
@@ -224,7 +232,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-    public Object[] getPropertyValues(Object entity) throws HibernateException {
+	public Object[] getPropertyValues(Object entity) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
 		}
@@ -234,7 +242,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-    public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) throws HibernateException {
+	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
+			throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
 		}
@@ -262,17 +271,17 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-    public boolean isLifecycleImplementor() {
+	public boolean isLifecycleImplementor() {
 		return lifecycleImplementor;
 	}
 
 	@Override
-    protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
+	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getGetter( mappedEntity.getMappedClass() );
 	}
 
 	@Override
-    protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
+	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getSetter( mappedEntity.getMappedClass() );
 	}
 
@@ -281,26 +290,26 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		return proxyInterface;
 	}
 
-    //TODO: need to make the majority of this functionality into a top-level support class for custom impl support
+	//TODO: need to make the majority of this functionality into a top-level support class for custom impl support
 
 	@Override
-    public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
+	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
 		if ( isInstrumented() ) {
-			Set lazyProps = lazyPropertiesAreUnfetched && getEntityMetamodel().hasLazyProperties() ?
+			Set<String> lazyProps = lazyPropertiesAreUnfetched && getEntityMetamodel().hasLazyProperties() ?
 					lazyPropertyNames : null;
 			//TODO: if we support multiple fetch groups, we would need
 			//      to clone the set of lazy properties!
 			FieldInterceptionHelper.injectFieldInterceptor( entity, getEntityName(), lazyProps, session );
 
-            //also clear the fields that are marked as dirty in the dirtyness tracker
-            if(entity instanceof org.hibernate.engine.spi.SelfDirtinessTracker) {
-                ((org.hibernate.engine.spi.SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
-            }
+			//also clear the fields that are marked as dirty in the dirtyness tracker
+			if ( entity instanceof org.hibernate.engine.spi.SelfDirtinessTracker ) {
+				( (org.hibernate.engine.spi.SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
+			}
 		}
 	}
 
 	@Override
-    public boolean hasUninitializedLazyProperties(Object entity) {
+	public boolean hasUninitializedLazyProperties(Object entity) {
 		if ( getEntityMetamodel().hasLazyProperties() ) {
 			FieldInterceptor callback = FieldInterceptionHelper.extractFieldInterceptor( entity );
 			return callback != null && !callback.isInitialized();

@@ -119,7 +119,7 @@ public final class Template {
 	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)} instead
 	 */
 	@Deprecated
-    @SuppressWarnings({ "JavaDoc" })
+	@SuppressWarnings({ "JavaDoc" })
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
 		return renderWhereStringTemplate(
 				sqlWhereString,
@@ -654,7 +654,7 @@ public final class Template {
 	 * @deprecated Use {@link #translateOrderBy} instead
 	 */
 	@Deprecated
-    public static String renderOrderByStringTemplate(
+	public static String renderOrderByStringTemplate(
 			String orderByFragment,
 			Dialect dialect,
 			SQLFunctionRegistry functionRegistry) {

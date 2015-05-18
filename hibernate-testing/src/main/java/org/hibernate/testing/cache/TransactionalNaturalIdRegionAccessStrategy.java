@@ -10,16 +10,9 @@ class TransactionalNaturalIdRegionAccessStrategy extends BaseNaturalIdRegionAcce
 		super( region );
 	}
 
-
-
-
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void remove(Object key) throws CacheException {
 		evict( key );
 	}
-
 
 }

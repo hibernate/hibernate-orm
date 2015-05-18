@@ -60,7 +60,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
- * Implementation of the "table-per-concrete-class" or "roll-down" mapping 
+ * Implementation of the "table-per-concrete-class" or "roll-down" mapping
  * strategy for an entity and its inheritence hierarchy.
  *
  * @author Gavin King
@@ -84,7 +84,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	//INITIALIZATION:
 
 	public UnionSubclassEntityPersister(
-			final PersistentClass persistentClass, 
+			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
 			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			final PersisterCreationContext creationContext) throws HibernateException {
@@ -95,17 +95,17 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( getIdentifierGenerator() instanceof IdentityGenerator ) {
 			throw new MappingException(
-					"Cannot use identity column key generation with <union-subclass> mapping for: " + 
-					getEntityName() 
+					"Cannot use identity column key generation with <union-subclass> mapping for: " +
+							getEntityName()
 			);
 		}
 
 		// TABLE
 
-		tableName = persistentClass.getTable().getQualifiedName( 
-				factory.getDialect(), 
-				factory.getSettings().getDefaultCatalogName(), 
-				factory.getSettings().getDefaultSchemaName() 
+		tableName = persistentClass.getTable().getQualifiedName(
+				factory.getDialect(),
+				factory.getSettings().getDefaultCatalogName(),
+				factory.getSettings().getDefaultSchemaName()
 		);
 		/*rootTableName = persistentClass.getRootTable().getQualifiedName( 
 				factory.getDialect(), 
@@ -122,34 +122,34 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		callable = sql != null && persistentClass.isCustomInsertCallable();
 		checkStyle = sql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
-	            : persistentClass.getCustomSQLInsertCheckStyle() == null
-						? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-	                    : persistentClass.getCustomSQLInsertCheckStyle();
-		customSQLInsert = new String[] { sql };
-		insertCallable = new boolean[] { callable };
-		insertResultCheckStyles = new ExecuteUpdateResultCheckStyle[] { checkStyle };
+				: persistentClass.getCustomSQLInsertCheckStyle() == null
+				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
+				: persistentClass.getCustomSQLInsertCheckStyle();
+		customSQLInsert = new String[] {sql};
+		insertCallable = new boolean[] {callable};
+		insertResultCheckStyles = new ExecuteUpdateResultCheckStyle[] {checkStyle};
 
 		sql = persistentClass.getCustomSQLUpdate();
 		callable = sql != null && persistentClass.isCustomUpdateCallable();
 		checkStyle = sql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
-	            : persistentClass.getCustomSQLUpdateCheckStyle() == null
-						? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-	                    : persistentClass.getCustomSQLUpdateCheckStyle();
-		customSQLUpdate = new String[] { sql };
-		updateCallable = new boolean[] { callable };
-		updateResultCheckStyles = new ExecuteUpdateResultCheckStyle[] { checkStyle };
+				: persistentClass.getCustomSQLUpdateCheckStyle() == null
+				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
+				: persistentClass.getCustomSQLUpdateCheckStyle();
+		customSQLUpdate = new String[] {sql};
+		updateCallable = new boolean[] {callable};
+		updateResultCheckStyles = new ExecuteUpdateResultCheckStyle[] {checkStyle};
 
 		sql = persistentClass.getCustomSQLDelete();
 		callable = sql != null && persistentClass.isCustomDeleteCallable();
 		checkStyle = sql == null
 				? ExecuteUpdateResultCheckStyle.COUNT
-	            : persistentClass.getCustomSQLDeleteCheckStyle() == null
-						? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
-	                    : persistentClass.getCustomSQLDeleteCheckStyle();
-		customSQLDelete = new String[] { sql };
-		deleteCallable = new boolean[] { callable };
-		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[] { checkStyle };
+				: persistentClass.getCustomSQLDeleteCheckStyle() == null
+				? ExecuteUpdateResultCheckStyle.determineDefault( sql, callable )
+				: persistentClass.getCustomSQLDeleteCheckStyle();
+		customSQLDelete = new String[] {sql};
+		deleteCallable = new boolean[] {callable};
+		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[] {checkStyle};
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
@@ -161,43 +161,45 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subclassClosure[0] = getEntityName();
 
 		// SUBCLASSES
-		subclassByDiscriminatorValue.put( 
+		subclassByDiscriminatorValue.put(
 				persistentClass.getSubclassId(),
-				persistentClass.getEntityName() 
+				persistentClass.getEntityName()
 		);
 		if ( persistentClass.isPolymorphic() ) {
 			Iterator iter = persistentClass.getSubclassIterator();
-			int k=1;
+			int k = 1;
 			while ( iter.hasNext() ) {
 				Subclass sc = (Subclass) iter.next();
 				subclassClosure[k++] = sc.getEntityName();
 				subclassByDiscriminatorValue.put( sc.getSubclassId(), sc.getEntityName() );
 			}
 		}
-		
+
 		//SPACES
 		//TODO: i'm not sure, but perhaps we should exclude
 		//      abstract denormalized tables?
-		
+
 		int spacesSize = 1 + persistentClass.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
 		spaces[0] = tableName;
 		Iterator iter = persistentClass.getSynchronizedTables().iterator();
-		for ( int i=1; i<spacesSize; i++ ) {
+		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = (String) iter.next();
 		}
-		
+
 		HashSet subclassTables = new HashSet();
 		iter = persistentClass.getSubclassTableClosureIterator();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
-			subclassTables.add( table.getQualifiedName(
-					factory.getDialect(), 
-					factory.getSettings().getDefaultCatalogName(), 
-					factory.getSettings().getDefaultSchemaName() 
-			) );
+			subclassTables.add(
+					table.getQualifiedName(
+							factory.getDialect(),
+							factory.getSettings().getDefaultCatalogName(),
+							factory.getSettings().getDefaultSchemaName()
+					)
+			);
 		}
-		subclassSpaces = ArrayHelper.toStringArray(subclassTables);
+		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
 		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
 
@@ -211,7 +213,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			iter = persistentClass.getSubclassTableClosureIterator();
 			while ( iter.hasNext() ) {
-				Table tab = ( Table ) iter.next();
+				Table tab = (Table) iter.next();
 				if ( !tab.isAbstractUnionTable() ) {
 					String tableName = tab.getQualifiedName(
 							factory.getDialect(),
@@ -221,8 +223,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
 					Iterator citer = tab.getPrimaryKey().getColumnIterator();
-					for ( int k=0; k<idColumnSpan; k++ ) {
-						key[k] = ( ( Column ) citer.next() ).getQuotedName( factory.getDialect() );
+					for ( int k = 0; k < idColumnSpan; k++ ) {
+						key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
 					}
 					keyColumns.add( key );
 				}
@@ -232,14 +234,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			constraintOrderedKeyColumnNames = ArrayHelper.to2DStringArray( keyColumns );
 		}
 		else {
-			constraintOrderedTableNames = new String[] { tableName };
-			constraintOrderedKeyColumnNames = new String[][] { getIdentifierColumnNames() };
+			constraintOrderedTableNames = new String[] {tableName};
+			constraintOrderedKeyColumnNames = new String[][] {getIdentifierColumnNames()};
 		}
 
 		initLockers();
 
 		initSubclassPropertyAliasesMap( persistentClass );
-		
+
 		postConstruct( creationContext.getMetadata() );
 
 	}
@@ -247,7 +249,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	public Serializable[] getQuerySpaces() {
 		return subclassSpaces;
 	}
-	
+
 	public String getTableName() {
 		return subquery;
 	}
@@ -269,7 +271,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassByDiscriminatorValue.get(value);
+		return (String) subclassByDiscriminatorValue.get( value );
 	}
 
 	public Serializable[] getPropertySpaces() {
@@ -285,19 +287,19 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	 */
 	protected String generateSelectString(LockMode lockMode) {
 		SimpleSelect select = new SimpleSelect( getFactory().getDialect() )
-			.setLockMode(lockMode)
-			.setTableName( getTableName() )
-			.addColumns( getIdentifierColumnNames() )
-			.addColumns( 
-					getSubclassColumnClosure(), 
-					getSubclassColumnAliasClosure(),
-					getSubclassColumnLazyiness()
-			)
-			.addColumns( 
-					getSubclassFormulaClosure(), 
-					getSubclassFormulaAliasClosure(),
-					getSubclassFormulaLazyiness()
-			);
+				.setLockMode( lockMode )
+				.setTableName( getTableName() )
+				.addColumns( getIdentifierColumnNames() )
+				.addColumns(
+						getSubclassColumnClosure(),
+						getSubclassColumnAliasClosure(),
+						getSubclassColumnLazyiness()
+				)
+				.addColumns(
+						getSubclassFormulaClosure(),
+						getSubclassFormulaAliasClosure(),
+						getSubclassFormulaLazyiness()
+				);
 		//TODO: include the rowids!!!!
 		if ( hasSubclasses() ) {
 			if ( isDiscriminatorFormula() ) {
@@ -324,11 +326,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	protected String[] getKeyColumns(int j) {
 		return getIdentifierColumnNames();
 	}
-	
+
 	protected boolean isTableCascadeDeleteEnabled(int j) {
 		return false;
 	}
-	
+
 	protected boolean isPropertyOfTable(int property, int j) {
 		return true;
 	}
@@ -336,7 +338,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	// Execute the SQL:
 
 	public String fromTableFragment(String name) {
-		return getTableName() + ' '  + name;
+		return getTableName() + ' ' + name;
 	}
 
 	@Override
@@ -356,11 +358,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
-		select.addColumn( name, getDiscriminatorColumnName(),  getDiscriminatorAlias() );
+		select.addColumn( name, getDiscriminatorColumnName(), getDiscriminatorAlias() );
 	}
-	
+
 	protected int[] getPropertyTableNumbersInSelect() {
-		return new int[ getPropertySpan() ];
+		return new int[getPropertySpan()];
 	}
 
 	protected int getSubclassPropertyTableNumber(int i) {
@@ -381,32 +383,32 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected int[] getSubclassColumnTableNumberClosure() {
-		return new int[ getSubclassColumnClosure().length ];
+		return new int[getSubclassColumnClosure().length];
 	}
 
 	protected int[] getSubclassFormulaTableNumberClosure() {
-		return new int[ getSubclassFormulaClosure().length ];
+		return new int[getSubclassFormulaClosure().length];
 	}
 
 	protected boolean[] getTableHasColumns() {
-		return new boolean[] { true };
+		return new boolean[] {true};
 	}
 
 	protected int[] getPropertyTableNumbers() {
-		return new int[ getPropertySpan() ];
+		return new int[getPropertySpan()];
 	}
 
 	protected String generateSubquery(PersistentClass model, Mapping mapping) {
 
 		Dialect dialect = getFactory().getDialect();
 		Settings settings = getFactory().getSettings();
-		
+
 		if ( !model.hasSubclasses() ) {
 			return model.getTable().getQualifiedName(
 					dialect,
 					settings.getDefaultCatalogName(),
 					settings.getDefaultSchemaName()
-				);
+			);
 		}
 
 		HashSet columns = new LinkedHashSet();
@@ -422,11 +424,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		StringBuilder buf = new StringBuilder()
-			.append("( ");
+				.append( "( " );
 
 		Iterator siter = new JoinedIterator(
-			new SingletonIterator(model),
-			model.getSubclassIterator()
+				new SingletonIterator( model ),
+				model.getSubclassIterator()
 		);
 
 		while ( siter.hasNext() ) {
@@ -434,51 +436,53 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			Table table = clazz.getTable();
 			if ( !table.isAbstractUnionTable() ) {
 				//TODO: move to .sql package!!
-				buf.append("select ");
+				buf.append( "select " );
 				Iterator citer = columns.iterator();
 				while ( citer.hasNext() ) {
 					Column col = (Column) citer.next();
-					if ( !table.containsColumn(col) ) {
-						int sqlType = col.getSqlTypeCode(mapping);
-						buf.append( dialect.getSelectClauseNullString(sqlType) )
-							.append(" as ");
+					if ( !table.containsColumn( col ) ) {
+						int sqlType = col.getSqlTypeCode( mapping );
+						buf.append( dialect.getSelectClauseNullString( sqlType ) )
+								.append( " as " );
 					}
-					buf.append( col.getQuotedName(dialect) );
-					buf.append(", ");
+					buf.append( col.getQuotedName( dialect ) );
+					buf.append( ", " );
 				}
 				buf.append( clazz.getSubclassId() )
-					.append(" as clazz_");
-				buf.append(" from ")
-					.append( table.getQualifiedName(
-							dialect,
-							settings.getDefaultCatalogName(),
-							settings.getDefaultSchemaName()
-					) );
-				buf.append(" union ");
+						.append( " as clazz_" );
+				buf.append( " from " )
+						.append(
+								table.getQualifiedName(
+										dialect,
+										settings.getDefaultCatalogName(),
+										settings.getDefaultSchemaName()
+								)
+						);
+				buf.append( " union " );
 				if ( dialect.supportsUnionAll() ) {
-					buf.append("all ");
+					buf.append( "all " );
 				}
 			}
 		}
-		
+
 		if ( buf.length() > 2 ) {
 			//chop the last union (all)
 			buf.setLength( buf.length() - ( dialect.supportsUnionAll() ? 11 : 7 ) );
 		}
 
-		return buf.append(" )").toString();
+		return buf.append( " )" ).toString();
 	}
 
 	protected String[] getSubclassTableKeyColumns(int j) {
-		if (j!=0) {
-			throw new AssertionFailure("only one table");
+		if ( j != 0 ) {
+			throw new AssertionFailure( "only one table" );
 		}
 		return getIdentifierColumnNames();
 	}
 
 	public String getSubclassTableName(int j) {
-		if (j!=0) {
-			throw new AssertionFailure("only one table");
+		if ( j != 0 ) {
+			throw new AssertionFailure( "only one table" );
 		}
 		return tableName;
 	}
@@ -488,8 +492,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected boolean isClassOrSuperclassTable(int j) {
-		if (j!=0) {
-			throw new AssertionFailure("only one table");
+		if ( j != 0 ) {
+			throw new AssertionFailure( "only one table" );
 		}
 		return true;
 	}
@@ -509,6 +513,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
-		return new StaticFilterAliasGenerator(rootAlias);
+		return new StaticFilterAliasGenerator( rootAlias );
 	}
 }

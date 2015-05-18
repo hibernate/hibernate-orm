@@ -77,9 +77,9 @@ public abstract class AbstractPathImpl<X>
 	}
 
 	@Override
-    public PathSource<?> getParentPath() {
-        return getPathSource();
-    }
+	public PathSource<?> getParentPath() {
+		return getPathSource();
+	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })

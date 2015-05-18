@@ -25,11 +25,9 @@
 package org.hibernate.transform;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
- * Tranforms each result row from a tuple into a {@link List}, such that what
- * you end up with is a {@link List} of {@link List Lists}.
+ * Tranforms each result row from a tuple into a {@link java.util.List} whose elements are each tuple value
  */
 public class ToListResultTransformer extends BasicTransformerAdapter {
 	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();

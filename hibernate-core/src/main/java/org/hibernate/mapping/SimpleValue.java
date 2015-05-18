@@ -236,7 +236,9 @@ public class SimpleValue implements KeyValue {
 			while ( iter.hasNext() ) {
 				Table table= (Table) iter.next();
 				tables.append( table.getQuotedName(dialect) );
-				if ( iter.hasNext() ) tables.append(", ");
+				if ( iter.hasNext() ) {
+					tables.append(", ");
+				}
 			}
 			params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
 		}
@@ -526,7 +528,7 @@ public class SimpleValue implements KeyValue {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return getClass().getName() + '(' + columns.toString() + ')';
 	}
 

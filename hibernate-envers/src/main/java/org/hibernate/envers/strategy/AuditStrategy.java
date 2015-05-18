@@ -3,10 +3,8 @@ package org.hibernate.envers.strategy;
 import java.io.Serializable;
 
 import org.hibernate.Session;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -43,7 +41,7 @@ public interface AuditStrategy {
 	 *
 	 * @param session Session, which can be used to persist the data.
 	 * @param entityName Name of the entity, in which the audited change happens.
-	 * @param propertyName The name of the property holding the {@link PersistentCollection}.
+	 * @param propertyName The name of the property holding the persistent collection
 	 * @param enversService The EnversService
 	 * @param persistentCollectionChangeData Collection change data to be persisted.
 	 * @param revision Current revision data

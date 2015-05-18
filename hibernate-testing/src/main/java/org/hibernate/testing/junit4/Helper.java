@@ -34,8 +34,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -54,6 +52,7 @@ public final class Helper {
 	 * Standard string content checking.
 	 *
 	 * @param string The string to check
+	 *
 	 * @return Are its content empty or the reference null?
 	 */
 	public static boolean isNotEmpty(String string) {
@@ -64,6 +63,7 @@ public final class Helper {
 	 * Extract a nice test name representation for display
 	 *
 	 * @param frameworkMethod The test method.
+	 *
 	 * @return The display representation
 	 */
 	public static String extractTestName(FrameworkMethod frameworkMethod) {
@@ -74,6 +74,7 @@ public final class Helper {
 	 * Extract a nice method name representation for display
 	 *
 	 * @param method The method.
+	 *
 	 * @return The display representation
 	 */
 	public static String extractMethodName(Method method) {
@@ -92,20 +93,22 @@ public final class Helper {
 	}
 
 	/**
-	 * @param singularAnnotationClass Singular annotation class (e.g. {@link SkipForDialect}).
-	 * @param pluralAnnotationClass Plural annotation class (e.g. {@link SkipForDialects}). Assuming that the only
-	 * 								declared method is an array of singular annotations.
+	 * @param singularAnnotationClass Singular annotation class (e.g. {@link org.hibernate.testing.SkipForDialect}).
+	 * @param pluralAnnotationClass Plural annotation class (e.g. {@link org.hibernate.testing.SkipForDialects}),
+	 * assuming that the only declared method is an array of singular annotations.
 	 * @param frameworkMethod Test method.
 	 * @param testClass Test class.
 	 * @param <S> Singular annotation type.
 	 * @param <P> Plural annotation type.
+	 *
 	 * @return Collection of all singular annotations or an empty list.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <S extends Annotation, P extends Annotation> List<S> collectAnnotations(Class<S> singularAnnotationClass,
-																						  Class<P> pluralAnnotationClass,
-																						  FrameworkMethod frameworkMethod,
-																						  TestClass testClass) {
+	public static <S extends Annotation, P extends Annotation> List<S> collectAnnotations(
+			Class<S> singularAnnotationClass,
+			Class<P> pluralAnnotationClass,
+			FrameworkMethod frameworkMethod,
+			TestClass testClass) {
 		final List<S> collection = new LinkedList<S>();
 		final S singularAnn = Helper.locateAnnotation( singularAnnotationClass, frameworkMethod, testClass );
 		if ( singularAnn != null ) {
@@ -114,9 +117,9 @@ public final class Helper {
 		final P pluralAnn = Helper.locateAnnotation( pluralAnnotationClass, frameworkMethod, testClass );
 		if ( pluralAnn != null ) {
 			try {
-				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke(pluralAnn) ) );
+				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( pluralAnn ) ) );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				throw new RuntimeException( e );
 			}
 		}

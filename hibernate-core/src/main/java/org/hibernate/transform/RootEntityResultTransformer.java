@@ -50,7 +50,7 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 	 * Return just the root entity from the row tuple.
 	 */
 	@Override
-    public Object transformTuple(Object[] tuple, String[] aliases) {
+	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return tuple[ tuple.length-1 ];
 	}
 

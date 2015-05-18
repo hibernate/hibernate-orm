@@ -36,10 +36,10 @@ import org.hibernate.internal.util.StringHelper;
  * @author Brett Meyer
  */
 public class UniqueKey extends Constraint {
-	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
+	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>();
 
 	@Override
-    public String sqlConstraintString(
+	public String sqlConstraintString(
 			Dialect dialect,
 			String constraintName,
 			String defaultCatalog,
@@ -50,8 +50,11 @@ public class UniqueKey extends Constraint {
 	}
 
 	@Override
-    public String sqlCreateString(Dialect dialect, Mapping p,
-    		String defaultCatalog, String defaultSchema) {
+	public String sqlCreateString(
+			Dialect dialect,
+			Mapping p,
+			String defaultCatalog,
+			String defaultSchema) {
 		return null;
 //		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
 //				this, defaultCatalog, defaultSchema
@@ -59,8 +62,10 @@ public class UniqueKey extends Constraint {
 	}
 
 	@Override
-    public String sqlDropString(Dialect dialect, String defaultCatalog,
-    		String defaultSchema) {
+	public String sqlDropString(
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema) {
 		return null;
 //		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
 //				this, defaultCatalog, defaultSchema
@@ -77,7 +82,7 @@ public class UniqueKey extends Constraint {
 	public Map<Column, String> getColumnOrderMap() {
 		return columnOrderMap;
 	}
-	
+
 	public String generatedConstraintNamePrefix() {
 		return "UK_";
 	}

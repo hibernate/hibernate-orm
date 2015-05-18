@@ -176,11 +176,14 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			buf.append( ( (Column) iter.next() ).getQuotedName( dialect ) );
-			if ( iter.hasNext() ) buf.append( ", " );
+			if ( iter.hasNext() ) {
+				buf.append( ", " );
+			}
 		}
 		return buf.append( ')' ).toString();
 	}
 
+	@Override
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		return "drop index " +
 				StringHelper.qualify(
@@ -219,13 +222,11 @@ public class Index implements RelationalModel, Exportable, Serializable {
 	}
 
 	public void addColumns(Iterator extraColumns) {
-		while ( extraColumns.hasNext() ) addColumn( (Column) extraColumns.next() );
+		while ( extraColumns.hasNext() ) {
+			addColumn( (Column) extraColumns.next() );
+		}
 	}
 
-	/**
-	 * @param column
-	 * @return true if this constraint already contains a column with same name.
-	 */
 	public boolean containsColumn(Column column) {
 		return columns.contains( column );
 	}
@@ -238,6 +239,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		this.name = name;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + "(" + getName() + ")";
 	}

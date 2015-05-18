@@ -276,7 +276,8 @@ public final class MessageHelper {
 			if ( collectionKey.getClass().isAssignableFrom( 
 					ownerIdentifierType.getReturnedClass() ) ) {
 				ownerKey = collectionKey;
-			} else {
+			}
+			else {
 				ownerKey = session.getPersistenceContext()
 						.getEntry( collection.getOwner() ).getId();
 			}
@@ -372,7 +373,8 @@ public final class MessageHelper {
 		if ( id.getClass().isAssignableFrom( 
 				ownerIdentifierType.getReturnedClass() ) ) {
 			s.append( ownerIdentifierType.toLoggableString( id, factory ) );
-		} else {
+		}
+		else {
 			// TODO: This is a crappy backup if a property-ref is used.
 			// If the reference is an object w/o toString(), this isn't going to work.
 			s.append( id.toString() );

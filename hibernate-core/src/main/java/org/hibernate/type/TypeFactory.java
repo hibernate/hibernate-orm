@@ -38,22 +38,21 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
- *
- *
+ * <p/>
+ * <p/>
  * Used internally to obtain instances of <tt>Type</tt>. Applications should use static methods
  * and constants on <tt>org.hibernate.Hibernate</tt>.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "unchecked" })
+@SuppressWarnings({"unchecked"})
 public final class TypeFactory implements Serializable {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeFactory.class.getName());
+	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
 
 	private final TypeScopeImpl typeScope = new TypeScopeImpl();
 
@@ -135,10 +134,10 @@ public final class TypeFactory implements Serializable {
 				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
 			}
 			else {
-				( (ParameterizedType) type ).setParameterValues(parameters);
+				( (ParameterizedType) type ).setParameterValues( parameters );
 			}
 		}
-		else if ( parameters!=null && !parameters.isEmpty() ) {
+		else if ( parameters != null && !parameters.isEmpty() ) {
 			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
 		}
 	}
@@ -151,14 +150,17 @@ public final class TypeFactory implements Serializable {
 	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
 	 */
 	@Deprecated
-    @SuppressWarnings({ "JavaDoc" })
-	public static CompositeCustomType customComponent(Class<CompositeUserType> typeClass, Properties parameters, TypeScope scope) {
+	@SuppressWarnings({"JavaDoc"})
+	public static CompositeCustomType customComponent(
+			Class<CompositeUserType> typeClass,
+			Properties parameters,
+			TypeScope scope) {
 		try {
 			CompositeUserType userType = typeClass.newInstance();
 			injectParameters( userType, parameters );
 			return new CompositeCustomType( userType );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new MappingException( "Unable to instantiate custom type: " + typeClass.getName(), e );
 		}
 	}
@@ -179,7 +181,7 @@ public final class TypeFactory implements Serializable {
 		try {
 			typeClass = ReflectHelper.classForName( typeName );
 		}
-		catch ( ClassNotFoundException cnfe ) {
+		catch (ClassNotFoundException cnfe) {
 			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
 		}
 		CustomCollectionType result = new CustomCollectionType( typeScope, typeClass, role, propertyRef, embedded );
@@ -198,7 +200,7 @@ public final class TypeFactory implements Serializable {
 		try {
 			typeClass = ReflectHelper.classForName( typeName );
 		}
-		catch ( ClassNotFoundException cnfe ) {
+		catch (ClassNotFoundException cnfe) {
 			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
 		}
 		CustomCollectionType result = new CustomCollectionType( typeScope, typeClass, role, propertyRef );
@@ -216,13 +218,13 @@ public final class TypeFactory implements Serializable {
 	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
 	 */
 	@Deprecated
-    public static CustomType custom(Class<UserType> typeClass, Properties parameters, TypeScope scope) {
+	public static CustomType custom(Class<UserType> typeClass, Properties parameters, TypeScope scope) {
 		try {
 			UserType userType = typeClass.newInstance();
 			injectParameters( userType, parameters );
 			return new CustomType( userType );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new MappingException( "Unable to instantiate custom type: " + typeClass.getName(), e );
 		}
 	}
@@ -242,40 +244,6 @@ public final class TypeFactory implements Serializable {
 
 	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * @deprecated Use {@link #oneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
-	 */
-	@Deprecated
-	public EntityType oneToOne(
-			String persistentClass,
-			ForeignKeyDirection foreignKeyType,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			String entityName,
-			String propertyName) {
-		return oneToOne( persistentClass, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName,
-				propertyName );
-	}
-
-	/**
-	 * @deprecated Use {@link #oneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
-	 */
-	@Deprecated
-	public EntityType oneToOne(
-			String persistentClass,
-			ForeignKeyDirection foreignKeyType,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		return oneToOne( persistentClass, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName,
-				propertyName );
-	}
-
 	public EntityType oneToOne(
 			String persistentClass,
 			ForeignKeyDirection foreignKeyType,
@@ -285,24 +253,10 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		return new OneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
-	}
-	
-	/**
-	 * @deprecated Use {@link #specialOneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
-	 */
-	@Deprecated
-	public EntityType specialOneToOne(
-			String persistentClass,
-			ForeignKeyDirection foreignKeyType,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		return specialOneToOne( persistentClass, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy,
-				entityName, propertyName );
+		return new OneToOneType(
+				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+		);
 	}
 
 	public EntityType specialOneToOne(
@@ -314,8 +268,10 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		return new SpecialOneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
+		return new SpecialOneToOneType(
+				typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+		);
 	}
 
 
@@ -342,8 +298,15 @@ public final class TypeFactory implements Serializable {
 			boolean isEmbeddedInXML,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		return manyToOne( persistentClass, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound,
-				isLogicalOneToOne );
+		return manyToOne(
+				persistentClass,
+				uniqueKeyPropertyName == null,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				isLogicalOneToOne
+		);
 	}
 
 	/**
@@ -357,8 +320,15 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		return manyToOne( persistentClass, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound,
-				isLogicalOneToOne );
+		return manyToOne(
+				persistentClass,
+				uniqueKeyPropertyName == null,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				isLogicalOneToOne
+		);
 	}
 
 	public EntityType manyToOne(

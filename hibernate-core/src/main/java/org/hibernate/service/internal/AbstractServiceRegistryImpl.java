@@ -285,7 +285,7 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 		catch (NullPointerException e) {
-            log.error( "NPE injecting service deps : " + service.getClass().getName() );
+			log.error( "NPE injecting service deps : " + service.getClass().getName() );
 		}
 	}
 
@@ -344,7 +344,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-    @SuppressWarnings( {"unchecked"})
+	@SuppressWarnings( {"unchecked"})
 	public void destroy() {
 		if ( !active ) {
 			return;

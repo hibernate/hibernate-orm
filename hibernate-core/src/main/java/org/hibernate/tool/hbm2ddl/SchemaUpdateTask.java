@@ -51,7 +51,7 @@ import org.apache.tools.ant.types.FileSet;
 
 /**
  * An Ant task for <tt>SchemaUpdate</tt>.
- *
+ * <p/>
  * <pre>
  * &lt;taskdef name="schemaupdate"
  *     classname="org.hibernate.tool.hbm2ddl.SchemaUpdateTask"
@@ -66,8 +66,8 @@ import org.apache.tools.ant.types.FileSet;
  * &lt;/schemaupdate&gt;
  * </pre>
  *
- * @see SchemaUpdate
  * @author Rong C Ou, Gavin King
+ * @see SchemaUpdate
  */
 public class SchemaUpdateTask extends MatchingTask {
 	private List<FileSet> fileSets = new LinkedList<FileSet>();
@@ -81,7 +81,7 @@ public class SchemaUpdateTask extends MatchingTask {
 
 	private String implicitNamingStrategy = null;
 	private String physicalNamingStrategy = null;
-	
+
 	@SuppressWarnings("UnusedDeclaration")
 	public void addFileset(FileSet fileSet) {
 		fileSets.add( fileSet );
@@ -95,10 +95,10 @@ public class SchemaUpdateTask extends MatchingTask {
 	@SuppressWarnings("UnusedDeclaration")
 	public void setProperties(File propertiesFile) {
 		if ( !propertiesFile.exists() ) {
-			throw new BuildException("Properties file: " + propertiesFile + " does not exist.");
+			throw new BuildException( "Properties file: " + propertiesFile + " does not exist." );
 		}
 
-		log("Using properties file " + propertiesFile, Project.MSG_DEBUG);
+		log( "Using properties file " + propertiesFile, Project.MSG_DEBUG );
 		this.propertiesFile = propertiesFile;
 	}
 
@@ -113,14 +113,14 @@ public class SchemaUpdateTask extends MatchingTask {
 	}
 
 	/**
-     * Enable "text-only" mode. The schema will not be updated in the database.
+	 * Enable "text-only" mode. The schema will not be updated in the database.
 	 *
 	 * @param text true to enable text-only mode
-     */
+	 */
 	@SuppressWarnings("UnusedDeclaration")
-    public void setText(boolean text) {
-        this.text = text;
-    }
+	public void setText(boolean text) {
+		this.text = text;
+	}
 
 	/**
 	 * Enable "quiet" mode. The schema will not be written to standard out.
@@ -181,9 +181,9 @@ public class SchemaUpdateTask extends MatchingTask {
 	 * Execute the task
 	 */
 	@Override
-    public void execute() throws BuildException {
-		log("Running Hibernate Core SchemaUpdate.");
-		log("This is an Ant task supporting only mapping files, if you want to use annotations see http://tools.hibernate.org.");
+	public void execute() throws BuildException {
+		log( "Running Hibernate Core SchemaUpdate." );
+		log( "This is an Ant task supporting only mapping files, if you want to use annotations see http://tools.hibernate.org." );
 
 		try {
 			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder();
@@ -204,19 +204,19 @@ public class SchemaUpdateTask extends MatchingTask {
 			su.execute( !quiet, !text );
 		}
 		catch (HibernateException e) {
-			throw new BuildException("Schema text failed: " + e.getMessage(), e);
+			throw new BuildException( "Schema text failed: " + e.getMessage(), e );
 		}
 		catch (FileNotFoundException e) {
-			throw new BuildException("File not found: " + e.getMessage(), e);
+			throw new BuildException( "File not found: " + e.getMessage(), e );
 		}
 		catch (IOException e) {
-			throw new BuildException("IOException : " + e.getMessage(), e);
+			throw new BuildException( "IOException : " + e.getMessage(), e );
 		}
 		catch (BuildException e) {
 			throw e;
 		}
 		catch (Exception e) {
-			throw new BuildException(e);
+			throw new BuildException( e );
 		}
 	}
 
@@ -238,7 +238,7 @@ public class SchemaUpdateTask extends MatchingTask {
 
 	private void configure(MetadataSources metadataSources) {
 		for ( String filename : collectFiles() ) {
-			if ( filename.endsWith(".jar") ) {
+			if ( filename.endsWith( ".jar" ) ) {
 				metadataSources.addJar( new File( filename ) );
 			}
 			else {
@@ -273,7 +273,10 @@ public class SchemaUpdateTask extends MatchingTask {
 				);
 			}
 			catch (Exception e) {
-				throw new BuildException( "Unable to instantiate specified ImplicitNamingStrategy [" + implicitNamingStrategy + "]", e );
+				throw new BuildException(
+						"Unable to instantiate specified ImplicitNamingStrategy [" + implicitNamingStrategy + "]",
+						e
+				);
 			}
 		}
 
@@ -284,7 +287,10 @@ public class SchemaUpdateTask extends MatchingTask {
 				);
 			}
 			catch (Exception e) {
-				throw new BuildException( "Unable to instantiate specified PhysicalNamingStrategy [" + physicalNamingStrategy + "]", e );
+				throw new BuildException(
+						"Unable to instantiate specified PhysicalNamingStrategy [" + physicalNamingStrategy + "]",
+						e
+				);
 			}
 		}
 	}

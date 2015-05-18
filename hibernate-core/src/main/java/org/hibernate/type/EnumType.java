@@ -37,6 +37,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -69,7 +70,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public class EnumType implements EnhancedUserType, DynamicParameterizedType,LoggableUserType, Serializable {
-    private static final Logger LOG = Logger.getLogger( EnumType.class.getName() );
+	private static final Logger LOG = CoreLogging.logger( EnumType.class );
 
 	public static final String ENUM = "enumClass";
 	public static final String NAMED = "useNamed";
@@ -458,9 +459,9 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 
 		private Enum fromName(String name) {
 			try {
-			    if(name == null) {
-			        return null;
-			    }
+				if (name == null) {
+					return null;
+				}
 				return Enum.valueOf( enumClass, name.trim() );
 			}
 			catch ( IllegalArgumentException iae ) {

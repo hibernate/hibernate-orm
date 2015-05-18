@@ -41,19 +41,31 @@ public class RelationDescription {
 	private final boolean insertable;
 	private boolean bidirectional;
 
-	public static RelationDescription toOne(String fromPropertyName, RelationType relationType, String toEntityName,
-											String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
-											PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable,
-											boolean ignoreNotFound) {
+	public static RelationDescription toOne(
+			String fromPropertyName,
+			RelationType relationType,
+			String toEntityName,
+			String mappedByPropertyName,
+			IdMapper idMapper,
+			PropertyMapper fakeBidirectionalRelationMapper,
+			PropertyMapper fakeBidirectionalRelationIndexMapper,
+			boolean insertable,
+			boolean ignoreNotFound) {
 		return new RelationDescription(
-				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
-				fakeBidirectionalRelationIndexMapper, insertable, ignoreNotFound
+				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper,
+				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, insertable, ignoreNotFound
 		);
 	}
 
-	public static RelationDescription toMany(String fromPropertyName, RelationType relationType, String toEntityName,
-											 String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
-											 PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable) {
+	public static RelationDescription toMany(
+			String fromPropertyName,
+			RelationType relationType,
+			String toEntityName,
+			String mappedByPropertyName,
+			IdMapper idMapper,
+			PropertyMapper fakeBidirectionalRelationMapper,
+			PropertyMapper fakeBidirectionalRelationIndexMapper,
+			boolean insertable) {
 		// Envers populates collections by executing dedicated queries. Special handling of
 		// @NotFound(action = NotFoundAction.IGNORE) can be omitted in such case as exceptions
 		// (e.g. EntityNotFoundException, ObjectNotFoundException) are never thrown.
@@ -64,9 +76,16 @@ public class RelationDescription {
 		);
 	}
 
-	private RelationDescription(String fromPropertyName, RelationType relationType, String toEntityName,
-								String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
-								PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable, boolean ignoreNotFound) {
+	private RelationDescription(
+			String fromPropertyName,
+			RelationType relationType,
+			String toEntityName,
+			String mappedByPropertyName,
+			IdMapper idMapper,
+			PropertyMapper fakeBidirectionalRelationMapper,
+			PropertyMapper fakeBidirectionalRelationIndexMapper,
+			boolean insertable,
+			boolean ignoreNotFound) {
 		this.fromPropertyName = fromPropertyName;
 		this.relationType = relationType;
 		this.toEntityName = toEntityName;

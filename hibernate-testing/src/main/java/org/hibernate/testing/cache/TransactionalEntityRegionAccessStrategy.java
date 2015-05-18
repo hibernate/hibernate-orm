@@ -27,8 +27,9 @@ class TransactionalEntityRegionAccessStrategy extends BaseEntityRegionAccessStra
 	}
 
 	@Override
-	public boolean update(Object key, Object value, Object currentVersion,
-						  Object previousVersion) throws CacheException {
+	public boolean update(
+			Object key, Object value, Object currentVersion,
+			Object previousVersion) throws CacheException {
 		return insert( key, value, currentVersion );
 	}
 }

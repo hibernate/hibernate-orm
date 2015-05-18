@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * Since Service lookup is a very hot operation and essentially it's a read only
- * data structure, to achieve threadsafety we can use immutability.
+ * data structure, to achieve thread-safety we can use immutability.
  * For our use case we just need reference equality, and the expectation is that a limited
  * number of elements will be contained in this custom collection (<32).
  * So the following structure is functionally equivalent to an Identity based ConcurrentMap,
@@ -123,6 +123,12 @@ public class ConcurrentServiceBinding<K,V> {
 		}
 
 		@Override
+		public int hashCode() {
+			return hash;
+		}
+
+		@Override
+		@SuppressWarnings({"unchecked", "EqualsWhichDoesntCheckParameterClass"})
 		public boolean equals(Object obj) {
 			//A ClassCastException is really not expected here,
 			//as it's an internal private class,

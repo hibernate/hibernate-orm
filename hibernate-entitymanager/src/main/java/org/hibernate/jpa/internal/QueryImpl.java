@@ -64,11 +64,10 @@ import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
 import static javax.persistence.TemporalType.DATE;
 import static javax.persistence.TemporalType.TIME;
 import static javax.persistence.TemporalType.TIMESTAMP;
+import static org.hibernate.jpa.internal.HEMLogging.messageLogger;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -77,9 +76,9 @@ import static javax.persistence.TemporalType.TIMESTAMP;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>, HibernateQuery, org.hibernate.ejb.HibernateQuery {
-
-    public static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class, QueryImpl.class.getName());
+public class QueryImpl<X> extends AbstractQueryImpl<X>
+		implements TypedQuery<X>, HibernateQuery, org.hibernate.ejb.HibernateQuery {
+	public static final EntityManagerMessageLogger LOG = messageLogger( QueryImpl.class );
 
 	private org.hibernate.Query query;
 
@@ -90,7 +89,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	public QueryImpl(
 			org.hibernate.Query query,
 			AbstractEntityManagerImpl em,
-			Map<String,Class> namedParameterTypeRedefinitions) {
+			Map<String, Class> namedParameterTypeRedefinitions) {
 		super( em );
 		this.query = query;
 		extractParameterInfo( namedParameterTypeRedefinitions );
@@ -110,15 +109,16 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		return org.hibernate.internal.QueryImpl.class.cast( query ).isSelect();
 	}
 
-	@SuppressWarnings({ "unchecked", "RedundantCast" })
-	private void extractParameterInfo(Map<String,Class> namedParameterTypeRedefinition) {
-		if ( ! org.hibernate.internal.AbstractQueryImpl.class.isInstance( query ) ) {
+	@SuppressWarnings({"unchecked", "RedundantCast"})
+	private void extractParameterInfo(Map<String, Class> namedParameterTypeRedefinition) {
+		if ( !org.hibernate.internal.AbstractQueryImpl.class.isInstance( query ) ) {
 			throw new IllegalStateException( "Unknown query type for parameter extraction" );
 		}
 
 		boolean hadJpaPositionalParameters = false;
 
-		final ParameterMetadata parameterMetadata = org.hibernate.internal.AbstractQueryImpl.class.cast( query ).getParameterMetadata();
+		final ParameterMetadata parameterMetadata = org.hibernate.internal.AbstractQueryImpl.class.cast( query )
+				.getParameterMetadata();
 
 		// extract named params
 		for ( String name : (Set<String>) parameterMetadata.getNamedParameterNames() ) {
@@ -154,8 +154,10 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		// extract Hibernate native positional parameters
 		for ( int i = 0, max = parameterMetadata.getOrdinalParameterCount(); i < max; i++ ) {
 			final OrdinalParameterDescriptor descriptor = parameterMetadata.getOrdinalParameterDescriptor( i + 1 );
-			Class javaType = descriptor.getExpectedType() == null ? null : descriptor.getExpectedType().getReturnedClass();
-			registerParameter( new ParameterRegistrationImpl( this, query, i+1, javaType ) );
+			Class javaType = descriptor.getExpectedType() == null ?
+					null :
+					descriptor.getExpectedType().getReturnedClass();
+			registerParameter( new ParameterRegistrationImpl( this, query, i + 1, javaType ) );
 		}
 	}
 
@@ -369,64 +371,64 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	@Override
-    protected int internalExecuteUpdate() {
+	protected int internalExecuteUpdate() {
 		return query.executeUpdate();
 	}
 
 	@Override
-    protected void applyMaxResults(int maxResults) {
+	protected void applyMaxResults(int maxResults) {
 		query.setMaxResults( maxResults );
 	}
 
 	@Override
-    protected void applyFirstResult(int firstResult) {
+	protected void applyFirstResult(int firstResult) {
 		query.setFirstResult( firstResult );
 	}
 
 	@Override
-    protected boolean applyTimeoutHint(int timeout) {
+	protected boolean applyTimeoutHint(int timeout) {
 		query.setTimeout( timeout );
 		return true;
 	}
 
 	@Override
-    protected boolean applyCommentHint(String comment) {
+	protected boolean applyCommentHint(String comment) {
 		query.setComment( comment );
 		return true;
 	}
 
 	@Override
-    protected boolean applyFetchSizeHint(int fetchSize) {
+	protected boolean applyFetchSizeHint(int fetchSize) {
 		query.setFetchSize( fetchSize );
 		return true;
 	}
 
 	@Override
-    protected boolean applyCacheableHint(boolean isCacheable) {
+	protected boolean applyCacheableHint(boolean isCacheable) {
 		query.setCacheable( isCacheable );
 		return true;
 	}
 
 	@Override
-    protected boolean applyCacheRegionHint(String regionName) {
+	protected boolean applyCacheRegionHint(String regionName) {
 		query.setCacheRegion( regionName );
 		return true;
 	}
 
 	@Override
-    protected boolean applyReadOnlyHint(boolean isReadOnly) {
+	protected boolean applyReadOnlyHint(boolean isReadOnly) {
 		query.setReadOnly( isReadOnly );
 		return true;
 	}
 
 	@Override
-    protected boolean applyCacheModeHint(CacheMode cacheMode) {
+	protected boolean applyCacheModeHint(CacheMode cacheMode) {
 		query.setCacheMode( cacheMode );
 		return true;
 	}
 
 	@Override
-    protected boolean applyFlushModeHint(FlushMode flushMode) {
+	protected boolean applyFlushModeHint(FlushMode flushMode) {
 		query.setFlushMode( flushMode );
 		return true;
 	}
@@ -442,7 +444,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "RedundantCast" })
+	@SuppressWarnings({"unchecked", "RedundantCast"})
 	public List<X> getResultList() {
 		getEntityManager().checkOpen( true );
 		checkTransaction();
@@ -451,10 +453,10 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			return list();
 		}
 		catch (QueryExecutionRequestException he) {
-			throw new IllegalStateException(he);
+			throw new IllegalStateException( he );
 		}
-		catch( TypeMismatchException e ) {
-			throw new IllegalArgumentException(e);
+		catch (TypeMismatchException e) {
+			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
 			throw getEntityManager().convert( he );
@@ -466,14 +468,14 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	 */
 	private void beforeQuery() {
 		final org.hibernate.Query query = getHibernateQuery();
-		if ( ! SQLQuery.class.isInstance( query ) ) {
+		if ( !SQLQuery.class.isInstance( query ) ) {
 			// this need only exists for native SQL queries, not JPQL or Criteria queries (both of which do
 			// partial auto flushing already).
 			return;
 		}
 
 		final SQLQuery sqlQuery = (SQLQuery) query;
-		if ( sqlQuery.getSynchronizedQuerySpaces() != null && ! sqlQuery.getSynchronizedQuerySpaces().isEmpty() ) {
+		if ( sqlQuery.getSynchronizedQuerySpaces() != null && !sqlQuery.getSynchronizedQuerySpaces().isEmpty() ) {
 			// The application defined query spaces on the Hibernate native SQLQuery which means the query will already
 			// perform a partial flush according to the defined query spaces, no need to do a full flush.
 			return;
@@ -488,7 +490,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "RedundantCast" })
+	@SuppressWarnings({"unchecked", "RedundantCast"})
 	public X getSingleResult() {
 		getEntityManager().checkOpen( true );
 		checkTransaction();
@@ -502,9 +504,11 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 				throw nre;
 			}
 			else if ( result.size() > 1 ) {
-				final Set<X> uniqueResult = new HashSet<X>(result);
+				final Set<X> uniqueResult = new HashSet<X>( result );
 				if ( uniqueResult.size() > 1 ) {
-					NonUniqueResultException nure = new NonUniqueResultException( "result returns more than one elements" );
+					NonUniqueResultException nure = new NonUniqueResultException(
+							"result returns more than one elements"
+					);
 					getEntityManager().handlePersistenceException( nure );
 					throw nure;
 				}
@@ -517,10 +521,10 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			}
 		}
 		catch (QueryExecutionRequestException he) {
-			throw new IllegalStateException(he);
+			throw new IllegalStateException( he );
 		}
-		catch( TypeMismatchException e ) {
-			throw new IllegalArgumentException(e);
+		catch (TypeMismatchException e) {
+			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
 			throw getEntityManager().convert( he );
@@ -528,7 +532,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	public <T> T unwrap(Class<T> tClass) {
 		if ( org.hibernate.Query.class.isAssignableFrom( tClass ) ) {
 			return (T) query;
@@ -565,7 +569,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	private List<X> list() {
-		if (getEntityGraphQueryHint() != null) {
+		if ( getEntityGraphQueryHint() != null ) {
 			SessionImplementor sessionImpl = (SessionImplementor) getEntityManager().getSession();
 			HQLQueryPlan entityGraphQueryPlan = new HQLQueryPlan(
 					getHibernateQuery().getQueryString(),

@@ -134,17 +134,18 @@ public class JpaDescriptorParser {
 			Schema schema = xmlParserHelper.getSchema( PERSISTENCE_SCHEMA );
 			persistence = xmlParserHelper.getJaxbRoot( stream, Persistence.class, schema );
 		}
-		catch ( XmlParsingException e ) {
+		catch (XmlParsingException e) {
 			context.logMessage(
 					Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
 			);
 		}
 
-        try {
-            stream.close();
-        } catch (IOException e) {
-            // eat it
-        }
+		try {
+			stream.close();
+		}
+		catch (IOException e) {
+			// eat it
+		}
 
 		return persistence;
 	}
@@ -160,7 +161,7 @@ public class JpaDescriptorParser {
 				Schema schema = xmlParserHelper.getSchema( ORM_SCHEMA );
 				mapping = xmlParserHelper.getJaxbRoot( stream, EntityMappings.class, schema );
 			}
-			catch ( XmlParsingException e ) {
+			catch (XmlParsingException e) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING, "Unable to parse " + mappingFile + ": " + e.getMessage()
 				);
@@ -169,11 +170,12 @@ public class JpaDescriptorParser {
 				entityMappings.add( mapping );
 			}
 
-            try {
-                stream.close();
-            } catch (IOException e) {
-                // eat it
-            }
+			try {
+				stream.close();
+			}
+			catch (IOException e) {
+				// eat it
+			}
 		}
 	}
 
@@ -192,7 +194,7 @@ public class JpaDescriptorParser {
 					fileStampCheck.add( mappingFile, file.lastModified() );
 				}
 			}
-			catch ( URISyntaxException e ) {
+			catch (URISyntaxException e) {
 				// in doubt return false
 				return false;
 			}
@@ -220,7 +222,7 @@ public class JpaDescriptorParser {
 					Diagnostic.Kind.OTHER, "Serialized " + fileStampCheck + " into " + file.getAbsolutePath()
 			);
 		}
-		catch ( IOException e ) {
+		catch (IOException e) {
 			// ignore - if the serialization failed we just have to keep parsing the xml
 			context.logMessage( Diagnostic.Kind.OTHER, "Error serializing  " + fileStampCheck );
 		}
@@ -242,7 +244,7 @@ public class JpaDescriptorParser {
 				in.close();
 			}
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// ignore - if the de-serialization failed we just have to keep parsing the xml
 			context.logMessage( Diagnostic.Kind.OTHER, "Error de-serializing  " + file );
 		}
@@ -274,7 +276,9 @@ public class JpaDescriptorParser {
 		}
 	}
 
-	private void parseEmbeddable(Collection<org.hibernate.jpamodelgen.xml.jaxb.Embeddable> embeddables, String defaultPackageName) {
+	private void parseEmbeddable(
+			Collection<org.hibernate.jpamodelgen.xml.jaxb.Embeddable> embeddables,
+			String defaultPackageName) {
 		for ( org.hibernate.jpamodelgen.xml.jaxb.Embeddable embeddable : embeddables ) {
 			String fqcn = StringUtil.determineFullyQualifiedClassName( defaultPackageName, embeddable.getClazz() );
 			// we have to extract the package name from the fqcn. Maybe the entity was setting a fqcn directly
@@ -299,7 +303,9 @@ public class JpaDescriptorParser {
 		}
 	}
 
-	private void parseMappedSuperClass(Collection<org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass> mappedSuperClasses, String defaultPackageName) {
+	private void parseMappedSuperClass(
+			Collection<org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass> mappedSuperClasses,
+			String defaultPackageName) {
 		for ( org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass mappedSuperClass : mappedSuperClasses ) {
 			String fqcn = StringUtil.determineFullyQualifiedClassName(
 					defaultPackageName, mappedSuperClass.getClazz()

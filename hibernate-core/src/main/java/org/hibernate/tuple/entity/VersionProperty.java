@@ -36,8 +36,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class VersionProperty extends AbstractNonIdentifierAttribute {
-
-    private final VersionValue unsavedValue;
+	private final VersionValue unsavedValue;
 
 	/**
 	 * Constructs VersionProperty instances.
@@ -59,12 +58,13 @@ public class VersionProperty extends AbstractNonIdentifierAttribute {
 			int attributeNumber,
 			String attributeName,
 			Type attributeType,
-			BaselineAttributeInformation attributeInformation, VersionValue unsavedValue) {
+			BaselineAttributeInformation attributeInformation,
+			VersionValue unsavedValue) {
 		super( source, sessionFactory, attributeNumber, attributeName, attributeType, attributeInformation );
 		this.unsavedValue = unsavedValue;
 	}
 
-    public VersionValue getUnsavedValue() {
-        return unsavedValue;
-    }
+	public VersionValue getUnsavedValue() {
+		return unsavedValue;
+	}
 }

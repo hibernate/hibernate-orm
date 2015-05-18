@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -32,7 +33,6 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Accesses fields directly.
@@ -130,7 +130,8 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 							clazz, 
 							name
 						);					
-				} else {
+				}
+				else {
 					throw new PropertyAccessException(e, "could not set a field value by reflection", true, clazz, name);
 				}
 			}

@@ -49,8 +49,11 @@ public class VersionTypeSeedParameterSpecification implements ParameterSpecifica
 	}
 
 	@Override
-	public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position)
-	        throws SQLException {
+	public int bind(
+			PreparedStatement statement,
+			QueryParameters qp,
+			SessionImplementor session,
+			int position) throws SQLException {
 		type.nullSafeSet( statement, type.seed( session ), position, session );
 		return 1;
 	}

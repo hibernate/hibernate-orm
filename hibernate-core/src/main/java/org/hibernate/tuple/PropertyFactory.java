@@ -64,6 +64,7 @@ public final class PropertyFactory {
 	 *
 	 * @param mappedEntity The mapping definition of the entity.
 	 * @param generator The identifier value generator to use for this identifier.
+	 *
 	 * @return The appropriate IdentifierProperty definition.
 	 */
 	public static IdentifierProperty buildIdentifierAttribute(
@@ -72,23 +73,23 @@ public final class PropertyFactory {
 		String mappedUnsavedValue = mappedEntity.getIdentifier().getNullValue();
 		Type type = mappedEntity.getIdentifier().getType();
 		Property property = mappedEntity.getIdentifierProperty();
-		
+
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 				mappedUnsavedValue,
 				getGetter( property ),
 				type,
-				getConstructor(mappedEntity)
-			);
+				getConstructor( mappedEntity )
+		);
 
 		if ( property == null ) {
 			// this is a virtual id property...
 			return new IdentifierProperty(
-			        type,
+					type,
 					mappedEntity.hasEmbeddedIdentifier(),
 					mappedEntity.hasIdentifierMapper(),
 					unsavedValue,
 					generator
-				);
+			);
 		}
 		else {
 			return new IdentifierProperty(
@@ -98,7 +99,7 @@ public final class PropertyFactory {
 					mappedEntity.hasEmbeddedIdentifier(),
 					unsavedValue,
 					generator
-				);
+			);
 		}
 	}
 
@@ -108,6 +109,7 @@ public final class PropertyFactory {
 	 *
 	 * @param property The version mapping Property.
 	 * @param lazyAvailable Is property lazy loading currently available.
+	 *
 	 * @return The appropriate VersionProperty definition.
 	 */
 	public static VersionProperty buildVersionProperty(
@@ -117,7 +119,7 @@ public final class PropertyFactory {
 			Property property,
 			boolean lazyAvailable) {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
-		
+
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
@@ -131,8 +133,8 @@ public final class PropertyFactory {
 				persister,
 				sessionFactory,
 				attributeNumber,
-		        property.getName(),
-		        property.getValue().getType(),
+				property.getName(),
+				property.getValue().getType(),
 				new BaselineAttributeInformation.Builder()
 						.setLazy( lazy )
 						.setInsertable( property.isInsertable() )
@@ -143,8 +145,8 @@ public final class PropertyFactory {
 						.setVersionable( property.isOptimisticLocked() )
 						.setCascadeStyle( property.getCascadeStyle() )
 						.createInformation(),
-		        unsavedValue
-			);
+				unsavedValue
+		);
 	}
 
 	public static enum NonIdentifierAttributeNature {
@@ -160,6 +162,7 @@ public final class PropertyFactory {
 	 *
 	 * @param property The mapped property.
 	 * @param lazyAvailable Is property lazy loading currently available.
+	 *
 	 * @return The appropriate NonIdentifierProperty definition.
 	 */
 	public static NonIdentifierAttribute buildEntityBasedAttribute(
@@ -174,13 +177,13 @@ public final class PropertyFactory {
 
 		// we need to dirty check collections, since they can cause an owner
 		// version number increment
-		
+
 		// we need to dirty check many-to-ones with not-found="ignore" in order 
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
-		
-		boolean alwaysDirtyCheck = type.isAssociationType() && 
-				( (AssociationType) type ).isAlwaysDirtyChecked(); 
+
+		boolean alwaysDirtyCheck = type.isAssociationType() &&
+				( (AssociationType) type ).isAlwaysDirtyChecked();
 
 		switch ( nature ) {
 			case BASIC: {
@@ -314,7 +317,7 @@ public final class PropertyFactory {
 		try {
 			return ReflectHelper.getDefaultConstructor( persistentClass.getMappedClass() );
 		}
-		catch( Throwable t ) {
+		catch (Throwable t) {
 			return null;
 		}
 	}

@@ -32,10 +32,8 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -51,11 +49,10 @@ import org.hibernate.service.ServiceRegistry;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
+import org.dom4j.Document;
 import org.dom4j.DocumentException;
-import org.dom4j.io.DOMWriter;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-import org.dom4j.Document;
 
 /**
  * @author Steve Ebersole

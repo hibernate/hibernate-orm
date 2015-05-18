@@ -23,6 +23,19 @@
  */
 package org.hibernate.jpa.event.internal.jpa;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.ExcludeDefaultListeners;
+import javax.persistence.ExcludeSuperclassListeners;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PersistenceException;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -30,20 +43,8 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
-import org.jboss.logging.Logger;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.ExcludeDefaultListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
@@ -86,13 +87,11 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 		do {
 			Callback callback = null;
 			List<XMethod> methods = currentClazz.getDeclaredMethods();
-			final int size = methods.size();
-			for ( int i = 0; i < size ; i++ ) {
-				final XMethod xMethod = methods.get( i );
+			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( annotation ) ) {
 					Method method = reflectionManager.toMethod( xMethod );
 					final String methodName = method.getName();
-					if ( ! callbacksMethodNames.contains( methodName ) ) {
+					if ( !callbacksMethodNames.contains( methodName ) ) {
 						//overridden method, remove the superclass overridden method
 						if ( callback == null ) {
 							callback = new EntityCallback( method );
@@ -104,11 +103,13 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 												.getName() + " - " + xMethod
 								);
 							}
-							method.setAccessible(true);
-							log.debugf("Adding %s as %s callback for entity %s",
-									   methodName,
-									   annotation.getSimpleName(),
-									   beanClass.getName());
+							method.setAccessible( true );
+							log.debugf(
+									"Adding %s as %s callback for entity %s",
+									methodName,
+									annotation.getSimpleName(),
+									beanClass.getName()
+							);
 							callbacks.add( 0, callback ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
@@ -131,19 +132,19 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				currentClazz = currentClazz.getSuperclass();
 			}
 			while ( currentClazz != null
-					&& ! ( currentClazz.isAnnotationPresent( Entity.class )
+					&& !( currentClazz.isAnnotationPresent( Entity.class )
 					|| currentClazz.isAnnotationPresent( MappedSuperclass.class ) )
 					);
 		}
 		while ( currentClazz != null );
 
 		//handle default listeners
-		if ( ! stopDefaultListeners ) {
+		if ( !stopDefaultListeners ) {
 			List<Class> defaultListeners = (List<Class>) reflectionManager.getDefaults().get( EntityListeners.class );
 
 			if ( defaultListeners != null ) {
 				int defaultListenerSize = defaultListeners.size();
-				for ( int i = defaultListenerSize - 1; i >= 0 ; i-- ) {
+				for ( int i = defaultListenerSize - 1; i >= 0; i-- ) {
 					orderedListeners.add( defaultListeners.get( i ) );
 				}
 			}
@@ -155,13 +156,11 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<String>();
 				List<XMethod> methods = xListener.getDeclaredMethods();
-				final int size = methods.size();
-				for ( int i = 0; i < size ; i++ ) {
-					final XMethod xMethod = methods.get( i );
+				for ( final XMethod xMethod : methods ) {
 					if ( xMethod.isAnnotationPresent( annotation ) ) {
 						final Method method = reflectionManager.toMethod( xMethod );
 						final String methodName = method.getName();
-						if ( ! callbacksMethodNames.contains( methodName ) ) {
+						if ( !callbacksMethodNames.contains( methodName ) ) {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
 								callback = new ListenerCallback( jpaListenerFactory.buildListener( listener ), method );
@@ -174,13 +173,15 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 													.getName() + " - " + method
 									);
 								}
-								if (!method.isAccessible()) {
-									method.setAccessible(true);
+								if ( !method.isAccessible() ) {
+									method.setAccessible( true );
 								}
-								log.debugf("Adding %s as %s callback for entity %s",
-										   methodName,
-										   annotation.getSimpleName(),
-										   beanClass.getName());
+								log.debugf(
+										"Adding %s as %s callback for entity %s",
+										methodName,
+										annotation.getSimpleName(),
+										beanClass.getName()
+								);
 								callbacks.add( 0, callback ); // listeners first
 							}
 							else {
@@ -195,7 +196,7 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				}
 			}
 		}
-		return callbacks.toArray( new Callback[ callbacks.size() ] );
+		return callbacks.toArray( new Callback[callbacks.size()] );
 	}
 
 	private static boolean useAnnotationAnnotatedByListener;
@@ -218,7 +219,7 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 		if ( entityListeners != null ) {
 			Class[] classes = entityListeners.value();
 			int size = classes.length;
-			for ( int index = size - 1; index >= 0 ; index-- ) {
+			for ( int index = size - 1; index >= 0; index-- ) {
 				orderedListeners.add( classes[index] );
 			}
 		}
@@ -229,7 +230,7 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				if ( entityListeners != null ) {
 					Class[] classes = entityListeners.value();
 					int size = classes.length;
-					for ( int index = size - 1; index >= 0 ; index-- ) {
+					for ( int index = size - 1; index >= 0; index-- ) {
 						orderedListeners.add( classes[index] );
 					}
 				}

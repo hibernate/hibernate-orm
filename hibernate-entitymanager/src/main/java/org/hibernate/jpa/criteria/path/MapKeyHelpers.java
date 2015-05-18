@@ -26,9 +26,6 @@ package org.hibernate.jpa.criteria.path;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.util.Map;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.ManagedType;
@@ -36,25 +33,25 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.jpa.criteria.compile.RenderingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.criteria.PathSource;
 import org.hibernate.jpa.criteria.MapJoinImplementor;
 import org.hibernate.jpa.criteria.PathImplementor;
+import org.hibernate.jpa.criteria.PathSource;
+import org.hibernate.jpa.criteria.compile.RenderingContext;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * {@link MapJoin#key} poses a number of implementation difficulties in terms of the type signatures
- * amongst the {@link Path}, {@link Join} and {@link Attribute} reference at play.  The implementations found here
- * provide that bridge.
+ * {@link javax.persistence.criteria.MapJoin#key} poses a number of implementation difficulties in terms of the
+ * type signatures amongst the {@link javax.persistence.criteria.Path}, {@link javax.persistence.criteria.Join} and
+ * {@link Attribute}.  The implementations found here provide that bridge.
  *
  * @author Steve Ebersole
  */
 public class MapKeyHelpers {
 
 	/**
-	 * Models a path to a map key.  This is the actual return used from {@link MapJoin#key}
+	 * Models a path to a map key.  This is the actual return used from {@link javax.persistence.criteria.MapJoin#key}
 	 *
 	 * @param <K> The type of the map key.
 	 */
@@ -128,7 +125,7 @@ public class MapKeyHelpers {
 	}
 
 	/**
-	 * Defines a {@link Path} for the map which can then be used to represent the source of the
+	 * Defines a path for the map which can then be used to represent the source of the
 	 * map key "attribute".
 	 *
 	 * @param <K> The map key type

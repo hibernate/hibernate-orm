@@ -39,15 +39,15 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class SelectFragment {
 	private String suffix;
-	private List columns = new ArrayList();
+	private List<String> columns = new ArrayList<String>();
 	//private List aliases = new ArrayList();
-	private List columnAliases = new ArrayList();
+	private List<String> columnAliases = new ArrayList<String>();
 	private String extraSelectList;
 	private String[] usedAliases;
 
 	public SelectFragment() {}
 
-	public List getColumns() {
+	public List<String> getColumns() {
 		return columns;
 	}
 
@@ -117,7 +117,9 @@ public class SelectFragment {
 
 	public SelectFragment addFormulas(String tableAlias, String[] formulas, String[] formulaAliases) {
 		for ( int i=0; i<formulas.length; i++ ) {
-			if ( formulas[i]!=null ) addFormula( tableAlias, formulas[i], formulaAliases[i] );
+			if ( formulas[i]!=null ) {
+				addFormula( tableAlias, formulas[i], formulaAliases[i] );
+			}
 		}
 		return this;
 	}
@@ -140,16 +142,16 @@ public class SelectFragment {
 
 	public String toFragmentString() {
 		StringBuilder buf = new StringBuilder( columns.size() * 10 );
-		Iterator iter = columns.iterator();
-		Iterator columnAliasIter = columnAliases.iterator();
+		Iterator<String> iter = columns.iterator();
+		Iterator<String> columnAliasIter = columnAliases.iterator();
 		//HashMap columnsUnique = new HashMap();
-		HashSet columnsUnique = new HashSet();
+		HashSet<String> columnsUnique = new HashSet<String>();
 		if (usedAliases!=null) {
 			columnsUnique.addAll( Arrays.asList(usedAliases) );
 		}
 		while ( iter.hasNext() ) {
-			String column = (String) iter.next();
-			String columnAlias = (String) columnAliasIter.next();
+			String column = iter.next();
+			String columnAlias = columnAliasIter.next();
 			//TODO: eventually put this back in, once we think all is fixed
 			//Object otherAlias = columnsUnique.put(qualifiedColumn, columnAlias);
 			/*if ( otherAlias!=null && !columnAlias.equals(otherAlias) ) {

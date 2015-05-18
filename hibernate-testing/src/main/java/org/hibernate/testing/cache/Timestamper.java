@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Generates increasing identifiers (in a single VM only). Not valid across multiple VMs.  Identifiers are not
  * necessarily strictly increasing, but usually are.
- *
+ * <p/>
  * Core while loop implemented by Alex Snaps - EHCache project - under ASL 2.0
  *
  * @author Hibernate team
@@ -45,7 +45,7 @@ public final class Timestamper {
 			long maxValue = base + ONE_MS - 1;
 
 			for ( long current = VALUE.get(), update = Math.max( base, current + 1 ); update < maxValue;
-				  current = VALUE.get(), update = Math.max( base, current + 1 ) ) {
+					current = VALUE.get(), update = Math.max( base, current + 1 ) ) {
 				if ( VALUE.compareAndSet( current, update ) ) {
 					return update;
 				}

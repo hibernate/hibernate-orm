@@ -27,13 +27,11 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.type.OffsetDateTimeType;
-import org.hibernate.type.ZonedDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**

@@ -67,12 +67,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final boolean keyIsUpdateable;
 
 	@Override
-    protected boolean isRowDeleteEnabled() {
+	protected boolean isRowDeleteEnabled() {
 		return keyIsUpdateable && keyIsNullable;
 	}
 
 	@Override
-    protected boolean isRowInsertEnabled() {
+	protected boolean isRowInsertEnabled() {
 		return keyIsUpdateable;
 	}
 
@@ -95,24 +95,24 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 * Generate the SQL UPDATE that updates all the foreign keys to null
 	 */
 	@Override
-    protected String generateDeleteString() {
+	protected String generateDeleteString() {
 		final Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames, "null" )
 				.addPrimaryKeyColumns( keyColumnNames );
-		
+
 		if ( hasIndex && !indexContainsFormula ) {
 			update.addColumns( indexColumnNames, "null" );
 		}
-		
+
 		if ( hasWhere ) {
 			update.setWhere( sqlWhereString );
 		}
-		
+
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "delete one-to-many " + getRole() );
 		}
-		
+
 		return update.toStatementString();
 	}
 
@@ -120,21 +120,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 * Generate the SQL UPDATE that updates a foreign key to a value
 	 */
 	@Override
-    protected String generateInsertRowString() {
+	protected String generateInsertRowString() {
 		final Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames );
-		
+
 		if ( hasIndex && !indexContainsFormula ) {
 			update.addColumns( indexColumnNames );
 		}
-		
+
 		//identifier collections not supported for 1-to-many
 
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "create one-to-many row " + getRole() );
 		}
-		
+
 		return update.addPrimaryKeyColumns( elementColumnNames, elementColumnWriters )
 				.toStatementString();
 	}
@@ -143,16 +143,16 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 * Generate the SQL UPDATE that inserts a collection index
 	 */
 	@Override
-    protected String generateUpdateRowString() {
+	protected String generateUpdateRowString() {
 		final Update update = new Update( getDialect() ).setTableName( qualifiedTableName );
 		update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
 		if ( hasIdentifier ) {
-			update.addPrimaryKeyColumns( new String[]{ identifierColumnName } );
+			update.addPrimaryKeyColumns( new String[] {identifierColumnName} );
 		}
 		if ( hasIndex && !indexContainsFormula ) {
 			update.addColumns( indexColumnNames );
 		}
-		
+
 		return update.toStatementString();
 	}
 
@@ -161,19 +161,19 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 * key to null
 	 */
 	@Override
-    protected String generateDeleteRowString() {
+	protected String generateDeleteRowString() {
 		final Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames, "null" );
-		
+
 		if ( hasIndex && !indexContainsFormula ) {
 			update.addColumns( indexColumnNames, "null" );
 		}
-		
+
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "delete one-to-many row " + getRole() );
 		}
-		
+
 		//use a combination of foreign key columns and pk columns, since
 		//the ordering of removal and addition is not guaranteed when
 		//a child moves from one parent to another
@@ -181,21 +181,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return update.addPrimaryKeyColumns( rowSelectColumnNames )
 				.toStatementString();
 	}
-	
+
 	@Override
 	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		super.recreate( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
-	
+
 	@Override
 	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		super.insertRows( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
-	
+
 	@Override
 	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
@@ -229,7 +229,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 									recreateBatchKey = new BasicBatchKey(
 											getRole() + "#RECREATE",
 											expectation
-											);
+									);
 								}
 								st = session
 										.getJdbcCoordinator()
@@ -246,9 +246,19 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							try {
 								offset += expectation.prepare( st );
 								if ( hasIdentifier ) {
-									offset = writeIdentifier( st, collection.getIdentifier( entry, nextIndex ), offset, session );
+									offset = writeIdentifier(
+											st,
+											collection.getIdentifier( entry, nextIndex ),
+											offset,
+											session
+									);
 								}
-								offset = writeIndex( st, collection.getIndex( entry, nextIndex, this ), offset, session );
+								offset = writeIndex(
+										st,
+										collection.getIndex( entry, nextIndex, this ),
+										offset,
+										session
+								);
 								offset = writeElement( st, collection.getElement( entry ), offset, session );
 
 								if ( useBatch ) {
@@ -257,10 +267,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 											.addToBatch();
 								}
 								else {
-									expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+									expectation.verifyOutcome(
+											session.getJdbcCoordinator()
+													.getResultSetReturn()
+													.executeUpdate( st ), st, -1
+									);
 								}
 							}
-							catch ( SQLException sqle ) {
+							catch (SQLException sqle) {
 								if ( useBatch ) {
 									session.getJdbcCoordinator().abortBatch();
 								}
@@ -278,7 +292,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					}
 				}
 			}
-			catch ( SQLException sqle ) {
+			catch (SQLException sqle) {
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not update collection: " +
@@ -292,6 +306,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public boolean consumesEntityAlias() {
 		return true;
 	}
+
 	public boolean consumesCollectionAlias() {
 		return true;
 	}
@@ -301,7 +316,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-    public boolean isManyToMany() {
+	public boolean isManyToMany() {
 		return false;
 	}
 
@@ -309,11 +324,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private BasicBatchKey insertRowBatchKey;
 
 	@Override
-    protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session) {
+	protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session) {
 
 		// we finish all the "removes" first to take care of possible unique
 		// constraints and so that we can take better advantage of batching
-		
+
 		try {
 			int count = 0;
 			if ( isRowDeleteEnabled() ) {
@@ -335,7 +350,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					int offset = 1;
 					while ( entries.hasNext() ) {
 						Object entry = entries.next();
-						if ( collection.needsUpdating( entry, i, elementType ) ) {  // will still be issued when it used to be null
+						if ( collection.needsUpdating(
+								entry,
+								i,
+								elementType
+						) ) {  // will still be issued when it used to be null
 							if ( useBatch ) {
 								st = session
 										.getJdbcCoordinator()
@@ -349,7 +368,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 										.prepareStatement( sql, isDeleteCallable() );
 							}
 							int loc = writeKey( st, id, offset, session );
-							writeElementToWhere( st, collection.getSnapshotElement(entry, i), loc, session );
+							writeElementToWhere( st, collection.getSnapshotElement( entry, i ), loc, session );
 							if ( useBatch ) {
 								session
 										.getJdbcCoordinator()
@@ -357,14 +376,18 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 										.addToBatch();
 							}
 							else {
-								deleteExpectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								deleteExpectation.verifyOutcome(
+										session.getJdbcCoordinator()
+												.getResultSetReturn()
+												.executeUpdate( st ), st, -1
+								);
 							}
 							count++;
 						}
 						i++;
 					}
 				}
-				catch ( SQLException e ) {
+				catch (SQLException e) {
 					if ( useBatch ) {
 						session.getJdbcCoordinator().abortBatch();
 					}
@@ -377,7 +400,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					}
 				}
 			}
-			
+
 			if ( isRowInsertEnabled() ) {
 				final Expectation insertExpectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
 				boolean useBatch = insertExpectation.canBeBatched();
@@ -425,14 +448,18 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 								session.getJdbcCoordinator().getBatch( insertRowBatchKey ).addToBatch();
 							}
 							else {
-								insertExpectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								insertExpectation.verifyOutcome(
+										session.getJdbcCoordinator()
+												.getResultSetReturn()
+												.executeUpdate( st ), st, -1
+								);
 							}
 							count++;
 						}
 						i++;
 					}
 				}
-				catch ( SQLException sqle ) {
+				catch (SQLException sqle) {
 					if ( useBatch ) {
 						session.getJdbcCoordinator().abortBatch();
 					}
@@ -448,30 +475,30 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 			return count;
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
-					"could not update collection rows: " + 
-					MessageHelper.collectionInfoString( this, collection, id, session ),
+					"could not update collection rows: " +
+							MessageHelper.collectionInfoString( this, collection, id, session ),
 					getSQLInsertRowString()
 			);
 		}
 	}
 
 	public String selectFragment(
-	        Joinable rhs,
-	        String rhsAlias,
-	        String lhsAlias,
-	        String entitySuffix,
-	        String collectionSuffix,
-	        boolean includeCollectionColumns) {
+			Joinable rhs,
+			String rhsAlias,
+			String lhsAlias,
+			String entitySuffix,
+			String collectionSuffix,
+			boolean includeCollectionColumns) {
 		StringBuilder buf = new StringBuilder();
 		if ( includeCollectionColumns ) {
 //			buf.append( selectFragment( lhsAlias, "" ) )//ignore suffix for collection columns!
 			buf.append( selectFragment( lhsAlias, collectionSuffix ) )
 					.append( ", " );
 		}
-		OuterJoinLoadable ojl = ( OuterJoinLoadable ) getElementPersister();
+		OuterJoinLoadable ojl = (OuterJoinLoadable) getElementPersister();
 		return buf.append( ojl.selectFragment( lhsAlias, entitySuffix ) )//use suffix for the entity columns
 				.toString();
 	}
@@ -482,7 +509,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 * @see org.hibernate.loader.collection.OneToManyLoader
 	 */
 	@Override
-    protected CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
+	protected CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
 			throws MappingException {
 		return BatchingCollectionInitializerBuilder.getBuilder( getFactory() )
 				.createBatchingOneToManyInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
@@ -499,7 +526,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			boolean innerJoin,
 			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
-		return ( (Joinable) getElementPersister() ).fromJoinFragment( alias, innerJoin, includeSubclasses, treatAsDeclarations );
+		return ( (Joinable) getElementPersister() ).fromJoinFragment(
+				alias,
+				innerJoin,
+				includeSubclasses,
+				treatAsDeclarations
+		);
 	}
 
 	@Override
@@ -513,19 +545,24 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			boolean innerJoin,
 			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
-		return ( (Joinable) getElementPersister() ).whereJoinFragment( alias, innerJoin, includeSubclasses, treatAsDeclarations );
+		return ( (Joinable) getElementPersister() ).whereJoinFragment(
+				alias,
+				innerJoin,
+				includeSubclasses,
+				treatAsDeclarations
+		);
 	}
 
 	@Override
-    public String getTableName() {
+	public String getTableName() {
 		return ( (Joinable) getElementPersister() ).getTableName();
 	}
 
 	@Override
-    public String filterFragment(String alias) throws MappingException {
+	public String filterFragment(String alias) throws MappingException {
 		String result = super.filterFragment( alias );
 		if ( getElementPersister() instanceof Joinable ) {
-			result += ( ( Joinable ) getElementPersister() ).oneToManyFilterFragment( alias );
+			result += ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias );
 		}
 		return result;
 
@@ -535,14 +572,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
 		String result = super.filterFragment( alias );
 		if ( getElementPersister() instanceof Joinable ) {
-			result += ( ( Joinable ) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
+			result += ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
 		}
 		return result;
 	}
 
 	@Override
-    protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session) {
-		return new SubselectOneToManyLoader( 
+	protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session) {
+		return new SubselectOneToManyLoader(
 				this,
 				subselect.toSubselectString( getCollectionType().getLHSPropertyName() ),
 				subselect.getResult(),
@@ -550,18 +587,18 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				subselect.getNamedParameterLocMap(),
 				session.getFactory(),
 				session.getLoadQueryInfluencers()
-			);
+		);
 	}
 
 	@Override
-    public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
+	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
 		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
-				.loadElement( session, key, incrementIndexByBase(index) );
+				.loadElement( session, key, incrementIndexByBase( index ) );
 	}
 
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
-		return getElementPersister().getFilterAliasGenerator(rootAlias);
+		return getElementPersister().getFilterAliasGenerator( rootAlias );
 	}
 
 }

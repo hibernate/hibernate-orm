@@ -172,7 +172,8 @@ public abstract class BaseRegion implements Region {
 						if ( tx != null ) {
 							log.tracef("Transaction, clearing one element at the time");
 							Caches.removeAll(localAndSkipLoadCache);
-						} else {
+						}
+						else {
 							log.tracef("Non-transactional, clear in one go");
 							localAndSkipLoadCache.clear();
 						}
@@ -234,10 +235,10 @@ public abstract class BaseRegion implements Region {
 		}
 	}
 
-   /**
-    * Invalidates the region.
-    */
-   public void invalidateRegion() {
+	/**
+	 * Invalidates the region.
+	 */
+	public void invalidateRegion() {
 		if (log.isTraceEnabled()) {
 			log.trace("Invalidate region: " + name);
 		}
@@ -248,7 +249,8 @@ public abstract class BaseRegion implements Region {
 				invalidateTransaction = tx;
 				invalidateState.set( InvalidateState.INVALID );
 			}
-		} else {
+		}
+		else {
 			invalidateState.set( InvalidateState.INVALID );
 		}
 	}
@@ -276,7 +278,8 @@ public abstract class BaseRegion implements Region {
 		try {
 			// Transaction manager could be null
 			return tm != null ? tm.getTransaction() : null;
-		} catch (SystemException e) {
+		}
+		catch (SystemException e) {
 			throw new CacheException("Unable to get current transaction", e);
 		}
 	}

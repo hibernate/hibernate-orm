@@ -68,7 +68,6 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
@@ -169,7 +168,7 @@ import org.hibernate.stat.internal.SessionStatisticsImpl;
  * Concrete implementation of a Session.
  * <p/>
  * Exposes two interfaces:<ul>
- * <li>{@link Session} to the application</li>
+ * <li>{@link org.hibernate.Session} to the application</li>
  * <li>{@link org.hibernate.engine.spi.SessionImplementor} to other Hibernate components (SPI)</li>
  * </ul>
  * <p/>

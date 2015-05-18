@@ -23,10 +23,7 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.io.Serializable;
-
-import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A pluggable strategy for defining any actions to be performed during
@@ -36,5 +33,5 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Steve Ebersole
  */
 public interface AfterCompletionAction extends Serializable {
-	public void doAction(boolean successful);
+	void doAction(boolean successful);
 }

@@ -27,27 +27,34 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.resource.jdbc.LogicalConnection;
 
 /**
+ * SPI contract for LogicalConnection
+ *
  * @author Steve Ebersole
  */
 public interface LogicalConnectionImplementor extends LogicalConnection {
-	// todo : expose the Connection as below?  or accept(WorkInConnection) where WorkInConnection is given access to Connection?
-	public Connection getPhysicalConnection();
+	/**
+	 * Exposes access to the "real" Connection.
+	 *
+	 * @todo : expose Connection as here?  or accept(WorkInConnection) where WorkInConnection is given access to Connection?
+	 *
+	 * @return The connection
+	 */
+	Connection getPhysicalConnection();
 
 	/**
 	 * Notification indicating a JDBC statement has been executed to trigger
 	 * {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT} releasing if needed
 	 */
-	public void afterStatement();
+	void afterStatement();
 
 	/**
 	 * Notification indicating a transaction has completed to trigger
 	 * {@link org.hibernate.ConnectionReleaseMode#AFTER_TRANSACTION} releasing if needed
 	 */
-	public void afterTransaction();
+	void afterTransaction();
 
 	/**
 	 * Manually disconnect the underlying JDBC Connection.  The assumption here
@@ -56,7 +63,7 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * @return The connection maintained here at time of disconnect.  {@code null} if
 	 * there was no connection cached internally.
 	 */
-	public Connection manualDisconnect();
+	Connection manualDisconnect();
 
 	/**
 	 * Manually reconnect the underlying JDBC Connection.  Should be called at some point after manualDisconnect().
@@ -64,16 +71,16 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * @param suppliedConnection For user supplied connection strategy the user needs to hand us the connection
 	 * with which to reconnect.  It is an error to pass a connection in the other strategies.
 	 */
-	public void manualReconnect(Connection suppliedConnection);
+	void manualReconnect(Connection suppliedConnection);
 
 	/**
 	 * Creates a shareable copy of itself for use in "shared sessions"
 	 *
 	 * @return The shareable copy.
 	 */
-	public LogicalConnectionImplementor makeShareableCopy();
+	LogicalConnectionImplementor makeShareableCopy();
 
-	public PhysicalJdbcTransaction getPhysicalJdbcTransaction();
+	PhysicalJdbcTransaction getPhysicalJdbcTransaction();
 
 	/**
 	 * Serialization hook
@@ -82,5 +89,5 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 *
 	 * @throws java.io.IOException Problem accessing stream
 	 */
-	public void serialize(ObjectOutputStream oos) throws IOException;
+	void serialize(ObjectOutputStream oos) throws IOException;
 }

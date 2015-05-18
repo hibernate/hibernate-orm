@@ -39,7 +39,7 @@ import org.hibernate.type.CompositeType;
  */
 public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
-	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject("INVOKE_IMPLEMENTATION");
+	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject( "INVOKE_IMPLEMENTATION" );
 
 	protected final Class persistentClass;
 	protected final Method getIdentifierMethod;
@@ -51,14 +51,14 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected BasicLazyInitializer(
 			String entityName,
-	        Class persistentClass,
-	        Serializable id,
-	        Method getIdentifierMethod,
-	        Method setIdentifierMethod,
-	        CompositeType componentIdType,
-	        SessionImplementor session,
-	        boolean overridesEquals) {
-		super(entityName, id, session);
+			Class persistentClass,
+			Serializable id,
+			Method getIdentifierMethod,
+			Method setIdentifierMethod,
+			CompositeType componentIdType,
+			SessionImplementor session,
+			boolean overridesEquals) {
+		super( entityName, id, session );
 		this.persistentClass = persistentClass;
 		this.getIdentifierMethod = getIdentifierMethod;
 		this.setIdentifierMethod = setIdentifierMethod;
@@ -72,25 +72,25 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		String methodName = method.getName();
 		int params = args.length;
 
-		if ( params==0 ) {
-			if ( "writeReplace".equals(methodName) ) {
+		if ( params == 0 ) {
+			if ( "writeReplace".equals( methodName ) ) {
 				return getReplacement();
 			}
-			else if ( !overridesEquals && "hashCode".equals(methodName) ) {
-				return System.identityHashCode(proxy);
+			else if ( !overridesEquals && "hashCode".equals( methodName ) ) {
+				return System.identityHashCode( proxy );
 			}
-			else if ( isUninitialized() && method.equals(getIdentifierMethod) ) {
+			else if ( isUninitialized() && method.equals( getIdentifierMethod ) ) {
 				return getIdentifier();
 			}
-			else if ( "getHibernateLazyInitializer".equals(methodName) ) {
+			else if ( "getHibernateLazyInitializer".equals( methodName ) ) {
 				return this;
 			}
 		}
-		else if ( params==1 ) {
-			if ( !overridesEquals && "equals".equals(methodName) ) {
-				return args[0]==proxy;
+		else if ( params == 1 ) {
+			if ( !overridesEquals && "equals".equals( methodName ) ) {
+				return args[0] == proxy;
 			}
-			else if ( method.equals(setIdentifierMethod) ) {
+			else if ( method.equals( setIdentifierMethod ) ) {
 				initialize();
 				setIdentifier( (Serializable) args[0] );
 				return INVOKE_IMPLEMENTATION;
@@ -98,7 +98,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		}
 
 		//if it is a property of an embedded component, invoke on the "identifier"
-		if ( componentIdType!=null && componentIdType.isMethodOf(method) ) {
+		if ( componentIdType != null && componentIdType.isMethodOf( method ) ) {
 			return method.invoke( getIdentifier(), args );
 		}
 
@@ -109,19 +109,19 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	private Object getReplacement() {
 		final SessionImplementor session = getSession();
-		if ( isUninitialized() && session != null && session.isOpen()) {
+		if ( isUninitialized() && session != null && session.isOpen() ) {
 			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
 					session.getFactory().getEntityPersister( getEntityName() )
 			);
-			final Object entity = session.getPersistenceContext().getEntity(key);
-			if (entity!=null) {
+			final Object entity = session.getPersistenceContext().getEntity( key );
+			if ( entity != null ) {
 				setImplementation( entity );
 			}
 		}
 
 		if ( isUninitialized() ) {
-			if (replacement==null) {
+			if ( replacement == null ) {
 				replacement = serializableProxy();
 			}
 			return replacement;

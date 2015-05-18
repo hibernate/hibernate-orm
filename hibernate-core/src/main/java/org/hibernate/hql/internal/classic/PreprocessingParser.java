@@ -90,7 +90,9 @@ public class PreprocessingParser implements Parser {
 		}
 
 		//ignore whitespace
-		if ( ParserHelper.isWhitespace( token ) ) return;
+		if ( ParserHelper.isWhitespace( token ) ) {
+			return;
+		}
 
 		//do replacements
 		String substoken = ( String ) replacements.get( token );

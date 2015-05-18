@@ -111,7 +111,6 @@ import org.hibernate.jpa.criteria.compile.CriteriaCompiler;
 import org.hibernate.jpa.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.HEMLogging;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.internal.StoredProcedureQueryImpl;
 import org.hibernate.jpa.internal.TransactionImpl;
@@ -125,6 +124,8 @@ import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 
+import static org.hibernate.jpa.internal.HEMLogging.messageLogger;
+
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
  * @author Emmanuel Bernard
@@ -135,7 +136,7 @@ import org.hibernate.type.Type;
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 	private static final long serialVersionUID = 78818181L;
 
-    private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( AbstractEntityManagerImpl.class );
+	private static final EntityManagerMessageLogger LOG = messageLogger( AbstractEntityManagerImpl.class );
 
 	private static final List<String> ENTITY_MANAGER_SPECIFIC_PROPERTIES = new ArrayList<String>();
 
@@ -176,21 +177,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 		}
 	}
-
-//	protected PersistenceUnitTransactionType transactionType() {
-//		return transactionType;
-//	}
-//
-//	protected SynchronizationType synchronizationType() {
-//		return synchronizationType;
-//	}
-//
-//	public boolean shouldAutoJoinTransactions() {
-//		// the Session should auto join only if using non-JTA transactions or if the synchronization type
-//		// was specified as SYNCHRONIZED
-//		return transactionType != PersistenceUnitTransactionType.JTA
-//				|| synchronizationType == SynchronizationType.SYNCHRONIZED;
-//	}
 
 	public PersistenceUnitTransactionType getTransactionType() {
 		return transactionType;
@@ -277,9 +263,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_TIMEOUT + ": " + lockTimeout );
 		}
 		if ( timeoutSet ) {
-            if ( timeout == LockOptions.SKIP_LOCKED ) {
-                options.setTimeOut( LockOptions.SKIP_LOCKED );
-            }
+			if ( timeout == LockOptions.SKIP_LOCKED ) {
+				options.setTimeOut( LockOptions.SKIP_LOCKED );
+			}
 			else if ( timeout < 0 ) {
 				options.setTimeOut( LockOptions.WAIT_FOREVER );
 			}
@@ -1308,7 +1294,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( ENTITY_MANAGER_SPECIFIC_PROPERTIES.contains( s ) ) {
 			properties.put( s, o );
 			applyProperties();
-        }
+		}
 		else {
 			LOG.debugf("Trying to set a property which is not supported on entity manager level");
 		}
@@ -1519,7 +1505,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public void markForRollbackOnly() {
-        LOG.debugf("Mark transaction for rollback");
+		LOG.debugf("Mark transaction for rollback");
 		if ( tx.isActive() ) {
 			tx.setRollbackOnly();
 		}
@@ -1612,7 +1598,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		catch ( Exception ne ) {
 			//we do not want the subsequent exception to swallow the original one
-            LOG.unableToMarkForRollbackOnPersistenceException(ne);
+			LOG.unableToMarkForRollbackOnPersistenceException(ne);
 		}
 	}
 
@@ -1690,7 +1676,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			final EntityExistsException converted = new EntityExistsException( cause.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
-        }
+		}
 		else if ( cause instanceof org.hibernate.NonUniqueResultException ) {
 			final NonUniqueResultException converted = new NonUniqueResultException( cause.getMessage() );
 			handlePersistenceException( converted );

@@ -29,7 +29,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -37,9 +36,8 @@ import org.jboss.logging.Logger;
  * @author Strong Liu
  */
 class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, EntityRegionImpl.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( EntityRegionImpl.class );
+
 
 	private final SessionFactoryOptions settings;
 

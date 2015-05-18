@@ -255,15 +255,25 @@ subprojects { subProject ->
 		// for now we need to set this to low so that FindBugs will actually report the DM_CONVERT_CASE warning we care about
 		reportLevel = 'low'
 	}
-	// exclude generated java sources - by explicitly setting the base source dir
-	findbugsMain.source = 'src/main/java'
 
+	// exclude generated java sources and cfg package is a mess mainly from annotation stuff
+	findbugsMain.doFirst {
+		classes = classes.filter {
+			!it.path.contains( "org/hibernate/hql/internal/antlr" ) &&
+					!it.path.contains( "org/hibernate/boot/jaxb/cfg/spi" ) &&
+					!it.path.contains( "org/hibernate/sql/ordering/antlr/Generated" ) &&
+					!it.path.contains( "org/hibernate/sql/ordering/antlr/OrderByTemplateTokenTypes" ) &&
+					!it.path.contains( "org/hibernate/boot/jaxb/hbm/spi/Jaxb" ) &&
+					!it.path.contains( "org/hibernate/boot/jaxb/hbm/spi/Adapter" ) &&
+					!it.path.contains( "org/hibernate/boot/jaxb/hbm/spi/ObjectFactory" ) &&
+					!it.path.contains( "org/hibernate/cfg" ) &&
+					!it.path.contains( "_\$logger" )
+		}
+	}
 
-	// because cfg package is a mess mainly from annotation stuff
+		// because cfg package is a mess mainly from annotation stuff
 	checkstyleMain.exclude '**/org/hibernate/cfg/**'
 	checkstyleMain.exclude '**/org/hibernate/cfg/*'
-	findbugsMain.exclude '**/org/hibernate/cfg/**'
-	findbugsMain.exclude '**/org/hibernate/cfg/*'
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

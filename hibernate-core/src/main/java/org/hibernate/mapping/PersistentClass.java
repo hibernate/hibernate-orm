@@ -211,7 +211,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 * Iterate over subclasses in a special 'order', most derived subclasses
 	 * first.
 	 */
-	public Iterator<Subclass> getSubclassIterator() {
+	public Iterator getSubclassIterator() {
 		Iterator[] iters = new Iterator[subclasses.size() + 1];
 		Iterator iter = subclasses.iterator();
 		int i = 0;

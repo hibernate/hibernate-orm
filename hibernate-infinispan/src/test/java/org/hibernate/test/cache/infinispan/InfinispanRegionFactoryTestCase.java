@@ -21,6 +21,8 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 
@@ -31,10 +33,12 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.EvictionConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.cache.CacheException;
@@ -63,6 +67,7 @@ import static org.junit.Assert.fail;
  * @since 3.5
  */
 public class InfinispanRegionFactoryTestCase  {
+   private static final Logger log = Logger.getLogger( InfinispanRegionFactoryTestCase.class );
 
    @Test
    public void testConfigurationProcessing() {
@@ -158,7 +163,7 @@ public class InfinispanRegionFactoryTestCase  {
          Configuration cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.eviction().strategy());
          assertEquals(2000, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(5000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 5000, cacheCfg.eviction() );
          assertEquals(60000, cacheCfg.expiration().lifespan());
          assertEquals(30000, cacheCfg.expiration().maxIdle());
          assertFalse(cacheCfg.jmxStatistics().enabled());
@@ -171,7 +176,7 @@ public class InfinispanRegionFactoryTestCase  {
          cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
          assertEquals(3000, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(20000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 20000, cacheCfg.eviction() );
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
          region = (EntityRegionImpl) factory.buildEntityRegion(car, p, null);
@@ -182,7 +187,7 @@ public class InfinispanRegionFactoryTestCase  {
          cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
          assertEquals(3000, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(20000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 20000, cacheCfg.eviction() );
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
@@ -194,7 +199,7 @@ public class InfinispanRegionFactoryTestCase  {
          cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
          assertEquals(2500, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(5500, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 5500, cacheCfg.eviction() );
          assertEquals(65000, cacheCfg.expiration().lifespan());
          assertEquals(35000, cacheCfg.expiration().maxIdle());
          assertFalse(cacheCfg.jmxStatistics().enabled());
@@ -207,7 +212,7 @@ public class InfinispanRegionFactoryTestCase  {
          cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.eviction().strategy());
          assertEquals(3500, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(25000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 25000, cacheCfg.eviction() );
          assertFalse(cacheCfg.jmxStatistics().enabled());
 
          collectionRegion = (CollectionRegionImpl) factory.buildCollectionRegion(parts, p, null);
@@ -218,7 +223,7 @@ public class InfinispanRegionFactoryTestCase  {
          cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.eviction().strategy());
          assertEquals(3500, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(25000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries(25000, cacheCfg.eviction());
          assertFalse(cacheCfg.jmxStatistics().enabled());
       } finally {
          factory.stop();
@@ -244,7 +249,7 @@ public class InfinispanRegionFactoryTestCase  {
          Configuration cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
          assertEquals(3000, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(30000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries(30000, cacheCfg.eviction());
          // Max idle value comes from base XML configuration
          assertEquals(100000, cacheCfg.expiration().maxIdle());
 
@@ -255,7 +260,7 @@ public class InfinispanRegionFactoryTestCase  {
          cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.eviction().strategy());
          assertEquals(3500, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(35000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 35000, cacheCfg.eviction() );
          assertEquals(100000, cacheCfg.expiration().maxIdle());
       } finally {
          factory.stop();
@@ -285,7 +290,7 @@ public class InfinispanRegionFactoryTestCase  {
          Configuration cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.eviction().strategy());
          assertEquals(3000, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(10000, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 10000, cacheCfg.eviction() );
          assertEquals(60000, cacheCfg.expiration().lifespan());
          assertEquals(30000, cacheCfg.expiration().maxIdle());
       } finally {
@@ -442,7 +447,7 @@ public class InfinispanRegionFactoryTestCase  {
          Configuration cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
          assertEquals(2222, cacheCfg.expiration().wakeUpInterval());
-         assertEquals(11111, cacheCfg.eviction().maxEntries());
+         assertEqualsEvictionConfigurationMaxEntries( 11111, cacheCfg.eviction() );
       } finally {
          factory.stop();
       }
@@ -588,5 +593,37 @@ public class InfinispanRegionFactoryTestCase  {
          properties.put( InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP, cfgFileName );
       }
       return properties;
+   }
+
+   private static void assertEqualsEvictionConfigurationMaxEntries(int maxEntriesExpected, EvictionConfiguration evictionConfiguration) {
+      // In Infinispan 6.0.0.Final, EvictionConfiguration.maxEntries() returns int.
+      // In Infinispan 7.2.1.Final, EvictionConfiguration.maxEntries() returns long.
+      // This method is intended to deal with this difference in return types to ensure that
+      // EvictionConfiguration.maxEntries() returns the correct value.
+      try {
+         final Method method = EvictionConfiguration.class.getMethod( "maxEntries" );
+         log.info( EvictionConfiguration.class.getName() + "." + method.getName() + " returns " + method.getReturnType() );
+         if ( int.class.isAssignableFrom( method.getReturnType() ) ) {
+            assertEquals( maxEntriesExpected, method.invoke( evictionConfiguration ) );
+         }
+         else if ( long.class.isAssignableFrom( method.getReturnType() ) ) {
+            assertEquals( (long) maxEntriesExpected, method.invoke( evictionConfiguration ) );
+         }
+         else {
+            fail(
+                    "Unexpected return type from " +
+                            EvictionConfiguration.class.getName() + "." + method.getName() + ": " +
+                            method.getReturnType() );
+         }
+      }
+      catch (NoSuchMethodException ex) {
+         fail( ex.getMessage() );
+      }
+      catch (IllegalAccessException ex) {
+         fail( ex.getMessage() );
+      }
+      catch ( InvocationTargetException ex) {
+         fail( ex.getMessage() );
+      }
    }
 }

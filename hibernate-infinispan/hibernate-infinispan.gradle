@@ -15,7 +15,7 @@ if ( useInfinispan7ForTesting() ) {
 private boolean useInfinispan7ForTesting() {
     if ( project.hasProperty( 'useInfinispan7ForTesting' ) ) {
         println 'useInfinispan7ForTesting = ' + useInfinispan7ForTesting
-	return useInfinispan7ForTesting.equals( 'true' );
+        return useInfinispan7ForTesting.equals( 'true' );
     }
     else {
         return false;
@@ -57,6 +57,10 @@ test {
    // Use Infinispan's test JGroups stack that uses TEST_PING
    systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = '2lc-test-tcp.xml'
    // systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
+   if ( useInfinispan7ForTesting() ) {
+      systemProperties['hibernate.cache.infinispan.cfg'] = 'src/test/resources/infinispan-7-configs.xml';
+   }
+
    enabled = true
 }
 

@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +77,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.hql.internal.HolderInstantiator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
@@ -114,9 +114,9 @@ import org.jboss.logging.Logger;
  * @see org.hibernate.persister.entity.Loadable
  */
 public abstract class Loader {
-
-	protected static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Loader.class.getName());
+	protected static final CoreMessageLogger LOG = CoreLogging.messageLogger( Loader.class );
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
+
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
 
@@ -124,7 +124,7 @@ public abstract class Loader {
 
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
-		this.referenceCachingEnabled = factory.getSettings().isDirectReferenceCacheEntriesEnabled();
+		this.referenceCachingEnabled = factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled();
 	}
 
 	/**
@@ -257,7 +257,7 @@ public abstract class Loader {
 			sql = dialect.getQueryHintString( sql, parameters.getQueryHints() );
 		}
 		
-		return getFactory().getSettings().isCommentsEnabled()
+		return getFactory().getSessionFactoryOptions().isCommentsEnabled()
 				? prependComment( sql, parameters )
 				: sql;
 	}
@@ -305,12 +305,7 @@ public abstract class Loader {
 			return sql;
 		}
 		else {
-			return new StringBuilder( comment.length() + sql.length() + 5 )
-					.append( "/* " )
-					.append( comment )
-					.append( " */ " )
-					.append( sql )
-					.toString();
+			return "/* " + comment + " */ " + sql;
 		}
 	}
 
@@ -1085,14 +1080,14 @@ public abstract class Loader {
 
 		final CollectionPersister[] collectionPersisters = getCollectionPersisters();
 		if ( collectionPersisters != null ) {
-			for ( int i=0; i<collectionPersisters.length; i++ ) {
-				if ( collectionPersisters[i].isArray() ) {
+			for ( CollectionPersister collectionPersister : collectionPersisters ) {
+				if ( collectionPersister.isArray() ) {
 					//for arrays, we should end the collection load before resolving
 					//the entities, since the actual array instances are not instantiated
 					//during loading
 					//TODO: or we could do this polymorphically, and have two
 					//      different operations implemented differently for arrays
-					endCollectionLoad( resultSetId, session, collectionPersisters[i] );
+					endCollectionLoad( resultSetId, session, collectionPersister );
 				}
 			}
 		}
@@ -1366,19 +1361,19 @@ public abstract class Loader {
 			// that the collection is empty and has no rows in the result set
 			CollectionPersister[] collectionPersisters = getCollectionPersisters();
 			for ( CollectionPersister collectionPersister : collectionPersisters )
-				for ( int i = 0; i < keys.length; i++ ) {
+				for ( Serializable key : keys ) {
 					//handle empty collections
 					if ( debugEnabled ) {
 						LOG.debugf(
 								"Result set contains (possibly empty) collection: %s",
-								MessageHelper.collectionInfoString( collectionPersister, keys[i], getFactory() )
+								MessageHelper.collectionInfoString( collectionPersister, key, getFactory() )
 						);
 					}
 
 					session.getPersistenceContext()
 							.getLoadContexts()
 							.getCollectionLoadContext( (ResultSet) resultSetId )
-							.getLoadingCollection( collectionPersister, keys[i] );
+							.getLoadingCollection( collectionPersister, key );
 				}
 		}
 
@@ -1813,7 +1808,7 @@ public abstract class Loader {
 	}
 
 	private ScrollMode getScrollMode(boolean scroll, boolean hasFirstRow, boolean useLimitOffSet, QueryParameters queryParameters) {
-		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
+		final boolean canScroll = getFactory().getSessionFactoryOptions().isScrollableResultSetsEnabled();
 		if ( canScroll ) {
 			if ( scroll ) {
 				return queryParameters.getScrollMode();

@@ -43,7 +43,7 @@ public class FilterHelper {
 	private final String[] filterNames;
 	private final String[] filterConditions;
 	private final boolean[] filterAutoAliasFlags;
-	private final Map<String,String>[] filterAliasTableMaps;
+	private final Map<String, String>[] filterAliasTableMaps;
 
 	/**
 	 * The map of defined filters.  This is expected to be in format
@@ -65,7 +65,7 @@ public class FilterHelper {
 			filterNames[filterCount] = filter.getName();
 			filterConditions[filterCount] = filter.getCondition();
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
-			if ( (filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass( filterAliasTableMaps[filterCount] )) && filter
+			if ( ( filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) ) && filter
 					.useAutoAliasInjection() ) {
 				filterConditions[filterCount] = Template.renderWhereStringTemplate(
 						filter.getCondition(),
@@ -83,9 +83,9 @@ public class FilterHelper {
 			filterCount++;
 		}
 	}
-	
-	private static boolean isTableFromPersistentClass(Map<String,String> aliasTableMap){
-		return aliasTableMap.size() == 1 && aliasTableMap.containsKey(null);
+
+	private static boolean isTableFromPersistentClass(Map<String, String> aliasTableMap) {
+		return aliasTableMap.size() == 1 && aliasTableMap.containsKey( null );
 	}
 
 	public boolean isAffectedBy(Map enabledFilters) {
@@ -116,17 +116,26 @@ public class FilterHelper {
 			}
 		}
 	}
-	
-	private String render(FilterAliasGenerator aliasGenerator, int filterIndex){
-		Map<String,String> aliasTableMap = filterAliasTableMaps[filterIndex];
+
+	private String render(FilterAliasGenerator aliasGenerator, int filterIndex) {
+		Map<String, String> aliasTableMap = filterAliasTableMaps[filterIndex];
 		String condition = filterConditions[filterIndex];
-		if (filterAutoAliasFlags[filterIndex]){
-			return StringHelper.replace(condition, FilterImpl.MARKER, aliasGenerator.getAlias(aliasTableMap.get(null)));
-		} else if (isTableFromPersistentClass(aliasTableMap)){
-			return condition.replace("{alias}", aliasGenerator.getAlias(aliasTableMap.get(null)));
-		} else {
-			for (Map.Entry<String, String> entry : aliasTableMap.entrySet()){
-				condition = condition.replace("{"+entry.getKey()+"}", aliasGenerator.getAlias(entry.getValue()));
+		if ( filterAutoAliasFlags[filterIndex] ) {
+			return StringHelper.replace(
+					condition,
+					FilterImpl.MARKER,
+					aliasGenerator.getAlias( aliasTableMap.get( null ) )
+			);
+		}
+		else if ( isTableFromPersistentClass( aliasTableMap ) ) {
+			return condition.replace( "{alias}", aliasGenerator.getAlias( aliasTableMap.get( null ) ) );
+		}
+		else {
+			for ( Map.Entry<String, String> entry : aliasTableMap.entrySet() ) {
+				condition = condition.replace(
+						"{" + entry.getKey() + "}",
+						aliasGenerator.getAlias( entry.getValue() )
+				);
 			}
 			return condition;
 		}

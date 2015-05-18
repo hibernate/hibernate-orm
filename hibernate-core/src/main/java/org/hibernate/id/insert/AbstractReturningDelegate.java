@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.id.insert;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -33,9 +34,9 @@ import org.hibernate.pretty.MessageHelper;
 
 /**
  * Abstract InsertGeneratedIdentifierDelegate implementation where the
- * underlying strategy causes the enerated identitifer to be returned as an
+ * underlying strategy causes the generated identifier to be returned as an
  * effect of performing the insert statement.  Thus, there is no need for an
- * additional sql statement to determine the generated identitifer.
+ * additional sql statement to determine the generated identifier.
  *
  * @author Steve Ebersole
  */
@@ -46,6 +47,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 		this.persister = persister;
 	}
 
+	@Override
 	public final Serializable performInsert(
 			String insertSQL,
 			SessionImplementor session,
@@ -61,12 +63,12 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 				releaseStatement( insert, session );
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        sqle,
-			        "could not insert: " + MessageHelper.infoString( persister ),
-			        insertSQL
-				);
+					sqle,
+					"could not insert: " + MessageHelper.infoString( persister ),
+					insertSQL
+			);
 		}
 	}
 
@@ -76,7 +78,8 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 
 	protected abstract PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException;
 
-	protected abstract Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException;
+	protected abstract Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+			throws SQLException;
 
 	protected void releaseStatement(PreparedStatement insert, SessionImplementor session) throws SQLException {
 		session.getJdbcCoordinator().getResourceRegistry().release( insert );

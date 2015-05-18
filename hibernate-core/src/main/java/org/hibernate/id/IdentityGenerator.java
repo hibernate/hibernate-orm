@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -49,10 +50,11 @@ import org.hibernate.id.insert.InsertSelectIdentityInsert;
  */
 public class IdentityGenerator extends AbstractPostInsertGenerator {
 
+	@Override
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
-	        Dialect dialect,
-	        boolean isGetGeneratedKeysEnabled) throws HibernateException {
+			Dialect dialect,
+			boolean isGetGeneratedKeysEnabled) throws HibernateException {
 		if ( isGetGeneratedKeysEnabled ) {
 			return new GetGeneratedKeysDelegate( persister, dialect );
 		}
@@ -79,12 +81,14 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			this.dialect = dialect;
 		}
 
+		@Override
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
 			IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
 			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 			return insert;
 		}
 
+		@Override
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
 			return session
 					.getJdbcCoordinator()
@@ -92,7 +96,9 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 					.prepareStatement( insertSQL, PreparedStatement.RETURN_GENERATED_KEYS );
 		}
 
-		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
+		@Override
+		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+				throws SQLException {
 			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			ResultSet rs = null;
 			try {
@@ -127,12 +133,14 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			this.dialect = dialect;
 		}
 
+		@Override
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
 			InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( dialect );
 			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 			return insert;
 		}
 
+		@Override
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
 			return session
 					.getJdbcCoordinator()
@@ -140,7 +148,9 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 		}
 
-		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
+		@Override
+		public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+				throws SQLException {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().execute( insert );
 			try {
 				return IdentifierGeneratorHelper.getGeneratedIdentity(
@@ -175,21 +185,28 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			this.dialect = dialect;
 		}
 
+		@Override
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
 			IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
 			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 			return insert;
 		}
 
+		@Override
 		protected String getSelectSQL() {
 			return persister.getIdentitySelectString();
 		}
 
+		@Override
 		protected Serializable getResult(
 				SessionImplementor session,
-		        ResultSet rs,
-		        Object object) throws SQLException {
-			return IdentifierGeneratorHelper.getGeneratedIdentity( rs, persister.getRootTableKeyColumnNames()[0], persister.getIdentifierType() );
+				ResultSet rs,
+				Object object) throws SQLException {
+			return IdentifierGeneratorHelper.getGeneratedIdentity(
+					rs,
+					persister.getRootTableKeyColumnNames()[0],
+					persister.getIdentifierType()
+			);
 		}
 	}
 

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -90,10 +91,10 @@ public final class OuterJoinableAssociation {
 		this.lhsColumns = lhsColumns;
 		this.rhsAlias = rhsAlias;
 		this.joinType = joinType;
-		this.joinable = joinableType.getAssociatedJoinable(factory);
-		this.rhsColumns = JoinHelper.getRHSColumnNames(joinableType, factory);
-		this.on = joinableType.getOnCondition(rhsAlias, factory, enabledFilters)
-			+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
+		this.joinable = joinableType.getAssociatedJoinable( factory );
+		this.rhsColumns = JoinHelper.getRHSColumnNames( joinableType, factory );
+		this.on = joinableType.getOnCondition( rhsAlias, factory, enabledFilters )
+				+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
 		this.hasRestriction = hasRestriction;
 		this.enabledFilters = enabledFilters; // needed later for many-to-many/filter application
 	}
@@ -119,7 +120,7 @@ public final class OuterJoinableAssociation {
 	}
 
 	private boolean isOneToOne() {
-		if ( joinableType.isEntityType() )  {
+		if ( joinableType.isEntityType() ) {
 			EntityType etype = (EntityType) joinableType;
 			return etype.isOneToOne() /*&& etype.isReferenceToPrimaryKey()*/;
 		}
@@ -127,11 +128,11 @@ public final class OuterJoinableAssociation {
 			return false;
 		}
 	}
-	
+
 	public AssociationType getJoinableType() {
 		return joinableType;
 	}
-	
+
 	public String getRHSUniqueKeyName() {
 		return joinableType.getRHSUniqueKeyPropertyName();
 	}
@@ -150,7 +151,7 @@ public final class OuterJoinableAssociation {
 
 	public int getOwner(final List associations) {
 		if ( isOneToOne() || isCollection() ) {
-			return getPosition(lhsAlias, associations);
+			return getPosition( lhsAlias, associations );
 		}
 		else {
 			return -1;
@@ -177,29 +178,29 @@ public final class OuterJoinableAssociation {
 
 	public void addJoins(JoinFragment outerjoin) throws MappingException {
 		outerjoin.addJoin(
-			joinable.getTableName(),
-			rhsAlias,
-			lhsColumns,
-			rhsColumns,
-			joinType,
-			on
+				joinable.getTableName(),
+				rhsAlias,
+				lhsColumns,
+				rhsColumns,
+				joinType,
+				on
 		);
 		outerjoin.addJoins(
-			joinable.fromJoinFragment(rhsAlias, false, true),
-			joinable.whereJoinFragment(rhsAlias, false, true)
+				joinable.fromJoinFragment( rhsAlias, false, true ),
+				joinable.whereJoinFragment( rhsAlias, false, true )
 		);
 	}
 
 	public void validateJoin(String path) throws MappingException {
-		if ( rhsColumns==null || lhsColumns==null
-				|| lhsColumns.length!=rhsColumns.length || lhsColumns.length==0 ) {
-			throw new MappingException("invalid join columns for association: " + path);
+		if ( rhsColumns == null || lhsColumns == null
+				|| lhsColumns.length != rhsColumns.length || lhsColumns.length == 0 ) {
+			throw new MappingException( "invalid join columns for association: " + path );
 		}
 	}
 
 	public boolean isManyToManyWith(OuterJoinableAssociation other) {
 		if ( joinable.isCollection() ) {
-			QueryableCollection persister = ( QueryableCollection ) joinable;
+			QueryableCollection persister = (QueryableCollection) joinable;
 			if ( persister.isManyToMany() ) {
 				return persister.getElementType() == other.getJoinableType();
 			}
@@ -212,19 +213,19 @@ public final class OuterJoinableAssociation {
 		String condition = "".equals( manyToManyFilter )
 				? on
 				: "".equals( on )
-						? manyToManyFilter
-						: on + " and " + manyToManyFilter;
+				? manyToManyFilter
+				: on + " and " + manyToManyFilter;
 		outerjoin.addJoin(
-		        joinable.getTableName(),
-		        rhsAlias,
-		        lhsColumns,
-		        rhsColumns,
-		        joinType,
-		        condition
+				joinable.getTableName(),
+				rhsAlias,
+				lhsColumns,
+				rhsColumns,
+				joinType,
+				condition
 		);
 		outerjoin.addJoins(
-			joinable.fromJoinFragment(rhsAlias, false, true),
-			joinable.whereJoinFragment(rhsAlias, false, true)
+				joinable.fromJoinFragment( rhsAlias, false, true ),
+				joinable.whereJoinFragment( rhsAlias, false, true )
 		);
 	}
 }

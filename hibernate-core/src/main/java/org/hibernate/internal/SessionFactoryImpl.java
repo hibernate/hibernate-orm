@@ -183,11 +183,8 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  */
 public final class SessionFactoryImpl implements SessionFactoryImplementor {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			SessionFactoryImpl.class.getName()
-	);
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
 	private final String name;
@@ -639,8 +636,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
 			if ( accessType != null ) {
 				LOG.tracef( "Building shared cache region for entity data [%s]", model.getEntityName() );
-				EntityRegion entityRegion = regionFactory.buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl
-																					 .decode( model ) );
+				EntityRegion entityRegion = regionFactory.buildEntityRegion(
+						cacheRegionName,
+						properties,
+						CacheDataDescriptionImpl.decode( model )
+				);
 				accessStrategy = entityRegion.buildAccessStrategy( accessType );
 				cacheAccessStrategiesMap.put( cacheRegionName, accessStrategy );
 				cacheAccess.addCacheRegion( cacheRegionName, entityRegion );
@@ -866,7 +866,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Reference getReference() {
 		// from javax.naming.Referenceable
-        LOG.debug( "Returning a Reference to the SessionFactory" );
+		LOG.debug( "Returning a Reference to the SessionFactory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
 				new StringRefAddr("uuid", uuid),

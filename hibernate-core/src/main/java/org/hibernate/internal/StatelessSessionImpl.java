@@ -80,7 +80,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * @author Steve Ebersole
  */
 public class StatelessSessionImpl extends AbstractSessionImpl implements StatelessSession {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
 	private TransactionCoordinator transactionCoordinator;
 
@@ -124,7 +124,10 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		);
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( connection, this );
 
-		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator, this );
+		this.transactionCoordinator = getTransactionCoordinatorBuilder().buildTransactionCoordinator(
+				jdbcCoordinator,
+				this
+		);
 		this.currentHibernateTransaction = getTransaction();
 		this.timestamp = timestamp;
 	}
@@ -149,7 +152,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Serializable insert(Object entity) {
 		errorIfClosed();
-		return insert(null, entity);
+		return insert( null, entity );
 	}
 
 	@Override
@@ -167,10 +170,10 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			}
 		}
 		if ( id == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			id = persister.insert(state, entity, this);
+			id = persister.insert( state, entity, this );
 		}
 		else {
-			persister.insert(id, state, entity, this);
+			persister.insert( id, state, entity, this );
 		}
 		persister.setIdentifier( entity, id, this );
 		return id;
@@ -200,26 +203,26 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public void update(Object entity) {
 		errorIfClosed();
-		update(null, entity);
+		update( null, entity );
 	}
 
 	@Override
 	public void update(String entityName, Object entity) {
 		errorIfClosed();
-		EntityPersister persister = getEntityPersister(entityName, entity);
+		EntityPersister persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifier( entity, this );
 		Object[] state = persister.getPropertyValues( entity );
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
 			Object newVersion = Versioning.increment( oldVersion, persister.getVersionType(), this );
-			Versioning.setVersion(state, newVersion, persister);
+			Versioning.setVersion( state, newVersion, persister );
 			persister.setPropertyValues( entity, state );
 		}
 		else {
 			oldVersion = null;
 		}
-		persister.update(id, state, null, false, null, oldVersion, entity, null, this);
+		persister.update( id, state, null, false, null, oldVersion, entity, null, this );
 	}
 
 
@@ -237,14 +240,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public Object get(String entityName, Serializable id) {
-		return get(entityName, id, LockMode.NONE);
+		return get( entityName, id, LockMode.NONE );
 	}
 
 	@Override
 	public Object get(String entityName, Serializable id, LockMode lockMode) {
 		errorIfClosed();
-		Object result = getFactory().getEntityPersister(entityName)
-				.load(id, null, lockMode, this);
+		Object result = getFactory().getEntityPersister( entityName )
+				.load( id, null, lockMode, this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -302,20 +305,20 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Object immediateLoad(String entityName, Serializable id)
 			throws HibernateException {
-		throw new SessionException("proxies cannot be fetched by a stateless session");
+		throw new SessionException( "proxies cannot be fetched by a stateless session" );
 	}
 
 	@Override
 	public void initializeCollection(
 			PersistentCollection collection,
-	        boolean writing) throws HibernateException {
-		throw new SessionException("collections cannot be fetched by a stateless session");
+			boolean writing) throws HibernateException {
+		throw new SessionException( "collections cannot be fetched by a stateless session" );
 	}
 
 	@Override
 	public Object instantiate(
 			String entityName,
-	        Serializable id) throws HibernateException {
+			Serializable id) throws HibernateException {
 		errorIfClosed();
 		return getFactory().getEntityPersister( entityName ).instantiate( id, this );
 	}
@@ -323,9 +326,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Object internalLoad(
 			String entityName,
-	        Serializable id,
-	        boolean eager,
-	        boolean nullable) throws HibernateException {
+			Serializable id,
+			boolean eager,
+			boolean nullable) throws HibernateException {
 		errorIfClosed();
 		EntityPersister persister = getFactory().getEntityPersister( entityName );
 		// first, try to load it from the temp PC associated to this SS
@@ -351,13 +354,13 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
-	throws HibernateException {
+			throws HibernateException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List listFilter(Object collection, String filter, QueryParameters queryParameters)
-	throws HibernateException {
+			throws HibernateException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -411,10 +414,10 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if (object instanceof HibernateProxy) {
+		if ( object instanceof HibernateProxy ) {
 			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
 		}
-		return guessEntityName(object);
+		return guessEntityName( object );
 	}
 
 	@Override
@@ -436,7 +439,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			success = true;
 		}
 		finally {
-			afterOperation(success);
+			afterOperation( success );
 		}
 		temporaryPersistenceContext.clear();
 		return result;
@@ -466,7 +469,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	public EntityPersister getEntityPersister(String entityName, Object object)
 			throws HibernateException {
 		errorIfClosed();
-		if ( entityName==null ) {
+		if ( entityName == null ) {
 			return factory.getEntityPersister( guessEntityName( object ) );
 		}
 		else {
@@ -576,14 +579,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			success = true;
 		}
 		finally {
-			afterOperation(success);
+			afterOperation( success );
 		}
 		temporaryPersistenceContext.clear();
 		return results;
 	}
 
 	public void afterOperation(boolean success) {
-		if ( ! isTransactionInProgress() ) {
+		if ( !isTransactionInProgress() ) {
 			jdbcCoordinator.afterTransaction();
 		}
 	}
@@ -597,7 +600,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Criteria createCriteria(String entityName, String alias) {
 		errorIfClosed();
-		return new CriteriaImpl(entityName, alias, this);
+		return new CriteriaImpl( entityName, alias, this );
 	}
 
 	@Override
@@ -609,44 +612,44 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public Criteria createCriteria(String entityName) {
 		errorIfClosed();
-		return new CriteriaImpl(entityName, this);
+		return new CriteriaImpl( entityName, this );
 	}
 
 	@Override
 	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-		
+
 		errorIfClosed();
 		String entityName = criteriaImpl.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
 				getOuterJoinLoadable( entityName ),
-		        factory,
-		        criteriaImpl,
-		        entityName,
-		        getLoadQueryInfluencers()
+				factory,
+				criteriaImpl,
+				entityName,
+				getLoadQueryInfluencers()
 		);
-		return loader.scroll(this, scrollMode);
+		return loader.scroll( this, scrollMode );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public List list(Criteria criteria) throws HibernateException {
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
-		
+
 		errorIfClosed();
 		String[] implementors = factory.getImplementors( criteriaImpl.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
-		for( int i=0; i <size; i++ ) {
+		for ( int i = 0; i < size; i++ ) {
 			loaders[i] = new CriteriaLoader(
 					getOuterJoinLoadable( implementors[i] ),
-			        factory,
-			        criteriaImpl,
-			        implementors[i],
-			        getLoadQueryInfluencers()
+					factory,
+					criteriaImpl,
+					implementors[i],
+					getLoadQueryInfluencers()
 			);
 		}
 
@@ -654,42 +657,42 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		List results = Collections.EMPTY_LIST;
 		boolean success = false;
 		try {
-			for( int i=0; i<size; i++ ) {
-				final List currentResults = loaders[i].list(this);
-				currentResults.addAll(results);
+			for ( int i = 0; i < size; i++ ) {
+				final List currentResults = loaders[i].list( this );
+				currentResults.addAll( results );
 				results = currentResults;
 			}
 			success = true;
 		}
 		finally {
-			afterOperation(success);
+			afterOperation( success );
 		}
 		temporaryPersistenceContext.clear();
 		return results;
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = factory.getEntityPersister(entityName);
-		if ( !(persister instanceof OuterJoinLoadable) ) {
+		EntityPersister persister = factory.getEntityPersister( entityName );
+		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}
-		return ( OuterJoinLoadable ) persister;
+		return (OuterJoinLoadable) persister;
 	}
 
 	@Override
 	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-	throws HibernateException {
+			throws HibernateException {
 		errorIfClosed();
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
 		boolean success = false;
 		List results;
 		try {
-			results = loader.list(this, queryParameters);
+			results = loader.list( this, queryParameters );
 			success = true;
 		}
 		finally {
-			afterOperation(success);
+			afterOperation( success );
 		}
 		temporaryPersistenceContext.clear();
 		return results;
@@ -697,7 +700,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-	throws HibernateException {
+			throws HibernateException {
 		errorIfClosed();
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 		return loader.scroll( queryParameters, this );
@@ -725,19 +728,21 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	@Override
-	public int executeNativeUpdate(NativeSQLQuerySpecification nativeSQLQuerySpecification,
+	public int executeNativeUpdate(
+			NativeSQLQuerySpecification nativeSQLQuerySpecification,
 			QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		queryParameters.validateParameters();
-		NativeSQLQueryPlan plan = getNativeSQLQueryPlan(nativeSQLQuerySpecification);
+		NativeSQLQueryPlan plan = getNativeSQLQueryPlan( nativeSQLQuerySpecification );
 
 		boolean success = false;
 		int result = 0;
 		try {
-			result = plan.performExecuteUpdate(queryParameters, this);
+			result = plan.performExecuteUpdate( queryParameters, this );
 			success = true;
-		} finally {
-			afterOperation(success);
+		}
+		finally {
+			afterOperation( success );
 		}
 		temporaryPersistenceContext.clear();
 		return result;
@@ -774,7 +779,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 							&& !isFlushModeNever()
 							&& !JtaStatusHelper.isRollback(
 							getJtaPlatform().getCurrentStatus()
-					));
+					) );
 		}
 		catch (SystemException se) {
 			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );

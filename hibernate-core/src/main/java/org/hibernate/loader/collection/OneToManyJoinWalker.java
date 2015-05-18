@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.collection;
 
@@ -43,23 +42,22 @@ import org.hibernate.sql.Select;
 /**
  * Walker for one-to-many associations
  *
- * @see OneToManyLoader
  * @author Gavin King
+ * @see OneToManyLoader
  */
 public class OneToManyJoinWalker extends CollectionJoinWalker {
 
 	private final QueryableCollection oneToManyPersister;
 
 	@Override
-    protected boolean isDuplicateAssociation(
-		final String foreignKeyTable,
-		final String[] foreignKeyColumns
-	) {
+	protected boolean isDuplicateAssociation(
+			final String foreignKeyTable,
+			final String[] foreignKeyColumns) {
 		//disable a join back to this same association
-		final boolean isSameJoin = oneToManyPersister.getTableName().equals(foreignKeyTable) &&
-			Arrays.equals( foreignKeyColumns, oneToManyPersister.getKeyColumnNames() );
+		final boolean isSameJoin = oneToManyPersister.getTableName().equals( foreignKeyTable ) &&
+				Arrays.equals( foreignKeyColumns, oneToManyPersister.getKeyColumnNames() );
 		return isSameJoin ||
-			super.isDuplicateAssociation(foreignKeyTable, foreignKeyColumns);
+				super.isDuplicateAssociation( foreignKeyTable, foreignKeyColumns );
 	}
 
 	public OneToManyJoinWalker(
@@ -75,21 +73,27 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 		final OuterJoinLoadable elementPersister = (OuterJoinLoadable) oneToManyPersister.getElementPersister();
 		final String alias = generateRootAlias( oneToManyPersister.getRole() );
 
-		walkEntityTree(elementPersister, alias);
+		walkEntityTree( elementPersister, alias );
 
 		List allAssociations = new ArrayList();
-		allAssociations.addAll(associations);
-		allAssociations.add( OuterJoinableAssociation.createRoot( oneToManyPersister.getCollectionType(), alias, getFactory() ) );
-		initPersisters(allAssociations, LockMode.NONE);
-		initStatementString(elementPersister, alias, batchSize, subquery);
+		allAssociations.addAll( associations );
+		allAssociations.add(
+				OuterJoinableAssociation.createRoot(
+						oneToManyPersister.getCollectionType(),
+						alias,
+						getFactory()
+				)
+		);
+		initPersisters( allAssociations, LockMode.NONE );
+		initStatementString( elementPersister, alias, batchSize, subquery );
 	}
 
 	private void initStatementString(
-		final OuterJoinLoadable elementPersister,
-		final String alias,
-		final int batchSize,
-		final String subquery)
-	throws MappingException {
+			final OuterJoinLoadable elementPersister,
+			final String alias,
+			final int batchSize,
+			final String subquery)
+			throws MappingException {
 
 		final int joins = countEntityPersisters( associations );
 		suffixes = BasicLoader.generateSuffixes( joins + 1 );
@@ -102,30 +106,37 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 				oneToManyPersister.getKeyColumnNames(),
 				subquery,
 				batchSize
-			);
+		);
 		String filter = oneToManyPersister.filterFragment( alias, getLoadQueryInfluencers().getEnabledFilters() );
 		whereString.insert( 0, StringHelper.moveAndToBeginning( filter ) );
 
-		JoinFragment ojf = mergeOuterJoins(associations);
+		JoinFragment ojf = mergeOuterJoins( associations );
 		Select select = new Select( getDialect() )
-			.setSelectClause(
-				oneToManyPersister.selectFragment(null, null, alias, suffixes[joins], collectionSuffixes[0], true) +
-				selectString(associations)
-			)
-			.setFromClause(
-				elementPersister.fromTableFragment(alias) +
-				elementPersister.fromJoinFragment(alias, true, true)
-			)
-			.setWhereClause( whereString.toString() )
-			.setOuterJoins(
-				ojf.toFromFragmentString(),
-				ojf.toWhereFragmentString() +
-				elementPersister.whereJoinFragment(alias, true, true)
-			);
+				.setSelectClause(
+						oneToManyPersister.selectFragment(
+								null,
+								null,
+								alias,
+								suffixes[joins],
+								collectionSuffixes[0],
+								true
+						) +
+								selectString( associations )
+				)
+				.setFromClause(
+						elementPersister.fromTableFragment( alias ) +
+								elementPersister.fromJoinFragment( alias, true, true )
+				)
+				.setWhereClause( whereString.toString() )
+				.setOuterJoins(
+						ojf.toFromFragmentString(),
+						ojf.toWhereFragmentString() +
+								elementPersister.whereJoinFragment( alias, true, true )
+				);
 
-		select.setOrderByClause( orderBy( associations, oneToManyPersister.getSQLOrderByString(alias) ) );
+		select.setOrderByClause( orderBy( associations, oneToManyPersister.getSQLOrderByString( alias ) ) );
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "load one-to-many " + oneToManyPersister.getRole() );
 		}
 
@@ -133,7 +144,7 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return getClass().getName() + '(' + oneToManyPersister.getRole() + ')';
 	}
 

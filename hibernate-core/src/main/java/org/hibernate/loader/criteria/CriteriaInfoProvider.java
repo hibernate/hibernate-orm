@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.criteria;
 
@@ -34,8 +33,11 @@ import org.hibernate.type.Type;
  */
 
 interface CriteriaInfoProvider {
-    String getName();
-    Serializable[] getSpaces();
-    PropertyMapping getPropertyMapping();
-    Type getType(String relativePath);
+	String getName();
+
+	Serializable[] getSpaces();
+
+	PropertyMapping getPropertyMapping();
+
+	Type getType(String relativePath);
 }

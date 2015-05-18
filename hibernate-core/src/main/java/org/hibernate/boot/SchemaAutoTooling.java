@@ -23,7 +23,6 @@
  */
 package org.hibernate.boot;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.StringHelper;
 
@@ -36,35 +35,41 @@ public enum SchemaAutoTooling {
 	/**
 	 * Drop the schema and recreate it on SessionFactory startup.
 	 */
-	CREATE,
+	CREATE( "create" ),
 	/**
 	 * Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the
 	 * schema on SessionFactory shutdown.
 	 */
-	CREATE_DROP,
+	CREATE_DROP( "create-drop" ),
 	/**
 	 * Update (alter) the schema on SessionFactory startup.
 	 */
-	UPDATE,
+	UPDATE( "update" ),
 	/**
 	 * Validate the schema on SessionFactory startup.
 	 */
-	VALIDATE;
+	VALIDATE( "validate" );
+
+	private final String externalForm;
+
+	SchemaAutoTooling(String externalForm) {
+		this.externalForm = externalForm;
+	}
 
 	public static SchemaAutoTooling interpret(String configurationValue) {
 		if ( StringHelper.isEmpty( configurationValue ) ) {
 			return null;
 		}
-		else if ( "validate".equals( configurationValue ) ) {
+		else if ( VALIDATE.externalForm.equals( configurationValue ) ) {
 			return VALIDATE;
 		}
-		else if ( "update".equals( configurationValue ) ) {
+		else if ( UPDATE.externalForm.equals( configurationValue ) ) {
 			return UPDATE;
 		}
-		else if ( "create".equals( configurationValue ) ) {
+		else if ( CREATE.externalForm.equals( configurationValue ) ) {
 			return CREATE;
 		}
-		else if ( "create-drop".equals( configurationValue ) ) {
+		else if ( CREATE_DROP.externalForm.equals( configurationValue ) ) {
 			return CREATE_DROP;
 		}
 		else {

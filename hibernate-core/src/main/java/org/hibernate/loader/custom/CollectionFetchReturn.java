@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.custom;
+
 import org.hibernate.LockMode;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
@@ -41,7 +41,7 @@ public class CollectionFetchReturn extends FetchReturn {
 			NonScalarReturn owner,
 			String ownerProperty,
 			CollectionAliases collectionAliases,
-	        EntityAliases elementEntityAliases,
+			EntityAliases elementEntityAliases,
 			LockMode lockMode) {
 		super( owner, ownerProperty, alias, lockMode );
 		this.collectionAliases = collectionAliases;

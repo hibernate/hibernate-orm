@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.custom.sql;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +53,7 @@ public class SQLQueryParser {
 	private final Map namedParameters = new HashMap();
 	private long aliasesFound;
 
-	static interface ParserContext {
+	interface ParserContext {
 		boolean isEntityAlias(String aliasName);
 		SQLLoadable getEntityPersisterByAlias(String alias);
 		String getEntitySuffixByAlias(String alias);
@@ -233,9 +233,7 @@ public class SQLQueryParser {
 		
 		}
 	}
-	private String resolveProperties(
-			String aliasName,
-	        String propertyName) {
+	private String resolveProperties(String aliasName, String propertyName) {
 		Map fieldResults = context.getPropertyResultsMapByAlias( aliasName );
 		SQLLoadable persister = context.getEntityPersisterByAlias( aliasName );
 		String suffix = context.getEntitySuffixByAlias( aliasName );

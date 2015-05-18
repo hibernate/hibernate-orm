@@ -28,7 +28,6 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;

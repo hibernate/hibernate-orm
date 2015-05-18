@@ -62,7 +62,7 @@ import org.hibernate.type.Type;
  * @author josh
  */
 public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, ParameterContainer {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FromElement.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FromElement.class );
 
 	private String className;
 	private String classAlias;
@@ -132,19 +132,24 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void initializeEntity(
-	        FromClause fromClause,
-	        String className,
-	        EntityPersister persister,
-	        EntityType type,
-	        String classAlias,
-	        String tableAlias) {
+			FromClause fromClause,
+			String className,
+			EntityPersister persister,
+			EntityType type,
+			String classAlias,
+			String tableAlias) {
 		doInitialize( fromClause, tableAlias, className, classAlias, persister, type );
 		this.sequence = fromClause.nextFromElementCounter();
 		initialized = true;
 	}
 
-	private void doInitialize(FromClause fromClause, String tableAlias, String className, String classAlias,
-							  EntityPersister persister, EntityType type) {
+	private void doInitialize(
+			FromClause fromClause,
+			String tableAlias,
+			String className,
+			String classAlias,
+			EntityPersister persister,
+			EntityType type) {
 		if ( initialized ) {
 			throw new IllegalStateException( "Already initialized!!" );
 		}
@@ -163,7 +168,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	@Override
-    public Type getDataType() {
+	public Type getDataType() {
 		return elementType.getDataType();
 	}
 
@@ -293,12 +298,12 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	@Override
-    public int hashCode() {
+	public int hashCode() {
 		return super.hashCode();
 	}
 
 	@Override
-    public boolean equals(Object obj) {
+	public boolean equals(Object obj) {
 		return super.equals( obj );
 	}
 

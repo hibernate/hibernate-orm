@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
@@ -36,9 +37,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
+
 /**
  * A dialect for the Teradata database
- *
  */
 public class Teradata14Dialect extends TeradataDialect {
 	/**
@@ -53,7 +54,7 @@ public class Teradata14Dialect extends TeradataDialect {
 		registerColumnType( Types.LONGVARCHAR, "VARCHAR(32000)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE,DEFAULT_BATCH_SIZE );
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIME, "current_time" ) );
 		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.DATE, "current_date" ) );
@@ -82,14 +83,14 @@ public class Teradata14Dialect extends TeradataDialect {
 	 *
 	 * @throws HibernateException
 	 */
-	 public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
+	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
 		/*
 		 * We might want a special case for 19,2. This is very common for money types
 		 * and here it is converted to 18,1
 		 */
-		float f = precision > 0 ? ( float ) scale / ( float ) precision : 0;
+		float f = precision > 0 ? (float) scale / (float) precision : 0;
 		int p = ( precision > 38 ? 38 : precision );
-		int s = ( precision > 38 ? ( int ) ( 38.0 * f ) : ( scale > 38 ? 38 : scale ) );
+		int s = ( precision > 38 ? (int) ( 38.0 * f ) : ( scale > 38 ? 38 : scale ) );
 		return super.getTypeName( code, length, p, s );
 	}
 
@@ -138,7 +139,7 @@ public class Teradata14Dialect extends TeradataDialect {
 
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		statement.registerOutParameter(col, Types.REF);
+		statement.registerOutParameter( col, Types.REF );
 		col++;
 		return col;
 	}
@@ -146,7 +147,7 @@ public class Teradata14Dialect extends TeradataDialect {
 	@Override
 	public ResultSet getResultSet(CallableStatement cs) throws SQLException {
 		boolean isResultSet = cs.execute();
-		while (!isResultSet && cs.getUpdateCount() != -1) {
+		while ( !isResultSet && cs.getUpdateCount() != -1 ) {
 			isResultSet = cs.getMoreResults();
 		}
 		return cs.getResultSet();
@@ -164,18 +165,20 @@ public class Teradata14Dialect extends TeradataDialect {
 			String constraintName = null;
 
 			int errorCode = sqle.getErrorCode();
-			if (errorCode == 27003) {
-				constraintName = extractUsingTemplate("Unique constraint (", ") violated.", sqle.getMessage());
-			} else if (errorCode == 2700) {
-				constraintName = extractUsingTemplate("Referential constraint", "violation:", sqle.getMessage());
-			} else if (errorCode == 5317) {
-				constraintName = extractUsingTemplate("Check constraint (", ") violated.", sqle.getMessage());
+			if ( errorCode == 27003 ) {
+				constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
+			}
+			else if ( errorCode == 2700 ) {
+				constraintName = extractUsingTemplate( "Referential constraint", "violation:", sqle.getMessage() );
+			}
+			else if ( errorCode == 5317 ) {
+				constraintName = extractUsingTemplate( "Check constraint (", ") violated.", sqle.getMessage() );
 			}
 
-			if (constraintName != null) {
-				int i = constraintName.indexOf('.');
-				if (i != -1) {
-					constraintName = constraintName.substring(i + 1);
+			if ( constraintName != null ) {
+				int i = constraintName.indexOf( '.' );
+				if ( i != -1 ) {
+					constraintName = constraintName.substring( i + 1 );
 				}
 			}
 			return constraintName;

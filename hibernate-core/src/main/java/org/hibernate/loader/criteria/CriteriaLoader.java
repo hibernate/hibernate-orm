@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.loader.criteria;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -78,33 +79,33 @@ public class CriteriaLoader extends OuterJoinLoader {
 	private final int resultRowLength;
 
 	public CriteriaLoader(
-			final OuterJoinLoadable persister, 
-			final SessionFactoryImplementor factory, 
-			final CriteriaImpl criteria, 
+			final OuterJoinLoadable persister,
+			final SessionFactoryImplementor factory,
+			final CriteriaImpl criteria,
 			final String rootEntityName,
 			final LoadQueryInfluencers loadQueryInfluencers) throws HibernateException {
 		super( factory, loadQueryInfluencers );
 
 		translator = new CriteriaQueryTranslator(
-				factory, 
-				criteria, 
-				rootEntityName, 
+				factory,
+				criteria,
+				rootEntityName,
 				CriteriaQueryTranslator.ROOT_SQL_ALIAS
-			);
+		);
 
 		querySpaces = translator.getQuerySpaces();
-		
-		CriteriaJoinWalker walker = new CriteriaJoinWalker(
-				persister, 
-				translator,
-				factory, 
-				criteria, 
-				rootEntityName, 
-				loadQueryInfluencers
-			);
 
-		initFromWalker(walker);
-		
+		CriteriaJoinWalker walker = new CriteriaJoinWalker(
+				persister,
+				translator,
+				factory,
+				criteria,
+				rootEntityName,
+				loadQueryInfluencers
+		);
+
+		initFromWalker( walker );
+
 		userAliases = walker.getUserAliases();
 		resultTypes = walker.getResultTypes();
 		includeInResultRow = walker.includeInResultRow();
@@ -113,43 +114,53 @@ public class CriteriaLoader extends OuterJoinLoader {
 		postInstantiate();
 
 	}
-	
-	public ScrollableResults scroll(SessionImplementor session, ScrollMode scrollMode) 
-	throws HibernateException {
+
+	public ScrollableResults scroll(SessionImplementor session, ScrollMode scrollMode)
+			throws HibernateException {
 		QueryParameters qp = translator.getQueryParameters();
-		qp.setScrollMode(scrollMode);
-		return scroll(qp, resultTypes, null, session);
+		qp.setScrollMode( scrollMode );
+		return scroll( qp, resultTypes, null, session );
 	}
 
-	public List list(SessionImplementor session) 
-	throws HibernateException {
+	public List list(SessionImplementor session)
+			throws HibernateException {
 		return list( session, translator.getQueryParameters(), querySpaces, resultTypes );
 
 	}
+
 	@Override
 	protected String[] getResultRowAliases() {
 		return userAliases;
 	}
+
 	@Override
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return translator.getRootCriteria().getResultTransformer();
 	}
+
 	@Override
 	protected boolean areResultSetRowsTransformedImmediately() {
 		return true;
 	}
+
 	@Override
 	protected boolean[] includeInResultRow() {
 		return includeInResultRow;
 	}
+
 	@Override
-	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
-	throws SQLException, HibernateException {
+	protected Object getResultColumnOrRow(
+			Object[] row,
+			ResultTransformer transformer,
+			ResultSet rs,
+			SessionImplementor session)
+			throws SQLException, HibernateException {
 		return resolveResultTransformer( transformer ).transformTuple(
-				getResultRow( row, rs, session),
+				getResultRow( row, rs, session ),
 				getResultRowAliases()
 		);
 	}
+
 	@Override
 	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
@@ -158,14 +169,14 @@ public class CriteriaLoader extends OuterJoinLoader {
 			Type[] types = translator.getProjectedTypes();
 			result = new Object[types.length];
 			String[] columnAliases = translator.getProjectedColumnAliases();
-			for ( int i=0, pos=0; i<result.length; i++ ) {
+			for ( int i = 0, pos = 0; i < result.length; i++ ) {
 				int numColumns = types[i].getColumnSpan( session.getFactory() );
 				if ( numColumns > 1 ) {
-			    	String[] typeColumnAliases = ArrayHelper.slice( columnAliases, pos, numColumns );
-					result[i] = types[i].nullSafeGet(rs, typeColumnAliases, session, null);
+					String[] typeColumnAliases = ArrayHelper.slice( columnAliases, pos, numColumns );
+					result[i] = types[i].nullSafeGet( rs, typeColumnAliases, session, null );
 				}
 				else {
-					result[i] = types[i].nullSafeGet(rs, columnAliases[pos], session, null);
+					result[i] = types[i].nullSafeGet( rs, columnAliases[pos], session, null );
 				}
 				pos += numColumns;
 			}
@@ -181,7 +192,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 			return row;
 		}
 		else {
-			Object[] result = new Object[ resultRowLength ];
+			Object[] result = new Object[resultRowLength];
 			int j = 0;
 			for ( int i = 0; i < row.length; i++ ) {
 				if ( includeInResultRow[i] ) {
@@ -205,16 +216,16 @@ public class CriteriaLoader extends OuterJoinLoader {
 		final LockOptions lockOptions = parameters.getLockOptions();
 
 		if ( lockOptions == null ||
-				(lockOptions.getLockMode() == LockMode.NONE && (lockOptions.getAliasLockCount() == 0
-						|| (lockOptions.getAliasLockCount() == 1 && lockOptions
-						.getAliasSpecificLockMode( "this_" ) == LockMode.NONE)
-				)) ) {
+				( lockOptions.getLockMode() == LockMode.NONE && ( lockOptions.getAliasLockCount() == 0
+						|| ( lockOptions.getAliasLockCount() == 1 && lockOptions
+						.getAliasSpecificLockMode( "this_" ) == LockMode.NONE )
+				) ) ) {
 			return sql;
 		}
 
 		if ( dialect.useFollowOnLocking() ) {
-            final LockMode lockMode = determineFollowOnLockMode( lockOptions );
-            if( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
+			final LockMode lockMode = determineFollowOnLockMode( lockOptions );
+			if ( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
 				// Dialect prefers to perform locking in a separate step
 				LOG.usingFollowOnLocking();
 
@@ -224,27 +235,27 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 				afterLoadActions.add(
 						new AfterLoadAction() {
-								@Override
-								public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
-									( (Session) session ).buildLockRequest( lockOptionsToUse )
+							@Override
+							public void afterLoad(SessionImplementor session, Object entity, Loadable persister) {
+								( (Session) session ).buildLockRequest( lockOptionsToUse )
 										.lock( persister.getEntityName(), entity );
-								}
-				        }
+							}
+						}
 				);
 				parameters.setLockOptions( new LockOptions() );
 				return sql;
 			}
 		}
-		final LockOptions locks = new LockOptions(lockOptions.getLockMode());
-		locks.setScope( lockOptions.getScope());
-		locks.setTimeOut( lockOptions.getTimeOut());
+		final LockOptions locks = new LockOptions( lockOptions.getLockMode() );
+		locks.setScope( lockOptions.getScope() );
+		locks.setTimeOut( lockOptions.getTimeOut() );
 
 		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
 		final String[] drivingSqlAliases = getAliases();
 		for ( int i = 0; i < drivingSqlAliases.length; i++ ) {
 			final LockMode lockMode = lockOptions.getAliasSpecificLockMode( drivingSqlAliases[i] );
 			if ( lockMode != null ) {
-				final Lockable drivingPersister = ( Lockable ) getEntityPersisters()[i];
+				final Lockable drivingPersister = (Lockable) getEntityPersisters()[i];
 				final String rootSqlAlias = drivingPersister.getRootTableAlias( drivingSqlAliases[i] );
 				locks.setAliasSpecificLockMode( rootSqlAlias, lockMode );
 				if ( keyColumnNames != null ) {
@@ -267,6 +278,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 		return lockModeToUse;
 	}
+
 	@Override
 	protected LockMode[] getLockModes(LockOptions lockOptions) {
 		final String[] entityAliases = getAliases();
@@ -275,23 +287,26 @@ public class CriteriaLoader extends OuterJoinLoader {
 		}
 		final int size = entityAliases.length;
 		LockMode[] lockModesArray = new LockMode[size];
-		for ( int i=0; i<size; i++ ) {
+		for ( int i = 0; i < size; i++ ) {
 			LockMode lockMode = lockOptions.getAliasSpecificLockMode( entityAliases[i] );
-			lockModesArray[i] = lockMode==null ? lockOptions.getLockMode() : lockMode;
+			lockModesArray[i] = lockMode == null ? lockOptions.getLockMode() : lockMode;
 		}
 		return lockModesArray;
 	}
+
 	@Override
 	protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
 	}
+
 	@Override
 	protected List getResultList(List results, ResultTransformer resultTransformer) {
 		return resolveResultTransformer( resultTransformer ).transformList( results );
 	}
+
 	@Override
-	protected String getQueryIdentifier() { 
-		return "[CRITERIA] " + getSQLString(); 
+	protected String getQueryIdentifier() {
+		return "[CRITERIA] " + getSQLString();
 	}
 
 }

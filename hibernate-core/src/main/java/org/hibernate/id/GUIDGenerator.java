@@ -39,14 +39,14 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Joseph Fifield
  */
 public class GUIDGenerator implements IdentifierGenerator {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
 	private static boolean WARNED;
 
 	public GUIDGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-            LOG.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
+			LOG.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
 		}
 	}
 
@@ -61,12 +61,12 @@ public class GUIDGenerator implements IdentifierGenerator {
 					if ( !rs.next() ) {
 						throw new HibernateException( "The database returned no GUID identity value" );
 					}
-					result = rs.getString(1);
+					result = rs.getString( 1 );
 				}
 				finally {
 					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
 				}
-                LOG.guidGenerated(result);
+				LOG.guidGenerated( result );
 				return result;
 			}
 			finally {
@@ -79,7 +79,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 					sqle,
 					"could not retrieve GUID",
 					sql
-				);
+			);
 		}
 	}
 }

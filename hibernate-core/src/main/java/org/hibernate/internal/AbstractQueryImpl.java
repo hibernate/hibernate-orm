@@ -82,18 +82,18 @@ public abstract class AbstractQueryImpl implements Query {
 			AbstractQueryImpl.class.getName()
 	);
 
-	private static final Object UNSET_PARAMETER = new MarkerObject("<unset parameter>");
-	private static final Object UNSET_TYPE = new MarkerObject("<unset type>");
+	private static final Object UNSET_PARAMETER = new MarkerObject( "<unset parameter>" );
+	private static final Object UNSET_TYPE = new MarkerObject( "<unset type>" );
 
 	private final String queryString;
 	protected final SessionImplementor session;
 	protected final ParameterMetadata parameterMetadata;
 
 	// parameter bind values...
-	private List values = new ArrayList(4);
-	private List types = new ArrayList(4);
-	private Map<String,TypedValue> namedParameters = new HashMap<String, TypedValue>(4);
-	private Map<String, TypedValue> namedParameterLists = new HashMap<String, TypedValue>(4);
+	private List values = new ArrayList( 4 );
+	private List types = new ArrayList( 4 );
+	private Map<String, TypedValue> namedParameters = new HashMap<String, TypedValue>( 4 );
+	private Map<String, TypedValue> namedParameterLists = new HashMap<String, TypedValue>( 4 );
 
 	private Object optionalObject;
 	private Serializable optionalId;
@@ -111,14 +111,14 @@ public abstract class AbstractQueryImpl implements Query {
 	private Serializable collectionKey;
 	private Boolean readOnly;
 	private ResultTransformer resultTransformer;
-	
+
 	private HQLQueryPlan queryPlan;
 
 	public AbstractQueryImpl(
 			String queryString,
-	        FlushMode flushMode,
-	        SessionImplementor session,
-	        ParameterMetadata parameterMetadata) {
+			FlushMode flushMode,
+			SessionImplementor session,
+			ParameterMetadata parameterMetadata) {
 		this.session = session;
 		this.queryString = queryString;
 		this.selection = new RowSelection();
@@ -159,7 +159,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	@Override
 	public Query setCacheRegion(String cacheRegion) {
-		if (cacheRegion != null) {
+		if ( cacheRegion != null ) {
 			this.cacheRegion = cacheRegion.trim();
 		}
 		return this;
@@ -197,12 +197,12 @@ public abstract class AbstractQueryImpl implements Query {
 		this.comment = comment;
 		return this;
 	}
-	  
+
 	@Override
 	public Query addQueryHint(String queryHint) {
 		queryHints.add( queryHint );
 		return this;
-	} 
+	}
 
 	@Override
 	public Integer getFirstResult() {
@@ -211,7 +211,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	@Override
 	public Query setFirstResult(int firstResult) {
-		selection.setFirstRow( firstResult);
+		selection.setFirstRow( firstResult );
 		return this;
 	}
 
@@ -227,7 +227,7 @@ public abstract class AbstractQueryImpl implements Query {
 			selection.setMaxRows( null );
 		}
 		else {
-			selection.setMaxRows( maxResults);
+			selection.setMaxRows( maxResults );
 		}
 		return this;
 	}
@@ -239,7 +239,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	@Override
 	public Query setTimeout(int timeout) {
-		selection.setTimeout( timeout);
+		selection.setTimeout( timeout );
 		return this;
 	}
 
@@ -250,7 +250,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	@Override
 	public Query setFetchSize(int fetchSize) {
-		selection.setFetchSize( fetchSize);
+		selection.setFetchSize( fetchSize );
 		return this;
 	}
 
@@ -280,12 +280,13 @@ public abstract class AbstractQueryImpl implements Query {
 		this.readOnly = readOnly;
 		return this;
 	}
+
 	@Override
 	public Query setResultTransformer(ResultTransformer transformer) {
 		this.resultTransformer = transformer;
 		return this;
 	}
-	
+
 	public void setOptionalEntityName(String optionalEntityName) {
 		this.optionalEntityName = optionalEntityName;
 	}
@@ -301,6 +302,7 @@ public abstract class AbstractQueryImpl implements Query {
 	SessionImplementor getSession() {
 		return session;
 	}
+
 	@Override
 	public abstract LockOptions getLockOptions();
 
@@ -328,6 +330,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 * holds true for all parameter metadata exposed here.
 	 *
 	 * @return Array of named parameter names.
+	 *
 	 * @throws HibernateException
 	 */
 	@Override
@@ -382,7 +385,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 * @throws QueryException
 	 */
 	protected void verifyParameters() throws QueryException {
-		verifyParameters(false);
+		verifyParameters( false );
 	}
 
 	/**
@@ -391,10 +394,12 @@ public abstract class AbstractQueryImpl implements Query {
 	 *
 	 * @param reserveFirstParameter if true, the first ? will not be verified since
 	 * its needed for e.g. callable statements returning a out parameter
+	 *
 	 * @throws HibernateException
 	 */
 	protected void verifyParameters(boolean reserveFirstParameter) throws HibernateException {
-		if ( parameterMetadata.getNamedParameterNames().size() != namedParameters.size() + namedParameterLists.size() ) {
+		if ( parameterMetadata.getNamedParameterNames()
+				.size() != namedParameters.size() + namedParameterLists.size() ) {
 			Set<String> missingParams = new HashSet<String>( parameterMetadata.getNamedParameterNames() );
 			missingParams.removeAll( namedParameterLists.keySet() );
 			missingParams.removeAll( namedParameters.keySet() );
@@ -404,8 +409,8 @@ public abstract class AbstractQueryImpl implements Query {
 		int positionalValueSpan = 0;
 		for ( int i = 0; i < values.size(); i++ ) {
 			Object object = types.get( i );
-			if( values.get( i ) == UNSET_PARAMETER || object == UNSET_TYPE ) {
-				if ( reserveFirstParameter && i==0 ) {
+			if ( values.get( i ) == UNSET_PARAMETER || object == UNSET_TYPE ) {
+				if ( reserveFirstParameter && i == 0 ) {
 					continue;
 				}
 				else {
@@ -418,31 +423,31 @@ public abstract class AbstractQueryImpl implements Query {
 		if ( parameterMetadata.getOrdinalParameterCount() != positionalValueSpan ) {
 			if ( reserveFirstParameter && parameterMetadata.getOrdinalParameterCount() - 1 != positionalValueSpan ) {
 				throw new QueryException(
-				 		"Expected positional parameter count: " +
-				 		(parameterMetadata.getOrdinalParameterCount()-1) +
-				 		", actual parameters: " +
-				 		values,
-				 		getQueryString()
-				 	);
+						"Expected positional parameter count: " +
+								( parameterMetadata.getOrdinalParameterCount() - 1 ) +
+								", actual parameters: " +
+								values,
+						getQueryString()
+				);
 			}
 			else if ( !reserveFirstParameter ) {
 				throw new QueryException(
-				 		"Expected positional parameter count: " +
-				 		parameterMetadata.getOrdinalParameterCount() +
-				 		", actual parameters: " +
-				 		values,
-				 		getQueryString()
-				 	);
+						"Expected positional parameter count: " +
+								parameterMetadata.getOrdinalParameterCount() +
+								", actual parameters: " +
+								values,
+						getQueryString()
+				);
 			}
 		}
 	}
 
 	public Query setParameter(int position, Object val, Type type) {
 		if ( parameterMetadata.getOrdinalParameterCount() == 0 ) {
-			throw new IllegalArgumentException("No positional parameters in query: " + getQueryString() );
+			throw new IllegalArgumentException( "No positional parameters in query: " + getQueryString() );
 		}
 		if ( position < 0 || position > parameterMetadata.getOrdinalParameterCount() - 1 ) {
-			throw new IllegalArgumentException("Positional parameter does not exist: " + position + " in query: " + getQueryString() );
+			throw new IllegalArgumentException( "Positional parameter does not exist: " + position + " in query: " + getQueryString() );
 		}
 		int size = values.size();
 		if ( position < size ) {
@@ -463,16 +468,16 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setParameter(String name, Object val, Type type) {
 		if ( !parameterMetadata.getNamedParameterNames().contains( name ) ) {
-			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
+			throw new IllegalArgumentException( "Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]" );
 		}
 		else {
-			 namedParameters.put( name, new TypedValue( type, val  ) );
-			 return this;
+			namedParameters.put( name, new TypedValue( type, val ) );
+			return this;
 		}
 	}
 
 	public Query setParameter(int position, Object val) throws HibernateException {
-		if (val == null) {
+		if ( val == null ) {
 			setParameter( position, val, StandardBasicTypes.SERIALIZABLE );
 		}
 		else {
@@ -482,7 +487,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setParameter(String name, Object val) throws HibernateException {
-		if (val == null) {
+		if ( val == null ) {
 			Type type = parameterMetadata.getNamedParameterExpectedType( name );
 			if ( type == null ) {
 				type = StandardBasicTypes.SERIALIZABLE;
@@ -542,18 +547,18 @@ public abstract class AbstractQueryImpl implements Query {
 
 	private Type guessType(Class clazz) throws HibernateException {
 		String typename = clazz.getName();
-		Type type = session.getFactory().getTypeResolver().heuristicType(typename);
-		boolean serializable = type!=null && type instanceof SerializableType;
-		if (type==null || serializable) {
+		Type type = session.getFactory().getTypeResolver().heuristicType( typename );
+		boolean serializable = type != null && type instanceof SerializableType;
+		if ( type == null || serializable ) {
 			try {
 				session.getFactory().getEntityPersister( clazz.getName() );
 			}
 			catch (MappingException me) {
-				if (serializable) {
+				if ( serializable ) {
 					return type;
 				}
 				else {
-					throw new HibernateException("Could not determine a type for class: " + typename);
+					throw new HibernateException( "Could not determine a type for class: " + typename );
 				}
 			}
 			return ( (Session) session ).getTypeHelper().entity( clazz );
@@ -564,7 +569,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setString(int position, String val) {
-		setParameter(position, val, StandardBasicTypes.STRING);
+		setParameter( position, val, StandardBasicTypes.STRING );
 		return this;
 	}
 
@@ -581,62 +586,62 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setByte(int position, byte val) {
-		setParameter(position, val, StandardBasicTypes.BYTE);
+		setParameter( position, val, StandardBasicTypes.BYTE );
 		return this;
 	}
 
 	public Query setShort(int position, short val) {
-		setParameter(position, val, StandardBasicTypes.SHORT);
+		setParameter( position, val, StandardBasicTypes.SHORT );
 		return this;
 	}
 
 	public Query setInteger(int position, int val) {
-		setParameter(position, val, StandardBasicTypes.INTEGER);
+		setParameter( position, val, StandardBasicTypes.INTEGER );
 		return this;
 	}
 
 	public Query setLong(int position, long val) {
-		setParameter(position, val, StandardBasicTypes.LONG);
+		setParameter( position, val, StandardBasicTypes.LONG );
 		return this;
 	}
 
 	public Query setFloat(int position, float val) {
-		setParameter(position, val, StandardBasicTypes.FLOAT);
+		setParameter( position, val, StandardBasicTypes.FLOAT );
 		return this;
 	}
 
 	public Query setDouble(int position, double val) {
-		setParameter(position, val, StandardBasicTypes.DOUBLE);
+		setParameter( position, val, StandardBasicTypes.DOUBLE );
 		return this;
 	}
 
 	public Query setBinary(int position, byte[] val) {
-		setParameter(position, val, StandardBasicTypes.BINARY);
+		setParameter( position, val, StandardBasicTypes.BINARY );
 		return this;
 	}
 
 	public Query setText(int position, String val) {
-		setParameter(position, val, StandardBasicTypes.TEXT);
+		setParameter( position, val, StandardBasicTypes.TEXT );
 		return this;
 	}
 
 	public Query setSerializable(int position, Serializable val) {
-		setParameter(position, val, StandardBasicTypes.SERIALIZABLE);
+		setParameter( position, val, StandardBasicTypes.SERIALIZABLE );
 		return this;
 	}
 
 	public Query setDate(int position, Date date) {
-		setParameter(position, date, StandardBasicTypes.DATE);
+		setParameter( position, date, StandardBasicTypes.DATE );
 		return this;
 	}
 
 	public Query setTime(int position, Date date) {
-		setParameter(position, date, StandardBasicTypes.TIME);
+		setParameter( position, date, StandardBasicTypes.TIME );
 		return this;
 	}
 
 	public Query setTimestamp(int position, Date date) {
-		setParameter(position, date, StandardBasicTypes.TIMESTAMP);
+		setParameter( position, date, StandardBasicTypes.TIMESTAMP );
 		return this;
 	}
 
@@ -653,27 +658,27 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setLocale(int position, Locale locale) {
-		setParameter(position, locale, StandardBasicTypes.LOCALE);
+		setParameter( position, locale, StandardBasicTypes.LOCALE );
 		return this;
 	}
 
 	public Query setCalendar(int position, Calendar calendar) {
-		setParameter(position, calendar, StandardBasicTypes.CALENDAR);
+		setParameter( position, calendar, StandardBasicTypes.CALENDAR );
 		return this;
 	}
 
 	public Query setCalendarDate(int position, Calendar calendar) {
-		setParameter(position, calendar, StandardBasicTypes.CALENDAR_DATE);
+		setParameter( position, calendar, StandardBasicTypes.CALENDAR_DATE );
 		return this;
 	}
 
 	public Query setBinary(String name, byte[] val) {
-		setParameter(name, val, StandardBasicTypes.BINARY);
+		setParameter( name, val, StandardBasicTypes.BINARY );
 		return this;
 	}
 
 	public Query setText(String name, String val) {
-		setParameter(name, val, StandardBasicTypes.TEXT);
+		setParameter( name, val, StandardBasicTypes.TEXT );
 		return this;
 	}
 
@@ -685,22 +690,22 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setByte(String name, byte val) {
-		setParameter(name, val, StandardBasicTypes.BYTE);
+		setParameter( name, val, StandardBasicTypes.BYTE );
 		return this;
 	}
 
 	public Query setCharacter(String name, char val) {
-		setParameter(name, val, StandardBasicTypes.CHARACTER);
+		setParameter( name, val, StandardBasicTypes.CHARACTER );
 		return this;
 	}
 
 	public Query setDate(String name, Date date) {
-		setParameter(name, date, StandardBasicTypes.DATE);
+		setParameter( name, date, StandardBasicTypes.DATE );
 		return this;
 	}
 
 	public Query setDouble(String name, double val) {
-		setParameter(name, val, StandardBasicTypes.DOUBLE);
+		setParameter( name, val, StandardBasicTypes.DOUBLE );
 		return this;
 	}
 
@@ -710,89 +715,89 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setFloat(String name, float val) {
-		setParameter(name, val, StandardBasicTypes.FLOAT);
+		setParameter( name, val, StandardBasicTypes.FLOAT );
 		return this;
 	}
 
 	public Query setInteger(String name, int val) {
-		setParameter(name, val, StandardBasicTypes.INTEGER);
+		setParameter( name, val, StandardBasicTypes.INTEGER );
 		return this;
 	}
 
 	public Query setLocale(String name, Locale locale) {
-		setParameter(name, locale, StandardBasicTypes.LOCALE);
+		setParameter( name, locale, StandardBasicTypes.LOCALE );
 		return this;
 	}
 
 	public Query setCalendar(String name, Calendar calendar) {
-		setParameter(name, calendar, StandardBasicTypes.CALENDAR);
+		setParameter( name, calendar, StandardBasicTypes.CALENDAR );
 		return this;
 	}
 
 	public Query setCalendarDate(String name, Calendar calendar) {
-		setParameter(name, calendar, StandardBasicTypes.CALENDAR_DATE);
+		setParameter( name, calendar, StandardBasicTypes.CALENDAR_DATE );
 		return this;
 	}
 
 	public Query setLong(String name, long val) {
-		setParameter(name, val, StandardBasicTypes.LONG);
+		setParameter( name, val, StandardBasicTypes.LONG );
 		return this;
 	}
 
 	public Query setSerializable(String name, Serializable val) {
-		setParameter(name, val, StandardBasicTypes.SERIALIZABLE);
+		setParameter( name, val, StandardBasicTypes.SERIALIZABLE );
 		return this;
 	}
 
 	public Query setShort(String name, short val) {
-		setParameter(name, val, StandardBasicTypes.SHORT);
+		setParameter( name, val, StandardBasicTypes.SHORT );
 		return this;
 	}
 
 	public Query setString(String name, String val) {
-		setParameter(name, val, StandardBasicTypes.STRING);
+		setParameter( name, val, StandardBasicTypes.STRING );
 		return this;
 	}
 
 	public Query setTime(String name, Date date) {
-		setParameter(name, date, StandardBasicTypes.TIME);
+		setParameter( name, date, StandardBasicTypes.TIME );
 		return this;
 	}
 
 	public Query setTimestamp(String name, Date date) {
-		setParameter(name, date, StandardBasicTypes.TIMESTAMP);
+		setParameter( name, date, StandardBasicTypes.TIMESTAMP );
 		return this;
 	}
 
 	public Query setBigDecimal(int position, BigDecimal number) {
-		setParameter(position, number, StandardBasicTypes.BIG_DECIMAL);
+		setParameter( position, number, StandardBasicTypes.BIG_DECIMAL );
 		return this;
 	}
 
 	public Query setBigDecimal(String name, BigDecimal number) {
-		setParameter(name, number, StandardBasicTypes.BIG_DECIMAL);
+		setParameter( name, number, StandardBasicTypes.BIG_DECIMAL );
 		return this;
 	}
 
 	public Query setBigInteger(int position, BigInteger number) {
-		setParameter(position, number, StandardBasicTypes.BIG_INTEGER);
+		setParameter( position, number, StandardBasicTypes.BIG_INTEGER );
 		return this;
 	}
 
 	public Query setBigInteger(String name, BigInteger number) {
-		setParameter(name, number, StandardBasicTypes.BIG_INTEGER);
+		setParameter( name, number, StandardBasicTypes.BIG_INTEGER );
 		return this;
 	}
 
 	@Override
 	public Query setParameterList(String name, Collection vals, Type type) throws HibernateException {
 		if ( !parameterMetadata.getNamedParameterNames().contains( name ) ) {
-			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
+			throw new IllegalArgumentException( "Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]" );
 		}
 		namedParameterLists.put( name, new TypedValue( type, vals ) );
 		return this;
 	}
-	
+
 	/**
 	 * Warning: adds new parameters to the argument by side-effect, as well as
 	 * mutating the query string!
@@ -812,7 +817,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 */
 	private String expandParameterList(String query, String name, TypedValue typedList, Map namedParamsCopy) {
 		Collection vals = (Collection) typedList.getValue();
-		
+
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
 		final Dialect dialect = session.getFactory().getDialect();
@@ -825,13 +830,10 @@ public abstract class AbstractQueryImpl implements Query {
 
 		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();
 		String paramPrefix = isJpaPositionalParam ? "?" : ParserHelper.HQL_VARIABLE_PREFIX;
-		String placeholder =
-				new StringBuilder( paramPrefix.length() + name.length() )
-						.append( paramPrefix ).append(  name )
-						.toString();
+		String placeholder = paramPrefix + name;
 
 		if ( query == null ) {
-			return query;
+			return null;
 		}
 		int loc = query.indexOf( placeholder );
 
@@ -840,15 +842,15 @@ public abstract class AbstractQueryImpl implements Query {
 		}
 
 		String beforePlaceholder = query.substring( 0, loc );
-		String afterPlaceholder =  query.substring( loc + placeholder.length() );
+		String afterPlaceholder = query.substring( loc + placeholder.length() );
 
 		// check if placeholder is already immediately enclosed in parentheses
 		// (ignoring whitespace)
 		boolean isEnclosedInParens =
 				StringHelper.getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' &&
-				StringHelper.getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')';
+						StringHelper.getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')';
 
-		if ( vals.size() == 1  && isEnclosedInParens ) {
+		if ( vals.size() == 1 && isEnclosedInParens ) {
 			// short-circuit for performance when only 1 value and the
 			// placeholder is already enclosed in parentheses...
 			namedParamsCopy.put( name, new TypedValue( type, vals.iterator().next() ) );
@@ -885,18 +887,18 @@ public abstract class AbstractQueryImpl implements Query {
 			throw new QueryException( "Collection must be not null!" );
 		}
 
-		if( vals.size() == 0 ) {
+		if ( vals.size() == 0 ) {
 			setParameterList( name, vals, null );
 		}
 		else {
-			setParameterList(name, vals, determineType( name, vals.iterator().next() ) );
+			setParameterList( name, vals, determineType( name, vals.iterator().next() ) );
 		}
 
 		return this;
 	}
 
 	public Query setParameterList(String name, Object[] vals, Type type) throws HibernateException {
-		return setParameterList( name, Arrays.asList(vals), type );
+		return setParameterList( name, Arrays.asList( vals ), type );
 	}
 
 	public Query setParameterList(String name, Object[] values) throws HibernateException {
@@ -905,42 +907,41 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setProperties(Map map) throws HibernateException {
 		String[] params = getNamedParameters();
-		for (int i = 0; i < params.length; i++) {
+		for ( int i = 0; i < params.length; i++ ) {
 			String namedParam = params[i];
-				final Object object = map.get(namedParam);
-				if(object==null) {
-					continue;
-				}
-				Class retType = object.getClass();
-				if ( Collection.class.isAssignableFrom( retType ) ) {
-					setParameterList( namedParam, ( Collection ) object );
-				}
-				else if ( retType.isArray() ) {
-					setParameterList( namedParam, ( Object[] ) object );
-				}
-				else {
-					setParameter( namedParam, object, determineType( namedParam, retType ) );
-				}
+			final Object object = map.get( namedParam );
+			if ( object == null ) {
+				continue;
+			}
+			Class retType = object.getClass();
+			if ( Collection.class.isAssignableFrom( retType ) ) {
+				setParameterList( namedParam, (Collection) object );
+			}
+			else if ( retType.isArray() ) {
+				setParameterList( namedParam, (Object[]) object );
+			}
+			else {
+				setParameter( namedParam, object, determineType( namedParam, retType ) );
+			}
 
-			
+
 		}
-		return this;				
+		return this;
 	}
-	
+
 	public Query setProperties(Object bean) throws HibernateException {
 		Class clazz = bean.getClass();
 		String[] params = getNamedParameters();
-		for (int i = 0; i < params.length; i++) {
-			String namedParam = params[i];
+		for ( String namedParam : params ) {
 			try {
 				Getter getter = ReflectHelper.getGetter( clazz, namedParam );
 				Class retType = getter.getReturnType();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( retType ) ) {
-					setParameterList( namedParam, ( Collection ) object );
+					setParameterList( namedParam, (Collection) object );
 				}
 				else if ( retType.isArray() ) {
-				 	setParameterList( namedParam, ( Object[] ) object );
+					setParameterList( namedParam, (Object[]) object );
 				}
 				else {
 					setParameter( namedParam, object, determineType( namedParam, retType ) );
@@ -954,8 +955,8 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setParameters(Object[] values, Type[] types) {
-		this.values = Arrays.asList(values);
-		this.types = Arrays.asList(types);
+		this.values = Arrays.asList( values );
+		this.types = Arrays.asList( types );
 		return this;
 	}
 
@@ -968,12 +969,12 @@ public abstract class AbstractQueryImpl implements Query {
 
 	static Object uniqueElement(List list) throws NonUniqueResultException {
 		int size = list.size();
-		if (size==0) {
+		if ( size == 0 ) {
 			return null;
 		}
-		Object first = list.get(0);
-		for ( int i=1; i<size; i++ ) {
-			if ( list.get(i)!=first ) {
+		Object first = list.get( 0 );
+		for ( int i = 1; i < size; i++ ) {
+			if ( list.get( i ) != first ) {
 				throw new NonUniqueResultException( list.size() );
 			}
 		}
@@ -987,7 +988,7 @@ public abstract class AbstractQueryImpl implements Query {
 	public Type[] typeArray() {
 		return ArrayHelper.toTypeArray( getTypes() );
 	}
-	
+
 	public Object[] valueArray() {
 		return getValues().toArray();
 	}
@@ -1005,7 +1006,7 @@ public abstract class AbstractQueryImpl implements Query {
 				cacheRegion,
 				comment,
 				queryHints,
-				collectionKey == null ? null : new Serializable[] { collectionKey },
+				collectionKey == null ? null : new Serializable[] {collectionKey},
 				optionalObject,
 				optionalEntityName,
 				optionalId,
@@ -1014,25 +1015,25 @@ public abstract class AbstractQueryImpl implements Query {
 		queryParameters.setQueryPlan( queryPlan );
 		return queryParameters;
 	}
-	
+
 	protected void before() {
-		if ( flushMode!=null ) {
+		if ( flushMode != null ) {
 			sessionFlushMode = getSession().getFlushMode();
-			getSession().setFlushMode(flushMode);
+			getSession().setFlushMode( flushMode );
 		}
-		if ( cacheMode!=null ) {
+		if ( cacheMode != null ) {
 			sessionCacheMode = getSession().getCacheMode();
-			getSession().setCacheMode(cacheMode);
+			getSession().setCacheMode( cacheMode );
 		}
 	}
-	
+
 	protected void after() {
-		if (sessionFlushMode!=null) {
-			getSession().setFlushMode(sessionFlushMode);
+		if ( sessionFlushMode != null ) {
+			getSession().setFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
 		}
-		if (sessionCacheMode!=null) {
-			getSession().setCacheMode(sessionCacheMode);
+		if ( sessionCacheMode != null ) {
+			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
 	}

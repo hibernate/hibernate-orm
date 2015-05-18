@@ -31,41 +31,59 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface PluralAttributeInfo extends AttributeMapping, TableInformationContainer, ToolingHintContainer {
-	public JaxbHbmKeyType getKey();
+	JaxbHbmKeyType getKey();
 
-	public JaxbHbmBasicCollectionElementType getElement();
-	public JaxbHbmCompositeCollectionElementType getCompositeElement();
-	public JaxbHbmOneToManyCollectionElementType getOneToMany();
-	public JaxbHbmManyToManyCollectionElementType getManyToMany();
-    public JaxbHbmManyToAnyCollectionElementType getManyToAny();
+	JaxbHbmBasicCollectionElementType getElement();
 
-	public String getComment();
-	public String getCheck();
-	public String getWhere();
+	JaxbHbmCompositeCollectionElementType getCompositeElement();
 
-	public JaxbHbmLoaderType getLoader();
-	public JaxbHbmCustomSqlDmlType getSqlInsert();
-    public JaxbHbmCustomSqlDmlType getSqlUpdate();
-    public JaxbHbmCustomSqlDmlType getSqlDelete();
-    public JaxbHbmCustomSqlDmlType getSqlDeleteAll();
+	JaxbHbmOneToManyCollectionElementType getOneToMany();
 
-	public List<JaxbHbmSynchronizeType> getSynchronize();
+	JaxbHbmManyToManyCollectionElementType getManyToMany();
 
-	public JaxbHbmCacheType getCache();
-	public List<JaxbHbmFilterType> getFilter();
+	JaxbHbmManyToAnyCollectionElementType getManyToAny();
 
-	public String getCascade();
-	public JaxbHbmFetchStyleWithSubselectEnum getFetch();
-	public JaxbHbmLazyWithExtraEnum getLazy();
-	public JaxbHbmOuterJoinEnum getOuterJoin();
+	String getComment();
 
-	public int getBatchSize();
-	public boolean isInverse();
-    public boolean isMutable();
-	public boolean isOptimisticLock();
+	String getCheck();
 
-	public String getCollectionType();
-    public String getPersister();
+	String getWhere();
+
+	JaxbHbmLoaderType getLoader();
+
+	JaxbHbmCustomSqlDmlType getSqlInsert();
+
+	JaxbHbmCustomSqlDmlType getSqlUpdate();
+
+	JaxbHbmCustomSqlDmlType getSqlDelete();
+
+	JaxbHbmCustomSqlDmlType getSqlDeleteAll();
+
+	List<JaxbHbmSynchronizeType> getSynchronize();
+
+	JaxbHbmCacheType getCache();
+
+	List<JaxbHbmFilterType> getFilter();
+
+	String getCascade();
+
+	JaxbHbmFetchStyleWithSubselectEnum getFetch();
+
+	JaxbHbmLazyWithExtraEnum getLazy();
+
+	JaxbHbmOuterJoinEnum getOuterJoin();
+
+	int getBatchSize();
+
+	boolean isInverse();
+
+	boolean isMutable();
+
+	boolean isOptimisticLock();
+
+	String getCollectionType();
+
+	String getPersister();
 
 // todo : not available on all.  do we need a specific interface for these?
 //	public String getSort();

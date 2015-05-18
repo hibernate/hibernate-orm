@@ -35,7 +35,6 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 
-import org.jboss.jandex.ClassInfo;
 import org.jboss.logging.Logger;
 
 /**

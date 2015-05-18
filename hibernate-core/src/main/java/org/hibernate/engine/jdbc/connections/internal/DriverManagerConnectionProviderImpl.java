@@ -298,6 +298,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 
+	//CHECKSTYLE:START_ALLOW_FINALIZER
 	@Override
 	protected void finalize() throws Throwable {
 		if ( active ) {
@@ -305,5 +306,6 @@ public class DriverManagerConnectionProviderImpl
 		}
 		super.finalize();
 	}
+	//CHECKSTYLE:END_ALLOW_FINALIZER
 
 }

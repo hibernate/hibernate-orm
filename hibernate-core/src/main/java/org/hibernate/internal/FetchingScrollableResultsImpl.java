@@ -56,18 +56,18 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	 * @param holderInstantiator Ugh
 	 */
 	public FetchingScrollableResultsImpl(
-	        ResultSet rs,
-	        PreparedStatement ps,
-	        SessionImplementor sess,
-	        Loader loader,
-	        QueryParameters queryParameters,
-	        Type[] types,
-	        HolderInstantiator holderInstantiator) {
+			ResultSet rs,
+			PreparedStatement ps,
+			SessionImplementor sess,
+			Loader loader,
+			QueryParameters queryParameters,
+			Type[] types,
+			HolderInstantiator holderInstantiator) {
 		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
 	}
 
 	@Override
-    protected Object[] getCurrentRow() {
+	protected Object[] getCurrentRow() {
 		return currentRow;
 	}
 
@@ -97,15 +97,15 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		try {
 			afterLast = getResultSet().isAfterLast();
 		}
-		catch( SQLException e ) {
+		catch (SQLException e) {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
-			        e,
-			        "exception calling isAfterLast()"
+					e,
+					"exception calling isAfterLast()"
 			);
 		}
 
 		currentPosition++;
-		currentRow = new Object[] { row };
+		currentRow = new Object[] {row};
 
 		if ( afterLast ) {
 			if ( maxPosition == null ) {
@@ -132,10 +132,10 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 				getSession(),
 				getQueryParameters(),
 				false,
-		        ( maxPosition != null && currentPosition > maxPosition )
+				( maxPosition != null && currentPosition > maxPosition )
 		);
 
-		currentRow = new Object[] { loadResult };
+		currentRow = new Object[] {loadResult};
 		currentPosition--;
 
 		afterScrollOperation();
@@ -196,7 +196,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 					more = next();
 				}
 			}
-			catch( SQLException e ) {
+			catch (SQLException e) {
 				throw getSession().getFactory().getSQLExceptionHelper().convert(
 						e,
 						"exception calling isAfterLast()"
@@ -224,10 +224,10 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		try {
 			getResultSet().beforeFirst();
 		}
-		catch( SQLException e ) {
+		catch (SQLException e) {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
-			        e,
-			        "exception calling beforeFirst()"
+					e,
+					"exception calling beforeFirst()"
 			);
 		}
 		currentRow = null;
@@ -274,12 +274,12 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 
 	private boolean isResultSetEmpty() {
 		try {
-			return currentPosition == 0 && ! getResultSet().isBeforeFirst() && ! getResultSet().isAfterLast();
+			return currentPosition == 0 && !getResultSet().isBeforeFirst() && !getResultSet().isAfterLast();
 		}
-		catch( SQLException e ) {
+		catch (SQLException e) {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
-			        e,
-			        "Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
+					e,
+					"Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
 			);
 		}
 	}

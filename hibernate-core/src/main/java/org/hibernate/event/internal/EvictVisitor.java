@@ -33,8 +33,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 
-import org.jboss.logging.Logger;
-
 /**
  * Evict any collections referenced by the object from the session cache.
  * This will NOT pick up any collections that were dereferenced, so they

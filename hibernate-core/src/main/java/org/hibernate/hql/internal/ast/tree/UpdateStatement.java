@@ -27,9 +27,8 @@ package org.hibernate.hql.internal.ast.tree;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 import antlr.collections.AST;
 
@@ -39,31 +38,26 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public class UpdateStatement extends AbstractRestrictableStatement {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UpdateStatement.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UpdateStatement.class.getName());
-
-	/**
-	 * @see org.hibernate.hql.internal.ast.tree.Statement#getStatementType()
-	 */
+	@Override
 	public int getStatementType() {
 		return SqlTokenTypes.UPDATE;
 	}
 
-	/**
-	 * @see org.hibernate.hql.internal.ast.tree.Statement#needsExecutor()
-	 */
+	@Override
 	public boolean needsExecutor() {
 		return true;
 	}
 
 	@Override
-    protected int getWhereClauseParentTokenType() {
+	protected int getWhereClauseParentTokenType() {
 		return SqlTokenTypes.SET;
 	}
 
 	@Override
-    protected CoreMessageLogger getLog() {
-        return LOG;
+	protected CoreMessageLogger getLog() {
+		return LOG;
 	}
 
 	public AST getSetClause() {

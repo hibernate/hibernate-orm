@@ -53,7 +53,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.hql.spi.id.IdTableSupport;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
@@ -84,8 +83,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public String processSql(String sql, RowSelection selection) {
 			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return new StringBuilder( sql.length() + 20 ).append( sql )
-					.append( hasOffset ? " limit ? offset ?" : " limit ?" ).toString();
+			return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
 		}
 
 		@Override

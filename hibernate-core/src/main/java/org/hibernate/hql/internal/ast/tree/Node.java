@@ -62,7 +62,7 @@ public class Node extends antlr.CommonAST {
 	}
 
 	@Override
-    public void initialize(Token tok) {
+	public void initialize(Token tok) {
 		super.initialize(tok);
 		filename = tok.getFilename();
 		line = tok.getLine();
@@ -72,7 +72,7 @@ public class Node extends antlr.CommonAST {
 	}
 
 	@Override
-    public void initialize(AST t) {
+	public void initialize(AST t) {
 		super.initialize( t );
 		if ( t instanceof Node ) {
 			Node n = (Node)t;
@@ -88,12 +88,12 @@ public class Node extends antlr.CommonAST {
 	}
 
 	@Override
-    public int getLine() {
+	public int getLine() {
 		return line;
 	}
 
 	@Override
-    public int getColumn() {
+	public int getColumn() {
 		return column;
 	}
 

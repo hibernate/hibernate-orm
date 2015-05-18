@@ -49,9 +49,9 @@ import org.hibernate.internal.util.compare.EqualsHelper;
  */
 public class TypeDefinition implements Serializable {
 	private final String name;
-    private final Class typeImplementorClass;
+	private final Class typeImplementorClass;
 	private final String[] registrationKeys;
-    private final Map<String, String> parameters;
+	private final Map<String, String> parameters;
 
 	public TypeDefinition(
 			String name,
@@ -108,8 +108,8 @@ public class TypeDefinition implements Serializable {
 	}
 
 	public Map<String, String> getParameters() {
-        return parameters;
-    }
+		return parameters;
+	}
 
 	public Properties getParametersAsProperties() {
 		Properties properties = new Properties();

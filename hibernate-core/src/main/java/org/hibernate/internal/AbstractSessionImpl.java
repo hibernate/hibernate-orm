@@ -105,6 +105,7 @@ public abstract class AbstractSessionImpl
 		}
 	}
 
+	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
@@ -208,8 +209,8 @@ public abstract class AbstractSessionImpl
 		}
 		Query query = new SQLQueryImpl(
 				nsqlqd,
-		        this,
-		        factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
+				this,
+				factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
 		);
 		query.setComment( "named native SQL query " + queryName );
 		initQuery( query, nsqlqd );

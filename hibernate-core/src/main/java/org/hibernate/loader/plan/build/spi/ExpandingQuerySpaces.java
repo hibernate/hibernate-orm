@@ -25,14 +25,12 @@ package org.hibernate.loader.plan.build.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping;
-import org.hibernate.loader.plan.spi.Join;
-import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.loader.plan.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Models a collection of {@link QuerySpace} references and
+ * Models a collection of {@link org.hibernate.loader.plan.spi.QuerySpace} references and
  * exposes the ability to create an {@link ExpandingQuerySpace} for "returns" and fetches;
  * used when building a load plan.
  *
@@ -44,11 +42,11 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 * Generate a unique ID to be used when creating an {@link ExpandingQuerySpace}.
 	 * <p/>
 	 * Using this method to generate a unique ID ensures that this object
-	 * does not contain a {@link QuerySpace} with the returned unique ID.
+	 * does not contain a {@link org.hibernate.loader.plan.spi.QuerySpace} with the returned unique ID.
 	 *
 	 * @return The unique ID.
 	 */
-	public String generateImplicitUid();
+	String generateImplicitUid();
 
 	/**
 	 * Create an {@link ExpandingEntityQuerySpace} for an entity "return" with the
@@ -56,7 +54,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * The unique ID should be generated using {@link #generateImplicitUid()},
 	 *
-	 * A unique suffix may be added to the unique ID for an existing {@link QuerySpace}.
+	 * A unique suffix may be added to the unique ID for an existing {@link org.hibernate.loader.plan.spi.QuerySpace}.
 	 * In this case, it is the caller's responsibility to ensure uniqueness.
 	 *
 	 * @param uid The unique ID for the root entity query space.
@@ -67,7 +65,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * @see org.hibernate.loader.plan.spi.EntityReturn
 	 */
-	public ExpandingEntityQuerySpace makeRootEntityQuerySpace(
+	ExpandingEntityQuerySpace makeRootEntityQuerySpace(
 			String uid,
 			EntityPersister entityPersister);
 
@@ -77,7 +75,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * The unique ID should be generated using {@link #generateImplicitUid()},
 	 *
-	 * A unique suffix may be added to the unique ID for an existing {@link QuerySpace}.
+	 * A unique suffix may be added to the unique ID for an existing {@link org.hibernate.loader.plan.spi.QuerySpace}.
 	 * In this case, it is the caller's responsibility to ensure uniqueness.
 	 *
 	 * @param uid The unique ID for the entity query space.
@@ -89,9 +87,9 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 * @throws IllegalStateException if there is already a query space with the
 	 *         specified unique ID.
 	 *
-	 * @see Join
+	 * @see org.hibernate.loader.plan.spi.Join
 	 */
-	public ExpandingEntityQuerySpace makeEntityQuerySpace(
+	ExpandingEntityQuerySpace makeEntityQuerySpace(
 			String uid,
 			EntityPersister entityPersister,
 			boolean canJoinsBeRequired);
@@ -102,7 +100,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * The unique ID should be generated using {@link #generateImplicitUid()},
 	 *
-	 * A unique suffix may be added to the unique ID for an existing {@link QuerySpace}.
+	 * A unique suffix may be added to the unique ID for an existing {@link org.hibernate.loader.plan.spi.QuerySpace}.
 	 * In this case, it is the caller's responsibility to ensure uniqueness.
 	 *
 	 * @param uid The unique ID for the root collection query space.
@@ -113,7 +111,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * @see org.hibernate.loader.plan.spi.CollectionReturn
 	 */
-	public ExpandingCollectionQuerySpace makeRootCollectionQuerySpace(
+	ExpandingCollectionQuerySpace makeRootCollectionQuerySpace(
 			String uid,
 			CollectionPersister collectionPersister);
 
@@ -123,7 +121,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * The unique ID should be generated using {@link #generateImplicitUid()},
 	 *
-	 * A unique suffix may be added to the unique ID for an existing {@link QuerySpace}.
+	 * A unique suffix may be added to the unique ID for an existing {@link org.hibernate.loader.plan.spi.QuerySpace}.
 	 * In this case, it is the caller's responsibility to ensure uniqueness.
 	 *
 	 * @param uid The unique ID for the collection query space.
@@ -135,9 +133,9 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 * @throws IllegalStateException if there is already a query space with the
 	 *         specified unique ID.
 	 *
-	 * @see Join
+	 * @see org.hibernate.loader.plan.spi.Join
 	 */
-	public ExpandingCollectionQuerySpace makeCollectionQuerySpace(
+	ExpandingCollectionQuerySpace makeCollectionQuerySpace(
 			String uid,
 			CollectionPersister collectionPersister,
 			boolean canJoinsBeRequired);
@@ -148,7 +146,7 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * The unique ID should be generated using {@link #generateImplicitUid()},
 	 *
-	 * A unique suffix may be added to the unique ID for an existing {@link QuerySpace}.
+	 * A unique suffix may be added to the unique ID for an existing {@link org.hibernate.loader.plan.spi.QuerySpace}.
 	 * In this case, it is the caller's responsibility to ensure uniqueness.
 	 *
 	 * @param uid The unique ID for the composite query space.
@@ -160,9 +158,9 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 * @throws IllegalStateException if there is already a query space with the
 	 *         specified unique ID.
 	 *
-	 * @see Join
+	 * @see org.hibernate.loader.plan.spi.Join
 	 */
-	public ExpandingCompositeQuerySpace makeCompositeQuerySpace(
+	ExpandingCompositeQuerySpace makeCompositeQuerySpace(
 			String uid,
 			CompositePropertyMapping compositePropertyMapping,
 			boolean canJoinsBeRequired);
@@ -172,5 +170,5 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 	 *
 	 * @return The session factory.
 	 */
-	public SessionFactoryImplementor getSessionFactory();
+	SessionFactoryImplementor getSessionFactory();
 }

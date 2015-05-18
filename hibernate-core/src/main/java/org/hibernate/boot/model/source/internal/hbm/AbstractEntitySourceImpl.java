@@ -66,7 +66,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 
-
 /**
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -530,9 +529,8 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public List<JpaCallbackSource> getJpaCallbackClasses() {
-	    return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	@Override

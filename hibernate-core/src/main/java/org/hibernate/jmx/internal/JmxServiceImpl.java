@@ -34,6 +34,7 @@ import javax.management.ObjectName;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jmx.spi.JmxService;
@@ -41,15 +42,13 @@ import org.hibernate.service.Service;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Stoppable;
 
-import org.jboss.logging.Logger;
-
 /**
  * Standard implementation of JMX services
  *
  * @author Steve Ebersole
  */
 public class JmxServiceImpl implements JmxService, Stoppable {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JmxServiceImpl.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JmxServiceImpl.class );
 
 	public static final String OBJ_NAME_TEMPLATE = "%s:sessionFactory=%s,serviceRole=%s,serviceType=%s";
 

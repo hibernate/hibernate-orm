@@ -20,13 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.jdbc;
+
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import org.hibernate.HibernateException;
 
 /**
  * Contract for performing a discrete piece of JDBC work.
@@ -38,8 +36,9 @@ public interface Work {
 	 * Execute the discrete work encapsulated by this work instance using the supplied connection.
 	 *
 	 * @param connection The connection on which to perform the work.
+	 *
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
-	 * @throws HibernateException Generally indicates a wrapped SQLException.
+	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public void execute(Connection connection) throws SQLException;
+	void execute(Connection connection) throws SQLException;
 }

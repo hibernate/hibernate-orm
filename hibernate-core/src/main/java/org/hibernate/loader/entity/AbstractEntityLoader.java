@@ -38,9 +38,9 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
-public abstract class AbstractEntityLoader extends OuterJoinLoader
+public abstract class AbstractEntityLoader
+		extends OuterJoinLoader
 		implements UniqueEntityLoader {
-
 	protected final OuterJoinLoadable persister;
 	protected final Type uniqueKeyType;
 	protected final String entityName;
@@ -109,13 +109,16 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 	}
 
 	@Override
-    protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
-	throws SQLException, HibernateException {
+	protected Object getResultColumnOrRow(
+			Object[] row,
+			ResultTransformer transformer,
+			ResultSet rs,
+			SessionImplementor session) throws SQLException, HibernateException {
 		return row[row.length-1];
 	}
 
 	@Override
-    protected boolean isSingleRowLoader() {
+	protected boolean isSingleRowLoader() {
 		return true;
 	}
 

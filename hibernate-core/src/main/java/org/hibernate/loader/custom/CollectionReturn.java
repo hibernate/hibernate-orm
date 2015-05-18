@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.custom;
+
 import org.hibernate.LockMode;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
@@ -46,7 +46,7 @@ public class CollectionReturn extends NonScalarReturn {
 			String ownerEntityName,
 			String ownerProperty,
 			CollectionAliases collectionAliases,
-	        EntityAliases elementEntityAliases,
+			EntityAliases elementEntityAliases,
 			LockMode lockMode) {
 		super( alias, lockMode );
 		this.ownerEntityName = ownerEntityName;

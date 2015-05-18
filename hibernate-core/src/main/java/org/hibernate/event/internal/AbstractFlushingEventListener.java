@@ -171,7 +171,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		}
 	}
 
-	protected Object getAnything() { return null; }
+	protected Object getAnything() {
+		return null;
+	}
 
 	protected CascadingAction getCascadingAction() {
 		return CascadingActions.SAVE_UPDATE;

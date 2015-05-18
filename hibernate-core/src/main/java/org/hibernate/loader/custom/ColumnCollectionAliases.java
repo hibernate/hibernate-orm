@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.custom;
 
@@ -35,7 +34,6 @@ import org.hibernate.persister.collection.SQLLoadableCollection;
  * Aliases can still be overwritten via <return-property>
  *
  * @author Max Rydahl Andersen
- *
  */
 public class ColumnCollectionAliases implements CollectionAliases {
 	private final String[] keyAliases;
@@ -51,20 +49,22 @@ public class ColumnCollectionAliases implements CollectionAliases {
 		this.keyAliases = getUserProvidedAliases(
 				"key",
 				persister.getKeyColumnNames()
-			);
+		);
 
 		this.indexAliases = getUserProvidedAliases(
 				"index",
 				persister.getIndexColumnNames()
-				);
+		);
 
-		this.elementAliases = getUserProvidedAliases( "element",
+		this.elementAliases = getUserProvidedAliases(
+				"element",
 				persister.getElementColumnNames()
-				);
+		);
 
-		this.identifierAlias = getUserProvidedAlias( "id",
+		this.identifierAlias = getUserProvidedAlias(
+				"id",
 				persister.getIdentifierColumnName()
-				);
+		);
 
 	}
 
@@ -116,22 +116,24 @@ public class ColumnCollectionAliases implements CollectionAliases {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return super.toString() + " [ suffixedKeyAliases=[" + join( keyAliases ) +
-		        "], suffixedIndexAliases=[" + join( indexAliases ) +
-		        "], suffixedElementAliases=[" + join( elementAliases ) +
-		        "], suffixedIdentifierAlias=[" + identifierAlias + "]]";
+				"], suffixedIndexAliases=[" + join( indexAliases ) +
+				"], suffixedElementAliases=[" + join( elementAliases ) +
+				"], suffixedIdentifierAlias=[" + identifierAlias + "]]";
 	}
 
 	private String join(String[] aliases) {
-		if ( aliases == null) return null;
+		if ( aliases == null ) {
+			return null;
+		}
 
 		return StringHelper.join( ", ", aliases );
 	}
 
 	private String[] getUserProvidedAliases(String propertyPath, String[] defaultAliases) {
-		String[] result = (String[]) userProvidedAliases.get(propertyPath);
-		if (result==null) {
+		String[] result = (String[]) userProvidedAliases.get( propertyPath );
+		if ( result == null ) {
 			return defaultAliases;
 		}
 		else {
@@ -140,8 +142,8 @@ public class ColumnCollectionAliases implements CollectionAliases {
 	}
 
 	private String getUserProvidedAlias(String propertyPath, String defaultAlias) {
-		String[] columns = (String[]) userProvidedAliases.get(propertyPath);
-		if (columns==null) {
+		String[] columns = (String[]) userProvidedAliases.get( propertyPath );
+		if ( columns == null ) {
 			return defaultAlias;
 		}
 		else {

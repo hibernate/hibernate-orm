@@ -49,7 +49,6 @@ import org.hibernate.type.AssociationType;
  * @author Gavin King
  */
 public abstract class AbstractEntityJoinWalker extends JoinWalker {
-
 	private final OuterJoinLoadable persister;
 	private final String alias;
 
@@ -139,7 +138,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 				.setOrderByClause( orderBy( associations, orderBy ) )
 				.setGroupByClause( groupBy );
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( getComment() );
 		}
 		sql = select.toStatementString();
@@ -185,7 +184,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	public abstract String getComment();
 
 	@Override
-    protected boolean isDuplicateAssociation(final String foreignKeyTable, final String[] foreignKeyColumns) {
+	protected boolean isDuplicateAssociation(final String foreignKeyTable, final String[] foreignKeyColumns) {
 		//disable a join back to this same association
 		final boolean isSameJoin =
 				persister.getTableName().equals( foreignKeyTable ) &&

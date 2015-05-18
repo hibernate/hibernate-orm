@@ -156,7 +156,9 @@ public class SelectParser implements Parser {
 		}
 		else if ( getFunction( lctoken, q ) != null && token.equals( q.unalias( token ) ) ) {
 			// the name of an SQL function
-			if ( !ready ) throw new QueryException( ", expected before aggregate function in SELECT: " + token );
+			if ( !ready ) {
+				throw new QueryException( ", expected before aggregate function in SELECT: " + token );
+			}
 			aggregate = true;
 			aggregateAddSelectScalar = true;
 			aggregateFuncTokenList.add( lctoken );

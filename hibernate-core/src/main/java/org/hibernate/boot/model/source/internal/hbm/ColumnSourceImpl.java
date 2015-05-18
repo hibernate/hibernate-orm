@@ -64,13 +64,13 @@ class ColumnSourceImpl
 
 	ColumnSourceImpl(
 			MappingDocument mappingDocument,
-            String tableName,
+			String tableName,
 			JaxbHbmColumnType columnElement,
-            TruthValue nullable) {
+			TruthValue nullable) {
 		super( mappingDocument );
-        this.tableName = tableName;
-        this.columnElement = columnElement;
-        this.nullable = nullable;
+		this.tableName = tableName;
+		this.columnElement = columnElement;
+		this.nullable = nullable;
 	}
 
 	@Override

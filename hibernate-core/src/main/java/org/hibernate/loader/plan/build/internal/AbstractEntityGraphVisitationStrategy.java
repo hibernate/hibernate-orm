@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AttributeNode;
 import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
@@ -45,17 +44,15 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.spi.EntityReturn;
-import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+
 import org.jboss.logging.Logger;
 
 /**

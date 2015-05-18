@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
@@ -39,7 +38,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Collection;
 
 /**
  * Standard implementation of ExtractedDatabaseMetaData

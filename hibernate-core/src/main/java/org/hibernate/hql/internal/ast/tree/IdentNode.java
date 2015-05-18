@@ -331,7 +331,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 
 	@Override
-    public Type getDataType() {
+	public Type getDataType() {
 		Type type = super.getDataType();
 		if ( type != null ) {
 			return type;
@@ -365,7 +365,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 
 	@Override
-    public String getDisplayText() {
+	public String getDisplayText() {
 		StringBuilder buf = new StringBuilder();
 
 		if (getType() == SqlTokenTypes.ALIAS_REF) {

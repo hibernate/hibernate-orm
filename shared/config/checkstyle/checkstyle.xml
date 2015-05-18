@@ -25,6 +25,14 @@
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.1//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 <module name="Checker">
 
+    <module name="FileContentsHolder"/>
+
+    <module name="SuppressionCommentFilter">
+        <property name="offCommentFormat" value="CHECKSTYLE:START_ALLOW_FINALIZER"/>
+        <property name="onCommentFormat" value="CHECKSTYLE:END_ALLOW_FINALIZER"/>
+        <property name="checkFormat" value="NoFinalizer"/>
+    </module>
+
     <!-- See http://checkstyle.sourceforge.net/checks.html for details of the various checks -->
 
     <module name="TreeWalker">

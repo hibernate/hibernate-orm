@@ -138,7 +138,8 @@ public class EntityGraphQueryHint {
 								queryableCollection, collectionType.getRole(), JoinType.LEFT_OUTER_JOIN, true, false
 						);
 					}
-				} else {
+				}
+				else {
 					explicitFromElement = true;
 					fromElement.setInProjectionList( true );
 					fromElement.setFetch( true );

@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.classic;
+
 import java.util.Map;
 
 import org.hibernate.QueryException;
@@ -39,30 +40,25 @@ import org.hibernate.hql.spi.QueryTranslatorFactory;
  * @author Gavin King
  */
 public class ClassicQueryTranslatorFactory implements QueryTranslatorFactory {
-
-	/**
-	 * @see QueryTranslatorFactory#createQueryTranslator
-	 */
+	@Override
 	public QueryTranslator createQueryTranslator(
 			String queryIdentifier,
-	        String queryString,
-	        Map filters,
-	        SessionFactoryImplementor factory,
-	        EntityGraphQueryHint entityGraphQueryHint) {
-		if (entityGraphQueryHint != null) {
+			String queryString,
+			Map filters,
+			SessionFactoryImplementor factory,
+			EntityGraphQueryHint entityGraphQueryHint) {
+		if ( entityGraphQueryHint != null ) {
 			throw new QueryException( "EntityGraphs cannot be applied queries using the classic QueryTranslator!" );
 		}
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}
 
-	/**
-	 * @see org.hibernate.hql.spi.QueryTranslatorFactory#createFilterTranslator
-	 */
+	@Override
 	public FilterTranslator createFilterTranslator(
 			String queryIdentifier,
 			String queryString,
-	        Map filters,
-	        SessionFactoryImplementor factory) {
+			Map filters,
+			SessionFactoryImplementor factory) {
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}
 

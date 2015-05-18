@@ -97,7 +97,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 				notifyObserversImplicitExecution();
 				performExecution();
 				batchPosition = 0;
-                batchExecuted = true;
+				batchExecuted = true;
 			}
 			statementPosition = 0;
 		}

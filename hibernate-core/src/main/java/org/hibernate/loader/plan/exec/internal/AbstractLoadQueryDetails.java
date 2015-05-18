@@ -28,9 +28,6 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
-import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
-import org.hibernate.loader.plan.exec.internal.FetchStats;
-import org.hibernate.loader.plan.exec.internal.LoadQueryJoinAndFetchProcessor;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl;
 import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
@@ -63,14 +60,9 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 
 	/**
 	 * @param rootReturn The root return reference we are processing
-	 * @param select The SelectStatementBuilder
-	 * @param helper The Join/Fetch helper
 	 * @param factory The SessionFactory
 	 * @param buildingParameters The query building context
-	 * @param rootAlias The table alias to use
-	 * @param rootLoadable The persister
-	 * @param readerCollector Collector for EntityReferenceInitializer and CollectionReferenceInitializer references
-	*/
+	 */
 	protected AbstractLoadQueryDetails(
 			LoadPlan loadPlan,
 			AliasResolutionContextImpl aliasResolutionContext,
@@ -278,15 +270,18 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 			entityReferenceInitializers.add( entityReferenceInitializer );
 		}
 
+		@Override
 		public final List<EntityReferenceInitializer> getEntityReferenceInitializers() {
 			return entityReferenceInitializers;
 		}
 
+		@Override
 		public List<CollectionReferenceInitializer> getArrayReferenceInitializers() {
 			return arrayReferenceInitializers;
 
 		}
 
+		@Override
 		public List<CollectionReferenceInitializer> getNonArrayCollectionReferenceInitializers() {
 			return collectionReferenceInitializers;
 		}

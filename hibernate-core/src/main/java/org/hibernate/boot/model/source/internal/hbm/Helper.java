@@ -97,7 +97,7 @@ public class Helper {
 			return new Caching( TruthValue.FALSE );
 		}
 
- 		final boolean cacheLazyProps = cacheElement.getInclude() == null
+		final boolean cacheLazyProps = cacheElement.getInclude() == null
 				|| !"non-lazy".equals( cacheElement.getInclude().value() );
 
 		return new Caching(

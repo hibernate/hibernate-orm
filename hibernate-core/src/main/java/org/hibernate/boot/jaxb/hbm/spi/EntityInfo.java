@@ -31,33 +31,45 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface EntityInfo extends ToolingHintContainer {
-	public String getName();
-	public String getEntityName();
+	String getName();
 
-    public Boolean isAbstract();
-    public Boolean isLazy();
-    public String getProxy();
-    public int getBatchSize();
-    public boolean isDynamicInsert();
-    public boolean isDynamicUpdate();
-    public boolean isSelectBeforeUpdate();
+	String getEntityName();
 
-	public List<JaxbHbmTuplizerType> getTuplizer();
-    public String getPersister();
+	Boolean isAbstract();
 
-	public JaxbHbmLoaderType getLoader();
-	public JaxbHbmCustomSqlDmlType getSqlInsert();
-	public JaxbHbmCustomSqlDmlType getSqlUpdate();
-	public JaxbHbmCustomSqlDmlType getSqlDelete();
+	Boolean isLazy();
 
-	public List<JaxbHbmSynchronizeType> getSynchronize();
+	String getProxy();
 
-	public List<JaxbHbmFetchProfileType> getFetchProfile();
+	int getBatchSize();
 
-    public List<JaxbHbmResultSetMappingType> getResultset();
+	boolean isDynamicInsert();
 
-	public List<JaxbHbmNamedNativeQueryType> getSqlQuery();
-	public List<JaxbHbmNamedQueryType> getQuery();
+	boolean isDynamicUpdate();
 
-	public List getAttributes();
+	boolean isSelectBeforeUpdate();
+
+	List<JaxbHbmTuplizerType> getTuplizer();
+
+	String getPersister();
+
+	JaxbHbmLoaderType getLoader();
+
+	JaxbHbmCustomSqlDmlType getSqlInsert();
+
+	JaxbHbmCustomSqlDmlType getSqlUpdate();
+
+	JaxbHbmCustomSqlDmlType getSqlDelete();
+
+	List<JaxbHbmSynchronizeType> getSynchronize();
+
+	List<JaxbHbmFetchProfileType> getFetchProfile();
+
+	List<JaxbHbmResultSetMappingType> getResultset();
+
+	List<JaxbHbmNamedNativeQueryType> getSqlQuery();
+
+	List<JaxbHbmNamedQueryType> getQuery();
+
+	List getAttributes();
 }

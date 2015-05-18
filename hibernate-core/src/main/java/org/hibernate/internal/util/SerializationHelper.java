@@ -39,8 +39,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
 
-import org.jboss.logging.Logger;
-
 /**
  * <p>Assists with the serialization process and performs additional functionality based
  * on serialization.</p>
@@ -50,7 +48,7 @@ import org.jboss.logging.Logger;
  * <li>Serialize managing finally and IOException
  * <li>Deserialize managing finally and IOException
  * </ul>
- *
+ * <p/>
  * <p>This class throws exceptions for invalid <code>null</code> inputs.
  * Each method documents its behaviour in more detail.</p>
  *
@@ -60,11 +58,11 @@ import org.jboss.logging.Logger;
  * @author Stephen Colebourne
  * @author Jeff Varszegi
  * @author Gary Gregory
- * @version $Id: SerializationHelper.java 9180 2006-01-30 23:51:27Z steveebersole $
+ *
  * @since 1.0
  */
 public final class SerializationHelper {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SerializationHelper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SerializationHelper.class );
 
 	private SerializationHelper() {
 	}
@@ -74,7 +72,7 @@ public final class SerializationHelper {
 
 	/**
 	 * <p>Deep clone an <code>Object</code> using serialization.</p>
-	 *
+	 * <p/>
 	 * <p>This is many times slower than writing clone methods by hand
 	 * on all objects in your object graph. However, for complex object
 	 * graphs, or for those that don't support deep cloning this can
@@ -100,11 +98,11 @@ public final class SerializationHelper {
 
 	/**
 	 * <p>Serializes an <code>Object</code> to the specified stream.</p>
-	 *
+	 * <p/>
 	 * <p>The stream will be closed once the object is written.
 	 * This avoids the need for a finally clause, and maybe also exception
 	 * handling, in the application code.</p>
-	 *
+	 * <p/>
 	 * <p>The stream passed in is not buffered internally within this method.
 	 * This is the responsibility of your application if desired.</p>
 	 *
@@ -135,7 +133,7 @@ public final class SerializationHelper {
 			out.writeObject( obj );
 
 		}
-		catch ( IOException ex ) {
+		catch (IOException ex) {
 			throw new SerializationException( "could not serialize", ex );
 		}
 		finally {
@@ -144,7 +142,7 @@ public final class SerializationHelper {
 					out.close();
 				}
 			}
-			catch ( IOException ignored ) {
+			catch (IOException ignored) {
 			}
 		}
 	}
@@ -244,22 +242,22 @@ public final class SerializationHelper {
 			try {
 				return (T) in.readObject();
 			}
-			catch ( ClassNotFoundException e ) {
+			catch (ClassNotFoundException e) {
 				throw new SerializationException( "could not deserialize", e );
 			}
-			catch ( IOException e ) {
+			catch (IOException e) {
 				throw new SerializationException( "could not deserialize", e );
 			}
 			finally {
 				try {
 					in.close();
 				}
-				catch ( IOException ignore ) {
+				catch (IOException ignore) {
 					// ignore
 				}
 			}
 		}
-		catch ( IOException e ) {
+		catch (IOException e) {
 			throw new SerializationException( "could not deserialize", e );
 		}
 	}
@@ -343,7 +341,7 @@ public final class SerializationHelper {
 			try {
 				return Class.forName( className, false, loader1 );
 			}
-			catch ( ClassNotFoundException e ) {
+			catch (ClassNotFoundException e) {
 				LOG.trace( "Unable to locate class using given classloader" );
 			}
 
@@ -351,7 +349,7 @@ public final class SerializationHelper {
 				try {
 					return Class.forName( className, false, loader2 );
 				}
-				catch ( ClassNotFoundException e ) {
+				catch (ClassNotFoundException e) {
 					LOG.trace( "Unable to locate class using given classloader" );
 				}
 			}
@@ -360,7 +358,7 @@ public final class SerializationHelper {
 				try {
 					return Class.forName( className, false, loader3 );
 				}
-				catch ( ClassNotFoundException e ) {
+				catch (ClassNotFoundException e) {
 					LOG.trace( "Unable to locate class using given classloader" );
 				}
 			}
@@ -371,10 +369,10 @@ public final class SerializationHelper {
 		}
 
 		private boolean different(ClassLoader one, ClassLoader other) {
-            if (one == null) {
+			if ( one == null ) {
 				return other != null;
 			}
-            return !one.equals(other);
+			return !one.equals( other );
 		}
 	}
 }

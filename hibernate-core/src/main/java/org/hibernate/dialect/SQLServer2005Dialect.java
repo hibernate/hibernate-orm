@@ -33,7 +33,6 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -89,16 +88,17 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		final boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
 		final String noWaitStr = isNoWait ? ", nowait" : "";
 		switch ( mode ) {
-			case UPGRADE_NOWAIT:
-				return tableName + " with (updlock, rowlock, nowait)";
 			case UPGRADE:
 			case PESSIMISTIC_WRITE:
-			case WRITE:
+			case WRITE: {
 				return tableName + " with (updlock, rowlock" + noWaitStr + " )";
-			case PESSIMISTIC_READ:
+			}
+			case PESSIMISTIC_READ: {
 				return tableName + " with (holdlock, rowlock" + noWaitStr + " )";
-			default:
+			}
+			default: {
 				return tableName;
+			}
 		}
 	}
 

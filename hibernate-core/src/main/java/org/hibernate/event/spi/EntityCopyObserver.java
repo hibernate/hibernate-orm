@@ -23,8 +23,6 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.event.spi.EventSource;
-
 /**
  * An observer for detection of multiple entity representations for a persistent entity being merged.
  *

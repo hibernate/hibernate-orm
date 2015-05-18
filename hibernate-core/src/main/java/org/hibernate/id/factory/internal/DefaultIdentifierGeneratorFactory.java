@@ -61,7 +61,7 @@ import org.hibernate.type.Type;
 public class DefaultIdentifierGeneratorFactory
 		implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
 
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultIdentifierGeneratorFactory.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultIdentifierGeneratorFactory.class );
 
 	private JdbcEnvironment jdbcEnvironment;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();

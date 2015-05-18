@@ -26,7 +26,6 @@ package org.hibernate.boot.internal;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.persistence.Converter;
 

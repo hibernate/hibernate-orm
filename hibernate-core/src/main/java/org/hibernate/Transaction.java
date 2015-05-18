@@ -25,8 +25,6 @@ package org.hibernate;
 
 import javax.transaction.Synchronization;
 
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.LocalStatus;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
@@ -53,16 +51,16 @@ public interface Transaction {
 	 *
 	 * @throws HibernateException Indicates a problem beginning the transaction.
 	 */
-	public void begin();
+	void begin();
 
 	/**
 	 * Commit this transaction.  This might entail a number of things depending on the context:<ul>
 	 *     <li>
-	 *         If this transaction is the {@link #isInitiator initiator}, {@link Session#flush} the {@link Session}
-	 *         with which it is associated (unless {@link Session} is in {@link FlushMode#MANUAL}).
+	 *         If the underlying transaction was initiated from this Transaction the Session will be flushed,
+	 *         unless the Session is in {@link FlushMode#MANUAL} FlushMode.
 	 *     </li>
 	 *     <li>
-	 *         If this transaction is the {@link #isInitiator initiator}, commit the underlying transaction.
+	 *         If the underlying transaction was initiated from this Transaction, commit the underlying transaction.
 	 *     </li>
 	 *     <li>
 	 *         Coordinate various callbacks
@@ -71,7 +69,7 @@ public interface Transaction {
 	 *
 	 * @throws HibernateException Indicates a problem committing the transaction.
 	 */
-	public void commit();
+	void commit();
 
 	/**
 	 * Rollback this transaction.  Either rolls back the underlying transaction or ensures it cannot later commit
@@ -79,7 +77,7 @@ public interface Transaction {
 	 *
 	 * @throws HibernateException Indicates a problem rolling back the transaction.
 	 */
-	public void rollback();
+	void rollback();
 
 	/**
 	 * Get the current local status of this transaction.
@@ -89,7 +87,7 @@ public interface Transaction {
 	 *
 	 * @return The current local status.
 	 */
-	public TransactionStatus getStatus();
+	TransactionStatus getStatus();
 
 	/**
 	 * Register a user synchronization callback for this transaction.
@@ -98,25 +96,25 @@ public interface Transaction {
 	 *
 	 * @throws HibernateException Indicates a problem registering the synchronization.
 	 */
-	public void registerSynchronization(Synchronization synchronization) throws HibernateException;
+	void registerSynchronization(Synchronization synchronization) throws HibernateException;
 
 	/**
 	 * Set the transaction timeout for any transaction started by a subsequent call to {@link #begin} on this instance.
 	 *
 	 * @param seconds The number of seconds before a timeout.
 	 */
-	public void setTimeout(int seconds);
+	void setTimeout(int seconds);
 
 	/**
 	 * Retrieve the transaction timeout set for this transaction.  A negative indicates no timeout has been set.
 	 *
 	 * @return The timeout, in seconds.
 	 */
-	public int getTimeout();
+	int getTimeout();
 
 	/**
 	 * Make a best effort to mark the underlying transaction for rollback only.
 	 */
-	public void markRollbackOnly();
+	void markRollbackOnly();
 
 }

@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.internal;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -43,8 +43,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 /**
  * default implementation of the <tt>Query</tt> interface,
  * for "ordinary" HQL queries (not collection filters)
- * @see CollectionFilterImpl
+ *
  * @author Gavin King
+ * @see CollectionFilterImpl
  */
 public class QueryImpl extends AbstractQueryImpl {
 
@@ -52,9 +53,9 @@ public class QueryImpl extends AbstractQueryImpl {
 
 	public QueryImpl(
 			String queryString,
-	        FlushMode flushMode,
-	        SessionImplementor session,
-	        ParameterMetadata parameterMetadata) {
+			FlushMode flushMode,
+			SessionImplementor session,
+			ParameterMetadata parameterMetadata) {
 		super( queryString, flushMode, session, parameterMetadata );
 	}
 
@@ -68,9 +69,9 @@ public class QueryImpl extends AbstractQueryImpl {
 		before();
 		try {
 			return getSession().iterate(
-					expandParameterLists(namedParams),
-			        getQueryParameters(namedParams)
-				);
+					expandParameterLists( namedParams ),
+					getQueryParameters( namedParams )
+			);
 		}
 		finally {
 			after();
@@ -85,10 +86,10 @@ public class QueryImpl extends AbstractQueryImpl {
 		verifyParameters();
 		Map namedParams = getNamedParams();
 		before();
-		QueryParameters qp = getQueryParameters(namedParams);
-		qp.setScrollMode(scrollMode);
+		QueryParameters qp = getQueryParameters( namedParams );
+		qp.setScrollMode( scrollMode );
 		try {
-			return getSession().scroll( expandParameterLists(namedParams), qp );
+			return getSession().scroll( expandParameterLists( namedParams ), qp );
 		}
 		finally {
 			after();
@@ -101,9 +102,9 @@ public class QueryImpl extends AbstractQueryImpl {
 		before();
 		try {
 			return getSession().list(
-					expandParameterLists(namedParams),
-			        getQueryParameters(namedParams)
-				);
+					expandParameterLists( namedParams ),
+					getQueryParameters( namedParams )
+			);
 		}
 		finally {
 			after();
@@ -115,10 +116,10 @@ public class QueryImpl extends AbstractQueryImpl {
 		Map namedParams = getNamedParams();
 		before();
 		try {
-            return getSession().executeUpdate(
-                    expandParameterLists( namedParams ),
-                    getQueryParameters( namedParams )
-	            );
+			return getSession().executeUpdate(
+					expandParameterLists( namedParams ),
+					getQueryParameters( namedParams )
+			);
 		}
 		finally {
 			after();
@@ -129,11 +130,11 @@ public class QueryImpl extends AbstractQueryImpl {
 		lockOptions.setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
-	
+
 	public Query setLockOptions(LockOptions lockOption) {
-		this.lockOptions.setLockMode(lockOption.getLockMode());
-		this.lockOptions.setScope(lockOption.getScope());
-		this.lockOptions.setTimeOut(lockOption.getTimeOut());
+		this.lockOptions.setLockMode( lockOption.getLockMode() );
+		this.lockOptions.setScope( lockOption.getScope() );
+		this.lockOptions.setTimeOut( lockOption.getTimeOut() );
 		return this;
 	}
 

@@ -162,12 +162,12 @@ public class EntityLoader extends AbstractEntityLoader {
 	}
 
 	@Override
-    protected boolean isSingleRowLoader() {
+	protected boolean isSingleRowLoader() {
 		return !batchLoader;
 	}
 
 	@Override
-    public int[][] getCompositeKeyManyToOneTargetIndices() {
+	public int[][] getCompositeKeyManyToOneTargetIndices() {
 		return compositeKeyManyToOneTargetIndices;
 	}
 }

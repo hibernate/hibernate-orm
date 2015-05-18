@@ -41,21 +41,21 @@ class ColumnAttributeSourceImpl
 	private final String tableName;
 	private final String columnName;
 	private final SizeSource sizeSource;
-    private final TruthValue nullable;
-    private final TruthValue unique;
+	private final TruthValue nullable;
+	private final TruthValue unique;
 
-    ColumnAttributeSourceImpl(
+	ColumnAttributeSourceImpl(
 			MappingDocument mappingDocument,
 			String tableName,
 			String columnName,
 			SizeSource sizeSource,
-            TruthValue nullable,
+			TruthValue nullable,
 			TruthValue unique) {
 		super( mappingDocument );
 		this.tableName = tableName;
 		this.columnName = columnName;
 		this.sizeSource = sizeSource;
-        this.nullable = nullable;
+		this.nullable = nullable;
 		this.unique = unique;
 	}
 

@@ -23,14 +23,12 @@
  */
 package org.hibernate.hql.spi.id;
 
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-
 /**
  * @author Steve Ebersole
  */
 public interface IdTableSupport {
-	public String generateIdTableName(String baseName);
-	public String getCreateIdTableCommand();
-	public String getCreateIdTableStatementOptions();
-	public String getDropIdTableCommand();
+	String generateIdTableName(String baseName);
+	String getCreateIdTableCommand();
+	String getCreateIdTableStatementOptions();
+	String getDropIdTableCommand();
 }

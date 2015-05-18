@@ -46,13 +46,14 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 /**
- *
- *
  * @author Gavin King
  */
 public class CollectionElementLoader extends OuterJoinLoader {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CollectionElementLoader.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			CollectionElementLoader.class.getName()
+	);
 
 	private final OuterJoinLoadable persister;
 	private final Type keyType;
@@ -71,16 +72,16 @@ public class CollectionElementLoader extends OuterJoinLoader {
 		this.entityName = persister.getEntityName();
 
 		JoinWalker walker = new EntityJoinWalker(
-				persister, 
+				persister,
 				ArrayHelper.join(
 						collectionPersister.getKeyColumnNames(),
-						collectionPersister.toColumns("index")
+						collectionPersister.toColumns( "index" )
 				),
-				1, 
-				LockMode.NONE, 
-				factory, 
+				1,
+				LockMode.NONE,
+				factory,
 				loadQueryInfluencers
-			);
+		);
 		initFromWalker( walker );
 
 		postInstantiate();
@@ -92,7 +93,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 	}
 
 	public Object loadElement(SessionImplementor session, Object key, Object index)
-	throws HibernateException {
+			throws HibernateException {
 
 		List list = loadEntity(
 				session,
@@ -101,36 +102,36 @@ public class CollectionElementLoader extends OuterJoinLoader {
 				keyType,
 				indexType,
 				persister
-			);
+		);
 
-		if ( list.size()==1 ) {
-			return list.get(0);
+		if ( list.size() == 1 ) {
+			return list.get( 0 );
 		}
-		else if ( list.size()==0 ) {
+		else if ( list.size() == 0 ) {
 			return null;
 		}
 		else {
-			if ( getCollectionOwners()!=null ) {
-				return list.get(0);
+			if ( getCollectionOwners() != null ) {
+				return list.get( 0 );
 			}
 			else {
-				throw new HibernateException("More than one row was found");
+				throw new HibernateException( "More than one row was found" );
 			}
 		}
 
 	}
 
 	@Override
-    protected Object getResultColumnOrRow(
-		Object[] row,
-		ResultTransformer transformer,
-		ResultSet rs, SessionImplementor session)
-	throws SQLException, HibernateException {
-		return row[row.length-1];
+	protected Object getResultColumnOrRow(
+			Object[] row,
+			ResultTransformer transformer,
+			ResultSet rs, SessionImplementor session)
+			throws SQLException, HibernateException {
+		return row[row.length - 1];
 	}
 
 	@Override
-    protected boolean isSingleRowLoader() {
+	protected boolean isSingleRowLoader() {
 		return true;
 	}
 }

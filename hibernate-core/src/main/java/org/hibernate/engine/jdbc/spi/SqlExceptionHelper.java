@@ -95,7 +95,7 @@ public class SqlExceptionHelper {
 	 * @param sqlExceptionConverter The converter to use.
 	 */
 	public void setSqlExceptionConverter(SQLExceptionConverter sqlExceptionConverter) {
-		this.sqlExceptionConverter = (sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter);
+		this.sqlExceptionConverter = ( sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter );
 	}
 
 	// SQLException ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -154,13 +154,13 @@ public class SqlExceptionHelper {
 	/**
 	 * Contract for handling {@link SQLWarning warnings}
 	 */
-	public static interface WarningHandler {
+	public interface WarningHandler {
 		/**
 		 * Should processing be done? Allows short-circuiting if not.
 		 *
 		 * @return True to process warnings, false otherwise.
 		 */
-		public boolean doProcess();
+		boolean doProcess();
 
 		/**
 		 * Prepare for processing of a {@link SQLWarning warning} stack.
@@ -169,14 +169,14 @@ public class SqlExceptionHelper {
 		 *
 		 * @param warning The first warning in the stack.
 		 */
-		public void prepare(SQLWarning warning);
+		void prepare(SQLWarning warning);
 
 		/**
 		 * Handle an individual warning in the stack.
 		 *
 		 * @param warning The warning to handle.
 		 */
-		public void handleWarning(SQLWarning warning);
+		void handleWarning(SQLWarning warning);
 	}
 
 	/**
@@ -237,7 +237,9 @@ public class SqlExceptionHelper {
 	/**
 	 * Static access to the standard handler for logging warnings
 	 */
-	public static final StandardWarningHandler STANDARD_WARNING_HANDLER = new StandardWarningHandler( DEFAULT_WARNING_MSG );
+	public static final StandardWarningHandler STANDARD_WARNING_HANDLER = new StandardWarningHandler(
+			DEFAULT_WARNING_MSG
+	);
 
 	/**
 	 * Generic algorithm to walk the hierarchy of SQLWarnings
@@ -268,7 +270,7 @@ public class SqlExceptionHelper {
 	public void logAndClearWarnings(Connection connection) {
 		handleAndClearWarnings( connection, STANDARD_WARNING_HANDLER );
 	}
-	
+
 	public void logAndClearWarnings(Statement statement) {
 		handleAndClearWarnings( statement, STANDARD_WARNING_HANDLER );
 	}
@@ -314,16 +316,16 @@ public class SqlExceptionHelper {
 			Statement statement,
 			WarningHandler handler) {
 		// See HHH-9174.  Statement#getWarnings can be an expensive call for many JDBC libs.  Don't do it unless
-    	// the log level would actually allow a warning to be logged.
-    	if (LOG.isEnabled(Level.WARN)) {
-    		try {
+		// the log level would actually allow a warning to be logged.
+		if ( LOG.isEnabled( Level.WARN ) ) {
+			try {
 				walkWarnings( statement.getWarnings(), handler );
 			}
 			catch (SQLException sqlException) {
 				// workaround for WebLogic
 				LOG.debug( "could not log warnings", sqlException );
 			}
-    	}
+		}
 		try {
 			// Sybase fail if we don't do that, sigh...
 			statement.clearWarnings();

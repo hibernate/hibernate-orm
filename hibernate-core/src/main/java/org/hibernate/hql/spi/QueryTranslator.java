@@ -44,12 +44,10 @@ import org.hibernate.type.Type;
  * @author josh
  */
 public interface QueryTranslator {
-
-	// Error message constants.
-	public static final String ERROR_CANNOT_FETCH_WITH_ITERATE = "fetch may not be used with scroll() or iterate()";
-	public static final String ERROR_NAMED_PARAMETER_DOES_NOT_APPEAR = "Named parameter does not appear in Query: ";
-    public static final String ERROR_CANNOT_DETERMINE_TYPE = "Could not determine type of: ";
-	public static final String ERROR_CANNOT_FORMAT_LITERAL =  "Could not format constant value to SQL literal: ";
+	String ERROR_CANNOT_FETCH_WITH_ITERATE = "fetch may not be used with scroll() or iterate()";
+	String ERROR_NAMED_PARAMETER_DOES_NOT_APPEAR = "Named parameter does not appear in Query: ";
+	String ERROR_CANNOT_DETERMINE_TYPE = "Could not determine type of: ";
+	String ERROR_CANNOT_FORMAT_LITERAL =  "Could not format constant value to SQL literal: ";
 
 	/**
 	 * Compile a "normal" query. This method may be called multiple
@@ -188,5 +186,5 @@ public interface QueryTranslator {
 
 	boolean isManipulationStatement();
 
-	public Class getDynamicInstantiationResultType();
+	Class getDynamicInstantiationResultType();
 }

@@ -41,7 +41,6 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.hql.spi.id.IdTableSupport;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;

@@ -80,7 +80,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class SQLQueryReturnProcessor {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SQLQueryReturnProcessor.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SQLQueryReturnProcessor.class );
 
 	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
 

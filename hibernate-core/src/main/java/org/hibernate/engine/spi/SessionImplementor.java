@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -38,7 +37,6 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;

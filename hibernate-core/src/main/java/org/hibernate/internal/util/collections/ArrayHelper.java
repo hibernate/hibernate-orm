@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.internal.util.collections;
 
@@ -38,11 +37,11 @@ import org.hibernate.LockOptions;
 import org.hibernate.type.Type;
 
 public final class ArrayHelper {
-	
+
 	public static boolean contains(Object[] array, Object object) {
 		return indexOf( array, object ) > -1;
 	}
-	
+
 	public static int indexOf(Object[] array, Object object) {
 		for ( int i = 0; i < array.length; i++ ) {
 			if ( array[i].equals( object ) ) {
@@ -59,9 +58,9 @@ public final class ArrayHelper {
 	}*/
 
 	public static String[] toStringArray(Object[] objects) {
-		int length=objects.length;
+		int length = objects.length;
 		String[] result = new String[length];
-		for (int i=0; i<length; i++) {
+		for ( int i = 0; i < length; i++ ) {
 			result[i] = objects[i].toString();
 		}
 		return result;
@@ -69,49 +68,49 @@ public final class ArrayHelper {
 
 	public static String[] fillArray(String value, int length) {
 		String[] result = new String[length];
-		Arrays.fill(result, value);
+		Arrays.fill( result, value );
 		return result;
 	}
 
 	public static int[] fillArray(int value, int length) {
 		int[] result = new int[length];
-		Arrays.fill(result, value);
+		Arrays.fill( result, value );
 		return result;
 	}
 
 	public static LockMode[] fillArray(LockMode lockMode, int length) {
 		LockMode[] array = new LockMode[length];
-		Arrays.fill(array, lockMode);
+		Arrays.fill( array, lockMode );
 		return array;
 	}
 
 	public static LockOptions[] fillArray(LockOptions lockOptions, int length) {
 		LockOptions[] array = new LockOptions[length];
-		Arrays.fill(array, lockOptions);
+		Arrays.fill( array, lockOptions );
 		return array;
 	}
 
 	public static String[] toStringArray(Collection coll) {
 		return (String[]) coll.toArray( new String[coll.size()] );
 	}
-	
+
 	public static String[][] to2DStringArray(Collection coll) {
-		return (String[][]) coll.toArray( new String[ coll.size() ][] );
+		return (String[][]) coll.toArray( new String[coll.size()][] );
 	}
-	
+
 	public static int[][] to2DIntArray(Collection coll) {
-		return (int[][]) coll.toArray( new int[ coll.size() ][] );
+		return (int[][]) coll.toArray( new int[coll.size()][] );
 	}
-	
+
 	public static Type[] toTypeArray(Collection coll) {
 		return (Type[]) coll.toArray( new Type[coll.size()] );
 	}
 
 	public static int[] toIntArray(Collection coll) {
 		Iterator iter = coll.iterator();
-		int[] arr = new int[ coll.size() ];
-		int i=0;
-		while( iter.hasNext() ) {
+		int[] arr = new int[coll.size()];
+		int i = 0;
+		while ( iter.hasNext() ) {
 			arr[i++] = (Integer) iter.next();
 		}
 		return arr;
@@ -119,25 +118,27 @@ public final class ArrayHelper {
 
 	public static boolean[] toBooleanArray(Collection coll) {
 		Iterator iter = coll.iterator();
-		boolean[] arr = new boolean[ coll.size() ];
-		int i=0;
-		while( iter.hasNext() ) {
+		boolean[] arr = new boolean[coll.size()];
+		int i = 0;
+		while ( iter.hasNext() ) {
 			arr[i++] = (Boolean) iter.next();
 		}
 		return arr;
 	}
 
 	public static Object[] typecast(Object[] array, Object[] to) {
-		return java.util.Arrays.asList(array).toArray(to);
+		return java.util.Arrays.asList( array ).toArray( to );
 	}
 
 	//Arrays.asList doesn't do primitive arrays
 	public static List toList(Object array) {
-		if ( array instanceof Object[] ) return Arrays.asList( (Object[]) array ); //faster?
-		int size = Array.getLength(array);
-		ArrayList list = new ArrayList(size);
-		for (int i=0; i<size; i++) {
-			list.add( Array.get(array, i) );
+		if ( array instanceof Object[] ) {
+			return Arrays.asList( (Object[]) array ); //faster?
+		}
+		int size = Array.getLength( array );
+		ArrayList list = new ArrayList( size );
+		for ( int i = 0; i < size; i++ ) {
+			list.add( Array.get( array, i ) );
 		}
 		return list;
 	}
@@ -163,17 +164,17 @@ public final class ArrayHelper {
 	}
 
 	public static String[] join(String[] x, String[] y) {
-		String[] result = new String[ x.length + y.length ];
+		String[] result = new String[x.length + y.length];
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
 	}
 
 	public static String[] join(String[] x, String[] y, boolean[] use) {
-		String[] result = new String[ x.length + countTrue(use) ];
+		String[] result = new String[x.length + countTrue( use )];
 		System.arraycopy( x, 0, result, 0, x.length );
 		int k = x.length;
-		for ( int i=0; i<y.length; i++ ) {
+		for ( int i = 0; i < y.length; i++ ) {
 			if ( use[i] ) {
 				result[k++] = y[i];
 			}
@@ -182,13 +183,13 @@ public final class ArrayHelper {
 	}
 
 	public static int[] join(int[] x, int[] y) {
-		int[] result = new int[ x.length + y.length ];
+		int[] result = new int[x.length + y.length];
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public static <T> T[] join(T[] x, T... y) {
 		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
@@ -196,21 +197,22 @@ public final class ArrayHelper {
 		return result;
 	}
 
-	public static final boolean[] TRUE = { true };
-	public static final boolean[] FALSE = { false };
+	public static final boolean[] TRUE = {true};
+	public static final boolean[] FALSE = {false};
 
-	private ArrayHelper() {}
+	private ArrayHelper() {
+	}
 
-	public static String toString( Object[] array ) {
+	public static String toString(Object[] array) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("[");
-		for (int i = 0; i < array.length; i++) {
+		sb.append( "[" );
+		for ( int i = 0; i < array.length; i++ ) {
 			sb.append( array[i] );
-			if( i<array.length-1 ) {
-				sb.append(",");
+			if ( i < array.length - 1 ) {
+				sb.append( "," );
 			}
 		}
-		sb.append("]");
+		sb.append( "]" );
 		return sb.toString();
 	}
 
@@ -233,7 +235,7 @@ public final class ArrayHelper {
 	}
 
 	public static int countTrue(boolean[] array) {
-		int result=0;
+		int result = 0;
 		for ( boolean anArray : array ) {
 			if ( anArray ) {
 				result++;
@@ -270,28 +272,28 @@ public final class ArrayHelper {
 	public static final Object[] EMPTY_OBJECT_ARRAY = {};
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
 	public static final byte[] EMPTY_BYTE_ARRAY = {};
-	
+
 	public static int[] getBatchSizes(int maxBatchSize) {
 		int batchSize = maxBatchSize;
-		int n=1;
-		while ( batchSize>1 ) {
-			batchSize = getNextBatchSize(batchSize);
+		int n = 1;
+		while ( batchSize > 1 ) {
+			batchSize = getNextBatchSize( batchSize );
 			n++;
 		}
 		int[] result = new int[n];
 		batchSize = maxBatchSize;
-		for ( int i=0; i<n; i++ ) {
+		for ( int i = 0; i < n; i++ ) {
 			result[i] = batchSize;
-			batchSize = getNextBatchSize(batchSize);
+			batchSize = getNextBatchSize( batchSize );
 		}
 		return result;
 	}
-	
+
 	private static int getNextBatchSize(int batchSize) {
-		if (batchSize<=10) {
-			return batchSize-1; //allow 9,8,7,6,5,4,3,2,1
+		if ( batchSize <= 10 ) {
+			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
 		}
-		else if (batchSize/2 < 10) {
+		else if ( batchSize / 2 < 10 ) {
 			return 10;
 		}
 		else {
@@ -346,66 +348,66 @@ public final class ArrayHelper {
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(Object[] o1, Object[] o2) {
-		if (o1 == o2) {
+		if ( o1 == o2 ) {
 			return true;
 		}
-		if (o1 == null || o2 == null) {
+		if ( o1 == null || o2 == null ) {
 			return false;
 		}
 		int length = o1.length;
-		if (length != o2.length) {
+		if ( length != o2.length ) {
 			return false;
 		}
-		for (int index = 0 ; index < length ; index++) {
-			if ( ! o1[index].equals( o2[index] ) ) {
+		for ( int index = 0; index < length; index++ ) {
+			if ( !o1[index].equals( o2[index] ) ) {
 				return false;
 			}
 		}
-        return true;
+		return true;
 	}
 
 	/**
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(char[] o1, char[] o2) {
-		if (o1 == o2) {
+		if ( o1 == o2 ) {
 			return true;
 		}
-		if (o1 == null || o2 == null) {
+		if ( o1 == null || o2 == null ) {
 			return false;
 		}
 		int length = o1.length;
-		if (length != o2.length) {
+		if ( length != o2.length ) {
 			return false;
 		}
-		for (int index = 0 ; index < length ; index++) {
-			if ( ! ( o1[index] == o2[index] ) ) {
+		for ( int index = 0; index < length; index++ ) {
+			if ( !( o1[index] == o2[index] ) ) {
 				return false;
 			}
 		}
-        return true;
+		return true;
 	}
 
 	/**
 	 * Compare 2 arrays only at the first level
 	 */
 	public static boolean isEquals(byte[] b1, byte[] b2) {
-		if (b1 == b2) {
+		if ( b1 == b2 ) {
 			return true;
 		}
-		if (b1 == null || b2 == null) {
+		if ( b1 == null || b2 == null ) {
 			return false;
 		}
 		int length = b1.length;
-		if (length != b2.length) {
+		if ( length != b2.length ) {
 			return false;
 		}
-		for (int index = 0 ; index < length ; index++) {
-			if ( ! ( b1[index] == b2[index] ) ) {
+		for ( int index = 0; index < length; index++ ) {
+			if ( !( b1[index] == b2[index] ) ) {
 				return false;
 			}
 		}
-        return true;
+		return true;
 	}
 
 	public static Serializable[] extractNonNull(Serializable[] array) {
@@ -452,7 +454,7 @@ public final class ArrayHelper {
 		}
 
 		System.out.println( "Backward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		for ( int i = batchSizes.length-1; i >= 0; i-- ) {
+		for ( int i = batchSizes.length - 1; i >= 0; i-- ) {
 			System.out.println( "[" + i + "] -> " + batchSizes[i] );
 		}
 	}

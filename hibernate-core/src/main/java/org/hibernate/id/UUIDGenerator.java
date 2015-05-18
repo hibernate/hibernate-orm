@@ -32,12 +32,11 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-
-import org.jboss.logging.Logger;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -60,7 +59,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UUIDGenerator.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	private UUIDGenerationStrategy strategy;
 	private UUIDTypeDescriptor.ValueTransformer valueTransformer;
@@ -86,11 +85,11 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
 					catch ( Exception ignore ) {
-                        LOG.unableToInstantiateUuidGenerationStrategy(ignore);
+						LOG.unableToInstantiateUuidGenerationStrategy(ignore);
 					}
 				}
 				catch ( ClassNotFoundException ignore ) {
-                    LOG.unableToLocateUuidGenerationStrategy(strategyClassName);
+						LOG.unableToLocateUuidGenerationStrategy(strategyClassName);
 				}
 			}
 		}

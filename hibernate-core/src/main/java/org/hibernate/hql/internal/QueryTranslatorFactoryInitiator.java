@@ -25,17 +25,13 @@ package org.hibernate.hql.internal;
 
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.QUERY_TRANSLATOR;
 

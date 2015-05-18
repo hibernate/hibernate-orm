@@ -31,7 +31,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -41,7 +40,7 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.jboss.logging.Logger;
 
 /**
- * {@link LoadPlanBuildingAssociationVisitationStrategy} implementation used for building LoadPlans based on metamodel-defined fetching.  Built
+ * LoadPlanBuildingAssociationVisitationStrategy implementation used for building LoadPlans based on metamodel-defined fetching.  Built
  * LoadPlans contain a single root return object, either an {@link EntityReturn} or a {@link CollectionReturn}.
  *
  * @author Steve Ebersole
@@ -129,7 +128,7 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 		}
 
-		final Integer maxFetchDepth = sessionFactory().getSettings().getMaximumFetchDepth();
+		final Integer maxFetchDepth = sessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
 		if ( maxFetchDepth != null && currentDepth() > maxFetchDepth ) {
 			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 		}

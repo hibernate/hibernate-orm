@@ -244,7 +244,7 @@ public class WhereParser implements Parser {
 
 			if ( bracketsSinceSelect == -1 ) {
 				QueryTranslatorImpl subq = new QueryTranslatorImpl(
-				        subselect.toString(),
+						subselect.toString(),
 						q.getEnabledFilters(),
 						q.getFactory()
 				);
@@ -445,7 +445,9 @@ public class WhereParser implements Parser {
 					catch ( MappingException me ) {
 						throw new QueryException( me );
 					}
-					if ( type == null ) throw new QueryException( QueryTranslator.ERROR_CANNOT_DETERMINE_TYPE + token );
+					if ( type == null ) {
+						throw new QueryException( QueryTranslator.ERROR_CANNOT_DETERMINE_TYPE + token );
+					}
 					try {
 						//noinspection unchecked
 						appendToken( q, ( ( LiteralType ) type ).objectToSQLString( constant, q.getFactory().getDialect() ) );

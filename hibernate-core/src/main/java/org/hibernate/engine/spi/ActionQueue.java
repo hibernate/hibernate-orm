@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -290,7 +289,7 @@ public class ActionQueue {
 
 	private void registerCleanupActions(Executable executable) {
 		beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
-		if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			invalidateSpaces( executable.getPropertySpaces() );
 		}
 		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
@@ -471,7 +470,7 @@ public class ActionQueue {
 			}
 		}
 		finally {
-			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
 				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
 				// unexpected.
@@ -573,7 +572,7 @@ public class ActionQueue {
 	}
 
 	public void sortCollectionActions() {
-		if ( session.getFactory().getSettings().isOrderUpdatesEnabled() ) {
+		if ( session.getFactory().getSessionFactoryOptions().isOrderUpdatesEnabled() ) {
 			// sort the updates by fk
 			collectionCreations.sort();
 			collectionUpdates.sort();
@@ -583,11 +582,11 @@ public class ActionQueue {
 	}
 
 	public void sortActions() {
-		if ( session.getFactory().getSettings().isOrderUpdatesEnabled() ) {
+		if ( session.getFactory().getSessionFactoryOptions().isOrderUpdatesEnabled() ) {
 			// sort the updates by pk
 			updates.sort();
 		}
-		if ( session.getFactory().getSettings().isOrderInsertsEnabled() ) {
+		if ( session.getFactory().getSessionFactoryOptions().isOrderInsertsEnabled() ) {
 			insertions.sort();
 		}
 	}
@@ -604,10 +603,12 @@ public class ActionQueue {
 		}
 	}
 
+	@SuppressWarnings("SimplifiableConditionalExpression")
 	public boolean hasAfterTransactionActions() {
 		return isTransactionCoordinatorShared ? false : afterTransactionProcesses.hasActions();
 	}
 
+	@SuppressWarnings("SimplifiableConditionalExpression")
 	public boolean hasBeforeTransactionActions() {
 		return isTransactionCoordinatorShared ? false : beforeTransactionProcesses.hasActions();
 	}
@@ -759,7 +760,7 @@ public class ActionQueue {
 				}
 			}
 
-			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				session.getFactory().getUpdateTimestampsCache().invalidate(
 						querySpacesToInvalidate.toArray( new String[querySpacesToInvalidate.size()] ),
 						session

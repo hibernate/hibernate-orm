@@ -31,8 +31,8 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
  * @author Gavin King
  */
 public interface PostInsertIdentifierGenerator extends IdentifierGenerator {
-	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
+	InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
-	        Dialect dialect,
-	        boolean isGetGeneratedKeysEnabled) throws HibernateException;
+			Dialect dialect,
+			boolean isGetGeneratedKeysEnabled) throws HibernateException;
 }

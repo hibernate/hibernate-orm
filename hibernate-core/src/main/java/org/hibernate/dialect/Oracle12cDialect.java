@@ -26,43 +26,41 @@ package org.hibernate.dialect;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQL2008StandardLimitHandler;
-import org.hibernate.engine.spi.RowSelection;
 
 /**
  * An SQL dialect for Oracle 12c.
- * 
+ *
  * @author zhouyanming (zhouyanming@gmail.com)
  */
 public class Oracle12cDialect extends Oracle10gDialect {
+	public Oracle12cDialect() {
+		super();
+	}
 
-        public Oracle12cDialect() {
-                super();
-        }
-        
-        @Override
-    	protected void registerDefaultProperties() {
-    		super.registerDefaultProperties();
-    		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );
-    	}
-        
-        @Override
-    	public boolean supportsIdentityColumns() {
-    		return true;
-    	}
+	@Override
+	protected void registerDefaultProperties() {
+		super.registerDefaultProperties();
+		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );
+	}
 
-    	@Override
-    	public boolean supportsInsertSelectIdentity() {
-    		return true;
-    	}
+	@Override
+	public boolean supportsIdentityColumns() {
+		return true;
+	}
 
-    	@Override
-    	public String getIdentityColumnString() {
-    		return "generated as identity";
-    	}
+	@Override
+	public boolean supportsInsertSelectIdentity() {
+		return true;
+	}
 
-		@Override
-		public LimitHandler getLimitHandler() {
-			return SQL2008StandardLimitHandler.INSTANCE;
-		}
+	@Override
+	public String getIdentityColumnString() {
+		return "generated as identity";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return SQL2008StandardLimitHandler.INSTANCE;
+	}
 
 }

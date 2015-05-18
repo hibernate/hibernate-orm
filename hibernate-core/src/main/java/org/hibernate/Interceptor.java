@@ -26,7 +26,6 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.Type;
 
 /**
@@ -71,7 +70,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
+	boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
 
 	/**
 	 * Called when an object is detected to be dirty, during a flush. The interceptor may modify the detected
@@ -94,7 +93,13 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) throws CallbackException;
+	boolean onFlushDirty(
+			Object entity,
+			Serializable id,
+			Object[] currentState,
+			Object[] previousState,
+			String[] propertyNames,
+			Type[] types) throws CallbackException;
 
 	/**
 	 * Called before an object is saved. The interceptor may modify the <tt>state</tt>, which will be used for
@@ -110,7 +115,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
+	boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
 
 	/**
 	 *  Called before an object is deleted. It is not recommended that the interceptor modify the <tt>state</tt>.
@@ -123,7 +128,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
+	void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) throws CallbackException;
 
 	/**
 	 * Called before a collection is (re)created.
@@ -133,7 +138,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException;
+	void onCollectionRecreate(Object collection, Serializable key) throws CallbackException;
 
 	/**
 	 * Called before a collection is deleted.
@@ -143,7 +148,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException;
+	void onCollectionRemove(Object collection, Serializable key) throws CallbackException;
 
 	/**
 	 * Called before a collection is updated.
@@ -153,7 +158,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException;
+	void onCollectionUpdate(Object collection, Serializable key) throws CallbackException;
 
 	/**
 	 * Called before a flush.
@@ -162,7 +167,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public void preFlush(Iterator entities) throws CallbackException;
+	void preFlush(Iterator entities) throws CallbackException;
 
 	/**
 	 * Called after a flush that actually ends in execution of the SQL statements required to synchronize
@@ -172,7 +177,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public void postFlush(Iterator entities) throws CallbackException;
+	void postFlush(Iterator entities) throws CallbackException;
 
 	/**
 	 * Called to distinguish between transient and detached entities. The return value determines the
@@ -186,7 +191,7 @@ public interface Interceptor {
 	 * @param entity a transient or detached entity
 	 * @return Boolean or <tt>null</tt> to choose default behaviour
 	 */
-	public Boolean isTransient(Object entity);
+	Boolean isTransient(Object entity);
 
 	/**
 	 * Called from <tt>flush()</tt>. The return value determines whether the entity is updated
@@ -207,7 +212,13 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public int[] findDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types);
+	int[] findDirty(
+			Object entity,
+			Serializable id,
+			Object[] currentState,
+			Object[] previousState,
+			String[] propertyNames,
+			Type[] types);
 	/**
 	 * Instantiate the entity class. Return <tt>null</tt> to indicate that Hibernate should use
 	 * the default constructor of the class. The identifier property of the returned instance
@@ -221,7 +232,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
+	Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
 
 	/**
 	 * Get the entity name for a persistent or transient instance.
@@ -232,7 +243,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public String getEntityName(Object object) throws CallbackException;
+	String getEntityName(Object object) throws CallbackException;
 
 	/**
 	 * Get a fully loaded entity instance that is cached externally.
@@ -244,7 +255,7 @@ public interface Interceptor {
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	public Object getEntity(String entityName, Serializable id) throws CallbackException;
+	Object getEntity(String entityName, Serializable id) throws CallbackException;
 	
 	/**
 	 * Called when a Hibernate transaction is begun via the Hibernate <tt>Transaction</tt> 
@@ -253,21 +264,21 @@ public interface Interceptor {
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */
-	public void afterTransactionBegin(Transaction tx);
+	void afterTransactionBegin(Transaction tx);
 
 	/**
 	 * Called before a transaction is committed (but not before rollback).
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */
-	public void beforeTransactionCompletion(Transaction tx);
+	void beforeTransactionCompletion(Transaction tx);
 
 	/**
 	 * Called after a transaction is committed or rolled back.
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */
-	public void afterTransactionCompletion(Transaction tx);
+	void afterTransactionCompletion(Transaction tx);
 
 	/**
 	 * Called when sql string is being prepared. 
@@ -278,5 +289,5 @@ public interface Interceptor {
 	 * to inspect and alter SQL statements.
 	 */
 	@Deprecated
-	public String onPrepareStatement(String sql);
+	String onPrepareStatement(String sql);
 }

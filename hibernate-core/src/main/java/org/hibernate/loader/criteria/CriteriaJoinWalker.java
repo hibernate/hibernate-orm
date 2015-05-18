@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.loader.criteria;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,8 +51,8 @@ import org.hibernate.type.Type;
 /**
  * A <tt>JoinWalker</tt> for <tt>Criteria</tt> queries.
  *
- * @see CriteriaLoader
  * @author Gavin King
+ * @see CriteriaLoader
  */
 public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
@@ -83,10 +84,10 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	}
 
 	public CriteriaJoinWalker(
-			final OuterJoinLoadable persister, 
+			final OuterJoinLoadable persister,
 			final CriteriaQueryTranslator translator,
-			final SessionFactoryImplementor factory, 
-			final CriteriaImpl criteria, 
+			final SessionFactoryImplementor factory,
+			final CriteriaImpl criteria,
 			final String rootEntityName,
 			final LoadQueryInfluencers loadQueryInfluencers) {
 		this( persister, translator, factory, criteria, rootEntityName, loadQueryInfluencers, null );
@@ -106,17 +107,17 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 		querySpaces = translator.getQuerySpaces();
 
-		if ( translator.hasProjection() ) {			
+		if ( translator.hasProjection() ) {
 			initProjection(
-					translator.getSelect(), 
-					translator.getWhereCondition(), 
+					translator.getSelect(),
+					translator.getWhereCondition(),
 					translator.getOrderBy(),
 					translator.getGroupBy(),
-					LockOptions.NONE  
-				);
+					LockOptions.NONE
+			);
 			resultTypes = translator.getProjectedTypes();
 			userAliases = translator.getProjectedAliases();
-			includeInResultRow = new boolean[ resultTypes.length ];
+			includeInResultRow = new boolean[resultTypes.length];
 			Arrays.fill( includeInResultRow, true );
 		}
 		else {
@@ -130,6 +131,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			includeInResultRow = ArrayHelper.toBooleanArray( includeInResultRowList );
 		}
 	}
+
 	@Override
 	protected JoinType getJoinType(
 			OuterJoinLoadable persister,
@@ -158,7 +160,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 							if ( isDuplicateAssociation( lhsTable, lhsColumns, associationType ) ) {
 								resolvedJoinType = JoinType.NONE;
 							}
-							else if ( isTooDeep(currentDepth) || ( associationType.isCollectionType() && isTooManyCollections() ) ) {
+							else if ( isTooDeep( currentDepth ) || ( associationType.isCollectionType() && isTooManyCollections() ) ) {
 								resolvedJoinType = JoinType.NONE;
 							}
 							else {
@@ -196,7 +198,11 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 				}
 				else {
 					if ( fetchMode == FetchMode.JOIN ) {
-						isDuplicateAssociation( lhsTable, lhsColumns, associationType ); //deliberately ignore return value!
+						isDuplicateAssociation(
+								lhsTable,
+								lhsColumns,
+								associationType
+						); //deliberately ignore return value!
 						resolvedJoinType = getJoinType( nullable, currentDepth );
 					}
 					else {
@@ -207,6 +213,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 		}
 		return resolvedJoinType;
 	}
+
 	@Override
 	protected JoinType getJoinType(
 			AssociationType associationType,
@@ -232,7 +239,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	}
 
 	private static boolean isDefaultFetchMode(FetchMode fetchMode) {
-		return fetchMode==null || fetchMode==FetchMode.DEFAULT;
+		return fetchMode == null || fetchMode == FetchMode.DEFAULT;
 	}
 
 	/**
@@ -242,8 +249,12 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	@Override
 	protected String getWhereFragment() throws MappingException {
 		return super.getWhereFragment() +
-			( (Queryable) getPersister() ).filterFragment( getAlias(), getLoadQueryInfluencers().getEnabledFilters() );
+				( (Queryable) getPersister() ).filterFragment(
+						getAlias(),
+						getLoadQueryInfluencers().getEnabledFilters()
+				);
 	}
+
 	@Override
 	protected String generateTableAlias(int n, PropertyPath path, Joinable joinable) {
 		// TODO: deal with side-effects (changes to includeInResultRowList, userAliasList, resultTypeList)!!!
@@ -259,22 +270,22 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 		if ( !checkForSqlAlias && joinable.isCollection() ) {
 			// is it a collection-of-other (component or value) ?
-			CollectionPersister collectionPersister = (CollectionPersister)joinable;
+			CollectionPersister collectionPersister = (CollectionPersister) joinable;
 			Type elementType = collectionPersister.getElementType();
 			if ( elementType.isComponentType() || !elementType.isEntityType() ) {
 				checkForSqlAlias = true;
- 			}
+			}
 		}
 
 		String sqlAlias = null;
 
 		if ( checkForSqlAlias ) {
 			final Criteria subcriteria = translator.getCriteria( path.getFullPath() );
-			sqlAlias = subcriteria==null ? null : translator.getSQLAlias(subcriteria);
-			
-			if (joinable.consumesEntityAlias() && ! translator.hasProjection()) {
+			sqlAlias = subcriteria == null ? null : translator.getSQLAlias( subcriteria );
+
+			if ( joinable.consumesEntityAlias() && !translator.hasProjection() ) {
 				includeInResultRowList.add( subcriteria != null && subcriteria.getAlias() != null );
-				if (sqlAlias!=null) {
+				if ( sqlAlias != null ) {
 					if ( subcriteria.getAlias() != null ) {
 						userAliasList.add( subcriteria.getAlias() );
 						resultTypeList.add( translator.getResultType( subcriteria ) );
@@ -283,12 +294,13 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			}
 		}
 
-		if (sqlAlias == null) {
+		if ( sqlAlias == null ) {
 			sqlAlias = super.generateTableAlias( n + translator.getSQLAliasCount(), path, joinable );
 		}
 
 		return sqlAlias;
 	}
+
 	@Override
 	protected String generateRootAlias(String tableName) {
 		return CriteriaQueryTranslator.ROOT_SQL_ALIAS;
@@ -297,16 +309,19 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	public Set getQuerySpaces() {
 		return querySpaces;
 	}
+
 	@Override
 	public String getComment() {
 		return "criteria query";
 	}
+
 	@Override
 	protected String getWithClause(PropertyPath path) {
 		return translator.getWithClause( path.getFullPath() );
 	}
+
 	@Override
-	protected boolean hasRestriction(PropertyPath path)	{
+	protected boolean hasRestriction(PropertyPath path) {
 		return translator.hasRestriction( path.getFullPath() );
 	}
 }

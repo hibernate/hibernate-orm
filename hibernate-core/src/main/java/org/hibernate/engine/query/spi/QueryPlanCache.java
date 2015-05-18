@@ -166,7 +166,8 @@ public class QueryPlanCache implements Serializable {
 			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
 			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
 			queryPlanCache.putIfAbsent( key, value );
-		} else {
+		}
+		else {
 			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
 		}
 		return value;

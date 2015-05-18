@@ -35,7 +35,7 @@ import org.hibernate.boot.model.source.spi.TableSpecificationSource;
  * @author Steve Ebersole
  */
 public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implements SubclassEntitySource {
-    private final EntitySource container;
+	private final EntitySource container;
 	private final TableSpecificationSource primaryTable;
 
 	protected SubclassEntitySourceImpl(

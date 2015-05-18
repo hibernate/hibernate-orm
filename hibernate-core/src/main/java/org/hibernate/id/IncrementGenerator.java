@@ -55,13 +55,14 @@ import org.hibernate.type.Type;
  * @author Brett Meyer
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	private Class returnClass;
 	private String sql;
 
 	private IntegralDataTypeHolder previousValueHolder;
 
+	@Override
 	public synchronized Serializable generate(SessionImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {
 			initializePreviousValueHolder( session );
@@ -74,7 +75,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		returnClass = type.getReturnedClass();
 
 		ObjectNameNormalizer normalizer =
-				( ObjectNameNormalizer ) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
+				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
 
 		String column = params.getProperty( "column" );
 		if ( column == null ) {
@@ -96,13 +97,13 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		);
 
 		StringBuilder buf = new StringBuilder();
-		for ( int i=0; i < tables.length; i++ ) {
+		for ( int i = 0; i < tables.length; i++ ) {
 			final String tableName = normalizer.toDatabaseIdentifierText( tables[i] );
 			if ( tables.length > 1 ) {
 				buf.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
 			buf.append( Table.qualify( catalog, schema, tableName ) );
-			if ( i < tables.length-1 ) {
+			if ( i < tables.length - 1 ) {
 				buf.append( " union " );
 			}
 		}
@@ -126,11 +127,11 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 			try {
 				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 				try {
-                    if (rs.next()) {
-						previousValueHolder.initialize(rs, 0L).increment();
+					if ( rs.next() ) {
+						previousValueHolder.initialize( rs, 0L ).increment();
 					}
-                    else {
-						previousValueHolder.initialize(1L);
+					else {
+						previousValueHolder.initialize( 1L );
 					}
 					sql = null;
 					if ( debugEnabled ) {

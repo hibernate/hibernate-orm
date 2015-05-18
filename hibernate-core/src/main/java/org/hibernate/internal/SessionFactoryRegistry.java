@@ -40,7 +40,7 @@ import org.hibernate.engine.jndi.spi.JndiService;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.
- *
+ * <p/>
  * This registry is used for serialization/deserialization as well as JNDI binding.
  *
  * @author Steve Ebersole
@@ -61,7 +61,7 @@ public class SessionFactoryRegistry {
 	/**
 	 * A cross-reference for mapping a SessionFactory name to its UUID.  Not all SessionFactories get named,
 	 */
-	private final ConcurrentHashMap<String,String> nameUuidXref = new ConcurrentHashMap<String, String>();
+	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<String, String>();
 
 	private SessionFactoryRegistry() {
 		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );
@@ -92,7 +92,7 @@ public class SessionFactoryRegistry {
 			nameUuidXref.put( name, uuid );
 		}
 
-		if ( name == null || ! isNameAlsoJndiName ) {
+		if ( name == null || !isNameAlsoJndiName ) {
 			LOG.debug( "Not binding SessionFactory to JNDI, no JNDI name configured" );
 			return;
 		}
@@ -139,10 +139,10 @@ public class SessionFactoryRegistry {
 					jndiService.unbind( name );
 					LOG.factoryUnboundFromJndiName( name );
 				}
-				catch ( JndiNameException e ) {
+				catch (JndiNameException e) {
 					LOG.invalidJndiName( name, e );
 				}
-				catch ( JndiException e ) {
+				catch (JndiException e) {
 					LOG.unableToUnbindFactoryFromJndi( e );
 				}
 			}
@@ -181,7 +181,7 @@ public class SessionFactoryRegistry {
 	 * @return true/false
 	 */
 	public boolean hasRegistrations() {
-		return ! sessionFactoryMap.isEmpty();
+		return !sessionFactoryMap.isEmpty();
 	}
 
 	public void clearRegistrations() {
@@ -203,13 +203,13 @@ public class SessionFactoryRegistry {
 	private final NamespaceChangeListener listener = new NamespaceChangeListener() {
 		@Override
 		public void objectAdded(NamingEvent evt) {
-			LOG.debugf("A factory was successfully bound to name: %s", evt.getNewBinding().getName());
+			LOG.debugf( "A factory was successfully bound to name: %s", evt.getNewBinding().getName() );
 		}
 
 		@Override
 		public void objectRemoved(NamingEvent evt) {
 			final String jndiName = evt.getOldBinding().getName();
-            LOG.factoryUnboundFromName( jndiName );
+			LOG.factoryUnboundFromName( jndiName );
 
 			final String uuid = nameUuidXref.remove( jndiName );
 			if ( uuid == null ) {
@@ -232,7 +232,7 @@ public class SessionFactoryRegistry {
 		@Override
 		public void namingExceptionThrown(NamingExceptionEvent evt) {
 			//noinspection ThrowableResultOfMethodCallIgnored
-            LOG.namingExceptionAccessingFactory(evt.getException());
+			LOG.namingExceptionAccessingFactory( evt.getException() );
 		}
 	};
 

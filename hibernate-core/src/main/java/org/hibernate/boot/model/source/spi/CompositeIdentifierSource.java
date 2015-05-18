@@ -41,5 +41,5 @@ public interface CompositeIdentifierSource extends IdentifierSource, EmbeddableS
 	 *
 	 * @return The generator for the named attribute (within the composite).
 	 */
-	public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName);
+	IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName);
 }

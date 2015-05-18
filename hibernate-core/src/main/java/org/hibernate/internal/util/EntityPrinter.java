@@ -39,18 +39,20 @@ import org.hibernate.type.Type;
 
 /**
  * Renders entities and query parameters to a nicely readable string.
+ *
  * @author Gavin King
  */
 public final class EntityPrinter {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
-    private SessionFactoryImplementor factory;
+	private SessionFactoryImplementor factory;
 
 	/**
 	 * Renders an entity to a string.
 	 *
 	 * @param entityName the entity name
 	 * @param entity an actual entity object, not a proxy!
+	 *
 	 * @return the entity rendered to a string
 	 */
 	public String toString(String entityName, Object entity) throws HibernateException {
@@ -60,23 +62,26 @@ public final class EntityPrinter {
 			return entity.getClass().getName();
 		}
 
-		Map<String,String> result = new HashMap<String,String>();
+		Map<String, String> result = new HashMap<String, String>();
 
 		if ( entityPersister.hasIdentifierProperty() ) {
 			result.put(
-				entityPersister.getIdentifierPropertyName(),
-				entityPersister.getIdentifierType().toLoggableString( entityPersister.getIdentifier( entity ), factory )
+					entityPersister.getIdentifierPropertyName(),
+					entityPersister.getIdentifierType().toLoggableString(
+							entityPersister.getIdentifier( entity ),
+							factory
+					)
 			);
 		}
 
 		Type[] types = entityPersister.getPropertyTypes();
 		String[] names = entityPersister.getPropertyNames();
 		Object[] values = entityPersister.getPropertyValues( entity );
-		for ( int i=0; i<types.length; i++ ) {
-			if ( !names[i].startsWith("_") ) {
-				String strValue = values[i]==LazyPropertyInitializer.UNFETCHED_PROPERTY ?
-					values[i].toString() :
-					types[i].toLoggableString( values[i], factory );
+		for ( int i = 0; i < types.length; i++ ) {
+			if ( !names[i].startsWith( "_" ) ) {
+				String strValue = values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ?
+						values[i].toString() :
+						types[i].toLoggableString( values[i], factory );
 				result.put( names[i], strValue );
 			}
 		}
@@ -85,16 +90,16 @@ public final class EntityPrinter {
 
 	public String toString(Type[] types, Object[] values) throws HibernateException {
 		StringBuilder buffer = new StringBuilder();
-		for ( int i=0; i<types.length; i++ ) {
-			if ( types[i]!=null ) {
+		for ( int i = 0; i < types.length; i++ ) {
+			if ( types[i] != null ) {
 				buffer.append( types[i].toLoggableString( values[i], factory ) ).append( ", " );
 			}
 		}
 		return buffer.toString();
 	}
 
-	public String toString(Map<String,TypedValue> namedTypedValues) throws HibernateException {
-		Map<String,String> result = new HashMap<String,String>();
+	public String toString(Map<String, TypedValue> namedTypedValues) throws HibernateException {
+		Map<String, String> result = new HashMap<String, String>();
 		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
 			result.put(
 					entry.getKey(), entry.getValue().getType().toLoggableString(
@@ -107,19 +112,19 @@ public final class EntityPrinter {
 	}
 
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
-	public void toString(Iterable<Map.Entry<EntityKey,Object>> entitiesByEntityKey) throws HibernateException {
-        if ( ! LOG.isDebugEnabled() || ! entitiesByEntityKey.iterator().hasNext() ) {
+	public void toString(Iterable<Map.Entry<EntityKey, Object>> entitiesByEntityKey) throws HibernateException {
+		if ( !LOG.isDebugEnabled() || !entitiesByEntityKey.iterator().hasNext() ) {
 			return;
 		}
 
-        LOG.debug( "Listing entities:" );
-		int i=0;
-		for (  Map.Entry<EntityKey,Object> entityKeyAndEntity : entitiesByEntityKey ) {
-			if (i++>20) {
-                LOG.debug("More......");
+		LOG.debug( "Listing entities:" );
+		int i = 0;
+		for ( Map.Entry<EntityKey, Object> entityKeyAndEntity : entitiesByEntityKey ) {
+			if ( i++ > 20 ) {
+				LOG.debug( "More......" );
 				break;
 			}
-            LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
+			LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
 		}
 	}
 

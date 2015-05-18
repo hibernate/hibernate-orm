@@ -35,11 +35,10 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public class OrderByClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes {
-
 	public void addOrderFragment(String orderByFragment) {
 		AST fragment = ASTUtil.create( getASTFactory(), SQL_TOKEN, orderByFragment );
 		if ( getFirstChild() == null ) {
-            setFirstChild( fragment );
+			setFirstChild( fragment );
 		}
 		else {
 			addChild( fragment );

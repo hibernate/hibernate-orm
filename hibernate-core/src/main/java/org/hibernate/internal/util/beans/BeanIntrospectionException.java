@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal.util.beans;
-import java.beans.BeanInfo;
 
 import org.hibernate.HibernateException;
 
 /**
- * Indicates a problem dealing with {@link BeanInfo} via the {@link BeanInfoHelper} delegate.
+ * Indicates a problem dealing with {@link java.beans.BeanInfo} via the {@link BeanInfoHelper} delegate.
  *
  * @author Steve Ebersole
  */

@@ -295,7 +295,8 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Integer getTimeout() {
 		return timeout;
 	}
-   @Override
+
+	@Override
 	public Criteria setTimeout(int timeout) {
 		this.timeout = timeout;
 		return this;

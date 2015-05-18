@@ -59,8 +59,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
-	        Dialect dialect,
-	        boolean isGetGeneratedKeysEnabled) throws HibernateException {
+			Dialect dialect,
+			boolean isGetGeneratedKeysEnabled) throws HibernateException {
 		return new SelectGeneratorDelegate( persister, dialect, uniqueKeyPropertyName );
 	}
 
@@ -69,25 +69,25 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 			return supplied;
 		}
 		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
-		if ( naturalIdPropertyIndices == null ){
+		if ( naturalIdPropertyIndices == null ) {
 			throw new IdentifierGenerationException(
 					"no natural-id property defined; need to specify [key] in " +
-					"generator parameters"
+							"generator parameters"
 			);
 		}
 		if ( naturalIdPropertyIndices.length > 1 ) {
 			throw new IdentifierGenerationException(
 					"select generator does not currently support composite " +
-					"natural-id properties; need to specify [key] in generator parameters"
+							"natural-id properties; need to specify [key] in generator parameters"
 			);
 		}
 		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
 			throw new IdentifierGenerationException(
 					"natural-id also defined as insert-generated; need to specify [key] " +
-					"in generator parameters"
+							"in generator parameters"
 			);
 		}
-		return persister.getPropertyNames() [ naturalIdPropertyIndices[0] ];
+		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
 	}
 
 
@@ -108,8 +108,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 
 		private SelectGeneratorDelegate(
 				PostInsertIdentityPersister persister,
-		        Dialect dialect,
-		        String suppliedUniqueKeyPropertyName) {
+				Dialect dialect,
+				String suppliedUniqueKeyPropertyName) {
 			super( persister );
 			this.persister = persister;
 			this.dialect = dialect;
@@ -133,23 +133,23 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 
 		protected void bindParameters(
 				SessionImplementor session,
-		        PreparedStatement ps,
-		        Object entity) throws SQLException {
+				PreparedStatement ps,
+				Object entity) throws SQLException {
 			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
 			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 
 		protected Serializable getResult(
 				SessionImplementor session,
-		        ResultSet rs,
-		        Object entity) throws SQLException {
+				ResultSet rs,
+				Object entity) throws SQLException {
 			if ( !rs.next() ) {
 				throw new IdentifierGenerationException(
 						"the inserted row could not be located by the unique key: " +
-						uniqueKeyPropertyName
+								uniqueKeyPropertyName
 				);
 			}
-			return ( Serializable ) idType.nullSafeGet(
+			return (Serializable) idType.nullSafeGet(
 					rs,
 					persister.getRootTableKeyColumnNames(),
 					session,

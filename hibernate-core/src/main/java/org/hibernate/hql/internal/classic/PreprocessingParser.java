@@ -38,10 +38,10 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class PreprocessingParser implements Parser {
 
-	private static final Set HQL_OPERATORS;
+	private static final Set<String> HQL_OPERATORS;
 
 	static {
-		HQL_OPERATORS = new HashSet();
+		HQL_OPERATORS = new HashSet<String>();
 		HQL_OPERATORS.add( "<=" );
 		HQL_OPERATORS.add( ">=" );
 		HQL_OPERATORS.add( "=>" );
@@ -85,7 +85,9 @@ public class PreprocessingParser implements Parser {
 			}
 			quoted = !quoted;
 		}
-		if ( quoted ) return;
+		if ( quoted ) {
+			return;
+		}
 
 		//ignore whitespace
 		if ( ParserHelper.isWhitespace( token ) ) return;
@@ -142,16 +144,13 @@ public class PreprocessingParser implements Parser {
 	}
 
 	public void end(QueryTranslatorImpl q) throws QueryException {
-		if ( lastToken != null ) parser.token( lastToken, q );
+		if ( lastToken != null ) {
+			parser.token( lastToken, q );
+		}
 		parser.end( q );
 		lastToken = null;
 		currentCollectionProp = null;
 	}
 
 }
-
-
-
-
-
 

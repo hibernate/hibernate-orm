@@ -63,7 +63,7 @@ import org.jboss.logging.Logger;
 public class SequenceGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
 
-    private static final Logger LOG = Logger.getLogger( SequenceGenerator.class.getName() );
+	private static final Logger LOG = Logger.getLogger( SequenceGenerator.class.getName() );
 
 	/**
 	 * The sequence parameter

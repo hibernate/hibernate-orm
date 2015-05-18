@@ -26,12 +26,9 @@ package org.hibernate.internal;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 
 /**
- * 
  * @author Rob Worsnop
- *
  */
 public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
-	
 	private String[] tables;
 	private String rootAlias;
 
@@ -42,10 +39,14 @@ public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
 
 	@Override
 	public String getAlias(String table) {
-		if (table == null){
+		if ( table == null ) {
 			return rootAlias;
-		} else{
-			return AbstractEntityPersister.generateTableAlias(rootAlias, AbstractEntityPersister.getTableId(table, tables));
+		}
+		else {
+			return AbstractEntityPersister.generateTableAlias(
+					rootAlias,
+					AbstractEntityPersister.getTableId( table, tables )
+			);
 		}
 	}
 

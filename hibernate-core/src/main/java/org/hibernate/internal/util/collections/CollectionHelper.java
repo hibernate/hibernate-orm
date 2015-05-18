@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Steve Ebersole
  */
 public final class CollectionHelper {
-    public static final int MINIMUM_INITIAL_CAPACITY = 16;
+	public static final int MINIMUM_INITIAL_CAPACITY = 16;
 	public static final float LOAD_FACTOR = 0.75f;
 
 	/**
@@ -68,10 +68,11 @@ public final class CollectionHelper {
 	 * Especially helpful for copy map contents.
 	 *
 	 * @param size The size to make the map.
+	 *
 	 * @return The sized map.
 	 */
-	public static <K,V> Map<K,V> mapOfSize(int size) {
-		return new HashMap<K,V>( determineProperSizing( size ), LOAD_FACTOR );
+	public static <K, V> Map<K, V> mapOfSize(int size) {
+		return new HashMap<K, V>( determineProperSizing( size ), LOAD_FACTOR );
 	}
 
 	/**
@@ -79,6 +80,7 @@ public final class CollectionHelper {
 	 * Specifically we want to account for load size and load factor to prevent immediate resizing.
 	 *
 	 * @param original The original map
+	 *
 	 * @return The proper size.
 	 */
 	public static int determineProperSizing(Map original) {
@@ -90,6 +92,7 @@ public final class CollectionHelper {
 	 * Specifically we want to account for load size and load factor to prevent immediate resizing.
 	 *
 	 * @param original The original set
+	 *
 	 * @return The proper size.
 	 */
 	public static int determineProperSizing(Set original) {
@@ -101,10 +104,11 @@ public final class CollectionHelper {
 	 * Specifically we want to account for load size and load factor to prevent immediate resizing.
 	 *
 	 * @param numberOfElements The number of elements to be stored.
+	 *
 	 * @return The proper size.
 	 */
 	public static int determineProperSizing(int numberOfElements) {
-		int actual = ( (int) (numberOfElements / LOAD_FACTOR) ) + 1;
+		int actual = ( (int) ( numberOfElements / LOAD_FACTOR ) ) + 1;
 		return Math.max( actual, MINIMUM_INITIAL_CAPACITY );
 	}
 
@@ -117,7 +121,7 @@ public final class CollectionHelper {
 	 *
 	 * @return The created map.
 	 */
-	public static <K,V> ConcurrentHashMap<K,V> concurrentMap(int expectedNumberOfElements) {
+	public static <K, V> ConcurrentHashMap<K, V> concurrentMap(int expectedNumberOfElements) {
 		return concurrentMap( expectedNumberOfElements, LOAD_FACTOR );
 	}
 
@@ -132,7 +136,7 @@ public final class CollectionHelper {
 	 *
 	 * @return The created map.
 	 */
-	public static <K,V> ConcurrentHashMap<K,V> concurrentMap(int expectedNumberOfElements, float loadFactor) {
+	public static <K, V> ConcurrentHashMap<K, V> concurrentMap(int expectedNumberOfElements, float loadFactor) {
 		final int size = expectedNumberOfElements + 1 + (int) ( expectedNumberOfElements * loadFactor );
 		return new ConcurrentHashMap<K, V>( size, loadFactor );
 	}
@@ -152,28 +156,28 @@ public final class CollectionHelper {
 		return copy;
 	}
 
-    public static boolean isEmpty(Collection collection) {
-        return collection == null || collection.isEmpty();
-    }
-
-    public static boolean isEmpty(Map map) {
-        return map == null || map.isEmpty();
-    }
-
-    public static boolean isNotEmpty(Collection collection) {
-        return !isEmpty( collection );
-    }
-
-    public static boolean isNotEmpty(Map map) {
-        return !isEmpty( map );
-    }
-
-	public static boolean isEmpty(Object[] objects){
-		return objects == null || objects.length==0;
+	public static boolean isEmpty(Collection collection) {
+		return collection == null || collection.isEmpty();
 	}
 
-	public static <X,Y> Map<X, Y> makeCopy(Map<X, Y> map) {
-		final Map<X,Y> copy = mapOfSize( map.size() + 1 );
+	public static boolean isEmpty(Map map) {
+		return map == null || map.isEmpty();
+	}
+
+	public static boolean isNotEmpty(Collection collection) {
+		return !isEmpty( collection );
+	}
+
+	public static boolean isNotEmpty(Map map) {
+		return !isEmpty( map );
+	}
+
+	public static boolean isEmpty(Object[] objects) {
+		return objects == null || objects.length == 0;
+	}
+
+	public static <X, Y> Map<X, Y> makeCopy(Map<X, Y> map) {
+		final Map<X, Y> copy = mapOfSize( map.size() + 1 );
 		copy.putAll( map );
 		return copy;
 	}

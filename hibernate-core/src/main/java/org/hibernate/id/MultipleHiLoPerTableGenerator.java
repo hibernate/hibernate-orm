@@ -48,6 +48,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -59,10 +60,7 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
 /**
- *
  * A hilo <tt>IdentifierGenerator</tt> that returns a <tt>Long</tt>, constructed using
  * a hi/lo algorithm. The hi value MUST be fetched in a seperate transaction
  * to the <tt>Session</tt> transaction so the generator must be able to obtain
@@ -71,14 +69,14 @@ import org.jboss.logging.Logger;
  * case a <tt>SequenceHiLoGenerator</tt> would be a better choice (where
  * supported).<br>
  * <br>
- *
+ * <p/>
  * A hilo <tt>IdentifierGenerator</tt> that uses a database
  * table to store the last generated values. A table can contains
  * several hi values. They are distinct from each other through a key
  * <p/>
  * <p>This implementation is not compliant with a user connection</p>
  * <p/>
- *
+ * <p/>
  * <p>Allowed parameters (all of them are optional):</p>
  * <ul>
  * <li>table: table name (default <tt>hibernate_sequences</tt>)</li>
@@ -93,9 +91,7 @@ import org.jboss.logging.Logger;
  * @author <a href="mailto:kr@hbt.de">Klaus Richarz</a>.
  */
 public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       MultipleHiLoPerTableGenerator.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MultipleHiLoPerTableGenerator.class );
 
 	public static final String ID_TABLE = "table";
 	public static final String PK_COLUMN_NAME = "primary_key_column";
@@ -138,13 +134,23 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 				int rows;
 				do {
-					final PreparedStatement queryPreparedStatement = prepareStatement( connection, query, statementLogger, statsCollector );
+					final PreparedStatement queryPreparedStatement = prepareStatement(
+							connection,
+							query,
+							statementLogger,
+							statsCollector
+					);
 					try {
 						final ResultSet rs = executeQuery( queryPreparedStatement, statsCollector );
 						boolean isInitialized = rs.next();
 						if ( !isInitialized ) {
 							value.initialize( 0 );
-							final PreparedStatement insertPreparedStatement = prepareStatement( connection, insert, statementLogger, statsCollector );
+							final PreparedStatement insertPreparedStatement = prepareStatement(
+									connection,
+									insert,
+									statementLogger,
+									statsCollector
+							);
 							try {
 								value.bind( insertPreparedStatement, 1 );
 								executeUpdate( insertPreparedStatement, statsCollector );
@@ -167,7 +173,12 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					}
 
 
-					final PreparedStatement updatePreparedStatement = prepareStatement( connection, update, statementLogger, statsCollector );
+					final PreparedStatement updatePreparedStatement = prepareStatement(
+							connection,
+							update,
+							statementLogger,
+							statsCollector
+					);
 					try {
 						value.copy().increment().bind( updatePreparedStatement, 1 );
 						value.bind( updatePreparedStatement, 2 );
@@ -181,7 +192,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					finally {
 						updatePreparedStatement.close();
 					}
-				} while ( rows==0 );
+				} while ( rows == 0 );
 
 				return value;
 			}
@@ -240,7 +251,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	}
 
-	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
+	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager statsCollector)
+			throws SQLException {
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
@@ -252,7 +264,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
 	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
-		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
 
 		qualifiedTableName = QualifiedNameParser.INSTANCE.parse(
 				ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE ),
@@ -275,31 +287,31 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		String keyValue = ConfigurationHelper.getString( PK_VALUE_NAME, params, params.getProperty( TABLE ) );
 
 		query = "select " +
-			valueColumnName +
-			" from " +
-			jdbcEnv.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
-			" where " + pkColumnName + " = '" + keyValue + "'" +
+				valueColumnName +
+				" from " +
+				jdbcEnv.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				" where " + pkColumnName + " = '" + keyValue + "'" +
 				jdbcEnv.getDialect().getForUpdateString();
 
 		update = "update " +
-			tableName +
-			" set " +
-			valueColumnName +
-			" = ? where " +
-			valueColumnName +
-			" = ? and " +
-			pkColumnName +
-			" = '" +
-			keyValue
-			+ "'";
+				tableName +
+				" set " +
+				valueColumnName +
+				" = ? where " +
+				valueColumnName +
+				" = ? and " +
+				pkColumnName +
+				" = '" +
+				keyValue
+				+ "'";
 
 		insert = "insert into " + tableName +
-			"(" + pkColumnName + ", " +	valueColumnName + ") " +
-			"values('"+ keyValue +"', ?)";
+				"(" + pkColumnName + ", " + valueColumnName + ") " +
+				"values('" + keyValue + "', ?)";
 
 
 		//hilo config
-		maxLo = ConfigurationHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
+		maxLo = ConfigurationHelper.getInt( MAX_LO, params, Short.MAX_VALUE );
 		returnClass = type.getReturnedClass();
 
 		if ( maxLo >= 1 ) {
@@ -347,7 +359,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] { dialect.getDropTableString( tableName ) };
+		return new String[] {dialect.getDropTableString( tableName )};
 	}
 
 	public Object generatorKey() {

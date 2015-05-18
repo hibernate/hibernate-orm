@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.loader;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * CollectionAliases which handles the logic of selecting user provided aliases (via return-property),
- * before using the default aliases. 
+ * before using the default aliases.
  *
  * @author Steve Ebersole
  * @author Max Rydahl Andersen
@@ -43,13 +44,13 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	private final String[] elementAliases;
 	private final String identifierAlias;
 	private Map userProvidedAliases;
-	
+
 	public GeneratedCollectionAliases(Map userProvidedAliases, CollectionPersister persister, String suffix) {
 		this.suffix = suffix;
 		this.userProvidedAliases = userProvidedAliases;
 
 		this.keyAliases = getUserProvidedAliases(
-				"key", 
+				"key",
 				persister.getKeyColumnAliases( suffix )
 		);
 
@@ -57,12 +58,12 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 				"index",
 				persister.getIndexColumnAliases( suffix )
 		);
-		
+
 		this.elementAliases = getUserProvidedAliases(
 				"element",
 				persister.getElementColumnAliases( suffix )
 		);
-				
+
 		this.identifierAlias = getUserProvidedAlias(
 				"id",
 				persister.getIdentifierColumnAlias( suffix )
@@ -70,7 +71,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	}
 
 	public GeneratedCollectionAliases(CollectionPersister persister, String string) {
-		this( Collections.EMPTY_MAP, persister, string);
+		this( Collections.EMPTY_MAP, persister, string );
 	}
 
 	/**
@@ -120,37 +121,37 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return super.toString() + " [suffix=" + suffix +
-		        ", suffixedKeyAliases=[" + join( keyAliases ) +
-		        "], suffixedIndexAliases=[" + join( indexAliases ) +
-		        "], suffixedElementAliases=[" + join( elementAliases ) +
-		        "], suffixedIdentifierAlias=[" + identifierAlias + "]]";
+				", suffixedKeyAliases=[" + join( keyAliases ) +
+				"], suffixedIndexAliases=[" + join( indexAliases ) +
+				"], suffixedElementAliases=[" + join( elementAliases ) +
+				"], suffixedIdentifierAlias=[" + identifierAlias + "]]";
 	}
 
 	private String join(String[] aliases) {
-		if ( aliases == null) {
+		if ( aliases == null ) {
 			return null;
 		}
 
 		return StringHelper.join( ", ", aliases );
 	}
-	
+
 	private String[] getUserProvidedAliases(String propertyPath, String[] defaultAliases) {
-		String[] result = (String[]) userProvidedAliases.get(propertyPath);
-		if (result==null) {
-			return defaultAliases;			
-		} 
+		String[] result = (String[]) userProvidedAliases.get( propertyPath );
+		if ( result == null ) {
+			return defaultAliases;
+		}
 		else {
 			return result;
 		}
 	}
 
 	private String getUserProvidedAlias(String propertyPath, String defaultAlias) {
-		String[] columns = (String[]) userProvidedAliases.get(propertyPath);
-		if (columns==null) {
+		String[] columns = (String[]) userProvidedAliases.get( propertyPath );
+		if ( columns == null ) {
 			return defaultAlias;
-		} 
+		}
 		else {
 			return columns[0];
 		}

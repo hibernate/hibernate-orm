@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
@@ -41,7 +41,6 @@ import org.hibernate.type.EntityType;
  * @author Gavin King
  */
 public abstract class OuterJoinLoader extends BasicLoader {
-
 	protected Loadable[] persisters;
 	protected CollectionPersister[] collectionPersisters;
 	protected int[] collectionOwners;
@@ -54,11 +53,11 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected String[] suffixes;
 	protected String[] collectionSuffixes;
 
-    private LoadQueryInfluencers loadQueryInfluencers;
+	private LoadQueryInfluencers loadQueryInfluencers;
 
 	protected final Dialect getDialect() {
-    	return getFactory().getDialect();
-    }
+		return getFactory().getDialect();
+	}
 
 	public OuterJoinLoader(
 			SessionFactoryImplementor factory,

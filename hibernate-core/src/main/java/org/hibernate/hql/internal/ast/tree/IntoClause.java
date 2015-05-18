@@ -120,15 +120,15 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 			throw new QueryException( "number of select types did not match those for insert" );
 		}
 
-		int parameterCount = 0; 
+		int parameterCount = 0;
 		for ( int i = 0; i < types.length; i++ ) {
-			if( selectClause.getParameterPositions().contains(i) ) {
+			if ( selectClause.getParameterPositions().contains( i ) ) {
 				parameterCount++;
 			}
 			else if ( !areCompatible( types[i], selectTypes[i - parameterCount] ) ) {
 				throw new QueryException(
-				        "insertion type [" + types[i] + "] and selection type [" +
-				        selectTypes[i - parameterCount] + "] at position " + i + " are not compatible"
+						"insertion type [" + types[i] + "] and selection type [" +
+								selectTypes[i - parameterCount] + "] at position " + i + " are not compatible"
 				);
 			}
 		}
@@ -142,13 +142,11 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	 * @return String - The additional display text.
 	 */
 	public String getDisplayText() {
-		StringBuilder buf = new StringBuilder();
-		buf.append( "IntoClause{" );
-		buf.append( "entityName=" ).append( getEntityName() );
-		buf.append( ",tableName=" ).append( getTableName() );
-		buf.append( ",columns={" ).append( columnSpec ).append( "}" );
-		buf.append( "}" );
-		return buf.toString();
+		return "IntoClause{"
+				+ "entityName=" + getEntityName()
+				+ ",tableName=" + getTableName()
+				+ ",columns={" + columnSpec + "}"
+				+ "}";
 	}
 
 	private void initializeColumns() {
@@ -185,20 +183,21 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 						componentIds.add( propertyNames[i] );
 					}
 				}
-				if ( componentIds.contains(name) ) {
+				if ( componentIds.contains( name ) ) {
 					if ( explicitComponentIds == null ) {
 						explicitComponentIds = new ArrayList( componentIds.size() );
 					}
 					explicitComponentIds.add( name );
 					explicitIdInsertion = explicitComponentIds.size() == componentIds.size();
 				}
-			} else if ( name.equals( persister.getIdentifierPropertyName() ) ) {
+			}
+			else if ( name.equals( persister.getIdentifierPropertyName() ) ) {
 				explicitIdInsertion = true;
 			}
 		}
-			
+
 		if ( persister.isVersioned() ) {
-			if ( name.equals( persister.getPropertyNames()[ persister.getVersionProperty() ] ) ) {
+			if ( name.equals( persister.getPropertyNames()[persister.getVersionProperty()] ) ) {
 				explicitVersionInsertion = true;
 			}
 		}
@@ -238,6 +237,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	 *
 	 * @param target The type defined in the into-clause.
 	 * @param source The type defined in the select clause.
+	 *
 	 * @return True if they are assignment compatible.
 	 */
 	private boolean areCompatible(Type target, Type source) {

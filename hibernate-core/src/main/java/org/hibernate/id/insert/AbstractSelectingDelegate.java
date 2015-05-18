@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.insert;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,6 +46,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		this.persister = persister;
 	}
 
+	@Override
 	public final Serializable performInsert(
 			String insertSQL,
 			SessionImplementor session,
@@ -65,12 +66,12 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        sqle,
-			        "could not insert: " + MessageHelper.infoString( persister ),
-			        insertSQL
-				);
+					sqle,
+					"could not insert: " + MessageHelper.infoString( persister ),
+					insertSQL
+			);
 		}
 
 		final String selectSQL = getSelectSQL();
@@ -97,11 +98,11 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			}
 
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        sqle,
-			        "could not retrieve generated id after insert: " + MessageHelper.infoString( persister ),
-			        insertSQL
+					sqle,
+					"could not retrieve generated id after insert: " + MessageHelper.infoString( persister ),
+					insertSQL
 			);
 		}
 	}
@@ -119,12 +120,13 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 * @param session The session
 	 * @param ps The prepared {@link #getSelectSQL SQL} command
 	 * @param entity The entity being saved.
+	 *
 	 * @throws SQLException
 	 */
 	protected void bindParameters(
 			SessionImplementor session,
-	        PreparedStatement ps,
-	        Object entity) throws SQLException {
+			PreparedStatement ps,
+			Object entity) throws SQLException {
 	}
 
 	/**
@@ -133,12 +135,14 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 * @param session The session
 	 * @param rs The result set containing the generated primay key values.
 	 * @param entity The entity being saved.
+	 *
 	 * @return The generated identifier
+	 *
 	 * @throws SQLException
 	 */
 	protected abstract Serializable getResult(
 			SessionImplementor session,
-	        ResultSet rs,
-	        Object entity) throws SQLException;
+			ResultSet rs,
+			Object entity) throws SQLException;
 
 }

@@ -29,11 +29,10 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * <b>uuid</b><br>
@@ -42,13 +41,13 @@ import org.jboss.logging.Logger;
  * This string will consist of only hex digits. Optionally,
  * the string may be generated with separators between each
  * component of the UUID.
- *
+ * <p/>
  * Mapping parameters supported: separator.
  *
  * @author Gavin King
  */
 public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configurable {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UUIDHexGenerator.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDHexGenerator.class );
 
 	private static boolean WARNED;
 
@@ -57,7 +56,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 	public UUIDHexGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-            LOG.usingUuidHexGenerator( this.getClass().getName(), UUIDGenerator.class.getName() );
+			LOG.usingUuidHexGenerator( this.getClass().getName(), UUIDGenerator.class.getName() );
 		}
 	}
 

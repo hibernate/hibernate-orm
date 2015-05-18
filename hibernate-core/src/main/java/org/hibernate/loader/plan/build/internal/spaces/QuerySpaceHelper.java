@@ -121,19 +121,19 @@ public class QuerySpaceHelper {
 			String querySpaceUid,
 			boolean shouldIncludeJoin) {
 		final boolean required = lhsQuerySpace.canJoinsBeRequired() && !attributeDefinition.isNullable();
- 		return makeCompositeQuerySpace(
-				 lhsQuerySpace,
-				 new CompositePropertyMapping(
-						 (CompositeType) attributeDefinition.getType(),
-						 lhsQuerySpace.getPropertyMapping(),
-						 attributeDefinition.getName()
-				 ),
-				 attributeDefinition.getName(),
-				 (CompositeType) attributeDefinition.getType(),
-				 querySpaceUid,
-				 required,
-				 shouldIncludeJoin
-		 );
+		return makeCompositeQuerySpace(
+				lhsQuerySpace,
+				new CompositePropertyMapping(
+						(CompositeType) attributeDefinition.getType(),
+						lhsQuerySpace.getPropertyMapping(),
+						attributeDefinition.getName()
+				),
+				attributeDefinition.getName(),
+				(CompositeType) attributeDefinition.getType(),
+				querySpaceUid,
+				required,
+				shouldIncludeJoin
+		);
 	}
 
 	public ExpandingCompositeQuerySpace makeCompositeQuerySpace(
@@ -172,7 +172,8 @@ public class QuerySpaceHelper {
 			FetchStrategy fetchStrategy) {
 
 		final CollectionType fetchedType = (CollectionType) attributeDefinition.getType();
-		final CollectionPersister fetchedPersister = attributeDefinition.toCollectionDefinition().getCollectionPersister();
+		final CollectionPersister fetchedPersister = attributeDefinition.toCollectionDefinition()
+				.getCollectionPersister();
 
 		if ( fetchedPersister == null ) {
 			throw new WalkingException(

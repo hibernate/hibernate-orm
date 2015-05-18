@@ -76,10 +76,7 @@ public final class HolderInstantiator {
 		return constructor != null ? new AliasToBeanConstructorResultTransformer( constructor ) : transformer;
 	}	
 
-	public HolderInstantiator( 
-			ResultTransformer transformer,
-			String[] queryReturnAliases
-	) {
+	public HolderInstantiator(ResultTransformer transformer, String[] queryReturnAliases) {
 		this.transformer = transformer;		
 		this.queryReturnAliases = queryReturnAliases;
 	}
@@ -89,9 +86,10 @@ public final class HolderInstantiator {
 	}
 	
 	public Object instantiate(Object[] row) {
-		if(transformer==null) {
+		if (transformer==null) {
 			return row;
-		} else {
+		}
+		else {
 			return transformer.transformTuple(row, queryReturnAliases);
 		}
 	}	

@@ -44,16 +44,12 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class CacheImpl implements CacheImplementor {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			CacheImpl.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheImpl.class );
+
 	private final SessionFactoryImplementor sessionFactory;
 	private final SessionFactoryOptions settings;
 	private final transient QueryCache queryCache;
@@ -231,10 +227,10 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictDefaultQueryRegion() {
-		if ( sessionFactory.getSettings().isQueryCacheEnabled() ) {
-            if ( LOG.isDebugEnabled() ) {
-                LOG.debug( "Evicting default query region cache." );
-            }
+		if ( sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Evicting default query region cache." );
+			}
 			sessionFactory.getQueryCache().clear();
 		}
 	}
@@ -246,13 +242,13 @@ public class CacheImpl implements CacheImplementor {
 					"Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)"
 			);
 		}
-		if ( sessionFactory.getSettings().isQueryCacheEnabled() ) {
+		if ( sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			QueryCache namedQueryCache = queryCaches.get( regionName );
 			// TODO : cleanup entries in queryCaches + allCacheRegions ?
 			if ( namedQueryCache != null ) {
-                if ( LOG.isDebugEnabled() ) {
-                    LOG.debugf( "Evicting query cache, region: %s", regionName );
-                }
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Evicting query cache, region: %s", regionName );
+				}
 				namedQueryCache.clear();
 			}
 		}
@@ -261,13 +257,13 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public void evictQueryRegions() {
 		evictDefaultQueryRegion();
-		
+
 		if ( CollectionHelper.isEmpty( queryCaches ) ) {
 			return;
 		}
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug( "Evicting cache of all query regions." );
-        }
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Evicting cache of all query regions." );
+		}
 		for ( QueryCache queryCache : queryCaches.values() ) {
 			queryCache.clear();
 		}
@@ -278,9 +274,7 @@ public class CacheImpl implements CacheImplementor {
 		if ( settings.isQueryCacheEnabled() ) {
 			queryCache.destroy();
 
-			Iterator iter = queryCaches.values().iterator();
-			while ( iter.hasNext() ) {
-				QueryCache cache = (QueryCache) iter.next();
+			for ( QueryCache cache : queryCaches.values() ) {
 				cache.destroy();
 			}
 			updateTimestampsCache.destroy();
@@ -306,7 +300,7 @@ public class CacheImpl implements CacheImplementor {
 
 		QueryCache currentQueryCache = queryCaches.get( regionName );
 		if ( currentQueryCache == null ) {
-			synchronized ( allCacheRegions ) {
+			synchronized (allCacheRegions) {
 				currentQueryCache = queryCaches.get( regionName );
 				if ( currentQueryCache == null ) {
 					currentQueryCache = settings.getQueryCacheFactory()
@@ -354,17 +348,17 @@ public class CacheImpl implements CacheImplementor {
 		return allCacheRegions.get( regionName );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	@Override
 	public Map<String, Region> getAllSecondLevelCacheRegions() {
-		return new HashMap<String,Region>( allCacheRegions );
+		return new HashMap<String, Region>( allCacheRegions );
 	}
 
 	@Override
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
 	}
-	
+
 	@Override
 	public void evictAllRegions() {
 		evictCollectionRegions();

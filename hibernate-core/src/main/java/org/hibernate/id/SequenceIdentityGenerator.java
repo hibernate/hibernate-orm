@@ -54,7 +54,6 @@ import org.jboss.logging.Logger;
  * are completely disabled.
  *
  * @author Steve Ebersole
- *
  * @deprecated See deprecation discussion on {@link SequenceGenerator}
  */
 @Deprecated
@@ -62,26 +61,26 @@ public class SequenceIdentityGenerator
 		extends SequenceGenerator
 		implements PostInsertIdentifierGenerator {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			SequenceIdentityGenerator.class.getName()
 	);
 
 	@Override
-    public Serializable generate(SessionImplementor s, Object obj) {
+	public Serializable generate(SessionImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 
 	@Override
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
-	        Dialect dialect,
-	        boolean isGetGeneratedKeysEnabled) throws HibernateException {
+			Dialect dialect,
+			boolean isGetGeneratedKeysEnabled) throws HibernateException {
 		return new Delegate( persister, dialect, getSequenceName() );
 	}
 
 	@Override
-    public void configure(Type type, Properties params, JdbcEnvironment env) throws MappingException {
+	public void configure(Type type, Properties params, JdbcEnvironment env) throws MappingException {
 		super.configure( type, params, env );
 	}
 
@@ -107,13 +106,14 @@ public class SequenceIdentityGenerator
 		}
 
 		@Override
-        protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
+		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
 			return session.getJdbcCoordinator().getStatementPreparer().prepareStatement( insertSQL, keyColumns );
 		}
 
 		@Override
-		protected Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session) throws SQLException {
-						session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
+		protected Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+				throws SQLException {
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
 					getPersister().getRootTableKeyColumnNames()[0],
@@ -128,7 +128,7 @@ public class SequenceIdentityGenerator
 		}
 
 		@Override
-        public Insert setComment(String comment) {
+		public Insert setComment(String comment) {
 			// don't allow comments on these insert statements as comments totally
 			// blow up the Oracle getGeneratedKeys "support" :(
 			LOG.disallowingInsertStatementComment();

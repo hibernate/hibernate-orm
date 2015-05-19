@@ -1,3 +1,10 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
 //$Id: Human.java 9873 2006-05-04 13:42:48Z max.andersen@jboss.com $
 package org.hibernate.test.hql;
 import java.math.BigDecimal;

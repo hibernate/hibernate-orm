@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.test.dynamicentity.tuplizer;
 
 import java.io.Serializable;
@@ -6,13 +12,14 @@ import java.lang.reflect.Proxy;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.tuple.Instantiator;
+
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.DataProxyHandler;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.tuple.Instantiator;
 
 /**
  * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>

@@ -1,8 +1,8 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Licensed under the Eclipse Public License version 1.0, available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.bytecode.enhancement.entity;
 

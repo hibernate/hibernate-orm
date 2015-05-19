@@ -6,6 +6,11 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * Defines the start index value for a list index as stored on the database.  This base is subtracted from the
  * incoming database value on reads to determine the List position; it is added to the List position index when
@@ -19,6 +24,7 @@ package org.hibernate.annotations;
  *
  * @author Steve Ebersole
  */
+@Retention( RUNTIME )
 public @interface ListIndexBase {
 	/**
 	 * The list index base.  Default is 0.

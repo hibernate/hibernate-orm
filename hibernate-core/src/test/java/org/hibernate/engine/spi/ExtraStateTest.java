@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-ackage org.hibernate.engine.spi;
+package org.hibernate.engine.spi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

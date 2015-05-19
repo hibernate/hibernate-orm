@@ -69,7 +69,7 @@ import static org.hibernate.jpa.internal.HEMLogging.messageLogger;
  * @author Steve Ebersole
  */
 public class PersistenceXmlParser {
-    private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
+	private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
 
 	private final ClassLoaderService classLoaderService;
 	private final PersistenceUnitTransactionType defaultTransactionType;

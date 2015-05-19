@@ -23,8 +23,6 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.awt.Color;
-
 /**
  * CacheRegionUtils
  *
@@ -32,52 +30,6 @@ import java.awt.Color;
  */
 @SuppressWarnings("UnusedDeclaration")
 public abstract class CacheRegionUtils {
-	/**
-	 * HIT_COLOR
-	 */
-	public static final Color HIT_COLOR = Color.green;
-
-	/**
-	 * MISS_COLOR
-	 */
-	public static final Color MISS_COLOR = Color.red;
-
-	/**
-	 * PUT_COLOR
-	 */
-	public static final Color PUT_COLOR = Color.blue;
-
-	/**
-	 * HIT_FILL_COLOR
-	 */
-	public static final Color HIT_FILL_COLOR = CacheRegionUtils.HIT_COLOR.brighter().brighter().brighter();
-
-	/**
-	 * MISS_FILL_COLOR
-	 */
-	public static final Color MISS_FILL_COLOR = CacheRegionUtils.MISS_COLOR.brighter().brighter().brighter();
-
-	/**
-	 * PUT_FILL_COLOR
-	 */
-	public static final Color PUT_FILL_COLOR = CacheRegionUtils.PUT_COLOR.brighter().brighter().brighter();
-
-	/**
-	 * HIT_DRAW_COLOR
-	 */
-	public static final Color HIT_DRAW_COLOR = CacheRegionUtils.HIT_COLOR.darker();
-
-	/**
-	 * MISS_DRAW_COLOR
-	 */
-	public static final Color MISS_DRAW_COLOR = CacheRegionUtils.MISS_COLOR.darker();
-
-	/**
-	 * PUT_DRAW_COLOR
-	 */
-	public static final Color PUT_DRAW_COLOR = CacheRegionUtils.PUT_COLOR.darker();
-
-
 	/**
 	 * Determine a short name from the full name
 	 *

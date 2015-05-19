@@ -238,7 +238,6 @@ subprojects { subProject ->
 		sourceSets = [ subProject.sourceSets.main ]
 		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
 		showViolations = false
-		ignoreFailures = true
 	}
 	// exclude generated java sources - by explicitly setting the base source dir
 	checkstyleMain.source = 'src/main/java'

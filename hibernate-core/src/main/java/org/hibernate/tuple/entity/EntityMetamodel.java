@@ -63,7 +63,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -71,8 +71,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class EntityMetamodel implements Serializable {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityMetamodel.class.getName());
+	private static final CoreMessageLogger LOG = messageLogger( EntityMetamodel.class );
 
 	private static final int NO_VERSION_INDX = -66;
 
@@ -331,7 +330,7 @@ public class EntityMetamodel implements Serializable {
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
-        if (hasLazyProperties) {
+		if (hasLazyProperties) {
 			LOG.lazyPropertyFetchingAvailable(name);
 		}
 

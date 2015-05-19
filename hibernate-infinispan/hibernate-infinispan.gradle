@@ -3,13 +3,7 @@ configurations {
 }
 
 if ( useInfinispan7ForTesting() ) {
-    configurations {
-        testRuntime {
-            resolutionStrategy {
-                force 'org.infinispan:infinispan-core:7.2.1.Final'
-            }
-        }
-    }
+    configurations.testRuntime.resolutionStrategy.force 'org.infinispan:infinispan-core:7.2.1.Final'
 }
 
 private boolean useInfinispan7ForTesting() {

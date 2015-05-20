@@ -25,6 +25,6 @@ public class SequenceInformationExtractorNoOpImpl implements SequenceInformation
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException {
-		return (Iterable<SequenceInformation>) Collections.emptyList().iterator();
+		return Collections.emptyList();
 	}
 }

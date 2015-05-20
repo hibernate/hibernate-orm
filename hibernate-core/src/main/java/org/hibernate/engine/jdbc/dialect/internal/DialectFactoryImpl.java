@@ -46,21 +46,34 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 
 	@Override
 	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
-		final String dialectName = (String) configValues.get( AvailableSettings.DIALECT );
-		if ( !StringHelper.isEmpty( dialectName ) ) {
-			return constructDialect( dialectName );
+		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
+		if ( !isEmpty( dialectReference ) ) {
+			return constructDialect( dialectReference );
 		}
 		else {
 			return determineDialect( resolutionInfoSource );
 		}
 	}
 
-	private Dialect constructDialect(String dialectName) {
+	@SuppressWarnings("SimplifiableIfStatement")
+	private boolean isEmpty(Object dialectReference) {
+		if ( dialectReference != null ) {
+			// the referenced value is not null
+			if ( dialectReference instanceof String ) {
+				// if it is a String, it might still be empty though...
+				return StringHelper.isEmpty( (String) dialectReference );
+			}
+			return false;
+		}
+		return true;
+	}
+
+	private Dialect constructDialect(Object dialectReference) {
 		final Dialect dialect;
 		try {
-			dialect = strategySelector.resolveStrategy( Dialect.class, dialectName );
+			dialect = strategySelector.resolveStrategy( Dialect.class, dialectReference );
 			if ( dialect == null ) {
-				throw new HibernateException( "Unable to construct requested dialect [" + dialectName+ "]" );
+				throw new HibernateException( "Unable to construct requested dialect [" + dialectReference + "]" );
 			}
 			return dialect;
 		}
@@ -68,7 +81,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			throw e;
 		}
 		catch (Exception e) {
-			throw new HibernateException( "Unable to construct requested dialect [" + dialectName+ "]", e );
+			throw new HibernateException( "Unable to construct requested dialect [" + dialectReference + "]", e );
 		}
 	}
 

@@ -96,16 +96,6 @@ public class Enhancer {
 		}
 	}
 
-	/**
-	 * @deprecated Should use enhance(String, byte[]) and a proper EnhancementContext
-	 */
-	@Deprecated( )
-	public byte[] enhanceComposite(String className, byte[] originalBytes) throws EnhancementException {
-		return enhance( className, originalBytes );
-	}
-
-	/* --- */
-
 	private ClassPool buildClassPool(EnhancementContext enhancementContext) {
 		final ClassPool classPool = new ClassPool( false );
 		final ClassLoader loadingClassLoader = enhancementContext.getLoadingClassLoader();
@@ -122,8 +112,6 @@ public class Enhancer {
 	private String getFilenameForClass(Class<?> aClass) {
 		return aClass.getName().replace( '.', File.separatorChar ) + JavaFileObject.Kind.CLASS.extension;
 	}
-
-	/* --- */
 
 	private void enhance(CtClass managedCtClass) {
 		// can't effectively enhance interfaces
@@ -172,8 +160,6 @@ public class Enhancer {
 		}
 	}
 
-	/* --- */
-
 	protected void addInterceptorHandling(CtClass managedCtClass) {
 		// interceptor handling is only needed if either:
 		//		a) in-line dirty checking has *not* been requested
@@ -191,4 +177,12 @@ public class Enhancer {
 				EnhancerConstants.INTERCEPTOR_SETTER_NAME );
 	}
 
+
+	/**
+	 * @deprecated Should use enhance(String, byte[]) and a proper EnhancementContext
+	 */
+	@Deprecated( )
+	public byte[] enhanceComposite(String className, byte[] originalBytes) throws EnhancementException {
+		return enhance( className, originalBytes );
+	}
 }

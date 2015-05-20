@@ -9,18 +9,28 @@ package org.hibernate.engine.spi;
 import java.util.Set;
 
 /**
- * Specify if an entity class is instrumented to track field changes
+ * Contract for an entity to report that it tracks the dirtiness of its own state,
+ * as opposed to needing Hibernate to perform state-diff dirty calculations.
+ * <p/>
+ * Entity classes are free to implement this contract themselves.  This contract is
+ * also introduced into the entity when using bytecode enhancement and requesting
+ * that entities track there own dirtiness.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface SelfDirtinessTracker {
 	/**
-	 * Return true if any fields has been changed
+	 * Have any of the entity's persistent attributes changed?
+	 *
+	 * @return {@code true} indicates one or more persistent attributes have changed; {@code false}
+	 * indicates none have changed.
 	 */
 	boolean $$_hibernate_hasDirtyAttributes();
 
 	/**
-	 * Get the field names of all the fields thats been changed
+	 * Retrieve the names of all the persistent attributes whose values have changed.
+	 *
+	 * @return The set of changed persistent attribute names
 	 */
 	Set<String> $$_hibernate_getDirtyAttributes();
 

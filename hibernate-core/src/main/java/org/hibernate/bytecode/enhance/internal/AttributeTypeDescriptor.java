@@ -37,11 +37,10 @@ public abstract class AttributeTypeDescriptor {
 					return "";
 				}
 			}
-			builder.append( String.format( "if (%s() != null", EnhancerConstants.INTERCEPTOR_GETTER_NAME ) );
 
 			// primitives || enums
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
-				builder.append( String.format( " && %s != $1)", currentValue.getName()) );
+				builder.append( String.format( "if (%s != $1)", currentValue.getName()) );
 			}
 			// simple data types
 			else if ( currentValue.getType().getName().startsWith( "java.lang" )
@@ -50,7 +49,7 @@ public abstract class AttributeTypeDescriptor {
 					|| currentValue.getType().getName().startsWith( "java.sql.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Date" )
 					|| currentValue.getType().getName().startsWith( "java.util.Calendar" ) ) {
-				builder.append( String.format( " && ((%s == null) || (!%<s.equals($1))))", currentValue.getName() ) );
+				builder.append( String.format( "if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
 			}
 			// all other objects
 			else {
@@ -64,7 +63,7 @@ public abstract class AttributeTypeDescriptor {
 					}
 				}
 				// TODO: for now just call equals, should probably do something else here
-				builder.append( String.format( " && ((%s == null) || (!%<s.equals($1))))", currentValue.getName() ) );
+				builder.append( String.format( "if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
 			}
 			builder.append( String.format( " { %s(\"%s\"); }", EnhancerConstants.TRACKER_CHANGER_NAME, currentValue.getName() ) );
 		}

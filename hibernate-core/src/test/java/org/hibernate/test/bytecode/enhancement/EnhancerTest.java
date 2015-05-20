@@ -15,7 +15,6 @@ import java.util.Set;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.bytecode.enhancement.entity.Address;
@@ -67,19 +66,9 @@ public class EnhancerTest extends BaseUnitTestCase {
 
         Method nextGetter = entityClass.getMethod(EnhancerConstants.PREVIOUS_GETTER_NAME);
         Method nextSetter = entityClass.getMethod(EnhancerConstants.PREVIOUS_SETTER_NAME, ManagedEntity.class);
-        nextSetter.invoke(entityInstance, entityInstance);
-        assertSame(entityInstance, nextGetter.invoke(entityInstance));
+        nextSetter.invoke( entityInstance, entityInstance );
+        assertSame( entityInstance, nextGetter.invoke( entityInstance ) );
 
-        // add an attribute interceptor...
-        Method interceptorGetter = entityClass.getMethod(EnhancerConstants.INTERCEPTOR_GETTER_NAME);
-        assertNull(interceptorGetter.invoke(entityInstance));
-        entityClass.getMethod("getId").invoke(entityInstance);
-
-        Method interceptorSetter = entityClass.getMethod(EnhancerConstants.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class);
-        interceptorSetter.invoke(entityInstance, new EnhancerTestUtils.LocalPersistentAttributeInterceptor());
-        assertNotNull(interceptorGetter.invoke(entityInstance));
-
-        // dirty checking is unfortunately just printlns for now... just verify the test output
         entityClass.getMethod("getId").invoke(entityInstance);
         entityClass.getMethod("setId", Long.class).invoke(entityInstance, entityClass.getMethod("getId").invoke(entityInstance));
         entityClass.getMethod("setId", Long.class).invoke(entityInstance, 1L);
@@ -108,9 +97,6 @@ public class EnhancerTest extends BaseUnitTestCase {
 
             entityClass = EnhancerTestUtils.enhanceAndDecompile(entityClassToEnhance, cl);
             entityInstance = entityClass.newInstance();
-
-            interceptorSetter = entityClass.getMethod(EnhancerConstants.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class);
-            interceptorSetter.invoke(entityInstance, new EnhancerTestUtils.LocalPersistentAttributeInterceptor());
 
             List<String> strings = new ArrayList<String>();
             strings.add("FooBar");

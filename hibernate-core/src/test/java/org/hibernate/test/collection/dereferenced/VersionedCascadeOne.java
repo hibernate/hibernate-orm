@@ -36,7 +36,7 @@ import javax.persistence.Version;
  * @author Gail Badner
  */
 @Entity
-public class VersionedCascadeOne implements One {
+public class VersionedCascadeOne {
 	@Id
 	@GeneratedValue
 	private long id;

@@ -238,16 +238,6 @@ public interface EntityTuplizer extends Tuplizer {
 	boolean hasUninitializedLazyProperties(Object entity);
 
 	/**
-	 * Does the given entity instance or state have any currently uninitialized lazy properties?
-	 *
-	 * @param entity The entity to be check for uninitialized lazy properties.
-	 * @param entityState The entity state array, which we check for lazy properties if the entity has not yet had the
-	 *                    FieldInterceptor injected.
-	 * @return True if uninitialized lazy properties were found; false otherwise.
-	 */
-	boolean hasUninitializedLazyProperties(Object entity, Object[] entityState);
-
-	/**
 	 * Is it an instrumented POJO?
 	 *
 	 * @return {@code true} if the entity class is instrumented; {@code false} otherwise.

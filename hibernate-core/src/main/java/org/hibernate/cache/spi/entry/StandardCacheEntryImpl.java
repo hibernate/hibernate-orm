@@ -11,6 +11,9 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -38,7 +41,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 *
 	 * @param state The extracted state
 	 * @param persister The entity persister
-	 * @param unfetched Are any values present in state unfetched?
 	 * @param version The current version (if versioned)
 	 * @param session The originating session
 	 * @param owner The owner
@@ -48,7 +50,6 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	public StandardCacheEntryImpl(
 			final Object[] state,
 			final EntityPersister persister,
-			final boolean unfetched,
 			final Object version,
 			final SessionImplementor session,
 			final Object owner)
@@ -62,7 +63,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				owner
 		);
 		subclass = persister.getEntityName();
-		lazyPropertiesAreUnfetched = unfetched || !persister.isLazyPropertiesCacheable();
+		lazyPropertiesAreUnfetched = arelazyPropertiesUnfetched(persister, owner, state) || !persister.isLazyPropertiesCacheable();
 		this.version = version;
 	}
 
@@ -175,5 +176,32 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	@Override
 	public String toString() {
 		return "CacheEntry(" + subclass + ')' + ArrayHelper.toString( disassembledState );
+	}
+
+	/**
+	 * Does the given instance or related state have any uninitialized lazy properties.
+	 * @param persister The entity persister from with we can read the meta modal and determine if the entity has
+	 *                  lazy properties.
+	 * @param entity The entity to be check for uninitialized lazy properties.
+	 * @param entityState The entity state array, which we check for lazy properties if the entity has not yet had the
+	 *                    FieldInterceptor injected.
+	 * @return True if uninitialized lazy properties were found; false otherwise.
+	 */
+	protected boolean arelazyPropertiesUnfetched(EntityPersister persister, Object entity, Object[] entityState) {
+		if (persister.getEntityMetamodel().hasLazyProperties()) {
+			FieldInterceptor callback = FieldInterceptionHelper.extractFieldInterceptor(entity);
+			if (callback == null) {
+				//We need to check the state array and see if it has any un-fetched properties.
+				for (Object property : entityState) {
+					if (property == LazyPropertyInitializer.UNFETCHED_PROPERTY) {
+						return true;
+					}
+				}
+			}
+			else {
+				return !callback.isInitialized();
+			}
+		}
+		return false;
 	}
 }

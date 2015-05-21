@@ -19,6 +19,7 @@ NOTE: This is still very much a work in progress. <<helping,Help>> is definitely
 == Tooling
 
 * See the <<metamodelgen/MetamodelGenerator.adoc#,Metamodel Generator Guide>> for details on generating a JPA "Static Metamodel"
+* see the <<bytecode/BytecodeEnhancement.adoc#,Bytecode Enhancement Guide>> for information on bytecode enhancement
 * Guide on the Gradle plugin coming soon
 * Guide on the Ant tasks coming soon
 * Guide on the Maven plugin coming soon

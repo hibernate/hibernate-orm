@@ -131,7 +131,7 @@ private float weight;
             <note>
                 <para>
                     Historically this was considered option.  While still not (yet) enforced, this should be considered
-                    a deprecated feature as it will be completely required to provide a identifier property in an
+                    a deprecated feature as it will be completely required to provide an identifier property in an
                     upcoming release.
                 </para>
             </note>

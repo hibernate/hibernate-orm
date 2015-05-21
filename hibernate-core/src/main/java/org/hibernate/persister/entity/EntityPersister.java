@@ -8,7 +8,6 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -784,7 +783,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	
 	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
-	public int[] resolveAttributeIndexes(Set<String> properties);
+	public int[] resolveAttributeIndexes(String[] attributeNames);
 
 	public boolean canUseReferenceCacheEntries();
 }

@@ -6,10 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.internal.tracker;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
 /**
  * small low memory class to keep track of changed fields
  *
@@ -58,8 +54,8 @@ public final class SortedDirtyTracker {
 		return names.length == 0;
 	}
 
-	public Set<String> asSet() {
-		return new CopyOnWriteArraySet<String>( Arrays.asList( names ) );
+	public String[] get() {
+		return names;
 	}
 
 }

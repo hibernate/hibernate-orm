@@ -6,6 +6,11 @@
  */
 package org.hibernate.bytecode.enhance.internal;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
@@ -19,11 +24,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
-
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * enhancer for regular entities
@@ -140,13 +140,18 @@ public class EntityEnhancer extends Enhancer {
 
 			MethodWriter.write(
 					managedCtClass, "" +
-							"public java.util.Set %1$s() {%n" +
-							"  if (%2$s == null) { %2$s = new %4$s(); }%n" +
-							"  %3$s(%2$s);%n" +
-							"  return %2$s.asSet();%n" +
+							"public String[] %1$s() {%n" +
+							"  if(%3$s == null) {%n" +
+							"    return (%2$s == null) ? new String[0] : %2$s.get();%n" +
+							"  } else {%n" +
+							"    if (%2$s == null) %2$s = new %5$s();%n" +
+							"    %4$s(%2$s);%n" +
+							"    return %2$s.get();%n" +
+							"  }%n" +
 							"}",
 					EnhancerConstants.TRACKER_GET_NAME,
 					EnhancerConstants.TRACKER_FIELD_NAME,
+					EnhancerConstants.TRACKER_COLLECTION_NAME,
 					EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME,
 					TRACKER_IMPL
 			);

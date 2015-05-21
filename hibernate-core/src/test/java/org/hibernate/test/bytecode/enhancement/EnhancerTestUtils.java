@@ -9,7 +9,6 @@ package org.hibernate.test.bytecode.enhancement;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -203,9 +202,9 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	public static void checkDirtyTracking(Object entityInstance, String... dirtyFields) {
 		final SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) entityInstance;
 		assertEquals( dirtyFields.length > 0, selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() );
-		Set<?> tracked = selfDirtinessTracker.$$_hibernate_getDirtyAttributes();
-		assertEquals( dirtyFields.length, tracked.size() );
-		assertTrue( tracked.containsAll( Arrays.asList( dirtyFields ) ) );
+		String[] tracked = selfDirtinessTracker.$$_hibernate_getDirtyAttributes();
+		assertEquals( dirtyFields.length, tracked.length );
+		assertTrue( Arrays.asList( tracked ).containsAll( Arrays.asList( dirtyFields ) ) );
 	}
 
 	static EntityEntry makeEntityEntry() {

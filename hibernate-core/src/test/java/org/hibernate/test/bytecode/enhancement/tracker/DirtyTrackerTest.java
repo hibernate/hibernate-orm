@@ -6,11 +6,10 @@
  */
 package org.hibernate.test.bytecode.enhancement.tracker;
 
-import org.hibernate.bytecode.enhance.internal.tracker.SortedDirtyTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleDirtyTracker;
-import org.junit.Test;
+import org.hibernate.bytecode.enhance.internal.tracker.SortedDirtyTracker;
 
-import java.util.Set;
+import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,15 +24,15 @@ public class DirtyTrackerTest {
     public void testSimpleTracker() {
         SimpleDirtyTracker tracker = new SimpleDirtyTracker();
         assertTrue(tracker.isEmpty());
-        assertTrue(tracker.asSet().isEmpty());
+        assertTrue(tracker.get().length == 0);
 
         tracker.add("foo");
         assertFalse(tracker.isEmpty());
-        assertArrayEquals(tracker.asSet().toArray(), new String[]{"foo"});
+        assertArrayEquals(tracker.get(), new String[]{"foo"});
 
         tracker.clear();
         assertTrue(tracker.isEmpty());
-        assertTrue(tracker.asSet().isEmpty());
+        assertTrue(tracker.get().length == 0);
 
         tracker.add("foo");
         tracker.add("bar");
@@ -41,7 +40,7 @@ public class DirtyTrackerTest {
         tracker.add("foo");
         tracker.add("another.foo");
         tracker.add("another.bar");
-        assertTrue(tracker.asSet().size() == 4);
+        assertTrue(tracker.get().length == 4);
 
     }
 
@@ -49,15 +48,15 @@ public class DirtyTrackerTest {
     public void testSortedTracker() {
         SortedDirtyTracker tracker = new SortedDirtyTracker();
         assertTrue(tracker.isEmpty());
-        assertTrue(tracker.asSet().isEmpty());
+        assertTrue(tracker.get().length == 0);
 
         tracker.add("foo");
         assertFalse(tracker.isEmpty());
-        assertArrayEquals(tracker.asSet().toArray(), new String[]{"foo"});
+        assertArrayEquals(tracker.get(), new String[]{"foo"});
 
         tracker.clear();
         assertTrue(tracker.isEmpty());
-        assertTrue(tracker.asSet().isEmpty());
+        assertTrue(tracker.get().length == 0);
 
         tracker.add("foo");
         tracker.add("bar");
@@ -65,15 +64,13 @@ public class DirtyTrackerTest {
         tracker.add("foo");
         tracker.add("another.foo");
         tracker.add("another.bar");
-        assertTrue(tracker.asSet().size() == 4);
+        assertTrue(tracker.get().length == 4);
 
         // we the algorithm for this implementation relies on the fact that the array is kept sorted, so let's check it really is
-        assertTrue(isSorted(tracker.asSet()));
+        assertTrue(isSorted(tracker.get()));
     }
 
-    private boolean isSorted(Set<String> set) {
-        String[] arr = new String[set.size()];
-        arr = set.toArray(arr);
+    private boolean isSorted(String[] arr) {
         for (int i = 1; i < arr.length; i++) {
             if (arr[i - 1].compareTo(arr[i]) > 0) {
                 return false;

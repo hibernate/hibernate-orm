@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.Set;
-
 /**
  * Contract for an entity to report that it tracks the dirtiness of its own state,
  * as opposed to needing Hibernate to perform state-diff dirty calculations.
@@ -30,9 +28,9 @@ public interface SelfDirtinessTracker {
 	/**
 	 * Retrieve the names of all the persistent attributes whose values have changed.
 	 *
-	 * @return The set of changed persistent attribute names
+	 * @return An array of changed persistent attribute names
 	 */
-	Set<String> $$_hibernate_getDirtyAttributes();
+	String[] $$_hibernate_getDirtyAttributes();
 
 	/**
 	 * Clear the stored dirty attributes

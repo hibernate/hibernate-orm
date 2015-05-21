@@ -239,7 +239,7 @@ public class Flight implements Serializable {
       </tip>
 
       <para><literal>@Entity.name</literal> lets you define the shortcut name
-      of the entity you can used in JP-QL and HQL queries. It defaults to the
+      of the entity you can use in JP-QL and HQL queries. It defaults to the
       unqualified class name of the class.</para>
 
       <para>Hibernate goes beyond the JPA specification and provide additional
@@ -932,7 +932,7 @@ class UserId implements Serializable {
           <programlisting role="XML">&lt;class name="Customer"&gt;
    &lt;composite-id name="id" class="CustomerId"&gt;
       &lt;key-property name="firstName" column="userfirstname_fk"/&gt;
-      &lt;key-property name="lastName" column="userfirstname_fk"/&gt;
+      &lt;key-property name="lastName" column="userlastname_fk"/&gt;
       &lt;key-property name="customerNumber"/&gt;
    &lt;/composite-id&gt;
 
@@ -1075,7 +1075,7 @@ class UserId implements Serializable {
         </section>
 
         <section>
-          <title>Multiple id properties with with a dedicated identifier
+          <title>Multiple id properties with a dedicated identifier
           type</title>
 
           <para><classname>@IdClass</classname> on an entity points to the
@@ -2594,7 +2594,7 @@ public class Order {
 
    @Embedded private Address address;
    public Address getAddress() { return address; }
-   public void setAddress() { this.address = address; }
+   public void setAddress(Address address) { this.address = address; }
 }
 
 @Entity
@@ -2605,7 +2605,7 @@ public class User {
 
    private Address address;
    @Embedded public Address getAddress() { return address; }
-   public void setAddress() { this.address = address; }
+   public void setAddress(Address address) { this.address = address; }
 }
 
 @Embeddable
@@ -2613,7 +2613,7 @@ public class User {
 public class Address {
    private String street1;
    public String getStreet1() { return street1; }
-   public void setStreet1() { this.street1 = street1; }
+   public void setStreet1(String street1) { this.street1 = street1; }
 
    private hashCode; //not persistent
 }</programlisting>
@@ -2631,7 +2631,7 @@ public class Order {
 
    @Access(AccessType.PROPERTY)
    public String getOrderNumber() { return userId + ":" + orderId; }
-   public void setOrderNumber() { this.userId = ...; this.orderId = ...; }
+   public void setOrderNumber(String userId, String orderId) { this.userId = userId; this.orderId = orderId; }
 }</programlisting>
 
           <para>In this example, the default access type is
@@ -3130,10 +3130,10 @@ public class Country implements Serializable {
     Address homeAddress;</programlisting>
 
       <para>Hibernate Annotations supports something that is not explicitly
-      supported by the JPA specification. You can annotate a embedded object
+      supported by the JPA specification. You can annotate an embedded object
       with the <literal>@MappedSuperclass</literal> annotation to make the
       superclass properties persistent (see
-      <literal>@MappedSuperclass</literal> for more informations).</para>
+      <literal>@MappedSuperclass</literal> for more information).</para>
 
       <para>You can also use association annotations in an embeddable object
       (ie <literal>@OneToOne</literal>, <classname>@ManyToOne</classname>,
@@ -3852,7 +3852,7 @@ public class Plane extends FlyingObject {
         <title>Mapping one entity to several tables</title>
 
         <para>While not recommended for a fresh schema, some legacy databases
-        force your to map a single entity on several tables.</para>
+        force you to map a single entity on several tables.</para>
 
         <para>Using the <literal>@SecondaryTable</literal> or
         <literal>@SecondaryTables</literal> class level annotations. To
@@ -4083,9 +4083,9 @@ public class Cat implements Serializable {
     </section>
 
     <section>
-      <title>Mapping one to one and one to many associations</title>
+      <title>Mapping one to one and many to one associations</title>
 
-      <para>To link one entity to an other, you need to map the association
+      <para>To link one entity to another, you need to map the association
       property as a to one association. In the relational model, you can
       either use a foreign key or an association table, or (a bit less common)
       share the same primary key value between the two entities.</para>
@@ -4303,7 +4303,7 @@ public class Child {
 alter table Child add constraint FK_PARENT foreign key (parent_id) references Parent</programlisting>
         </example>
 
-        <para>Sometimes, you want to link one entity to an other not by the
+        <para>Sometimes, you want to link one entity to another not by the
         target entity primary key but by a different unique key. You can
         achieve that by referencing the unique key column(s) in
         <methodname>@JoinColumn.referenceColumnName</methodname>.</para>
@@ -5869,7 +5869,7 @@ class CreditCard {
       to define either of these rules.</para>
     </note>
 
-    <para>If a property uses more that one column, you must use the
+    <para>If a property uses more than one column, you must use the
     <literal>forColumn</literal> attribute to specify which column, the
     expressions are targeting.</para>
 

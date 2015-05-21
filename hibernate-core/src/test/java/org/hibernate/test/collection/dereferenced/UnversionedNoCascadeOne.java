@@ -35,7 +35,7 @@ import javax.persistence.OneToMany;
  * @author Gail Badner
  */
 @Entity
-public class UnversionedNoCascadeOne implements One {
+public class UnversionedNoCascadeOne {
 	@Id
 	@GeneratedValue
 	private long id;

@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
@@ -592,7 +591,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public int[] resolveAttributeIndexes(Set<String> properties) {
+		public int[] resolveAttributeIndexes(String[] attributeNames) {
 			return new int[0];
 		}
 

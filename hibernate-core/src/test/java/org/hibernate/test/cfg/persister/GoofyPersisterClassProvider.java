@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -587,7 +586,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
         @Override
-        public int[] resolveAttributeIndexes(Set<String> attributes) {
+        public int[] resolveAttributeIndexes(String[] attributeNames) {
             return null;
         }
 

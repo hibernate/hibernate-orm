@@ -783,6 +783,13 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	
 	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
+	/**
+	 * Converts an array of attribute names to a set of indexes, according to the entity metamodel
+	 *
+	 * @param attributeNames Array of names to be resolved
+	 *
+	 * @return A set of unique indexes of the attribute names found in the metamodel
+	 */
 	public int[] resolveAttributeIndexes(String[] attributeNames);
 
 	public boolean canUseReferenceCacheEntries();

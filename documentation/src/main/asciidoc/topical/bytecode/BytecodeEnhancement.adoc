@@ -91,3 +91,50 @@ Once enhancement overall is enabled, the default for these 3 properties is `true
 
 
 === Maven Plugin
+
+The Hibernate Maven plugin provides a convenient way to enhance the domain model at build-time when using Maven as the
+build environment. Much like the Gradle plugin, the current bytecode enhancement capabilities that can be configured
+on the plugin are:
+
+    * `enableLazyInitialization`
+    * `enableDirtyTracking`
+    * `enableAssociationManagement`
+
+These are all enabled by default. Even if the plugin is enabled, the bytecode enhancement can be bypassed by disabling
+all the capabilities.
+
+To use the Hibernate Maven plugin on a build it must added to the model (pom.xml) along with other plugins that may be
+already in use. The XML snippet below is an example of how to declare and configure the plugin.
+
+[[maven-plugin-apply-example]]
+.Apply the plugin
+====
+[source, XML]
+----
+<build>
+    <plugins>
+        [...]
+        <plugin>
+            <groupId>org.hibernate.orm.tooling</groupId>
+            <artifactId>hibernate-enhance-maven-plugin</artifactId>
+            <version>$currentHibernateVersion</version>
+            <executions>
+                <execution>
+                    <configuration>
+                        <enableLazyInitialization>true</enableLazyInitialization>
+                        <enableDirtyTracking>true</enableDirtyTracking>
+                        <enableAssociationManagement>true</enableAssociationManagement>
+                    </configuration>
+                    <goals>
+                        <goal>enhance</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        [...]
+    </plugins>
+</build>
+----
+====
+
+

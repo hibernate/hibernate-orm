@@ -26,6 +26,7 @@ import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.internal.OldCacheKeyImplementation;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -338,7 +339,7 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
-		return new CacheKey( id, type, entityOrRoleName, getTenantIdentifier(), getFactory() );
+		return new OldCacheKeyImplementation( id, type, entityOrRoleName, getTenantIdentifier(), getFactory() );
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

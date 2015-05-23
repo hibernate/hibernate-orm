@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.internal.OldCacheKeyImplementation;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
@@ -97,7 +98,7 @@ public class CacheImpl implements CacheImplementor {
 	}
 
 	private CacheKey buildCacheKey(Serializable identifier, EntityPersister p) {
-		return new CacheKey(
+		return new OldCacheKeyImplementation(
 				identifier,
 				p.getIdentifierType(),
 				p.getRootEntityName(),
@@ -175,7 +176,7 @@ public class CacheImpl implements CacheImplementor {
 	}
 
 	private CacheKey buildCacheKey(Serializable ownerIdentifier, CollectionPersister p) {
-		return new CacheKey(
+		return new OldCacheKeyImplementation(
 				ownerIdentifier,
 				p.getKeyType(),
 				p.getRole(),

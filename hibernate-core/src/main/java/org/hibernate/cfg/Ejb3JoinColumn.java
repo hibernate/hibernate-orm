@@ -37,6 +37,7 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.cfg.naming.NamingStrategyDelegate;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
@@ -657,10 +658,15 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		if ( StringHelper.isNotEmpty( columnName ) ) {
 			getMappingColumn().setName(
 					applyNamingStrategy ?
-							getNamingStrategyDelegate().toPhysicalColumnName( columnName ) :
+							quoteIdentifier( getNamingStrategyDelegate().toPhysicalColumnName( columnName ) ) :
 							columnName
 			);
 		}
+	}
+
+	private String quoteIdentifier(String identifier) {
+		return getMappings().getObjectNameNormalizer().isUseQuotedIdentifiersGlobally()
+				? StringHelper.quote( identifier ) : identifier;
 	}
 
 	public static Ejb3JoinColumn[] buildJoinTableJoinColumns(

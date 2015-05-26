@@ -17,7 +17,9 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -103,6 +105,16 @@ public class StandardTableExporter implements Exporter<Table> {
 					buf.append( " not null" );
 				}
 
+			}
+
+			if ( col.isUnique() ) {
+				String keyName = Constraint.generateName( "UK_", table, col );
+				UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+				uk.addColumn( col );
+				buf.append(
+						dialect.getUniqueDelegate()
+								.getColumnDefinitionUniquenessFragment( col )
+				);
 			}
 
 			if ( col.getCheckConstraint() != null && dialect.supportsColumnCheck() ) {

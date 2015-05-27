@@ -32,9 +32,11 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -1620,15 +1622,14 @@ public abstract class Loader {
 
 		// see if the entity defines reference caching, and if so use the cached reference (if one).
 		if ( session.getCacheMode().isGetEnabled() && persister.canUseReferenceCacheEntries() ) {
-			final Object cachedEntry = CacheHelper.fromSharedCache(
-					session,
-					session.generateCacheKey(
-							key.getIdentifier(),
-							persister.getEntityMetamodel().getEntityType(),
-							key.getEntityName()
-					),
-					persister.getCacheAccessStrategy()
-			);
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityCacheKey ck = cache.generateCacheKey(
+					key.getIdentifier(),
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+					);
+			final Object cachedEntry = CacheHelper.fromSharedCache( session, ck, cache );
 			if ( cachedEntry != null ) {
 				CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( cachedEntry, factory );
 				return ( (ReferenceCacheEntryImpl) entry ).getReference();

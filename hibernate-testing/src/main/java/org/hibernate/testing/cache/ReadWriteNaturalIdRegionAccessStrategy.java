@@ -9,14 +9,18 @@ package org.hibernate.testing.cache;
 import java.util.Comparator;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Eric Dalquist
  */
-class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStrategy
+class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStrategy<NaturalIdCacheKey>
 		implements NaturalIdRegionAccessStrategy {
 
 	private final NaturalIdRegionImpl region;
@@ -26,17 +30,17 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 	}
 
 	@Override
-	public boolean insert(Object key, Object value) throws CacheException {
+	public boolean insert(NaturalIdCacheKey key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(Object key, Object value) throws CacheException {
+	public boolean update(NaturalIdCacheKey key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value) throws CacheException {
+	public boolean afterInsert(NaturalIdCacheKey key, Object value) throws CacheException {
 
 		try {
 			writeLock.lock();
@@ -56,7 +60,7 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(NaturalIdCacheKey key, Object value, SoftLock lock) throws CacheException {
 		try {
 			writeLock.lock();
 			Lockable item = (Lockable) region.get( key );
@@ -100,5 +104,10 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 	@Override
 	public NaturalIdRegion getRegion() {
 		return region;
+	}
+
+	@Override
+	public NaturalIdCacheKey generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 }

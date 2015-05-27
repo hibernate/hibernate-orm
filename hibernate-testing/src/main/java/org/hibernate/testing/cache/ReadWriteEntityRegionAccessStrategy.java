@@ -6,17 +6,22 @@
  */
 package org.hibernate.testing.cache;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Strong Liu
  */
-class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrategy
+class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrategy<EntityCacheKey>
 		implements EntityRegionAccessStrategy {
 	private final EntityRegionImpl region;
 
@@ -25,18 +30,18 @@ class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrateg
 	}
 
 	@Override
-	public boolean insert(Object key, Object value, Object version) throws CacheException {
+	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException {
 
 		try {
 			writeLock.lock();
@@ -56,7 +61,7 @@ class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrateg
 
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		try {
 			writeLock.lock();
@@ -103,4 +108,10 @@ class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrateg
 	public EntityRegion getRegion() {
 		return region;
 	}
+
+	@Override
+	public EntityCacheKey generateCacheKey(Serializable id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+	}
+
 }

@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 import org.jboss.logging.Logger;
@@ -20,7 +21,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Strong Liu
  */
-abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy {
+abstract class AbstractReadWriteAccessStrategy<T extends CacheKey> extends BaseRegionAccessStrategy<T> {
 	private static final Logger LOG = Logger.getLogger( AbstractReadWriteAccessStrategy.class.getName() );
 
 	private final UUID uuid = UUID.randomUUID();
@@ -34,7 +35,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * after the start of this transaction.
 	 */
 	@Override
-	public final Object get(Object key, long txTimestamp) throws CacheException {
+	public final Object get(T key, long txTimestamp) throws CacheException {
 		LOG.debugf( "getting key[%s] from region[%s]", key, getInternalRegion().getName() );
 		try {
 			readLock.lock();
@@ -68,7 +69,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 */
 	@Override
 	public final boolean putFromLoad(
-			Object key,
+			T key,
 			Object value,
 			long txTimestamp,
 			Object version,
@@ -108,7 +109,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * Soft-lock a cache item.
 	 */
 	@Override
-	public final SoftLock lockItem(Object key, Object version) throws CacheException {
+	public final SoftLock lockItem(T key, Object version) throws CacheException {
 
 		try {
 			LOG.debugf( "locking key[%s] in region[%s]", key, getInternalRegion().getName() );
@@ -132,7 +133,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * Soft-unlock a cache item.
 	 */
 	@Override
-	public final void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public final void unlockItem(T key, SoftLock lock) throws CacheException {
 
 		try {
 			LOG.debugf( "unlocking key[%s] in region[%s]", key, getInternalRegion().getName() );

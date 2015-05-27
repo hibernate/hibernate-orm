@@ -7,6 +7,7 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.CollectionCacheKey;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -17,7 +18,7 @@ class TransactionalCollectionRegionAccessStrategy extends BaseCollectionRegionAc
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(CollectionCacheKey key) throws CacheException {
 		evict( key );
 	}
 

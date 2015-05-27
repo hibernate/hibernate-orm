@@ -14,7 +14,8 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.WrongClassException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -357,12 +358,14 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final LoadEventListener.LoadType options,
 			final SessionImplementor source) {
 		SoftLock lock = null;
-		final CacheKey ck;
+		final EntityCacheKey ck;
+		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 		if ( persister.hasCache() ) {
-			ck = source.generateCacheKey(
+			ck = cache.generateCacheKey(
 					event.getEntityId(),
-					persister.getIdentifierType(),
-					persister.getRootEntityName()
+					persister,
+					source.getFactory(),
+					source.getTenantIdentifier()
 			);
 			lock = persister.getCacheAccessStrategy().lockItem( ck, null );
 		}
@@ -376,7 +379,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 		finally {
 			if ( persister.hasCache() ) {
-				persister.getCacheAccessStrategy().unlockItem( ck, lock );
+				cache.unlockItem( ck, lock );
 			}
 		}
 
@@ -572,22 +575,24 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		final SessionFactoryImplementor factory = source.getFactory();
-		final CacheKey ck = source.generateCacheKey(
+		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		final EntityCacheKey ck = cache.generateCacheKey(
 				event.getEntityId(),
-				persister.getIdentifierType(),
-				persister.getRootEntityName()
+				persister,
+				factory,
+				source.getTenantIdentifier()
 		);
 
 		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			if ( ce == null ) {
 				factory.getStatisticsImplementor().secondLevelCacheMiss(
-						persister.getCacheAccessStrategy().getRegion().getName()
+						cache.getRegion().getName()
 				);
 			}
 			else {
 				factory.getStatisticsImplementor().secondLevelCacheHit(
-						persister.getCacheAccessStrategy().getRegion().getName()
+						cache.getRegion().getName()
 				);
 			}
 		}

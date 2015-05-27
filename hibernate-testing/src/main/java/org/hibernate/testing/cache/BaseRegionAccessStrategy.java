@@ -7,34 +7,34 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-
 import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu
  */
-abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
-	private static final Logger LOG = Logger.getLogger( BaseRegionAccessStrategy.class );
+abstract class BaseRegionAccessStrategy<T extends CacheKey> implements RegionAccessStrategy<T> {
 
+	private static final Logger LOG = Logger.getLogger( BaseRegionAccessStrategy.class );
 
 	protected abstract BaseGeneralDataRegion getInternalRegion();
 
 	protected abstract boolean isDefaultMinimalPutOverride();
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(T key, long txTimestamp) throws CacheException {
 		return getInternalRegion().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(T key, Object value, long txTimestamp, Object version) throws CacheException {
 		return putFromLoad( key, value, txTimestamp, version, isDefaultMinimalPutOverride() );
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(T key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 
 		if ( key == null || value == null ) {
@@ -75,12 +75,12 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockItem(T key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(T key, SoftLock lock) throws CacheException {
 	}
 
 
@@ -91,7 +91,7 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#remove(java.lang.Object)
 	 */
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(T key) throws CacheException {
 	}
 
 	/**
@@ -107,7 +107,7 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	}
 
 	@Override
-	public void evict(Object key) throws CacheException {
+	public void evict(T key) throws CacheException {
 		getInternalRegion().evict( key );
 	}
 

@@ -8,7 +8,8 @@ package org.hibernate.cache.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.CollectionCacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.Type;
@@ -18,13 +19,13 @@ import org.hibernate.type.Type;
  * keys which do not properly implement equals()/hashCode().
  *
  * This was named org.hibernate.cache.spi.CacheKey in Hibernate until version 5.
- * Temporarily maintained as a reference while all components catch up with the refactoring to interface.
+ * Temporarily maintained as a reference while all components catch up with the refactoring to the caching interfaces.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 @Deprecated
-public class OldCacheKeyImplementation implements CacheKey, Serializable {
+final class OldCacheKeyImplementation implements EntityCacheKey, CollectionCacheKey, Serializable {
 	private final Serializable key;
 	private final Type type;
 	private final String entityOrRoleName;
@@ -42,7 +43,7 @@ public class OldCacheKeyImplementation implements CacheKey, Serializable {
 	 * @param tenantId The tenant identifier associated this data.
 	 * @param factory The session factory for which we are caching
 	 */
-	public OldCacheKeyImplementation(
+	OldCacheKeyImplementation(
 			final Serializable id,
 			final Type type,
 			final String entityOrRoleName,
@@ -61,14 +62,24 @@ public class OldCacheKeyImplementation implements CacheKey, Serializable {
 		return result;
 	}
 
+	@Override
 	public Serializable getKey() {
 		return key;
 	}
 
-	public String getEntityOrRoleName() {
+	@Override
+	public String getEntityName() {
+		//defined exclusively on EntityCacheKey
 		return entityOrRoleName;
 	}
 
+	@Override
+	public String getCollectionRole() {
+		//defined exclusively on CollectionCacheKey
+		return entityOrRoleName;
+	}
+
+	@Override
 	public String getTenantId() {
 		return tenantId;
 	}

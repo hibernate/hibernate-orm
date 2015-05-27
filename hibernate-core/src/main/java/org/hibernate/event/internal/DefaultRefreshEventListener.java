@@ -13,7 +13,8 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
@@ -136,12 +137,14 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		if ( persister.hasCache() ) {
-			final CacheKey ck = source.generateCacheKey(
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			EntityCacheKey ck = cache.generateCacheKey(
 					id,
-					persister.getIdentifierType(),
-					persister.getRootEntityName()
+					persister,
+					source.getFactory(),
+					source.getTenantIdentifier()
 			);
-			persister.getCacheAccessStrategy().evict( ck );
+			cache.evict( ck );
 		}
 
 		evictCachedCollections( persister, id, source.getFactory() );

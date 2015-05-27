@@ -1235,7 +1235,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
-			final CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
+			final CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, getCacheAccessStrategy() );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);

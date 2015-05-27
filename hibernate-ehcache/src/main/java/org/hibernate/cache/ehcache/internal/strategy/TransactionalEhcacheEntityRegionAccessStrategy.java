@@ -12,6 +12,7 @@ import net.sf.ehcache.Element;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -23,7 +24,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Ludovic Orban
  * @author Alex Snaps
  */
-public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
+public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion,EntityCacheKey>
 		implements EntityRegionAccessStrategy {
 
 	private final Ehcache ehcache;
@@ -44,17 +45,17 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value, Object version) {
+	public boolean afterInsert(EntityCacheKey key, Object value, Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(EntityCacheKey key, long txTimestamp) throws CacheException {
 		try {
 			final Element element = ehcache.get( key );
 			return element == null ? null : element.getObjectValue();
@@ -70,7 +71,7 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public boolean insert(Object key, Object value, Object version)
+	public boolean insert(EntityCacheKey key, Object value, Object version)
 			throws CacheException {
 		//OptimisticCache? versioning?
 		try {
@@ -83,13 +84,13 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockItem(EntityCacheKey key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
 	public boolean putFromLoad(
-			Object key,
+			EntityCacheKey key,
 			Object value,
 			long txTimestamp,
 			Object version,
@@ -108,7 +109,7 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(EntityCacheKey key) throws CacheException {
 		try {
 			ehcache.remove( key );
 		}
@@ -118,13 +119,13 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 	}
 
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(EntityCacheKey key, SoftLock lock) throws CacheException {
 		// no-op
 	}
 
 	@Override
 	public boolean update(
-			Object key,
+			EntityCacheKey key,
 			Object value,
 			Object currentVersion,
 			Object previousVersion) throws CacheException {

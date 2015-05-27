@@ -17,22 +17,23 @@ import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.internal.util.compare.ComparableComparator;
-
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import junit.framework.AssertionFailedError;
 
 import org.infinispan.Cache;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
-
 import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
@@ -193,7 +194,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
     */
    private void putFromLoadTest(final boolean useMinimalAPI) throws Exception {
 
-      final String KEY = KEY_BASE + testCount++;
+      final EntityCacheKey KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
       final CountDownLatch writeLatch1 = new CountDownLatch(1);
       final CountDownLatch writeLatch2 = new CountDownLatch(1);
@@ -297,7 +298,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    @Test
    public void testInsert() throws Exception {
 
-      final String KEY = KEY_BASE + testCount++;
+      final EntityCacheKey KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
       final CountDownLatch readLatch = new CountDownLatch(1);
       final CountDownLatch commitLatch = new CountDownLatch(1);
@@ -386,7 +387,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    @Test
    public void testUpdate() throws Exception {
 
-      final String KEY = KEY_BASE + testCount++;
+      final EntityCacheKey KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
       // Set up initial state
       localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
@@ -502,7 +503,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    }
 
    private void evictOrRemoveTest(final boolean evict) throws Exception {
-      final String KEY = KEY_BASE + testCount++;
+      final EntityCacheKey KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
       assertEquals(0, getValidKeyCount(localEntityRegion.getCache().keySet()));
       assertEquals(0, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
 
@@ -531,7 +532,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    }
 
    private void evictOrRemoveAllTest(final boolean evict) throws Exception {
-      final String KEY = KEY_BASE + testCount++;
+      final EntityCacheKey KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
       assertEquals(0, getValidKeyCount(localEntityRegion.getCache().keySet()));
       assertEquals(0, getValidKeyCount(remoteEntityRegion.getCache().keySet()));
       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));

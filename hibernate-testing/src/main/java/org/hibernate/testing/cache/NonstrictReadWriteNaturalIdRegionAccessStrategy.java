@@ -7,6 +7,7 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 /**
@@ -18,27 +19,27 @@ class NonstrictReadWriteNaturalIdRegionAccessStrategy extends BaseNaturalIdRegio
 	}
 
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(NaturalIdCacheKey key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(NaturalIdCacheKey key) throws CacheException {
 		evict( key );
 	}
 
 	@Override
-	public boolean insert(Object key, Object value) throws CacheException {
+	public boolean insert(NaturalIdCacheKey key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value) throws CacheException {
+	public boolean afterInsert(NaturalIdCacheKey key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(Object key, Object value) throws CacheException {
+	public boolean update(NaturalIdCacheKey key, Object value) throws CacheException {
 		remove( key );
 		return false;
 	}

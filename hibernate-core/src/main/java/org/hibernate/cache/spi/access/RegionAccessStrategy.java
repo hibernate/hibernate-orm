@@ -6,14 +6,17 @@
  */
 package org.hibernate.cache.spi.access;
 
+
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.CacheKey;
 
 /**
  * Base access strategy for all regions.
  *
  * @author Gail Badner
  */
-public interface RegionAccessStrategy {
+public interface RegionAccessStrategy<T extends CacheKey> {
+
 	/**
 	 * Attempt to retrieve an object from the cache. Mainly used in attempting
 	 * to resolve entities/collections from the second level cache.
@@ -23,7 +26,7 @@ public interface RegionAccessStrategy {
 	 * @return the cached object or <tt>null</tt>
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	Object get(Object key, long txTimestamp) throws CacheException;
+	Object get(T key, long txTimestamp) throws CacheException;
 
 	/**
 	 * Attempt to cache an object, after loading from the database.
@@ -36,7 +39,7 @@ public interface RegionAccessStrategy {
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	boolean putFromLoad(
-			Object key,
+			T key,
 			Object value,
 			long txTimestamp,
 			Object version) throws CacheException;
@@ -54,7 +57,7 @@ public interface RegionAccessStrategy {
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	boolean putFromLoad(
-			Object key,
+			T key,
 			Object value,
 			long txTimestamp,
 			Object version,
@@ -73,7 +76,7 @@ public interface RegionAccessStrategy {
 	 * @return A representation of our lock on the item; or null.
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	SoftLock lockItem(Object key, Object version) throws CacheException;
+	SoftLock lockItem(T key, Object version) throws CacheException;
 
 	/**
 	 * Lock the entire region
@@ -92,7 +95,7 @@ public interface RegionAccessStrategy {
 	 * @param lock The lock previously obtained from {@link #lockItem}
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	void unlockItem(Object key, SoftLock lock) throws CacheException;
+	void unlockItem(T key, SoftLock lock) throws CacheException;
 
 	/**
 	 * Called after we have finished the attempted invalidation of the entire
@@ -110,7 +113,7 @@ public interface RegionAccessStrategy {
 	 * @param key The key of the item to remove
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	void remove(Object key) throws CacheException;
+	void remove(T key) throws CacheException;
 
 	/**
 	 * Called to evict data from the entire region
@@ -126,7 +129,7 @@ public interface RegionAccessStrategy {
 	 * @param key The key of the item to remove
 	 * @throws org.hibernate.cache.CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	void evict(Object key) throws CacheException;
+	void evict(T key) throws CacheException;
 
 	/**
 	 * Forcibly evict all items from the cache immediately without regard for transaction

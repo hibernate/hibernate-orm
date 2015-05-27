@@ -9,6 +9,7 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
 import javax.transaction.TransactionManager;
 
 import org.infinispan.Cache;
@@ -20,10 +21,9 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
 import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 
@@ -345,9 +345,9 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 		public void nodeVisited(CacheEntryVisitedEvent event) {
 			log.debug( event.toString() );
 			if ( !event.isPre() ) {
-				CacheKey cacheKey = (CacheKey) event.getKey();
+				EntityCacheKey cacheKey = (EntityCacheKey) event.getKey();
 				Integer primKey = (Integer) cacheKey.getKey();
-				String key = cacheKey.getEntityOrRoleName() + '#' + primKey;
+				String key = cacheKey.getEntityName() + '#' + primKey;
 				log.debug( "MyListener[" + name + "] - Visiting key " + key );
 				// String name = fqn.toString();
 				String token = ".functional.";

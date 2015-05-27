@@ -8,6 +8,7 @@ package org.hibernate.cache.ehcache.internal.strategy;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
@@ -18,7 +19,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
  * @author Alex Snaps
  */
 public class ReadWriteEhcacheCollectionRegionAccessStrategy
-		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheCollectionRegion>
+		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheCollectionRegion,CollectionCacheKey>
 		implements CollectionRegionAccessStrategy {
 
 	/**

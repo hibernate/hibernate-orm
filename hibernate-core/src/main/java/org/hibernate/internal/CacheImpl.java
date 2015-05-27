@@ -14,12 +14,14 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.internal.OldCacheKeyImplementation;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.CollectionCacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -74,8 +76,14 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public boolean containsEntity(String entityName, Serializable identifier) {
 		EntityPersister p = sessionFactory.getEntityPersister( entityName );
-		return p.hasCache() &&
-				p.getCacheAccessStrategy().getRegion().contains( buildCacheKey( identifier, p ) );
+		if ( p.hasCache() ) {
+			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
+			EntityCacheKey key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
+			return cache.getRegion().contains( key );
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -93,18 +101,10 @@ public class CacheImpl implements CacheImplementor {
 						MessageHelper.infoString( p, identifier, sessionFactory )
 				);
 			}
-			p.getCacheAccessStrategy().evict( buildCacheKey( identifier, p ) );
+			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
+			EntityCacheKey key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
+			cache.evict( key );
 		}
-	}
-
-	private CacheKey buildCacheKey(Serializable identifier, EntityPersister p) {
-		return new OldCacheKeyImplementation(
-				identifier,
-				p.getIdentifierType(),
-				p.getRootEntityName(),
-				null,                         // have to assume non tenancy
-				sessionFactory
-		);
 	}
 
 	@Override
@@ -156,8 +156,14 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public boolean containsCollection(String role, Serializable ownerIdentifier) {
 		CollectionPersister p = sessionFactory.getCollectionPersister( role );
-		return p.hasCache() &&
-				p.getCacheAccessStrategy().getRegion().contains( buildCacheKey( ownerIdentifier, p ) );
+		if ( p.hasCache() ) {
+			CollectionRegionAccessStrategy cache = p.getCacheAccessStrategy();
+			CollectionCacheKey key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
+			return cache.getRegion().contains( key );
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -170,19 +176,10 @@ public class CacheImpl implements CacheImplementor {
 						MessageHelper.collectionInfoString( p, ownerIdentifier, sessionFactory )
 				);
 			}
-			CacheKey cacheKey = buildCacheKey( ownerIdentifier, p );
-			p.getCacheAccessStrategy().evict( cacheKey );
+			CollectionRegionAccessStrategy cache = p.getCacheAccessStrategy();
+			CollectionCacheKey key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
+			cache.evict( key );
 		}
-	}
-
-	private CacheKey buildCacheKey(Serializable ownerIdentifier, CollectionPersister p) {
-		return new OldCacheKeyImplementation(
-				ownerIdentifier,
-				p.getKeyType(),
-				p.getRole(),
-				null,                        // have to assume non tenancy
-				sessionFactory
-		);
 	}
 
 	@Override

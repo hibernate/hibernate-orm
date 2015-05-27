@@ -10,7 +10,8 @@ import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.CollectionCacheKey;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
@@ -136,8 +137,16 @@ public class CollectionCacheInvalidator
 	}
 
 	private void evict(Serializable id, CollectionPersister collectionPersister, EventSource session) {
-		LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
-		CacheKey key = session.generateCacheKey( id, collectionPersister.getKeyType(), collectionPersister.getRole() );
-		collectionPersister.getCacheAccessStrategy().evict( key );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
+		}
+		CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
+		CollectionCacheKey key = cache.generateCacheKey(
+				id,
+				collectionPersister,
+				session.getFactory(),
+				session.getTenantIdentifier()
+		);
+		cache.evict( key );
 	}
 }

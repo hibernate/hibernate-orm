@@ -14,7 +14,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.EntityMode;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.CollectionCacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreLogging;
@@ -201,13 +204,16 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
+		final SessionImplementor session = context.getSession();
 		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
-			final CacheKey key = context.getSession().generateCacheKey(
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityCacheKey key = cache.generateCacheKey(
 					entityKey.getIdentifier(),
-					persister.getIdentifierType(),
-					persister.getRootEntityName()
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
 			);
-			return CacheHelper.fromSharedCache( context.getSession(), key, persister.getCacheAccessStrategy() ) != null;
+			return CacheHelper.fromSharedCache( session, key, cache ) != null;
 		}
 		return false;
 	}
@@ -314,14 +320,18 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(Serializable collectionKey, CollectionPersister persister) {
-		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
-			CacheKey cacheKey = context.getSession().generateCacheKey(
+		SessionImplementor session = context.getSession();
+		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
+			CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			CollectionCacheKey cacheKey = cache.generateCacheKey(
 					collectionKey,
-					persister.getKeyType(),
-					persister.getRole()
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
 			);
-			return CacheHelper.fromSharedCache( context.getSession(), cacheKey, persister.getCacheAccessStrategy() ) != null;
+			return CacheHelper.fromSharedCache( session, cacheKey, cache ) != null;
 		}
 		return false;
 	}
+
 }

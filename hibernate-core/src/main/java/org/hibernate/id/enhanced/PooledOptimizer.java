@@ -86,12 +86,12 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 			}
 			else {
 				generationState.hiValue = generationState.value;
-				generationState.value = generationState.hiValue.copy().subtract( incrementSize );
+				generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
 			}
 		}
-		else if ( ! generationState.hiValue.gt( generationState.value ) ) {
+		else if ( generationState.value.gt( generationState.hiValue ) ) {
 			generationState.hiValue = callback.getNextValue();
-			generationState.value = generationState.hiValue.copy().subtract( incrementSize );
+			generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
 		}
 
 		return generationState.value.makeValueThenIncrement();

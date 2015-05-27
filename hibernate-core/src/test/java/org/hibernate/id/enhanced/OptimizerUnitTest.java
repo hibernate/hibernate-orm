@@ -85,7 +85,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		// test historic sequence behavior, where the initial values start at 1...
 		SourceMock sequence = new SourceMock( 1, 10 );
 		Optimizer optimizer = buildPooledOptimizer( -1, 10 );
-		for ( int i = 1; i < 11; i++ ) {
+		for ( int i = 1; i <= 11; i++ ) {
 			next = ( Long ) optimizer.generate( sequence );
 			assertEquals( i, next.intValue() );
 		}
@@ -93,7 +93,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 11, sequence.getCurrentValue() );
 		// force a "clock over"
 		next = ( Long ) optimizer.generate( sequence );
-		assertEquals( 11, next.intValue() );
+		assertEquals( 12, next.intValue() );
 		assertEquals( 3, sequence.getTimesCalled() );
 		assertEquals( 21, sequence.getCurrentValue() );
 	}
@@ -110,12 +110,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 1001, sequence.getCurrentValue() );
 
 		Long next = (Long) optimizer.generate( sequence );
-		assertEquals( 1001, next.intValue() );
-		assertEquals( (5+1), sequence.getTimesCalled() );
-		assertEquals( (1001+3), sequence.getCurrentValue() );
-
-		next = (Long) optimizer.generate( sequence );
-		assertEquals( (1001+1), next.intValue() );
+		assertEquals( 1001 +1 , next.intValue() );
 		assertEquals( (5+1), sequence.getTimesCalled() );
 		assertEquals( (1001+3), sequence.getCurrentValue() );
 
@@ -124,9 +119,14 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( (5+1), sequence.getTimesCalled() );
 		assertEquals( (1001+3), sequence.getCurrentValue() );
 
-		// force a "clock over"
 		next = (Long) optimizer.generate( sequence );
 		assertEquals( (1001+3), next.intValue() );
+		assertEquals( (5+1), sequence.getTimesCalled() );
+		assertEquals( (1001+3), sequence.getCurrentValue() );
+
+		// force a "clock over"
+		next = (Long) optimizer.generate( sequence );
+		assertEquals( (1001+4), next.intValue() );
 		assertEquals( (5+2), sequence.getTimesCalled() );
 		assertEquals( (1001+6), sequence.getCurrentValue() );
 	}
@@ -211,7 +211,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		// app ends, and starts back up (we should "lose" only 2 and 3 as id values)
 		final Optimizer optimizer2 = buildPooledOptimizer( 1, 3 );
 		next = ( Long ) optimizer2.generate( sequence );
-		assertEquals( 4, next.intValue() );
+		assertEquals( 5, next.intValue() );
 		assertEquals( 3, sequence.getTimesCalled() );
 		assertEquals( 7, sequence.getCurrentValue() );
 	}

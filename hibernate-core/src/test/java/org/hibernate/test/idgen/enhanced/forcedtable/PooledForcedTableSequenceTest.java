@@ -46,10 +46,10 @@ public class PooledForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 		PooledOptimizer optimizer = (PooledOptimizer) generator.getOptimizer();
 
 		int increment = optimizer.getIncrementSize();
-		Entity[] entities = new Entity[ increment + 1 ];
+		Entity[] entities = new Entity[ increment + 2 ];
 		Session s = openSession();
 		s.beginTransaction();
-		for ( int i = 0; i < increment; i++ ) {
+		for ( int i = 0; i <= increment; i++ ) {
 			entities[i] = new Entity( "" + ( i + 1 ) );
 			s.save( entities[i] );
 			long expectedId = i + 1;
@@ -61,14 +61,14 @@ public class PooledForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
 		}
 		// now force a "clock over"
-		entities[ increment ] = new Entity( "" + increment );
-		s.save( entities[ increment ] );
-		long expectedId = optimizer.getIncrementSize() + 1;
-		assertEquals( expectedId, entities[ optimizer.getIncrementSize() ].getId().longValue() );
+		entities[increment + 1] = new Entity( "" + increment );
+		s.save( entities[increment + 1] );
+		long expectedId =  optimizer.getIncrementSize() + 2;
+		assertEquals( expectedId, entities[ increment + 1 ].getId().longValue() );
 		// initialization (2) + clock over
 		assertEquals( 3, generator.getDatabaseStructure().getTimesAccessed() );
 		assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-		assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+		assertEquals( increment + 2, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
 		s.getTransaction().commit();
 
 		s.beginTransaction();

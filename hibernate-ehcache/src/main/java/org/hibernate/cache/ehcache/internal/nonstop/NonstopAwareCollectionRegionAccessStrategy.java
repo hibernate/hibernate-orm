@@ -6,12 +6,18 @@
  */
 package org.hibernate.cache.ehcache.internal.nonstop;
 
+import java.io.Serializable;
+
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Implementation of {@link CollectionRegionAccessStrategy} that handles {@link NonStopCacheException} using
@@ -43,7 +49,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public void evict(Object key) throws CacheException {
+	public void evict(CollectionCacheKey key) throws CacheException {
 		try {
 			actualStrategy.evict( key );
 		}
@@ -63,7 +69,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(CollectionCacheKey key, long txTimestamp) throws CacheException {
 		try {
 			return actualStrategy.get( key, txTimestamp );
 		}
@@ -74,7 +80,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockItem(CollectionCacheKey key, Object version) throws CacheException {
 		try {
 			return actualStrategy.lockItem( key, version );
 		}
@@ -96,7 +102,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(CollectionCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
@@ -108,7 +114,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(CollectionCacheKey key, Object value, long txTimestamp, Object version) throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( key, value, txTimestamp, version );
 		}
@@ -119,7 +125,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(CollectionCacheKey key) throws CacheException {
 		try {
 			actualStrategy.remove( key );
 		}
@@ -139,7 +145,7 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 	}
 
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(CollectionCacheKey key, SoftLock lock) throws CacheException {
 		try {
 			actualStrategy.unlockItem( key, lock );
 		}
@@ -156,6 +162,11 @@ public class NonstopAwareCollectionRegionAccessStrategy implements CollectionReg
 		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
+	}
+
+	@Override
+	public CollectionCacheKey generateCacheKey(Serializable id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 
 }

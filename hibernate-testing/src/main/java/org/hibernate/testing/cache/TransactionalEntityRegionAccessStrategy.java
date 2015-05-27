@@ -7,6 +7,7 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 /**
@@ -18,23 +19,23 @@ class TransactionalEntityRegionAccessStrategy extends BaseEntityRegionAccessStra
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value, Object version) {
+	public boolean afterInsert(EntityCacheKey key, Object value, Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(EntityCacheKey key) throws CacheException {
 		evict( key );
 	}
 
 	@Override
 	public boolean update(
-			Object key, Object value, Object currentVersion,
+			EntityCacheKey key, Object value, Object currentVersion,
 			Object previousVersion) throws CacheException {
 		return insert( key, value, currentVersion );
 	}

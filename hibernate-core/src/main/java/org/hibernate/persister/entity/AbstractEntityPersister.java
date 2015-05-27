@@ -36,7 +36,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -906,8 +906,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
-			final CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
-			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, getCacheAccessStrategy() );
+			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
+			final EntityCacheKey cacheKey = cache.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
+			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cache );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
 				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
@@ -4269,7 +4270,8 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && hasCache() ) {
-			final CacheKey ck = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
+			final EntityRegionAccessStrategy cache = getCacheAccessStrategy();
+			final EntityCacheKey ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
 			if ( ce != null ) {
 				return Boolean.FALSE;

@@ -10,10 +10,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.AssertionFailedError;
+
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
-
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -34,7 +36,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 
     public void testContestedPutFromLoad() throws Exception {
 
-        final String KEY = KEY_BASE + testCount++;
+        final EntityCacheKey KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 

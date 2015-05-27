@@ -9,6 +9,7 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -20,7 +21,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Alex Snaps
  */
 public class ReadOnlyEhcacheCollectionRegionAccessStrategy
-		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion>
+		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion,CollectionCacheKey>
 		implements CollectionRegionAccessStrategy {
 
 	/**
@@ -39,12 +40,12 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(CollectionCacheKey key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(CollectionCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
@@ -56,7 +57,7 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
+	public SoftLock lockItem(CollectionCacheKey key, Object version) throws UnsupportedOperationException {
 		return null;
 	}
 
@@ -66,6 +67,6 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	 * A no-op since this cache is read-only
 	 */
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(CollectionCacheKey key, SoftLock lock) throws CacheException {
 	}
 }

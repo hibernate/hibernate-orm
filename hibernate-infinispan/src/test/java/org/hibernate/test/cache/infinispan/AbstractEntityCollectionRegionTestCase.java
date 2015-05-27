@@ -12,10 +12,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TransactionalDataRegion;
 import org.hibernate.cache.spi.access.AccessType;
-
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class AbstractEntityCollectionRegionTestCase extends AbstractRegionImplTestCase {
+public abstract class AbstractEntityCollectionRegionTestCase<T extends CacheKey> extends AbstractRegionImplTestCase<T> {
 	@Test
 	public void testSupportedAccessTypes() throws Exception {
 		supportedAccessTypeTest();

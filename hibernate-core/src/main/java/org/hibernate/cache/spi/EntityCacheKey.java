@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
+
 /**
  * Allows multiple entity roles to be stored in the same cache region. Also allows for composite
  * keys which do not properly implement equals()/hashCode().
@@ -13,6 +15,12 @@ package org.hibernate.cache.spi;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface CacheKey {
+public interface EntityCacheKey extends CacheKey {
+
+	public Serializable getKey();
+
+	public String getEntityName();
+
+	public String getTenantId();
 
 }

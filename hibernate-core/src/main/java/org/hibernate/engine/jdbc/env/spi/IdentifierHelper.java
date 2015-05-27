@@ -22,7 +22,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The quoting-normalized Identifier.
 	 */
-	public Identifier normalizeQuoting(Identifier identifier);
+	Identifier normalizeQuoting(Identifier identifier);
 
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping
@@ -35,7 +35,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The identifier form of the name.
 	 */
-	public Identifier toIdentifier(String text);
+	Identifier toIdentifier(String text);
 
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping
@@ -50,7 +50,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The identifier form of the name.
 	 */
-	public Identifier toIdentifier(String text, boolean quoted);
+	Identifier toIdentifier(String text, boolean quoted);
 
 	/**
 	 * Needed to account for certain fields ({@link javax.persistence.Column#columnDefinition()} comes to mind)
@@ -61,7 +61,16 @@ public interface IdentifierHelper {
 	 *
 	 * @return The identifier form
 	 */
-	public Identifier applyGlobalQuoting(String text);
+	Identifier applyGlobalQuoting(String text);
+
+	/**
+	 * Check whether the given word represents a reserved word.
+	 *
+	 * @param word The word to check
+	 *
+	 * @return {@code true} if the given word represents a reserved word; {@code false} otherwise.
+	 */
+	boolean isReservedWord(String word);
 
 	/**
 	 * Render the Identifier representation of a catalog name into the String form needed
@@ -71,7 +80,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The String representation of the given catalog name
 	 */
-	public String toMetaDataCatalogName(Identifier catalogIdentifier);
+	String toMetaDataCatalogName(Identifier catalogIdentifier);
 
 	/**
 	 * Render the Identifier representation of a schema name into the String form needed
@@ -81,7 +90,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The String representation of the given schema name
 	 */
-	public String toMetaDataSchemaName(Identifier schemaIdentifier);
+	String toMetaDataSchemaName(Identifier schemaIdentifier);
 
 	/**
 	 * Render the Identifier representation of an object name (table, sequence, etc) into the
@@ -91,7 +100,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The String representation of the given object name
 	 */
-	public String toMetaDataObjectName(Identifier identifier);
+	String toMetaDataObjectName(Identifier identifier);
 
 	/**
 	 * Parse an Identifier representation from the String representation of a catalog name
@@ -101,7 +110,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The parsed Identifier representation of the given catalog name
 	 */
-	public Identifier fromMetaDataCatalogName(String catalogName);
+	Identifier fromMetaDataCatalogName(String catalogName);
 
 	/**
 	 * Parse an Identifier representation from the String representation of a schema name
@@ -111,7 +120,7 @@ public interface IdentifierHelper {
 	 *
 	 * @return The parsed Identifier representation of the given schema name
 	 */
-	public Identifier fromMetaDataSchemaName(String schemaName);
+	Identifier fromMetaDataSchemaName(String schemaName);
 
 	/**
 	 * Parse an Identifier representation from the String representation of an object name
@@ -121,5 +130,5 @@ public interface IdentifierHelper {
 	 *
 	 * @return The parsed Identifier representation of the given object name
 	 */
-	public Identifier fromMetaDataObjectName(String name);
+	Identifier fromMetaDataObjectName(String name);
 }

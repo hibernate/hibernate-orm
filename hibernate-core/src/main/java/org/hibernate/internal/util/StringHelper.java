@@ -13,8 +13,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public final class StringHelper {
@@ -795,5 +798,9 @@ public final class StringHelper {
 
 	public static String nullIfEmpty(String value) {
 		return isEmpty( value ) ? null : value;
+	}
+
+	public static List<String> parseCommaSeparatedString(String incomingString) {
+		return Arrays.asList( incomingString.split( "\\s*,\\s*" ) );
 	}
 }

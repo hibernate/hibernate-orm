@@ -24,7 +24,7 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The dialect.
 	 */
-	public Dialect getDialect();
+	Dialect getDialect();
 
 	/**
 	 * Access to the bits of information we pulled off the JDBC {@link java.sql.DatabaseMetaData} (that did not get
@@ -32,7 +32,7 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The values extracted from JDBC DatabaseMetaData
 	 */
-	public ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
+	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
 
 	/**
 	 * Get the current database catalog.  Typically will come from either {@link java.sql.Connection#getCatalog()}
@@ -40,7 +40,7 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The current catalog.
 	 */
-	public Identifier getCurrentCatalog();
+	Identifier getCurrentCatalog();
 
 	/**
 	 * Get the current database catalog.  Typically will come from either
@@ -49,14 +49,14 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The current schema
 	 */
-	public Identifier getCurrentSchema();
+	Identifier getCurrentSchema();
 
 	/**
 	 * Obtain support for formatting qualified object names.
 	 *
 	 * @return Qualified name support.
 	 */
-	public QualifiedObjectNameFormatter getQualifiedObjectNameFormatter();
+	QualifiedObjectNameFormatter getQualifiedObjectNameFormatter();
 
 	/**
 	 * Obtain the helper for dealing with identifiers in this environment.
@@ -66,30 +66,21 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The identifier helper.
 	 */
-	public IdentifierHelper getIdentifierHelper();
-
-	/**
-	 * Check whether the given word represents a reserved word.
-	 *
-	 * @param word The word to check
-	 *
-	 * @return {@code true} if the given word represents a reserved word; {@code false} otherwise.
-	 */
-	public boolean isReservedWord(String word);
+	IdentifierHelper getIdentifierHelper();
 
 	/**
 	 * Obtain the helper for dealing with JDBC {@link java.sql.SQLException} faults.
 	 *
 	 * @return This environment's helper.
 	 */
-	public SqlExceptionHelper getSqlExceptionHelper();
+	SqlExceptionHelper getSqlExceptionHelper();
 
 	/**
 	 * Retrieve the delegate for building {@link org.hibernate.engine.jdbc.LobCreator} instances.
 	 *
 	 * @return The LobCreator builder.
 	 */
-	public LobCreatorBuilder getLobCreatorBuilder();
+	LobCreatorBuilder getLobCreatorBuilder();
 
 	/**
 	 * Find type information for the type identified by the given "JDBC type code".
@@ -98,5 +89,5 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The corresponding type info.
 	 */
-	public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
+	TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
 }

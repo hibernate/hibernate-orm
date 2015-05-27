@@ -208,7 +208,7 @@ public final class ArrayHelper {
 		return true;
 	}
 
-	public static boolean isAllTrue(boolean[] array) {
+	public static boolean isAllTrue(boolean... array) {
 		for ( boolean anArray : array ) {
 			if ( !anArray ) {
 				return false;
@@ -217,7 +217,7 @@ public final class ArrayHelper {
 		return true;
 	}
 
-	public static int countTrue(boolean[] array) {
+	public static int countTrue(boolean... array) {
 		int result = 0;
 		for ( boolean anArray : array ) {
 			if ( anArray ) {
@@ -235,7 +235,7 @@ public final class ArrayHelper {
 		return result;
 	}*/
 
-	public static boolean isAllFalse(boolean[] array) {
+	public static boolean isAllFalse(boolean... array) {
 		for ( boolean anArray : array ) {
 			if ( anArray ) {
 				return false;

@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
+import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,6 +54,8 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -1846,7 +1849,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * @deprecated See {@link #determineKeywordsForAutoQuoting} instead
+	 * @deprecated These are only ever used (if at all) from the code that handles identifier quoting.  So
+	 * see {@link #buildIdentifierHelper} instead
 	 */
 	@Deprecated
 	public Set<String> getKeywords() {
@@ -1854,29 +1858,46 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Hook into auto-quoting of identifiers that are deemed to be keywords.  By default we
-	 * return all of the following here:<ul>
-	 *     <li>all keywords as defined by ANSI SQL:2003 specification</li>
-	 *     <li>all "extra" keywords reported by the JDBC driver </li>
-	 *     <li>all Dialect-registered "extra" keywords</li>
+	 * Build the IdentifierHelper indicated by this Dialect for handling identifier conversions.
+	 * Returning {@code null} is allowed and indicates that Hibernate should fallback to building a
+	 * "standard" helper.  In the fallback path, any changes made to the IdentifierHelperBuilder
+	 * during this call will still be incorporated into the built IdentifierHelper.
+	 * <p/>
+	 * The incoming builder will have the following set:<ul>
+	 *     <li>{@link IdentifierHelperBuilder#isGloballyQuoteIdentifiers()}</li>
+	 *     <li>{@link IdentifierHelperBuilder#getUnquotedCaseStrategy()} - initialized to UPPER</li>
+	 *     <li>{@link IdentifierHelperBuilder#getQuotedCaseStrategy()} - initialized to MIXED</li>
 	 * </ul>
 	 * <p/>
-	 * Subclasses are free to override this as they see fit.  Just be aware that overriding this
-	 * does affect what identifiers are auto-quoted based on being seen as a keyword.
-	 * <p/>
-	 * NOTE: The code that ultimately consumes these and uses them stores them in a case-insensitive
-	 * Set, so case here does not matter.
+	 * By default Hibernate will do the following:<ul>
+	 *     <li>Call {@link IdentifierHelperBuilder#applyIdentifierCasing(DatabaseMetaData)}
+	 *     <li>Call {@link IdentifierHelperBuilder#applyReservedWords(DatabaseMetaData)}
+	 *     <li>Applies {@link AnsiSqlKeywords#sql2003()} as reserved words</li>
+	 *     <li>Applies the {#link #sqlKeywords} collected here as reserved words</li>
+	 *     <li>Applies the Dialect's NameQualifierSupport, if it defines one</li>
+	 * </ul>
 	 *
-	 * @see org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords#sql2003()
-	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
-	 * @see #registerKeyword
+	 * @param builder A semi-configured IdentifierHelper builder.
+	 * @param dbMetaData Access to the metadata returned from the driver if needed and if available.  WARNING: may be {@code null}
+	 *
+	 * @return The IdentifierHelper instance to use, or {@code null} to indicate Hibernate should use its fallback path
+	 *
+	 * @throws SQLException Accessing the DatabaseMetaData can throw it.  Just re-throw and Hibernate will handle.
+	 *
+	 * @see #getNameQualifierSupport()
 	 */
-	public Set<String> determineKeywordsForAutoQuoting(Set<String> databaseMetadataReportedKeywords) {
-		final Set<String> keywords = new HashSet<String>();
-		keywords.addAll( AnsiSqlKeywords.INSTANCE.sql2003() );
-		keywords.addAll( databaseMetadataReportedKeywords );
-		keywords.addAll( sqlKeywords );
-		return keywords;
+	public IdentifierHelper buildIdentifierHelper(
+			IdentifierHelperBuilder builder,
+			DatabaseMetaData dbMetaData) throws SQLException {
+		builder.applyIdentifierCasing( dbMetaData );
+
+		builder.applyReservedWords( dbMetaData );
+		builder.applyReservedWords( AnsiSqlKeywords.INSTANCE.sql2003() );
+		builder.applyReservedWords( sqlKeywords );
+
+		builder.setNameQualifierSupport( getNameQualifierSupport() );
+
+		return builder.build();
 	}
 
 

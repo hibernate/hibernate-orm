@@ -43,13 +43,9 @@ public class TestKeywordRecognition extends BaseUnitTestCase {
 	public void testAnsiSqlKeyword() {
 		// END is ANSI SQL keyword
 
-		// keywords are kept defined in upper case in here...
-		assertTrue( AnsiSqlKeywords.INSTANCE.sql2003().contains( "END" ) );
-
-		// But JdbcEnvironment uses a case-insensitive Set to store them...
 		JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		assertTrue( jdbcEnvironment.isReservedWord( "end" ) );
-		assertTrue( jdbcEnvironment.isReservedWord( "END" ) );
+		assertTrue( jdbcEnvironment.getIdentifierHelper().isReservedWord( "end" ) );
+		assertTrue( jdbcEnvironment.getIdentifierHelper().isReservedWord( "END" ) );
 
 		Identifier identifier = jdbcEnvironment.getIdentifierHelper().toIdentifier( "end" );
 		assertTrue( identifier.isQuoted() );

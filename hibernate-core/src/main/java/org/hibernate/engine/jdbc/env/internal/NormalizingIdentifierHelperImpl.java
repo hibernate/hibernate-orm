@@ -7,8 +7,11 @@
 package org.hibernate.engine.jdbc.env.internal;
 
 import java.util.Locale;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -25,59 +28,31 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	private final NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
-
-	private final boolean storesMixedCaseQuotedIdentifiers;
-	private final boolean storesLowerCaseQuotedIdentifiers;
-	private final boolean storesUpperCaseQuotedIdentifiers;
-	private final boolean storesMixedCaseIdentifiers;
-	private final boolean storesUpperCaseIdentifiers;
-	private final boolean storesLowerCaseIdentifiers;
+	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+	private final IdentifierCaseStrategy unquotedCaseStrategy;
+	private final IdentifierCaseStrategy quotedCaseStrategy;
 
 	public NormalizingIdentifierHelperImpl(
 			JdbcEnvironment jdbcEnvironment,
 			NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
-			boolean storesMixedCaseQuotedIdentifiers,
-			boolean storesLowerCaseQuotedIdentifiers,
-			boolean storesUpperCaseQuotedIdentifiers,
-			boolean storesMixedCaseIdentifiers,
-			boolean storesUpperCaseIdentifiers,
-			boolean storesLowerCaseIdentifiers) {
+			Set<String> reservedWords,
+			IdentifierCaseStrategy unquotedCaseStrategy,
+			IdentifierCaseStrategy quotedCaseStrategy) {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
-		this.storesMixedCaseQuotedIdentifiers = storesMixedCaseQuotedIdentifiers;
-		this.storesLowerCaseQuotedIdentifiers = storesLowerCaseQuotedIdentifiers;
-		this.storesUpperCaseQuotedIdentifiers = storesUpperCaseQuotedIdentifiers;
-		this.storesMixedCaseIdentifiers = storesMixedCaseIdentifiers;
-		this.storesUpperCaseIdentifiers = storesUpperCaseIdentifiers;
-		this.storesLowerCaseIdentifiers = storesLowerCaseIdentifiers;
-
-		if ( storesMixedCaseQuotedIdentifiers && storesLowerCaseQuotedIdentifiers && storesUpperCaseQuotedIdentifiers ) {
-			log.warn( "JDBC Driver reports it stores quoted identifiers in mixed, upper and lower case" );
+		if ( reservedWords != null ) {
+			this.reservedWords.addAll( reservedWords );
 		}
-		else if ( storesMixedCaseQuotedIdentifiers && storesUpperCaseQuotedIdentifiers ) {
-			log.warn( "JDBC Driver reports it stores quoted identifiers in both mixed and upper case" );
-		}
-		else if ( storesMixedCaseQuotedIdentifiers && storesLowerCaseQuotedIdentifiers ) {
-			log.warn( "JDBC Driver reports it stores quoted identifiers in both mixed and lower case" );
-		}
-
-		if ( storesUpperCaseIdentifiers && storesLowerCaseIdentifiers ) {
-			log.warn( "JDBC Driver reports it stores non-quoted identifiers in both upper and lower case" );
-		}
-
-		if ( storesUpperCaseIdentifiers && storesUpperCaseQuotedIdentifiers ) {
-			log.warn( "JDBC Driver reports it stores both quoted and non-quoted identifiers in upper case" );
-		}
-
-		if ( storesLowerCaseIdentifiers && storesLowerCaseQuotedIdentifiers ) {
-			log.warn( "JDBC Driver reports it stores both quoted and non-quoted identifiers in lower case" );
-		}
+		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
+		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
 	}
 
 	@Override
 	public Identifier normalizeQuoting(Identifier identifier) {
+		log.tracef( "Normalizing identifier quoting [%s]", identifier );
+
 		if ( identifier == null ) {
 			return null;
 		}
@@ -87,10 +62,12 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		}
 
 		if ( globallyQuoteIdentifiers ) {
+			log.tracef( "Forcing identifier [%s] to quoted for global quoting", identifier );
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
 
-		if ( jdbcEnvironment.isReservedWord( identifier.getText() ) ) {
+		if ( isReservedWord( identifier.getText() ) ) {
+			log.tracef( "Forcing identifier [%s] to quoted as recognized reserveed word", identifier );
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
 
@@ -112,16 +89,18 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		return Identifier.toIdentifier( text, globallyQuoteIdentifiers );
 	}
 
-	// In the DatabaseMetaData method params for catalog and schema name have the following meaning:
-	//		1) <""> means to match things "without a catalog/schema"
-	//		2) <null> means to not limit results based on this field
-	//
-	// todo : not sure how "without a catalog/schema" is interpreted.  Current?
+	@Override
+	public boolean isReservedWord(String word) {
+		return reservedWords.contains( word );
+	}
 
 	@Override
 	public String toMetaDataCatalogName(Identifier identifier) {
+		log.tracef( "Normalizing identifier quoting for catalog name [%s]", identifier );
+
 		if ( !nameQualifierSupport.supportsCatalogs() ) {
-			// null is used to tell DBMD to not limit results based on catalog.
+			log.trace( "Environment does not support catalogs; returning null" );
+			// null is used to tell DatabaseMetaData to not limit results based on catalog.
 			return null;
 		}
 
@@ -141,39 +120,48 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		}
 
 		if ( identifier.isQuoted() ) {
-			if ( storesMixedCaseQuotedIdentifiers ) {
-				return identifier.getText();
-			}
-			else if ( storesUpperCaseQuotedIdentifiers ) {
-				return identifier.getText().toUpperCase( Locale.ENGLISH );
-			}
-			else if ( storesLowerCaseQuotedIdentifiers ) {
-				return identifier.getText().toLowerCase( Locale.ENGLISH );
-			}
-			else {
-				return identifier.getText();
+			switch ( quotedCaseStrategy ) {
+				case UPPER: {
+					log.tracef( "Rendering quoted identifier [%s] in upper case for use in DatabaseMetaData", identifier );
+					return identifier.getText().toUpperCase( Locale.ROOT );
+				}
+				case LOWER: {
+					log.tracef( "Rendering quoted identifier [%s] in lower case for use in DatabaseMetaData", identifier );
+					return identifier.getText().toLowerCase( Locale.ROOT );
+				}
+				default: {
+					// default is mixed case
+					log.tracef( "Rendering quoted identifier [%s] in mixed case for use in DatabaseMetaData", identifier );
+					return identifier.getText();
+				}
 			}
 		}
 		else {
-			if ( storesMixedCaseIdentifiers ) {
-				return identifier.getText();
-			}
-			else if ( storesUpperCaseIdentifiers ) {
-				return identifier.getText().toUpperCase( Locale.ENGLISH );
-			}
-			else if ( storesLowerCaseIdentifiers ) {
-				return identifier.getText().toLowerCase( Locale.ENGLISH );
-			}
-			else {
-				return identifier.getText();
+			switch ( unquotedCaseStrategy ) {
+				case MIXED: {
+					log.tracef( "Rendering unquoted identifier [%s] in mixed case for use in DatabaseMetaData", identifier );
+					return identifier.getText();
+				}
+				case LOWER: {
+					log.tracef( "Rendering unquoted identifier [%s] in lower case for use in DatabaseMetaData", identifier );
+					return identifier.getText().toLowerCase( Locale.ROOT );
+				}
+				default: {
+					// default is upper case
+					log.tracef( "Rendering unquoted identifier [%s] in upper case for use in DatabaseMetaData", identifier );
+					return identifier.getText().toUpperCase( Locale.ROOT );
+				}
 			}
 		}
 	}
 
 	@Override
 	public String toMetaDataSchemaName(Identifier identifier) {
+		log.tracef( "Normalizing identifier quoting for schema name [%s]", identifier );
+
 		if ( !nameQualifierSupport.supportsSchemas() ) {
-			// null is used to tell DBMD to not limit results based on schema.
+			// null is used to tell DatabaseMetaData to not limit results based on schema.
+			log.trace( "Environment does not support catalogs; returning null" );
 			return null;
 		}
 
@@ -189,6 +177,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public String toMetaDataObjectName(Identifier identifier) {
+		log.tracef( "Normalizing identifier quoting for object name [%s]", identifier );
+
 		if ( identifier == null ) {
 			// if this method was called, the value is needed
 			throw new IllegalArgumentException( "null was passed as an object name" );
@@ -211,32 +201,40 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	public Identifier toIdentifierFromMetaData(String text) {
+		log.tracef( "Interpreting return value [%s] from DatabaseMetaData as identifier", text );
+
 		if ( globallyQuoteIdentifiers ) {
+			log.trace( "Forcing DatabaseMetaData return value as quoted due to global quoting" );
+			return Identifier.toIdentifier( text, true );
+		}
+
+		if ( isReservedWord( text ) ) {
+			// unequivocally it needs to be quoted...
+			log.trace( "Forcing DatabaseMetaData return value as quoted as it was recognized as a reserved word" );
 			return Identifier.toIdentifier( text, true );
 		}
 
 		// lovely decipher of whether the incoming value represents a quoted identifier...
-		final boolean isUpperCase = text.toUpperCase(Locale.ROOT).equals( text );
-		final boolean isLowerCase = text.toLowerCase(Locale.ROOT).equals( text );
+		final boolean isUpperCase = text.toUpperCase( Locale.ROOT ).equals( text );
+		final boolean isLowerCase = text.toLowerCase( Locale.ROOT ).equals( text );
 		final boolean isMixedCase = ! isLowerCase && ! isUpperCase;
 
-		if ( jdbcEnvironment.isReservedWord( text ) ) {
-			// unequivocally it needs to be quoted...
+		if ( quotedCaseStrategy == IdentifierCaseStrategy.MIXED && isMixedCase ) {
+			log.trace( "Interpreting return value as quoted due to case strategy" );
 			return Identifier.toIdentifier( text, true );
 		}
 
-		if ( storesMixedCaseQuotedIdentifiers && isMixedCase ) {
+		if ( quotedCaseStrategy == IdentifierCaseStrategy.LOWER && isLowerCase ) {
+			log.trace( "Interpreting return value as quoted due to case strategy" );
 			return Identifier.toIdentifier( text, true );
 		}
 
-		if ( storesLowerCaseQuotedIdentifiers && isLowerCase ) {
+		if ( quotedCaseStrategy == IdentifierCaseStrategy.UPPER && isUpperCase ) {
+			log.trace( "Interpreting return value as quoted due to case strategy" );
 			return Identifier.toIdentifier( text, true );
 		}
 
-		if ( storesUpperCaseQuotedIdentifiers && isUpperCase ) {
-			return Identifier.toIdentifier( text, true );
-		}
-
+		log.trace( "Interpreting return value as unquoted due to case strategy" );
 		return Identifier.toIdentifier( text );
 	}
 

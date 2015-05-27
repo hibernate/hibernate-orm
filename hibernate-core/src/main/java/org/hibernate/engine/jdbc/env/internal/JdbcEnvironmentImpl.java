@@ -9,11 +9,9 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -22,7 +20,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -36,10 +36,14 @@ import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class JdbcEnvironmentImpl implements JdbcEnvironment {
+	private static final Logger log = Logger.getLogger( JdbcEnvironmentImpl.class );
+
 	private final Dialect dialect;
 
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -51,7 +55,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
 	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
-	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 
 	/**
 	 * Constructor form used when the JDBC {@link java.sql.DatabaseMetaData} is not available.
@@ -62,6 +65,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	public JdbcEnvironmentImpl(ServiceRegistryImplementor serviceRegistry, Dialect dialect) {
 		this.dialect = dialect;
 
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
 		if ( nameQualifierSupport == null ) {
 			// assume both catalogs and schemas are supported
@@ -71,37 +76,41 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
 
-		reservedWords.addAll( dialect.determineKeywordsForAutoQuoting( Collections.<String>emptySet() ) );
+		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
+		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
-		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );
-
-		// a simple impl that works on H2
-		this.identifierHelper = new NormalizingIdentifierHelperImpl(
-				this,
-				nameQualifierSupport,
-				globallyQuoteIdentifiers,
-				true,	// storesMixedCaseQuotedIdentifiers
-				false,	// storesLowerCaseQuotedIdentifiers
-				false, 	// storesUpperCaseQuotedIdentifiers
-				false,  // storesMixedCaseIdentifiers
-				true,	// storesUpperCaseIdentifiers
-				false	// storesLowerCaseIdentifiers
-		);
+		IdentifierHelper identifierHelper = null;
+		try {
+			identifierHelper = dialect.buildIdentifierHelper( identifierHelperBuilder, null );
+		}
+		catch (SQLException sqle) {
+			// should never ever happen
+			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+		}
+		if ( identifierHelper == null ) {
+			identifierHelper = identifierHelperBuilder.build();
+		}
+		this.identifierHelper = identifierHelper;
 
 		this.currentCatalog = identifierHelper.toIdentifier(
-				serviceRegistry.getService( ConfigurationService.class )
-						.getSetting( AvailableSettings.DEFAULT_CATALOG, StandardConverters.STRING )
+				cfgService.getSetting( AvailableSettings.DEFAULT_CATALOG, StandardConverters.STRING )
 		);
 		this.currentSchema = Identifier.toIdentifier(
-				serviceRegistry.getService( ConfigurationService.class )
-						.getSetting( AvailableSettings.DEFAULT_SCHEMA, StandardConverters.STRING )
+				cfgService.getSetting( AvailableSettings.DEFAULT_SCHEMA, StandardConverters.STRING )
 		);
 
-		// again, a simple impl that works on H2
 		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
+	}
+
+	private static boolean globalQuoting(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
+				StandardConverters.BOOLEAN,
+				false
+		);
 	}
 
 	/**
@@ -123,22 +132,20 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
 
-		reservedWords.addAll( dialect.determineKeywordsForAutoQuoting( extractedMetaDataSupport.getExtraKeywords() ) );
-
-		final boolean globallyQuoteIdentifiers = false;
-
-		// a simple impl that works on H2
-		this.identifierHelper = new NormalizingIdentifierHelperImpl(
-				this,
-				nameQualifierSupport,
-				globallyQuoteIdentifiers,
-				true,	// storesMixedCaseQuotedIdentifiers
-				false,	// storesLowerCaseQuotedIdentifiers
-				false, 	// storesUpperCaseQuotedIdentifiers
-				false,  // storesMixedCaseIdentifiers
-				true,	// storesUpperCaseIdentifiers
-				false	// storesLowerCaseIdentifiers
-		);
+		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
+		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
+		IdentifierHelper identifierHelper = null;
+		try {
+			identifierHelper = dialect.buildIdentifierHelper( identifierHelperBuilder, databaseMetaData );
+		}
+		catch (SQLException sqle) {
+			// should never ever happen
+			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+		}
+		if ( identifierHelper == null ) {
+			identifierHelper = identifierHelperBuilder.build();
+		}
+		this.identifierHelper = identifierHelper;
 
 		this.currentCatalog = null;
 		this.currentSchema = null;
@@ -184,6 +191,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			DatabaseMetaData databaseMetaData) throws SQLException {
 		this.dialect = dialect;
 
+		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
@@ -196,22 +205,21 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
 
-		reservedWords.addAll( dialect.determineKeywordsForAutoQuoting( extractedMetaDataSupport.getExtraKeywords() ) );
-
-		final boolean globallyQuoteIdentifiers = serviceRegistry.getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, StandardConverters.BOOLEAN, false );
-
-		this.identifierHelper = new NormalizingIdentifierHelperImpl(
-				this,
-				nameQualifierSupport,
-				globallyQuoteIdentifiers,
-				databaseMetaData.storesMixedCaseQuotedIdentifiers(),
-				databaseMetaData.storesLowerCaseQuotedIdentifiers(),
-				databaseMetaData.storesUpperCaseQuotedIdentifiers(),
-				databaseMetaData.storesMixedCaseIdentifiers(),
-				databaseMetaData.storesUpperCaseIdentifiers(),
-				databaseMetaData.storesLowerCaseIdentifiers()
-		);
+		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
+		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
+		IdentifierHelper identifierHelper = null;
+		try {
+			identifierHelper = dialect.buildIdentifierHelper( identifierHelperBuilder, databaseMetaData );
+		}
+		catch (SQLException sqle) {
+			// should never ever happen
+			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+		}
+		if ( identifierHelper == null ) {
+			identifierHelper = identifierHelperBuilder.build();
+		}
+		this.identifierHelper = identifierHelper;
 
 		// and that current-catalog and current-schema happen after it
 		this.currentCatalog = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionCatalogName() );
@@ -225,7 +233,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder(
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				cfgService.getSettings(),
 				databaseMetaData.getConnection()
 		);
 	}
@@ -305,11 +313,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public IdentifierHelper getIdentifierHelper() {
 		return identifierHelper;
-	}
-
-	@Override
-	public boolean isReservedWord(String word) {
-		return reservedWords.contains( word );
 	}
 
 	@Override

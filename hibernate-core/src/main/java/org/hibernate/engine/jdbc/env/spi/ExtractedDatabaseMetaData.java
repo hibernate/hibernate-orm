@@ -25,21 +25,21 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @return The JDBC environment
 	 */
-	public JdbcEnvironment getJdbcEnvironment();
+	JdbcEnvironment getJdbcEnvironment();
 
 	/**
 	 * Retrieve the name of the catalog in effect when we connected to the database.
 	 *
 	 * @return The catalog name
 	 */
-	public String getConnectionCatalogName();
+	String getConnectionCatalogName();
 
 	/**
 	 * Retrieve the name of the schema in effect when we connected to the database.
 	 *
 	 * @return The schema name
 	 */
-	public String getConnectionSchemaName();
+	String getConnectionSchemaName();
 
 	/**
 	 * Set of type info reported by the driver.
@@ -48,7 +48,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#getTypeInfo()
 	 */
-	public LinkedHashSet<TypeInfo> getTypeInfoSet();
+	LinkedHashSet<TypeInfo> getTypeInfoSet();
 
 	/**
 	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
@@ -57,7 +57,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
 	 */
-	public Set<String> getExtraKeywords();
+	Set<String> getExtraKeywords();
 
 	/**
 	 * Does the driver report supporting named parameters?
@@ -65,7 +65,7 @@ public interface ExtractedDatabaseMetaData {
 	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
 	 * or that the driver could not be asked.
 	 */
-	public boolean supportsNamedParameters();
+	boolean supportsNamedParameters();
 
 	/**
 	 * Does the driver report supporting REF_CURSORs?
@@ -73,7 +73,7 @@ public interface ExtractedDatabaseMetaData {
 	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
 	 * or that the driver could not be asked.
 	 */
-	public boolean supportsRefCursors();
+	boolean supportsRefCursors();
 
 	/**
 	 * Did the driver report to supporting scrollable result sets?
@@ -82,7 +82,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsResultSetType
 	 */
-	public boolean supportsScrollableResults();
+	boolean supportsScrollableResults();
 
 	/**
 	 * Did the driver report to supporting retrieval of generated keys?
@@ -91,7 +91,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsGetGeneratedKeys
 	 */
-	public boolean supportsGetGeneratedKeys();
+	boolean supportsGetGeneratedKeys();
 
 	/**
 	 * Did the driver report to supporting batched updates?
@@ -100,7 +100,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsBatchUpdates
 	 */
-	public boolean supportsBatchUpdates();
+	boolean supportsBatchUpdates();
 
 	/**
 	 * Did the driver report to support performing DDL within transactions?
@@ -109,7 +109,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#dataDefinitionIgnoredInTransactions
 	 */
-	public boolean supportsDataDefinitionInTransaction();
+	boolean supportsDataDefinitionInTransaction();
 
 	/**
 	 * Did the driver report to DDL statements performed within a transaction performing an implicit commit of the
@@ -120,7 +120,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#dataDefinitionCausesTransactionCommit()
 	 */
-	public boolean doesDataDefinitionCauseTransactionCommit();
+	boolean doesDataDefinitionCauseTransactionCommit();
 
 	/**
 	 * Retrieve the type of codes the driver says it uses for {@code SQLState}.  They might follow either
@@ -130,7 +130,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#getSQLStateType()
 	 */
-	public SQLStateType getSqlStateType();
+	SQLStateType getSqlStateType();
 
 	/**
 	 * Did the driver report that updates to a LOB locator affect a copy of the LOB?
@@ -139,5 +139,5 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
 	 */
-	public boolean doesLobLocatorUpdateCopy();
+	boolean doesLobLocatorUpdateCopy();
 }

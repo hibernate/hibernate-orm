@@ -457,7 +457,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
 	private Map<String, TypeOverrides> initGenericDataTypeOverrides() {
 		final TypeOverrides entityOverrides = new TypeOverrides();
-		entityOverrides.setCacheName(DEF_ENTITY_RESOURCE);
+		entityOverrides.setCacheName( DEF_ENTITY_RESOURCE );
 		typeOverrides.put( ENTITY_KEY, entityOverrides );
 		final TypeOverrides immutableEntityOverrides = new TypeOverrides();
 		immutableEntityOverrides.setCacheName( DEF_IMMUTABLE_ENTITY_RESOURCE );

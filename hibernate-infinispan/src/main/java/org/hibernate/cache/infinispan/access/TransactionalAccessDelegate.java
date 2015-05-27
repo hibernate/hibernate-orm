@@ -205,7 +205,7 @@ public class TransactionalAccessDelegate {
 		if ( !putValidator.invalidateRegion() ) {
 			throw new CacheException( "Failed to invalidate pending putFromLoad calls for region " + region.getName() );
 		}
-		Caches.removeAll(cache);
+		Caches.removeAll( cache );
 	}
 
    /**

@@ -153,22 +153,22 @@ public abstract class BaseRegion implements Region {
 						// (without forcing autoCommit cache configuration).
 						Transaction tx = getCurrentTransaction();
 						if ( tx != null ) {
-							log.tracef("Transaction, clearing one element at the time");
-							Caches.removeAll(localAndSkipLoadCache);
+							log.tracef( "Transaction, clearing one element at the time" );
+							Caches.removeAll( localAndSkipLoadCache );
 						}
 						else {
-							log.tracef("Non-transactional, clear in one go");
+							log.tracef( "Non-transactional, clear in one go" );
 							localAndSkipLoadCache.clear();
 						}
 
-						log.tracef("Transition state from CLEARING to VALID");
+						log.tracef( "Transition state from CLEARING to VALID" );
 						invalidateState.compareAndSet(
 								InvalidateState.CLEARING, InvalidateState.VALID
 						);
 					}
 					catch ( Exception e ) {
 						if ( log.isTraceEnabled() ) {
-							log.trace("Could not invalidate region: ", e);
+							log.trace( "Could not invalidate region: ", e );
 						}
 					}
 				}
@@ -223,7 +223,7 @@ public abstract class BaseRegion implements Region {
 	 */
 	public void invalidateRegion() {
 		if (log.isTraceEnabled()) {
-			log.trace("Invalidate region: " + name);
+			log.trace( "Invalidate region: " + name );
 		}
 
 		Transaction tx = getCurrentTransaction();
@@ -254,7 +254,7 @@ public abstract class BaseRegion implements Region {
 
 	public boolean isRegionInvalidatedInCurrentTx() {
 		Transaction tx = getCurrentTransaction();
-		return tx != null && tx.equals(invalidateTransaction);
+		return tx != null && tx.equals( invalidateTransaction );
 	}
 
 	private Transaction getCurrentTransaction() {

@@ -254,7 +254,8 @@ public class Caches {
 		CloseableIterator it = cache.keySet().iterator();
 		try {
 			while (it.hasNext()) {
-				it.next(); // Necessary to get next element
+				// Necessary to get next element
+				it.next();
 				it.remove();
 			}
 		}

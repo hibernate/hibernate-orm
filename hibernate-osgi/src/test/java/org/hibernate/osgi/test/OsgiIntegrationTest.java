@@ -59,6 +59,7 @@ import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
@@ -94,12 +95,18 @@ public class OsgiIntegrationTest {
 						.frameworkUrl( paxExamEnvironment.getProperty( "org.ops4j.pax.exam.container.karaf.distroUrl" ) )
 						.karafVersion( paxExamEnvironment.getProperty( "org.ops4j.pax.exam.container.karaf.version" ) )
 						.name( "Apache Karaf" )
-						.unpackDirectory( new File( paxExamEnvironment.getProperty( "org.ops4j.pax.exam.container.karaf.unpackDir" ) ) )
+						.unpackDirectory(
+								new File(
+										paxExamEnvironment.getProperty(
+												"org.ops4j.pax.exam.container.karaf.unpackDir"
+										)
+								)
+						)
 						.useDeployFolder( false ),
-				repositories(
-						repository( "https://repository.jboss.org/nexus/content/groups/public-jboss/" )
-								.id( "jboss-nexus" )
-								.allowSnapshots()
+				editConfigurationFileExtend(
+						"etc/org.ops4j.pax.url.mvn.cfg",
+						"org.ops4j.pax.url.mvn.repositories",
+						"https://repository.jboss.org/nexus/content/groups/public/"
 				),
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),

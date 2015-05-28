@@ -111,6 +111,9 @@ subprojects { subProject ->
 			// todo : need to make sure these are non-exported
 			description = 'Non-exported compile-time dependencies.'
 		}
+		jbossLoggingTool {
+			description = 'Dependencies for running the jboss-logging tooling.'
+		}
 		configurations {
 			all*.exclude group: 'xml-apis', module: 'xml-apis'
 		}
@@ -119,8 +122,9 @@ subprojects { subProject ->
 	// appropriately inject the common dependencies into each sub-project
 	dependencies {
 		compile( libraries.logging )
-		compile( libraries.logging_annotations )
-		compile( libraries.logging_processor )
+
+		jbossLoggingTool( libraries.logging_annotations )
+		jbossLoggingTool( libraries.logging_processor )
 
 		testCompile( libraries.junit )
 		testCompile( libraries.byteman )
@@ -151,6 +155,7 @@ subprojects { subProject ->
 
 	sourceSets.main {
 		compileClasspath += configurations.provided
+		compileClasspath += configurations.jbossLoggingTool
 	}
 
 	jar {

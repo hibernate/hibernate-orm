@@ -46,9 +46,9 @@ ext {
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
 
             // logging
-            logging:        'org.jboss.logging:jboss-logging:3.3.0.Beta1',
-            logging_annotations: 'org.jboss.logging:jboss-logging-annotations:1.2.0.Final',
-            logging_processor:  'org.jboss.logging:jboss-logging-processor:1.2.0.Final',
+            logging:        'org.jboss.logging:jboss-logging:3.3.0.Final',
+            logging_annotations: 'org.jboss.logging:jboss-logging-annotations:2.0.0.Final',
+            logging_processor:  'org.jboss.logging:jboss-logging-processor:2.0.0.Final',
 
             slf4j_api:                 "org.slf4j:slf4j-api:1.7.5",
             slf4j_log4j:               "org.slf4j:slf4j-log4j12:1.7.5",

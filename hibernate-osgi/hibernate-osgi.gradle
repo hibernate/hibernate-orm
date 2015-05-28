@@ -124,6 +124,21 @@ karafFeatures {
 					rootProject.childProjects.'hibernate-entitymanager',
 					project
 			]
+			// According to Christian Schneider, these should not be needed
+			bundle {
+				match {
+					group = 'org.osgi'
+					module = 'org.osgi.core'
+				}
+				include = false
+			}
+			bundle {
+				match {
+					group = 'org.osgi'
+					module = 'org.osgi.compendium'
+				}
+				include = false
+			}
 			bundle {
 				match {
 					group = 'org.jboss.logging'

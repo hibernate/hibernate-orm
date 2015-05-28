@@ -219,7 +219,7 @@ task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
 task uploadBundles(type: Exec, dependsOn: buildBundles) {
     description = "Uploads release bundles to SourceForge"
 
-    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${majorVersion}/${version}";
+    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate-orm/${version}";
 
     executable 'rsync'
     args '-vr', '-e ssh', "${project.buildDir}/distributions/", url

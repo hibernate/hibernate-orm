@@ -5,6 +5,61 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in 5.0.0.CR1 (May 27, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/19851
+
+** Sub-task
+    * [HHH-8489] - Bi-directional association management via bytecode enhancement
+
+** Bug
+    * [HHH-8854] - Could not extract ParameterizedType representation of AttributeConverter definition
+    * [HHH-9629] - l2 cache key constructed wrong for entity with inheritance when fetching lazy property
+    * [HHH-9665] - Allow EntityManagerFactoryImpl to be unwrapped only into public interfaces/classes
+    * [HHH-9737] - Miscellaneous bugs in unit tests when using non-default dialects
+    * [HHH-9745] - ClassCastException in hbm2ddl update and validate
+    * [HHH-9756] - NPE in JtaTransactionCoordinatorImpl#explicitJoin() after previously executed transaction
+    * [HHH-9758] - Broken SQL generated for dynamic batch fetching entities with a composite ID
+    * [HHH-9760] - TransactionImpl itself should not be throwing new TransactionExceptions
+    * [HHH-9765] - Re-introduce ExceptionMapper, ManagedFlushChecker and AfterCompletionAction
+    * [HHH-9768] - Maintain explicit list of ANSI SQL keywords
+    * [HHH-9772] - annotation @ListIndexBase has no runtime retention, so it is not available through AnnotationBinder configuration
+    * [HHH-9773] - Add missing package statements to package-info.java files in hibernate-jpamodelgen
+    * [HHH-9776] - org.hibernate.cache.infinispan.impl.BaseRegion.getElementCountInMemory() is no longer correct
+    * [HHH-9777] - Dereferenced collections are not processed properly
+    * [HHH-9787] - Remove outdated Infinispan configuration elements
+    * [HHH-9788] - SchemaUpdate and quoted identifiers causes tables/columns to not be found based on name search
+    * [HHH-9797] - Inaccurate logged warning about duplicate joins (HHH000072)
+    * [HHH-9806] - Bytecode-enhancement-based dirty tracking does not work because PersistentAttributeInterceptor is never injected
+
+** Improvement
+    * [HHH-8804] - Ability to use parametrized type as AttributeConverter type parameter
+    * [HHH-8898] - Allow usage of try-with to autoclose Session, SessionFactory and ScrollableResults
+    * [HHH-9781] - Upgrade Hibernate to support Infinispan 7.2.1.Final configurations
+    * [HHH-9795] - Create delegating base class for SessionFactory(Implementor) implementations
+    * [HHH-9804] - Ehcache integration uses a write lock where a read lock is requested in EhcacheTransactionalDataRegion
+    * [HHH-9820] - Handle JDBC drivers that do not properly report metadata regarding case of identifiers
+    * [HHH-9823] - org.hibernate.cfg.annotations.SimpleValueBinder#fillSimpleValue incorrectly using HCANN classloading directly
+
+** New Feature
+    * [HHH-9761] - Make native APIs typed
+    * [HHH-9762] - Complete deprecation of Settings contract
+
+** Task
+    * [HHH-9697] - Complete documentation of new approach and APIs for SessionFactory building
+    * [HHH-9699] - Re-work the hibernate-osgi integration tests using managed Karaf
+    * [HHH-9782] - Build plugins could pick up JAVA6_HOME as environment variable
+    * [HHH-9783] - TestableLoggerProvider needs to implement a new method after upgrade of JBoss Logger
+    * [HHH-9790] - Remove deprecated methods from Session and SessionFactory
+    * [HHH-9792] - Clean up missed Configuration methods
+    * [HHH-9796] - Allow running hibernate-infinspan tests using Infinispan configuration specified by hibernate.cache.infinispan.cfg
+    * [HHH-9803] - Checkstyle fix ups
+    * [HHH-9809] - Improve Hibernate Gradle plugin
+    * [HHH-9811] - Change EntityPersister#resolveAttributeIndexes to take String[]
+    * [HHH-9813] - Improve Hibernate Enhance Maven Plugin
+
+
+
 Changes in 5.0.0.Beta2 (April 29, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/19550

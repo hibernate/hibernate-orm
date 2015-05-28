@@ -23,19 +23,15 @@
  */
 package org.hibernate.osgi;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import javax.persistence.spi.PersistenceProvider;
-
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+
+import javax.persistence.spi.PersistenceProvider;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 /**
  * This BundleActivator provides three different uses of Hibernate in OSGi
@@ -61,7 +57,6 @@ import org.osgi.framework.ServiceRegistration;
 @SuppressWarnings("UnusedDeclaration")
 public class HibernateBundleActivator implements BundleActivator {
 	
-	private OsgiClassLoader osgiClassLoader;
 	private OsgiServiceUtil osgiServiceUtil;
 	
 	private ServiceRegistration<?> persistenceProviderService;
@@ -70,13 +65,6 @@ public class HibernateBundleActivator implements BundleActivator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void start(BundleContext context) throws Exception {
-		// build a ClassLoader that uses all the necessary OSGi bundles, and place it into
-		// a well-known location so internals can access it
-		osgiClassLoader = new OsgiClassLoader();
-		osgiClassLoader.addBundle( FrameworkUtil.getBundle( Session.class ) );
-		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernatePersistenceProvider.class ) );
-		ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
-		
 		osgiServiceUtil = new OsgiServiceUtil( context );
 
 		// Build a JtaPlatform specific for this OSGi context
@@ -87,20 +75,18 @@ public class HibernateBundleActivator implements BundleActivator {
 		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
 		persistenceProviderService = context.registerService(
 				PersistenceProvider.class.getName(),
-				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil ),
+				new OsgiPersistenceProviderService( osgiJtaPlatform, osgiServiceUtil ),
 				properties
 		);
 		sessionFactoryService = context.registerService(
 				SessionFactory.class.getName(),
-				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil ),
+				new OsgiSessionFactoryService( osgiJtaPlatform, osgiServiceUtil ),
 				new Hashtable()
 		);
 	}
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
-		osgiClassLoader.stop();
-		osgiClassLoader = null;
 		osgiServiceUtil.stop();
 		osgiServiceUtil = null;
 		
@@ -108,7 +94,5 @@ public class HibernateBundleActivator implements BundleActivator {
 		persistenceProviderService = null;
 		sessionFactoryService.unregister();
 		sessionFactoryService = null;
-
-		ClassLoaderHelper.overridenClassLoader = null;
 	}
 }

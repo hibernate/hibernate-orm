@@ -20,8 +20,6 @@
  */
 package org.hibernate.osgi;
 
-import java.util.Collection;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -37,6 +35,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
+
+import java.util.Collection;
 
 /**
  * Hibernate 4.2 and 4.3 still heavily rely on TCCL for ClassLoading.  Although
@@ -57,75 +57,81 @@ import org.osgi.framework.wiring.BundleWiring;
  * @author Tim Ward
  */
 public class OsgiSessionFactoryService implements ServiceFactory {
+
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
 			OsgiSessionFactoryService.class.getName());
-	
-	private OsgiClassLoader osgiClassLoader;
+
 	private OsgiJtaPlatform osgiJtaPlatform;
+
 	private OsgiServiceUtil osgiServiceUtil;
 
 	/**
 	 * Constructs a OsgiSessionFactoryService
 	 *
-	 * @param osgiClassLoader The OSGi-specific ClassLoader created in HibernateBundleActivator
 	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform created in HibernateBundleActivator
-	 * @param context The OSGi context
 	 */
-	public OsgiSessionFactoryService(
-			OsgiClassLoader osgiClassLoader,
-			OsgiJtaPlatform osgiJtaPlatform,
-			OsgiServiceUtil osgiServiceUtil) {
-		this.osgiClassLoader = osgiClassLoader;
+	public OsgiSessionFactoryService(OsgiJtaPlatform osgiJtaPlatform, OsgiServiceUtil osgiServiceUtil) {
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.osgiServiceUtil = osgiServiceUtil;
 	}
 
 	@Override
 	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
-		osgiClassLoader.addBundle( requestingBundle );
 
-		final Configuration configuration = new Configuration();
-		configuration.getProperties().put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
-		
+
 		// Allow bundles to put the config file somewhere other than the root level.
-		final BundleWiring bundleWiring = (BundleWiring) requestingBundle.adapt( BundleWiring.class );
-		final Collection<String> cfgResources = bundleWiring.listResources( "/", "hibernate.cfg.xml",
-				BundleWiring.LISTRESOURCES_RECURSE );
-		if (cfgResources.size() == 0) {
-			configuration.configure();
-		}
-		else {
-			if (cfgResources.size() > 1) {
-				LOG.warn( "Multiple hibernate.cfg.xml files found in the persistence bundle.  Using the first one discovered." );
+		final BundleWiring bundleWiring = (BundleWiring) requestingBundle.adapt(BundleWiring.class);
+
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(bundleWiring.getClassLoader());
+			final Configuration configuration = new Configuration();
+			configuration.getProperties().put(AvailableSettings.JTA_PLATFORM, osgiJtaPlatform);
+
+
+			final Collection<String> cfgResources = bundleWiring.listResources("/", "hibernate.cfg.xml", BundleWiring
+					.LISTRESOURCES_RECURSE);
+			if (cfgResources.size() == 0) {
+				configuration.configure();
+			} else {
+				if (cfgResources.size() > 1) {
+					LOG.warn("Multiple hibernate.cfg.xml files found in the persistence bundle.  Using the first one " +
+							"discovered.");
+				}
+				String cfgResource = "/" + cfgResources.iterator().next();
+				configuration.configure(cfgResource);
 			}
-			String cfgResource = "/" + cfgResources.iterator().next();
-			configuration.configure( cfgResource );
+
+			final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
+
+
+			final Integrator[] integrators = osgiServiceUtil.getServiceImpls(Integrator.class);
+			for (Integrator integrator : integrators) {
+				builder.with(integrator);
+			}
+
+			final StrategyRegistrationProvider[] strategyRegistrationProviders = osgiServiceUtil.getServiceImpls
+					(StrategyRegistrationProvider.class);
+			for (StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders) {
+				builder.withStrategySelectors(strategyRegistrationProvider);
+			}
+
+			final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls(TypeContributor.class);
+			for (TypeContributor typeContributor : typeContributors) {
+				configuration.registerTypeContributor(typeContributor);
+			}
+
+			final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder(builder.build()).applySettings
+					(configuration.getProperties()).build();
+			SessionFactory sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+
+			return new SessionFactoryTcclWrapper(sessionFactory, bundleWiring.getClassLoader());
+		} finally {
+			Thread.currentThread().setContextClassLoader(tccl);
 		}
 
-		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
-		final OSGiClassLoaderServiceImpl classLoaderService = new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil );
-		builder.with( classLoaderService );
-
-		final Integrator[] integrators = osgiServiceUtil.getServiceImpls( Integrator.class );
-		for ( Integrator integrator : integrators ) {
-			builder.with( integrator );
-		}
-
-		final StrategyRegistrationProvider[] strategyRegistrationProviders
-				= osgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class );
-		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
-			builder.withStrategySelectors( strategyRegistrationProvider );
-		}
-
-		final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls( TypeContributor.class );
-		for ( TypeContributor typeContributor : typeContributors ) {
-			configuration.registerTypeContributor( typeContributor );
-		}
-
-		final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
-				.applySettings( configuration.getProperties() ).build();
-		return configuration.buildSessionFactory( serviceRegistry );
 	}
+
 
 	@Override
 	public void ungetService(Bundle requestingBundle, ServiceRegistration registration, Object service) {

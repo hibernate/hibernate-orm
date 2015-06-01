@@ -98,11 +98,11 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	//hilo params
 	public static final String MAX_LO = "max_lo";
 
-	private int maxLo;
-	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
+	protected int maxLo;
+	protected LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
-	private Class returnClass;
-	private int keySize;
+	protected Class returnClass;
+	protected int keySize;
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()

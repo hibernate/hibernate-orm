@@ -8,6 +8,8 @@ package org.hibernate.test.cache.infinispan;
 
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -19,9 +21,9 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.infinispan.AdvancedCache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.hibernate.test.cache.infinispan.util.CacheTestUtil.assertEqualsEventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -59,7 +61,6 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	}
 
 	@Test
-	@Ignore // currently ignored because of HHH-9800
 	public void testEvict() throws Exception {
 		evictOrRemoveTest();
 	}
@@ -81,7 +82,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 			// Sleep a bit to avoid concurrent FLUSH problem
 			avoidConcurrentFlush();
 
-			GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+			final GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
 					regionFactory,
 					getStandardRegionName( REGION_PREFIX ),
 					properties,
@@ -93,7 +94,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 					getCacheTestSupport()
 			);
 
-			GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
+			final GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
 					regionFactory,
 					getStandardRegionName( REGION_PREFIX ),
 					properties,
@@ -103,22 +104,29 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 			assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
 			regionPut( localRegion );
-			sleep( 250 );
-			assertEquals( VALUE1, localRegion.get( KEY ) );
 
-			// allow async propagation
-			sleep( 250 );
+			Callable<Object> getFromLocalRegion = new Callable<Object>() {
+				@Override
+				public Object call() throws Exception {
+					return localRegion.get(KEY);
+				}
+			};
+			Callable<Object> getFromRemoteRegion = new Callable<Object>() {
+				@Override
+				public Object call() throws Exception {
+					return remoteRegion.get(KEY);
+				}
+			};
+
+			assertEqualsEventually(VALUE1, getFromLocalRegion, 10, TimeUnit.SECONDS);
 			Object expected = invalidation ? null : VALUE1;
-			assertEquals( expected, remoteRegion.get( KEY ) );
+			assertEqualsEventually(expected, getFromRemoteRegion, 10, TimeUnit.SECONDS);
 
-			regionEvict( localRegion );
+			regionEvict(localRegion);
 
-			// allow async propagation
-			sleep( 250 );
-			assertEquals( null, localRegion.get( KEY ) );
-			assertEquals( null, remoteRegion.get( KEY ) );
-		}
-		finally {
+			assertEqualsEventually(null, getFromLocalRegion, 10, TimeUnit.SECONDS);
+			assertEqualsEventually(null, getFromRemoteRegion, 10, TimeUnit.SECONDS);
+		} finally {
 			StandardServiceRegistryBuilder.destroy( registry1 );
 			StandardServiceRegistryBuilder.destroy( registry2 );
 		}

@@ -302,7 +302,7 @@
         </para>
       </example>
     </section>
-    <section id="caching-strategies-list">
+    <section id="caching-strategies-list" revision="1">
       <title>Caching strategies</title>
       <variablelist>
         <varlistentry>
@@ -315,7 +315,7 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term>nonstrict read-write</term>
+          <term>nonstrict-read-write</term>
           <listitem>
             <para>
               Some applications only rarely need to modify data. This is the case if two transactions are unlikely to
@@ -358,7 +358,7 @@
         </varlistentry>
       </variablelist>
     </section>
-    <section id="caching-provider-table">
+    <section id="caching-provider-table" revision="1">
       <title>Second-level cache providers for Hibernate</title>
       <informaltable>
         <tgroup cols="5">
@@ -376,7 +376,7 @@
               <entry>
                 <itemizedlist>
                   <listitem><para>read-only</para></listitem>
-                  <listitem><para>nonstrict read-write</para></listitem>
+                  <listitem><para>nonstrict-read-write</para></listitem>
                   <listitem><para>read-write</para></listitem>
                 </itemizedlist>
               </entry>
@@ -387,7 +387,7 @@
               <entry>
                 <itemizedlist>
                   <listitem><para>read-only</para></listitem>
-                  <listitem><para>nonstrict read-write</para></listitem>
+                  <listitem><para>nonstrict-read-write</para></listitem>
                   <listitem><para>read-write</para></listitem>
                   <listitem><para>transactional</para></listitem>
                 </itemizedlist>

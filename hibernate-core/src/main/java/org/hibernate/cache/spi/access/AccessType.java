@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi.access;
 
+import java.util.Locale;
+
 /**
  * The types of access strategies available.
  *
@@ -71,6 +73,12 @@ public enum AccessType {
 				return accessType;
 			}
 		}
-		throw new UnknownAccessTypeException( externalName );
+		// Check to see if making upper-case matches an enum name.
+		try {
+			return AccessType.valueOf( externalName.toUpperCase( Locale.ROOT) );
+		}
+		catch ( IllegalArgumentException e ) {
+			throw new UnknownAccessTypeException( externalName );
+		}
 	}
 }

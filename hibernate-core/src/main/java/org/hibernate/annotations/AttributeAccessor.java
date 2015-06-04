@@ -14,7 +14,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Names a {@link org.hibernate.property.PropertyAccessor} strategy to use.
+ * Names a persistent property access strategy ({@link org.hibernate.property.access.spi.PropertyAccessStrategy}) to use.
  *
  * Can be specified at either:<ul>
  *     <li>
@@ -26,10 +26,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     </li>
  * </ul>
  *
- * Should only be used to name custom {@link org.hibernate.property.PropertyAccessor}.  For {@code property/field}
- * access, the JPA {@link javax.persistence.Access} annotation should be preferred using the appropriate
- * {@link javax.persistence.AccessType}.  However, if this annotation is used with either {@code value="property"}
- * or {@code value="field"}, it will act just as the corresponding usage of {@link javax.persistence.Access}.
+ * Should only be used to name custom {@link org.hibernate.property.access.spi.PropertyAccessStrategy}.  For
+ * {@code property/field} access, the JPA {@link javax.persistence.Access} annotation should be preferred
+ * using the appropriate {@link javax.persistence.AccessType}.  However, if this annotation is used with
+ * either {@code value="property"} or {@code value="field"}, it will act just as the corresponding usage
+ * of {@link javax.persistence.Access}.
+ *
+ * @see org.hibernate.property.access.spi.PropertyAccessStrategy
+ * @see org.hibernate.property.access.spi.PropertyAccessStrategyResolver
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -38,7 +42,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface AttributeAccessor {
 	/**
-	 * Names the {@link org.hibernate.property.PropertyAccessor} strategy.
+	 * Names the {@link org.hibernate.property.access.spi.PropertyAccessStrategy} strategy.
 	 */
 	String value();
 }

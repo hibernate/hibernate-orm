@@ -7,6 +7,7 @@
 package org.hibernate.test.legacy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -136,7 +137,12 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		assertTrue( q.list().get(0)==simple );
 		//misuse of "Single" as a propertyobject, but it was the first testclass i found with a collection ;)
 		Single single = new Single() { // trivial hack to test properties with arrays.
-			String[] getStuff() { return (String[]) getSeveral().toArray(new String[getSeveral().size()]); }
+			String[] getStuff() {
+				return (String[]) getSeveral().toArray(new String[getSeveral().size()]);
+			}
+			void setStuff(String[] stuff) {
+				setSeveral( Arrays.asList( stuff ) );
+			}
 		};
 
 		List l = new ArrayList();

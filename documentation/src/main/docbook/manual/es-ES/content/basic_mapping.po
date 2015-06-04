@@ -4625,7 +4625,7 @@ msgstr ""
 "<literal>access=\"field\"</literal>, Hibernate se saltará el par get/set y "
 "accederá al campo directamente utilizando reflección. Puede especificar su "
 "propia estrategia de acceso a la propiedad mencionando una clase que "
-"implemente la interfaz <literal>org.hibernate.property.PropertyAccessor</"
+"implemente la interfaz <literal>org.hibernate.property.access.spi.PropertyAccessStrategy</"
 "literal>."
 
 #. Tag: para

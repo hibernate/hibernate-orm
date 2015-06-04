@@ -16,15 +16,16 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -120,11 +121,14 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	public Class getComponentClass() throws MappingException {
+		final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+				.getServiceRegistry()
+				.getService( ClassLoaderService.class );
 		try {
-			return ReflectHelper.classForName(componentClassName);
+			return classLoaderService.classForName( componentClassName );
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new MappingException("component class not found: " + componentClassName, cnfe);
+		catch (ClassLoadingException e) {
+			throw new MappingException("component class not found: " + componentClassName, e);
 		}
 	}
 
@@ -163,7 +167,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	@Override
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
-		final ComponentMetamodel metamodel = new ComponentMetamodel( this );
+		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getMetadata().getMetadataBuildingOptions() );
 		final TypeFactory factory = getMetadata().getTypeResolver().getTypeFactory();
 		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
 	}
@@ -379,8 +383,9 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	private Setter injector(Property property, Class attributeDeclarer) {
-		return property.getPropertyAccessor( attributeDeclarer )
-				.getSetter( attributeDeclarer, property.getName() );
+		return property.getPropertyAccessStrategy( attributeDeclarer )
+				.buildPropertyAccess( attributeDeclarer, property.getName() )
+				.getSetter();
 	}
 
 	private Class resolveComponentClass() {

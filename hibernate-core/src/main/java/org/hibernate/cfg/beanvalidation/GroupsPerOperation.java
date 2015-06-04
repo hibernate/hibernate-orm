@@ -13,66 +13,81 @@ import java.util.Map;
 import javax.validation.groups.Default;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 
 /**
  * @author Emmanuel Bernard
  */
 public class GroupsPerOperation {
-
 	private static final String JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
 	private static final String HIBERNATE_GROUP_PREFIX = "org.hibernate.validator.group.";
+
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
 	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
 
 	private Map<Operation, Class<?>[]> groupsPerOperation = new HashMap<Operation, Class<?>[]>(4);
 
-	public GroupsPerOperation(Map settings) {
-		setGroupsForOperation( Operation.INSERT, settings );
-		setGroupsForOperation( Operation.UPDATE, settings );
-		setGroupsForOperation( Operation.DELETE, settings );
-		setGroupsForOperation( Operation.DDL, settings );
+	private GroupsPerOperation() {
 	}
 
-	private void setGroupsForOperation(Operation operation, Map settings) {
-		Object property = settings.get( operation.getGroupPropertyName() );
+	public static GroupsPerOperation from(Map settings, ClassLoaderAccess classLoaderAccess) {
+		GroupsPerOperation groupsPerOperation = new GroupsPerOperation();
 
-		Class<?>[] groups;
+		applyOperationGrouping( groupsPerOperation, Operation.INSERT, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.UPDATE, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.DELETE, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.DDL, settings, classLoaderAccess );
+
+		return groupsPerOperation;
+	}
+
+	private static void applyOperationGrouping(
+			GroupsPerOperation groupsPerOperation,
+			Operation operation,
+			Map settings,
+			ClassLoaderAccess classLoaderAccess) {
+		groupsPerOperation.groupsPerOperation.put(
+				operation,
+				buildGroupsForOperation( operation, settings, classLoaderAccess )
+		);
+	}
+
+	public static Class<?>[] buildGroupsForOperation(Operation operation, Map settings, ClassLoaderAccess classLoaderAccess) {
+		final Object property = settings.get( operation.getGroupPropertyName() );
+
 		if ( property == null ) {
-			groups = operation == Operation.DELETE ? EMPTY_GROUPS : DEFAULT_GROUPS;
+			return operation == Operation.DELETE ? EMPTY_GROUPS : DEFAULT_GROUPS;
 		}
-		else {
-			if ( property instanceof String ) {
-				String stringProperty = (String) property;
-				String[] groupNames = stringProperty.split( "," );
-				if ( groupNames.length == 1 && groupNames[0].equals( "" ) ) {
-					groups = EMPTY_GROUPS;
-				}
-				else {
-					List<Class<?>> groupsList = new ArrayList<Class<?>>(groupNames.length);
-					for (String groupName : groupNames) {
-						String cleanedGroupName = groupName.trim();
-						if ( cleanedGroupName.length() > 0) {
-							try {
-								groupsList.add( ReflectHelper.classForName( cleanedGroupName ) );
-							}
-							catch ( ClassNotFoundException e ) {
-								throw new HibernateException( "Unable to load class " + cleanedGroupName, e );
-							}
-						}
+
+		if ( property instanceof Class<?>[] ) {
+			return (Class<?>[]) property;
+		}
+
+		if ( property instanceof String ) {
+			String stringProperty = (String) property;
+			String[] groupNames = stringProperty.split( "," );
+			if ( groupNames.length == 1 && groupNames[0].equals( "" ) ) {
+				return EMPTY_GROUPS;
+			}
+
+			List<Class<?>> groupsList = new ArrayList<Class<?>>(groupNames.length);
+			for (String groupName : groupNames) {
+				String cleanedGroupName = groupName.trim();
+				if ( cleanedGroupName.length() > 0) {
+					try {
+						groupsList.add( classLoaderAccess.classForName( cleanedGroupName ) );
 					}
-					groups = groupsList.toArray( new Class<?>[groupsList.size()] );
+					catch ( ClassLoadingException e ) {
+						throw new HibernateException( "Unable to load class " + cleanedGroupName, e );
+					}
 				}
 			}
-			else if ( property instanceof Class<?>[] ) {
-				groups = (Class<?>[]) property;
-			}
-			else {
-				//null is bad and excluded by instanceof => exception is raised
-				throw new HibernateException( JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
-			}
+			return groupsList.toArray( new Class<?>[groupsList.size()] );
 		}
-		groupsPerOperation.put( operation, groups );
+
+		//null is bad and excluded by instanceof => exception is raised
+		throw new HibernateException( JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
 	}
 
 	public Class<?>[] get(Operation operation) {

@@ -10,11 +10,23 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractIdMapper implements IdMapper {
+	private final ServiceRegistry serviceRegistry;
+
+	public AbstractIdMapper(ServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
+	}
+
 	private Parameters getParametersToUse(Parameters parameters, List<QueryParameterData> paramDatas) {
 		if ( paramDatas.size() > 1 ) {
 			return parameters.addSubParameters( "and" );

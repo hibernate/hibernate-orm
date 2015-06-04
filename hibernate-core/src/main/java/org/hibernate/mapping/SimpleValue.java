@@ -17,6 +17,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
@@ -31,6 +32,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
@@ -81,6 +83,11 @@ public class SimpleValue implements KeyValue {
 
 	public MetadataImplementor getMetadata() {
 		return metadata;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
 	@Override
@@ -398,7 +405,7 @@ public class SimpleValue implements KeyValue {
 			if ( className == null ) {
 				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 			}
-			typeName = ReflectHelper.reflectedPropertyClass( className, propertyName ).getName();
+			typeName = ReflectHelper.reflectedPropertyClass( className, propertyName, metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) ).getName();
 			// todo : to fully support isNationalized here we need do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
 			//		a (1) SqlTypeDescriptor, a (2) JavaTypeDescriptor and dynamically building a BasicType
@@ -554,10 +561,13 @@ public class SimpleValue implements KeyValue {
 					? null
 					: xProperty.getAnnotations();
 
+			final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
-							ReflectHelper.classForName(
+							classLoaderService.classForName(
 									typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS )
 							),
 							annotations,
@@ -569,8 +579,8 @@ public class SimpleValue implements KeyValue {
 					)
 			);
 		}
-		catch ( ClassNotFoundException cnfe ) {
-			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, cnfe );
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
 

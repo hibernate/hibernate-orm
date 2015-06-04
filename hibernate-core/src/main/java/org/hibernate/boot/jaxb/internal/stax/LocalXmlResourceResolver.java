@@ -11,9 +11,9 @@ import java.io.InputStream;
 import java.net.URL;
 import javax.xml.stream.XMLStreamException;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ConfigHelper;
 
 /**
  * @author Steve Ebersole
@@ -21,9 +21,13 @@ import org.hibernate.internal.util.ConfigHelper;
 public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( LocalXmlResourceResolver.class );
 
-	public static final LocalXmlResourceResolver INSTANCE = new LocalXmlResourceResolver();
-
 	public static final String CLASSPATH_EXTENSION_URL_BASE = "classpath://";
+
+	private final ClassLoaderService classLoaderService;
+
+	public LocalXmlResourceResolver(ClassLoaderService classLoaderService) {
+		this.classLoaderService = classLoaderService;
+	}
 
 	@Override
 	public Object resolveEntity(String publicID, String systemID, String baseURI, String namespace) throws XMLStreamException {
@@ -115,7 +119,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	private InputStream resolveInLocalNamespace(String path) {
 		try {
-			return ConfigHelper.getUserResourceAsStream( path );
+			return classLoaderService.locateResourceStream( path );
 		}
 		catch ( Throwable t ) {
 			return null;

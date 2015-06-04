@@ -17,6 +17,8 @@ import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import org.hibernate.testing.boot.ClassLoaderAccessTestingImpl;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -47,7 +49,7 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 			throws Exception {
 		AnnotatedElement el = getAnnotatedElement( entityClass, fieldName );
 		XMLContext xmlContext = getContext( ormResourceName );
-		return new JPAOverriddenAnnotationReader( el, xmlContext );
+		return new JPAOverriddenAnnotationReader( el, xmlContext, ClassLoaderAccessTestingImpl.INSTANCE );
 	}
 
 	protected AnnotatedElement getAnnotatedElement(Class<?> entityClass, String fieldName) throws Exception {
@@ -61,7 +63,7 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	}
 
 	protected XMLContext getContext(InputStream is) throws Exception {
-		XMLContext xmlContext = new XMLContext();
+		XMLContext xmlContext = new XMLContext( ClassLoaderAccessTestingImpl.INSTANCE );
 		Document doc = new SAXReader().read( is );
 		xmlContext.addDocument( doc );
 		return xmlContext;

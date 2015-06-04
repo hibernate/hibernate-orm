@@ -39,6 +39,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	private SqlStatementLogger sqlStatementLogger;
 
+	private ResultSetWrapperImpl resultSetWrapper;
+
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
@@ -55,6 +57,8 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
 
 		this.sqlStatementLogger =  new SqlStatementLogger( showSQL, formatSQL );
+
+		resultSetWrapper = new ResultSetWrapperImpl( serviceRegistry );
 	}
 
 	@Override
@@ -106,6 +110,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public ResultSetWrapper getResultSetWrapper() {
-		return ResultSetWrapperImpl.INSTANCE;
+		return resultSetWrapper;
 	}
 }

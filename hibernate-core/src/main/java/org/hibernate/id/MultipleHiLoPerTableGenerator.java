@@ -39,6 +39,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -246,8 +247,9 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
-		ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
 
 		qualifiedTableName = QualifiedNameParser.INSTANCE.parse(
 				ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE ),
@@ -255,9 +257,9 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 				normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
 		);
 
-		tableName = jdbcEnv.getQualifiedObjectNameFormatter().format(
+		tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				qualifiedTableName,
-				jdbcEnv.getDialect()
+				jdbcEnvironment.getDialect()
 		);
 		pkColumnName = normalizer.toDatabaseIdentifierText(
 				ConfigurationHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
@@ -272,9 +274,9 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		query = "select " +
 				valueColumnName +
 				" from " +
-				jdbcEnv.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				jdbcEnvironment.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
 				" where " + pkColumnName + " = '" + keyValue + "'" +
-				jdbcEnv.getDialect().getForUpdateString();
+				jdbcEnvironment.getDialect().getForUpdateString();
 
 		update = "update " +
 				tableName +

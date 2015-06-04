@@ -694,7 +694,7 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		private ReflectionManager generateDefaultReflectionManager() {
 			final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-			reflectionManager.setMetadataProvider( new JPAMetadataProvider() );
+			reflectionManager.setMetadataProvider( new JPAMetadataProvider( this ) );
 			reflectionManager.injectClassLoaderDelegate( getHcannClassLoaderDelegate() );
 			return reflectionManager;
 		}

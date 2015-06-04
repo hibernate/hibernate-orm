@@ -8,6 +8,8 @@ package org.hibernate.boot.registry.classloading.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +28,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -149,7 +150,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static ClassLoader locateTCCL() {
 		try {
-			return ClassLoaderHelper.getContextClassLoader();
+			return Thread.currentThread().getContextClassLoader();
 		}
 		catch (Exception e) {
 			return null;
@@ -321,6 +322,20 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		return services;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T generateProxy(InvocationHandler handler, Class... interfaces) {
+		return (T) Proxy.newProxyInstance(
+				getAggregatedClassLoader(),
+				interfaces,
+				handler
+		);
+	}
+
+	@Override
+	public <T> T workWithClassLoader(Work<T> work) {
+		return work.doWork( getAggregatedClassLoader() );
+	}
 
 	private ClassLoader getAggregatedClassLoader() {
 		final ClassLoader aggregated = this.aggregatedClassLoader;

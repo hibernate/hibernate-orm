@@ -4695,7 +4695,7 @@ msgstr ""
 "<literal>access=\"field\"</literal>, o Hibernate irá bipassar os metodos get/"
 "set, acessando o campo diretamente, usando reflexão. Você pode especificar "
 "sua própria estratégia para acesso da propriedade criando uma classe que "
-"implemente a interface <literal>org.hibernate.property.PropertyAccessor</"
+"implemente a interface <literal>org.hibernate.property.access.spi.PropertyAccessStrategy</"
 "literal>."
 
 #. Tag: para

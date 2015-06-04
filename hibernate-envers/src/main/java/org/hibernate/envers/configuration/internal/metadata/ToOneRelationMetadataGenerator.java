@@ -143,7 +143,13 @@ public final class ToOneRelationMetadataGenerator {
 		final PropertyData propertyData = propertyAuditingData.getPropertyData();
 		mapper.addComposite(
 				propertyData,
-				new OneToOneNotOwningMapper( entityName, referencedEntityName, owningReferencePropertyName, propertyData )
+				new OneToOneNotOwningMapper(
+						entityName,
+						referencedEntityName,
+						owningReferencePropertyName,
+						propertyData,
+						mainGenerator.getServiceRegistry()
+				)
 		);
 	}
 
@@ -178,7 +184,12 @@ public final class ToOneRelationMetadataGenerator {
 		final PropertyData propertyData = propertyAuditingData.getPropertyData();
 		mapper.addComposite(
 				propertyData,
-				new OneToOnePrimaryKeyJoinColumnMapper( entityName, referencedEntityName, propertyData )
+				new OneToOnePrimaryKeyJoinColumnMapper(
+						entityName,
+						referencedEntityName,
+						propertyData,
+						mainGenerator.getServiceRegistry()
+				)
 		);
 	}
 }

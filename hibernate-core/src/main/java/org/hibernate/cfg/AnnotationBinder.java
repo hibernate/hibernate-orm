@@ -145,6 +145,7 @@ import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -165,34 +166,31 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * JSR 175 annotation binder which reads the annotations from classes, applies the
  * principles of the EJB3 spec and produces the Hibernate configuration-time metamodel
  * (the classes in the {@code org.hibernate.mapping} package)
+ * <p/>
+ * Some design description
+ * I tried to remove any link to annotation except from the 2 first level of
+ * method call.
+ * It'll enable to:
+ *   - facilitate annotation overriding
+ *   - mutualize one day xml and annotation binder (probably a dream though)
+ *   - split this huge class in smaller mapping oriented classes
+ *
+ * bindSomething usually create the mapping container and is accessed by one of the 2 first level method
+ * makeSomething usually create the mapping container and is accessed by bindSomething[else]
+ * fillSomething take the container into parameter and fill it.
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
 public final class AnnotationBinder {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() );
-
-    /*
-     * Some design description
-     * I tried to remove any link to annotation except from the 2 first level of
-     * method call.
-     * It'll enable to:
-     *   - facilitate annotation overriding
-     *   - mutualize one day xml and annotation binder (probably a dream though)
-     *   - split this huge class in smaller mapping oriented classes
-     *
-     * bindSomething usually create the mapping container and is accessed by one of the 2 first level method
-     * makeSomething usually create the mapping container and is accessed by bindSomething[else]
-     * fillSomething take the container into parameter and fill it.
-     */
+	private static final CoreMessageLogger LOG = messageLogger( AnnotationBinder.class );
 
 	private AnnotationBinder() {
 	}
@@ -518,7 +516,7 @@ public final class AnnotationBinder {
 				inheritanceState
 		);
 
-		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
+		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
 		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );
 		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
 				org.hibernate.annotations.Entity.class
@@ -1176,26 +1174,26 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static PersistentClass makePersistentClass(InheritanceState inheritanceState, PersistentClass superEntity) {
+	private static PersistentClass makePersistentClass(
+			InheritanceState inheritanceState,
+			PersistentClass superEntity,
+			MetadataBuildingContext metadataBuildingContext) {
 		//we now know what kind of persistent entity it is
-		PersistentClass persistentClass;
-		//create persistent class
 		if ( !inheritanceState.hasParents() ) {
-			persistentClass = new RootClass();
+			return new RootClass( metadataBuildingContext );
 		}
 		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-			persistentClass = new SingleTableSubclass( superEntity );
+			return new SingleTableSubclass( superEntity, metadataBuildingContext );
 		}
 		else if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) ) {
-			persistentClass = new JoinedSubclass( superEntity );
+			return new JoinedSubclass( superEntity, metadataBuildingContext );
 		}
 		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
-			persistentClass = new UnionSubclass( superEntity );
+			return new UnionSubclass( superEntity, metadataBuildingContext );
 		}
 		else {
 			throw new AssertionFailure( "Unknown inheritance type: " + inheritanceState.getType() );
 		}
-		return persistentClass;
 	}
 
 	private static Ejb3JoinColumn[] makeInheritanceJoinColumns(

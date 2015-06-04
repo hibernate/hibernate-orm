@@ -7,6 +7,7 @@
 package org.hibernate.boot.registry.classloading.spi;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -71,4 +72,12 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 * @return The ordered set of discovered services.
 	 */
 	public <S> Collection<S> loadJavaServices(Class<S> serviceContract);
+
+	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
+
+	interface Work<T> {
+		T doWork(ClassLoader classLoader);
+	}
+
+	<T> T workWithClassLoader(Work<T> work);
 }

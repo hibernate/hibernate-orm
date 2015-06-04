@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.tuple.PropertyFactory;
@@ -40,7 +41,7 @@ public class ComponentMetamodel implements Serializable {
 	private final Map propertyIndexes = new HashMap();
 
 //	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
-	public ComponentMetamodel(Component component) {
+	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
 //		this.sessionFactory = sessionFactory;
 		this.role = component.getRoleName();
 		this.isKey = component.isKey();
@@ -58,7 +59,7 @@ public class ComponentMetamodel implements Serializable {
 		entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
 
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
-		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
+		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( metadataBuildingOptions );
 		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
 		this.componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
 				entityMode,

@@ -8,7 +8,8 @@ package org.hibernate.envers.internal.revisioninfo;
 
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.Getter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Gets a revision number from a persisted revision info entity.
@@ -18,8 +19,8 @@ import org.hibernate.property.Getter;
 public class RevisionInfoNumberReader {
 	private final Getter revisionIdGetter;
 
-	public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData) {
-		revisionIdGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoIdData );
+	public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData, ServiceRegistry serviceRegistry) {
+		revisionIdGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoIdData, serviceRegistry );
 	}
 
 	public Number getRevisionNumber(Object revision) {

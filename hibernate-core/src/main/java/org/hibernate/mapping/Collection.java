@@ -15,12 +15,13 @@ import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -95,6 +96,11 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return metadata;
 	}
 
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+	}
+
 	public boolean isSet() {
 		return false;
 	}
@@ -126,7 +132,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public Comparator getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
 			try {
-				setComparator( (Comparator) ReflectHelper.classForName( comparatorClassName ).newInstance() );
+				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.getService( ClassLoaderService.class );
+				setComparator( (Comparator) classLoaderService.classForName( comparatorClassName ).newInstance() );
 			}
 			catch (Exception e) {
 				throw new MappingException(

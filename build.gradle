@@ -121,9 +121,10 @@ subprojects { subProject ->
 
 	// appropriately inject the common dependencies into each sub-project
 	dependencies {
-		compile( libraries.logging )
+		compile libraries.logging
 
-		jbossLoggingTool( libraries.logging_annotations )
+		provided libraries.logging_annotations
+
 		jbossLoggingTool( libraries.logging_processor )
 
 		testCompile( libraries.junit )

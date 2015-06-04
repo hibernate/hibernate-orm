@@ -56,7 +56,7 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	 *
 	 * @return The property accessor style for this attribute.
 	 *
-	 * @see org.hibernate.property.PropertyAccessor
+	 * @see org.hibernate.property.access.spi.PropertyAccessStrategy
 	 */
 	public String getPropertyAccessorName();
 

@@ -59,10 +59,7 @@ public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;
 
-	// NOTE : The boolean here indicates whether or not to perform validation as we load XML documents.
-	// Should we expose this setting?  Disabling would speed up JAXP and JAXB at runtime, but potentially
-	// at the cost of less obvious errors when a document is not valid.
-	private Binder mappingsBinder = new MappingBinder( true );
+	private Binder mappingsBinder;
 
 	private List<Binding> xmlBindings = new ArrayList<Binding>();
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
@@ -88,6 +85,11 @@ public class MetadataSources implements Serializable {
 			);
 		}
 		this.serviceRegistry = serviceRegistry;
+
+		// NOTE : The boolean here indicates whether or not to perform validation as we load XML documents.
+		// Should we expose this setting?  Disabling would speed up JAXP and JAXB at runtime, but potentially
+		// at the cost of less obvious errors when a document is not valid.
+		this.mappingsBinder = new MappingBinder( serviceRegistry.getService( ClassLoaderService.class ), true );
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {

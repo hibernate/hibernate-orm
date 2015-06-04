@@ -31,7 +31,8 @@ import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.property.Getter;
+import org.hibernate.internal.util.xml.XMLHelper;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -72,6 +73,8 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	private RevisionInfoNumberReader revisionInfoNumberReader;
 	private ModifiedEntityNamesReader modifiedEntityNamesReader;
 
+	private XMLHelper xmlHelper;
+
 	@Override
 	public void configure(Map configurationValues) {
 		final boolean legacySetting = ConfigurationHelper.getBoolean( LEGACY_AUTO_REGISTER, configurationValues, true );
@@ -100,22 +103,21 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 
 
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
-
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.xmlHelper = new XMLHelper( classLoaderService );
 
-		doInitialize( metadata, mappingCollector, serviceRegistry, classLoaderService );
+		doInitialize( metadata, mappingCollector, serviceRegistry );
 	}
 
 	private void doInitialize(
 			final MetadataImplementor metadata,
 			final MappingCollector mappingCollector,
-			ServiceRegistry serviceRegistry,
-			ClassLoaderService classLoaderService) {
+			ServiceRegistry serviceRegistry) {
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final Properties properties = new Properties();
 		properties.putAll( cfgService.getSettings() );
 
-		this.globalConfiguration = new GlobalConfiguration( properties, classLoaderService );
+		this.globalConfiguration = new GlobalConfiguration( this, properties );
 
 		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions()
 				.getReflectionManager();
@@ -129,17 +131,17 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 				properties,
 				revInfoCfgResult.getRevisionInfoEntityName()
 		);
-		EnversServiceImpl.this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
-		EnversServiceImpl.this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
-		EnversServiceImpl.this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-		EnversServiceImpl.this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
-		EnversServiceImpl.this.auditStrategy = initializeAuditStrategy(
+		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
+		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
+		this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
+		this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
+		this.auditStrategy = initializeAuditStrategy(
 				auditEntitiesConfiguration.getAuditStrategyName(),
 				revInfoCfgResult.getRevisionInfoClass(),
 				revInfoCfgResult.getRevisionInfoTimestampData(),
-				classLoaderService
+				serviceRegistry
 		);
-		EnversServiceImpl.this.entitiesConfigurations = new EntitiesConfigurator().configure(
+		this.entitiesConfigurations = new EntitiesConfigurator().configure(
 				metadata,
 				serviceRegistry,
 				reflectionManager,
@@ -156,11 +158,11 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			String auditStrategyName,
 			Class<?> revisionInfoClass,
 			PropertyData revisionInfoTimestampData,
-			ClassLoaderService classLoaderService) {
+			ServiceRegistry serviceRegistry) {
 		AuditStrategy strategy;
 
 		try {
-			Class<?> auditStrategyClass = loadClass( auditStrategyName, classLoaderService );
+			final Class<?> auditStrategyClass = loadClass( auditStrategyName, serviceRegistry );
 			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor( auditStrategyClass ).newInstance();
 		}
 		catch (Exception e) {
@@ -174,7 +176,8 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			// further initialization required
 			final Getter revisionTimestampGetter = ReflectionTools.getGetter(
 					revisionInfoClass,
-					revisionInfoTimestampData
+					revisionInfoTimestampData,
+					serviceRegistry
 			);
 			( (ValidityAuditStrategy) strategy ).setRevisionTimestampGetter( revisionTimestampGetter );
 		}
@@ -182,20 +185,25 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		return strategy;
 	}
 
+	@Override
+	public XMLHelper getXmlHelper() {
+		return xmlHelper;
+	}
+
 	/**
 	 * Load a class by name, preferring our ClassLoader and then the ClassLoaderService.
 	 *
 	 * @param auditStrategyName The name of the class to load
-	 * @param classLoaderService The ClassLoaderService
+	 * @param serviceRegistry The ServiceRegistry
 	 *
 	 * @return The loaded class.
 	 */
-	private static Class<?> loadClass(String auditStrategyName, ClassLoaderService classLoaderService) {
+	private static Class<?> loadClass(String auditStrategyName, ServiceRegistry serviceRegistry) {
 		try {
 			return EnversServiceImpl.class.getClassLoader().loadClass( auditStrategyName );
 		}
 		catch (Exception e) {
-			return ReflectionTools.loadClass( auditStrategyName, classLoaderService );
+			return ReflectionTools.loadClass( auditStrategyName, serviceRegistry.getService( ClassLoaderService.class ) );
 		}
 	}
 
@@ -269,6 +277,14 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			throw new IllegalStateException( "Service is not yet initialized" );
 		}
 		return classLoaderService;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		if ( !initialized ) {
+			throw new IllegalStateException( "Service is not yet initialized" );
+		}
+		return serviceRegistry;
 	}
 
 	@Override

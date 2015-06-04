@@ -11,6 +11,7 @@ import java.util.Iterator;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -38,4 +39,6 @@ public interface Value extends Serializable {
 	public boolean isValid(Mapping mapping) throws MappingException;
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException;
 	public Object accept(ValueVisitor visitor);
+
+	ServiceRegistry getServiceRegistry();
 }

@@ -11,16 +11,18 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.PropertyAccessorFactory;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -205,7 +207,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isBasicPropertyAccessor() {
-		return propertyAccessorName==null || "property".equals(propertyAccessorName);
+		return propertyAccessorName==null || "property".equals( propertyAccessorName );
 	}
 
 	public java.util.Map getMetaAttributes() {
@@ -303,17 +305,44 @@ public class Property implements Serializable, MetaAttributable {
 
 	// todo : remove
 	public Getter getGetter(Class clazz) throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessor(clazz).getGetter( clazz, name );
+		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name ).getGetter();
 	}
 
 	// todo : remove
 	public Setter getSetter(Class clazz) throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessor(clazz).getSetter(clazz, name);
+		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name ).getSetter();
 	}
 
 	// todo : remove
-	public PropertyAccessor getPropertyAccessor(Class clazz) throws MappingException {
-		return PropertyAccessorFactory.getPropertyAccessor( clazz, getPropertyAccessorName() );
+	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
+		String accessName = getPropertyAccessorName();
+		if ( accessName == null ) {
+			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
+				accessName = "map";
+			}
+			else {
+				accessName = "property";
+			}
+		}
+
+		final EntityMode entityMode = clazz == null || java.util.Map.class.equals( clazz )
+				? EntityMode.MAP
+				: EntityMode.POJO;
+
+		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
+				accessName,
+				entityMode
+		);
+	}
+
+	protected ServiceRegistry resolveServiceRegistry() {
+		if ( getPersistentClass() != null ) {
+			return getPersistentClass().getServiceRegistry();
+		}
+		if ( getValue() != null ) {
+			return getValue().getServiceRegistry();
+		}
+		throw new HibernateException( "Could not resolve ServiceRegistry" );
 	}
 
 	public boolean isNaturalIdentifier() {

@@ -45,6 +45,7 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -344,13 +345,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		identifierType = type;
 
-		final Dialect dialect = jdbcEnv.getDialect();
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		qualifiedTableName = determineGeneratorTableName( params, dialect );
-		renderedTableName = jdbcEnv.getQualifiedObjectNameFormatter().format( qualifiedTableName, dialect );
+		renderedTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format( qualifiedTableName, dialect );
 		segmentColumnName = determineSegmentColumnName( params, dialect );
 		valueColumnName = determineValueColumnName( params, dialect );
 

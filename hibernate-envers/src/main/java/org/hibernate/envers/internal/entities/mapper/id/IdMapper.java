@@ -10,11 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public interface IdMapper {
+	ServiceRegistry getServiceRegistry();
+
 	void mapToMapFromId(Map<String, Object> data, Object obj);
 
 	void mapToMapFromEntity(Map<String, Object> data, Object obj);

@@ -152,6 +152,8 @@ public class ModelBinder {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
 	private static final boolean debugEnabled = log.isDebugEnabled();
 
+	private final MetadataBuildingContext metadataBuildingContext;
+
 	private final Database database;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final ImplicitNamingStrategy implicitNamingStrategy;
@@ -162,6 +164,8 @@ public class ModelBinder {
 	}
 
 	public ModelBinder(final MetadataBuildingContext context) {
+		this.metadataBuildingContext = context;
+
 		this.database = context.getMetadataCollector().getDatabase();
 		this.objectNameNormalizer = new ObjectNameNormalizer() {
 			@Override
@@ -177,7 +181,7 @@ public class ModelBinder {
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
-		final RootClass rootEntityDescriptor = new RootClass();
+		final RootClass rootEntityDescriptor = new RootClass( metadataBuildingContext );
 		bindRootEntity( hierarchySource, rootEntityDescriptor );
 		hierarchySource.getRoot()
 				.getLocalMetadataBuildingContext()
@@ -503,7 +507,7 @@ public class ModelBinder {
 			AbstractEntitySourceImpl entitySource,
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass( superEntityDescriptor );
+			final SingleTableSubclass subEntityDescriptor = new SingleTableSubclass( superEntityDescriptor, metadataBuildingContext );
 			bindDiscriminatorSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -561,7 +565,7 @@ public class ModelBinder {
 			AbstractEntitySourceImpl entitySource,
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final JoinedSubclass subEntityDescriptor = new JoinedSubclass( superEntityDescriptor );
+			final JoinedSubclass subEntityDescriptor = new JoinedSubclass( superEntityDescriptor, metadataBuildingContext );
 			bindJoinedSubclassEntity( (JoinedSubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );
@@ -637,7 +641,7 @@ public class ModelBinder {
 			EntitySource entitySource,
 			PersistentClass superEntityDescriptor) {
 		for ( IdentifiableTypeSource subType : entitySource.getSubTypes() ) {
-			final UnionSubclass subEntityDescriptor = new UnionSubclass( superEntityDescriptor );
+			final UnionSubclass subEntityDescriptor = new UnionSubclass( superEntityDescriptor, metadataBuildingContext );
 			bindUnionSubclassEntity( (SubclassEntitySourceImpl) subType, subEntityDescriptor );
 			superEntityDescriptor.addSubclass( subEntityDescriptor );
 			entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityBinding( subEntityDescriptor );

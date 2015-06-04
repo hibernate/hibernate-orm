@@ -16,10 +16,10 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.PropertyAccessorFactory;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
@@ -43,23 +43,23 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		return EntityMode.MAP;
 	}
 
-	private PropertyAccessor buildPropertyAccessor(Property mappedProperty) {
+	private PropertyAccess buildPropertyAccess(Property mappedProperty) {
 		if ( mappedProperty.isBackRef() ) {
-			return mappedProperty.getPropertyAccessor( null );
+			return mappedProperty.getPropertyAccessStrategy( null ).buildPropertyAccess( null, mappedProperty.getName() );
 		}
 		else {
-			return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
+			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, mappedProperty.getName() );
 		}
 	}
 
 	@Override
 	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor( mappedProperty ).getGetter( null, mappedProperty.getName() );
+		return buildPropertyAccess( mappedProperty ).getGetter();
 	}
 
 	@Override
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor( mappedProperty ).getSetter( null, mappedProperty.getName() );
+		return buildPropertyAccess( mappedProperty ).getSetter();
 	}
 
 	@Override

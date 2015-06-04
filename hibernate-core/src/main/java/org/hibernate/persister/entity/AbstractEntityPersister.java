@@ -94,7 +94,7 @@ import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.property.BackrefPropertyAccessor;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -2645,7 +2645,7 @@ public abstract class AbstractEntityPersister
 
 			for ( int i = 0; i < types.length; i++ ) {
 				if ( !propertySelectable[i] ) {
-					values[i] = BackrefPropertyAccessor.UNKNOWN;
+					values[i] = PropertyAccessStrategyBackRefImpl.UNKNOWN;
 				}
 				else if ( allProperties || !laziness[i] ) {
 					//decide which ResultSet to get the property value from:

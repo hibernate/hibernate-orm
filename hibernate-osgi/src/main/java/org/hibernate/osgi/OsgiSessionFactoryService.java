@@ -49,31 +49,42 @@ import org.osgi.framework.wiring.BundleWiring;
 public class OsgiSessionFactoryService implements ServiceFactory {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
 			OsgiSessionFactoryService.class.getName());
-	
-	private OsgiClassLoader osgiClassLoader;
+
 	private OsgiJtaPlatform osgiJtaPlatform;
 	private OsgiServiceUtil osgiServiceUtil;
 
 	/**
 	 * Constructs a OsgiSessionFactoryService
 	 *
-	 * @param osgiClassLoader The OSGi-specific ClassLoader created in HibernateBundleActivator
 	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform created in HibernateBundleActivator
 	 * @param osgiServiceUtil Util object built in HibernateBundleActivator
 	 */
-	public OsgiSessionFactoryService(
-			OsgiClassLoader osgiClassLoader,
-			OsgiJtaPlatform osgiJtaPlatform,
-			OsgiServiceUtil osgiServiceUtil) {
-		this.osgiClassLoader = osgiClassLoader;
+	public OsgiSessionFactoryService(OsgiJtaPlatform osgiJtaPlatform, OsgiServiceUtil osgiServiceUtil) {
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.osgiServiceUtil = osgiServiceUtil;
 	}
 
 	@Override
 	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
+		final OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
 		osgiClassLoader.addBundle( requestingBundle );
 
+		// Some "boot time" code does still rely on TCCL.  "run time" code should all be using
+		// ClassLoaderService now.
+
+		final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( osgiClassLoader );
+		try {
+			return buildSessionFactory( requestingBundle, osgiClassLoader );
+		}
+		finally {
+			Thread.currentThread().setContextClassLoader( originalTccl );
+		}
+	}
+
+	private Object buildSessionFactory(
+			Bundle requestingBundle,
+			OsgiClassLoader osgiClassLoader) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
 		bsrBuilder.applyClassLoaderService( new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) );
 
@@ -85,7 +96,7 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		final StrategyRegistrationProvider[] strategyRegistrationProviders
 				= osgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class );
 		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
-			bsrBuilder.withStrategySelectors( strategyRegistrationProvider );
+			bsrBuilder.applyStrategySelectors( strategyRegistrationProvider );
 		}
 
 		final BootstrapServiceRegistry bsr = bsrBuilder.build();
@@ -93,8 +104,11 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 
 		// Allow bundles to put the config file somewhere other than the root level.
 		final BundleWiring bundleWiring = (BundleWiring) requestingBundle.adapt( BundleWiring.class );
-		final Collection<String> cfgResources = bundleWiring.listResources( "/", "hibernate.cfg.xml",
-																			BundleWiring.LISTRESOURCES_RECURSE );
+		final Collection<String> cfgResources = bundleWiring.listResources(
+				"/",
+				"hibernate.cfg.xml",
+				BundleWiring.LISTRESOURCES_RECURSE
+		);
 		if (cfgResources.size() == 0) {
 			ssrBuilder.configure();
 		}

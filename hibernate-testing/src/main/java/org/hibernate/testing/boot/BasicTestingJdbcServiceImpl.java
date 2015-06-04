@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.common;
+package org.hibernate.testing.boot;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,24 +22,30 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 
 /**
- * Implementation of the {@link JdbcServices} contract for use by these
- * tests.
+ * Implementation of the {@link JdbcServices} contract for use by tests.
+ * <p/>
+ * An alternative approach is to build a {@link ServiceRegistryTestingImpl} and grab the {@link JdbcServices}
+ * from that.
  *
  * @author Steve Ebersole
  */
-public class BasicTestingJdbcServiceImpl implements JdbcServices {
+public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistryAwareService {
 	private JdbcEnvironment jdbcEnvironment;
 	private ConnectionProvider connectionProvider;
 	private Dialect dialect;
 	private SqlStatementLogger sqlStatementLogger;
 
 	private JdbcConnectionAccess jdbcConnectionAccess;
+	private ServiceRegistry serviceRegistry;
 
 	public void start() {
 	}
@@ -93,7 +99,7 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	}
 
 	public ResultSetWrapper getResultSetWrapper() {
-		return ResultSetWrapperImpl.INSTANCE;
+		return new ResultSetWrapperImpl( serviceRegistry );
 	}
 
 	public SqlStatementLogger getSqlStatementLogger() {
@@ -106,5 +112,10 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return jdbcEnvironment.getExtractedDatabaseMetaData();
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 }

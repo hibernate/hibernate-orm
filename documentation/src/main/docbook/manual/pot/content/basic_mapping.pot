@@ -3130,7 +3130,7 @@ msgstr ""
 #. Tag: para
 #: basic_mapping.xml:2250
 #, no-c-format
-msgid "The <literal>access</literal> attribute allows you to control how Hibernate accesses the property at runtime. By default, Hibernate will call the property get/set pair. If you specify <literal>access=\"field\"</literal>, Hibernate will bypass the get/set pair and access the field directly using reflection. You can specify your own strategy for property access by naming a class that implements the interface <literal>org.hibernate.property.PropertyAccessor</literal>."
+msgid "The <literal>access</literal> attribute allows you to control how Hibernate accesses the property at runtime. By default, Hibernate will call the property get/set pair. If you specify <literal>access=\"field\"</literal>, Hibernate will bypass the get/set pair and access the field directly using reflection. You can specify your own strategy for property access by naming a class that implements the interface <literal>org.hibernate.property.access.spi.PropertyAccessStrategy</literal>."
 msgstr ""
 
 #. Tag: para

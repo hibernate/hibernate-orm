@@ -3033,7 +3033,7 @@ public long getObjectVolume()</programlisting>
         pair and access the field directly using reflection. You can specify
         your own strategy for property access by naming a class that
         implements the interface
-        <literal>org.hibernate.property.PropertyAccessor</literal>.</para>
+        <literal>org.hibernate.property.access.spi.PropertyAccessStrategy</literal>.</para>
 
         <para>A powerful feature is derived properties. These properties are
         by definition read-only. The property value is computed at load time.

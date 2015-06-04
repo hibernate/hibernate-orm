@@ -9,7 +9,7 @@ Working list of changes for 5.0
   `org.hibernate.engine.jdbc.env` package and moved a few contracts there.
 * Introduction of `org.hibernate.boot.model.relational.ExportableProducer` which will effect any
  `org.hibernate.id.PersistentIdentifierGenerator` implementations
-* Change to signature of `org.hibernate.id.Configurable` to accept `JdbcEnvironment` rather than just `Dialect`
+* Change to signature of `org.hibernate.id.Configurable` to accept `ServiceRegistry` rather than just `Dialect`
 * Removed deprecated `org.hibernate.id.TableGenerator` id-generator
 * Removed deprecated `org.hibernate.id.TableHiLoGenerator` (hilo) id-generator
 * Deprecated `org.hibernate.id.SequenceGenerator` and its subclasses
@@ -25,9 +25,14 @@ Working list of changes for 5.0
     with `org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry`.  Applications using custom SqlTypeDescriptor
     implementations extending the built-in ones and relying on that behavior should be updated to call
     `SqlTypeDescriptorRegistry#addDescriptor` themselves.
-* The JDBC type for "big_integer" (org.hibernate.type.BigIntegerType) properties has changed from     java.sql.Types,NUMERIC to java.sql.Types.BIGINT.
+* The JDBC type for "big_integer" (org.hibernate.type.BigIntegerType) properties has changed from 
+    java.sql.Types,NUMERIC to java.sql.Types.BIGINT.
 * Moving `org.hibernate.hql.spi.MultiTableBulkIdStrategy` and friends to new `org.hibernate.hql.spi.id` package
     and sub-packages
+* Changes to "property access" contracts, including 
+* Valid `hibernate.cache.default_cache_concurrency_strategy` setting values are now defined via
+    `org.hibernate.cache.spi.access.AccessType#getExternalName` rather than the `org.hibernate.cache.spi.access.AccessType`
+    enum names; this is more consistent with other Hibernate settings
 
 TODOs
 =====
@@ -43,6 +48,7 @@ Blog items
 ==========
 * New bootstrapping API - better determinism, better integration
 * Java 8 Support (though still compatible with Java 6).
+* hibernate-spatial
 * Ability to handle additional Java types for id attributes marked as `GenerationType#AUTO`.  Built-in support
     for Number and UUID.  Expandable via new `org.hibernate.boot.model.IdGeneratorStrategyInterpreter` extension
 * Expanded support for AttributeConverters.
@@ -54,6 +60,7 @@ Blog items
     * collection values, map keys
 * scanning support for non-JPA usage
 * naming strategy
+* OSGi improvements, Karaf feature file published
 
 
 Proposals for discussion
@@ -76,6 +83,5 @@ either an additional SecondPass or done in a `ManyToOne#isValid` override of `Si
 reason the validation failed (non-unique many-to-one marked for orphan delete) but not the property name/path.
 Simply returning false from `ManyToOne#isValid` would instead lead to a misleading exception message, which
 would at least have the proper context to know the property name/path.
-* Should `org.hibernate.boot.MetadataBuilder` be folded into `org.hibernate.boot.MetadataSources`?
 * Consider an additional "naming strategy contract" specifically for logical naming.  This would be non-pluggable, and
 would be the thing that generates the names we use to cross-reference and locate tables, columns, etc.

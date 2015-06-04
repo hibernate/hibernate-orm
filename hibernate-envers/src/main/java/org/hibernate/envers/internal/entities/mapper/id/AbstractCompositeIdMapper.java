@@ -12,23 +12,26 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
-	protected Map<PropertyData, SingleIdMapper> ids;
-	protected Class compositeIdClass;
+	protected final Class compositeIdClass;
 
-	protected AbstractCompositeIdMapper(Class compositeIdClass) {
-		ids = Tools.newLinkedHashMap();
+	protected Map<PropertyData, SingleIdMapper> ids;
+
+	protected AbstractCompositeIdMapper(Class compositeIdClass, ServiceRegistry serviceRegistry) {
+		super( serviceRegistry );
 		this.compositeIdClass = compositeIdClass;
+		ids = Tools.newLinkedHashMap();
 	}
 
 	@Override
 	public void add(PropertyData propertyData) {
-		ids.put( propertyData, new SingleIdMapper( propertyData ) );
+		ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), propertyData ) );
 	}
 
 	@Override

@@ -27,6 +27,10 @@ import javax.validation.metadata.PropertyDescriptor;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -35,7 +39,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -104,6 +107,7 @@ class TypeSafeActivator {
 		}
 
 		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().getService( ClassLoaderService.class );
 
 		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
 		// asks for it
@@ -113,7 +117,8 @@ class TypeSafeActivator {
 
 		final BeanValidationEventListener listener = new BeanValidationEventListener(
 				validatorFactory,
-				cfgService.getSettings()
+				cfgService.getSettings(),
+				classLoaderService
 		);
 
 		final EventListenerRegistry listenerRegistry = activationContext.getServiceRegistry()
@@ -125,7 +130,7 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 
-		listener.initialize( cfgService.getSettings() );
+		listener.initialize( cfgService.getSettings(), classLoaderService );
 	}
 
 	@SuppressWarnings({"unchecked", "UnusedParameters"})
@@ -145,7 +150,8 @@ class TypeSafeActivator {
 				factory,
 				activationContext.getMetadata().getEntityBindings(),
 				cfgService.getSettings(),
-				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect()
+				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect(),
+				new ClassLoaderAccessImpl( null, activationContext.getServiceRegistry().getService( ClassLoaderService.class ) )
 		);
 	}
 
@@ -154,8 +160,13 @@ class TypeSafeActivator {
 			ValidatorFactory factory,
 			Collection<PersistentClass> persistentClasses,
 			Map settings,
-			Dialect dialect) {
-		Class<?>[] groupsArray = new GroupsPerOperation( settings ).get( GroupsPerOperation.Operation.DDL );
+			Dialect dialect,
+			ClassLoaderAccess classLoaderAccess) {
+		Class<?>[] groupsArray = GroupsPerOperation.buildGroupsForOperation(
+				GroupsPerOperation.Operation.DDL,
+				settings,
+				classLoaderAccess
+		);
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
 
 		for ( PersistentClass persistentClass : persistentClasses ) {
@@ -166,9 +177,9 @@ class TypeSafeActivator {
 			}
 			Class<?> clazz;
 			try {
-				clazz = ReflectHelper.classForName( className, TypeSafeActivator.class );
+				clazz = classLoaderAccess.classForName( className );
 			}
-			catch ( ClassNotFoundException e ) {
+			catch ( ClassLoadingException e ) {
 				throw new AssertionFailure( "Entity class not found", e );
 			}
 

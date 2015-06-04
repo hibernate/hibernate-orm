@@ -24,6 +24,7 @@ import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 import org.jboss.logging.Logger;
 
@@ -33,13 +34,15 @@ import org.jboss.logging.Logger;
 public abstract class AbstractBinder implements Binder {
 	private static final Logger log = Logger.getLogger( AbstractBinder.class );
 
+	private final LocalXmlResourceResolver xmlResourceResolver;
 	private final boolean validateXml;
 
-	protected AbstractBinder() {
-		this( true );
+	protected AbstractBinder(ClassLoaderService classLoaderService) {
+		this( classLoaderService, true );
 	}
 
-	protected AbstractBinder(boolean validateXml) {
+	protected AbstractBinder(ClassLoaderService classLoaderService, boolean validateXml) {
+		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
 		this.validateXml = validateXml;
 	}
 
@@ -121,7 +124,7 @@ public abstract class AbstractBinder implements Binder {
 	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
-		staxFactory.setXMLResolver( LocalXmlResourceResolver.INSTANCE );
+		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}
 

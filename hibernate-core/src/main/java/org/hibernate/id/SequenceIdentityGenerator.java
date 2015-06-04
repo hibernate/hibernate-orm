@@ -14,12 +14,12 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.insert.AbstractReturningDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Insert;
 import org.hibernate.type.Type;
 
@@ -63,8 +63,8 @@ public class SequenceIdentityGenerator
 	}
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment env) throws MappingException {
-		super.configure( type, params, env );
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		super.configure( type, params, serviceRegistry );
 	}
 
 	public static class Delegate extends AbstractReturningDelegate {

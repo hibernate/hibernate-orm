@@ -95,12 +95,12 @@ public interface MappingDefaults {
 	public String getImplicitCascadeStyleName();
 
 	/**
-	 * Identifies the default {@link org.hibernate.property.PropertyAccessor} name to use if none specified in the
+	 * Identifies the default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} name to use if none specified in the
 	 * mapping.
 	 *
 	 * @return The implicit property accessor name
 	 *
-	 * @see org.hibernate.property.PropertyAccessorFactory
+	 * @see org.hibernate.property.access.spi.PropertyAccessStrategy
 	 */
 	public String getImplicitPropertyAccessorName();
 

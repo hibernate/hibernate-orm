@@ -19,7 +19,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
@@ -27,7 +26,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +62,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
 
 		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry.getService( JdbcEnvironment.class ) );
+		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
 
 		Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );

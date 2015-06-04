@@ -18,6 +18,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.mapping.ValueVisitor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
@@ -43,7 +44,7 @@ public class ExportableColumn extends Column {
 			BasicType type,
 			String dbTypeDeclaration) {
 		super( name );
-		setValue( new ValueImpl( this, table, type ) );
+		setValue( new ValueImpl( this, table, type, database ) );
 		setSqlType( dbTypeDeclaration );
 	}
 
@@ -51,11 +52,13 @@ public class ExportableColumn extends Column {
 		private final ExportableColumn column;
 		private final Table table;
 		private final BasicType type;
+		private final Database database;
 
-		public ValueImpl(ExportableColumn column, Table table, BasicType type) {
+		public ValueImpl(ExportableColumn column, Table table, BasicType type, Database database) {
 			this.column = column;
 			this.table = table;
 			this.type = type;
+			this.database = database;
 		}
 
 		@Override
@@ -129,6 +132,11 @@ public class ExportableColumn extends Column {
 		@Override
 		public Object accept(ValueVisitor visitor) {
 			return null;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return database.getBuildingOptions().getServiceRegistry();
 		}
 	}
 

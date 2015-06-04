@@ -18,6 +18,8 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 import org.hibernate.EntityMode;
+import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
@@ -50,26 +52,26 @@ public class BeanValidationEventListener
 	boolean initialized;
 
 	/**
-	 * No-arg constructor used when listener is configured via configuration file
-	 */
-	public BeanValidationEventListener() {
-	}
-
-	/**
 	 * Constructor used in an environment where validator factory is injected (JPA2).
 	 *
 	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
 	 * @param settings Configued properties
 	 */
-	public BeanValidationEventListener(ValidatorFactory factory, Map settings) {
-		init( factory, settings );
+	public BeanValidationEventListener(ValidatorFactory factory, Map settings, ClassLoaderService classLoaderService) {
+		init( factory, settings, classLoaderService );
 	}
 
-	public void initialize(Map settings) {
+	public void initialize(Map settings, ClassLoaderService classLoaderService) {
 		if ( !initialized ) {
 			ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-			init( factory, settings );
+			init( factory, settings, classLoaderService );
 		}
+	}
+
+	private void init(ValidatorFactory factory, Map settings, ClassLoaderService classLoaderService) {
+		this.factory = factory;
+		groupsPerOperation = GroupsPerOperation.from( settings, new ClassLoaderAccessImpl( classLoaderService ) );
+		initialized = true;
 	}
 
 	public boolean onPreInsert(PreInsertEvent event) {
@@ -94,12 +96,6 @@ public class BeanValidationEventListener
 				event.getSession().getFactory(), GroupsPerOperation.Operation.DELETE
 		);
 		return false;
-	}
-
-	private void init(ValidatorFactory factory, Map settings) {
-		this.factory = factory;
-		groupsPerOperation = new GroupsPerOperation( settings );
-		initialized = true;
 	}
 
 	private <T> void validate(T object, EntityMode mode, EntityPersister persister,

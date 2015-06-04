@@ -12,15 +12,15 @@ import java.util.Collections;
 import java.util.List;
 import javax.persistence.AccessType;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.property.BasicPropertyAccessor;
-import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.property.access.spi.GetterFieldImpl;
+import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.tuple.entity.EntityTuplizer;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -179,13 +179,13 @@ public class XmlAccessTest extends BaseUnitTestCase {
 		if ( AccessType.FIELD.equals( accessType ) ) {
 			Assert.assertTrue(
 					"Field access was expected.",
-					tuplizer.getGetter( 0 ) instanceof DirectPropertyAccessor.DirectGetter
+					tuplizer.getGetter( 0 ) instanceof GetterFieldImpl
 			);
 		}
 		else {
 			Assert.assertTrue(
 					"Property access was expected.",
-					tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
+					tuplizer.getGetter( 0 ) instanceof GetterMethodImpl
 			);
 		}
 	}

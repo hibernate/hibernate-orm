@@ -4638,7 +4638,7 @@ msgstr ""
 "默认情况下，Hibernate 会使用属性的 get/set 方法对（pair）。如果你指明 "
 "<literal>access=\"field\"</literal>，Hibernate 会忽略 get/set 方法对，直接使"
 "用反射来访问成员变量。你也可以指定你自己的策略，这就需要你自己实现 "
-"<literal>org.hibernate.property.PropertyAccessor</literal> 接口，再在 access "
+"<literal>org.hibernate.property.access.spi.PropertyAccessStrategy</literal> 接口，再在 access "
 "中设置你自定义策略类的名字。 "
 
 #. Tag: para

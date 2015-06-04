@@ -6,8 +6,9 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.property.BackrefPropertyAccessor;
-import org.hibernate.property.PropertyAccessor;
+import org.hibernate.MappingException;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 /**
  * @author Gavin King
@@ -39,9 +40,14 @@ public class Backref extends Property {
 		return false;
 	}
 
+	private PropertyAccessStrategy propertyAccessStrategy;
+
 	@Override
-	public PropertyAccessor getPropertyAccessor(Class clazz) {
-		return new BackrefPropertyAccessor(collectionRole, entityName);
+	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
+		if ( propertyAccessStrategy == null ) {
+			propertyAccessStrategy = new PropertyAccessStrategyBackRefImpl( collectionRole, entityName );
+		}
+		return propertyAccessStrategy;
 	}
 	
 	public String getEntityName() {

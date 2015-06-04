@@ -8,9 +8,11 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.sql.ResultSet;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.jdbc.ResultSetWrapperProxy;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Standard Hibernate implementation for wrapping a {@link ResultSet} in a
@@ -20,16 +22,14 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
  * @author Gail Badner
  */
 public class ResultSetWrapperImpl implements ResultSetWrapper {
-	/**
-	 * Singleton access
-	 */
-	public static final ResultSetWrapper INSTANCE = new ResultSetWrapperImpl();
+	private final ServiceRegistry serviceRegistry;
 
-	private ResultSetWrapperImpl() {
+	public ResultSetWrapperImpl(ServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
 	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache) {
-		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache );
+		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache, serviceRegistry );
 	}
 }

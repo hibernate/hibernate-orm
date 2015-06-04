@@ -9,11 +9,11 @@ package org.hibernate.envers.configuration.internal;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -25,6 +25,8 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class GlobalConfiguration {
+	private final EnversService enversService;
+
 	// Should a revision be generated when a not-owned relation field changes
 	private final boolean generateRevisionsForCollections;
 
@@ -72,7 +74,11 @@ public class GlobalConfiguration {
 	*/
 	private final String correlatedSubqueryOperator;
 
-	public GlobalConfiguration(Map properties, ClassLoaderService classLoaderService) {
+	public GlobalConfiguration(
+			EnversService enversService,
+			Map properties) {
+		this.enversService = enversService;
+
 		generateRevisionsForCollections = ConfigurationHelper.getBoolean(
 				EnversSettings.REVISION_ON_COLLECTION_CHANGE,
 				properties,
@@ -131,7 +137,10 @@ public class GlobalConfiguration {
 		final String revisionListenerClassName = (String) properties.get( EnversSettings.REVISION_LISTENER );
 		if ( revisionListenerClassName != null ) {
 			try {
-				revisionListenerClass = ReflectionTools.loadClass( revisionListenerClassName, classLoaderService );
+				revisionListenerClass = ReflectionTools.loadClass(
+						revisionListenerClassName,
+						enversService.getClassLoaderService()
+				);
 			}
 			catch (ClassLoadingException e) {
 				throw new MappingException(
@@ -147,6 +156,10 @@ public class GlobalConfiguration {
 		allowIdentifierReuse = ConfigurationHelper.getBoolean(
 				EnversSettings.ALLOW_IDENTIFIER_REUSE, properties, false
 		);
+	}
+
+	public EnversService getEnversService() {
+		return enversService;
 	}
 
 	public boolean isGenerateRevisionsForCollections() {

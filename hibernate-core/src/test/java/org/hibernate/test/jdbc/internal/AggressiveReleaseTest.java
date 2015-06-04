@@ -12,19 +12,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.Session;
-import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-
-import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
-import org.hibernate.test.common.JdbcConnectionAccessImpl;
-import org.hibernate.test.common.JournalingConnectionObserver;
+import org.hibernate.testing.boot.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 

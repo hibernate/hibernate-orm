@@ -21,6 +21,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -54,17 +55,18 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		returnClass = type.getReturnedClass();
 
-		ObjectNameNormalizer normalizer =
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final ObjectNameNormalizer normalizer =
 				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
 
 		String column = params.getProperty( "column" );
 		if ( column == null ) {
 			column = params.getProperty( PersistentIdentifierGenerator.PK );
 		}
-		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnv.getDialect() );
+		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
 
 		String tableList = params.getProperty( "tables" );
 		if ( tableList == null ) {

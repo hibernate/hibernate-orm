@@ -5,13 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.transform;
+
 import java.util.Arrays;
 
 import org.hibernate.HibernateException;
-import org.hibernate.property.ChainedPropertyAccessor;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.PropertyAccessorFactory;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyChainedImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyFieldImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.spi.Setter;
 
 /**
  * Result transformer that allows to transform a result to
@@ -88,11 +90,10 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 	}
 
 	private void initialize(String[] aliases) {
-		PropertyAccessor propertyAccessor = new ChainedPropertyAccessor(
-				new PropertyAccessor[] {
-						PropertyAccessorFactory.getPropertyAccessor( resultClass, null ),
-						PropertyAccessorFactory.getPropertyAccessor( "field" )
-				}
+		PropertyAccessStrategyChainedImpl propertyAccessStrategy = new PropertyAccessStrategyChainedImpl(
+				PropertyAccessStrategyBasicImpl.INSTANCE,
+				PropertyAccessStrategyFieldImpl.INSTANCE,
+				PropertyAccessStrategyMapImpl.INSTANCE
 		);
 		this.aliases = new String[ aliases.length ];
 		setters = new Setter[ aliases.length ];
@@ -100,7 +101,7 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			String alias = aliases[ i ];
 			if ( alias != null ) {
 				this.aliases[ i ] = alias;
-				setters[ i ] = propertyAccessor.getSetter( resultClass, alias );
+				setters[ i ] = propertyAccessStrategy.buildPropertyAccess( resultClass, alias ).getSetter();
 			}
 		}
 		isInitialized = true;

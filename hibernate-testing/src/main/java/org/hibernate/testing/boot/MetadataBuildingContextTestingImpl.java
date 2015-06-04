@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.common;
+package org.hibernate.testing.boot;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
@@ -12,6 +12,7 @@ import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
@@ -29,6 +30,10 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	private final ClassLoaderAccessImpl classLoaderAccess;
 
 	private final ObjectNameNormalizer objectNameNormalizer;
+
+	public MetadataBuildingContextTestingImpl() {
+		this( new StandardServiceRegistryBuilder().build() );
+	}
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );

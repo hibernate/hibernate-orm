@@ -21,8 +21,8 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
-import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.SetterFieldImpl;
 
 /**
  * TODO: diff
@@ -92,7 +92,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			return;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData );
+		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData, enversService.getServiceRegistry() );
 		final Object value = data.get( propertyData.getName() );
 		// We only set a null value if the field is not primite. Otherwise, we leave it intact.
 		if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
@@ -105,7 +105,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			throw new HibernateException( "No field found for property: " + propertyData.getName() );
 		}
 
-		if ( setter instanceof DirectPropertyAccessor.DirectSetter ) {
+		if ( setter instanceof SetterFieldImpl ) {
 			// In a direct setter, getMethod() returns null
 			// Trying to look up the field
 			try {

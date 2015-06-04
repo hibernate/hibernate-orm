@@ -28,8 +28,8 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.property.Getter;
-import org.hibernate.property.MapAccessor;
+import org.hibernate.property.access.internal.PropertyAccessMapImpl;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -946,7 +946,7 @@ public class AttributeFactory {
 			final Getter getter = embeddableType.getHibernateType()
 					.getComponentTuplizer()
 					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
-			return MapAccessor.MapGetter.class.isInstance( getter )
+			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
 					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
 					: getter.getMember();
 		}
@@ -972,7 +972,7 @@ public class AttributeFactory {
 			final Getter getter = componentType.getComponentTuplizer()
 					.getGetter( componentType.getPropertyIndex( attributeName ) );
 
-			return MapAccessor.MapGetter.class.isInstance( getter )
+			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
 					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
 					: getter.getMember();
 		}
@@ -1002,7 +1002,7 @@ public class AttributeFactory {
 				}
 				else {
 					final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
-					return MapAccessor.MapGetter.class.isInstance( getter )
+					return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
 							? new MapMember( propertyName, property.getType().getReturnedClass() )
 							: getter.getMember();
 				}
@@ -1024,12 +1024,15 @@ public class AttributeFactory {
 				return virtualIdentifierMemberResolver.resolveMember( attributeContext );
 			}
 			final Getter getter = entityMetamodel.getTuplizer().getIdentifierGetter();
-			return MapAccessor.MapGetter.class.isInstance( getter )
-					? new MapMember(
-					entityMetamodel.getIdentifierProperty().getName(),
-					entityMetamodel.getIdentifierProperty().getType().getReturnedClass()
-			)
-					: getter.getMember();
+			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
+				return new MapMember(
+						entityMetamodel.getIdentifierProperty().getName(),
+						entityMetamodel.getIdentifierProperty().getType().getReturnedClass()
+				);
+			}
+			else {
+				return getter.getMember();
+			}
 		}
 	};
 
@@ -1045,12 +1048,15 @@ public class AttributeFactory {
 			}
 
 			final Getter getter = entityMetamodel.getTuplizer().getVersionGetter();
-			return MapAccessor.MapGetter.class.isInstance( getter )
-					? new MapMember(
-					versionPropertyName,
-					attributeContext.getPropertyMapping().getType().getReturnedClass()
-			)
-					: getter.getMember();
+			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
+				return new MapMember(
+						versionPropertyName,
+						attributeContext.getPropertyMapping().getType().getReturnedClass()
+				);
+			}
+			else {
+				return getter.getMember();
+			}
 		}
 	};
 }

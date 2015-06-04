@@ -19,7 +19,8 @@ import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeD
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Base class for property mappers that manage to-one relation.
@@ -27,9 +28,11 @@ import org.hibernate.property.Setter;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractToOneMapper implements PropertyMapper {
+	private final ServiceRegistry serviceRegistry;
 	private final PropertyData propertyData;
 
-	protected AbstractToOneMapper(PropertyData propertyData) {
+	protected AbstractToOneMapper(ServiceRegistry serviceRegistry, PropertyData propertyData) {
+		this.serviceRegistry = serviceRegistry;
 		this.propertyData = propertyData;
 	}
 
@@ -84,7 +87,7 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 	}
 
 	protected void setPropertyValue(Object targetObject, Object value) {
-		final Setter setter = ReflectionTools.getSetter( targetObject.getClass(), propertyData );
+		final Setter setter = ReflectionTools.getSetter( targetObject.getClass(), propertyData, serviceRegistry );
 		setter.set( targetObject, value, null );
 	}
 

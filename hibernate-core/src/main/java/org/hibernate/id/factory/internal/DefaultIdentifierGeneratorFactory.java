@@ -11,6 +11,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
@@ -31,7 +33,7 @@ import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
@@ -46,12 +48,15 @@ public class DefaultIdentifierGeneratorFactory
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultIdentifierGeneratorFactory.class );
 
-	private JdbcEnvironment jdbcEnvironment;
+	private ServiceRegistry serviceRegistry;
+	private Dialect dialect;
+
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
 
 	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
 	 */
+	@SuppressWarnings("deprecation")
 	public DefaultIdentifierGeneratorFactory() {
 		register( "uuid2", UUIDGenerator.class );
 		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
@@ -79,7 +84,7 @@ public class DefaultIdentifierGeneratorFactory
 
 	@Override
 	public Dialect getDialect() {
-		return jdbcEnvironment.getDialect();
+		return dialect;
 	}
 
 	@Override
@@ -107,7 +112,7 @@ public class DefaultIdentifierGeneratorFactory
 			Class clazz = getIdentifierGeneratorClass( strategy );
 			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, jdbcEnvironment );
+				( ( Configurable ) identifierGenerator ).configure( type, config, serviceRegistry );
 			}
 			return identifierGenerator;
 		}
@@ -130,10 +135,11 @@ public class DefaultIdentifierGeneratorFactory
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
-				generatorClass = ReflectHelper.classForName( strategy );
+				final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+				generatorClass = cls.classForName( strategy );
 			}
 		}
-		catch ( ClassNotFoundException e ) {
+		catch ( ClassLoadingException e ) {
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 		return generatorClass;
@@ -141,6 +147,7 @@ public class DefaultIdentifierGeneratorFactory
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		this.serviceRegistry = serviceRegistry;
+		this.dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
 	}
 }

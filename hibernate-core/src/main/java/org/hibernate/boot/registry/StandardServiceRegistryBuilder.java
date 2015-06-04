@@ -326,6 +326,10 @@ public class StandardServiceRegistryBuilder {
 	 * @param serviceRegistry The registry to be closed.
 	 */
 	public static void destroy(ServiceRegistry serviceRegistry) {
+		if ( serviceRegistry == null ) {
+			return;
+		}
+
 		( (StandardServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

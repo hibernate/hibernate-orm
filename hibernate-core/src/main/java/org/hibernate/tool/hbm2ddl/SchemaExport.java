@@ -27,6 +27,8 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -42,7 +44,6 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -78,6 +79,7 @@ public class SchemaExport {
 	private final ConnectionHelper connectionHelper;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
+	private final ClassLoaderService classLoaderService;
 	private final String[] dropSQL;
 	private final String[] createSQL;
 	private final String importFiles;
@@ -154,6 +156,7 @@ public class SchemaExport {
 		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 		this.sqlExceptionHelper = serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper();
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 		this.importFiles = ConfigurationHelper.getString(
 				AvailableSettings.HBM2DDL_IMPORT_FILES,
@@ -272,6 +275,7 @@ public class SchemaExport {
 		this.importFiles = "";
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
 		this.sqlExceptionHelper = new SqlExceptionHelper();
+		this.classLoaderService = new ClassLoaderServiceImpl();
 		this.formatter = FormatStyle.DDL.getFormatter();
 	}
 
@@ -397,13 +401,14 @@ public class SchemaExport {
 
 		final List<NamedReader> importFileReaders = new ArrayList<NamedReader>();
 		for ( String currentFile : importFiles.split( "," ) ) {
-			try {
-				final String resourceName = currentFile.trim();
-				InputStream stream = ConfigHelper.getResourceAsStream( resourceName );
-				importFileReaders.add( new NamedReader( resourceName, stream ) );
-			}
-			catch (HibernateException e) {
+			final String resourceName = currentFile.trim();
+
+			InputStream stream = classLoaderService.locateResourceStream( resourceName );
+			if ( stream == null ) {
 				LOG.debugf( "Import file not found: %s", currentFile );
+			}
+			else {
+				importFileReaders.add( new NamedReader( resourceName, stream ) );
 			}
 		}
 

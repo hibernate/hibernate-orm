@@ -10,11 +10,11 @@ import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -39,8 +39,8 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
 	@Override
-	public void configure(Type type, Properties params, JdbcEnvironment d) throws MappingException {
-		super.configure(type, params, d);
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		super.configure( type, params, serviceRegistry );
 
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, 9 );
 

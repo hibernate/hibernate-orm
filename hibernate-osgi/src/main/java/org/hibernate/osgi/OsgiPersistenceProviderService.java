@@ -18,29 +18,37 @@ import org.osgi.framework.ServiceRegistration;
  * @author Tim Ward
  */
 public class OsgiPersistenceProviderService implements ServiceFactory {
-	private OsgiClassLoader osgiClassLoader;
 	private OsgiJtaPlatform osgiJtaPlatform;
 	private OsgiServiceUtil osgiServiceUtil;
 
 	/**
 	 * Constructs a OsgiPersistenceProviderService
 	 *
-	 * @param osgiClassLoader The OSGi-specific ClassLoader created in HibernateBundleActivator
 	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform created in HibernateBundleActivator
-	 * @param context The OSGi context
 	 */
 	public OsgiPersistenceProviderService(
-			OsgiClassLoader osgiClassLoader,
 			OsgiJtaPlatform osgiJtaPlatform,
 			OsgiServiceUtil osgiServiceUtil) {
-		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.osgiServiceUtil = osgiServiceUtil;
 	}
 
 	@Override
 	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
-		return new OsgiPersistenceProvider( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil, requestingBundle );
+		final OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
+		osgiClassLoader.addBundle( requestingBundle );
+
+		// Some "boot time" code does still rely on TCCL.  "run time" code should all be using
+		// ClassLoaderService now.
+
+		final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( osgiClassLoader );
+		try {
+			return new OsgiPersistenceProvider( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil, requestingBundle );
+		}
+		finally {
+			Thread.currentThread().setContextClassLoader( originalTccl );
+		}
 	}
 
 	@Override

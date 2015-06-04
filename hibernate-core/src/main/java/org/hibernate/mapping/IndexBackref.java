@@ -6,8 +6,9 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.property.IndexPropertyAccessor;
-import org.hibernate.property.PropertyAccessor;
+import org.hibernate.MappingException;
+import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 /**
  * @author Gavin King
@@ -39,11 +40,16 @@ public class IndexBackref extends Property {
 		return false;
 	}
 
+	private PropertyAccessStrategy accessStrategy;
+
 	@Override
-	public PropertyAccessor getPropertyAccessor(Class clazz) {
-		return new IndexPropertyAccessor(collectionRole, entityName);
+	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
+		if ( accessStrategy == null ) {
+			accessStrategy = new PropertyAccessStrategyIndexBackRefImpl( collectionRole, entityName );
+		}
+		return accessStrategy;
 	}
-	
+
 	public String getEntityName() {
 		return entityName;
 	}

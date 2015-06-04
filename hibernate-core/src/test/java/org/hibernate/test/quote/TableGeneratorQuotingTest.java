@@ -26,11 +26,9 @@ import org.hibernate.tool.schema.spi.Target;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.JdbcConnectionAccessImpl;
+import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;

@@ -9,10 +9,9 @@ import java.util.Map;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.PropertyAccessorFactory;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
 
@@ -36,16 +35,12 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 		super(component);
 	}
 
-	private PropertyAccessor buildPropertyAccessor(Property property) {
-		return PropertyAccessorFactory.getDynamicMapPropertyAccessor();
-	}
-
 	protected Getter buildGetter(Component component, Property prop) {
-		return buildPropertyAccessor(prop).getGetter( null, prop.getName() );
+		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, prop.getName() ).getGetter();
 	}
 
 	protected Setter buildSetter(Component component, Property prop) {
-		return buildPropertyAccessor(prop).getSetter( null, prop.getName() );
+		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, prop.getName() ).getSetter();
 	}
 
 }

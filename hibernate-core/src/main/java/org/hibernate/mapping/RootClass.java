@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -50,6 +51,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
 	private boolean cachingExplicitlyRequested;
+
+	public RootClass(MetadataBuildingContext metadataBuildingContext) {
+		super( metadataBuildingContext );
+	}
 
 	@Override
 	int nextSubclassId() {

@@ -11,6 +11,7 @@ import java.io.Serializable;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Property mapper for not owning side of {@link javax.persistence.OneToOne} relation.
@@ -27,8 +28,9 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
 			String notOwningEntityName,
 			String owningEntityName,
 			String owningReferencePropertyName,
-			PropertyData propertyData) {
-		super( notOwningEntityName, owningEntityName, propertyData );
+			PropertyData propertyData,
+			ServiceRegistry serviceRegistry) {
+		super( notOwningEntityName, owningEntityName, propertyData, serviceRegistry );
 		this.owningReferencePropertyName = owningReferencePropertyName;
 	}
 

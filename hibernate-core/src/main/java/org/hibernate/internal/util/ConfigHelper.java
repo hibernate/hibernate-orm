@@ -8,11 +8,8 @@ package org.hibernate.internal.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
@@ -23,8 +20,10 @@ import org.hibernate.internal.CoreMessageLogger;
  * A simple class to centralize logic needed to locate config files on the system.
  *
  * @author Steve Ebersole
- * @todo : Update usages to use {@link org.hibernate.boot.registry.classloading.spi.ClassLoaderService}
+ *
+ * @deprecated Use {@link org.hibernate.boot.registry.classloading.spi.ClassLoaderService} instead
  */
+@Deprecated
 public final class ConfigHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ConfigHelper.class );
 
@@ -61,7 +60,7 @@ public final class ConfigHelper {
 
 		// First, try to locate this resource through the current
 		// context classloader.
-		ClassLoader contextClassLoader = ClassLoaderHelper.getContextClassLoader();
+		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		if ( contextClassLoader != null ) {
 			url = contextClassLoader.getResource( path );
 		}
@@ -110,42 +109,6 @@ public final class ConfigHelper {
 		}
 	}
 
-	/**
-	 * Open an Reader to the URL represented by the incoming path.  First makes a call
-	 * to {@link #locateConfig(java.lang.String)} in order to find an appropriate URL.
-	 * {@link java.net.URL#openStream()} is then called to obtain a stream, which is then
-	 * wrapped in a Reader.
-	 *
-	 * @param path The path representing the config location.
-	 *
-	 * @return An input stream to the requested config resource.
-	 *
-	 * @throws HibernateException Unable to open reader to that resource.
-	 */
-	public static Reader getConfigStreamReader(final String path) throws HibernateException {
-		return new InputStreamReader( getConfigStream( path ) );
-	}
-
-	/**
-	 * Loads a properties instance based on the data at the incoming config location.
-	 *
-	 * @param path The path representing the config location.
-	 *
-	 * @return The loaded properties instance.
-	 *
-	 * @throws HibernateException Unable to load properties from that resource.
-	 */
-	public static Properties getConfigProperties(String path) throws HibernateException {
-		try {
-			Properties properties = new Properties();
-			properties.load( getConfigStream( path ) );
-			return properties;
-		}
-		catch (IOException e) {
-			throw new HibernateException( "Unable to load properties from specified config file: " + path, e );
-		}
-	}
-
 	private ConfigHelper() {
 	}
 
@@ -155,7 +118,7 @@ public final class ConfigHelper {
 				: resource;
 
 		InputStream stream = null;
-		ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		if ( classLoader != null ) {
 			stream = classLoader.getResourceAsStream( stripped );
 		}
@@ -178,7 +141,7 @@ public final class ConfigHelper {
 
 		InputStream stream = null;
 
-		ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		if ( classLoader != null ) {
 			stream = classLoader.getResourceAsStream( resource );
 			if ( stream == null && hasLeadingSlash ) {

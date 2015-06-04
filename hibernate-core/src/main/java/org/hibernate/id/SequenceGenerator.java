@@ -25,6 +25,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -79,18 +80,19 @@ public class SequenceGenerator
 
 	@Override
 	@SuppressWarnings("StatementWithEmptyBody")
-	public void configure(Type type, Properties params, JdbcEnvironment jdbcEnv) throws MappingException {
+	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		identifierType = type;
 		parameters = params.getProperty( PARAMETERS );
 
-		final Dialect dialect = jdbcEnv.getDialect();
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final Dialect dialect = jdbcEnvironment.getDialect();
 		final ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		qualifiedSequenceName = QualifiedNameParser.INSTANCE.parse(
 				ConfigurationHelper.getString( SEQUENCE, params, "hibernate_sequence" ),
 				normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) ),
 				normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
 		);
-		sequenceName = jdbcEnv.getQualifiedObjectNameFormatter().format( qualifiedSequenceName, dialect );
+		sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format( qualifiedSequenceName, dialect );
 
 		sql = dialect.getSequenceNextValString( sequenceName );
 	}

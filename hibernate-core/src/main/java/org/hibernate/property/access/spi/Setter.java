@@ -4,17 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.property;
+package org.hibernate.property.access.spi;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * Sets values to a particular property.
- * 
+ * The contract for setting a persistent property value into its container/owner
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface Setter extends Serializable {
 	/**
@@ -23,15 +24,18 @@ public interface Setter extends Serializable {
 	 * @param target The instance upon which to set the given value.
 	 * @param value The value to be set on the target.
 	 * @param factory The session factory from which this request originated.
-	 * @throws HibernateException
+	 *
+	 * @throws org.hibernate.HibernateException
 	 */
-	public void set(Object target, Object value, SessionFactoryImplementor factory) throws HibernateException;
+	void set(Object target, Object value, SessionFactoryImplementor factory);
+
 	/**
-	 * Optional operation (return null)
+	 * Optional operation (may return {@code null})
 	 */
-	public String getMethodName();
+	String getMethodName();
+
 	/**
-	 * Optional operation (return null)
+	 * Optional operation (may return {@code null})
 	 */
-	public Method getMethod();
+	Method getMethod();
 }

@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 
@@ -25,6 +30,15 @@ public class ComponentTuplizerFactory implements Serializable {
 	private static final Class[] COMPONENT_TUP_CTOR_SIG = new Class[] { Component.class };
 
 	private Map<EntityMode,Class<? extends ComponentTuplizer>> defaultImplClassByMode = buildBaseMapping();
+
+	private final ClassLoaderAccess classLoaderAccess;
+
+	public ComponentTuplizerFactory(MetadataBuildingOptions metadataBuildingOptions) {
+		classLoaderAccess = new ClassLoaderAccessImpl(
+				metadataBuildingOptions.getTempClassLoader(),
+				metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
+		);
+	}
 
 	/**
 	 * Method allowing registration of the tuplizer class to use as default for a particular entity-mode.
@@ -56,10 +70,10 @@ public class ComponentTuplizerFactory implements Serializable {
 	@SuppressWarnings({ "unchecked" })
 	public ComponentTuplizer constructTuplizer(String tuplizerClassName, Component metadata) {
 		try {
-			Class<? extends ComponentTuplizer> tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
+			Class<? extends ComponentTuplizer> tuplizerClass = classLoaderAccess.classForName( tuplizerClassName );
 			return constructTuplizer( tuplizerClass, metadata );
 		}
-		catch ( ClassNotFoundException e ) {
+		catch ( ClassLoadingException e ) {
 			throw new HibernateException( "Could not locate specified tuplizer class [" + tuplizerClassName + "]" );
 		}
 	}
@@ -114,6 +128,7 @@ public class ComponentTuplizerFactory implements Serializable {
 		return getProperConstructor( tuplizerClass ) != null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private Constructor<? extends ComponentTuplizer> getProperConstructor(Class<? extends ComponentTuplizer> clazz) {
 		Constructor<? extends ComponentTuplizer> constructor = null;
 		try {

@@ -53,9 +53,11 @@ public class JaxbCfgProcessor {
 	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/orm/cfg";
 
 	private final ClassLoaderService classLoaderService;
+	private final LocalXmlResourceResolver xmlResourceResolver;
 
 	public JaxbCfgProcessor(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
+		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
 	}
 
 	public JaxbCfgHibernateConfiguration unmarshal(InputStream stream, Origin origin) {
@@ -89,7 +91,7 @@ public class JaxbCfgProcessor {
 	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
-		staxFactory.setXMLResolver( LocalXmlResourceResolver.INSTANCE );
+		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}
 

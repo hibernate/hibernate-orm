@@ -193,12 +193,7 @@ public class DriverManagerConnectionProviderImpl
 			return (Driver) Class.forName( driverClassName ).newInstance();
 		}
 		catch ( Exception e1 ) {
-			try{
-				return (Driver) ReflectHelper.classForName( driverClassName ).newInstance();
-			}
-			catch ( Exception e2 ) {
-				throw new ServiceException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e2 );
-			}
+			throw new ServiceException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e1 );
 		}
 	}
 

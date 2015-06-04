@@ -12,6 +12,7 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Property mapper for {@link javax.persistence.OneToOne} with {@link javax.persistence.PrimaryKeyJoinColumn} relation.
@@ -22,8 +23,9 @@ public class OneToOnePrimaryKeyJoinColumnMapper extends AbstractOneToOneMapper {
 	public OneToOnePrimaryKeyJoinColumnMapper(
 			String entityName,
 			String referencedEntityName,
-			PropertyData propertyData) {
-		super( entityName, referencedEntityName, propertyData );
+			PropertyData propertyData,
+			ServiceRegistry serviceRegistry) {
+		super( entityName, referencedEntityName, propertyData, serviceRegistry );
 	}
 
 	@Override

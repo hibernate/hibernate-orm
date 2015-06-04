@@ -14,8 +14,9 @@ import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.Getter;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Automatically adds entity names, that have been changed during current revision, to revision entity.
@@ -30,13 +31,16 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 	private final Getter modifiedEntityNamesGetter;
 
 	public DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
-			String revisionInfoEntityName, Class<?> revisionInfoClass,
+			String revisionInfoEntityName,
+			Class<?> revisionInfoClass,
 			Class<? extends RevisionListener> listenerClass,
-			PropertyData revisionInfoTimestampData, boolean timestampAsDate,
-			PropertyData modifiedEntityNamesData) {
-		super( revisionInfoEntityName, revisionInfoClass, listenerClass, revisionInfoTimestampData, timestampAsDate );
-		modifiedEntityNamesSetter = ReflectionTools.getSetter( revisionInfoClass, modifiedEntityNamesData );
-		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData );
+			PropertyData revisionInfoTimestampData,
+			boolean timestampAsDate,
+			PropertyData modifiedEntityNamesData,
+			ServiceRegistry serviceRegistry) {
+		super( revisionInfoEntityName, revisionInfoClass, listenerClass, revisionInfoTimestampData, timestampAsDate, serviceRegistry );
+		modifiedEntityNamesSetter = ReflectionTools.getSetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
+		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 	}
 
 	@Override

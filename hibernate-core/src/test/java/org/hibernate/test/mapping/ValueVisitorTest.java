@@ -7,6 +7,9 @@
 package org.hibernate.test.mapping;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -27,17 +30,35 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ValueVisitor;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author max
  */
 public class ValueVisitorTest extends BaseUnitTestCase {
+
+	private StandardServiceRegistry serviceRegistry;
+	private MetadataBuildingContext metadataBuildingContext;
+
+	@Before
+	public void prepare() {
+		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+	}
+
+	@After
+	public void release() {
+		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+	}
+
 	@Test
 	public void testProperCallbacks() {
 		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources().buildMetadata();
 		final Table tbl = new Table();
-		final RootClass rootClass = new RootClass();
+		final RootClass rootClass = new RootClass( metadataBuildingContext );
 
 		ValueVisitor vv = new ValueVisitorValidator();
 

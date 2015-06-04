@@ -21,22 +21,26 @@ import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.internal.util.xml.XMLHelper;
 
+import org.hibernate.testing.boot.ClassLoaderAccessTestingImpl;
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
+
 /**
  * @author Emmanuel Bernard
  */
 public class XMLContextTest {
 	@Test
 	public void testAll() throws Exception {
-		XMLHelper xmlHelper = new XMLHelper();
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		InputStream is = cl.getResourceAsStream(
+		final XMLHelper xmlHelper = new XMLHelper( ClassLoaderServiceTestingImpl.INSTANCE );
+		final XMLContext context = new XMLContext( ClassLoaderAccessTestingImpl.INSTANCE );
+
+		InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream(
 				"org/hibernate/test/annotations/reflection/orm.xml"
 		);
 		Assert.assertNotNull( "ORM.xml not found", is );
-		XMLContext context = new XMLContext();
-		ErrorLogger errorLogger = new ErrorLogger();
-		SAXReader saxReader = xmlHelper.createSAXReader( errorLogger, EJB3DTDEntityResolver.INSTANCE );
-		//saxReader.setValidation( false );
+
+		final ErrorLogger errorLogger = new ErrorLogger();
+		final SAXReader saxReader = xmlHelper.createSAXReader( errorLogger, EJB3DTDEntityResolver.INSTANCE );
+
 		try {
 			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
 		}
@@ -45,8 +49,7 @@ public class XMLContextTest {
 		}
 		org.dom4j.Document doc;
 		try {
-			doc = saxReader
-					.read( new InputSource( new BufferedInputStream( is ) ) );
+			doc = saxReader.read( new InputSource( new BufferedInputStream( is ) ) );
 		}
 		finally {
 			try {

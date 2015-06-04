@@ -6,6 +6,21 @@
  */
 package org.hibernate.cache.infinispan;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -27,8 +42,9 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commons.util.FileLookupFactory;
@@ -46,20 +62,6 @@ import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
  * regions.
@@ -69,7 +71,6 @@ import java.util.concurrent.TimeUnit;
  * @since 3.5
  */
 public class InfinispanRegionFactory implements RegionFactory {
-
 	private static final Log log = LogFactory.getLog( InfinispanRegionFactory.class );
 
 	private static final String PREFIX = "hibernate.cache.infinispan.";
@@ -249,7 +250,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		if ( log.isDebugEnabled() ) {
-			log.debugf( "Building entity cache region [%s] (mutable=%s, versioned=%s)", regionName, metadata.isMutable(), metadata.isVersioned());
+			log.debugf(
+					"Building entity cache region [%s] (mutable=%s, versioned=%s)",
+					regionName,
+					metadata.isMutable(),
+					metadata.isVersioned()
+			);
 		}
 		final AdvancedCache cache = getCache( regionName, metadata.isMutable() ? ENTITY_KEY : IMMUTABLE_ENTITY_KEY, properties );
 		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, metadata, this );
@@ -337,7 +343,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		log.debug( "Starting Infinispan region factory" );
 		try {
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
-			manager = createCacheManager( properties );
+			manager = createCacheManager( properties, settings.getServiceRegistry() );
 			initGenericDataTypeOverrides();
 			final Enumeration keys = properties.propertyNames();
 			while ( keys.hasMoreElements() ) {
@@ -412,41 +418,55 @@ public class InfinispanRegionFactory implements RegionFactory {
 		return Collections.unmodifiableSet( definedConfigurations );
 	}
 
-	protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
-		try {
-			final String configLoc = ConfigurationHelper.getString(
-					INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE
-			);
-			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
-			InputStream is;
-			try {
-				is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
-			}
-			catch (FileNotFoundException e) {
-				// In some environments (ex: OSGi), hibernate-infinispan may not
-				// be in the app CL.  It's important to also try this CL.
-				classLoader = this.getClass().getClassLoader();
-				is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
-			}
-			final ParserRegistry parserRegistry = new ParserRegistry( classLoader );
-			final ConfigurationBuilderHolder holder = parserRegistry.parse( is );
+	protected EmbeddedCacheManager createCacheManager(
+			final Properties properties,
+			final ServiceRegistry serviceRegistry) throws CacheException {
+		final String configLoc = ConfigurationHelper.getString(
+				INFINISPAN_CONFIG_RESOURCE_PROP,
+				properties,
+				DEF_INFINISPAN_CONFIG_RESOURCE
+		);
 
-			// Override global jmx statistics exposure
-			final String globalStats = extractProperty( INFINISPAN_GLOBAL_STATISTICS_PROP, properties );
-			if ( globalStats != null ) {
-				holder.getGlobalConfigurationBuilder().globalJmxStatistics()
-						.enabled( Boolean.parseBoolean( globalStats ) );
-			}
+		return serviceRegistry.getService( ClassLoaderService.class ).workWithClassLoader(
+				new ClassLoaderService.Work<EmbeddedCacheManager>() {
+					@Override
+					public EmbeddedCacheManager doWork(ClassLoader classLoader) {
+						try {
+							InputStream is;
+							try {
+								is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
+							}
+							catch (FileNotFoundException e) {
+								// In some environments (ex: OSGi), hibernate-infinispan may not
+								// be in the app CL.  It's important to also try this CL.
+								classLoader = this.getClass().getClassLoader();
+								is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
+							}
+							final ParserRegistry parserRegistry = new ParserRegistry( classLoader );
+							final ConfigurationBuilderHolder holder = parserRegistry.parse( is );
 
-			return createCacheManager( holder );
-		}
-		catch (IOException e) {
-			throw new CacheException( "Unable to create default cache manager", e );
-		}
+							// Override global jmx statistics exposure
+							final String globalStats = extractProperty(
+									INFINISPAN_GLOBAL_STATISTICS_PROP,
+									properties
+							);
+							if ( globalStats != null ) {
+								holder.getGlobalConfigurationBuilder()
+										.globalJmxStatistics()
+										.enabled( Boolean.parseBoolean( globalStats ) );
+							}
+
+							return createCacheManager( holder );
+						}
+						catch (IOException e) {
+							throw new CacheException( "Unable to create default cache manager", e );
+						}
+					}
+				}
+		);
 	}
 
-	protected EmbeddedCacheManager createCacheManager(
-			ConfigurationBuilderHolder holder) {
+	protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {
 		return new DefaultCacheManager( holder, true );
 	}
 

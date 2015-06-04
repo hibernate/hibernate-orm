@@ -12,6 +12,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -32,6 +33,11 @@ public class OneToMany implements Value {
 	public OneToMany(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
 		this.metadata = metadata;
 		this.referencingTable = ( owner == null ) ? null : owner.getTable();
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return metadata.getMetadataBuildingOptions().getServiceRegistry();
 	}
 
 	private EntityType getEntityType() {

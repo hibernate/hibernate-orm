@@ -32,8 +32,8 @@ import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
-import org.hibernate.test.common.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.boot.BasicTestingJdbcServiceImpl;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 					}
 				}
 		);
-		generator.configure( StandardBasicTypes.LONG, properties, jdbcServices.getJdbcEnvironment() );
+		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		metadata.getDatabase().addAuxiliaryDatabaseObject(

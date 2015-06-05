@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.spi;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -302,4 +303,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @throws HibernateException If a matching EntityPersister cannot be located
 	 */
 	EntityPersister locateEntityPersister(String byName);
+
+	/**
+	 * Contract for resolving this SessionFactory on deserialization
+	 */
+	interface DeserializationResolver<T extends SessionFactoryImplementor> extends Serializable {
+		T resolve();
+	}
+
+	DeserializationResolver getDeserializationResolver();
 }

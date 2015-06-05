@@ -383,6 +383,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public DeserializationResolver getDeserializationResolver() {
+		return delegate.getDeserializationResolver();
+	}
+
+	@Override
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return delegate.getIdentifierGeneratorFactory();
 	}

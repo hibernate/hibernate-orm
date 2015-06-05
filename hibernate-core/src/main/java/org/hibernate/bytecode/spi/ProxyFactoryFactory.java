@@ -6,7 +6,11 @@
  */
 package org.hibernate.bytecode.spi;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * An interface for factories of {@link ProxyFactory proxy factory} instances.
@@ -23,7 +27,7 @@ public interface ProxyFactoryFactory {
 	 *
 	 * @return The lazy-load proxy factory.
 	 */
-	public ProxyFactory buildProxyFactory();
+	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * Build a proxy factory for basic proxy concerns.  The return

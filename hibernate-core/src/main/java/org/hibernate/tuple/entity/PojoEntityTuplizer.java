@@ -190,7 +190,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			Getter idGetter,
 			Setter idSetter) {
 		// TODO : YUCK!!!  fix after HHH-1907 is complete
-		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
+		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory( getFactory() );
 //		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 	}
 

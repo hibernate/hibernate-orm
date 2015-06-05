@@ -797,6 +797,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public DeserializationResolver getDeserializationResolver() {
+		return new DeserializationResolver() {
+			@Override
+			public SessionFactoryImplementor resolve() {
+				return (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory( uuid, name );
+			}
+		};
+	}
+
+	@Override
 	public Map<String, CollectionPersister> getCollectionPersisters() {
 		return collectionPersisters;
 	}

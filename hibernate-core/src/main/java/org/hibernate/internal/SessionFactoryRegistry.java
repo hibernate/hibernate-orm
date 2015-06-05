@@ -17,9 +17,11 @@ import javax.naming.event.NamingExceptionEvent;
 import javax.naming.spi.ObjectFactory;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.
@@ -154,6 +156,14 @@ public class SessionFactoryRegistry {
 		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "Not found: %s", uuid );
 			LOG.debugf( sessionFactoryMap.toString() );
+		}
+		return sessionFactory;
+	}
+
+	public SessionFactory findSessionFactory(String uuid, String name) {
+		SessionFactory sessionFactory = getSessionFactory( uuid );
+		if ( sessionFactory == null && StringHelper.isNotEmpty( name ) ) {
+			sessionFactory = getNamedSessionFactory( name );
 		}
 		return sessionFactory;
 	}

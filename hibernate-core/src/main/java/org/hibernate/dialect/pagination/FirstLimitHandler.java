@@ -29,7 +29,7 @@ public class FirstLimitHandler extends AbstractLimitHandler {
 		}
 		return new StringBuilder( sql.length() + 16 )
 				.append( sql )
-				.insert( sql.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6, " first ?" )
+				.insert( sql.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6, " first " + getMaxOrLimit( selection ) )
 				.toString();
 	}
 

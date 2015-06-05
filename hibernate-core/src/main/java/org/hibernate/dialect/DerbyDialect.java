@@ -285,13 +285,13 @@ public class DerbyDialect extends DB2Dialect {
 			}
 
 			if (LimitHelper.hasFirstRow( selection )) {
-				sb.append( " offset ? rows fetch next " );
+				sb.append( " offset " ).append( selection.getFirstRow() ).append( " rows fetch next " );
 			}
 			else {
 				sb.append( " fetch first " );
 			}
 
-			sb.append( "? rows only" );
+			sb.append( getMaxOrLimit( selection ) ).append(" rows only" );
 
 			if (hasForUpdateClause( forUpdateIndex )) {
 				sb.append( ' ' );

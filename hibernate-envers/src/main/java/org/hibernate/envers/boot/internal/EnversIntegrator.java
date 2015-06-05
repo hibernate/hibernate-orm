@@ -47,33 +47,31 @@ public class EnversIntegrator implements Integrator {
 		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		if ( enversService.getEntitiesConfigurations() != null ) {
-			if ( enversService.getEntitiesConfigurations().hasAuditedEntities() ) {
-				listenerRegistry.appendListeners(
-						EventType.POST_DELETE,
-						new EnversPostDeleteEventListenerImpl( enversService )
-				);
-				listenerRegistry.appendListeners(
-						EventType.POST_INSERT,
-						new EnversPostInsertEventListenerImpl( enversService )
-				);
-				listenerRegistry.appendListeners(
-						EventType.POST_UPDATE,
-						new EnversPostUpdateEventListenerImpl( enversService )
-				);
-				listenerRegistry.appendListeners(
-						EventType.POST_COLLECTION_RECREATE,
-						new EnversPostCollectionRecreateEventListenerImpl( enversService )
-				);
-				listenerRegistry.appendListeners(
-						EventType.PRE_COLLECTION_REMOVE,
-						new EnversPreCollectionRemoveEventListenerImpl( enversService )
-				);
-				listenerRegistry.appendListeners(
-						EventType.PRE_COLLECTION_UPDATE,
-						new EnversPreCollectionUpdateEventListenerImpl( enversService )
-				);
-			}
+		if ( enversService.getEntitiesConfigurations() != null && enversService.getEntitiesConfigurations().hasAuditedEntities()) {
+			listenerRegistry.appendListeners(
+					EventType.POST_DELETE,
+					new EnversPostDeleteEventListenerImpl( enversService )
+			);
+			listenerRegistry.appendListeners(
+					EventType.POST_INSERT,
+					new EnversPostInsertEventListenerImpl( enversService )
+			);
+			listenerRegistry.appendListeners(
+					EventType.POST_UPDATE,
+					new EnversPostUpdateEventListenerImpl( enversService )
+			);
+			listenerRegistry.appendListeners(
+					EventType.POST_COLLECTION_RECREATE,
+					new EnversPostCollectionRecreateEventListenerImpl( enversService )
+			);
+			listenerRegistry.appendListeners(
+					EventType.PRE_COLLECTION_REMOVE,
+					new EnversPreCollectionRemoveEventListenerImpl( enversService )
+			);
+			listenerRegistry.appendListeners(
+					EventType.PRE_COLLECTION_UPDATE,
+					new EnversPreCollectionUpdateEventListenerImpl( enversService )
+			);
 		}
 	}
 

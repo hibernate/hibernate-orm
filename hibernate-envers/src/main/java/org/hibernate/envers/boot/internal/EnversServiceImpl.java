@@ -6,12 +6,8 @@
  */
 package org.hibernate.envers.boot.internal;
 
-import java.util.Map;
-import java.util.Properties;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -37,8 +33,10 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
-
 import org.jboss.logging.Logger;
+
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Provides central access to Envers' configuration.

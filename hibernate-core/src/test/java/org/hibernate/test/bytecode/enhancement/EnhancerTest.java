@@ -6,12 +6,17 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.bytecode.enhancement.association.ManyToManyAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToManyAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToOneAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.basic.BasicEnhancementTestTask;
 import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask1;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask2;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask3;
+import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask4;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
 import org.junit.Test;
@@ -42,6 +47,15 @@ public class EnhancerTest extends BaseUnitTestCase {
 	public void testLazy() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyLoadingTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( LazyLoadingIntegrationTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-3949" )
+	public void testHHH3949() {
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask1.class );
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask2.class );
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask3.class );
+		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask4.class );
 	}
 
 }

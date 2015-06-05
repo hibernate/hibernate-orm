@@ -20,7 +20,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -78,6 +77,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setGloballyQuoteIdentifiers( autoQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
 		IdentifierHelper identifierHelper = null;
@@ -110,6 +110,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
 				StandardConverters.BOOLEAN,
 				false
+		);
+	}
+
+	private static boolean autoQuoting(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
+				StandardConverters.BOOLEAN,
+				true
 		);
 	}
 
@@ -207,6 +215,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		identifierHelperBuilder.setAutoQuoteKeywords( autoQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 		IdentifierHelper identifierHelper = null;
 		try {

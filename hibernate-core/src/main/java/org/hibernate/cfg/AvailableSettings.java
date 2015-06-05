@@ -746,8 +746,10 @@ public interface AvailableSettings {
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
+	/**
+	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to opened Sessions.
+	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
-
 
 	/**
 	 * The deprecated name.  Use {@link #SCANNER} or {@link #SCANNER_ARCHIVE_INTERPRETER} instead.
@@ -820,4 +822,12 @@ public interface AvailableSettings {
 	 * annotations (combined with {@code orm.xml} mappings).
 	 */
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+
+	/**
+	 * Specifies whether to automatically quote any names that are deemed keywords.  Auto-quoting
+	 * is enabled by default.  Set to false to disable.
+	 *
+	 * @since 5.0
+	 */
+	String KEYWORD_AUTO_QUOTING_ENABLED = "hibernate.auto_quote_keyword";
 }

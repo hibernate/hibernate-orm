@@ -28,6 +28,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	private final NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
+	private final boolean autoQuoteKeywords;
 	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
 	private final IdentifierCaseStrategy quotedCaseStrategy;
@@ -36,12 +37,14 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			JdbcEnvironment jdbcEnvironment,
 			NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
+			boolean autoQuoteKeywords,
 			Set<String> reservedWords,
 			IdentifierCaseStrategy unquotedCaseStrategy,
 			IdentifierCaseStrategy quotedCaseStrategy) {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
+		this.autoQuoteKeywords = autoQuoteKeywords;
 		if ( reservedWords != null ) {
 			this.reservedWords.addAll( reservedWords );
 		}
@@ -66,7 +69,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
 
-		if ( isReservedWord( identifier.getText() ) ) {
+		if ( autoQuoteKeywords && isReservedWord( identifier.getText() ) ) {
 			log.tracef( "Forcing identifier [%s] to quoted as recognized reserveed word", identifier );
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
@@ -208,7 +211,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return Identifier.toIdentifier( text, true );
 		}
 
-		if ( isReservedWord( text ) ) {
+		if ( autoQuoteKeywords && isReservedWord( text ) ) {
 			// unequivocally it needs to be quoted...
 			log.trace( "Forcing DatabaseMetaData return value as quoted as it was recognized as a reserved word" );
 			return Identifier.toIdentifier( text, true );

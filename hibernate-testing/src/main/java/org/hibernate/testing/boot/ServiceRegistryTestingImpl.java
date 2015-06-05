@@ -45,6 +45,19 @@ public class ServiceRegistryTestingImpl
 		);
 	}
 
+	public static ServiceRegistryTestingImpl forUnitTesting(Map settings) {
+		return new ServiceRegistryTestingImpl(
+				true,
+				new BootstrapServiceRegistryBuilder().build(),
+				StandardServiceInitiators.LIST,
+				Arrays.asList(
+						dialectFactoryService(),
+						connectionProviderService()
+				),
+				settings
+		);
+	}
+
 	private static ProvidedService dialectFactoryService() {
 		return new ProvidedService<DialectFactory>( DialectFactory.class, new DialectFactoryTestingImpl() );
 	}

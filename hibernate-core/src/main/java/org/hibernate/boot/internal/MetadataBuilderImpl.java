@@ -540,6 +540,8 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
+		private boolean autoQuoteKeywords;
+
 //		private PersistentAttributeMemberResolver persistentAttributeMemberResolver =
 //				StandardPersistentAttributeMemberResolver.INSTANCE;
 

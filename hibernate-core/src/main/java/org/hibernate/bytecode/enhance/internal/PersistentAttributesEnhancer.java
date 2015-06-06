@@ -6,6 +6,15 @@
  */
 package org.hibernate.bytecode.enhance.internal;
 
+import java.util.IdentityHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import javax.persistence.Embedded;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
@@ -28,15 +37,6 @@ import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import javax.persistence.Embedded;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import java.util.IdentityHashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * enhancer for persistent attributes of any type of entity
@@ -225,7 +225,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 		final String mappedBy = getMappedBy( persistentField, targetEntity );
 		if ( mappedBy.isEmpty() ) {
-			log.debugf(
+			log.warnf(
 					"Could not find bi-directional association for field [%s#%s]",
 					managedCtClass.getName(),
 					persistentField.getName()
@@ -258,9 +258,10 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		}
 		if ( persistentField.hasAnnotation( OneToMany.class ) ) {
 			// only remove elements not in the new collection or else we would loose those elements
+			// don't use iterator to avoid ConcurrentModException
 			fieldWriter.insertBefore(
 					String.format(
-							"if ($0.%s != null) for (java.util.Iterator itr = $0.%<s.iterator(); itr.hasNext(); ) { %s target = (%<s) itr.next(); if ($1 == null || !$1.contains(target)) target.%s(null); }%n",
+							"if ($0.%s != null) { Object[] array = $0.%<s.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; if ($1 == null || !$1.contains(target)) target.%s(null); } }%n",
 							persistentField.getName(),
 							targetEntity.getName(),
 							mappedBySetterName
@@ -268,7 +269,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			);
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null) for (java.util.Iterator itr = $1.iterator(); itr.hasNext(); ) { %s target = (%<s) itr.next(); if (target.%s() != $0) target.%s((%s)$0); }%n",
+							"if ($1 != null) { Object[] array = $1.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; if (target.%s() != $0) target.%s((%s)$0); } }%n",
 							targetEntity.getName(),
 							mappedByGetterName,
 							mappedBySetterName,
@@ -287,7 +288,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			// check .contains($0) to avoid double inserts (but preventing duplicates)
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null && $1.%s() != null && !$1.%<s().contains($0) ) $1.%<s().add($0);%n",
+							"if ($1 != null) { java.util.Collection c = $1.%s(); if (c != null && !c.contains($0)) c.add($0); }%n",
 							mappedByGetterName
 					)
 			);
@@ -295,7 +296,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
 			fieldWriter.insertBefore(
 					String.format(
-							"if ($0.%s != null) for (java.util.Iterator itr = $0.%<s.iterator(); itr.hasNext(); ) { %s target = (%<s) itr.next(); if ($1 == null || !$1.contains(target)) target.%s().remove($0); }%n",
+							"if ($0.%s != null) { Object[] array = $0.%<s.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; if ($1 == null || !$1.contains(target)) target.%s().remove($0); } }%n",
 							persistentField.getName(),
 							targetEntity.getName(),
 							mappedByGetterName
@@ -303,7 +304,7 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			);
 			fieldWriter.insertAfter(
 					String.format(
-							"if ($1 != null) for (java.util.Iterator itr = $1.iterator(); itr.hasNext(); ) { %s target = (%<s) itr.next(); if (target.%s() != $0 && target.%<s() != null) target.%<s().add($0); }%n",
+							"if ($1 != null) { Object[] array = $1.toArray(); for (int i = 0; i < array.length; i++) { %s target = (%<s) array[i]; java.util.Collection c = target.%s(); if ( c != $0 && c != null) c.add($0); } }%n",
 							targetEntity.getName(),
 							mappedByGetterName
 					)

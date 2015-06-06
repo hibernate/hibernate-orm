@@ -4,20 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.enhancement.entity;
-
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.ManagedEntity;
+package org.hibernate.test.bytecode.enhancement.basic;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
+
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
 public class MyEntity implements ManagedEntity {
+
 	@Transient
 	private transient EntityEntry entityEntry;
 	@Transient
@@ -25,7 +26,9 @@ public class MyEntity implements ManagedEntity {
 	@Transient
 	private transient ManagedEntity next;
 
+	@Id
 	private Long id;
+
 	private String name;
 
 	public MyEntity() {
@@ -35,7 +38,6 @@ public class MyEntity implements ManagedEntity {
 		this.id = id;
 	}
 
-	@Id
 	public Long getId() {
 		return id;
 	}

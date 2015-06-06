@@ -4,33 +4,36 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.enhancement.entity;
+package org.hibernate.test.bytecode.enhancement.basic;
 
-import javax.persistence.Embedded;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
 public class SimpleEntity {
-	private Long id;
-	private String name;
-	private boolean active;
-	private long someNumber;
-    private List<String> someStrings;
-
-    @OneToMany
-    private Set<Integer> someInts;
-
-    @Embedded
-    private Address address;
 
 	@Id
+	private Long id;
+
+	private String name;
+
+	private boolean active;
+
+	private long someNumber;
+
+	Object anUnspecifiedObject;
+
+	private List<String> someStrings;
+
+	@OneToMany
+	private Set<Integer> someInts;
+
 	public Long getId() {
 		return id;
 	}
@@ -63,27 +66,27 @@ public class SimpleEntity {
 		this.someNumber = someNumber;
 	}
 
-    public List<String> getSomeStrings() {
-        return someStrings;
-    }
+	public Object getAnObject() {
+		return anUnspecifiedObject;
+	}
 
-    public void setSomeStrings(List<String> someStrings) {
-        this.someStrings = someStrings;
-    }
+	public void setAnObject(Object providedObject) {
+		this.anUnspecifiedObject = providedObject;
+	}
 
-    public Address getAddress() {
-        return address;
-    }
+	public List<String> getSomeStrings() {
+		return someStrings;
+	}
 
-    public void setAddress(Address address) {
-        this.address = address;
-    }
+	public void setSomeStrings(List<String> someStrings) {
+		this.someStrings = someStrings;
+	}
 
-    public Set<Integer> getSomeInts() {
-        return someInts;
-    }
+	public Set<Integer> getSomeInts() {
+		return someInts;
+	}
 
-    public void setSomeInts(Set<Integer> someInts) {
-        this.someInts = someInts;
-    }
+	public void setSomeInts(Set<Integer> someInts) {
+		this.someInts = someInts;
+	}
 }

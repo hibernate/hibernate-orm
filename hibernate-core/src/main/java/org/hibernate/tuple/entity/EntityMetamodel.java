@@ -24,6 +24,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.CoreMessageLogger;
@@ -124,6 +125,7 @@ public class EntityMetamodel implements Serializable {
 	private final EntityMode entityMode;
 	private final EntityTuplizer entityTuplizer;
 	private final EntityInstrumentationMetadata instrumentationMetadata;
+	private final boolean lazyLoadingBytecodeEnhanced;
 
 	public EntityMetamodel(
 			PersistentClass persistentClass,
@@ -146,6 +148,9 @@ public class EntityMetamodel implements Serializable {
 		instrumentationMetadata = persistentClass.hasPojoRepresentation()
 				? Environment.getBytecodeProvider().getEntityInstrumentationMetadata( persistentClass.getMappedClass() )
 				: new NonPojoInstrumentationMetadata( persistentClass.getEntityName() );
+
+		lazyLoadingBytecodeEnhanced = ( persistentClass.getMappedClass() != null
+				&& PersistentAttributeInterceptable.class.isAssignableFrom( persistentClass.getMappedClass() ) );
 
 		boolean hasLazy = false;
 
@@ -221,7 +226,7 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			boolean lazy = prop.isLazy() && instrumentationMetadata.isInstrumented();
+			boolean lazy = prop.isLazy() && ( instrumentationMetadata.isInstrumented() || lazyLoadingBytecodeEnhanced );
 			if ( lazy ) {
 				hasLazy = true;
 			}
@@ -846,7 +851,7 @@ public class EntityMetamodel implements Serializable {
 	public boolean hasNaturalIdentifier() {
 		return naturalIdPropertyNumbers!=null;
 	}
-	
+
 	public boolean isNaturalIdentifierCached() {
 		return hasNaturalIdentifier() && hasCacheableNaturalId;
 	}
@@ -1096,5 +1101,9 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityInstrumentationMetadata getInstrumentationMetadata() {
 		return instrumentationMetadata;
+	}
+
+	public boolean isLazyLoadingBytecodeEnhanced() {
+		return this.lazyLoadingBytecodeEnhanced;
 	}
 }

@@ -26,12 +26,13 @@ public final class SortedDirtyTracker {
 		int insert = 0;
 		for ( int low = 0, high = names.length - 1; low <= high; ) {
 			final int middle = low + ( ( high - low ) / 2 );
-			if ( names[middle].compareTo( name ) > 0 ) {
+			final int compare = names[middle].compareTo( name );
+			if ( compare > 0 ) {
 				// bottom half: higher bound in (middle - 1) and insert position in middle
 				high = middle - 1;
 				insert = middle;
 			}
-			else if( names[middle].compareTo( name ) < 0 ) {
+			else if( compare < 0 ) {
 				// top half: lower bound in (middle + 1) and insert position after middle
 				insert = low = middle + 1;
 			}
@@ -44,6 +45,25 @@ public final class SortedDirtyTracker {
 		System.arraycopy( names, insert, newNames, insert + 1, names.length - insert);
 		newNames[insert] = name;
 		names = newNames;
+	}
+
+	public boolean contains(String name) {
+		for ( int low = 0, high = names.length - 1; low <= high; ) {
+			final int middle = low + ( ( high - low ) / 2 );
+			final int compare = names[middle].compareTo( name );
+			if ( compare > 0 ) {
+				// bottom half: higher bound in (middle - 1) and insert position in middle
+				high = middle - 1;
+			}
+			else if( compare < 0 ) {
+				// top half: lower bound in (middle + 1) and insert position after middle
+				low = middle + 1;
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void clear() {

@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 /**
  * small low memory class to keep track of changed fields
- *
+ * <p/>
  * uses an array as a set (under the assumption that the number of elements will be low) to avoid having to instantiate an HashSet.
  * if the assumption does not, hold the array can be kept ordered to reduce the cost of verifying duplicates
  *
@@ -25,13 +25,19 @@ public final class SimpleDirtyTracker {
 	}
 
 	public void add(String name) {
-		for (String existing : names) {
+		if ( !contains( name ) ) {
+			names = Arrays.copyOf( names, names.length + 1 );
+			names[names.length - 1] = name;
+		}
+	}
+
+	public boolean contains(String name) {
+		for ( String existing : names ) {
 			if ( existing.equals( name ) ) {
-				return;
+				return true;
 			}
 		}
-		names = Arrays.copyOf( names, names.length + 1 );
-		names[names.length - 1] = name;
+		return false;
 	}
 
 	public void clear() {

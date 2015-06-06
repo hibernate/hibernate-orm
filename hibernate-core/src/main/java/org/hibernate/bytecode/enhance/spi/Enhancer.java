@@ -6,9 +6,17 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import javax.tools.JavaFileObject;
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.CompositeEnhancer;
 import org.hibernate.bytecode.enhance.internal.EntityEnhancer;
@@ -20,13 +28,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import javax.tools.JavaFileObject;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Class responsible for performing enhancement.
@@ -161,10 +162,8 @@ public class Enhancer {
 	}
 
 	protected void addInterceptorHandling(CtClass managedCtClass) {
-		// interceptor handling is only needed if either:
-		//		a) in-line dirty checking has *not* been requested
-		//		b) class has lazy-loadable attributes
-		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) && !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
+		// interceptor handling is only needed if class has lazy-loadable attributes
+		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
 			return;
 		}
 		log.debugf( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );

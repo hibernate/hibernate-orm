@@ -568,7 +568,7 @@ public abstract class AbstractEntityPersister
 
 		// PROPERTIES
 
-		final boolean lazyAvailable = isInstrumented();
+		final boolean lazyAvailable = isInstrumented() || entityMetamodel.isLazyLoadingBytecodeEnhanced();
 
 		int hydrateSpan = entityMetamodel.getPropertySpan();
 		propertyColumnSpans = new int[hydrateSpan];
@@ -4305,7 +4305,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean hasProxy() {
-		return entityMetamodel.isLazy();
+		// skip proxy instantiation if entity is bytecode enhanced
+		return entityMetamodel.isLazy() && !entityMetamodel.isLazyLoadingBytecodeEnhanced();
 	}
 
 	public IdentifierGenerator getIdentifierGenerator() throws HibernateException {

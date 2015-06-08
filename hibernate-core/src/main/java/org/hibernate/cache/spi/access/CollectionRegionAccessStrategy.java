@@ -6,9 +6,6 @@
  */
 package org.hibernate.cache.spi.access;
 
-import java.io.Serializable;
-
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -26,7 +23,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface CollectionRegionAccessStrategy extends RegionAccessStrategy<CollectionCacheKey> {
+public interface CollectionRegionAccessStrategy extends RegionAccessStrategy {
 
 	/**
 	 * To create instances of CollectionCacheKey for this region, Hibernate will invoke this method
@@ -37,7 +34,15 @@ public interface CollectionRegionAccessStrategy extends RegionAccessStrategy<Col
 	 * @param tenantIdentifier the tenant id, or null if multi-tenancy is not being used.
 	 * @return a key which can be used to identify this collection on this same region
 	 */
-	public CollectionCacheKey generateCacheKey(Serializable id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
+	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
+
+	/**
+	 * Performs reverse operation to {@link #generateCacheKey(Object, CollectionPersister, SessionFactoryImplementor, String)}
+	 *
+	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, CollectionPersister, SessionFactoryImplementor, String)}
+	 * @return original key passed to {@link #generateCacheKey(Object, CollectionPersister, SessionFactoryImplementor, String)}
+	 */
+	public Object getCacheKeyId(Object cacheKey);
 
 	/**
 	 * Get the wrapped collection cache region

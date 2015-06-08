@@ -6,29 +6,19 @@
  */
 package org.hibernate.engine.spi;
 
+import javax.naming.NamingException;
+import javax.naming.Reference;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.naming.NamingException;
-import javax.naming.Reference;
 
-import org.hibernate.Cache;
-import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityNameResolver;
-import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.MappingException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.SessionFactoryObserver;
-import org.hibernate.StatelessSession;
-import org.hibernate.StatelessSessionBuilder;
-import org.hibernate.TypeHelper;
+import org.hibernate.*;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -293,8 +283,18 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName) {
+		return delegate.getSecondLevelCacheRegionAccessStrategy(regionName);
+	}
+
+	@Override
 	public Region getNaturalIdCacheRegion(String regionName) {
 		return delegate.getNaturalIdCacheRegion( regionName );
+	}
+
+	@Override
+	public RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName) {
+		return delegate.getNaturalIdCacheRegionAccessStrategy(regionName);
 	}
 
 	@Override

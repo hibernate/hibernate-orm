@@ -6,10 +6,7 @@
  */
 package org.hibernate.cache.spi.access;
 
-import java.io.Serializable;
-
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -30,7 +27,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface EntityRegionAccessStrategy extends RegionAccessStrategy<EntityCacheKey> {
+public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 
 	/**
 	 * To create instances of EntityCacheKey for this region, Hibernate will invoke this method
@@ -41,7 +38,15 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy<EntityC
 	 * @param tenantIdentifier the tenant id, or null if multi-tenancy is not being used.
 	 * @return a key which can be used to identify this entity on this same region
 	 */
-	public EntityCacheKey generateCacheKey(Serializable id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
+
+	/**
+	 * Performs reverse operation to {@link #generateCacheKey(Object, EntityPersister, SessionFactoryImplementor, String)}
+	 *
+	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, EntityPersister, SessionFactoryImplementor, String)}
+	 * @return original id passed to {@link #generateCacheKey(Object, EntityPersister, SessionFactoryImplementor, String)}
+	 */
+	public Object getCacheKeyId(Object cacheKey);
 
 	/**
 	 * Get the wrapped entity cache region
@@ -61,7 +66,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy<EntityC
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException;
+	public boolean insert(Object key, Object value, Object version) throws CacheException;
 
 	/**
 	 * Called after an item has been inserted (after the transaction completes),
@@ -74,7 +79,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy<EntityC
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException;
+	public boolean afterInsert(Object key, Object value, Object version) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (before the transaction completes),
@@ -88,7 +93,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy<EntityC
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion) throws CacheException;
+	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (after the transaction completes),
@@ -103,5 +108,5 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy<EntityC
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) throws CacheException;
+	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) throws CacheException;
 }

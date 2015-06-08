@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
@@ -85,7 +84,7 @@ public class EntityDeleteAction extends EntityAction {
 			version = persister.getVersion( instance );
 		}
 
-		final EntityCacheKey ck;
+		final Object ck;
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey( id, persister, session.getFactory(), session.getTenantIdentifier() );
@@ -189,7 +188,7 @@ public class EntityDeleteAction extends EntityAction {
 		EntityPersister entityPersister = getPersister();
 		if ( entityPersister.hasCache() ) {
 			EntityRegionAccessStrategy cache = entityPersister.getCacheAccessStrategy();
-			final EntityCacheKey ck = cache.generateCacheKey(
+			final Object ck = cache.generateCacheKey(
 					getId(),
 					entityPersister,
 					session.getFactory(),

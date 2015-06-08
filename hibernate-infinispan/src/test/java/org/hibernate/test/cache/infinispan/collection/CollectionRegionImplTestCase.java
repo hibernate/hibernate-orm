@@ -6,11 +6,12 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
+import java.util.Properties;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
@@ -18,8 +19,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
 import org.infinispan.AdvancedCache;
-
-import java.util.Properties;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -29,7 +28,7 @@ import static org.junit.Assert.fail;
  * 
  * @author Galder Zamarreño
  */
-public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegionTestCase<CollectionCacheKey> {
+public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegionTestCase {
 
    private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
 
@@ -62,13 +61,13 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
    }
 
    @Override
-   protected void putInRegion(Region region, CollectionCacheKey key, Object value) {
+   protected void putInRegion(Region region, Object key, Object value) {
       CollectionRegionAccessStrategy strategy = ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL);
       strategy.putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
    }
 
    @Override
-   protected void removeFromRegion(Region region, CollectionCacheKey key) {
+   protected void removeFromRegion(Region region, Object key) {
       ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(key);
    }
 

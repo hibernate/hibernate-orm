@@ -11,6 +11,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -299,7 +303,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			if ( region == null ) {
 				return null;
 			}
-			nics = new ConcurrentNaturalIdCacheStatisticsImpl( region );
+			NaturalIdRegionAccessStrategy accessStrategy
+					= (NaturalIdRegionAccessStrategy) sessionFactory.getNaturalIdCacheRegionAccessStrategy(regionName);
+
+			nics = new ConcurrentNaturalIdCacheStatisticsImpl( region, accessStrategy );
 			ConcurrentNaturalIdCacheStatisticsImpl previous;
 			if ( ( previous = (ConcurrentNaturalIdCacheStatisticsImpl) naturalIdCacheStatistics.putIfAbsent(
 					regionName, nics
@@ -328,7 +335,16 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			if ( region == null ) {
 				return null;
 			}
-			slcs = new ConcurrentSecondLevelCacheStatisticsImpl( region );
+			RegionAccessStrategy accessStrategy = sessionFactory.getSecondLevelCacheRegionAccessStrategy(regionName);
+
+			EntityRegionAccessStrategy entityRegionAccessStrategy
+					= accessStrategy instanceof EntityRegionAccessStrategy ?
+					(EntityRegionAccessStrategy) accessStrategy : null;
+			CollectionRegionAccessStrategy collectionRegionAccessStrategy
+					= accessStrategy instanceof CollectionRegionAccessStrategy ?
+					(CollectionRegionAccessStrategy) accessStrategy : null;
+
+			slcs = new ConcurrentSecondLevelCacheStatisticsImpl( region, entityRegionAccessStrategy, collectionRegionAccessStrategy );
 			ConcurrentSecondLevelCacheStatisticsImpl previous;
 			if ( ( previous = (ConcurrentSecondLevelCacheStatisticsImpl) secondLevelCacheStatistics.putIfAbsent(
 					regionName, slcs

@@ -6,11 +6,14 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+import javax.transaction.TransactionManager;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.test.cache.infinispan.functional.Citizen;
 import org.hibernate.test.cache.infinispan.functional.NaturalIdOnManyToOne;
@@ -23,15 +26,8 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
-import org.junit.After;
 import org.junit.Test;
 
-import javax.transaction.TransactionManager;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-import static org.infinispan.test.TestingUtil.tmpDirectory;
 import static org.infinispan.test.TestingUtil.withTx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -263,8 +259,7 @@ public class NaturalIdInvalidationTestCase extends DualNodeTestCase {
       public void nodeVisited(CacheEntryVisitedEvent event) {
          log.debug( event.toString() );
          if ( !event.isPre() ) {
-            NaturalIdCacheKey cacheKey = (NaturalIdCacheKey) event.getKey();
-            visited.add(cacheKey.toString());
+            visited.add(event.getKey().toString());
 //            Integer primKey = (Integer) cacheKey.getKey();
 //            String key = (String) cacheKey.getEntityOrRoleName() + '#' + primKey;
 //            log.debug( "MyListener[" + name + "] - Visiting key " + key );

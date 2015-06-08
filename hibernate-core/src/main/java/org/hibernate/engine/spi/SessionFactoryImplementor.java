@@ -21,6 +21,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -189,6 +190,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The region
 	 */
 	Region getSecondLevelCacheRegion(String regionName);
+
+	/**
+	 * Get access strategy to second-level cache region
+	 * @param regionName
+	 * @return
+	 */
+	RegionAccessStrategy getSecondLevelCacheRegionAccessStrategy(String regionName);
 	
 	/**
 	 * Get a named naturalId cache region
@@ -197,6 +205,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The region
 	 */
 	Region getNaturalIdCacheRegion(String regionName);
+
+	/**
+	 * Get access strategy to naturalId cache region
+	 * @param regionName
+	 * @return
+	 */
+	RegionAccessStrategy getNaturalIdCacheRegionAccessStrategy(String regionName);
 
 	/**
 	 * Get a map of all the second level cache regions currently maintained in

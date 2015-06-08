@@ -8,7 +8,6 @@ package org.hibernate.test.cache.infinispan.collection;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -31,7 +30,7 @@ import static org.junit.Assert.assertNull;
 public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase {
 
 	public static final String REGION_NAME = "test/com.foo.test";
-	public static final CollectionCacheKey KEY = TestingKeyFactory.generateCollectionCacheKey( "KEY" );
+	public static final Object KEY = TestingKeyFactory.generateCollectionCacheKey( "KEY" );
 	public static final String VALUE1 = "VALUE1";
 	public static final String VALUE2 = "VALUE2";
 

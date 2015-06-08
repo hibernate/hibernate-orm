@@ -13,7 +13,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
@@ -185,7 +184,7 @@ public final class TwoPhaseLoad {
 			final Object version = Versioning.getVersion( hydratedState, persister );
 			final CacheEntry entry = persister.buildCacheEntry( entity, hydratedState, version, session );
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final EntityCacheKey cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
 			// from the database *within the same transaction*.  usually this is done by

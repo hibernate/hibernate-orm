@@ -11,7 +11,6 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -127,7 +126,7 @@ public final class EntityUpdateAction extends EntityAction {
 			previousVersion = persister.getVersion( instance );
 		}
 		
-		final EntityCacheKey ck;
+		final Object ck;
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey(
@@ -216,7 +215,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, EntityCacheKey ck) {
+	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
 		try {
 			getSession().getEventListenerManager().cachePutStart();
 			return persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
@@ -312,7 +311,7 @@ public final class EntityUpdateAction extends EntityAction {
 		final EntityPersister persister = getPersister();
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final EntityCacheKey ck = cache.generateCacheKey(
+			final Object ck = cache.generateCacheKey(
 					getId(),
 					persister,
 					session.getFactory(),
@@ -334,7 +333,7 @@ public final class EntityUpdateAction extends EntityAction {
 		postCommitUpdate( success );
 	}
 
-	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, EntityCacheKey ck) {
+	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, Object ck) {
 		SessionEventListenerManager eventListenerManager = getSession().getEventListenerManager();
 		try {
 			eventListenerManager.cachePutStart();

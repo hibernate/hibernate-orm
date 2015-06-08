@@ -12,16 +12,15 @@ import java.util.Set;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.infinispan.AdvancedCache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -32,7 +31,7 @@ import static org.junit.Assert.assertNull;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class AbstractGeneralDataRegionTestCase<T extends CacheKey> extends AbstractRegionImplTestCase<T> {
+public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionImplTestCase {
 	private static final Logger log = Logger.getLogger( AbstractGeneralDataRegionTestCase.class );
 
 	protected static final String KEY = "Key";
@@ -50,12 +49,12 @@ public abstract class AbstractGeneralDataRegionTestCase<T extends CacheKey> exte
 	}
 
 	@Override
-	protected void putInRegion(Region region, T key, Object value) {
+	protected void putInRegion(Region region, Object key, Object value) {
 		((GeneralDataRegion) region).put( key, value );
 	}
 
 	@Override
-	protected void removeFromRegion(Region region, T key) {
+	protected void removeFromRegion(Region region, Object key) {
 		((GeneralDataRegion) region).evict( key );
 	}
 

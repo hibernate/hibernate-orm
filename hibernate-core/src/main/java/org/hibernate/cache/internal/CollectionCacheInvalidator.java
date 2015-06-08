@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -141,7 +140,7 @@ public class CollectionCacheInvalidator
 			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
 		CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
-		CollectionCacheKey key = cache.generateCacheKey(
+		Object key = cache.generateCacheKey(
 				id,
 				collectionPersister,
 				session.getFactory(),

@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
@@ -118,7 +117,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			);
 			cacheEntry = persister.getCacheEntryStructure().structure( ce );
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final EntityCacheKey ck = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+			final Object ck = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 
 			final boolean put = cacheInsert( persister, ck );
 
@@ -138,7 +137,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		markExecuted();
 	}
 
-	private boolean cacheInsert(EntityPersister persister, EntityCacheKey ck) {
+	private boolean cacheInsert(EntityPersister persister, Object ck) {
 		try {
 			getSession().getEventListenerManager().cachePutStart();
 			return persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
@@ -213,7 +212,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			SessionFactoryImplementor sessionFactoryImplementor = session.getFactory();
-			final EntityCacheKey ck = cache.generateCacheKey( getId(), persister, sessionFactoryImplementor, session.getTenantIdentifier() );
+			final Object ck = cache.generateCacheKey( getId(), persister, sessionFactoryImplementor, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
 			if ( put && sessionFactoryImplementor.getStatistics().isStatisticsEnabled() ) {
@@ -224,7 +223,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		postCommitInsert( success );
 	}
 
-	private boolean cacheAfterInsert(EntityRegionAccessStrategy cache, EntityCacheKey ck) {
+	private boolean cacheAfterInsert(EntityRegionAccessStrategy cache, Object ck) {
 		final SessionEventListenerManager eventListenerManager = getSession().getEventListenerManager();
 		try {
 			eventListenerManager.cachePutStart();

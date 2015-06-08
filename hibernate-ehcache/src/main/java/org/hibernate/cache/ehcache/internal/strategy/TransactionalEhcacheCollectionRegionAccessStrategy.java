@@ -6,15 +6,12 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
-import java.io.Serializable;
-
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
-
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
-import org.hibernate.cache.spi.CollectionCacheKey;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -29,7 +26,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Alex Snaps
  */
 public class TransactionalEhcacheCollectionRegionAccessStrategy
-		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion,CollectionCacheKey>
+		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion>
 		implements CollectionRegionAccessStrategy {
 
 	private final Ehcache ehcache;
@@ -50,7 +47,7 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public Object get(CollectionCacheKey key, long txTimestamp) throws CacheException {
+	public Object get(Object key, long txTimestamp) throws CacheException {
 		try {
 			final Element element = ehcache.get( key );
 			return element == null ? null : element.getObjectValue();
@@ -66,13 +63,13 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public SoftLock lockItem(CollectionCacheKey key, Object version) throws CacheException {
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
 	public boolean putFromLoad(
-			CollectionCacheKey key,
+			Object key,
 			Object value,
 			long txTimestamp,
 			Object version,
@@ -91,7 +88,7 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public void remove(CollectionCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		try {
 			ehcache.remove( key );
 		}
@@ -101,8 +98,17 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public void unlockItem(CollectionCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		// no-op
 	}
 
+	@Override
+	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getCollectionId(cacheKey);
+	}
 }

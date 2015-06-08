@@ -20,7 +20,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
@@ -102,7 +101,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
 		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-		CollectionCacheKey cacheKey = cache.generateCacheKey(
+		Object cacheKey = cache.generateCacheKey(
 				testData.steveId,
 				persister,
 				sessionFactory(),
@@ -121,7 +120,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 				.uniqueResult();
 		assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 
-		CollectionCacheKey cacheKey2 = cache.generateCacheKey(
+		Object cacheKey2 = cache.generateCacheKey(
 				testData.steveId,
 				persister,
 				sessionFactory(),

@@ -6,12 +6,9 @@
  */
 package org.hibernate.cache.infinispan.collection;
 
-import java.io.Serializable;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -36,7 +33,7 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 		this.delegate = new TransactionalAccessDelegate( region, region.getPutFromLoadValidator() );
 	}
 
-	public void evict(CollectionCacheKey key) throws CacheException {
+	public void evict(Object key) throws CacheException {
 		delegate.evict( key );
 	}
 
@@ -44,20 +41,20 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 		delegate.evictAll();
 	}
 
-	public Object get(CollectionCacheKey key, long txTimestamp) throws CacheException {
+	public Object get(Object key, long txTimestamp) throws CacheException {
 		return delegate.get( key, txTimestamp );
 	}
 
-	public boolean putFromLoad(CollectionCacheKey key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return delegate.putFromLoad( key, value, txTimestamp, version );
 	}
 
-	public boolean putFromLoad(CollectionCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		return delegate.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
 	}
 
-	public void remove(CollectionCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		delegate.remove( key );
 	}
 
@@ -69,7 +66,7 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 		return region;
 	}
 
-	public SoftLock lockItem(CollectionCacheKey key, Object version) throws CacheException {
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
@@ -77,15 +74,20 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 		return null;
 	}
 
-	public void unlockItem(CollectionCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 	}
 
 	public void unlockRegion(SoftLock lock) throws CacheException {
 	}
 
 	@Override
-	public CollectionCacheKey generateCacheKey(Serializable id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
+	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getCollectionId(cacheKey);
 	}
 
 }

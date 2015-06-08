@@ -8,50 +8,27 @@ package org.hibernate.test.cache.infinispan.util;
 
 import java.io.Serializable;
 
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
-
 public class TestingKeyFactory {
 
 	private TestingKeyFactory() {
 		//Not to be constructed
 	}
 
-	public static EntityCacheKey generateEntityCacheKey(String id) {
+	public static Object generateEntityCacheKey(String id) {
 		return new TestingEntityCacheKey( id );
 	}
 
-	public static CollectionCacheKey generateCollectionCacheKey(String id) {
+	public static Object generateCollectionCacheKey(String id) {
 		return new TestingEntityCacheKey( id );
 	}
 
 	//For convenience implement both interfaces.
-	private static class TestingEntityCacheKey implements EntityCacheKey, CollectionCacheKey, Serializable {
+	private static class TestingEntityCacheKey implements Serializable {
 
 		private final String id;
 
 		public TestingEntityCacheKey(String id) {
 			this.id = id;
-		}
-
-		@Override
-		public Serializable getKey() {
-			return null;
-		}
-
-		@Override
-		public String getEntityName() {
-			return null;
-		}
-
-		@Override
-		public String getCollectionRole() {
-			return null;
-		}
-
-		@Override
-		public String getTenantId() {
-			return null;
 		}
 
 		@Override

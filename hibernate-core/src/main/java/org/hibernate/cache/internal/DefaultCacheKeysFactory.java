@@ -6,11 +6,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
-
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -44,16 +39,27 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class DefaultCacheKeysFactory {
 
-	public static CollectionCacheKey createCollectionKey(Serializable id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public static Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
 	}
 
-	public static EntityCacheKey createEntityKey(Serializable id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public static Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
 	}
 
-	public static NaturalIdCacheKey createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
 		return new OldNaturalIdCacheKey( naturalIdValues, persister, session );
 	}
 
+	public static Object getEntityId(Object cacheKey) {
+		return ((OldCacheKeyImplementation) cacheKey).getId();
+	}
+
+	public static Object getCollectionId(Object cacheKey) {
+		return ((OldCacheKeyImplementation) cacheKey).getId();
+	}
+
+	public static Object[] getNaturalIdValues(Object cacheKey) {
+		return ((OldNaturalIdCacheKey) cacheKey).getNaturalIdValues();
+	}
 }

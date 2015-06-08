@@ -32,6 +32,7 @@ import org.jboss.logging.Logger;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -97,28 +98,28 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		final ClassLoaderService cls = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 		for ( String className : sources.getAnnotatedClassNames() ) {
-			final Class clazz = cls.classForName( className );
-			final XClass xClass = reflectionManager.toXClass( clazz );
-			// categorize it, based on assumption it is either an AttributeConverter or an entity
-			if ( xClass.isAnnotationPresent( Converter.class ) ) {
-				//noinspection unchecked
-				attributeConverterManager.addAttributeConverter( clazz );
-			}
-			else {
-				xClasses.add( xClass );
-			}
+			final Class annotatedClass = cls.classForName( className );
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
 		}
 
-		for ( Class annotateClass : sources.getAnnotatedClasses() ) {
-			final XClass xClass = reflectionManager.toXClass( annotateClass );
-			// categorize it, based on assumption it is either an AttributeConverter or an entity
-			if ( xClass.isAnnotationPresent( Converter.class ) ) {
-				//noinspection unchecked
-				attributeConverterManager.addAttributeConverter( annotateClass );
-			}
-			else {
-				xClasses.add( xClass );
-			}
+		for ( Class annotatedClass : sources.getAnnotatedClasses() ) {
+			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+		}
+	}
+
+	private void categorizeAnnotatedClass(Class annotatedClass, AttributeConverterManager attributeConverterManager) {
+		final XClass xClass = reflectionManager.toXClass( annotatedClass );
+		// categorize it, based on assumption it does not fall into multiple categories
+		if ( xClass.isAnnotationPresent( Converter.class ) ) {
+			//noinspection unchecked
+			attributeConverterManager.addAttributeConverter( annotatedClass );
+		}
+		else if ( xClass.isAnnotationPresent( Entity.class )
+				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
+			xClasses.add( xClass );
+		}
+		else {
+			log.debugf( "Encountered a non-categorized annotated class [%s]; ignoring", annotatedClass.getName() );
 		}
 	}
 

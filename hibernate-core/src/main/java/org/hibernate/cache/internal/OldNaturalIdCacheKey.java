@@ -11,7 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ValueHolder;
@@ -30,7 +29,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Deprecated
-public class OldNaturalIdCacheKey implements NaturalIdCacheKey, Serializable {
+public class OldNaturalIdCacheKey implements Serializable {
 	private final Serializable[] naturalIdValues;
 	private final String entityName;
 	private final String tenantId;

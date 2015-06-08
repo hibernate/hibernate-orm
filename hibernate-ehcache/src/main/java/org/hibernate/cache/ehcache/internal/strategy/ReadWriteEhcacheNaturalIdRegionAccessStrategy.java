@@ -9,10 +9,12 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Ehcache specific read/write NaturalId region access strategy
@@ -21,7 +23,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Alex Snaps
  */
 public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
-		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheNaturalIdRegion,NaturalIdCacheKey>
+		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheNaturalIdRegion>
 		implements NaturalIdRegionAccessStrategy {
 
 	/**
@@ -45,7 +47,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean insert(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean insert(Object key, Object value) throws CacheException {
 		return false;
 	}
 
@@ -55,7 +57,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * Inserts will only succeed if there is no existing value mapped to this key.
 	 */
 	@Override
-	public boolean afterInsert(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean afterInsert(Object key, Object value) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -78,7 +80,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean update(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean update(Object key, Object value) throws CacheException {
 		return false;
 	}
 
@@ -90,7 +92,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * the course of this transaction.
 	 */
 	@Override
-	public boolean afterUpdate(NaturalIdCacheKey key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
 		//what should we do with previousVersion here?
 		region().writeLock( key );
 		try {
@@ -115,5 +117,15 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 		finally {
 			region().writeUnlock( key );
 		}
+	}
+
+	@Override
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+		return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
+	}
+
+	@Override
+	public Object[] getNaturalIdValues(Object cacheKey) {
+		return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
 	}
 }

@@ -6,13 +6,9 @@
  */
 package org.hibernate.cache.ehcache.internal.nonstop;
 
-import java.io.Serializable;
-
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -49,7 +45,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
 		try {
 			return actualStrategy.afterInsert( key, value, version );
 		}
@@ -60,7 +56,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		try {
 			return actualStrategy.afterUpdate( key, value, currentVersion, previousVersion, lock );
@@ -72,7 +68,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public void evict(EntityCacheKey key) throws CacheException {
+	public void evict(Object key) throws CacheException {
 		try {
 			actualStrategy.evict( key );
 		}
@@ -92,7 +88,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public Object get(EntityCacheKey key, long txTimestamp) throws CacheException {
+	public Object get(Object key, long txTimestamp) throws CacheException {
 		try {
 			return actualStrategy.get( key, txTimestamp );
 		}
@@ -103,7 +99,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		try {
 			return actualStrategy.insert( key, value, version );
 		}
@@ -114,7 +110,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public SoftLock lockItem(EntityCacheKey key, Object version) throws CacheException {
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		try {
 			return actualStrategy.lockItem( key, version );
 		}
@@ -136,7 +132,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public boolean putFromLoad(EntityCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
@@ -148,7 +144,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public boolean putFromLoad(EntityCacheKey key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( key, value, txTimestamp, version );
 		}
@@ -159,7 +155,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public void remove(EntityCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		try {
 			actualStrategy.remove( key );
 		}
@@ -179,7 +175,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public void unlockItem(EntityCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		try {
 			actualStrategy.unlockItem( key, lock );
 		}
@@ -199,7 +195,7 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		try {
 			return actualStrategy.update( key, value, currentVersion, previousVersion );
@@ -211,7 +207,12 @@ public class NonstopAwareEntityRegionAccessStrategy implements EntityRegionAcces
 	}
 
 	@Override
-	public EntityCacheKey generateCacheKey(Serializable id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getEntityId(cacheKey);
 	}
 }

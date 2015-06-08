@@ -6,19 +6,18 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 
+import java.util.Properties;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
 import org.infinispan.AdvancedCache;
-
-import java.util.Properties;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -29,7 +28,7 @@ import static org.junit.Assert.fail;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTestCase<EntityCacheKey> {
+public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTestCase {
 
    private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
 
@@ -52,12 +51,12 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
    }
 
    @Override
-   protected void putInRegion(Region region, EntityCacheKey key, Object value) {
+   protected void putInRegion(Region region, Object key, Object value) {
       ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).insert(key, value, 1);
    }
 
    @Override
-   protected void removeFromRegion(Region region, EntityCacheKey key) {
+   protected void removeFromRegion(Region region, Object key) {
       ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(key);
    }
 

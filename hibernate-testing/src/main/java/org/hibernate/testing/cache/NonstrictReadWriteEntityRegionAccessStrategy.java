@@ -7,7 +7,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 /**
@@ -22,7 +21,7 @@ class NonstrictReadWriteEntityRegionAccessStrategy extends BaseEntityRegionAcces
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	@Override
-	public void unlockItem(EntityCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
@@ -30,7 +29,7 @@ class NonstrictReadWriteEntityRegionAccessStrategy extends BaseEntityRegionAcces
 	 * Returns <code>false</code> since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
@@ -38,7 +37,7 @@ class NonstrictReadWriteEntityRegionAccessStrategy extends BaseEntityRegionAcces
 	 * Returns <code>false</code> since this is a non-strict read/write cache access strategy
 	 */
 	@Override
-	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
@@ -46,21 +45,21 @@ class NonstrictReadWriteEntityRegionAccessStrategy extends BaseEntityRegionAcces
 	 * Removes the entry since this is a non-strict read/write cache strategy.
 	 */
 	@Override
-	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		evict( key );
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		unlockItem( key, lock );
 		return false;
 	}
 
 	@Override
-	public void remove(EntityCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		evict( key );
 	}
 }

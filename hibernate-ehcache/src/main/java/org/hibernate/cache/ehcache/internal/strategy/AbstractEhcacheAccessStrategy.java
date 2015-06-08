@@ -6,21 +6,10 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
-import java.io.Serializable;
-
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Ultimate superclass for all Ehcache specific Hibernate AccessStrategy implementations.
@@ -30,7 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Chris Dennis
  * @author Alex Snaps
  */
-abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion, K extends CacheKey> {
+abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion> {
 	private final T region;
 	private final SessionFactoryOptions settings;
 
@@ -66,7 +55,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object)
 	 */
-	public final boolean putFromLoad(K key, Object value, long txTimestamp, Object version) throws CacheException {
+	public final boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return putFromLoad( key, value, txTimestamp, version, settings.isMinimalPutsEnabled() );
 	}
 
@@ -77,7 +66,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object, boolean)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object, boolean)
 	 */
-	public abstract boolean putFromLoad(K key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public abstract boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException;
 
 	/**
@@ -110,7 +99,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#remove(java.lang.Object)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#remove(java.lang.Object)
 	 */
-	public void remove(K key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 	}
 
 	/**
@@ -131,7 +120,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#evict(java.lang.Object)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#evict(java.lang.Object)
 	 */
-	public final void evict(K key) throws CacheException {
+	public final void evict(Object key) throws CacheException {
 		region.remove( key );
 	}
 
@@ -144,17 +133,5 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	@SuppressWarnings("UnusedDeclaration")
 	public final void evictAll() throws CacheException {
 		region.clear();
-	}
-
-	public CollectionCacheKey generateCacheKey(Serializable id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
-	}
-
-	public EntityCacheKey generateCacheKey(Serializable id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
-	}
-
-	public NaturalIdCacheKey generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
-		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 }

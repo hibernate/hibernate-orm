@@ -9,10 +9,12 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
-import org.hibernate.cache.spi.EntityCacheKey;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Ehcache specific read-only entity region access strategy
@@ -20,7 +22,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Chris Dennis
  * @author Alex Snaps
  */
-public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion,EntityCacheKey>
+public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
 		implements EntityRegionAccessStrategy {
 
 	/**
@@ -39,12 +41,12 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	}
 
 	@Override
-	public Object get(EntityCacheKey key, long txTimestamp) throws CacheException {
+	public Object get(Object key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(EntityCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
@@ -56,7 +58,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	}
 
 	@Override
-	public SoftLock lockItem(EntityCacheKey key, Object version) throws UnsupportedOperationException {
+	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
 		return null;
 	}
 
@@ -66,7 +68,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * A no-op since this cache is read-only
 	 */
 	@Override
-	public void unlockItem(EntityCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
@@ -76,12 +78,12 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * This cache is asynchronous hence a no-op
 	 */
 	@Override
-	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
 		region().put( key, value );
 		return true;
 	}
@@ -94,7 +96,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
@@ -107,8 +109,18 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+	}
+
+	@Override
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getEntityId(cacheKey);
 	}
 }

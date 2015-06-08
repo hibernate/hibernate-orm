@@ -9,7 +9,6 @@ package org.hibernate.cache.infinispan.naturalid;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -29,12 +28,12 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public boolean insert(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean insert(Object key, Object value) throws CacheException {
 		return delegate.insert( key, value, null );
 	}
 
 	@Override
-	public boolean update(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean update(Object key, Object value) throws CacheException {
 		return delegate.update( key, value, null, null );
 	}
 
@@ -44,7 +43,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public void evict(NaturalIdCacheKey key) throws CacheException {
+	public void evict(Object key) throws CacheException {
 		delegate.evict( key );
 	}
 
@@ -54,23 +53,23 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public Object get(NaturalIdCacheKey key, long txTimestamp) throws CacheException {
+	public Object get(Object key, long txTimestamp) throws CacheException {
 		return delegate.get( key, txTimestamp );
 	}
 
 	@Override
-	public boolean putFromLoad(NaturalIdCacheKey key, Object value, long txTimestamp, Object version) throws CacheException {
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		return delegate.putFromLoad( key, value, txTimestamp, version );
 	}
 
 	@Override
-	public boolean putFromLoad(NaturalIdCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		return delegate.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
 	}
 
 	@Override
-	public void remove(NaturalIdCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		delegate.remove( key );
 	}
 
@@ -80,7 +79,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public SoftLock lockItem(NaturalIdCacheKey key, Object version) throws CacheException {
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
@@ -90,7 +89,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public void unlockItem(NaturalIdCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 	}
 
 	@Override
@@ -98,18 +97,22 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 	}
 
 	@Override
-	public boolean afterInsert(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean afterInsert(Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(NaturalIdCacheKey key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public NaturalIdCacheKey generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
 		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
+	@Override
+	public Object[] getNaturalIdValues(Object cacheKey) {
+		return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
+	}
 }

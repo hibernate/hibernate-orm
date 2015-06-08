@@ -28,7 +28,6 @@ import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
@@ -272,7 +271,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final EntityCacheKey ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
+			final Object ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
 			cache.evict( ck );
 		}
 		String previousFetchProfile = this.getLoadQueryInfluencers().getInternalFetchProfile();

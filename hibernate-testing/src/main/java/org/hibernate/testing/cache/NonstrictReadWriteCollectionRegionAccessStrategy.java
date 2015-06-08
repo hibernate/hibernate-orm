@@ -7,7 +7,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 /**
@@ -19,12 +18,12 @@ class NonstrictReadWriteCollectionRegionAccessStrategy extends BaseCollectionReg
 	}
 
 	@Override
-	public void unlockItem(CollectionCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
 	@Override
-	public void remove(CollectionCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		evict( key );
 	}
 }

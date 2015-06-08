@@ -17,8 +17,6 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -335,7 +333,7 @@ public class CollectionLoadContext {
 
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
 		final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-		final CollectionCacheKey cacheKey = cache.generateCacheKey(
+		final Object cacheKey = cache.generateCacheKey(
 				lce.getKey(),
 				persister,
 				session.getFactory(),

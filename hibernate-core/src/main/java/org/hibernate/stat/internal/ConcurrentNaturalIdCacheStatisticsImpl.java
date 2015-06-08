@@ -13,8 +13,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.stat.NaturalIdCacheStatistics;
 
 /**
@@ -25,6 +25,7 @@ import org.hibernate.stat.NaturalIdCacheStatistics;
 public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistics implements NaturalIdCacheStatistics {
 	private static final long serialVersionUID = 1L;
 	private final transient Region region;
+	private final transient NaturalIdRegionAccessStrategy accessStrategy;
 	private final AtomicLong hitCount = new AtomicLong();
 	private final AtomicLong missCount = new AtomicLong();
 	private final AtomicLong putCount = new AtomicLong();
@@ -35,15 +36,17 @@ public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistic
 
 	private final Lock readLock;
 	private final Lock writeLock;
+
 	{
 		final ReadWriteLock lock = new ReentrantReadWriteLock();
 		this.readLock = lock.readLock();
 		this.writeLock = lock.writeLock();
 	}
 
-	ConcurrentNaturalIdCacheStatisticsImpl(Region region) {
+	ConcurrentNaturalIdCacheStatisticsImpl(Region region, NaturalIdRegionAccessStrategy accessStrategy) {
 		super( region.getName() );
 		this.region = region;
+		this.accessStrategy = accessStrategy;
 	}
 
 	@Override
@@ -126,8 +129,8 @@ public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistic
 	public Map getEntries() {
 		final Map map = new HashMap();
 		for ( Object o : this.region.toMap().entrySet() ) {
-			final Map.Entry me = (Map.Entry) o;
-			map.put( ( (NaturalIdCacheKey) me.getKey() ).getNaturalIdValues(), me.getValue() );
+			Map.Entry me = (Map.Entry) o;
+			map.put( accessStrategy.getNaturalIdValues(me.getKey()), me.getValue() );
 		}
 		return map;
 	}

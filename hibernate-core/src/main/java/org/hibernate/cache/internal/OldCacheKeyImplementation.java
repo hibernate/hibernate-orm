@@ -8,8 +8,6 @@ package org.hibernate.cache.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.Type;
@@ -25,8 +23,8 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Deprecated
-final class OldCacheKeyImplementation implements EntityCacheKey, CollectionCacheKey, Serializable {
-	private final Serializable key;
+final class OldCacheKeyImplementation implements Serializable {
+	private final Object id;
 	private final Type type;
 	private final String entityOrRoleName;
 	private final String tenantId;
@@ -44,12 +42,12 @@ final class OldCacheKeyImplementation implements EntityCacheKey, CollectionCache
 	 * @param factory The session factory for which we are caching
 	 */
 	OldCacheKeyImplementation(
-			final Serializable id,
+			final Object id,
 			final Type type,
 			final String entityOrRoleName,
 			final String tenantId,
 			final SessionFactoryImplementor factory) {
-		this.key = id;
+		this.id = id;
 		this.type = type;
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
@@ -57,31 +55,13 @@ final class OldCacheKeyImplementation implements EntityCacheKey, CollectionCache
 	}
 
 	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
-		int result = type.getHashCode( key, factory );
+		int result = type.getHashCode(id, factory );
 		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
 		return result;
 	}
 
-	@Override
-	public Serializable getKey() {
-		return key;
-	}
-
-	@Override
-	public String getEntityName() {
-		//defined exclusively on EntityCacheKey
-		return entityOrRoleName;
-	}
-
-	@Override
-	public String getCollectionRole() {
-		//defined exclusively on CollectionCacheKey
-		return entityOrRoleName;
-	}
-
-	@Override
-	public String getTenantId() {
-		return tenantId;
+	public Object getId() {
+		return id;
 	}
 
 	@Override
@@ -98,7 +78,7 @@ final class OldCacheKeyImplementation implements EntityCacheKey, CollectionCache
 		}
 		final OldCacheKeyImplementation that = (OldCacheKeyImplementation) other;
 		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
-				&& type.isEqual( key, that.key )
+				&& type.isEqual(id, that.id)
 				&& EqualsHelper.equals( tenantId, that.tenantId );
 	}
 
@@ -110,6 +90,6 @@ final class OldCacheKeyImplementation implements EntityCacheKey, CollectionCache
 	@Override
 	public String toString() {
 		// Used to be required for OSCache
-		return entityOrRoleName + '#' + key.toString();
+		return entityOrRoleName + '#' + id.toString();
 	}
 }

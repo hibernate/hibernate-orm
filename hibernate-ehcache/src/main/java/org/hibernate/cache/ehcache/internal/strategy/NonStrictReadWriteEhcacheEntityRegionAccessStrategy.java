@@ -6,12 +6,10 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
-import java.io.Serializable;
-
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
-import org.hibernate.cache.spi.EntityCacheKey;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -25,7 +23,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Alex Snaps
  */
 public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
-		extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion,EntityCacheKey>
+		extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
 		implements EntityRegionAccessStrategy {
 
 	/**
@@ -44,12 +42,12 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	}
 
 	@Override
-	public Object get(EntityCacheKey key, long txTimestamp) throws CacheException {
+	public Object get(Object key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(EntityCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
@@ -66,7 +64,7 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	@Override
-	public SoftLock lockItem(EntityCacheKey key, Object version) throws CacheException {
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
@@ -76,7 +74,7 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	@Override
-	public void unlockItem(EntityCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		region().remove( key );
 	}
 
@@ -86,7 +84,7 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	 * Returns <code>false</code> since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
@@ -96,7 +94,7 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	 * Returns <code>false</code> since this is a non-strict read/write cache access strategy
 	 */
 	@Override
-	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
@@ -106,22 +104,31 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	 * Removes the entry since this is a non-strict read/write cache strategy.
 	 */
 	@Override
-	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		remove( key );
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		unlockItem( key, lock );
 		return false;
 	}
 
 	@Override
-	public void remove(EntityCacheKey key) throws CacheException {
+	public void remove(Object key) throws CacheException {
 		region().remove( key );
 	}
 
+	@Override
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
+	}
+
+	@Override
+	public Object getCacheKeyId(Object cacheKey) {
+		return DefaultCacheKeysFactory.getEntityId(cacheKey);
+	}
 }

@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.EntityMode;
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -207,7 +205,7 @@ public class BatchFetchQueue {
 		final SessionImplementor session = context.getSession();
 		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			final EntityCacheKey key = cache.generateCacheKey(
+			final Object key = cache.generateCacheKey(
 					entityKey.getIdentifier(),
 					persister,
 					session.getFactory(),
@@ -323,7 +321,7 @@ public class BatchFetchQueue {
 		SessionImplementor session = context.getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			CollectionCacheKey cacheKey = cache.generateCacheKey(
+			Object cacheKey = cache.generateCacheKey(
 					collectionKey,
 					persister,
 					session.getFactory(),

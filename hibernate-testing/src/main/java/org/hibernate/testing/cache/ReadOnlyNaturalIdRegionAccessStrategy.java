@@ -7,7 +7,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 /**
@@ -19,7 +18,7 @@ class ReadOnlyNaturalIdRegionAccessStrategy extends BaseNaturalIdRegionAccessStr
 	}
 
 	@Override
-	public void unlockItem(NaturalIdCacheKey key, SoftLock lock) throws CacheException {
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 }

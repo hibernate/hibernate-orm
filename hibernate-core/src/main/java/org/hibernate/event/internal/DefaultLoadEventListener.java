@@ -14,7 +14,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.WrongClassException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -358,7 +357,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final LoadEventListener.LoadType options,
 			final SessionImplementor source) {
 		SoftLock lock = null;
-		final EntityCacheKey ck;
+		final Object ck;
 		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 		if ( persister.hasCache() ) {
 			ck = cache.generateCacheKey(
@@ -576,7 +575,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		final SessionFactoryImplementor factory = source.getFactory();
 		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-		final EntityCacheKey ck = cache.generateCacheKey(
+		final Object ck = cache.generateCacheKey(
 				event.getEntityId(),
 				persister,
 				factory,

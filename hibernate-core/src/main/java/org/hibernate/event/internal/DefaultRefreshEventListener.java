@@ -13,7 +13,6 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -138,7 +137,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
-			EntityCacheKey ck = cache.generateCacheKey(
+			Object ck = cache.generateCacheKey(
 					id,
 					persister,
 					source.getFactory(),

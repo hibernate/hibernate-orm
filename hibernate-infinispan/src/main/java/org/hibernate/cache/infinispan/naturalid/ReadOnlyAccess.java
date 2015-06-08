@@ -7,7 +7,6 @@
 package org.hibernate.cache.infinispan.naturalid;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 
 /**
@@ -20,12 +19,12 @@ class ReadOnlyAccess extends TransactionalAccess {
 	}
 
 	@Override
-	public boolean update(NaturalIdCacheKey key, Object value) throws CacheException {
+	public boolean update(Object key, Object value) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}
 
 	@Override
-	public boolean afterUpdate(NaturalIdCacheKey key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}
 

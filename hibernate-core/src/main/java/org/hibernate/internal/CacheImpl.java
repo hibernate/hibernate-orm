@@ -14,8 +14,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.CollectionCacheKey;
-import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
@@ -78,7 +76,7 @@ public class CacheImpl implements CacheImplementor {
 		EntityPersister p = sessionFactory.getEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
-			EntityCacheKey key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
+			Object key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
 			return cache.getRegion().contains( key );
 		}
 		else {
@@ -102,7 +100,7 @@ public class CacheImpl implements CacheImplementor {
 				);
 			}
 			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
-			EntityCacheKey key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
+			Object key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
 			cache.evict( key );
 		}
 	}
@@ -158,7 +156,7 @@ public class CacheImpl implements CacheImplementor {
 		CollectionPersister p = sessionFactory.getCollectionPersister( role );
 		if ( p.hasCache() ) {
 			CollectionRegionAccessStrategy cache = p.getCacheAccessStrategy();
-			CollectionCacheKey key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
+			Object key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
 			return cache.getRegion().contains( key );
 		}
 		else {
@@ -177,7 +175,7 @@ public class CacheImpl implements CacheImplementor {
 				);
 			}
 			CollectionRegionAccessStrategy cache = p.getCacheAccessStrategy();
-			CollectionCacheKey key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
+			Object key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
 			cache.evict( key );
 		}
 	}

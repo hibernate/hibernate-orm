@@ -8,13 +8,16 @@ package org.hibernate.test.annotations.entitynonentity;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.UnknownEntityTypeException;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -43,6 +46,52 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 		s.delete( gsm );
 		tx.commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9856" )
+	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
+		try {
+			sessionFactory().locateEntityPersister( Cellular.class );
+		}
+		catch (UnknownEntityTypeException ignore) {
+			// expected
+		}
+
+		try {
+			sessionFactory().locateEntityPersister( Cellular.class.getName() );
+		}
+		catch (UnknownEntityTypeException ignore) {
+			// expected
+		}
+
+		Session s = openSession();
+		s.beginTransaction();
+		try {
+			s.get( Cellular.class, 1 );
+			fail( "Expecting a failure" );
+		}
+		catch (UnknownEntityTypeException ignore) {
+			// expected
+		}
+		finally {
+			s.getTransaction().commit();
+			s.close();
+		}
+
+		s = openSession();
+		s.beginTransaction();
+		try {
+			s.get( Cellular.class.getName(), 1 );
+			fail( "Expecting a failure" );
+		}
+		catch (UnknownEntityTypeException ignore) {
+			// expected
+		}
+		finally {
+			s.getTransaction().commit();
+			s.close();
+		}
 	}
 
 	@Override

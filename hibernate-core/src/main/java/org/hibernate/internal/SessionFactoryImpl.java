@@ -49,6 +49,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
+import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -781,7 +782,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		if ( entityPersister == null ) {
-			throw new HibernateException( "Unable to locate persister: " + byClass.getName() );
+			throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
 		}
 
 		return entityPersister;
@@ -791,7 +792,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	public EntityPersister locateEntityPersister(String byName) {
 		final EntityPersister entityPersister = entityPersisters.get( byName );
 		if ( entityPersister == null ) {
-			throw new HibernateException( "Unable to locate persister: " + byName );
+			throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
 		}
 		return entityPersister;
 	}

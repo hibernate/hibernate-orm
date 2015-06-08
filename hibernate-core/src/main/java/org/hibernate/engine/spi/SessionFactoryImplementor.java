@@ -289,7 +289,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The located EntityPersister, never {@code null}
 	 *
-	 * @throws HibernateException If a matching EntityPersister cannot be located
+	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 */
 	EntityPersister locateEntityPersister(Class byClass);
 
@@ -300,7 +300,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 *
 	 * @return The located EntityPersister, never {@code null}
 	 *
-	 * @throws HibernateException If a matching EntityPersister cannot be located
+	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 */
 	EntityPersister locateEntityPersister(String byName);
 

@@ -10,8 +10,11 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -29,6 +32,24 @@ public class FindTest extends BaseEntityManagerFunctionalTestCase {
 		Assert.assertNull( em.find( Reptile.class, 1l ) );
 		em.getTransaction().rollback();
 		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-9856" )
+	public void testNonEntity() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.find( String.class, 1 );
+			fail( "Expecting a failure" );
+		}
+		catch (IllegalArgumentException ignore) {
+			// expected
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 	}
 
 	@Override

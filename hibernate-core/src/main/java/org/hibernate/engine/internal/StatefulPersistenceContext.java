@@ -44,6 +44,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -472,20 +473,28 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final boolean disableVersionIncrement,
 			boolean lazyPropertiesAreUnfetched) {
 
-		final EntityEntryFactory entityEntryFactory = persister.getEntityEntryFactory();
-		final EntityEntry e = entityEntryFactory.createEntityEntry(
-				status,
-				loadedState,
-				rowId,
-				id,
-				version,
-				lockMode,
-				existsInDatabase,
-				persister,
-				disableVersionIncrement,
-				lazyPropertiesAreUnfetched,
-				this
-		);
+		final EntityEntry e;
+
+		if( (entity instanceof ManagedEntity) &&  ((ManagedEntity) entity).$$_hibernate_getEntityEntry() != null && status == Status.READ_ONLY) {
+			e = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
+			e.setStatus( status  );
+		}
+		else {
+			final EntityEntryFactory entityEntryFactory = persister.getEntityEntryFactory();
+			e = entityEntryFactory.createEntityEntry(
+					status,
+					loadedState,
+					rowId,
+					id,
+					version,
+					lockMode,
+					existsInDatabase,
+					persister,
+					disableVersionIncrement,
+					lazyPropertiesAreUnfetched,
+					this
+			);
+		}
 
 		entityEntryContext.addEntityEntry( entity, e );
 //		entityEntries.put(entity, e);

@@ -8,9 +8,12 @@ package org.hibernate.test.cache.infinispan.collection;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.internal.CacheDataDescriptionImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
@@ -31,8 +34,8 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	public static final String REGION_NAME = "test/com.foo.test";
 	public static final Object KEY = TestingKeyFactory.generateCollectionCacheKey( "KEY" );
-	public static final String VALUE1 = "VALUE1";
-	public static final String VALUE2 = "VALUE2";
+	public static final CacheDataDescription CACHE_DATA_DESCRIPTION
+			= new CacheDataDescriptionImpl(false, false, ComparableComparator.INSTANCE, null);
 
 	private NodeEnvironment environment;
 	private static CollectionRegionAccessStrategy accessStrategy;
@@ -45,7 +48,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
 
-		accessStrategy = environment.getCollectionRegion( REGION_NAME, null ).buildAccessStrategy( getAccessType() );
+		accessStrategy = environment.getCollectionRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( getAccessType() );
 	}
 
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {

@@ -10,6 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
@@ -33,11 +34,12 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
     * @param name of entity type
     * @param metadata for the entity type
     * @param factory for the region
+	* @param cacheKeysFactory factory for cache keys
     */
 	public EntityRegionImpl(
 			AdvancedCache cache, String name,
-			CacheDataDescription metadata, RegionFactory factory) {
-		super( cache, name, metadata, factory );
+			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+		super( cache, name, metadata, factory, cacheKeysFactory);
 	}
 
 	@Override
@@ -60,5 +62,4 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
 	public PutFromLoadValidator getPutFromLoadValidator() {
 		return new PutFromLoadValidator( cache );
 	}
-
 }

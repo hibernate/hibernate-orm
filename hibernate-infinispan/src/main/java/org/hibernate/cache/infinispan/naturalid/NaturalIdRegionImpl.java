@@ -10,11 +10,11 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-
 import org.infinispan.AdvancedCache;
 
 /**
@@ -33,11 +33,12 @@ public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
     * @param name of natural id region
     * @param metadata for the natural id region
     * @param factory for the natural id region
+	* @param cacheKeysFactory factory for cache keys
     */
 	public NaturalIdRegionImpl(
 			AdvancedCache cache, String name,
-			CacheDataDescription metadata, RegionFactory factory) {
-		super( cache, name, metadata, factory );
+			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+		super( cache, name, metadata, factory, cacheKeysFactory );
 	}
 
 	@Override

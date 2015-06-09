@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.collection;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -82,12 +81,12 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 
 	@Override
 	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
+		return region.getCacheKeysFactory().createCollectionKey(id, persister, factory, tenantIdentifier);
 	}
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getCollectionId(cacheKey);
+		return region.getCacheKeysFactory().getCollectionId(cacheKey);
 	}
 
 }

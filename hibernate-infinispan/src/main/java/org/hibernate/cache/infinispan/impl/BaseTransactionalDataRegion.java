@@ -7,6 +7,7 @@
 package org.hibernate.cache.infinispan.impl;
 
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TransactionalDataRegion;
 
@@ -23,6 +24,7 @@ public abstract class BaseTransactionalDataRegion
 		extends BaseRegion implements TransactionalDataRegion {
 
 	private final CacheDataDescription metadata;
+	private final CacheKeysFactory cacheKeysFactory;
 
    /**
     * Base transactional region constructor
@@ -31,12 +33,14 @@ public abstract class BaseTransactionalDataRegion
     * @param name of the transactional region
     * @param metadata for the transactional region
     * @param factory for the transactional region
+	* @param cacheKeysFactory factory for cache keys
     */
 	public BaseTransactionalDataRegion(
 			AdvancedCache cache, String name,
-			CacheDataDescription metadata, RegionFactory factory) {
-		super( cache, name, factory );
+			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+		super( cache, name, factory);
 		this.metadata = metadata;
+		this.cacheKeysFactory = cacheKeysFactory;
 	}
 
 	@Override
@@ -44,4 +48,7 @@ public abstract class BaseTransactionalDataRegion
 		return metadata;
 	}
 
+	public CacheKeysFactory getCacheKeysFactory() {
+		return cacheKeysFactory;
+	}
 }

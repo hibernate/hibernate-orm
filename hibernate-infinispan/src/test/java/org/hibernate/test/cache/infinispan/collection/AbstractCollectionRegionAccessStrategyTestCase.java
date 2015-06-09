@@ -115,7 +115,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 	}
 
 	protected CacheDataDescription getCacheDataDescription() {
-		return new CacheDataDescriptionImpl( true, true, ComparableComparator.INSTANCE );
+		return new CacheDataDescriptionImpl( true, true, ComparableComparator.INSTANCE, null);
 	}
 
 	@After
@@ -152,7 +152,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       withCacheManager(new CacheManagerCallable(TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator validator = new PutFromLoadValidator(cm,
+            PutFromLoadValidator validator = new PutFromLoadValidator(remoteCollectionRegion.getCache(), cm,
                   remoteTm, 20000) {
                @Override
                public boolean acquirePutFromLoadLock(Object key) {

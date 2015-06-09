@@ -6,6 +6,12 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import javax.transaction.TransactionManager;
+import java.util.Properties;
+
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
@@ -20,6 +26,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
@@ -33,10 +40,12 @@ import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.TransactionMode;
 import org.junit.Test;
 
-import javax.transaction.TransactionManager;
-import java.util.Properties;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -45,8 +54,13 @@ import static org.junit.Assert.*;
  * @since 3.5
  */
 public class InfinispanRegionFactoryTestCase  {
-   private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
-   private static CacheDataDescription IMMUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(false, false, null);
+   private static final CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null, null);
+   private static final CacheDataDescription IMMUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(false, false, null, null);
+
+   private static final StandardServiceRegistry REGISTRY
+           = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder("test", InfinispanRegionFactory.class, true, false).build();
+   private static final SessionFactoryOptions SETTINGS = new SessionFactoryOptionsImpl(
+           new SessionFactoryBuilderImpl.SessionFactoryOptionsStateStandardImpl( REGISTRY ));
 
    @Test
    public void testConfigurationProcessing() {
@@ -553,6 +567,10 @@ public class InfinispanRegionFactoryTestCase  {
    }
 
    private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager, Properties p) {
+      return createRegionFactory(manager, p, SETTINGS);
+   }
+
+   private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager, Properties p, SessionFactoryOptions settings) {
       final InfinispanRegionFactory factory = new SingleNodeTestCase.TestInfinispanRegionFactory() {
 
          @Override
@@ -577,7 +595,7 @@ public class InfinispanRegionFactoryTestCase  {
 
       };
 
-      factory.start(null, p);
+      factory.start(settings, p);
       return factory;
    }
 

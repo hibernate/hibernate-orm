@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.internal;
 
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -48,7 +49,7 @@ public class DefaultCacheKeysFactory {
 	}
 
 	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
-		return new OldNaturalIdCacheKey( naturalIdValues, persister, session );
+		return new OldNaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
 	}
 
 	public static Object getEntityId(Object cacheKey) {
@@ -62,4 +63,36 @@ public class DefaultCacheKeysFactory {
 	public static Object[] getNaturalIdValues(Object cacheKey) {
 		return ((OldNaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
+
+	public static CacheKeysFactory INSTANCE = new CacheKeysFactory() {
+		@Override
+		public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
+		}
+
+		@Override
+		public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+			return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
+		}
+
+		@Override
+		public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
+		}
+
+		@Override
+		public Object getEntityId(Object cacheKey) {
+			return DefaultCacheKeysFactory.getEntityId(cacheKey);
+		}
+
+		@Override
+		public Object getCollectionId(Object cacheKey) {
+			return DefaultCacheKeysFactory.getCollectionId(cacheKey);
+		}
+
+		@Override
+		public Object[] getNaturalIdValues(Object cacheKey) {
+			return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
+		}
+	};
 }

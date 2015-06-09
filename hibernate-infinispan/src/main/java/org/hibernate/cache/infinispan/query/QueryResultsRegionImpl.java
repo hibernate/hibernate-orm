@@ -13,7 +13,6 @@ import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
-
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 
@@ -38,7 +37,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
     * @param factory for the query region
     */
 	public QueryResultsRegionImpl(AdvancedCache cache, String name, RegionFactory factory) {
-		super( cache, name, null, factory );
+		super( cache, name, null, factory, null );
 		// If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
 		// We use the Timestamps cache to manage invalidation
 		final boolean localOnly = Caches.isInvalidationCache( cache );

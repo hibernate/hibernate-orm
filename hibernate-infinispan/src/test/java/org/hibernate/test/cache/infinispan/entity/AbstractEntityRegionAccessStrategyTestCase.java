@@ -115,7 +115,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    }
 
    protected CacheDataDescription getCacheDataDescription() {
-      return new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE);
+      return new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE, null);
    }
 
    @After

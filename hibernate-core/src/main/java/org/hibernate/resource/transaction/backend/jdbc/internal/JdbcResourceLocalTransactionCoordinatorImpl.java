@@ -83,8 +83,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public boolean isJoined() {
-		log.debug( "Calling TransactionCoordinator#isJoined in resource-local mode always returns false" );
-		return isActive();
+		return physicalTransactionDelegate != null && physicalTransactionDelegate.getStatus() == TransactionStatus.ACTIVE;
+
 	}
 
 	@Override

@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-public class TransactionJoiningTest extends AbstractJPATest {
+public class JtaTransactionJoiningTest extends AbstractJPATest {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );

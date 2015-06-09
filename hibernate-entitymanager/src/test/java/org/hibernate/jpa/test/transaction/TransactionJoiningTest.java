@@ -31,7 +31,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Largely a copy of {@link org.hibernate.test.jpa.txn.TransactionJoiningTest}
+ * Largely a copy of {@link org.hibernate.test.jpa.txn.JtaTransactionJoiningTest}
  *
  * @author Steve Ebersole
  */

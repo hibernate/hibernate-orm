@@ -6,30 +6,10 @@
  */
 package org.hibernate.collection.internal;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-
-import javax.naming.NamingException;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
-import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
+import org.hibernate.*;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.*;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -46,6 +26,10 @@ import org.hibernate.type.Type;
 import org.hibernate.type.UUIDBinaryType;
 import org.hibernate.type.UUIDCharType;
 import org.jboss.logging.Logger;
+
+import javax.naming.NamingException;
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -639,7 +623,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	@Override
 	public boolean needsRecreate(CollectionPersister persister) {
-		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
+        // Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
 		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
 		// of hasNotNullableColumns in the AbstractCollectionPersister constructor for more info.  In order to delete
 		// row-by-row, that would require SQL like "WHERE ( COL = ? OR ( COL is null AND ? is null ) )", rather than
@@ -647,12 +631,26 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// the param would have to be bound twice.  Until we eventually add "parameter bind points" concepts to the
 		// AST in ORM 5+, handling this type of condition is either extremely difficult or impossible.  Forcing
 		// recreation isn't ideal, but not really any other option in ORM 4.
-		if (persister.getElementType() instanceof ComponentType) {
-			ComponentType componentType = (ComponentType) persister.getElementType();
-			return !componentType.hasNotNullProperty();
-		}
-		return false;
-	}
+
+        // Selecting a type used in where part of update statement
+        // (must match condidion in org.hibernate.persister.collection.BasicCollectionPersister.doUpdateRows).
+        // See HHH-9474
+        Type whereType;
+
+        if (persister.hasIndex())//&& !persister.isIndexContainsFormula() )
+        {
+            whereType = persister.getIndexType();
+        } else {
+            whereType = persister.getElementType();
+        }
+
+        if (whereType instanceof ComponentType) {
+            ComponentType componentIndexType = (ComponentType) whereType;
+            return !componentIndexType.hasNotNullProperty();
+        }
+
+        return false;
+    }
 
 	@Override
 	public final void forceInitialization() throws HibernateException {

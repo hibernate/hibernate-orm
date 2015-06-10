@@ -44,10 +44,10 @@
 
             <mediaobject>
                 <imageobject role="html">
-                    <imagedata fileref="images/multitenacy_database.png" format="PNG" align="center" />
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_database.png" format="PNG" align="center" />
                 </imageobject>
                 <imageobject role="fo">
-                    <imagedata fileref="images/multitenacy_database.svg" format="SVG" align="center" width="17cm" />
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_database.svg" format="SVG" align="center" width="17cm" />
                 </imageobject>
             </mediaobject>
 
@@ -64,10 +64,10 @@
 
             <mediaobject>
                 <imageobject role="html">
-                    <imagedata fileref="images/multitenacy_schema.png" format="PNG" align="center" />
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_schema.png" format="PNG" align="center" />
                 </imageobject>
                 <imageobject role="fo">
-                    <imagedata fileref="images/multitenacy_schema.svg" format="SVG" align="center" width="17cm" />
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_schema.svg" format="SVG" align="center" width="17cm" />
                 </imageobject>
             </mediaobject>
 
@@ -105,10 +105,10 @@
 
             <mediaobject>
                 <imageobject role="html">
-                    <imagedata fileref="images/multitenacy_discriminator.png" format="PNG" align="center" />
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_discriminator.png" format="PNG" align="center" />
                 </imageobject>
                 <imageobject role="fo">
-                    <imagedata fileref="images/multitenacy_discriminator.svg" format="SVG" align="center" width="17cm" />
+                    <imagedata fileref="chapters/multitenancy/images/multitenacy_discriminator.svg" format="SVG" align="center" width="17cm" />
                 </imageobject>
             </mediaobject>
 

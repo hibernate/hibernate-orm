@@ -168,7 +168,6 @@ jdocbook {
 
     devguide {
         masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
-        useRelativeImageUris = false
     }
 
     manual {

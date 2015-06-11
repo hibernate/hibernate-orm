@@ -40,21 +40,17 @@ import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
  */
 public class MultipleSessionCollectionWarningTest extends BaseCoreFunctionalTestCase {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9518" )

@@ -426,9 +426,8 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		
 		while ( iter.hasNext() ) {
 			final Column column = (Column) iter.next();
-			final ColumnInformation columnInfo = tableInfo.getColumn( Identifier.toIdentifier( column.getName(), column.isQuoted() ) );
 
-			if ( columnInfo == null ) {
+			if ( !existsColumn( tableInfo, column ) ) {
 				// the column doesnt exist at all.
 				StringBuilder alter = new StringBuilder( root.toString() )
 						.append( ' ' )
@@ -479,6 +478,20 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 
 		return results.iterator();
+	}
+
+	private boolean existsColumn(TableInformation tableInfo, Column column) {
+		final Iterator<ColumnInformation> iterator = tableInfo.getColumns().iterator();
+		boolean columnExists = false;
+		while ( iterator.hasNext() ) {
+			if ( iterator.next().getColumnIdentifier().getText().toLowerCase().equals(
+					column.getName()
+							.toLowerCase()
+			) ) {
+				columnExists = true;
+			}
+		}
+		return columnExists;
 	}
 
 	public boolean hasPrimaryKey() {

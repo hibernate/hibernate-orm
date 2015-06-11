@@ -1652,4 +1652,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
 	void creatingPooledLoOptimizer(int incrementSize, String name);
+
+	@LogMessage(level = WARN)
+	@Message(value = "An unexpected session is defined for a collection, but the collection is not connected to that session. A persistent collection may only be associated with one session at a time. Overwriting session. %s", id = 470)
+	void logUnexpectedSessionInCollectionNotConnected(String msg);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Cannot unset session in a collection because an unexpected session is defined. A persistent collection may only be associated with one session at a time. %s", id = 471 )
+	void logCannotUnsetUnexpectedSessionInCollection(String msg);
 }

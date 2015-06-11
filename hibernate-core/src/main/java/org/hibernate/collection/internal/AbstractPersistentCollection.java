@@ -34,6 +34,8 @@ import java.util.ListIterator;
 
 import javax.naming.NamingException;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -47,6 +49,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -56,7 +59,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -64,7 +66,9 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class AbstractPersistentCollection implements Serializable, PersistentCollection {
-	private static final Logger log = Logger.getLogger( AbstractPersistentCollection.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, AbstractPersistentCollection.class.getName()
+	);
 
 	private transient SessionImplementor session;
 	private boolean initialized;
@@ -243,7 +247,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 					( (Session) session ).close();
 				}
 				catch (Exception e) {
-					log.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
 				}
 				session = originalSession;
 			}
@@ -602,6 +606,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			return true;
 		}
 		else {
+			if ( this.session != null ) {
+				LOG.logCannotUnsetUnexpectedSessionInCollection( generateUnexpectedSessionStateMessage( currentSession ) );
+			}
 			return false;
 		}
 	}
@@ -630,26 +637,23 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * @throws HibernateException if the collection was already associated
 	 * with another open session
 	 */
+	@Override
 	public final boolean setCurrentSession(SessionImplementor session) throws HibernateException {
 		if ( session == this.session ) {
 			return false;
 		}
 		else {
-			if ( isConnectedToSession() ) {
-				CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
-				if ( ce == null ) {
+			if ( this.session != null ) {
+				final String msg = generateUnexpectedSessionStateMessage( session );
+				if ( isConnectedToSession() ) {
 					throw new HibernateException(
-							"Illegal attempt to associate a collection with two open sessions"
+							"Illegal attempt to associate a collection with two open sessions. " + msg
 					);
 				}
 				else {
-					throw new HibernateException(
-							"Illegal attempt to associate a collection with two open sessions: " +
-									MessageHelper.collectionInfoString(
-											ce.getLoadedPersister(), this,
-											ce.getLoadedKey(), session
-									)
-					);
+					LOG.logUnexpectedSessionInCollectionNotConnected( msg );
+					this.session = session;
+					return true;
 				}
 			}
 			else {
@@ -659,9 +663,50 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 	}
 
+	private String generateUnexpectedSessionStateMessage(SessionImplementor session) {
+		// NOTE: If this.session != null, this.session may be operating on this collection
+		// (e.g., by changing this.role, this.key, or even this.session) in a different thread.
+
+		// Grab the current role and key (it can still get changed by this.session...)
+		// If this collection is connected to this.session, then this.role and this.key should
+		// be consistent with the CollectionEntry in this.session (as long as this.session doesn't
+		// change it). Don't access the CollectionEntry in this.session because that could result
+		// in multi-threaded access to this.session.
+		final String roleCurrent = role;
+		final Serializable keyCurrent = key;
+
+		final StringBuilder sb = new StringBuilder( "Collection : " );
+		if ( roleCurrent != null ) {
+			sb.append( MessageHelper.collectionInfoString( roleCurrent, keyCurrent ) );
+		}
+		else {
+			final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( this );
+			if ( ce != null ) {
+				sb.append(
+						MessageHelper.collectionInfoString(
+								ce.getLoadedPersister(),
+								this,
+								ce.getLoadedKey(),
+								session
+						)
+				);
+			}
+			else {
+				sb.append( "<unknown>" );
+			}
+		}
+		// only include the collection contents if debug logging
+		if ( LOG.isDebugEnabled() ) {
+			final String collectionContents = wasInitialized() ? toString() : "<uninitialized>";
+			sb.append( "\nCollection contents: [" ).append( collectionContents ).append( "]" );
+		}
+		return sb.toString();
+	}
+
 	/**
 	 * Do we need to completely recreate this collection when it changes?
 	 */
+	@Override
 	public boolean needsRecreate(CollectionPersister persister) {
 		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
 		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use

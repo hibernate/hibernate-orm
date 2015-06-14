@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Implementation of the ImplicitNamingStrategy contract which conforms to the
  * naming rules initially implemented by Hibernate for JPA 1.0, prior to many
@@ -68,17 +70,16 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 //			name = transformAttributePath( source.getAttributePath() );
 //		}
 //		else if ( source.getNature() == ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION
-
 		if ( source.getNature() == ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION
 				|| source.getAttributePath() == null ) {
 			name = source.getReferencedTableName().getText()
 					+ '_'
-					+ source.getReferencedColumnName();
+					+ source.getReferencedColumnName().getText();
 		}
 		else {
 			name = transformAttributePath( source.getAttributePath() )
 					+ '_'
-					+ source.getReferencedColumnName();
+					+ source.getReferencedColumnName().getText();
 		}
 
 		return toIdentifier( name, source.getBuildingContext() );

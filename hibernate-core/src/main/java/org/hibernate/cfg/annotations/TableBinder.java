@@ -600,8 +600,8 @@ public class TableBinder {
 			}
 			while ( idColumns.hasNext() ) {
 				Column column = (Column) idColumns.next();
-				columns[0].overrideFromReferencedColumnIfNecessary( column );
 				columns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
+				columns[0].overrideFromReferencedColumnIfNecessary( column );
 			}
 		}
 		else {

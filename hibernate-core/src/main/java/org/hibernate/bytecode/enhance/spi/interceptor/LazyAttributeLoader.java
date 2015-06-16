@@ -35,7 +35,7 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 	}
 
 	protected final Object intercept(Object target, String fieldName, Object value) {
-		if ( lazyFields != null && lazyFields.contains( fieldName ) && initializedFields.contains( fieldName ) ) {
+		if ( lazyFields != null && lazyFields.contains( fieldName ) && !initializedFields.contains( fieldName ) ) {
 			if ( session == null ) {
 				throw new LazyInitializationException( "entity with lazy properties is not associated with a session" );
 			}

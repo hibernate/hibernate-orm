@@ -8,7 +8,6 @@ package org.hibernate.test.bytecode.enhancement.lazy;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;

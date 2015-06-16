@@ -7,6 +7,9 @@
 package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -21,18 +24,20 @@ public abstract class AbstractEnhancerTestTask implements EnhancerTestTask {
 	private ServiceRegistry serviceRegistry;
 	private SessionFactory factory;
 
-	public final void prepare(Configuration user) {
-		Configuration cfg = new Configuration();
-		cfg.setProperties( user.getProperties() );
-		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+	public final void prepare(Configuration config) {
+		config.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 
 		Class<?>[] resources = getAnnotatedClasses();
 		for ( Class<?> resource : resources ) {
-			cfg.addAnnotatedClass( resource );
+			config.addAnnotatedClass( resource );
 		}
 
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		factory = cfg.buildSessionFactory( serviceRegistry );
+		StandardServiceRegistryBuilder serviceBuilder = new StandardServiceRegistryBuilder( );
+		serviceBuilder.addService( ClassLoaderService.class, new ClassLoaderServiceImpl( Thread.currentThread().getContextClassLoader() ) );
+
+		serviceBuilder.applySettings( config.getProperties() );
+		serviceRegistry = serviceBuilder.build();
+		factory = config.buildSessionFactory( serviceRegistry );
 	}
 
 	public final void complete() {

@@ -39,13 +39,6 @@ public interface TableInformation {
 	public String getComment();
 
 	/**
-	 * Get an iterable over all of the table's columns.
-	 *
-	 * @return All of the table's columns
-	 */
-	public Iterable<ColumnInformation> getColumns();
-
-	/**
 	 * Retrieve the named ColumnInformation
 	 *
 	 * @param columnIdentifier The column identifier (simple name)

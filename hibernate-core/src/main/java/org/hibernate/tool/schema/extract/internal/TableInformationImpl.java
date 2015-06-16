@@ -31,7 +31,6 @@ public class TableInformationImpl implements TableInformation {
 	private final boolean physicalTable;
 	private final String comment;
 
-	private Map<Identifier, ColumnInformation> columns;
 	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
@@ -65,25 +64,8 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public Iterable<ColumnInformation> getColumns() {
-		return columns().values();
-	}
-
-	protected Map<Identifier, ColumnInformation> columns() {
-		if ( this.columns == null ) {
-			final Map<Identifier, ColumnInformation> columnMap = new HashMap<Identifier, ColumnInformation>();
-			final Iterable<ColumnInformation> columnInformationItr = extractor.getColumns( this );
-			for ( ColumnInformation columnInformation : columnInformationItr ) {
-				columnMap.put( columnInformation.getColumnIdentifier(), columnInformation );
-			}
-			this.columns = columnMap;
-		}
-		return this.columns;
-	}
-
-	@Override
 	public ColumnInformation getColumn(Identifier columnIdentifier) {
-		return columns().get( columnIdentifier );
+		return extractor.getColumn( this, columnIdentifier );
 	}
 
 	@Override

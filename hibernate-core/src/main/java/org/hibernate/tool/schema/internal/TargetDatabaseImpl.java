@@ -36,6 +36,7 @@ public class TargetDatabaseImpl implements Target {
 	public void prepare() {
 		try {
 			connection = connectionAccess.obtainConnection();
+			connection.setAutoCommit( true );
 		}
 		catch (SQLException e) {
 			throw new SchemaManagementException( "Unable to open JDBC connection for schema management target", e );
@@ -70,6 +71,7 @@ public class TargetDatabaseImpl implements Target {
 		}
 		if ( connection != null ) {
 			try {
+
 				connectionAccess.releaseConnection( connection );
 			}
 			catch (SQLException ignore) {

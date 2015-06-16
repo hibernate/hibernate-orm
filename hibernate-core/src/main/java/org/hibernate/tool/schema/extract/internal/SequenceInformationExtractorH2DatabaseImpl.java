@@ -44,13 +44,13 @@ public class SequenceInformationExtractorH2DatabaseImpl implements SequenceInfor
 					sequenceInformationList.add(
 							new SequenceInformationImpl(
 									new QualifiedSequenceName(
-											identifierHelper.fromMetaDataCatalogName(
+											identifierHelper.toIdentifier(
 													resultSet.getString( "SEQUENCE_CATALOG" )
 											),
-											identifierHelper.fromMetaDataSchemaName(
+											identifierHelper.toIdentifier(
 													resultSet.getString( "SEQUENCE_SCHEMA" )
 											),
-											identifierHelper.fromMetaDataObjectName(
+											identifierHelper.toIdentifier(
 													resultSet.getString( "SEQUENCE_NAME" )
 											)
 									),

@@ -26,19 +26,6 @@ public interface InformationExtractor {
 	boolean schemaExists(Identifier catalog, Identifier schema);
 
 	/**
-	 * Return information about all matching tables, depending on whether to apply filter for
-	 * catalog/schema.
-	 *
-	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
-	 * non-{@code null} value indicates that search should be limited to the passed catalog.
-	 * @param schema Can  be {@code null}, indicating that any schema may be considered a match.  A
-	 * non-{@code null} value indicates that search should be limited to the passed schema .
-	 *
-	 * @return The matching table information
-	 */
-	public Collection<TableInformation> getTables(Identifier catalog, Identifier schema);
-
-	/**
 	 * Look for a matching table.
 	 *
 	 * @param catalog Can be {@code null}, indicating that any catalog may be considered a match.  A
@@ -52,14 +39,15 @@ public interface InformationExtractor {
 	public TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
 
 	/**
-	 * Return information about columns for the given table.  Typically called from the TableInformation itself
+	 * Return information about column for the given table.  Typically called from the TableInformation itself
 	 * as part of on-demand initialization of its state.
 	 *
-	 * @param tableInformation The table for which to locate columns
+	 * @param tableInformation table info for the matching table
+	 * @param columnIdentifier The column identifier for which to locate column
 	 *
 	 * @return The extracted column information
 	 */
-	public Iterable<ColumnInformation> getColumns(TableInformation tableInformation);
+	public ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier);
 
 	/**
 	 * Extract information about the given table's primary key.

@@ -122,6 +122,11 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 					paramHolder.type = namedSpec.getExpectedType();
 					namedParameterMap.put( namedSpec.getName(), paramHolder );
 				}
+				else if ( paramHolder.type == null && namedSpec.getExpectedType() != null ) {
+					// previous reference to the named parameter did not have type determined;
+					// this time, it can be determined by namedSpec.getExpectedType().
+					paramHolder.type = namedSpec.getExpectedType();
+				}
 				paramHolder.positions.add( i );
 			}
 			else {

@@ -24,37 +24,12 @@
 package org.hibernate.test.collection.dereferenced;
 
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 
 /**
  * @author Gail Badner
  */
-@Entity
-public class UnversionedNoCascadeOne implements One {
-	@Id
-	@GeneratedValue
-	private long id;
-
-	@OneToMany
-	@JoinColumn
-	private Set<Many> manies;
-
-	public long getId() {
-		return id;
-	}
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public Set<Many> getManies() {
-		return manies;
-	}
-	public void setManies(Set<Many> manies) {
-		this.manies = manies;
-	}
+public interface One {
+	long getId();
+	Set<Many> getManies();
+	void setManies(Set<Many> manies);
 }

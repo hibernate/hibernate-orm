@@ -23,10 +23,6 @@
  */
 package org.hibernate.test.collection.dereferenced;
 
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
-
 /**
  * @author Gail Badner
  */
@@ -35,26 +31,5 @@ public class UnversionedCascadeDereferencedCollectionTest extends AbstractDerefe
 	@Override
 	protected Class<?> getCollectionOwnerClass() {
 		return UnversionedCascadeOne.class;
-	}
-
-	@Override
-	@Test
-	@FailureExpected(jiraKey = "HHH-9777")
-	public void testMergeNullCollection() {
-		super.testMergeNullCollection();
-	}
-
-	@Override
-	@Test
-	@FailureExpected(jiraKey = "HHH-9777")
-	public void testGetAndNullifyCollection() {
-		super.testGetAndNullifyCollection();
-	}
-
-	@Override
-	@Test
-	@FailureExpected(jiraKey = "HHH-9777")
-	public void testGetAndReplaceCollection() {
-		super.testGetAndReplaceCollection();
 	}
 }

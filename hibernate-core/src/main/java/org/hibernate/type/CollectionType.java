@@ -313,7 +313,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		// TODO: I don't really like this implementation; it would be better if
 		// this was handled by searchForDirtyCollections()
-		return super.isDirty( old, current, session );
+		return isOwnerVersioned( session ) && super.isDirty( old, current, session );
 		// return false;
 
 	}

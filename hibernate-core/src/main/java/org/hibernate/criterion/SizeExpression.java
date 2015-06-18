@@ -76,7 +76,7 @@ public class SizeExpression implements Criterion {
 
 	@Override
 	public String toString() {
-		return propertyName + ".size" + op + size;
+		return Integer.toString(size) + op + propertyName + ".size";
 	}
 
 }

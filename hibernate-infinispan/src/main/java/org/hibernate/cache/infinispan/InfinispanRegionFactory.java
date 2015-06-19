@@ -48,6 +48,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commons.util.FileLookup;
 import org.infinispan.commons.util.FileLookupFactory;
+import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -434,8 +435,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 				new ClassLoaderService.Work<EmbeddedCacheManager>() {
 					@Override
 					public EmbeddedCacheManager doWork(ClassLoader classLoader) {
+						InputStream is = null;
 						try {
-							InputStream is;
 							is = fileLookup.lookupFile( configLoc, classLoader );
 							if ( is == null ) {
 								// when it's not a user-provided configuration file, it might be a default configuration file,
@@ -462,6 +463,9 @@ public class InfinispanRegionFactory implements RegionFactory {
 						}
 						catch (IOException e) {
 							throw new CacheException( "Unable to create default cache manager", e );
+						}
+						finally {
+							Util.close( is );
 						}
 					}
 

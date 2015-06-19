@@ -153,7 +153,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		instantiator = buildInstantiator( mappingInfo );
 
-		if ( entityMetamodel.isLazy() ) {
+		if ( entityMetamodel.isLazy() && !entityMetamodel.isLazyLoadingBytecodeEnhanced() ) {
 			proxyFactory = buildProxyFactory( mappingInfo, idGetter, idSetter );
 			if ( proxyFactory == null ) {
 				entityMetamodel.setLazy( false );
@@ -657,7 +657,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public boolean hasProxy() {
-		return entityMetamodel.isLazy();
+		return entityMetamodel.isLazy() && !entityMetamodel.isLazyLoadingBytecodeEnhanced();
 	}
 
 	@Override

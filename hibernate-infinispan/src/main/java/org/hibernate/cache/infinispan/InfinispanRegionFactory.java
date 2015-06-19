@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.infinispan;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -47,6 +46,7 @@ import org.hibernate.service.ServiceRegistry;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
+import org.infinispan.commons.util.FileLookup;
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -426,6 +426,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 				properties,
 				DEF_INFINISPAN_CONFIG_RESOURCE
 		);
+		final FileLookup fileLookup = FileLookupFactory.newInstance();
 
 		return serviceRegistry.getService( ClassLoaderService.class ).workWithClassLoader(
 				new ClassLoaderService.Work<EmbeddedCacheManager>() {
@@ -433,13 +434,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 					public EmbeddedCacheManager doWork(ClassLoader classLoader) {
 						try {
 							InputStream is;
-							try {
-								is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
-							}
-							catch (FileNotFoundException e) {
-								// In some environments (ex: OSGi), hibernate-infinispan may not
-								// be in the app CL.  It's important to also try this CL.
+							is = fileLookup.lookupFile( configLoc, classLoader );
+							if ( is == null ) {
+								// when it's not a user-provided configuration file, it might be a default configuration file,
+								// and if that's included in [this] module might not be visible to the ClassLoaderService:
 								classLoader = this.getClass().getClassLoader();
+								// This time use lookupFile*Strict* so to provide an exception if we can't find it yet:
 								is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
 							}
 							final ParserRegistry parserRegistry = new ParserRegistry( classLoader );

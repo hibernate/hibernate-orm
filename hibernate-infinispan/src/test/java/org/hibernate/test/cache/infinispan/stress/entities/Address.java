@@ -153,14 +153,13 @@ public final class Address {
 
       Address address = (Address) o;
 
+      // inhabitants must not be in the comparison since we would end up in infinite recursion
       if (id != address.id) return false;
       if (streetNumber != address.streetNumber) return false;
       if (version != address.version) return false;
       if (cityName != null ? !cityName.equals(address.cityName) : address.cityName != null)
          return false;
       if (countryName != null ? !countryName.equals(address.countryName) : address.countryName != null)
-         return false;
-      if (inhabitants != null ? !inhabitants.equals(address.inhabitants) : address.inhabitants != null)
          return false;
       if (streetName != null ? !streetName.equals(address.streetName) : address.streetName != null)
          return false;
@@ -177,7 +176,6 @@ public final class Address {
       result = 31 * result + (cityName != null ? cityName.hashCode() : 0);
       result = 31 * result + (countryName != null ? countryName.hashCode() : 0);
       result = 31 * result + (zipCode != null ? zipCode.hashCode() : 0);
-      result = 31 * result + (inhabitants != null ? inhabitants.hashCode() : 0);
       result = 31 * result + id;
       result = 31 * result + version;
       return result;

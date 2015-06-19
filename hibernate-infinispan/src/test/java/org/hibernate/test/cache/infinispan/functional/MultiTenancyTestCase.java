@@ -10,6 +10,7 @@ import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.infinispan.commons.util.CloseableIteratorSet;
 import org.infinispan.context.Flag;
@@ -26,8 +27,10 @@ public class MultiTenancyTestCase extends SingleNodeTestCase {
 
     private static final String DB1 = "db1";
     private static final String DB2 = "db2";
-    private final ConnectionProvider db1 = ConnectionProviderBuilder.buildConnectionProvider(DB1);
-    private final ConnectionProvider db2 = ConnectionProviderBuilder.buildConnectionProvider(DB2);
+    private final ConnectionProvider db1
+          = new XaConnectionProvider(ConnectionProviderBuilder.buildConnectionProvider(DB1));
+    private final ConnectionProvider db2
+          = new XaConnectionProvider(ConnectionProviderBuilder.buildConnectionProvider(DB2));
 
     @Override
     protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {

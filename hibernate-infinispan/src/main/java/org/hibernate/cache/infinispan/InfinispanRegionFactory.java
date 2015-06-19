@@ -427,6 +427,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 				DEF_INFINISPAN_CONFIG_RESOURCE
 		);
 		final FileLookup fileLookup = FileLookupFactory.newInstance();
+		//The classloader of the current module:
+		final ClassLoader infinispanClassLoader = InfinispanRegionFactory.class.getClassLoader();
 
 		return serviceRegistry.getService( ClassLoaderService.class ).workWithClassLoader(
 				new ClassLoaderService.Work<EmbeddedCacheManager>() {
@@ -438,12 +440,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 							if ( is == null ) {
 								// when it's not a user-provided configuration file, it might be a default configuration file,
 								// and if that's included in [this] module might not be visible to the ClassLoaderService:
-								classLoader = this.getClass().getClassLoader();
+								classLoader = infinispanClassLoader;
 								// This time use lookupFile*Strict* so to provide an exception if we can't find it yet:
 								is = FileLookupFactory.newInstance().lookupFileStrict( configLoc, classLoader );
 							}
-							final ParserRegistry parserRegistry = new ParserRegistry( classLoader );
-							final ConfigurationBuilderHolder holder = parserRegistry.parse( is );
+							final ParserRegistry parserRegistry = new ParserRegistry( infinispanClassLoader );
+							final ConfigurationBuilderHolder holder = parseWithOverridenClassLoader( parserRegistry, is, infinispanClassLoader );
 
 							// Override global jmx statistics exposure
 							final String globalStats = extractProperty(
@@ -462,8 +464,26 @@ public class InfinispanRegionFactory implements RegionFactory {
 							throw new CacheException( "Unable to create default cache manager", e );
 						}
 					}
+
 				}
 		);
+	}
+
+	private static ConfigurationBuilderHolder parseWithOverridenClassLoader(ParserRegistry configurationParser, InputStream is, ClassLoader infinispanClassLoader) {
+		// Infinispan requires the context ClassLoader to have full visibility on all
+		// its components and eventual extension points even *during* configuration parsing.
+		final Thread currentThread = Thread.currentThread();
+		final ClassLoader originalContextClassLoader = currentThread.getContextClassLoader();
+		try {
+			currentThread.setContextClassLoader( infinispanClassLoader );
+			ConfigurationBuilderHolder builderHolder = configurationParser.parse( is );
+			// Workaround Infinispan's ClassLoader strategies to bend to our will:
+			builderHolder.getGlobalConfigurationBuilder().classLoader( infinispanClassLoader );
+			return builderHolder;
+		}
+		finally {
+			currentThread.setContextClassLoader( originalContextClassLoader );
+		}
 	}
 
 	protected EmbeddedCacheManager createCacheManager(ConfigurationBuilderHolder holder) {

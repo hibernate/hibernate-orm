@@ -23,41 +23,44 @@ import javax.transaction.TransactionManager;
  */
 public class XaTransactionManagerImpl implements TransactionManager {
    private static final XaTransactionManagerImpl INSTANCE = new XaTransactionManagerImpl();
-   private XaTransactionImpl currentTransaction;
+   private final ThreadLocal<XaTransactionImpl> currentTransaction = new ThreadLocal<>();
 
    public static XaTransactionManagerImpl getInstance() {
       return INSTANCE;
    }
 
    public int getStatus() throws SystemException {
+      XaTransactionImpl currentTransaction = this.currentTransaction.get();
       return currentTransaction == null ? Status.STATUS_NO_TRANSACTION : currentTransaction.getStatus();
    }
 
    public Transaction getTransaction() throws SystemException {
-      return currentTransaction;
+      return currentTransaction.get();
    }
 
    public XaTransactionImpl getCurrentTransaction() {
-      return currentTransaction;
+      return currentTransaction.get();
    }
 
    public void begin() throws NotSupportedException, SystemException {
-      currentTransaction = new XaTransactionImpl(this);
+      if (currentTransaction.get() != null) throw new IllegalStateException("Transaction already started.");
+      currentTransaction.set(new XaTransactionImpl(this));
    }
 
    public Transaction suspend() throws SystemException {
-      Transaction suspended = currentTransaction;
-      currentTransaction = null;
+      Transaction suspended = currentTransaction.get();
+      currentTransaction.remove();
       return suspended;
    }
 
    public void resume(Transaction transaction) throws InvalidTransactionException, IllegalStateException,
             SystemException {
-      currentTransaction = (XaTransactionImpl) transaction;
+      currentTransaction.set((XaTransactionImpl) transaction);
    }
 
    public void commit() throws RollbackException, HeuristicMixedException, HeuristicRollbackException,
             SecurityException, IllegalStateException, SystemException {
+      XaTransactionImpl currentTransaction = this.currentTransaction.get();
       if (currentTransaction == null) {
          throw new IllegalStateException("no current transaction to commit");
       }
@@ -65,6 +68,7 @@ public class XaTransactionManagerImpl implements TransactionManager {
    }
 
    public void rollback() throws IllegalStateException, SecurityException, SystemException {
+      XaTransactionImpl currentTransaction = this.currentTransaction.get();
       if (currentTransaction == null) {
          throw new IllegalStateException("no current transaction");
       }
@@ -72,6 +76,7 @@ public class XaTransactionManagerImpl implements TransactionManager {
    }
 
    public void setRollbackOnly() throws IllegalStateException, SystemException {
+      XaTransactionImpl currentTransaction = this.currentTransaction.get();
       if (currentTransaction == null) {
          throw new IllegalStateException("no current transaction");
       }
@@ -82,8 +87,6 @@ public class XaTransactionManagerImpl implements TransactionManager {
    }
 
    void endCurrent(Transaction transaction) {
-      if (transaction == currentTransaction) {
-         currentTransaction = null;
-      }
+      currentTransaction.remove();
    }
 }

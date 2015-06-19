@@ -89,6 +89,7 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+		delegate.unlockItem(key);
 	}
 
 	@Override

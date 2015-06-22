@@ -11,12 +11,14 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -116,7 +118,7 @@ public final class EntityUpdateAction extends EntityAction {
 
 		final boolean veto = preUpdate();
 
-		final SessionFactoryImplementor factory = getSession().getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 		Object previousVersion = this.previousVersion;
 		if ( persister.isVersionPropertyGenerated() ) {
 			// we need to grab the version value from the entity, otherwise
@@ -125,14 +127,16 @@ public final class EntityUpdateAction extends EntityAction {
 			previousVersion = persister.getVersion( instance );
 		}
 		
-		final CacheKey ck;
+		final EntityCacheKey ck;
 		if ( persister.hasCache() ) {
-			ck = session.generateCacheKey(
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			ck = cache.generateCacheKey(
 					id, 
-					persister.getIdentifierType(), 
-					persister.getRootEntityName()
+					persister,
+					factory,
+					session.getTenantIdentifier()
 			);
-			lock = persister.getCacheAccessStrategy().lockItem( ck, previousVersion );
+			lock = cache.lockItem( ck, previousVersion );
 		}
 		else {
 			ck = null;
@@ -152,7 +156,7 @@ public final class EntityUpdateAction extends EntityAction {
 			);
 		}
 
-		final EntityEntry entry = getSession().getPersistenceContext().getEntry( instance );
+		final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
 		}
@@ -212,7 +216,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, CacheKey ck) {
+	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, EntityCacheKey ck) {
 		try {
 			getSession().getEventListenerManager().cachePutStart();
 			return persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
@@ -307,34 +311,37 @@ public final class EntityUpdateAction extends EntityAction {
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws CacheException {
 		final EntityPersister persister = getPersister();
 		if ( persister.hasCache() ) {
-			
-			final CacheKey ck = getSession().generateCacheKey(
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final EntityCacheKey ck = cache.generateCacheKey(
 					getId(),
-					persister.getIdentifierType(), 
-					persister.getRootEntityName()
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+					
 			);
-			
+
 			if ( success && cacheEntry!=null /*!persister.isCacheInvalidationRequired()*/ ) {
-				final boolean put = cacheAfterUpdate( persister, ck );
+				final boolean put = cacheAfterUpdate( cache, ck );
 
 				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					getSession().getFactory().getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
+					getSession().getFactory().getStatisticsImplementor().secondLevelCachePut( cache.getRegion().getName() );
 				}
 			}
 			else {
-				persister.getCacheAccessStrategy().unlockItem( ck, lock );
+				cache.unlockItem( ck, lock );
 			}
 		}
 		postCommitUpdate( success );
 	}
 
-	private boolean cacheAfterUpdate(EntityPersister persister, CacheKey ck) {
+	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, EntityCacheKey ck) {
+		SessionEventListenerManager eventListenerManager = getSession().getEventListenerManager();
 		try {
-			getSession().getEventListenerManager().cachePutStart();
-			return persister.getCacheAccessStrategy().afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
+			eventListenerManager.cachePutStart();
+			return cache.afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {
-			getSession().getEventListenerManager().cachePutEnd();
+			eventListenerManager.cachePutEnd();
 		}
 	}
 

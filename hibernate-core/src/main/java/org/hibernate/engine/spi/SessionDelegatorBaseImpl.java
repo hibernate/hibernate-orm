@@ -35,7 +35,6 @@ import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -47,7 +46,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-import org.hibernate.type.Type;
 
 /**
  * This class is meant to be extended.
@@ -95,11 +93,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
 		return sessionImplementor.generateEntityKey( id, persister );
-	}
-
-	@Override
-	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
-		return sessionImplementor.generateCacheKey( id, type, entityOrRoleName );
 	}
 
 	@Override

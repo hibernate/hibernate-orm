@@ -15,8 +15,8 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -27,9 +27,8 @@ import org.jboss.logging.Logger;
  * @author Chris Dennis
  * @author Alex Snaps
  */
-abstract class AbstractReadWriteEhcacheAccessStrategy<T
-		extends EhcacheTransactionalDataRegion>
-		extends AbstractEhcacheAccessStrategy<T> {
+abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion, K extends CacheKey>
+		extends AbstractEhcacheAccessStrategy<T, K> {
 
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
 			EhCacheMessageLogger.class,
@@ -56,7 +55,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#get(java.lang.Object, long)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#get(java.lang.Object, long)
 	 */
-	public final Object get(Object key, long txTimestamp) throws CacheException {
+	public final Object get(K key, long txTimestamp) throws CacheException {
 		readLockIfNeeded( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -83,7 +82,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T
 	 */
 	@Override
 	public final boolean putFromLoad(
-			Object key,
+			K key,
 			Object value,
 			long txTimestamp,
 			Object version,
@@ -112,7 +111,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#lockItem(java.lang.Object, java.lang.Object)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#lockItem(java.lang.Object, java.lang.Object)
 	 */
-	public final SoftLock lockItem(Object key, Object version) throws CacheException {
+	public final SoftLock lockItem(K key, Object version) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -136,7 +135,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#unlockItem(java.lang.Object, org.hibernate.cache.spi.access.SoftLock)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#unlockItem(java.lang.Object, org.hibernate.cache.spi.access.SoftLock)
 	 */
-	public final void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public final void unlockItem(K key, SoftLock lock) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );

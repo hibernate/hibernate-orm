@@ -9,6 +9,7 @@ package org.hibernate.cache.ehcache.internal.strategy;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -19,7 +20,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Chris Dennis
  * @author Alex Snaps
  */
-public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
+public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion,EntityCacheKey>
 		implements EntityRegionAccessStrategy {
 
 	/**
@@ -38,12 +39,12 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(EntityCacheKey key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
 	@Override
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(EntityCacheKey key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
@@ -55,7 +56,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
+	public SoftLock lockItem(EntityCacheKey key, Object version) throws UnsupportedOperationException {
 		return null;
 	}
 
@@ -65,7 +66,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * A no-op since this cache is read-only
 	 */
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(EntityCacheKey key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
@@ -75,12 +76,12 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * This cache is asynchronous hence a no-op
 	 */
 	@Override
-	public boolean insert(Object key, Object value, Object version) throws CacheException {
+	public boolean insert(EntityCacheKey key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+	public boolean afterInsert(EntityCacheKey key, Object value, Object version) throws CacheException {
 		region().put( key, value );
 		return true;
 	}
@@ -93,7 +94,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion)
 			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
@@ -106,7 +107,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * @throws UnsupportedOperationException always
 	 */
 	@Override
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
+	public boolean afterUpdate(EntityCacheKey key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}

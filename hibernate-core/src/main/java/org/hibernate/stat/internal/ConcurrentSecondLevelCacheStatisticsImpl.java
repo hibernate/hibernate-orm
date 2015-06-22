@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.EntityCacheKey;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
@@ -60,7 +60,7 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 		Iterator iter = region.toMap().entrySet().iterator();
 		while (iter.hasNext()) {
 			Map.Entry me = (Map.Entry) iter.next();
-			map.put(((CacheKey) me.getKey()).getKey(), me.getValue());
+			map.put(((EntityCacheKey) me.getKey()).getKey(), me.getValue());
 		}
 		return map;
 	}

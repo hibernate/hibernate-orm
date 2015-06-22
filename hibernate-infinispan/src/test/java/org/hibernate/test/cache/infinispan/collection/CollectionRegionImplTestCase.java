@@ -10,6 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CollectionCacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
@@ -28,7 +29,8 @@ import static org.junit.Assert.fail;
  * 
  * @author Galder Zamarreño
  */
-public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegionTestCase {
+public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegionTestCase<CollectionCacheKey> {
+
    private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
 
    @Override
@@ -60,13 +62,13 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
    }
 
    @Override
-   protected void putInRegion(Region region, Object key, Object value) {
+   protected void putInRegion(Region region, CollectionCacheKey key, Object value) {
       CollectionRegionAccessStrategy strategy = ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL);
       strategy.putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
    }
 
    @Override
-   protected void removeFromRegion(Region region, Object key) {
+   protected void removeFromRegion(Region region, CollectionCacheKey key) {
       ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(key);
    }
 

@@ -12,6 +12,7 @@ import net.sf.ehcache.Element;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
+import org.hibernate.cache.spi.NaturalIdCacheKey;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -24,7 +25,7 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Alex Snaps
  */
 public class TransactionalEhcacheNaturalIdRegionAccessStrategy
-		extends AbstractEhcacheAccessStrategy<EhcacheNaturalIdRegion>
+		extends AbstractEhcacheAccessStrategy<EhcacheNaturalIdRegion,NaturalIdCacheKey>
 		implements NaturalIdRegionAccessStrategy {
 
 	private final Ehcache ehcache;
@@ -45,17 +46,17 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value) {
+	public boolean afterInsert(NaturalIdCacheKey key, Object value) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) {
+	public boolean afterUpdate(NaturalIdCacheKey key, Object value, SoftLock lock) {
 		return false;
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(NaturalIdCacheKey key, long txTimestamp) throws CacheException {
 		try {
 			final Element element = ehcache.get( key );
 			return element == null ? null : element.getObjectValue();
@@ -71,7 +72,7 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public boolean insert(Object key, Object value) throws CacheException {
+	public boolean insert(NaturalIdCacheKey key, Object value) throws CacheException {
 		//OptimisticCache? versioning?
 		try {
 			ehcache.put( new Element( key, value ) );
@@ -83,13 +84,13 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockItem(NaturalIdCacheKey key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
 	public boolean putFromLoad(
-			Object key,
+			NaturalIdCacheKey key,
 			Object value,
 			long txTimestamp,
 			Object version,
@@ -108,7 +109,7 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(NaturalIdCacheKey key) throws CacheException {
 		try {
 			ehcache.remove( key );
 		}
@@ -118,12 +119,12 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(NaturalIdCacheKey key, SoftLock lock) throws CacheException {
 		// no-op
 	}
 
 	@Override
-	public boolean update(Object key, Object value) throws CacheException {
+	public boolean update(NaturalIdCacheKey key, Object value) throws CacheException {
 		try {
 			ehcache.put( new Element( key, value ) );
 			return true;

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2015, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,21 +21,49 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.metamodel;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+package org.hibernate.test.hql.fetchAndJoin;
 
-/**
- * @author Steve Ebersole
- */
-public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Address.class, Alias.class, Country.class, CreditCard.class, Customer.class,
-				Entity1.class, Entity2.class, Entity3.class,
-				Info.class, LineItem.class, Order.class, Phone.class, Product.class,
-				ShelfLife.class, Spouse.class, Thing.class, ThingWithQuantity.class,
-				VersionedEntity.class
-		};
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "entity1")
+public class Entity1 {
+	@Id
+	@GeneratedValue
+	private long id;
+
+	@ManyToOne
+	@JoinColumn(name="entity2_id", nullable = false)
+	private Entity2 entity2;
+
+	private String value;
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public Entity2 getEntity2() {
+		return entity2;
+	}
+
+	public void setEntity2(Entity2 entity2) {
+		this.entity2 = entity2;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
 	}
 }

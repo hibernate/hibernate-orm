@@ -6,9 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.sql.Types;
-
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -37,8 +34,10 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
+
+import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * A dialect compatible with the H2 database.
@@ -335,7 +334,8 @@ public class H2Dialect extends Dialect {
 		 * @param sqle The exception that was the result of the constraint violation.
 		 * @return The extracted constraint name.
 		 */
-		public String extractConstraintName(SQLException sqle) {
+		@Override
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
 			String constraintName = null;
 			// 23000: Check constraint violation: {0}
 			// 23001: Unique index or primary key violation: {0}

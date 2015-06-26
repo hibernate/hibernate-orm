@@ -144,7 +144,7 @@ public class Teradata14Dialect extends TeradataDialect {
 		 * @return The extracted constraint name.
 		 */
 		@Override
-		public String extractConstraintName(SQLException sqle) {
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
 			String constraintName = null;
 
 			int errorCode = sqle.getErrorCode();

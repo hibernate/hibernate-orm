@@ -6,10 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -25,6 +21,10 @@ import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
 
 /**
  * Informix dialect.<br>
@@ -223,7 +223,7 @@ public class InformixDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
-		public String extractConstraintName(SQLException sqle) {
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
 			String constraintName = null;
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 

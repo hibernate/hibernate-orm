@@ -210,6 +210,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 				}
 				catch (Exception ignore) {
 				}
+				catch (LinkageError ignore) {
+				}
 			}
 
 			throw new ClassNotFoundException( "Could not load requested class : " + name );
@@ -224,6 +226,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
 		}
 		catch (Exception e) {
+			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
+		}
+		catch (LinkageError e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
 		}
 	}

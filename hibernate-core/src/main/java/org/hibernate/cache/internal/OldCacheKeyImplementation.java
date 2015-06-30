@@ -21,6 +21,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated In optimized implementations, wrapping the id is not necessary.
  */
 @Deprecated
 final class OldCacheKeyImplementation implements Serializable {
@@ -55,7 +57,7 @@ final class OldCacheKeyImplementation implements Serializable {
 	}
 
 	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
-		int result = type.getHashCode(id, factory );
+		int result = type.getHashCode( id, factory );
 		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
 		return result;
 	}
@@ -78,7 +80,7 @@ final class OldCacheKeyImplementation implements Serializable {
 		}
 		final OldCacheKeyImplementation that = (OldCacheKeyImplementation) other;
 		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
-				&& type.isEqual(id, that.id)
+				&& type.isEqual( id, that.id)
 				&& EqualsHelper.equals( tenantId, that.tenantId );
 	}
 

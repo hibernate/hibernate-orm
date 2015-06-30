@@ -292,9 +292,7 @@ public class CollectionLoadContext {
 			if ( debugEnabled ) {
 				LOG.debug( "Refusing to add to cache due to enabled filters" );
 			}
-			// todo : add the notion of enabled filters to the CacheKey to differentiate filtered collections from non-filtered;
-			//      but CacheKey is currently used for both collections and entities; would ideally need to define two seperate ones;
-			//      currently this works in conjuction with the check on
+			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
 			// EARLY EXIT!!!!!

@@ -30,7 +30,7 @@ import org.hibernate.persister.entity.EntityPersister;
 public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 
 	/**
-	 * To create instances of EntityCacheKey for this region, Hibernate will invoke this method
+	 * To create instances of keys for this region, Hibernate will invoke this method
 	 * exclusively so that generated implementations can generate optimised keys.
 	 * @param id the primary identifier of the entity
 	 * @param persister the persister for the type for which a key is being generated

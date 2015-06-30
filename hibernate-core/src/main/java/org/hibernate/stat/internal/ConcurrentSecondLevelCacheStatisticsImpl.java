@@ -29,8 +29,8 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 	private AtomicLong putCount = new AtomicLong();
 
 	ConcurrentSecondLevelCacheStatisticsImpl(Region region,
-											 EntityRegionAccessStrategy entityRegionAccessStrategy,
-											 CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
+			EntityRegionAccessStrategy entityRegionAccessStrategy,
+			CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
 		super( region.getName() );
 		this.region = region;
 		this.entityRegionAccessStrategy = entityRegionAccessStrategy;
@@ -63,34 +63,36 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 
 	public Map getEntries() {
 		Map map = new HashMap();
-		for (Object o : region.toMap().entrySet()) {
+		for ( Object o : region.toMap().entrySet() ) {
 			Map.Entry me = (Map.Entry) o;
 			Object id;
-			if (entityRegionAccessStrategy != null) {
-				id = entityRegionAccessStrategy.getCacheKeyId(me.getKey());
-			} else if (collectionRegionAccessStrategy != null) {
-				id = collectionRegionAccessStrategy.getCacheKeyId(me.getKey());
-			} else {
+			if ( entityRegionAccessStrategy != null ) {
+				id = entityRegionAccessStrategy.getCacheKeyId( me.getKey() );
+			}
+			else if ( collectionRegionAccessStrategy != null ) {
+				id = collectionRegionAccessStrategy.getCacheKeyId( me.getKey() );
+			}
+			else {
 				id = me.getKey();
 			}
-			map.put(id, me.getValue());
+			map.put( id, me.getValue() );
 		}
 		return map;
 	}
 
 	public String toString() {
 		StringBuilder buf = new StringBuilder()
-				.append("SecondLevelCacheStatistics")
-				.append("[hitCount=").append(this.hitCount)
-				.append(",missCount=").append(this.missCount)
-				.append(",putCount=").append(this.putCount);
+				.append( "SecondLevelCacheStatistics" )
+				.append( "[hitCount=").append( this.hitCount )
+				.append( ",missCount=").append( this.missCount )
+				.append( ",putCount=").append( this.putCount );
 		//not sure if this would ever be null but wanted to be careful
-		if (region != null) {
-			buf.append(",elementCountInMemory=").append(this.getElementCountInMemory())
-					.append(",elementCountOnDisk=").append(this.getElementCountOnDisk())
-					.append(",sizeInMemory=").append(this.getSizeInMemory());
+		if ( region != null ) {
+			buf.append( ",elementCountInMemory=" ).append( this.getElementCountInMemory() )
+					.append( ",elementCountOnDisk=" ).append( this.getElementCountOnDisk() )
+					.append( ",sizeInMemory=" ).append( this.getSizeInMemory() );
 		}
-		buf.append(']');
+		buf.append( ']' );
 		return buf.toString();
 	}
 

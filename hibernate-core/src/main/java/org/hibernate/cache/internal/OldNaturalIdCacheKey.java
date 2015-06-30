@@ -27,6 +27,8 @@ import org.hibernate.type.Type;
  *
  * @author Eric Dalquist
  * @author Steve Ebersole
+ *
+ * @deprecated Cache implementation should provide optimized key.
  */
 @Deprecated
 public class OldNaturalIdCacheKey implements Serializable {

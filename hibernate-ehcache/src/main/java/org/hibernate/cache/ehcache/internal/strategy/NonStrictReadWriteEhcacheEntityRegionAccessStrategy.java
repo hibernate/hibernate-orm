@@ -129,6 +129,6 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getEntityId(cacheKey);
+		return DefaultCacheKeysFactory.getEntityId( cacheKey );
 	}
 }

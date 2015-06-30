@@ -66,6 +66,6 @@ class BaseNaturalIdRegionAccessStrategy extends BaseRegionAccessStrategy impleme
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
+		return DefaultCacheKeysFactory.getNaturalIdValues( cacheKey );
 	}
 }

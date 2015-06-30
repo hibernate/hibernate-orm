@@ -112,6 +112,6 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
+		return DefaultCacheKeysFactory.getNaturalIdValues( cacheKey );
 	}
 }

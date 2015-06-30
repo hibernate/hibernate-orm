@@ -117,6 +117,7 @@ public abstract class AbstractFunctionalTestCase extends SingleNodeTestCase {
       log.info("Entry persisted, let's load and delete it.");
 
       cleanupCache();
+      Thread.sleep(10);
 
       withTx(tm, new Callable<Void>() {
          @Override

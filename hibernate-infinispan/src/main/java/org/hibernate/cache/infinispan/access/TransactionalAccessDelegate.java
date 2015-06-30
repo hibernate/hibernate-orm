@@ -61,7 +61,7 @@ public class TransactionalAccessDelegate {
 		}
 		final Object val = cache.get( key );
 		if ( val == null ) {
-			putValidator.registerPendingPut( key );
+			putValidator.registerPendingPut( key, txTimestamp );
 		}
 		return val;
 	}
@@ -110,7 +110,7 @@ public class TransactionalAccessDelegate {
 			return false;
 		}
 
-		PutFromLoadValidator.Lock lock = putValidator.acquirePutFromLoadLock(key);
+		PutFromLoadValidator.Lock lock = putValidator.acquirePutFromLoadLock(key, txTimestamp);
 		if ( lock == null) {
 			if ( TRACE_ENABLED ) {
 				log.tracef( "Put from load lock not acquired for key %s", key );
@@ -202,10 +202,15 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if eviction the region fails
     */
 	public void removeAll() throws CacheException {
-		if ( !putValidator.invalidateRegion() ) {
-			throw new CacheException( "Failed to invalidate pending putFromLoad calls for region " + region.getName() );
+		try {
+			if (!putValidator.beginInvalidatingRegion()) {
+				throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+			}
+			Caches.removeAll(cache);
 		}
-		Caches.removeAll( cache );
+		finally {
+			putValidator.endInvalidatingRegion();
+		}
 	}
 
    /**
@@ -231,13 +236,18 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if evicting items fails
     */
 	public void evictAll() throws CacheException {
-		if ( !putValidator.invalidateRegion() ) {
-			throw new CacheException( "Failed to invalidate pending putFromLoad calls for region " + region.getName() );
-		}
+		try {
+			if (!putValidator.beginInvalidatingRegion()) {
+				throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+			}
 
-		// Invalidate the local region and then go remote
-		region.invalidateRegion();
-		Caches.broadcastEvictAll( cache );
+			// Invalidate the local region and then go remote
+			region.invalidateRegion();
+			Caches.broadcastEvictAll(cache);
+		}
+		finally {
+			putValidator.endInvalidatingRegion();
+		}
 	}
 
 	/**

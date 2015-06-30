@@ -126,21 +126,22 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 			assertEqualsEventually(null, getFromLocalRegion, 10, TimeUnit.SECONDS);
 			assertEqualsEventually(null, getFromRemoteRegion, 10, TimeUnit.SECONDS);
-		} finally {
+		}
+		finally {
 			StandardServiceRegistryBuilder.destroy( registry1 );
 			StandardServiceRegistryBuilder.destroy( registry2 );
 		}
 	}
 
-   protected void regionEvict(GeneralDataRegion region) throws Exception {
+	protected void regionEvict(GeneralDataRegion region) throws Exception {
 	  region.evict(KEY);
-   }
+	}
 
-   protected void regionPut(GeneralDataRegion region) throws Exception {
+	protected void regionPut(GeneralDataRegion region) throws Exception {
 	  region.put(KEY, VALUE1);
-   }
+	}
 
-   protected abstract String getStandardRegionName(String regionPrefix);
+	protected abstract String getStandardRegionName(String regionPrefix);
 
 	/**
 	 * Test method for {@link QueryResultsRegion#evictAll()}.

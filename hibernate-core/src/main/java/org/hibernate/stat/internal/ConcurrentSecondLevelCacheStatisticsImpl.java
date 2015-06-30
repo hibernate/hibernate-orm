@@ -29,8 +29,8 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 	private AtomicLong putCount = new AtomicLong();
 
 	ConcurrentSecondLevelCacheStatisticsImpl(Region region,
-											 EntityRegionAccessStrategy entityRegionAccessStrategy,
-											 CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
+			EntityRegionAccessStrategy entityRegionAccessStrategy,
+			CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
 		super( region.getName() );
 		this.region = region;
 		this.entityRegionAccessStrategy = entityRegionAccessStrategy;
@@ -68,9 +68,11 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 			Object id;
 			if (entityRegionAccessStrategy != null) {
 				id = entityRegionAccessStrategy.getCacheKeyId(me.getKey());
-			} else if (collectionRegionAccessStrategy != null) {
+			}
+			else if (collectionRegionAccessStrategy != null) {
 				id = collectionRegionAccessStrategy.getCacheKeyId(me.getKey());
-			} else {
+			}
+			else {
 				id = me.getKey();
 			}
 			map.put(id, me.getValue());

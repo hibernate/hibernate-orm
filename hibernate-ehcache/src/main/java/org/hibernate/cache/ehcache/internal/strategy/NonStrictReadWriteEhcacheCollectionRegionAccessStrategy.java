@@ -90,6 +90,6 @@ public class NonStrictReadWriteEhcacheCollectionRegionAccessStrategy
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getCollectionId(cacheKey);
+		return DefaultCacheKeysFactory.getCollectionId( cacheKey );
 	}
 }

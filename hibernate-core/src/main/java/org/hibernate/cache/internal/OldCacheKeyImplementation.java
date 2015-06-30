@@ -21,6 +21,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated In optimized implementations, wrapping the id is not necessary.
  */
 @Deprecated
 final class OldCacheKeyImplementation implements Serializable {

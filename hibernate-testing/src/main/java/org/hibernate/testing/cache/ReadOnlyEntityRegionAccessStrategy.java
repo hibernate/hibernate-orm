@@ -8,7 +8,6 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-
 import org.jboss.logging.Logger;
 
 /**

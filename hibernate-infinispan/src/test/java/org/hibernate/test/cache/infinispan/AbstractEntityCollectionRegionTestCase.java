@@ -15,7 +15,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TransactionalDataRegion;
 import org.hibernate.cache.spi.access.AccessType;
-
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.junit.Test;
 

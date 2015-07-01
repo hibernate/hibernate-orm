@@ -7,12 +7,12 @@
 package org.hibernate.stat.internal;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**
@@ -22,13 +22,19 @@ import org.hibernate.stat.SecondLevelCacheStatistics;
  */
 public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatistics implements SecondLevelCacheStatistics {
 	private final transient Region region;
+	private final transient EntityRegionAccessStrategy entityRegionAccessStrategy;
+	private final transient CollectionRegionAccessStrategy collectionRegionAccessStrategy;
 	private AtomicLong hitCount = new AtomicLong();
 	private AtomicLong missCount = new AtomicLong();
 	private AtomicLong putCount = new AtomicLong();
 
-	ConcurrentSecondLevelCacheStatisticsImpl(Region region) {
+	ConcurrentSecondLevelCacheStatisticsImpl(Region region,
+			EntityRegionAccessStrategy entityRegionAccessStrategy,
+			CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
 		super( region.getName() );
 		this.region = region;
+		this.entityRegionAccessStrategy = entityRegionAccessStrategy;
+		this.collectionRegionAccessStrategy = collectionRegionAccessStrategy;
 	}
 
 	public long getHitCount() {
@@ -57,10 +63,19 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 
 	public Map getEntries() {
 		Map map = new HashMap();
-		Iterator iter = region.toMap().entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry me = (Map.Entry) iter.next();
-			map.put(((CacheKey) me.getKey()).getKey(), me.getValue());
+		for (Object o : region.toMap().entrySet()) {
+			Map.Entry me = (Map.Entry) o;
+			Object id;
+			if (entityRegionAccessStrategy != null) {
+				id = entityRegionAccessStrategy.getCacheKeyId(me.getKey());
+			}
+			else if (collectionRegionAccessStrategy != null) {
+				id = collectionRegionAccessStrategy.getCacheKeyId(me.getKey());
+			}
+			else {
+				id = me.getKey();
+			}
+			map.put(id, me.getValue());
 		}
 		return map;
 	}

@@ -9,15 +9,14 @@ package org.hibernate.testing.cache;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-
 import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu
  */
 abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
-	private static final Logger LOG = Logger.getLogger( BaseRegionAccessStrategy.class );
 
+	private static final Logger LOG = Logger.getLogger( BaseRegionAccessStrategy.class );
 
 	protected abstract BaseGeneralDataRegion getInternalRegion();
 

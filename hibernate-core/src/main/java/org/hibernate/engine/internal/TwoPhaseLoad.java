@@ -13,11 +13,12 @@ import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -182,7 +183,8 @@ public final class TwoPhaseLoad {
 
 			final Object version = Versioning.getVersion( hydratedState, persister );
 			final CacheEntry entry = persister.buildCacheEntry( entity, hydratedState, version, session );
-			final CacheKey cacheKey = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
 			// from the database *within the same transaction*.  usually this is done by
@@ -191,7 +193,7 @@ public final class TwoPhaseLoad {
 			//
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
 			if ( session.getPersistenceContext().wasInsertedDuringTransaction( persister, id ) ) {
-				persister.getCacheAccessStrategy().update(
+				cache.update(
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
 						version,
@@ -199,9 +201,10 @@ public final class TwoPhaseLoad {
 				);
 			}
 			else {
+				final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 				try {
-					session.getEventListenerManager().cachePutStart();
-					final boolean put = persister.getCacheAccessStrategy().putFromLoad(
+					eventListenerManager.cachePutStart();
+					final boolean put = cache.putFromLoad(
 							cacheKey,
 							persister.getCacheEntryStructure().structure( entry ),
 							session.getTimestamp(),
@@ -210,11 +213,11 @@ public final class TwoPhaseLoad {
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+						factory.getStatisticsImplementor().secondLevelCachePut( cache.getRegion().getName() );
 					}
 				}
 				finally {
-					session.getEventListenerManager().cachePutEnd();
+					eventListenerManager.cachePutEnd();
 				}
 			}
 		}

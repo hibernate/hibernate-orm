@@ -12,7 +12,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -76,12 +76,14 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		// bidirectional association and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
 		if ( persister.hasCache() ) {
-			final CacheKey ck = session.generateCacheKey(
+			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
 					key,
-					persister.getKeyType(),
-					persister.getRole()
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
 			);
-			final SoftLock lock = persister.getCacheAccessStrategy().lockItem( ck, null );
+			final SoftLock lock = cache.lockItem( ck, null );
 			// the old behavior used key as opposed to getKey()
 			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
 		}
@@ -127,12 +129,14 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	protected final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
-			final CacheKey ck = session.generateCacheKey(
+			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
 					key, 
-					persister.getKeyType(), 
-					persister.getRole()
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
 			);
-			persister.getCacheAccessStrategy().remove( ck );
+			cache.remove( ck );
 		}
 	}
 
@@ -169,12 +173,14 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-			final CacheKey ck = session.generateCacheKey(
+			final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
 					key,
-					persister.getKeyType(),
-					persister.getRole()
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
 			);
-			persister.getCacheAccessStrategy().unlockItem( ck, lock );
+			cache.unlockItem( ck, lock );
 		}
 	}
 
@@ -190,9 +196,4 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return (EventSource) getSession();
 	}
 }
-
-
-
-
-
 

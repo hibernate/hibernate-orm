@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -84,10 +84,11 @@ public class EntityDeleteAction extends EntityAction {
 			version = persister.getVersion( instance );
 		}
 
-		final CacheKey ck;
+		final Object ck;
 		if ( persister.hasCache() ) {
-			ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
-			lock = persister.getCacheAccessStrategy().lockItem( ck, version );
+			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+			ck = cache.generateCacheKey( id, persister, session.getFactory(), session.getTenantIdentifier() );
+			lock = cache.lockItem( ck, version );
 		}
 		else {
 			ck = null;
@@ -184,13 +185,16 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
-		if ( getPersister().hasCache() ) {
-			final CacheKey ck = getSession().generateCacheKey(
+		EntityPersister entityPersister = getPersister();
+		if ( entityPersister.hasCache() ) {
+			EntityRegionAccessStrategy cache = entityPersister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
 					getId(),
-					getPersister().getIdentifierType(),
-					getPersister().getRootEntityName()
+					entityPersister,
+					session.getFactory(),
+					session.getTenantIdentifier()
 			);
-			getPersister().getCacheAccessStrategy().unlockItem( ck, lock );
+			cache.unlockItem( ck, lock );
 		}
 		postCommitDelete( success );
 	}

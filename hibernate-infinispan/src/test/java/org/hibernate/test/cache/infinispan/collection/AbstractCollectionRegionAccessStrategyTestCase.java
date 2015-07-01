@@ -6,14 +6,15 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
+import javax.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.transaction.TransactionManager;
 
+import junit.framework.AssertionFailedError;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
@@ -25,20 +26,17 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.internal.util.compare.ComparableComparator;
-
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import junit.framework.AssertionFailedError;
-
+import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
-
 import org.jboss.logging.Logger;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.junit.Assert.assertEquals;
@@ -54,7 +52,6 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractCollectionRegionAccessStrategyTestCase extends AbstractNonFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( AbstractCollectionRegionAccessStrategyTestCase.class );
-
 	public static final String REGION_NAME = "test/com.foo.test";
 	public static final String KEY_BASE = "KEY";
 	public static final String VALUE1 = "VALUE1";
@@ -230,7 +227,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 	private void putFromLoadTest(final boolean useMinimalAPI) throws Exception {
 
-		final String KEY = KEY_BASE + testCount++;
+		final Object KEY = TestingKeyFactory.generateCollectionCacheKey( KEY_BASE + testCount++ );
 
 		final CountDownLatch writeLatch1 = new CountDownLatch( 1 );
 		final CountDownLatch writeLatch2 = new CountDownLatch( 1 );
@@ -382,7 +379,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 	private void evictOrRemoveTest(final boolean evict) throws Exception {
 
-		final String KEY = KEY_BASE + testCount++;
+		final Object KEY = TestingKeyFactory.generateCollectionCacheKey( KEY_BASE + testCount++ );
 
 		assertNull( "local is clean", localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
 		assertNull( "remote is clean", remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
@@ -413,7 +410,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 	private void evictOrRemoveAllTest(final boolean evict) throws Exception {
 
-		final String KEY = KEY_BASE + testCount++;
+		final Object KEY = TestingKeyFactory.generateCollectionCacheKey( KEY_BASE + testCount++ );
 
 		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCache().keySet() ) );
 

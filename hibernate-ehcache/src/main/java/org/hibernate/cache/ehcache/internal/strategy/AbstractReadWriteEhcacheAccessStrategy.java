@@ -16,7 +16,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.SoftLock;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -27,8 +26,7 @@ import org.jboss.logging.Logger;
  * @author Chris Dennis
  * @author Alex Snaps
  */
-abstract class AbstractReadWriteEhcacheAccessStrategy<T
-		extends EhcacheTransactionalDataRegion>
+abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion>
 		extends AbstractEhcacheAccessStrategy<T> {
 
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(

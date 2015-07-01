@@ -18,7 +18,6 @@ class ReadOnlyAccess extends TransactionalAccess {
 		super( naturalIdRegion );
 	}
 
-
 	@Override
 	public boolean update(Object key, Object value) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
@@ -28,4 +27,5 @@ class ReadOnlyAccess extends TransactionalAccess {
 	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}
+
 }

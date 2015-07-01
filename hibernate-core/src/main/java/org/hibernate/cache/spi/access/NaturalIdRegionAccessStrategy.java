@@ -8,6 +8,8 @@ package org.hibernate.cache.spi.access;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Contract for managing transactional and concurrent access to cached naturalId
@@ -37,6 +39,24 @@ import org.hibernate.cache.spi.NaturalIdRegion;
 public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 
 	/**
+	 * To create instances of NaturalIdCacheKey for this region, Hibernate will invoke this method
+	 * exclusively so that generated implementations can generate optimised keys.
+	 * @param naturalIdValues the sequence of values which unequivocally identifies a cached element on this region
+	 * @param persister the persister of the element being cached
+	 * @param session
+	 * @return a key which can be used to identify this an element unequivocally on this same region
+	 */
+	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session);
+
+	/**
+	 * Performs reverse operation to {@link #generateCacheKey(Object[], EntityPersister, SessionImplementor)}, returning
+	 * the original naturalIdValues.
+	 * @param cacheKey key returned from {@link #generateCacheKey(Object[], EntityPersister, SessionImplementor)}
+	 * @return the sequence of values which unequivocally identifies a cached element on this region
+	 */
+	public Object[] getNaturalIdValues(Object cacheKey);
+
+	/**
 	 * Get the wrapped naturalId cache region
 	 *
 	 * @return The underlying region
@@ -51,7 +71,7 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean insert(Object key, Object value) throws CacheException;
 
@@ -63,7 +83,7 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean afterInsert(Object key, Object value) throws CacheException;
 
@@ -75,7 +95,7 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean update(Object key, Object value) throws CacheException;
 

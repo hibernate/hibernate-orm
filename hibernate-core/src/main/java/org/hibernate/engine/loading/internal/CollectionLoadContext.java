@@ -17,7 +17,7 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -332,7 +332,13 @@ public class CollectionLoadContext {
 		}
 
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
-		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister.getKeyType(), persister.getRole() );
+		final CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		final Object cacheKey = cache.generateCacheKey(
+				lce.getKey(),
+				persister,
+				session.getFactory(),
+				session.getTenantIdentifier()
+		);
 
 		boolean isPutFromLoad = true;
 		if ( persister.getElementType().isAssociationType() ) {
@@ -349,7 +355,7 @@ public class CollectionLoadContext {
 		if (isPutFromLoad) {
 			try {
 				session.getEventListenerManager().cachePutStart();
-				final boolean put = persister.getCacheAccessStrategy().putFromLoad(
+				final boolean put = cache.putFromLoad(
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
 						session.getTimestamp(),

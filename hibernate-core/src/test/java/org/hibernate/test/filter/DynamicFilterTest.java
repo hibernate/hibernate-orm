@@ -20,7 +20,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.DetachedCriteria;
@@ -100,12 +100,14 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		Hibernate.initialize( sp.getOrders() );
 		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
-		CacheKey cacheKey = ( (SessionImplementor) session ).generateCacheKey(
+		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+		Object cacheKey = cache.generateCacheKey(
 				testData.steveId,
-				persister.getKeyType(),
-				persister.getRole()
+				persister,
+				sessionFactory(),
+				session.getTenantIdentifier()
 		);
-		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( cacheKey, ts );
+		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) cache.get( cacheKey, ts );
 		assertNotNull( "collection was not in cache", cachedData );
 
 		session.close();
@@ -114,14 +116,15 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		ts = ( ( SessionImplementor ) session ).getTimestamp();
 		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 		sp = ( Salesperson ) session.createQuery( "from Salesperson as s where s.id = :id" )
-		        .setLong( "id", testData.steveId )
-		        .uniqueResult();
+				.setLong( "id", testData.steveId )
+				.uniqueResult();
 		assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 
-		CacheKey cacheKey2 = ( (SessionImplementor) session ).generateCacheKey(
+		Object cacheKey2 = cache.generateCacheKey(
 				testData.steveId,
-				persister.getKeyType(),
-				persister.getRole()
+				persister,
+				sessionFactory(),
+				session.getTenantIdentifier()
 		);
 		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( cacheKey2, ts );
 		assertNotNull( "collection no longer in cache!", cachedData2 );

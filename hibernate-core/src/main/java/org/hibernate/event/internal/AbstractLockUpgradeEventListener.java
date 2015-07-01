@@ -9,7 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
@@ -17,7 +17,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -62,18 +61,16 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 				);
 			}
 
-			final SoftLock lock;
-			final CacheKey ck;
-			if ( persister.hasCache() ) {
-				ck = source.generateCacheKey( entry.getId(), persister.getIdentifierType(), persister.getRootEntityName() );
-				lock = persister.getCacheAccessStrategy().lockItem( ck, entry.getVersion() );
-			}
-			else {
-				ck = null;
-				lock = null;
-			}
-
+			final boolean cachingEnabled = persister.hasCache();
+			SoftLock lock = null;
+			Object ck = null;
 			try {
+				if ( cachingEnabled ) {
+					EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
+					ck = cache.generateCacheKey( entry.getId(), persister, source.getFactory(), source.getTenantIdentifier() );
+					lock = cache.lockItem( ck, entry.getVersion() );
+				}
+
 				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE  ) {
 					// todo : should we check the current isolation mode explicitly?
 					Object nextVersion = persister.forceVersionIncrement(
@@ -89,7 +86,7 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 			finally {
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
-				if ( persister.hasCache() ) {
+				if ( cachingEnabled ) {
 					persister.getCacheAccessStrategy().unlockItem( ck, lock );
 				}
 			}

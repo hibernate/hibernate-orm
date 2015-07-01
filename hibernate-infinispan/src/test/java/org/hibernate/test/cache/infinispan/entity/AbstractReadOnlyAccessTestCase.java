@@ -7,10 +7,9 @@
 package org.hibernate.test.cache.infinispan.entity;
 
 import org.hibernate.cache.spi.access.AccessType;
-
-import org.junit.Test;
-
+import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -42,7 +41,7 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
 
    private void putFromLoadTest(boolean minimal) throws Exception {
 
-      final String KEY = KEY_BASE + testCount++;
+      final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
       long txTimestamp = System.currentTimeMillis();
       BatchModeTransactionManager.getInstance().begin();
@@ -64,8 +63,8 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
    @Test(expected = UnsupportedOperationException.class)
    @Override
    public void testUpdate() throws Exception {
-      localAccessStrategy.update(KEY_BASE + testCount++,
-            VALUE2, 2, 1);
+      final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
+      localAccessStrategy.update( KEY, VALUE2, 2, 1);
    }
 
 }

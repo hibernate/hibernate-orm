@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.cache.spi;
+package org.hibernate.cache.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -22,10 +22,16 @@ import org.hibernate.type.Type;
 /**
  * Defines a key for caching natural identifier resolutions into the second level cache.
  *
+ * This was named org.hibernate.cache.spi.NaturalIdCacheKey in Hibernate until version 5.
+ * Temporarily maintained as a reference while all components catch up with the refactoring to the caching interfaces.
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
+ *
+ * @deprecated Cache implementation should provide optimized key.
  */
-public class NaturalIdCacheKey implements Serializable {
+@Deprecated
+public class OldNaturalIdCacheKey implements Serializable {
 	private final Serializable[] naturalIdValues;
 	private final String entityName;
 	private final String tenantId;
@@ -35,13 +41,12 @@ public class NaturalIdCacheKey implements Serializable {
 
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
-	 * Note that an entity name should always be the root entity name, not a subclass entity name.
 	 *
 	 * @param naturalIdValues The naturalIdValues associated with the cached data
 	 * @param persister The persister for the entity
 	 * @param session The originating session
 	 */
-	public NaturalIdCacheKey(
+	public OldNaturalIdCacheKey(
 			final Object[] naturalIdValues,
 			final EntityPersister persister,
 			final SessionImplementor session) {
@@ -137,12 +142,12 @@ public class NaturalIdCacheKey implements Serializable {
 			return true;
 		}
 
-		if ( hashCode != o.hashCode() || !( o instanceof NaturalIdCacheKey ) ) {
+		if ( hashCode != o.hashCode() || !( o instanceof OldNaturalIdCacheKey ) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 
-		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
+		final OldNaturalIdCacheKey other = (OldNaturalIdCacheKey) o;
 		return EqualsHelper.equals( entityName, other.entityName )
 				&& EqualsHelper.equals( tenantId, other.tenantId )
 				&& Arrays.deepEquals( this.naturalIdValues, other.naturalIdValues );

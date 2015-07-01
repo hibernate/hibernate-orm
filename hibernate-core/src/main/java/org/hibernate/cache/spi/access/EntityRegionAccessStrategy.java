@@ -8,6 +8,8 @@ package org.hibernate.cache.spi.access;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Contract for managing transactional and concurrent access to cached entity
@@ -25,7 +27,26 @@ import org.hibernate.cache.spi.EntityRegion;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface EntityRegionAccessStrategy extends RegionAccessStrategy{
+public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
+
+	/**
+	 * To create instances of EntityCacheKey for this region, Hibernate will invoke this method
+	 * exclusively so that generated implementations can generate optimised keys.
+	 * @param id the primary identifier of the entity
+	 * @param persister the persister for the type for which a key is being generated
+	 * @param factory a reference to the current SessionFactory
+	 * @param tenantIdentifier the tenant id, or null if multi-tenancy is not being used.
+	 * @return a key which can be used to identify this entity on this same region
+	 */
+	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
+
+	/**
+	 * Performs reverse operation to {@link #generateCacheKey(Object, EntityPersister, SessionFactoryImplementor, String)}
+	 *
+	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, EntityPersister, SessionFactoryImplementor, String)}
+	 * @return original id passed to {@link #generateCacheKey(Object, EntityPersister, SessionFactoryImplementor, String)}
+	 */
+	public Object getCacheKeyId(Object cacheKey);
 
 	/**
 	 * Get the wrapped entity cache region
@@ -43,7 +64,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy{
 	 * @param value The item
 	 * @param version The item's version value
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean insert(Object key, Object value, Object version) throws CacheException;
 
@@ -56,7 +77,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy{
 	 * @param value The item
 	 * @param version The item's version value
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException;
 
@@ -70,7 +91,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy{
 	 * @param currentVersion The item's current version value
 	 * @param previousVersion The item's previous version value
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException;
 
@@ -85,7 +106,7 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy{
 	 * @param previousVersion The item's previous version value
 	 * @param lock The lock previously obtained from {@link #lockItem}
 	 * @return Were the contents of the cache actual changed by this operation?
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) throws CacheException;
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 
+import java.util.Properties;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.internal.CacheDataDescriptionImpl;
@@ -17,8 +19,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
 import org.infinispan.AdvancedCache;
 
-import java.util.Properties;
-
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
  * @since 3.5
  */
 public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTestCase {
+
    private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
 
    @Override

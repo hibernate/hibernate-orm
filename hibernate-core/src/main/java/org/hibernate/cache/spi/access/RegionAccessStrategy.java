@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.spi.access;
 
+
 import org.hibernate.cache.CacheException;
 
 /**
@@ -14,6 +15,7 @@ import org.hibernate.cache.CacheException;
  * @author Gail Badner
  */
 public interface RegionAccessStrategy {
+
 	/**
 	 * Attempt to retrieve an object from the cache. Mainly used in attempting
 	 * to resolve entities/collections from the second level cache.

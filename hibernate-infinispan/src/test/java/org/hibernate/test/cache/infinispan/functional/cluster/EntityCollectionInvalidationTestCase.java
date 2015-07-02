@@ -343,7 +343,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 		public void nodeVisited(CacheEntryVisitedEvent event) {
 			log.debug( event.toString() );
 			if ( !event.isPre() ) {
-				String key = String.valueOf(event.getKey());
+				String key = event.getCache().getName() + "#" + event.getKey();
 				log.debug( "MyListener[" + name + "] - Visiting key " + key );
 				// String name = fqn.toString();
 				String token = ".functional.";
@@ -351,7 +351,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 				if ( index > -1 ) {
 					index += token.length();
 					key = key.substring( index );
-					log.debug( "MyListener[" + name + "] - recording visit to " + key );
+					log.debug( "MyListener[" + this.name + "] - recording visit to " + key );
 					visited.add( key );
 				}
 			}

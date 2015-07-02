@@ -23,10 +23,19 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
  * @since 3.5
  */
 public class XaConnectionProvider implements ConnectionProvider {
-	private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
+	private final static ConnectionProvider DEFAULT_CONNECTION_PROVIDER = ConnectionProviderBuilder.buildConnectionProvider();
+	private final ConnectionProvider actualConnectionProvider;
 	private boolean isTransactional;
 
-	public static ConnectionProvider getActualConnectionProvider() {
+	public XaConnectionProvider() {
+		this(DEFAULT_CONNECTION_PROVIDER);
+	}
+
+	public XaConnectionProvider(ConnectionProvider connectionProvider) {
+		this.actualConnectionProvider = connectionProvider;
+	}
+
+	public ConnectionProvider getActualConnectionProvider() {
 		return actualConnectionProvider;
 	}
 

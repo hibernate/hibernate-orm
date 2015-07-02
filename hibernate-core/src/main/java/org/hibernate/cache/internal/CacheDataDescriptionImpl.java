@@ -11,6 +11,7 @@ import java.util.Comparator;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
 /**
@@ -22,19 +23,21 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	private final boolean mutable;
 	private final boolean versioned;
 	private final Comparator versionComparator;
+	private final Type keyType;
 
 	/**
 	 * Constructs a CacheDataDescriptionImpl instance.  Generally speaking, code should use one of the
 	 * overloaded {@link #decode} methods rather than direct instantiation.
-	 *
 	 * @param mutable Is the described data mutable?
 	 * @param versioned Is the described data versioned?
 	 * @param versionComparator The described data's version value comparator (if versioned).
+	 * @param keyType
 	 */
-	public CacheDataDescriptionImpl(boolean mutable, boolean versioned, Comparator versionComparator) {
+	public CacheDataDescriptionImpl(boolean mutable, boolean versioned, Comparator versionComparator, Type keyType) {
 		this.mutable = mutable;
 		this.versioned = versioned;
 		this.versionComparator = versionComparator;
+		this.keyType = keyType;
 	}
 
 	@Override
@@ -52,6 +55,11 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 		return versionComparator;
 	}
 
+	@Override
+	public Type getKeyType() {
+		return keyType;
+	}
+
 	/**
 	 * Builds a CacheDataDescriptionImpl from the mapping model of an entity class.
 	 *
@@ -65,8 +73,8 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				model.isVersioned(),
 				model.isVersioned()
 						? ( (VersionType) model.getVersion().getType() ).getComparator()
-						: null
-		);
+						: null,
+				model.getIdentifierProperty().getType());
 	}
 
 	/**
@@ -82,8 +90,8 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				model.getOwner().isVersioned(),
 				model.getOwner().isVersioned()
 						? ( (VersionType) model.getOwner().getVersion().getType() ).getComparator()
-						: null
-		);
+						: null,
+				model.getKey().getType());
 	}
 
 }

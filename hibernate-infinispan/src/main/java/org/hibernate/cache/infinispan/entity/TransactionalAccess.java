@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -100,11 +99,11 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 
 	@Override
 	public Object generateCacheKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
+		return region.getCacheKeysFactory().createEntityKey(id, persister, factory, tenantIdentifier);
 	}
 
 	@Override
 	public Object getCacheKeyId(Object cacheKey) {
-		return DefaultCacheKeysFactory.getEntityId(cacheKey);
+		return region.getCacheKeysFactory().getEntityId(cacheKey);
 	}
 }

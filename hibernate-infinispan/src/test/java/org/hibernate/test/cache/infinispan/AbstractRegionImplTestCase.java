@@ -32,7 +32,7 @@ public abstract class AbstractRegionImplTestCase extends AbstractNonFunctionalTe
    protected abstract void removeFromRegion(Region region, Object key);
 
    protected CacheDataDescription getCacheDataDescription() {
-      return new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE);
+      return new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE, null);
    }
 
 }

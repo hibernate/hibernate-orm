@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan.access;
 
+import javax.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -15,20 +16,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
-
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.infinispan.AdvancedCache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.junit.Assert.assertEquals;
@@ -84,7 +83,7 @@ public class PutFromLoadValidatorUnitTestCase {
          @Override
          public void call() {
             try {
-               PutFromLoadValidator testee = new PutFromLoadValidator(cm,
+               PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                      transactional ? tm : null,
                      PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
                if (transactional) {
@@ -119,7 +118,7 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm,
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null,
                   PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
             try {
@@ -166,7 +165,7 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm,
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null,
                   PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
             if (removeRegion) {
@@ -218,7 +217,7 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm,
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null,
                   PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
             if (removeRegion) {
@@ -272,7 +271,7 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new PutFromLoadValidator(cm,
+            PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null,
                   PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
             try {
@@ -325,7 +324,7 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            PutFromLoadValidator testee = new TestValidator(cm,
+            PutFromLoadValidator testee = new TestValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null, 100);
             if (removeRegion) {
                testee.invalidateRegion();
@@ -368,7 +367,7 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            final PutFromLoadValidator testee = new PutFromLoadValidator(cm,
+            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), cm,
                   transactional ? tm : null,
                   PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
 
@@ -440,8 +439,8 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            final PutFromLoadValidator testee = new PutFromLoadValidator(
-                  cm, null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
+            final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(),
+                    cm, null, PutFromLoadValidator.NAKED_PUT_INVALIDATION_PERIOD);
             final CountDownLatch removeLatch = new CountDownLatch(1);
             final CountDownLatch pferLatch = new CountDownLatch(1);
             final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");
@@ -503,10 +502,10 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private static class TestValidator extends PutFromLoadValidator {
 
-      protected TestValidator(EmbeddedCacheManager cm,
+      protected TestValidator(AdvancedCache cache, EmbeddedCacheManager cm,
             TransactionManager transactionManager,
             long nakedPutInvalidationPeriod) {
-         super(cm, transactionManager, nakedPutInvalidationPeriod);
+         super(cache, cm, transactionManager, nakedPutInvalidationPeriod);
       }
 
       @Override

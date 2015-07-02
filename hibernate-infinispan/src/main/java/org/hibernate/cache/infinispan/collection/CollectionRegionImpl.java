@@ -10,11 +10,11 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-
 import org.infinispan.AdvancedCache;
 
 /**
@@ -33,11 +33,12 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
     * @param name of collection type
     * @param metadata for the collection type
     * @param factory for the region
+	* @param cacheKeysFactory factory for cache keys
     */
 	public CollectionRegionImpl(
 			AdvancedCache cache, String name,
-			CacheDataDescription metadata, RegionFactory factory) {
-		super( cache, name, metadata, factory );
+			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
+		super( cache, name, metadata, factory, cacheKeysFactory );
 	}
 
 	@Override

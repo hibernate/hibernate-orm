@@ -6,6 +6,9 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,14 +18,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-
 import org.infinispan.AdvancedCache;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 
 /**
@@ -130,27 +131,37 @@ public class PutFromLoadValidator {
 	public PutFromLoadValidator(
 			AdvancedCache cache,
 			long nakedPutInvalidationPeriod) {
-		this(
-				cache.getCacheManager(), cache.getTransactionManager(),
+		this(cache, cache.getCacheManager(), cache.getTransactionManager(),
 				nakedPutInvalidationPeriod
 		);
 	}
 
    /**
     * Creates a new put from load validator instance.
-    *
-    * @param cacheManager where to find a cache to store pending put information
-    * @param tm transaction manager
-    * @param nakedPutInvalidationPeriod Period (in ms) after a removal during which a call to
-    *                                   {@link #acquirePutFromLoadLock(Object)} that hasn't been
-    *                                   {@link #registerPendingPut(Object) pre-registered} (aka a "naked put")
-    *                                   will return false.
-    */
-	public PutFromLoadValidator(
+	*
+	* @param cache Cache instance on which to store pending put information.
+	* @param cacheManager where to find a cache to store pending put information
+	* @param tm transaction manager
+	* @param nakedPutInvalidationPeriod Period (in ms) after a removal during which a call to
+	*                                   {@link #acquirePutFromLoadLock(Object)} that hasn't been
+	*                                   {@link #registerPendingPut(Object) pre-registered} (aka a "naked put")
+	*                                   will return false.
+	*/
+	public PutFromLoadValidator(AdvancedCache cache,
 			EmbeddedCacheManager cacheManager,
 			TransactionManager tm, long nakedPutInvalidationPeriod) {
-		this.pendingPuts = cacheManager
-				.getCache( InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME );
+
+		Configuration cacheConfiguration = cache.getCacheConfiguration();
+		Configuration pendingPutsConfiguration = cacheManager.getCacheConfiguration(InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME);
+		ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+		if (pendingPutsConfiguration != null) {
+			configurationBuilder.read(pendingPutsConfiguration);
+		}
+		configurationBuilder.dataContainer().keyEquivalence(cacheConfiguration.dataContainer().keyEquivalence());
+		String pendingPutsName = cache.getName() + "-" + InfinispanRegionFactory.PENDING_PUTS_CACHE_NAME;
+		cacheManager.defineConfiguration(pendingPutsName, configurationBuilder.build());
+
+		this.pendingPuts = cacheManager.getCache(pendingPutsName);
 		this.transactionManager = tm;
 		this.nakedPutInvalidationPeriod = nakedPutInvalidationPeriod;
 	}

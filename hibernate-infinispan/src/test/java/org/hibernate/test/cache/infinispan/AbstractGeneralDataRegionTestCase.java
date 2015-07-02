@@ -133,11 +133,11 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	}
 
    protected void regionEvict(GeneralDataRegion region) throws Exception {
-      region.evict(KEY);
+	  region.evict(KEY);
    }
 
    protected void regionPut(GeneralDataRegion region) throws Exception {
-      region.put(KEY, VALUE1);
+	  region.put(KEY, VALUE1);
    }
 
    protected abstract String getStandardRegionName(String regionPrefix);

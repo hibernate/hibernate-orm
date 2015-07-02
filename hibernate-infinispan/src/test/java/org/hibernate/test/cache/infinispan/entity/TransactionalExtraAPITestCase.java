@@ -12,6 +12,7 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
@@ -38,6 +39,8 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public static final Object KEY = TestingKeyFactory.generateEntityCacheKey( "KEY" );
 	public static final String VALUE1 = "VALUE1";
 	public static final String VALUE2 = "VALUE2";
+	protected static final CacheDataDescriptionImpl CACHE_DATA_DESCRIPTION
+			= new CacheDataDescriptionImpl(true, false, ComparableComparator.INSTANCE, null);
 
 	private NodeEnvironment environment;
 	private EntityRegionAccessStrategy accessStrategy;
@@ -50,7 +53,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();
 
-		accessStrategy = environment.getEntityRegion( REGION_NAME, new CacheDataDescriptionImpl(true, false, null)).buildAccessStrategy( getAccessType() );
+		accessStrategy = environment.getEntityRegion( REGION_NAME, CACHE_DATA_DESCRIPTION).buildAccessStrategy( getAccessType() );
    }
 
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {

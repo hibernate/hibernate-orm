@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -41,24 +40,22 @@ public class OldNaturalIdCacheKey implements Serializable {
 
 	/**
 	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
-	 *
 	 * @param naturalIdValues The naturalIdValues associated with the cached data
-	 * @param persister The persister for the entity
+	 * @param propertyTypes
+	 * @param naturalIdPropertyIndexes
 	 * @param session The originating session
 	 */
 	public OldNaturalIdCacheKey(
 			final Object[] naturalIdValues,
-			final EntityPersister persister,
+			Type[] propertyTypes, int[] naturalIdPropertyIndexes, final String entityName,
 			final SessionImplementor session) {
 
-		this.entityName = persister.getRootEntityName();
+		this.entityName = entityName;
 		this.tenantId = session.getTenantIdentifier();
 
 		this.naturalIdValues = new Serializable[naturalIdValues.length];
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
-		final Type[] propertyTypes = persister.getPropertyTypes();
 
 		final int prime = 31;
 		int result = 1;
@@ -93,7 +90,7 @@ public class OldNaturalIdCacheKey implements Serializable {
 					public String initialize() {
 						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
 						//the only same way to differentiate the keys is to included the disassembled values in the string.
-						final StringBuilder toStringBuilder = new StringBuilder( entityName ).append( "##NaturalId[" );
+						final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append( "##NaturalId[" );
 						for ( int i = 0; i < naturalIdValues.length; i++ ) {
 							toStringBuilder.append( naturalIdValues[i] );
 							if ( i + 1 < naturalIdValues.length ) {

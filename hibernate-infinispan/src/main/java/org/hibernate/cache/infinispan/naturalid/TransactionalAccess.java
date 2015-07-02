@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.naturalid;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
-import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -108,11 +107,11 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
-		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
+		return region.getCacheKeysFactory().createNaturalIdKey(naturalIdValues, persister, session);
 	}
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
+		return region.getCacheKeysFactory().getNaturalIdValues(cacheKey);
 	}
 }

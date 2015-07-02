@@ -56,8 +56,8 @@ import static org.junit.Assert.fail;
  * @since 3.5
  */
 public class InfinispanRegionFactoryTestCase  {
-   private static CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null);
-   private static CacheDataDescription IMMUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(false, false, null);
+   private static final CacheDataDescription MUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(true, false, null, null);
+   private static final CacheDataDescription IMMUTABLE_NON_VERSIONED = new CacheDataDescriptionImpl(false, false, null, null);
 
    @Test
    public void testConfigurationProcessing() {

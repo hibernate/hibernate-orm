@@ -7,6 +7,7 @@
 package org.hibernate.jpa.boot.internal;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.SharedCacheMode;
@@ -108,7 +109,7 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
-	public void pushClassTransformer(List<String> entityClassNames) {
+	public void pushClassTransformer(Collection<String> entityClassNames) {
 		persistenceUnitInfo.addTransformer( new InterceptFieldClassFileTransformer( entityClassNames ) );
 	}
 }

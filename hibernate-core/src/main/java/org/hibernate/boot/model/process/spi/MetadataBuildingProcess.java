@@ -4,30 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.boot.internal;
+package org.hibernate.boot.model.process.spi;
 
-import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Converter;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
-import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
-import org.hibernate.boot.archive.scan.spi.JandexInitializer;
-import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
-import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
-import org.hibernate.boot.archive.scan.spi.ScanParameters;
-import org.hibernate.boot.archive.scan.spi.ScanResult;
-import org.hibernate.boot.archive.scan.spi.Scanner;
-import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.DeploymentResourcesInterpreter.DeploymentResources;
+import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
+import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchySourceImpl;
@@ -36,7 +28,6 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -55,8 +46,21 @@ import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 /**
- * Represents the process of building a Metadata object.  The main entry point is the
- * static {@link #build}
+ * Represents the process of of transforming a {@link org.hibernate.boot.MetadataSources}
+ * reference into a {@link org.hibernate.boot.Metadata} reference.  Allows for 2 different process paradigms:<ul>
+ *     <li>
+ *         Single step : as defined by the {@link #build} method; internally leverages the 2-step paradigm
+ *     </li>
+ *     <li>
+ *         Two step : a first step coordinates resource scanning and some other preparation work; a second step
+ *         builds the {@link org.hibernate.boot.Metadata}.  A hugely important distinction in the need for the
+ *         steps is that the first phase should strive to not load user entity/component classes so that we can still
+ *         perform enhancement on them later.  This approach caters to the 2-phase bootstrap we use in regards
+ *         to WildFly Hibernate-JPA integration.  The first step is defined by {@link #prepare} which returns
+ *         a {@link ManagedResources} instance.  The second step is defined by calling
+ *         {@link #complete}
+ *     </li>
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -65,70 +69,32 @@ public class MetadataBuildingProcess {
 
 	public static MetadataImpl build(
 			final MetadataSources sources,
-			final MetadataBuildingOptionsImpl options) {
+			final MetadataBuildingOptions options) {
+		return complete( prepare( sources, options ), options );
+	}
+
+	public static ManagedResources prepare(
+			final MetadataSources sources,
+			final MetadataBuildingOptions options) {
+		return ManagedResourcesBuilder.INSTANCE.buildCompleteManagedResources( sources, options );
+	}
+
+	public static MetadataImpl complete(final ManagedResources managedResources, final MetadataBuildingOptions options) {
+		final BasicTypeRegistry basicTypeRegistry = handleTypes( options );
+
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
+				options,
+				new TypeResolver( basicTypeRegistry, new TypeFactory() )
+		);
+		for ( AttributeConverterDefinition attributeConverterDefinition : managedResources.getAttributeConverterDefinitions() ) {
+			metadataCollector.addAttributeConverter( attributeConverterDefinition );
+		}
+
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
 				options.getTempClassLoader(),
 				classLoaderService
-		);
-
-//		final JandexInitManager jandexInitializer = buildJandexInitializer( options, classLoaderAccess );
-		
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// scanning - Jandex initialization and source discovery
-		if ( options.getScanEnvironment() != null ) {
-			final Scanner scanner = buildScanner( options, classLoaderAccess );
-			final ScanResult scanResult = scanner.scan(
-					options.getScanEnvironment(),
-					options.getScanOptions(),
-					new ScanParameters() {
-						@Override
-						public JandexInitializer getJandexInitializer() {
-//							return jandexInitializer;
-							return null;
-						}
-					}
-			);
-
-			// Add to the MetadataSources any classes/packages/mappings discovered during scanning
-			addScanResultsToSources( sources, options, scanResult );
-		}
-
-//		// todo : add options.getScanEnvironment().getExplicitlyListedClassNames() to jandex?
-//		//		^^ - another option is to make sure that they are added to sources
-//
-//		if ( !jandexInitializer.wasIndexSupplied() ) {
-//			// If the Jandex Index(View) was supplied, we consider that supplied
-//			// one "complete".
-//			// Here though we were NOT supplied an index; in this case we want to
-//			// additionally ensure that any-and-all "known" classes are added to
-//			// the index we are building
-//			sources.indexKnownClasses( jandexInitializer );
-//		}
-		
-		// It's necessary to delay the binding of XML resources until now.  ClassLoaderAccess is needed for
-		// reflection, etc.
-//		sources.buildBindResults( classLoaderAccess );
-
-//		final IndexView jandexView = augmentJandexFromMappings( jandexInitializer.buildIndex(), sources, options );
-		final IndexView jandexView = options.getJandexView();
-
-		final BasicTypeRegistry basicTypeRegistry = handleTypes( options );
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// prep to start handling binding in earnest
-
-//		final JandexAccessImpl jandexAccess = new JandexAccessImpl(
-//				jandexView,
-//				classLoaderAccess
-//
-//		);
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
-				options,
-				sources,
-				new TypeResolver( basicTypeRegistry, new TypeFactory() )
 		);
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
@@ -137,6 +103,8 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
+		final IndexView jandexView = options.getJandexView();
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Set up the processors and start binding
 		//		NOTE : this becomes even more simplified after we move purely
@@ -144,12 +112,12 @@ public class MetadataBuildingProcess {
 
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
 			private final HbmMetadataSourceProcessorImpl hbmProcessor = new HbmMetadataSourceProcessorImpl(
-					sources,
+					managedResources,
 					rootMetadataBuildingContext
 			);
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
-					sources,
+					managedResources,
 					rootMetadataBuildingContext,
 					jandexView
 			);
@@ -321,152 +289,7 @@ public class MetadataBuildingProcess {
 //		return new JandexInitManager( options.getJandexView(), classLoaderAccess, autoIndexMembers );
 //	}
 
-	private static final Class[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
 
-	private static Scanner buildScanner(MetadataBuildingOptions options, ClassLoaderAccess classLoaderAccess) {
-		final Object scannerSetting = options.getScanner();
-		final ArchiveDescriptorFactory archiveDescriptorFactory = options.getArchiveDescriptorFactory();
-
-		if ( scannerSetting == null ) {
-			// No custom Scanner specified, use the StandardScanner
-			if ( archiveDescriptorFactory == null ) {
-				return new StandardScanner();
-			}
-			else {
-				return new StandardScanner( archiveDescriptorFactory );
-			}
-		}
-		else {
-			if ( Scanner.class.isInstance( scannerSetting ) ) {
-				if ( archiveDescriptorFactory != null ) {
-					throw new IllegalStateException(
-							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
-									"specify one or the other, or if you need to supply both, Scanner class to use " +
-									"(assuming it has a constructor accepting a ArchiveDescriptorFactory).  " +
-									"Alternatively, just pass the ArchiveDescriptorFactory during your own " +
-									"Scanner constructor assuming it is statically known."
-					);
-				}
-				return (Scanner) scannerSetting;
-			}
-
-			final Class<? extends  Scanner> scannerImplClass;
-			if ( Class.class.isInstance( scannerSetting ) ) {
-				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
-			}
-			else {
-				scannerImplClass = classLoaderAccess.classForName( scannerSetting.toString() );
-			}
-
-
-			if ( archiveDescriptorFactory != null ) {
-				// find the single-arg constructor - its an error if none exists
-				try {
-					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
-					try {
-						return constructor.newInstance( archiveDescriptorFactory );
-					}
-					catch (Exception e) {
-						throw new IllegalStateException(
-								"Error trying to instantiate custom specified Scanner [" +
-										scannerImplClass.getName() + "]",
-								e
-						);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					throw new IllegalArgumentException(
-							"Configuration named a custom Scanner and a custom ArchiveDescriptorFactory, but " +
-									"Scanner impl did not define a constructor accepting ArchiveDescriptorFactory"
-					);
-				}
-			}
-			else {
-				// could be either ctor form...
-				// find the single-arg constructor - its an error if none exists
-				try {
-					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
-					try {
-						return constructor.newInstance( StandardArchiveDescriptorFactory.INSTANCE );
-					}
-					catch (Exception e) {
-						throw new IllegalStateException(
-								"Error trying to instantiate custom specified Scanner [" +
-										scannerImplClass.getName() + "]",
-								e
-						);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					try {
-						final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor();
-						try {
-							return constructor.newInstance();
-						}
-						catch (Exception e2) {
-							throw new IllegalStateException(
-									"Error trying to instantiate custom specified Scanner [" +
-											scannerImplClass.getName() + "]",
-									e2
-							);
-						}
-					}
-					catch (NoSuchMethodException ignore) {
-						throw new IllegalArgumentException(
-								"Configuration named a custom Scanner, but we were unable to locate " +
-										"an appropriate constructor"
-						);
-					}
-				}
-			}
-		}
-	}
-
-	private static void addScanResultsToSources(
-			MetadataSources sources,
-			MetadataBuildingOptionsImpl options,
-			ScanResult scanResult) {
-		final ClassLoaderService cls = options.getServiceRegistry().getService( ClassLoaderService.class );
-
-		DeploymentResources deploymentResources = DeploymentResourcesInterpreter.INSTANCE.buildDeploymentResources(
-				options.getScanEnvironment(),
-				scanResult,
-				options.getServiceRegistry()
-		);
-
-		for ( ClassDescriptor classDescriptor : deploymentResources.getClassDescriptors() ) {
-			final String className = classDescriptor.getName();
-
-			// todo : leverage Jandex calls after we fully integrate Jandex...
-			try {
-				final Class classRef = cls.classForName( className );
-
-				// logic here assumes an entity is not also a converter...
-				final Converter converter = (Converter) classRef.getAnnotation( Converter.class );
-				if ( converter != null ) {
-					//noinspection unchecked
-					options.addAttributeConverterDefinition(
-							AttributeConverterDefinition.from( classRef, converter.autoApply() )
-					);
-				}
-				else {
-					sources.addAnnotatedClass( classRef );
-				}
-			}
-			catch (ClassLoadingException e) {
-				// Not really sure what this means...
-				sources.addAnnotatedClassName( className );
-			}
-		}
-
-		for ( PackageDescriptor packageDescriptor : deploymentResources.getPackageDescriptors() ) {
-			sources.addPackage( packageDescriptor.getName() );
-		}
-
-		for ( MappingFileDescriptor mappingFileDescriptor : deploymentResources.getMappingFileDescriptors() ) {
-			sources.addInputStream( mappingFileDescriptor.getStreamAccess() );
-		}
-	}
 
 
 	private static BasicTypeRegistry handleTypes(MetadataBuildingOptions options) {

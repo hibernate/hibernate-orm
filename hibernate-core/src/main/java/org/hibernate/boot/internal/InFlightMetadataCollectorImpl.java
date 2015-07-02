@@ -34,7 +34,6 @@ import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -160,17 +159,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	public InFlightMetadataCollectorImpl(
 			MetadataBuildingOptions options,
-			MetadataSources sources,
 			TypeResolver typeResolver) {
 		this.uuid = UUID.randomUUID();
 		this.options = options;
 		this.typeResolver = typeResolver;
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
-
-		for ( AttributeConverterDefinition attributeConverterDefinition : options.getAttributeConverters() ) {
-			addAttributeConverter( attributeConverterDefinition );
-		}
 
 		for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : options.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {

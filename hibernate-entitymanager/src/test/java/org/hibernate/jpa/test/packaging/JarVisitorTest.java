@@ -26,12 +26,12 @@ import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
 import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
+import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
 import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.AbstractScannerImpl;
-import org.hibernate.boot.archive.scan.spi.JandexInitializer;
+import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.dialect.H2Dialect;
@@ -82,14 +82,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		return new StandardScanner().scan(
 				env,
 				new StandardScanOptions(),
-				new ScanParameters() {
-//					private final JandexInitManager jandexInitManager = new JandexInitManager();
-					@Override
-					public JandexInitializer getJandexInitializer() {
-//						return jandexInitManager;
-						return null;
-					}
-				}
+				StandardScanParameters.INSTANCE
 		);
 	}
 
@@ -135,7 +128,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		for ( Class expectedClass : expectedClasses ) {
 			assertTrue(
 					scanResult.getLocatedClasses().contains(
-							new ClassDescriptorImpl( expectedClass.getName(), null )
+							new ClassDescriptorImpl( expectedClass.getName(), ClassDescriptor.Categorization.MODEL, null )
 					)
 			);
 		}
@@ -169,14 +162,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		ScanResultCollector collector = new ScanResultCollector(
 				environment,
 				new StandardScanOptions(),
-				new ScanParameters() {
-//					private final JandexInitManager jandexInitManager = new JandexInitManager();
-					@Override
-					public JandexInitializer getJandexInitializer() {
-//						return jandexInitManager;
-						return null;
-					}
-				}
+				StandardScanParameters.INSTANCE
 		);
 
 		archiveDescriptor.visitArchive(
@@ -201,14 +187,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		collector = new ScanResultCollector(
 				environment,
 				new StandardScanOptions(),
-				new ScanParameters() {
-//					private final JandexInitManager jandexInitManager = new JandexInitManager();
-					@Override
-					public JandexInitializer getJandexInitializer() {
-//						return jandexInitManager;
-						return null;
-					}
-				}
+				StandardScanParameters.INSTANCE
 		);
 
 		archiveDescriptor.visitArchive(
@@ -239,14 +218,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		final ScanResultCollector collector = new ScanResultCollector(
 				environment,
 				new StandardScanOptions(),
-				new ScanParameters() {
-//					private final JandexInitManager jandexInitManager = new JandexInitManager();
-					@Override
-					public JandexInitializer getJandexInitializer() {
-//						return jandexInitManager;
-						return null;
-					}
-				}
+				StandardScanParameters.INSTANCE
 		);
 
 		archiveDescriptor.visitArchive(
@@ -291,7 +263,7 @@ public class JarVisitorTest extends PackagingTestCase {
 
 		assertTrue(
 				result.getLocatedClasses().contains(
-						new ClassDescriptorImpl( Carpet.class.getName(), null )
+						new ClassDescriptorImpl( Carpet.class.getName(), ClassDescriptor.Categorization.MODEL, null )
 				)
 		);
 

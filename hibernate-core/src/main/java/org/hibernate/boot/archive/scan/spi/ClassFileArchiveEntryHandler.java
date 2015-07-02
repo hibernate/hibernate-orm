@@ -38,17 +38,20 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 
 	@Override
 	public void handleEntry(ArchiveEntry entry, ArchiveContext context) {
+		// Ultimately we'd like to leverage Jandex here as long term we want to move to
+		// using Jandex for annotation processing.  But even then, Jandex atm does not have
+		// any facility for passing a stream and conditionally indexing it into an Index or
+		// returning existing ClassInfo objects.
+		//
+		// So not sure we can ever not do this unconditional input stream read :(
 		final ClassFile classFile = toClassFile( entry );
 		final ClassDescriptor classDescriptor = toClassDescriptor( classFile, entry );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// temporary until HHH-9489 is addressed
-		if ( ! containsClassAnnotationsOfInterest( classFile ) ) {
+		if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.OTHER ) {
 			return;
 		}
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		resultCollector.handleClass( toClassDescriptor( toClassFile( entry ), entry ), context.isRootUrl() );
+		resultCollector.handleClass( classDescriptor, context.isRootUrl() );
 	}
 
 	private ClassFile toClassFile(ArchiveEntry entry) {
@@ -75,21 +78,21 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 		}
 	}
 
+	private ClassDescriptor toClassDescriptor(ClassFile classFile, ArchiveEntry entry) {
+		ClassDescriptor.Categorization categorization = ClassDescriptor.Categorization.OTHER;;
 
-	@SuppressWarnings("SimplifiableIfStatement")
-	private boolean containsClassAnnotationsOfInterest(ClassFile cf) {
-		final AnnotationsAttribute visibleAnnotations = (AnnotationsAttribute) cf.getAttribute( AnnotationsAttribute.visibleTag );
-		if ( visibleAnnotations == null ) {
-			return false;
+		final AnnotationsAttribute visibleAnnotations = (AnnotationsAttribute) classFile.getAttribute( AnnotationsAttribute.visibleTag );
+		if ( visibleAnnotations != null ) {
+			if ( visibleAnnotations.getAnnotation( Entity.class.getName() ) != null
+					|| visibleAnnotations.getAnnotation( MappedSuperclass.class.getName() ) != null
+					|| visibleAnnotations.getAnnotation( Embeddable.class.getName() ) != null ) {
+				categorization = ClassDescriptor.Categorization.MODEL;
+			}
+			else if ( visibleAnnotations.getAnnotation( Converter.class.getName() ) != null ) {
+				categorization = ClassDescriptor.Categorization.CONVERTER;
+			}
 		}
 
-		return visibleAnnotations.getAnnotation( Entity.class.getName() ) != null
-				|| visibleAnnotations.getAnnotation( MappedSuperclass.class.getName() ) != null
-				|| visibleAnnotations.getAnnotation( Embeddable.class.getName() ) != null
-				|| visibleAnnotations.getAnnotation( Converter.class.getName() ) != null;
-	}
-
-	private ClassDescriptor toClassDescriptor(ClassFile classFile, ArchiveEntry entry) {
-		return new ClassDescriptorImpl( classFile.getName(), entry.getStreamAccess() );
+		return new ClassDescriptorImpl( classFile.getName(), categorization, entry.getStreamAccess() );
 	}
 }

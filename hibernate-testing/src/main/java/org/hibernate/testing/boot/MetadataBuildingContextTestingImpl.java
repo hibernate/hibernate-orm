@@ -6,7 +6,6 @@
  */
 package org.hibernate.testing.boot;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
@@ -38,7 +37,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
-		metadataCollector = new InFlightMetadataCollectorImpl( buildingOptions, new MetadataSources( serviceRegistry ), new TypeResolver() );
+		metadataCollector = new InFlightMetadataCollectorImpl( buildingOptions, new TypeResolver() );
 		classLoaderAccess = new ClassLoaderAccessImpl( null, serviceRegistry );
 
 		objectNameNormalizer = new ObjectNameNormalizer() {

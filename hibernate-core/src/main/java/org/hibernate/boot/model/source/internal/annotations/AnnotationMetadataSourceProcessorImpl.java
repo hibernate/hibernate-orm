@@ -6,17 +6,26 @@
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
-import org.dom4j.Document;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl.JpaOrmXmlPersistenceUnitDefaults;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AnnotationBinder;
@@ -26,18 +35,11 @@ import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionColl
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.dom4j.Document;
 
 /**
  * @author Steve Ebersole
@@ -57,7 +59,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private final List<XClass> xClasses = new ArrayList<XClass>();
 
 	public AnnotationMetadataSourceProcessorImpl(
-			MetadataSources sources,
+			ManagedResources managedResources,
 			final MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			IndexView jandexView) {
 		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
@@ -65,8 +67,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		this.reflectionManager = rootMetadataBuildingContext.getBuildingOptions().getReflectionManager();
 
-		if ( CollectionHelper.isNotEmpty( sources.getAnnotatedPackages() ) ) {
-			annotatedPackages.addAll( sources.getAnnotatedPackages() );
+		if ( CollectionHelper.isNotEmpty( managedResources.getAnnotatedPackageNames() ) ) {
+			annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
 		}
 
 		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
@@ -75,7 +77,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		// Ewww.  This is temporary until we migrate to Jandex + StAX for annotation binding
 
 		final JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) ( (MetadataProviderInjector) reflectionManager ).getMetadataProvider();
-		for ( Binding xmlBinding : sources.getXmlBindings() ) {
+		for ( Binding xmlBinding : managedResources.getXmlMappingBindings() ) {
 //			if ( !MappingBinder.DelayedOrmXmlData.class.isInstance( xmlBinding.getRoot() ) ) {
 //				continue;
 //			}
@@ -97,12 +99,12 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		final ClassLoaderService cls = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
-		for ( String className : sources.getAnnotatedClassNames() ) {
+		for ( String className : managedResources.getAnnotatedClassNames() ) {
 			final Class annotatedClass = cls.classForName( className );
 			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
 		}
 
-		for ( Class annotatedClass : sources.getAnnotatedClasses() ) {
+		for ( Class annotatedClass : managedResources.getAnnotatedClassReferences() ) {
 			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
 		}
 	}

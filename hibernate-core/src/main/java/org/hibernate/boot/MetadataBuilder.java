@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot;
 
-import java.sql.DatabaseMetaData;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -24,7 +23,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;

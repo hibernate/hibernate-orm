@@ -21,6 +21,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
 
+import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -123,11 +124,11 @@ public class ConfigurationTest extends BaseUnitTestCase {
 				adapter,
 				settings
 		);
-
+		emfb.build();
 		return emfb.getMetadata();
 	}
 
-	public static class CustomRegionFactory extends NoCachingRegionFactory {
+	public static class CustomRegionFactory extends CachingRegionFactory {
 		public CustomRegionFactory() {
 		}
 

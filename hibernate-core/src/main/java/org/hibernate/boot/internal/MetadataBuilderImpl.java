@@ -42,6 +42,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -49,6 +50,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
@@ -79,7 +81,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 /**
  * @author Steve Ebersole
  */
-public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
+public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeContributions {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
@@ -394,6 +396,11 @@ public class MetadataBuilderImpl implements MetadataBuilder, TypeContributions {
 		}
 
 		return MetadataBuildingProcess.build( sources, options );
+	}
+
+	@Override
+	public MetadataBuildingOptions getMetadataBuildingOptions() {
+		return options;
 	}
 
 	public static class MappingDefaultsImpl implements MappingDefaults {

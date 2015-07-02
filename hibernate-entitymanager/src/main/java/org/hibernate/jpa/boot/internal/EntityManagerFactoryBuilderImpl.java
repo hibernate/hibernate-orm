@@ -31,14 +31,19 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
+import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
+import org.hibernate.boot.cfgxml.spi.MappingReference;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.process.spi.ManagedResources;
+import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
@@ -61,7 +66,6 @@ import org.hibernate.jpa.internal.schemagen.JpaSchemaGenerator;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -121,15 +125,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	// things built in first phase, needed for second phase..
 	private final Map configurationValues;
 	private final StandardServiceRegistry standardServiceRegistry;
-	private final MetadataImplementor metadata;
+	private final ManagedResources managedResources;
+	private final MetadataBuilderImplementor metamodelBuilder;
 	private final SettingsImpl settings;
-
-	/**
-	 * Intended for internal testing only...
-	 */
-	public MetadataImplementor getMetadata() {
-		return metadata;
-	}
 
 	private static class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		/**
@@ -174,10 +172,29 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		configure( standardServiceRegistry, mergedSettings );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = populate( metadataSources, mergedSettings, standardServiceRegistry );
-		final MetadataBuilder metamodelBuilder = metadataSources.getMetadataBuilder( standardServiceRegistry );
+		List<AttributeConverterDefinition> attributeConverterDefinitions = populate(
+				metadataSources,
+				mergedSettings,
+				standardServiceRegistry
+		);
+		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
-		this.metadata = (MetadataImplementor) metamodelBuilder.build();
+
+		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
+		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
+		final CfgXmlAccessService cfgXmlAccessService = standardServiceRegistry.getService( CfgXmlAccessService.class );
+		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
+				for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
+					mappingReference.apply( metadataSources );
+				}
+			}
+		}
+
+		this.managedResources = MetadataBuildingProcess.prepare(
+				metadataSources,
+				metamodelBuilder.getMetadataBuildingOptions()
+		);
 
 		withValidatorFactory( configurationValues.get( AvailableSettings.VALIDATION_FACTORY ) );
 
@@ -186,7 +203,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 		final boolean useClassTransformer = "true".equals( configurationValues.remove( AvailableSettings.USE_CLASS_ENHANCER ) );
 		if ( useClassTransformer ) {
-			persistenceUnit.pushClassTransformer( collectNamesOfClassesToEnhance( metadata ) );
+			persistenceUnit.pushClassTransformer( managedResources.getAnnotatedClassNames() );
 		}
 	}
 
@@ -708,24 +725,20 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private List<String> collectNamesOfClassesToEnhance(MetadataImplementor metadata) {
-		final List<String> entityClassNames = new ArrayList<String>();
-		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
-			if ( persistentClass.getClassName() != null ) {
-				entityClassNames.add( persistentClass.getClassName() );
-			}
-		}
-		return entityClassNames;
-	}
-
-
-
 
 	// Phase 2 concerns ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private Object validatorFactory;
 	private Object cdiBeanManager;
 	private DataSource dataSource;
+	private MetadataImplementor metadata;
+
+	/**
+	 * Intended for internal testing only...
+	 */
+	public MetadataImplementor getMetadata() {
+		return metadata;
+	}
 
 	@Override
 	public EntityManagerFactoryBuilder withValidatorFactory(Object validatorFactory) {
@@ -749,16 +762,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// todo : close the bootstrap registry (not critical, but nice to do)
 	}
 
+	private MetadataImplementor metadata() {
+		if ( this.metadata == null ) {
+			this.metadata = MetadataBuildingProcess.complete( managedResources, metamodelBuilder.getMetadataBuildingOptions() );
+		}
+		return metadata;
+	}
+
 	@Override
 	public void generateSchema() {
 		// This seems overkill, but building the SF is necessary to get the Integrators to kick in.
 		// Metamodel will clean this up...
 		try {
-			SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
+			SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
 			populate( sfBuilder, standardServiceRegistry );
 			sfBuilder.build();
 
-			JpaSchemaGenerator.performGeneration( metadata, configurationValues, standardServiceRegistry );
+			JpaSchemaGenerator.performGeneration( metadata(), configurationValues, standardServiceRegistry );
 		}
 		catch (Exception e) {
 			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
@@ -771,7 +791,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@SuppressWarnings("unchecked")
 	public EntityManagerFactory build() {
-		SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
+		SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
 		populate( sfBuilder, standardServiceRegistry );
 
 		SessionFactoryImplementor sessionFactory;
@@ -782,12 +802,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			throw persistenceException( "Unable to build Hibernate SessionFactory", e );
 		}
 
-		JpaSchemaGenerator.performGeneration( metadata, configurationValues, standardServiceRegistry );
+		JpaSchemaGenerator.performGeneration( metadata(), configurationValues, standardServiceRegistry );
 
 		return new EntityManagerFactoryImpl(
 				persistenceUnit.getName(),
 				sessionFactory,
-				metadata,
+				metadata(),
 				settings,
 				configurationValues
 		);

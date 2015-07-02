@@ -7,6 +7,7 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.SharedCacheMode;
@@ -81,5 +82,5 @@ public interface PersistenceUnitDescriptor {
 	public ClassLoader getClassLoader();
 	public ClassLoader getTempClassLoader();
 
-	public void pushClassTransformer(List<String> entityClassNames);
+	public void pushClassTransformer(Collection<String> entityClassNames);
 }

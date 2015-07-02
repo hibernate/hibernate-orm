@@ -205,6 +205,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( useClassTransformer ) {
 			persistenceUnit.pushClassTransformer( managedResources.getAnnotatedClassNames() );
 		}
+
+		// for the time being we want to revoke access to the temp ClassLoader if one was passed
+		metamodelBuilder.applyTempClassLoader( null );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

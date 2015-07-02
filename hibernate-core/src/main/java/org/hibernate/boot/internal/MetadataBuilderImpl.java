@@ -53,6 +53,7 @@ import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
@@ -385,7 +386,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 //	}
 
 	@Override
-	public MetadataImpl build() {
+	public MetadataImplementor build() {
 		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {

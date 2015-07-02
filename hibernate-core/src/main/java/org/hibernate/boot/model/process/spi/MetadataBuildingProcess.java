@@ -13,13 +13,12 @@ import java.util.Set;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
+import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
+import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchySourceImpl;
@@ -32,6 +31,7 @@ import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
@@ -67,19 +67,45 @@ import org.jboss.logging.Logger;
 public class MetadataBuildingProcess {
 	private static final Logger log = Logger.getLogger( MetadataBuildingProcess.class );
 
-	public static MetadataImpl build(
+	/**
+	 * Unified single phase for MetadataSources->Metadata process
+	 *
+	 * @param sources The MetadataSources
+	 * @param options The building options
+	 *
+	 * @return The built Metadata
+	 */
+	public static MetadataImplementor build(
 			final MetadataSources sources,
 			final MetadataBuildingOptions options) {
 		return complete( prepare( sources, options ), options );
 	}
 
+	/**
+	 * First step of 2-phase for MetadataSources->Metadata process
+	 *
+	 * @param sources The MetadataSources
+	 * @param options The building options
+	 *
+	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
+	 */
 	public static ManagedResources prepare(
 			final MetadataSources sources,
 			final MetadataBuildingOptions options) {
-		return ManagedResourcesBuilder.INSTANCE.buildCompleteManagedResources( sources, options );
+		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, options );
+		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, options, sources.getXmlMappingBinderAccess() );
+		return managedResources;
 	}
 
-	public static MetadataImpl complete(final ManagedResources managedResources, final MetadataBuildingOptions options) {
+	/**
+	 * Second step of 2-phase for MetadataSources->Metadata process
+	 *
+	 * @param managedResources The token/memento from 1st phase
+	 * @param options The building options
+	 *
+	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
+	 */
+	public static MetadataImplementor complete(final ManagedResources managedResources, final MetadataBuildingOptions options) {
 		final BasicTypeRegistry basicTypeRegistry = handleTypes( options );
 
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(

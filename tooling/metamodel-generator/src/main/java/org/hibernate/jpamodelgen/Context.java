@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -76,6 +77,9 @@ public final class Context {
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
+
+	// keep track of all classes for which model have been generated
+	private final Collection<String> generatedModelClasses = new HashSet<String>();
 
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
@@ -196,6 +200,14 @@ public final class Context {
 	public TypeElement getTypeElementForFullyQualifiedName(String fqcn) {
 		Elements elementUtils = pe.getElementUtils();
 		return elementUtils.getTypeElement( fqcn );
+	}
+
+	void markGenerated(String name) {
+		generatedModelClasses.add( name );
+	}
+
+	boolean isAlreadyGenerated(String name) {
+		return generatedModelClasses.contains( name );
 	}
 
 	public void logMessage(Diagnostic.Kind type, String message) {

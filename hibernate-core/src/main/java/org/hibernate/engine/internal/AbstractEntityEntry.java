@@ -6,6 +6,10 @@
  */
 package org.hibernate.engine.internal;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -26,15 +30,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
 /**
- * We need an entry to tell us all about the current state of an mutable object with respect to its persistent state
- *
- * Implementation Warning: Hibernate needs to instantiate a high amount of instances of this class,
- * therefore we need to take care of its impact on memory consumption.
+ * A base implementation of EntityEntry
  *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
@@ -69,7 +66,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
 	 * </pre>
 	 * Use {@link #setCompressedValue(org.hibernate.engine.internal.AbstractEntityEntry.EnumState, Enum)},
-	 * {@link #getCompressedValue(org.hibernate.engine.internal.AbstractEntityEntry.EnumState, Class)} etc
+	 * {@link #getCompressedValue(org.hibernate.engine.internal.AbstractEntityEntry.EnumState)} etc
 	 * to access the enums and booleans stored in this value.
 	 * <p>
 	 * Representing enum values by their ordinal value is acceptable for our case as this value itself is never

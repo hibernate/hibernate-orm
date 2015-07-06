@@ -28,13 +28,15 @@ public abstract class TemplatedViolatedConstraintNameExtracter implements Violat
 				if (sqle.getNextException() == null
 						|| sqle.getNextException() == sqle) {
 					break;
-				} else {
+				}
+				else {
 					sqle = sqle.getNextException();
 				}
 			} while (constraintName == null);
 
 			return constraintName;
-		} catch (NumberFormatException nfe) {
+		}
+		catch (NumberFormatException nfe) {
 			return null;
 		}
 	}

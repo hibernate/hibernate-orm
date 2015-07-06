@@ -6,6 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
+
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
@@ -22,10 +26,6 @@ import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
-
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
 
 /**
  * Informix dialect.<br>
@@ -276,5 +276,10 @@ public class InformixDialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new InformixIdentityColumnSupport();
+	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return bool ? "'t'" : "'f'";
 	}
 }

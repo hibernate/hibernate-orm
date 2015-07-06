@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.lang.instrument.IllegalClassFormatException;
 import java.util.List;
 
-import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
+import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
 /**
  * @author Emmanuel Bernard
@@ -79,7 +79,7 @@ public class InstrumentedClassLoader extends ClassLoader {
 		catch (IOException e) {
 			throw new ClassNotFoundException( name + " not found", e );
 		}
-		InterceptFieldClassFileTransformer t = new InterceptFieldClassFileTransformer( entities );
+		EnhancingClassTransformerImpl t = new EnhancingClassTransformerImpl( entities );
 		byte[] transformed = new byte[0];
 		try {
 			transformed = t.transform(

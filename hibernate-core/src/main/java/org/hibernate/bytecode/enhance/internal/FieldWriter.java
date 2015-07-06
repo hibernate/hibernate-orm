@@ -50,7 +50,7 @@ public class FieldWriter {
 
 	private static void addPrivateTransient(CtClass target, CtClass type, String name) {
 		addWithModifiers( target, type, name, Modifier.PRIVATE | Modifier.TRANSIENT, Transient.class );
-		log.debugf( "Wrote field into [%s]: @Transient private transient %s %s() %s;%n", target.getName(), type.getName(), name );
+		log.debugf( "Wrote field into [%s]: @Transient private transient %s %s;%n", target.getName(), type.getName(), name );
 	}
 
 	private static void addWithModifiers(CtClass target, CtClass type, String  name, int modifiers, Class<?> ... annotations ) {

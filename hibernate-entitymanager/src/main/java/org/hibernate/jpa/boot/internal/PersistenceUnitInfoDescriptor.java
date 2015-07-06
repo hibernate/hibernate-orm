@@ -16,7 +16,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;
+import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
 /**
  * @author Steve Ebersole
@@ -110,6 +110,6 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public void pushClassTransformer(Collection<String> entityClassNames) {
-		persistenceUnitInfo.addTransformer( new InterceptFieldClassFileTransformer( entityClassNames ) );
+		persistenceUnitInfo.addTransformer( new EnhancingClassTransformerImpl( entityClassNames ) );
 	}
 }

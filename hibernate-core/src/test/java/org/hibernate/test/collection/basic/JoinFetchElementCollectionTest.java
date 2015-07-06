@@ -15,6 +15,7 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class JoinFetchElementCollectionTest extends BaseCoreFunctionalTestCase {
@@ -25,7 +26,6 @@ public class JoinFetchElementCollectionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8206")
-	@FailureExpected(jiraKey = "HHH-8206", message = "This is not explicitly supported, however should arguably throw an exception")
 	public void testJoinFetchesByPath() {
 		Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
 		emailAddresses.add( new EmailAddress( "test1@test.com" ) );
@@ -59,6 +59,8 @@ public class JoinFetchElementCollectionTest extends BaseCoreFunctionalTestCase {
 					+ "LEFT OUTER JOIN FETCH user.contact.emailAddresses2 "
 					+ "LEFT OUTER JOIN FETCH user.contact.emailAddresses";
 			User user = (User) session.createQuery( qry ).uniqueResult();
+			session.delete( user );
+			session.delete( user.getContact() );
 			session.getTransaction().commit();
 			session.close();
 
@@ -103,6 +105,8 @@ public class JoinFetchElementCollectionTest extends BaseCoreFunctionalTestCase {
 					+ "LEFT OUTER JOIN FETCH c.emailAddresses2 "
 					+ "LEFT OUTER JOIN FETCH c.emailAddresses";
 			User user = (User) session.createQuery( qry ).uniqueResult();
+			session.delete( user );
+			session.delete( user.getContact() );
 			session.getTransaction().commit();
 			session.close();
 

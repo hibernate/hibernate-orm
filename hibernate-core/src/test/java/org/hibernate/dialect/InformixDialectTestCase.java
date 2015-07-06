@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Testing of patched support for Informix boolean type; see HHH-9894
  *
- * @author Evan Leonard
+ * @author Greg Jones
  */
 @TestForIssue( jiraKey = "HHH-9894" )
 public class InformixDialectTestCase extends BaseUnitTestCase {

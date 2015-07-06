@@ -297,4 +297,9 @@ public class InformixDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new InformixIdentityColumnSupport();
 	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return bool ? "'t'" : "'f'";
+	}
 }

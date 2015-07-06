@@ -296,4 +296,9 @@ public class InformixDialect extends Dialect {
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
+	
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return bool ? "'t'" : "'f'";
+	}
 }

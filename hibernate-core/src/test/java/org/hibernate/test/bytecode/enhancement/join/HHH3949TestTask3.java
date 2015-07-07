@@ -12,10 +12,9 @@ public class HHH3949TestTask3 extends AbstractHHH3949TestTask {
 	@SuppressWarnings("unchecked")
 	public void execute() {
 		Session session = getFactory().openSession();
-		List<Person> persons = (List<Person>) session.createCriteria( Person.class ).setFetchMode(
-				"vehicle",
-				FetchMode.JOIN
-		).list();
+		List<Person> persons = (List<Person>) session.createCriteria( Person.class )
+				.setFetchMode( "vehicle", FetchMode.JOIN )
+				.list();
 		for ( Person person : persons ) {
 			if ( person.getId() < 3 ) {
 				Assert.assertNotNull( person.getVehicle() );

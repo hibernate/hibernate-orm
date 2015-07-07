@@ -12,17 +12,17 @@ public class HHH3949TestTask4 extends AbstractHHH3949TestTask {
 	@SuppressWarnings("unchecked")
 	public void execute() {
 		Session session = getFactory().openSession();
-		List<Vehicle> vehicles = (List<Vehicle>) session.createCriteria( Vehicle.class ).setFetchMode(
-				"driver",
-				FetchMode.JOIN
-		).list();
+		List<Vehicle> vehicles = (List<Vehicle>) session.createCriteria( Vehicle.class )
+				.setFetchMode( "driver", FetchMode.JOIN )
+				.list();
+		session.close();
+
 		for ( Vehicle vehicle : vehicles ) {
 			if ( vehicle.getId() < 3 ) {
 				Assert.assertNotNull( vehicle.getDriver() );
 				Assert.assertNotNull( vehicle.getDriver().getVehicle() );
 			}
 		}
-		session.close();
 	}
 
 }

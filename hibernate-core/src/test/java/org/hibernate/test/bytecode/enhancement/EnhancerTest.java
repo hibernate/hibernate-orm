@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.bytecode.enhancement.association.ManyToManyAssociationTestTask;
@@ -51,9 +52,22 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-3949" )
-	public void testHHH3949() {
+	@FailureExpected( jiraKey = "HHH-3949" )
+	public void testJoinFetchLazyToOneAttributeHql() {
 		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask1.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-3949" )
+	@FailureExpected( jiraKey = "HHH-3949" )
+	public void testJoinFetchLazyToOneAttributeHql2() {
 		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask2.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-3949" )
+	@FailureExpected( jiraKey = "HHH-3949" )
+	public void testHHH3949() {
 		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask3.class );
 		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask4.class );
 	}

@@ -17,10 +17,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
@@ -82,7 +82,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		File root = new File( this.dir );
 		walkDir( root );
 
-		final ClassLoader classLoader = toClassLoader( sourceSet );
+		final ClassLoader classLoader = toClassLoader( Arrays.asList( root ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override
@@ -107,7 +107,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 			@Override
 			public boolean isLazyLoadable(CtField field) {
-				return true;
+				return enableLazyInitialization;
 			}
 		};
 
@@ -120,13 +120,15 @@ public class MavenEnhancePlugin extends AbstractMojo {
 				continue;
 			}
 
-			if ( !ctClass.hasAnnotation( Entity.class ) && !ctClass.hasAnnotation( Embedded.class ) ) {
-				getLog().debug( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embedded" );
+			if ( !enhancementContext.isEntityClass( ctClass ) && !enhancementContext.isCompositeClass( ctClass ) ) {
+				getLog().info( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
 				continue;
 			}
 
 			final byte[] enhancedBytecode = doEnhancement( ctClass, enhancer );
 			writeOutEnhancedClass( enhancedBytecode, ctClass, file );
+
+			getLog().info( "Successfully enhanced class [" + ctClass.getName() + "]" );
 		}
 	}
 
@@ -135,6 +137,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		for ( File file : runtimeClasspath ) {
 			try {
 				urls.add( file.toURI().toURL() );
+				getLog().debug( "Adding root " + file.getAbsolutePath() + " to classpath " );
 			}
 			catch (MalformedURLException e) {
 				String msg = "Unable to resolve classpath entry to URL: " + file.getAbsolutePath();

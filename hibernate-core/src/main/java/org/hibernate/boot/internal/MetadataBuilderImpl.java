@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
@@ -74,7 +75,6 @@ import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
 import org.jboss.jandex.IndexView;
 
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -384,6 +384,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 //		options.persistentAttributeMemberResolver = resolver;
 //		return this;
 //	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T extends MetadataBuilder> T unwrap(Class<T> type) {
+		return (T) this;
+	}
 
 	@Override
 	public MetadataImplementor build() {

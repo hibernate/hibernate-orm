@@ -19,8 +19,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+
 import javax.xml.transform.dom.DOMSource;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.Origin;
@@ -32,12 +34,14 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataBuilderFactory;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
-
 import org.w3c.dom.Document;
 
 /**
@@ -118,7 +122,8 @@ public class MetadataSources implements Serializable {
 	 * @return The built metadata.
 	 */
 	public MetadataBuilder getMetadataBuilder() {
-		return new MetadataBuilderImpl( this );
+		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this );
+		return getCustomBuilderOrDefault( defaultBuilder );
 	}
 
 	/**
@@ -127,7 +132,40 @@ public class MetadataSources implements Serializable {
 	 * @return The built metadata.
 	 */
 	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
-		return new MetadataBuilderImpl( this, serviceRegistry );
+		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry );
+		return getCustomBuilderOrDefault( defaultBuilder );
+	}
+
+	/**
+	 * In case a custom {@link MetadataBuilderFactory} creates a custom builder, return that one, otherwise the default
+	 * builder.
+	 */
+	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
+		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		final java.util.Collection<MetadataBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( MetadataBuilderFactory.class );
+
+		MetadataBuilder builder = null;
+		List<String> activeFactoryNames = null;
+
+		for ( MetadataBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories ) {
+			final MetadataBuilder returnedBuilder = discoveredBuilderFactory.getMetadataBuilder( this, defaultBuilder );
+			if ( returnedBuilder != null ) {
+				if ( activeFactoryNames == null ) {
+					activeFactoryNames = new ArrayList<String>();
+				}
+				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
+				builder = returnedBuilder;
+			}
+		}
+
+		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
+			throw new HibernateException(
+					"Multiple active MetadataBuilder definitions were discovered : " +
+							StringHelper.join( ", ", activeFactoryNames )
+			);
+		}
+
+		return builder != null ? builder : defaultBuilder;
 	}
 
 	/**

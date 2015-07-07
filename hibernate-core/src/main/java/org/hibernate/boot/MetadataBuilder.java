@@ -26,7 +26,6 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
 import org.jboss.jandex.IndexView;
 
 /**
@@ -395,6 +394,15 @@ public interface MetadataBuilder {
 //	 */
 //	public MetadataBuilder with(PersistentAttributeMemberResolver resolver);
 
+	/**
+	 * Allows unwrapping this builder as another, more specific type.
+	 *
+	 * @param type
+	 * @param <T>
+	 *
+	 * @return The unwrapped builder.
+	 */
+	public <T extends MetadataBuilder> T unwrap(Class<T> type);
 
 	/**
 	 * Actually build the metamodel

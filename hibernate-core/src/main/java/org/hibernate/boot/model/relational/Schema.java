@@ -1,19 +1,8 @@
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
 package org.hibernate.boot.model.relational;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Table;
@@ -23,39 +12,13 @@ import org.hibernate.mapping.Table;
  *
  * @author Steve Ebersole
  */
-public class Schema {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Schema.class );
+public interface Schema {
 
-	private final Database database;
-	private final Name name;
+	Schema.Name getName();
 
-	private final Name physicalName;
+	Schema.Name getPhysicalName();
 
-	private Map<Identifier, Table> tables = new TreeMap<Identifier, Table>();
-	private Map<Identifier, Sequence> sequences = new TreeMap<Identifier, Sequence>();
-
-	public Schema(Database database, Name name) {
-		this.database = database;
-		this.name = name;
-
-		final Identifier physicalCatalogIdentifier = database.getPhysicalNamingStrategy()
-				.toPhysicalCatalogName( name.getCatalog(), database.getJdbcEnvironment() );
-		final Identifier physicalSchemaIdentifier = database.getPhysicalNamingStrategy()
-				.toPhysicalCatalogName( name.getSchema(), database.getJdbcEnvironment() );
-		this.physicalName = new Name( physicalCatalogIdentifier, physicalSchemaIdentifier );
-	}
-
-	public Name getName() {
-		return name;
-	}
-
-	public Name getPhysicalName() {
-		return physicalName;
-	}
-
-	public Collection<Table> getTables() {
-		return tables.values();
-	}
+	Collection<Table> getTables();
 
 	/**
 	 * Returns the table with the specified logical table name.
@@ -66,9 +29,7 @@ public class Schema {
 	 *         or null if there is no table with the specified
 	 *         table name.
 	 */
-	public Table locateTable(Identifier logicalTableName) {
-		return tables.get( logicalTableName );
-	}
+	Table locateTable(Identifier logicalTableName);
 
 	/**
 	 * Creates a mapping Table instance.
@@ -77,81 +38,17 @@ public class Schema {
 	 *
 	 * @return the created table.
 	 */
-	public Table createTable(Identifier logicalTableName, boolean isAbstract) {
-		final Table existing = tables.get( logicalTableName );
-		if ( existing != null ) {
-			return existing;
-		}
+	Table createTable(Identifier logicalTableName, boolean isAbstract);
 
-		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
-		Table table = new Table( this, physicalTableName, isAbstract );
-		tables.put( logicalTableName, table );
-		return table;
-	}
+	DenormalizedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, Table includedTable);
 
-	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, Table includedTable) {
-		final Table existing = tables.get( logicalTableName );
-		if ( existing != null ) {
-			// for now assume it is
-			return (DenormalizedTable) existing;
-		}
+	Sequence locateSequence(Identifier name);
 
-		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
-		DenormalizedTable table = new DenormalizedTable( this, physicalTableName, isAbstract, includedTable );
-		tables.put( logicalTableName, table );
-		return table;
-	}
+	Sequence createSequence(Identifier logicalName, int initialValue, int increment);
 
-	public Sequence locateSequence(Identifier name) {
-		return sequences.get( name );
-	}
+	Iterable<Sequence> getSequences();
 
-	public Sequence createSequence(Identifier logicalName, int initialValue, int increment) {
-		if ( sequences.containsKey( logicalName ) ) {
-			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
-		}
-
-		final Identifier physicalName = database.getPhysicalNamingStrategy().toPhysicalSequenceName( logicalName, database.getJdbcEnvironment() );
-
-		Sequence sequence = new Sequence(
-				this.physicalName.getCatalog(),
-				this.physicalName.getSchema(),
-				physicalName,
-				initialValue,
-				increment
-		);
-		sequences.put( logicalName, sequence );
-		return sequence;
-	}
-
-	@Override
-	public String toString() {
-		return "Schema" + "{name=" + name + '}';
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-
-		final Schema that = (Schema) o;
-		return EqualsHelper.equals( this.name, that.name );
-	}
-
-	@Override
-	public int hashCode() {
-		return name.hashCode();
-	}
-
-	public Iterable<Sequence> getSequences() {
-		return sequences.values();
-	}
-
-	public static class Name implements Comparable<Name> {
+	class Name implements Comparable<Name> {
 		private final Identifier catalog;
 		private final Identifier schema;
 
@@ -208,7 +105,7 @@ public class Schema {
 		}
 	}
 
-	public static class ComparableHelper {
+	class ComparableHelper {
 		public static <T extends Comparable<T>> int compare(T first, T second) {
 			if ( first == null ) {
 				if ( second == null ) {

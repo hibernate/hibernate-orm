@@ -43,6 +43,7 @@ import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.DatabaseImpl;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
@@ -200,7 +201,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	public Database getDatabase() {
 		// important to delay this instantiation until as late as possible.
 		if ( database == null ) {
-			this.database = new Database( options );
+			this.database = new DatabaseImpl( options );
 		}
 		return database;
 	}

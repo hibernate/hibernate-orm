@@ -4,6 +4,63 @@ Hibernate 5.0 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.0.0.CR2 (July 8, 2015)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/20150
+
+** Sub-task
+    * [HHH-8558] - Lazy loading (basic attributes)
+    * [HHH-8559] - Lazy loading (to-one associations)
+
+** Bug
+    * [HHH-2851] - ParameterTranslationsImpl fails to correctly determine parameter type
+    * [HHH-9166] - Postgres ViolatedConstraintNameExtracter doesn't handle nested Exceptions
+    * [HHH-9581] - hibernate-enhance-maven-plugin error: "Unable to delete class file"
+    * [HHH-9582] - hibernate-enhance-maven-plugin error: "Unable to enhance persistent attribute"
+    * [HHH-9757] - Incorrect image path generated in HTML rendering
+    * [HHH-9800] - Numerous hibernate-infinispan tests continue to fail transiently
+    * [HHH-9837] - Remove reliance during annotation binding on org.hibernate.internal.util.ClassLoaderHelper
+    * [HHH-9838] - Leverage ClassLoaderService during JavassistLazyInitializer#getProxyFactory
+    * [HHH-9844] - org.hibernate.cache.spi.access.AccessType enum names are not valid values for hibernate.cache.default_cache_concurrency_strategy
+    * [HHH-9849] - Duplicate column name for mixed case column name on schema update (mysql,linux)
+    * [HHH-9851] - Limit handling is broken for dialects that don't support variable limit/offset
+    * [HHH-9856] - EntityManager.find() and getReference() throw incorrect exception for non-entity
+    * [HHH-9859] - ResourceLocalTransactionCoordinatorImpl#isJoined bad impl
+    * [HHH-9866] - Wrong join table column names generation with globally_quoted_identifiers
+    * [HHH-9874] - Classloader issue in starting the Infinispan CacheManager within WildFly
+    * [HHH-9885] - The default ClassLoaderService implementation should handle java.lang.LinkageError
+    * [HHH-9887] - Make sure the JPA temp ClassLoader is not used to load Class definitions that are then held on to
+    * [HHH-9892] - Hibernate generator try to regenerate same metamodel after generated entities
+    * [HHH-9893] - proper karaf features file task dependency for artifact publishing
+    * [HHH-9902] - Gradle enhancer plugin skips Embeddable entities
+    * [HHH-9905] - JPA integration property "javax.persistence.validation.factory" not passed along to TypeSafeActivator
+
+** Improvement
+    * [HHH-9518] - Exception and logging messages for collection multi-session access needs to be improved
+    * [HHH-9584] - MavenEnhancePlugin should optionally fail on error
+    * [HHH-9738] - Upgrade master (5.0) to Gradle 2.4
+    * [HHH-9840] - Allow custom key implementations for 2nd level cache regions
+    * [HHH-9841] - Redesign org.hibernate.property.PropertyAccessorFactory
+    * [HHH-9843] - Use optimized cache key implementation in Infinispan 2LC
+    * [HHH-9855] - Ignore non-entity classes listed as "managed classes" in persistence.xml
+    * [HHH-9857] - Reuse of EntityEntry for bytecode enhanced read-only reference cached entities
+
+** New Feature
+    * [HHH-9848] - Allow disabling auto-quoting of database object names (tables, columns, etc)
+    * [HHH-9899] - Enable custom Metadata(Builder) extensions by integrators
+
+** Task
+    * [HHH-9822] - Switch runtime JPA Class transformation to use new bytecode Enhancer
+    * [HHH-9825] - HCANN AnnotationFactory still using TCCL
+    * [HHH-9826] - Update the release task for uploading release bundles to SourceForge FRS
+    * [HHH-9827] - Truncate master changelog.txt file to just 5.0 related changes
+    * [HHH-9830] - Upgrade to jboss-logging 3.3 Final (rather than Beta)
+    * [HHH-9831] - Upgrade HCANN to 5.0.0
+    * [HHH-9858] - Make sure release bundles contain hibernate-java8
+    * [HHH-9860] - Upgrade to non-SNAPSHOT version of geolatte
+
+
+
 Changes in 5.0.0.CR1 (May 27, 2015)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/19851

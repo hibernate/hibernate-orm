@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -31,6 +32,7 @@ import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -77,10 +79,9 @@ class TypeSafeActivator {
 
 	@SuppressWarnings("UnusedDeclaration")
 	public static void activate(ActivationContext activationContext) {
-		final ConfigurationService cfgService = activationContext.getServiceRegistry().getService( ConfigurationService.class );
 		final ValidatorFactory factory;
 		try {
-			factory = getValidatorFactory( cfgService.getSettings() );
+			factory = getValidatorFactory( activationContext );
 		}
 		catch (IntegrationException e) {
 			if ( activationContext.getValidationModes().contains( ValidationMode.CALLBACK ) ) {
@@ -112,7 +113,7 @@ class TypeSafeActivator {
 		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
 		// asks for it
 		if ( cfgService.getSettings().get( Environment.CHECK_NULLABILITY ) == null ) {
-			activationContext.getSessionFactory().getSettings().setCheckNullability( false );
+			activationContext.getSessionFactory().getSessionFactoryOptions().setCheckNullability( false );
 		}
 
 		final BeanValidationEventListener listener = new BeanValidationEventListener(
@@ -151,7 +152,10 @@ class TypeSafeActivator {
 				activationContext.getMetadata().getEntityBindings(),
 				cfgService.getSettings(),
 				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect(),
-				new ClassLoaderAccessImpl( null, activationContext.getServiceRegistry().getService( ClassLoaderService.class ) )
+				new ClassLoaderAccessImpl(
+						null,
+						activationContext.getServiceRegistry().getService( ClassLoaderService.class )
+				)
 		);
 	}
 
@@ -303,6 +307,7 @@ class TypeSafeActivator {
 		col.setCheckConstraint( checkConstraint );
 	}
 
+	@SuppressWarnings("unchecked")
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
 		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
@@ -310,9 +315,9 @@ class TypeSafeActivator {
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns
 				if ( !property.isComposite() ) {
-					final Iterator<Selectable> iter = property.getColumnIterator();
-					while ( iter.hasNext() ) {
-						final Selectable selectable = iter.next();
+					final Iterator<Selectable> itr = property.getColumnIterator();
+					while ( itr.hasNext() ) {
+						final Selectable selectable = itr.next();
 						if ( Column.class.isInstance( selectable ) ) {
 							Column.class.cast( selectable ).setNullable( false );
 						}
@@ -371,10 +376,8 @@ class TypeSafeActivator {
 	}
 
 	/**
-	 * @param associatedClass
-	 * @param propertyName
-     * @return the property by path in a recursive way, including IdentifierProperty in the loop if propertyName is
-     * <code>null</code>.  If propertyName is <code>null</code> or empty, the IdentifierProperty is returned
+	 * Locate the property by path in a recursive way, including IdentifierProperty in the loop if propertyName is
+	 * {@code null}.  If propertyName is {@code null} or empty, the IdentifierProperty is returned
 	 */
 	private static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
 		Property property = null;
@@ -434,30 +437,81 @@ class TypeSafeActivator {
 		return property;
 	}
 
-	private static ValidatorFactory getValidatorFactory(Map<Object, Object> properties) {
-		ValidatorFactory factory = null;
-		if ( properties != null ) {
-			Object unsafeProperty = properties.get( FACTORY_PROPERTY );
-			if ( unsafeProperty != null ) {
-				try {
-					factory = ValidatorFactory.class.cast( unsafeProperty );
-				}
-				catch ( ClassCastException e ) {
-					throw new IntegrationException(
-							"Property " + FACTORY_PROPERTY
-									+ " should contain an object of type " + ValidatorFactory.class.getName()
-					);
-				}
-			}
+	private static ValidatorFactory getValidatorFactory(ActivationContext activationContext) {
+		// IMPL NOTE : We can either be provided a ValidatorFactory or make one.  We can be provided
+		// a ValidatorFactory in 2 different ways.  So here we "get" a ValidatorFactory in the following order:
+		//		1) Look into SessionFactoryOptions.getValidatorFactoryReference()
+		//		2) Look into ConfigurationService
+		//		3) build a new ValidatorFactory
+
+		// 1 - look in SessionFactoryOptions.getValidatorFactoryReference()
+		ValidatorFactory factory = resolveProvidedFactory( activationContext.getSessionFactory().getSessionFactoryOptions() );
+		if ( factory != null ) {
+			return factory;
 		}
-		if ( factory == null ) {
-			try {
-				factory = Validation.buildDefaultValidatorFactory();
-			}
-			catch ( Exception e ) {
-				throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
-			}
+
+		// 2 - look in ConfigurationService
+		factory = resolveProvidedFactory( activationContext.getServiceRegistry().getService( ConfigurationService.class ) );
+		if ( factory != null ) {
+			return factory;
 		}
-		return factory;
+
+		// 3 - build our own
+		try {
+			return Validation.buildDefaultValidatorFactory();
+		}
+		catch ( Exception e ) {
+			throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
+		}
+	}
+
+	private static ValidatorFactory resolveProvidedFactory(SessionFactoryOptions options) {
+		final Object validatorFactoryReference = options.getValidatorFactoryReference();
+
+		if ( validatorFactoryReference == null ) {
+			return null;
+		}
+
+		try {
+			return ValidatorFactory.class.cast( validatorFactoryReference );
+		}
+		catch ( ClassCastException e ) {
+			throw new IntegrationException(
+					String.format(
+							Locale.ENGLISH,
+							"ValidatorFactory reference (provided via %s) was not castable to %s : %s",
+							SessionFactoryOptions.class.getName(),
+							ValidatorFactory.class.getName(),
+							validatorFactoryReference.getClass().getName()
+					)
+			);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static ValidatorFactory resolveProvidedFactory(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				FACTORY_PROPERTY,
+				new ConfigurationService.Converter<ValidatorFactory>() {
+					@Override
+					public ValidatorFactory convert(Object value) {
+						try {
+							return ValidatorFactory.class.cast( value );
+						}
+						catch ( ClassCastException e ) {
+							throw new IntegrationException(
+									String.format(
+											Locale.ENGLISH,
+											"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
+											FACTORY_PROPERTY,
+											ValidatorFactory.class.getName(),
+											value.getClass().getName()
+									)
+							);
+						}
+					}
+				},
+				null
+		);
 	}
 }

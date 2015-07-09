@@ -9,9 +9,7 @@ package org.hibernate.bytecode.enhance.spi;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
-import javax.tools.JavaFileObject;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -107,11 +105,8 @@ public class Enhancer {
 	}
 
 	private CtClass loadCtClassFromClass(ClassPool cp, Class<?> aClass) throws IOException {
-		return cp.makeClass( aClass.getClassLoader().getResourceAsStream( getFilenameForClass( aClass ) ) );
-	}
-
-	private String getFilenameForClass(Class<?> aClass) {
-		return aClass.getName().replace( '.', File.separatorChar ) + JavaFileObject.Kind.CLASS.extension;
+		String resourceName = aClass.getName().replace( '.', '/' ) + ".class";
+		return cp.makeClass( aClass.getClassLoader().getResourceAsStream( resourceName ) );
 	}
 
 	private void enhance(CtClass managedCtClass) {

@@ -45,7 +45,7 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 
 	@Override
 	public ConnectionReleaseMode getDefaultConnectionReleaseMode() {
-		return ConnectionReleaseMode.ON_CLOSE;
+		return ConnectionReleaseMode.AFTER_TRANSACTION;
 	}
 
 	@Override

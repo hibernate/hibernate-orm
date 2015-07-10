@@ -62,8 +62,9 @@ public class JpaFlushEntityEventListener extends DefaultFlushEntityEventListener
 		int size = newState.length;
 		boolean isDirty = false;
 		for ( int index = 0; index < size ; index++ ) {
-			if (state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY && newState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| state[index] != newState[index] && !types[index].isEqual(state[index], newState[index])) {
+			if ( ( state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+					newState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) ||
+					( state[index] != newState[index] && !types[index].isEqual( state[index], newState[index] ) ) ) {
 				isDirty = true;
 				state[index] = newState[index];
 			}

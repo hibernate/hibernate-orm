@@ -7,11 +7,14 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
+import org.hibernate.Hibernate;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Kitten;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -257,6 +260,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 	 * @throws Exception
 	 */
 	@Test
+	@TestForIssue( jiraKey = "HHH-7573" )
 	public void testJpaFlushEntityEventListener() throws Exception {
 		EntityWithLazyProperty entity;
 		EntityManager em = getOrCreateEntityManager();
@@ -270,16 +274,23 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		entity.setLazyData(testArray);
 		em.persist(entity);
 		em.getTransaction().commit();
+		em.close();
+
 		checkLazyField(entity, em, testArray);
 
 		/**
 		 * Set a non lazy field, therefore the lazyData field will be LazyPropertyInitializer.UNFETCHED_PROPERTY
 		 * for both state and newState so the field should not change. This should no longer cause a ClassCastException.
 		 */
+		em = getOrCreateEntityManager();
 	  	em.getTransaction().begin();
 		entity = em.find(EntityWithLazyProperty.class, entity.getId());
 		entity.setSomeField("TEST1");
+		assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
 		em.getTransaction().commit();
+		assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+		em.close();
+
 		checkLazyField(entity, em, testArray);
 
 		/**
@@ -287,11 +298,16 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		 * PreUpdate annotated callback method. So state == LazyPropertyInitializer.UNFETCHED_PROPERTY and
 		 * newState == EntityWithLazyProperty.PRE_UPDATE_VALUE. This should no longer cause a ClassCastException.
 		 */
+		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		entity = em.find(EntityWithLazyProperty.class, entity.getId());
 		entity.setUpdateLazyFieldInPreUpdate(true);
 		entity.setSomeField("TEST2");
+		assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
 		em.getTransaction().commit();
+		assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
+		em.close();
+
 		checkLazyField(entity, em, EntityWithLazyProperty.PRE_UPDATE_VALUE);
 
 		/**
@@ -299,22 +315,29 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		 * PreUpdate annotated callback method and also set the lazyData field directly to testArray1. When we reload we
 		 * should get EntityWithLazyProperty.PRE_UPDATE_VALUE.
 		 */
+		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		entity = em.find(EntityWithLazyProperty.class, entity.getId());
 		entity.setUpdateLazyFieldInPreUpdate(true);
+		assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
 		entity.setLazyData(testArray);
+		assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
 		entity.setSomeField("TEST3");
 		em.getTransaction().commit();
-		checkLazyField(entity, em, EntityWithLazyProperty.PRE_UPDATE_VALUE);
-
 		em.close();
+
+		checkLazyField( entity, em, EntityWithLazyProperty.PRE_UPDATE_VALUE);
 	}
 
 	private void checkLazyField(EntityWithLazyProperty entity, EntityManager em, byte[] expected) {
 		// reload the entity and check the lazy value matches what we expect.
+		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		entity = em.find(EntityWithLazyProperty.class, entity.getId());
-		assertEquals(expected, entity.getLazyData());
+		assertFalse( Hibernate.isPropertyInitialized( entity, "lazyData") );
+		assertTrue( ArrayHelper.isEquals( expected, entity.getLazyData() ) );
+		assertTrue( Hibernate.isPropertyInitialized( entity, "lazyData" ) );
 		em.getTransaction().commit();
+		em.close();
 	}
 }

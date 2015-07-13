@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -106,7 +107,18 @@ public class Enhancer {
 
 	private CtClass loadCtClassFromClass(ClassPool cp, Class<?> aClass) throws IOException {
 		String resourceName = aClass.getName().replace( '.', '/' ) + ".class";
-		return cp.makeClass( aClass.getClassLoader().getResourceAsStream( resourceName ) );
+		InputStream resourceAsStream = aClass.getClassLoader().getResourceAsStream( resourceName );
+		try {
+			return cp.makeClass( resourceAsStream );
+		}
+		finally {
+			try {
+				resourceAsStream.close();
+			}
+			catch (IOException ioe) {
+				log.debugf( "An error occurs closing InputStream for class [%s]", aClass.getName() );
+			}
+		}
 	}
 
 	private void enhance(CtClass managedCtClass) {

@@ -1,0 +1,231 @@
+[[tutorial-native]]
+== Tutorial Using Native Hibernate APIs and hbm.xml Mapping
+
+NOTE: This tutorial is located within the download bundle under `basic/`.
+
+.Objectives
+- [*] Bootstrap a Hibernate `SessionFactory`
+- [*] Use Hibernate mapping (`hbm.xml`) files to provide mapping information
+- [*] Use the Hibernate native APIs
+
+
+[[hibernate-gsg-tutorial-basic-config]]
+=== The Hibernate configuration file
+
+For this tutorial, the `hibernate.cfg.xml` file defines the Hibernate configuration information.
+
+The `connection.driver_class`, `connection.url`, `connection.username` and `connection.password` `<property/>` elements
+define JDBC connection information. These tutorials utilize the H2 in-memory database, so the values of these properties
+are all specific to running H2 in its in-memory mode.  `connection.pool_size` is used to configure the number of
+connections in Hibernate's built-in connection pool.
+
+IMPORTANT: The built-in Hibernate connection pool is in no way intended for production use. It lacks several
+features found on production-ready connection pools.
+
+The `dialect` property specifies the particular SQL variant with which Hibernate will converse.
+
+TIP: In most cases, Hibernate is able to properly determine which dialect to use. This is particularly useful
+if your application targets multiple databases.
+
+The `hbm2ddl.auto` property enables automatic generation of database schemas directly into the database.
+
+Finally, add the mapping file(s) for persistent classes to the configuration.  The `resource` attribute of the
+`<mapping/>` element causes Hibernate to attempt to locate that mapping as a classpath resource using a
+`java.lang.ClassLoader` lookup.
+
+There are many ways and options to bootstrap a Hibernate `SessionFactory`.  For additional details, see
+the _Native Bootstrapping_ topical guide.
+
+
+[[hibernate-gsg-tutorial-basic-entity]]
+=== The entity Java class
+
+The entity class for this tutorial is `org.hibernate.tutorial.hbm.Event`
+
+.Notes About the Entity
+* This class uses standard JavaBean naming conventions for property getter and setter methods, as well as
+private visibility for the fields. Although this is the recommended design, it is not required.
+* The no-argument constructor, which is also a JavaBean convention, is a requirement for all persistent classes.
+Hibernate needs to create objects for you, using Java Reflection.  The constructor can be private.  However, package
+or public visibility is required for runtime proxy generation and efficient data retrieval without bytecode
+instrumentation.
+
+
+[[hibernate-gsg-tutorial-basic-mapping]]
+=== The mapping file
+
+The mapping file for this tutorial is the classpath resource `org/hibernate/tutorial/hbm/Event.hbm.xml` (as discussed above).
+
+Hibernate uses the mapping metadata to determine how to load and store objects of the persistent class. The Hibernate
+mapping file is one choice for providing Hibernate with this metadata.
+
+
+[[hibernate-gsg-tutorial-basic-mapping-class]]
+.The class mapping element
+====
+[source, XML]
+----
+<class name="Event" table="EVENTS">
+	...
+</class>
+----
+====
+
+.Functions of the <varname>class</varname> mapping element
+* The `name` attribute (combined here with the `package` attribute from the containing `<hibernate-mapping/>` element)
+names the FQN of the class to be defined as an entity.
+* The `table` attribute names the database table which contains the data for this entity.
+
+Instances of the `Event` class are now mapped to rows in the `EVENTS` database table.
+
+
+[[hibernate-gsg-tutorial-basic-mapping-id]]
+.The id mapping element
+====
+[source, XML]
+----
+<id name="id" column="EVENT_ID">
+    ...
+</id>
+----
+====
+
+Hibernate uses the property named by the `<id/>` element to uniquely identify rows in the table.
+
+IMPORTANT: It is not required for the id element to map to the table's actual primary key column(s), but it is
+the normal convention.  Tables mapped in Hibernate do not even need to define primary keys. However, it is strongly
+recommend that all schemas define proper referential integrity. Therefore id and primary key are used interchangeably
+throughout Hibernate documentation.
+
+The `<id/>` element here names the EVENT_ID column as the primary key of the EVENTS table. It also identifies the
+`id` property of the `Event` class as the property containing the identifier value.
+
+The `generator element informs Hibernate about which strategy is used to generated primary key values for this entity.
+This example uses a simple incrementing count.
+
+[[hibernate-gsg-tutorial-basic-mapping-property]]
+.The property mapping element
+====
+[source, XML]
+----
+<property name="date" type="timestamp" column="EVENT_DATE"/>
+<property name="title"/>
+----
+====
+
+The two `<property/>` elements declare the remaining two persistent properties of the `Event` class: `date` and `title`.
+The `date` property mapping includes the `column` attribute, but the `title` does not.
+In the absence of a `column` attribute, Hibernate uses the property name as the column name.
+This is appropriate for `title`, but since `date` is a reserved keyword in most databases, you need to specify a
+non-reserved word for the column name.
+
+The `title mapping also lacks a type attribute.  The types declared and used in the mapping files are neither Java data
+types nor SQL database types.  Instead, they are *Hibernate mapping types*, which are converters which translate between
+Java and SQL data types.  Hibernate attempts to determine the correct conversion and mapping type autonomously if the
+type attribute is not specified in the mapping, by using Java reflection to determine the Java type of the declared
+property and using a default mapping type for that Java type.
+
+In some cases this automatic detection might not chose the default you expect or need, as seen with the
+`date` property.  Hibernate cannot know if the property, which is of type `java.util.Date`, should map to a SQL
+_DATE_, _TIME_, or _TIMESTAMP_ datatype.  Full date and time information is preserved by mapping the property to
+the _timestamp_ converter, which identifies the converter class `org.hibernate.type.TimestampType`.
+
+TIP: Hibernate determines the mapping type using reflection when the mapping files are processed. This process adds
+overhead in terms of time and resources. If startup performance is important, consider explicitly defining the type
+to use.
+
+[[hibernate-gsg-tutorial-basic-test]]
+=== Example code
+
+The `org.hibernate.tutorial.hbm.NativeApiIllustrationTest` class illustrates using the Hibernate native API.
+
+NOTE: The examples in these tutorials are presented as JUnit tests, for ease of use.  One benefit of this
+approach is that `setUp` and `tearDown` roughly illustrate how a `org.hibernate.SessionFactory` is created at the
+start-up of an application and closed at the end of the application lifecycle.
+
+
+[[hibernate-gsg-tutorial-basic-test-setUp]]
+.Obtaining the org.hibernate.SessionFactory
+====
+[source, JAVA]
+----
+protected void setUp() throws Exception {
+	// A SessionFactory is set up once for an application!
+	final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+			.configure() // configures settings from hibernate.cfg.xml
+			.build();
+	try {
+		sessionFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+	}
+	catch (Exception e) {
+		// The registry would be destroyed by the SessionFactory, but we had trouble building the SessionFactory
+		// so destroy it manually.
+		StandardServiceRegistryBuilder.destroy( registry );
+	}
+}
+----
+====
+
+The `setUp` method first builds a `org.hibernate.boot.registry.StandardServiceRegistry` instance which incorporates
+configuration information into a working set of Services for use by the SessionFactory.  In this tutorial
+we defined all configuration information in `hibernate.cfg.xml` so there is not much interesting to see here.
+
+Using the `StandardServiceRegistry` we create the `org.hibernate.boot.MetadataSources` which is the start point for
+telling Hibernate about your domain model.  Again, since we defined that in `hibernate.cfg.xml` so there is not much
+interesting to see here.
+
+`org.hibernate.boot.Metadata` represents the complete, partially validated view of the application domain model which the
+`SessionFactory` will be based on.
+
+The final step in the bootstrap process is to build the `SessionFactory`.  The `SessionFactory` is a
+thread-safe object that is instantiated once to serve the entire application.
+
+The `SessionFactory` acts as a factory for `org.hibernate.Session` instances, which should be thought of
+as a corollary to a "unit of work".
+
+
+[[hibernate-gsg-tutorial-basic-test-saving]]
+.Saving entities
+====
+[source, JAVA]
+----
+Session session = sessionFactory.openSession();
+session.beginTransaction();
+session.save( new Event( "Our very first event!", new Date() ) );
+session.save( new Event( "A follow up event", new Date() ) );
+session.getTransaction().commit();
+session.close();
+----
+====
+
+`testBasicUsage()` first creates some new `Event` objects and hands them over to Hibernate for management, using the
+`save()` method.  Hibernate now takes responsibility to perform an _INSERT_ on the database for each `Event`.
+
+
+[[hibernate-gsg-tutorial-basic-test-list]]
+.Obtaining a list of entities
+====
+[source, JAVA]
+----
+session = sessionFactory.openSession();
+session.beginTransaction();
+List result = session.createQuery( "from Event" ).list();
+for ( Event event : (List<Event>) result ) {
+    System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
+}
+session.getTransaction().commit();
+session.close();
+----
+====
+
+Here we see an example of the Hibernate Query Language (HQL) to load all existing `Event` objects from the database
+by generating the appropriate _SELECT_ SQL, sending it to the database and populating `Event` objects with the result
+set data.
+
+
+[[hibernate-gsg-tutorial-annotations-further]]
+=== Take it further!
+
+.Practice Exercises
+- [ ] Reconfigure the examples to connect to your own persistent relational database.
+- [ ] Add an association to the `Event` entity to model a message thread.

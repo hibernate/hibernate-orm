@@ -1,0 +1,17 @@
+[[tutorial_osgi]]
+== OSGi Tutorial
+
+[IMPORTANT]
+====
+This guide and the tutorials were very much out-of-date as of 5.0, and were therefore removed until they can be updated.
+For details see link:$$https://hibernate.atlassian.net/browse/HHH-9919$$[HHH-9919].
+
+In the meantime, we suggest looking at the Pax Exam and Karaf based
+link:$$https://github.com/hibernate/hibernate-orm/blob/master/hibernate-osgi/src/test/java/org/hibernate/osgi/test/OsgiIntegrationTest.java$$[hibernate-osgi tests]
+for examples of using Hibernate in Karaf specifically.  Usage in other OSGi containers should be similar.
+
+The Hibernate-produced Karaf features file (feature repository) is published to the JBoss Nexus repository, along
+with our other artifacts, using the `org.hibernate` groupId and `hibernate-osgi` with the `karaf` classifier.  The
+features it defines are versioned using the same version as the release it comes from.  The Karaf feature file is
+tested against Karaf version 3.0.3.
+====

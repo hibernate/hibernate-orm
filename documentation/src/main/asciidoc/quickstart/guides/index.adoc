@@ -1,0 +1,18 @@
+= Hibernate Getting Started Guide
+:toc:
+:docinfo:
+
+include::preface.adoc[]
+
+:numbered:
+include::obtaining.adoc[]
+
+include::tutorial_native.adoc[]
+
+include::tutorial_annotations.adoc[]
+
+include::tutorial_jpa.adoc[]
+
+include::tutorial_envers.adoc[]
+
+include::tutorial_osgi.adoc[]

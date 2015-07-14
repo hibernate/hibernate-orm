@@ -16,7 +16,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.internal.SessionImpl;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -35,6 +37,11 @@ public class ExtraStateTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9451")
+	@SkipForDialect(
+			value = Oracle10gDialect.class,
+			comment = "Identity key generation is not supported",
+			jiraKey = "HHH-9918"
+			)
 	public void shouldMaintainExtraStateWhenUsingIdentityIdGenerationStrategy() {
 		session = openSession();
 		session.getTransaction().begin();

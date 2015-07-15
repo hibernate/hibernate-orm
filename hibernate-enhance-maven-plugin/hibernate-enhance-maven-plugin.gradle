@@ -6,7 +6,9 @@ import org.apache.tools.ant.filters.ReplaceTokens
 group = 'org.hibernate.orm.tooling'
 
 repositories {
-    mavenCentral()
+    // mavenCentral()
+    mavenRepo name: 'rsg', url: "https://maven.teamspace.local/content/groups/public/"
+    mavenLocal()
 }
 
 processResources.doLast {

@@ -34,7 +34,6 @@ import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -77,7 +76,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
-		identifierHelperBuilder.setGloballyQuoteIdentifiers( autoQuoting( cfgService ) );
+		identifierHelperBuilder.setAutoQuoteKeywords( autoQuoting( cfgService ) );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
 		IdentifierHelper identifierHelper = null;

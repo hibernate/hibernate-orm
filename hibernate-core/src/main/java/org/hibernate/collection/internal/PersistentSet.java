@@ -326,8 +326,8 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	public boolean endRead() {
 		set.addAll( tempList );
 		tempList = null;
-		setInitialized();
-		return true;
+		// ensure that operationQueue is considered
+		return super.endRead();
 	}
 
 	@Override

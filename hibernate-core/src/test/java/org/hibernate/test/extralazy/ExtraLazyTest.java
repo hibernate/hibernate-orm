@@ -18,8 +18,11 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.naturalid.inheritance.cache.ExtendedEntity;
+import org.hibernate.test.naturalid.inheritance.cache.MyEntity;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -34,7 +37,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "extralazy/UserGroup.hbm.xml","extralazy/Parent.hbm.xml","extralazy/Child.hbm.xml" };
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { School.class, Student.class, Championship.class };
@@ -255,7 +258,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull(child2);
 		session2.close();
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-10874")
 	public void testWhereClauseOnBidirectionalCollection() {

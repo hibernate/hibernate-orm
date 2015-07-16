@@ -96,7 +96,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		g.getUsers().put("turin", turin);
 		s.persist(g);
 		gavin.getSession().put( "foo", new SessionAttribute("foo", "foo bar baz") );
-		gavin.getSession().put( "bar", new SessionAttribute("bar", "foo bar baz 2") );
+		gavin.getSession().put("bar", new SessionAttribute("bar", "foo bar baz 2"));
 		t.commit();
 		s.close();
 
@@ -108,11 +108,11 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull(gavin);
 		assertNotNull(turin);
 		assertNull( g.getUsers().get("emmanuel") );
-		assertFalse( Hibernate.isInitialized( g.getUsers() ) );
-		assertNotNull( gavin.getSession().get("foo") );
-		assertNull( turin.getSession().get("foo") );
+		assertFalse(Hibernate.isInitialized(g.getUsers()));
+		assertNotNull(gavin.getSession().get("foo"));
+		assertNull(turin.getSession().get("foo"));
 		assertFalse( Hibernate.isInitialized( gavin.getSession() ) );
-		assertFalse( Hibernate.isInitialized( turin.getSession() ) );
+		assertFalse(Hibernate.isInitialized(turin.getSession()));
 		s.delete(gavin);
 		s.delete(turin);
 		s.delete(g);
@@ -140,7 +140,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		g = (Group) s.get(Group.class, "developers");
 		gavin = (User) g.getUsers().get("gavin");
 		turin = (User) g.getUsers().get("turin");
-		assertFalse( Hibernate.isInitialized( g.getUsers() ) );
+		assertFalse(Hibernate.isInitialized(g.getUsers()));
 		g.getUsers().clear();
 		gavin.getSession().remove("foo");
 		assertTrue( Hibernate.isInitialized( g.getUsers() ) );
@@ -151,8 +151,8 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
-		assertTrue( g.getUsers().isEmpty() );
-		assertFalse( Hibernate.isInitialized( g.getUsers() ) );
+		assertTrue(g.getUsers().isEmpty());
+		assertFalse(Hibernate.isInitialized(g.getUsers()));
 		gavin = (User) s.get(User.class, "gavin");
 		assertFalse( gavin.getSession().containsKey("foo") );
 		assertFalse( Hibernate.isInitialized( gavin.getSession() ) );
@@ -181,7 +181,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
-		assertEquals( g.getUsers().size(), 2 );
+		assertEquals(g.getUsers().size(), 2);
 		g.getUsers().remove("turin");
 		Map smap = ( (User) g.getUsers().get("gavin") ).getSession();
 		assertEquals(smap.size(), 2);
@@ -197,21 +197,21 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		assertEquals(smap.size(), 1);
 		gavin = (User) g.getUsers().put("gavin", turin);
 		s.delete(gavin);
-		assertEquals( s.createQuery("select count(*) from SessionAttribute").uniqueResult(), new Long(0) );
+		assertEquals(s.createQuery("select count(*) from SessionAttribute").uniqueResult(), new Long(0));
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
-		assertEquals( g.getUsers().size(), 1 );
+		assertEquals(g.getUsers().size(), 1);
 		turin = (User) g.getUsers().get("turin");
 		smap = turin.getSession();
 		assertEquals(smap.size(), 0);
-		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), new Long(1) );
+		assertEquals(s.createQuery("select count(*) from User").uniqueResult(), new Long(1));
 		s.delete(g);
 		s.delete(turin);
-		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), new Long(0) );
+		assertEquals(s.createQuery("select count(*) from User").uniqueResult(), new Long(0));
 		t.commit();
 		s.close();
 	}
@@ -259,6 +259,162 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		Parent parent2 = (Parent)session2.get(Parent.class, parent.getId());
 		Child child2 = parent2.getChildren().get(child.getFirstName()); // causes SQLGrammarException because of wrong condition: 	where child0_.PARENT_ID=? and child0_.null=?
 		assertNotNull(child2);
+		session2.close();
+	}
+
+	@Test
+	public void testSetSize() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertEquals(1, user2.getDocuments().size());
+		session2.close();
+	}
+
+	@Test
+	public void testSetIterator() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertTrue(user2.getDocuments().iterator().hasNext());
+		session2.close();
+	}
+
+	@Test
+	public void testSetIsEmpty() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertFalse(user2.getDocuments().isEmpty());
+		session2.close();
+	}
+
+	@Test
+	public void testSetContains() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertTrue(user2.getDocuments().contains(document));
+		session2.close();
+	}
+
+	@Test
+	public void testSetAdd() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document();
+		document.setTitle("Les Miserables");
+		document.setContent("sad");
+		document.setOwner(user2);
+		assertTrue("not added", user2.getDocuments().add(document));
+		assertFalse("added", user2.getDocuments().add(document));
+		session2.close();
+	}
+
+	@Test
+	public void testSetRemove() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertTrue("not removed", user2.getDocuments().remove(document));
+		session2.close();
+	}
+
+	@Test
+	public void testSetToArray() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertEquals(1, user2.getDocuments().toArray().length);
+		session2.close();
+	}
+
+	@Test
+	public void testSetToArrayTyped() {
+		Session session1 = openSession();
+		Transaction tx1 = session1.beginTransaction();
+		session1.createQuery("delete Document").executeUpdate();
+		session1.createQuery("delete User").executeUpdate();
+		User user = new User("victor", "hugo");
+		session1.persist(user);
+		tx1.commit();
+		session1.close();
+		// END PREPARE SECTION
+
+		Session session2 = openSession();
+		User user2 = (User)session2.get(User.class, user.getName());
+		Document document = new Document("Les Miserables", "sad", user2);
+		assertEquals(1, user2.getDocuments().toArray(new Document[0]).length);
 		session2.close();
 	}
 }

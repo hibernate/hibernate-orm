@@ -263,6 +263,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetSize() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -282,6 +283,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetIterator() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -301,6 +303,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetIsEmpty() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -320,6 +323,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetContains() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -339,6 +343,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetAdd() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -362,6 +367,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetRemove() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -381,6 +387,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetToArray() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -400,6 +407,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetToArrayTyped() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();

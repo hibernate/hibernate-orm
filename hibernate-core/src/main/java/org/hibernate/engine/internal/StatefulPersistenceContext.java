@@ -23,23 +23,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -78,6 +61,22 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.type.CollectionType;
+import org.jboss.logging.Logger;
+
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * A <strong>stateful</strong> implementation of the {@link PersistenceContext} contract meaning that we maintain this
@@ -93,7 +92,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatefulPersistenceContext.class.getName() );
 
-   private static final boolean tracing = LOG.isTraceEnabled();
+	private static final CoreMessageLogger NARROW_LOG = Logger.getMessageLogger(CoreMessageLogger.class, StatefulPersistenceContext.class.getName() + ".narrowProxy");
+
+	private static final boolean tracing = LOG.isTraceEnabled();
 
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
@@ -718,7 +719,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
-			LOG.narrowingProxy( concreteProxyClass );
+			NARROW_LOG.narrowingProxy( concreteProxyClass );
 
 			// If an impl is passed, there is really no point in creating a proxy.
 			// It would just be extra processing.  Just return the impl

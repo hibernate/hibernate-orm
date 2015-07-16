@@ -23,13 +23,6 @@
  */
 package org.hibernate.test.schematoolsnaming;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
-
-import org.junit.Test;
-
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.naming.ImprovedNamingStrategyDelegator;
 import org.hibernate.testing.TestForIssue;
@@ -37,6 +30,12 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.junit.Test;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -94,7 +93,7 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSchemaExportNamingAndNamingDelegatorSpecified() {
-		OUTFILE.delete();
+		assertTrue( !OUTFILE.exists() || OUTFILE.delete() );
 		// --naming and --namingdelegator cannot be used together.
 		// when SchemaExport is used standalone, an exception should be logged and OUTFILE should not exist.
 		SchemaExport.main(
@@ -110,7 +109,7 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSchemaUpdateNamingAndNamingDelegatorSpecified() {
-		OUTFILE.delete();
+		assertTrue( !OUTFILE.exists() || OUTFILE.delete() );
 		// --naming and --namingdelegator cannot be used together.
 		// when SchemaUpdate is used standalone, an exception should be logged and OUTFILE should not exist.
 		SchemaUpdate.main(
@@ -138,21 +137,21 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 		);
 	}
 	private void doValidTest(String args[], String collectionTableNameExpected) {
-		OUTFILE.delete();
+		assertTrue( !OUTFILE.exists() || OUTFILE.delete() );
 		SchemaExport.main( args );
 		assertTrue( OUTFILE.exists() );
 		assertFileContainsTrimmedLineStartingWith( OUTFILE, collectionTableNameExpected );
 
 		SchemaValidator.main( args );
 
-		OUTFILE.delete();
+		assertTrue( !OUTFILE.exists() || OUTFILE.delete() );
 		// SchemaUpdate should result in an empty file because there should be nothing to update.
 		SchemaUpdate.main( args );
 		assertFileIsEmpty( OUTFILE );
 
 		dropSchema( args );
 
-		OUTFILE.delete();
+		assertTrue( !OUTFILE.exists() || OUTFILE.delete() );
 		// since schema was dropped, OUTFILE should now contain references to collectionTableNameExpected.
 		SchemaUpdate.main( args );
 		assertTrue( OUTFILE.exists() );
@@ -165,8 +164,9 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 
 	private void assertFileContainsTrimmedLineStartingWith(java.io.File file, String text) {
 
+		BufferedReader input = null;
 		try {
-			BufferedReader input = new BufferedReader( new FileReader( file ) );
+			input = new BufferedReader( new FileReader( file ) );
 			String line;
 			/*
 			 * readLine is a bit quirky :
@@ -190,6 +190,16 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 					)
 			);
 		}
+		finally {
+			if ( input != null ) {
+				try {
+					input.close();
+				}
+				catch ( IOException ex ) {
+					// nothing to do
+				}
+			}
+		}
 		fail(
 				String.format(
 						"File [%s] does not contain a line containing: [%s]",
@@ -200,12 +210,22 @@ public class StandaloneSchemaToolsNamingTest extends BaseUnitTestCase {
 	}
 
 	private void assertFileIsEmpty(java.io.File file) {
+		FileReader fileReader = null;
 		try {
-			FileReader fileReader = new FileReader( file );
+			fileReader = new FileReader( file );
 			assertEquals( -1, fileReader.read() );
 		}
 		catch (IOException ex) {
 			fail( ex.getMessage() );
+		}
+		finally {
+			if (fileReader != null) {
+				try {
+					fileReader.close();
+				} catch (IOException ex) {
+					// nothing to do
+				}
+			}
 		}
 	}
 

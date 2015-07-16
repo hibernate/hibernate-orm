@@ -25,6 +25,8 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.junit.After;
@@ -40,6 +42,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
+@RequiresDialectFeature( DialectChecks.SupportsSequences.class )
 public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 

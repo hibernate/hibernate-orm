@@ -1848,6 +1848,10 @@ public class Configuration implements Serializable {
 			LOG.incompleteMappingMetadataCacheProcessing();
 		}
 
+		// Register extra types from hibernate-mapping xml resources.
+		// They are loaded into typeDefs after the above call to secondPassCompile()
+		registerUserTypes();
+
 		validate();
 
 		Environment.verifyProperties( properties );
@@ -1895,6 +1899,42 @@ public class Configuration implements Serializable {
 		// from app registrations
 		for ( TypeContributor contributor : typeContributorRegistrations ) {
 			contributor.contribute( typeContributions, serviceRegistry );
+		}
+	}
+
+	private void registerUserTypes() {
+		for (Map.Entry<String, TypeDef> typeDefEntry : typeDefs.entrySet()) {
+			TypeDef typeDef = typeDefEntry.getValue();
+			String[] className = new String[1];
+			className[0] = typeDefEntry.getKey();
+			String userClassName = typeDef.getTypeClass();
+			Class cl;
+			try {
+				cl = Class.forName(userClassName);
+				Class[] interfaces = cl.getInterfaces();
+				boolean hasUserType = false;
+				for (Class i : interfaces) {
+					if (i == UserType.class) {
+						hasUserType = true;
+						break;
+					}
+				}
+				if (hasUserType) {
+					typeResolver.registerTypeOverride((UserType) cl.newInstance() , className);
+				}
+				else {
+					LOG.warnf("Class \"%s\" does not implement org.hibernate.usertype.UserType", userClassName);
+				}
+			}
+			catch (ClassNotFoundException ex) {
+				LOG.warnf("Cannot find user-specified class \"%s\"", userClassName);
+			}
+			catch (InstantiationException ex) {
+				LOG.warnf(ex, "Cannot instantiate UserType class \"%s\"", userClassName);
+			}
+			catch (IllegalAccessException ex) {
+				LOG.warnf(ex, "Cannot instantiate UserType class \"%s\"", userClassName);
+			}
 		}
 	}
 

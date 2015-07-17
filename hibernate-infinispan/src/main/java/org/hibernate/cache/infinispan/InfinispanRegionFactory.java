@@ -34,6 +34,7 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.Externalizers;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -66,6 +67,8 @@ import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+
+import javax.transaction.TransactionManager;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -233,9 +236,11 @@ public class InfinispanRegionFactory implements RegionFactory {
 	private final Set<String> definedConfigurations = new HashSet<String>();
 
 	private org.infinispan.transaction.lookup.TransactionManagerLookup transactionManagerlookup;
+	private TransactionManager transactionManager;
 
 	private List<String> regionNames = new ArrayList<String>();
 	private SessionFactoryOptions settings;
+
 
 	/**
 	 * Create a new instance using the default configuration.
@@ -261,7 +266,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			log.debug( "Building collection cache region [" + regionName + "]" );
 		}
 		final AdvancedCache cache = getCache( regionName, COLLECTION_KEY, properties, metadata);
-		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, metadata, this, buildCacheKeysFactory() );
+		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
 		startRegion( region, regionName );
 		return region;
 	}
@@ -278,7 +283,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			);
 		}
 		final AdvancedCache cache = getCache( regionName, metadata.isMutable() ? ENTITY_KEY : IMMUTABLE_ENTITY_KEY, properties, metadata );
-		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, metadata, this, buildCacheKeysFactory() );
+		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
 		startRegion( region, regionName );
 		return region;
 	}
@@ -290,7 +295,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			log.debug("Building natural id cache region [" + regionName + "]");
 		}
 		final AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties, metadata);
-		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, metadata, this, buildCacheKeysFactory());
+		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory());
 		startRegion( region, regionName );
 		return region;
 	}
@@ -308,7 +313,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 
 		final AdvancedCache cache = getCache( cacheName, QUERY_KEY, properties, null);
-		final QueryResultsRegionImpl region = new QueryResultsRegionImpl( cache, regionName, this );
+		final QueryResultsRegionImpl region = new QueryResultsRegionImpl( cache, regionName, transactionManager, this );
 		startRegion( region, regionName );
 		return region;
 	}
@@ -372,6 +377,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		log.debug( "Starting Infinispan region factory" );
 		try {
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
+			transactionManager = transactionManagerlookup.getTransactionManager();
 			manager = createCacheManager( properties, settings.getServiceRegistry() );
 			this.settings = settings;
 			initGenericDataTypeOverrides();
@@ -471,6 +477,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 										.globalJmxStatistics()
 										.enabled( Boolean.parseBoolean( globalStats ) );
 							}
+							holder.getGlobalConfigurationBuilder().serialization().addAdvancedExternalizer(Externalizers.ALL_EXTERNALIZERS);
 
 							return createCacheManager( holder );
 						}
@@ -600,7 +607,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 	}
 
-	private AdvancedCache getCache(String regionName, String typeKey, Properties properties, CacheDataDescription metadata) {
+	protected AdvancedCache getCache(String regionName, String typeKey, Properties properties, CacheDataDescription metadata) {
 		TypeOverrides regionOverride = typeOverrides.get( regionName );
 		if ( !definedConfigurations.contains( regionName ) ) {
 			final String templateCacheName;

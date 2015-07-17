@@ -16,10 +16,15 @@ public interface CacheCommandIds {
 	/**
 	 * {@link EvictAllCommand} id
 	 */
-	public static final byte EVICT_ALL = 120;
+	byte EVICT_ALL = 120;
 
 	/**
 	 * {@link EndInvalidationCommand} id
 	 */
-	public static final byte END_INVALIDATION = 121;
+	byte END_INVALIDATION = 121;
+
+	/**
+	 * {@link BeginInvalidationCommand} id
+	 */
+	byte BEGIN_INVALIDATION = 122;
 }

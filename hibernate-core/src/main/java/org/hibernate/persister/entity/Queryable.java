@@ -170,6 +170,8 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 */
 	public DiscriminatorMetadata getTypeDiscriminatorMetadata();
 
+	String[][] getSubclassPropertyColumnNameClosure();
+
 	String[][] getSubclassPropertyFormulaTemplateClosure();
 
 	public static class Declarer {

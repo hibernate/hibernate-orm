@@ -23,11 +23,8 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import java.util.Arrays;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
-
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -38,6 +35,8 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+
+import java.util.Arrays;
 
 /**
  * Contract for nodes representing binary operators.
@@ -209,13 +208,16 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 		}
 		else if ( operand instanceof SqlNode ) {
 			String nodeText = operand.getText();
-			if ( nodeText.startsWith( "(" ) ) {
-				nodeText = nodeText.substring( 1 );
+			if ( nodeText.startsWith( "(" ) && nodeText.endsWith( ")" ) ) {
+				nodeText = nodeText.substring( 1, nodeText.length() - 1 );
 			}
-			if ( nodeText.endsWith( ")" ) ) {
-				nodeText = nodeText.substring( 0, nodeText.length() - 1 );
+			String[] splits;
+			if ( count > 1 && "null".equalsIgnoreCase( nodeText ) ) {
+				splits = new String[count];
+				Arrays.fill( splits, "null" );
+			} else {
+				splits = StringHelper.split( ",", nodeText );
 			}
-			String[] splits = StringHelper.split( ", ", nodeText );
 			if ( count != splits.length ) {
 				throw new HibernateException( "SqlNode's text did not reference expected number of columns" );
 			}

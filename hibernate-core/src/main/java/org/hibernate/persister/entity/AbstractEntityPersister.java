@@ -23,22 +23,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -130,6 +114,21 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
+import org.jboss.logging.Logger;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1960,7 +1959,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String[] toColumns(String propertyName) throws QueryException {
-		return propertyMapping.getColumnNames( propertyName );
+		return propertyMapping.toColumns( propertyName );
 	}
 
 	public Type toType(String propertyName) throws QueryException {
@@ -2127,7 +2126,7 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyTypeClosure;
 	}
 
-	protected String[][] getSubclassPropertyColumnNameClosure() {
+	public String[][] getSubclassPropertyColumnNameClosure() {
 		return subclassPropertyColumnNameClosure;
 	}
 
@@ -2605,10 +2604,18 @@ public abstract class AbstractEntityPersister
 					// this property belongs to the table, and it is not specifically
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
+					String[] propertyColumnFormulas = propertyColumnFormulaTemplates[i];
 					String[] propertyColumnWriters = getPropertyColumnWriters( i );
 					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i], getFactory() );
 					for ( int k=0; k<propertyNullness.length; k++ ) {
-						if ( propertyNullness[k] ) {
+						if (propertyColumnNames[k] == null && propertyColumnFormulaTemplates[k] != null) {
+							String formula = StringHelper.replace(propertyColumnFormulas[k], Template.TEMPLATE + ".", "");
+							if (propertyNullness[k]) {
+								update.addWhereColumn(formula, "=" + (propertyColumnWriters[k] == null ? "?" : propertyColumnWriters[k]));
+							} else {
+								update.addWhereColumn(formula, " is null");
+							}
+						} else if ( propertyNullness[k] ) {
 							update.addWhereColumn( propertyColumnNames[k], "=" + propertyColumnWriters[k] );
 						}
 						else {

@@ -23,15 +23,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -95,6 +86,15 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Base implementation of the <tt>QueryableCollection</tt> interface.
@@ -611,7 +611,7 @@ public abstract class AbstractCollectionPersister
 				formulaTemplates = elementFormulaTemplates;
 			}
 			else {
-				columnNames = elementPropertyMapping.toColumns( reference );
+				columnNames = columnNames( reference );
 				formulaTemplates = formulaTemplates( reference, columnNames.length );
 			}
 
@@ -641,6 +641,15 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 			return result;
+		}
+	}
+
+	private String[] columnNames(String reference) {
+		try {
+			final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex(reference);
+			return ((Queryable)elementPersister).getSubclassPropertyColumnNameClosure()[propertyIndex];
+		} catch (Exception e) {
+			return elementPropertyMapping.toColumns(reference);
 		}
 	}
 

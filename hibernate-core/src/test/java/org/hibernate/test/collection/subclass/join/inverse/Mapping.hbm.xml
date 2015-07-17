@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.collection.subclass.join.inverse">
+
+	<class name="Event" table="event" discriminator-value="-1">
+		<id name="Id" type="long" column="event_id" />
+		<discriminator column="event_type_id" type="integer" />
+		<subclass name="EventPayer" discriminator-value="-3">
+			<join table="event_payer">
+				<key column="event_id" />
+				<many-to-one name="payer" column="payer_id" class="Payer" foreign-key="none" />
+			</join>
+			<subclass name="EventPayerCreated" discriminator-value="1" />
+		</subclass>
+	</class>
+	<class name="Payer" table="payer">
+		<id name="payerId" column="payer_id" type="java.lang.Long" />
+		<set name="eventPayers" inverse="true" cascade="save-update">
+			<key column="payer_id" />
+			<one-to-many class="EventPayer" />
+		</set>
+	</class>
+
+</hibernate-mapping>

@@ -476,7 +476,7 @@ Cat fritz = (Cat) iter.next();</programlisting>
 
         <itemizedlist>
             <listitem>
-                <para><literal>LEGACY</literal></para>
+                <para><literal>LEGACY</literal> (default)</para>
                 <para>The legacy algorithm where we keep a set of pre-built batch sizes based on
                     <classname>org.hibernate.internal.util.collections.ArrayHelper#getBatchSizes</classname>.
                     Batches are performed using the next-smaller pre-built batch size from the number of existing batchable identifiers.</para>

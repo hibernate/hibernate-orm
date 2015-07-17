@@ -6,6 +6,8 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.loader.BatchFetchStyle;
+
 /**
  * @author Steve Ebersole
  */
@@ -682,6 +684,8 @@ public interface AvailableSettings {
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
 	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
+	 * 
+	 * {@code LEGACY} is the default value.
 	 */
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 

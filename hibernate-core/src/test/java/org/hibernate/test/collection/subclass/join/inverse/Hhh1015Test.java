@@ -3,6 +3,7 @@ package org.hibernate.test.collection.subclass.join.inverse;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.SQLGrammarException;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,6 +20,7 @@ public class Hhh1015Test extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
+	@TestForIssue(jiraKey = "HHH-9941")
 	public void test() throws Exception {
 		Session s;
 		Transaction t;

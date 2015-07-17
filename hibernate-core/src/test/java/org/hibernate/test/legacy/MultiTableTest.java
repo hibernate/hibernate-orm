@@ -105,7 +105,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "xxx")
+	@FailureExpected(jiraKey = "HHH-9942")
 	public void testJoinsFailing() throws Exception {
 		// if ( getDialect() instanceof H2Dialect) return;
 		Session s = openSession();
@@ -391,7 +391,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "xxx")
+	@FailureExpected(jiraKey = "HHH-9942")
 	public void testMultiTableFailing() throws Exception {
 		// if ( getDialect() instanceof H2Dialect) return;
 		Session s = openSession();

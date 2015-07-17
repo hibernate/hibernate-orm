@@ -224,7 +224,7 @@ public final class JoinHelper {
 		if (entity != null) {
 			String[] aliased = new String[ret.length];
 			for (int ix = 0; ix < ret.length; ix++) {
-				aliased[ix] = entity.getTableAliasForColumn(ret[ix], rootAlias) + "." + ret[ix];
+				aliased[ix] = entity.getTableAliasForColumn(ret[ix], rootAlias, true) + "." + ret[ix];
 			}
 			ret = aliased;
 		}

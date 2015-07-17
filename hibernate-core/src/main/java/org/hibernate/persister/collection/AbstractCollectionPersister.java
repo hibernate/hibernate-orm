@@ -1956,7 +1956,7 @@ public abstract class AbstractCollectionPersister
 				return rootAlias;
 			}
 			else {
-				return ( (Loadable) elementPersister ).getTableAliasForColumn( columnReference, rootAlias );
+				return ( (Loadable) elementPersister ).getTableAliasForColumn( columnReference, rootAlias, false );
 			}
 		}
 	}

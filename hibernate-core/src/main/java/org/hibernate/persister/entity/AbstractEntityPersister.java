@@ -4986,16 +4986,29 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String getTableAliasForColumn(String columnName, String rootAlias) {
-		return generateTableAlias( rootAlias, determineTableNumberForColumn( columnName ) );
+	public String getTableAliasForColumn(String columnName, String rootAlias, boolean defaultToRoot) {
+		return generateTableAlias( rootAlias, determineTableNumberForColumn( columnName, defaultToRoot ) );
 	}
 
-	public int determineTableNumberForColumn(String columnName) {
-		for (int ix = 0; ix < getSubclassColumnClosure().length; ix++) {
-			if (columnName.equals(getSubclassColumnClosure()[ix])) {
-				return getSubclassColumnTableNumberClosure()[ix];
+	public int determineTableNumberForColumn(String columnName, boolean defaultToRoot) {
+		final String[] subclassColumnNameClosure = getSubclassColumnClosure();
+		for (int i = 0; i < subclassColumnNameClosure.length; i++) {
+			final boolean quoted = subclassColumnNameClosure[i].startsWith("\"")
+								   && subclassColumnNameClosure[i].endsWith("\"");
+			if (quoted) {
+				if (subclassColumnNameClosure[i].equals(columnName)) {
+					return getSubclassColumnTableNumberClosure()[i];
+				}
+			} else {
+				if (subclassColumnNameClosure[i].equalsIgnoreCase(columnName)) {
+					return getSubclassColumnTableNumberClosure()[i];
+				}
 			}
 		}
+		return handleTableForColumnNotFound(columnName, defaultToRoot);
+	}
+
+	protected int handleTableForColumnNotFound(String columnName, boolean defaultToRoot) {
 		return 0;
 	}
 

@@ -130,8 +130,9 @@ public interface Loadable extends EntityPersister {
 	 *
 	 * @param columnName The column name
 	 * @param rootAlias The hierarchy root alias
+	 * @param defaultToRoot use rootAlias if the column is not found?
 	 *
 	 * @return The proper table alias for qualifying the given column.
 	 */
-	public String getTableAliasForColumn(String columnName, String rootAlias);
+	public String getTableAliasForColumn(String columnName, String rootAlias, boolean defaultToRoot);
 }

@@ -104,11 +104,13 @@ public class QueryJoinFragment extends JoinFragment {
 	public void addCondition(String alias, String[] fkColumns, String[] pkColumns) {
 		for ( int j = 0; j < fkColumns.length; j++ ) {
 			afterWhere.append( " and " )
-					.append( fkColumns[j] )
-					.append( '=' )
-					.append( alias )
-					.append( '.' )
-					.append( pkColumns[j] );
+					  .append( fkColumns[j] )
+					  .append( '=' );
+			if ( !pkColumns[j].contains(".") ) {
+				afterWhere.append( alias )
+						  .append( '.' );
+			}
+			afterWhere.append( pkColumns[j] );
 		}
 	}
 

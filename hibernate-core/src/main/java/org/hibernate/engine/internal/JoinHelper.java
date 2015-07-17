@@ -27,6 +27,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -193,5 +195,39 @@ public final class JoinHelper {
 		else {
 			return ( (OuterJoinLoadable) joinable ).getPropertyColumnNames(uniqueKeyPropertyName);
 		}
+	}
+
+	/**
+	 * Get the columns of the associated table which are to be used in the join
+	 */
+	public static String[] getRHSColumnNames(AssociationType type, SessionFactoryImplementor factory,
+											 String rootAlias) {
+		String uniqueKeyPropertyName = type.getRHSUniqueKeyPropertyName();
+		Joinable joinable = type.getAssociatedJoinable(factory);
+		String[] ret;
+		if (uniqueKeyPropertyName == null) {
+			ret = joinable.getKeyColumnNames();
+		} else {
+			OuterJoinLoadable loadable = (OuterJoinLoadable)joinable;
+			ret = loadable.getPropertyColumnNames(uniqueKeyPropertyName);
+		}
+		AbstractEntityPersister entity = null;
+		if (joinable instanceof AbstractEntityPersister) {
+			entity = (AbstractEntityPersister)joinable;
+		} else if (joinable instanceof CollectionPersister) {
+			CollectionPersister coll = (CollectionPersister)joinable;
+			if (coll.getElementType().isAssociationType()) {
+				entity = (AbstractEntityPersister)((AssociationType)coll.getElementType())
+														  .getAssociatedJoinable(factory);
+			}
+		}
+		if (entity != null) {
+			String[] aliased = new String[ret.length];
+			for (int ix = 0; ix < ret.length; ix++) {
+				aliased[ix] = entity.getTableAliasForColumn(ret[ix], rootAlias) + "." + ret[ix];
+			}
+			ret = aliased;
+		}
+		return ret;
 	}
 }

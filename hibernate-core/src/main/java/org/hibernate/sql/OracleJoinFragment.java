@@ -45,10 +45,12 @@ public class OracleJoinFragment extends JoinFragment {
 			afterWhere.append( " and " )
 					.append( fkColumns[j] );
 			if ( joinType == JoinType.RIGHT_OUTER_JOIN || joinType == JoinType.FULL_JOIN ) afterWhere.append( "(+)" );
-			afterWhere.append( '=' )
-					.append( alias )
-					.append( '.' )
-					.append( pkColumns[j] );
+			afterWhere.append( '=' );
+			if ( !pkColumns[j].contains(".") ) {
+				afterWhere.append( alias )
+						  .append( '.' );
+			}
+			afterWhere.append( pkColumns[j] );
 			if ( joinType == JoinType.LEFT_OUTER_JOIN || joinType == JoinType.FULL_JOIN ) afterWhere.append( "(+)" );
 		}
 

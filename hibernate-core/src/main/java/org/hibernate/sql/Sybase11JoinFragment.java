@@ -53,10 +53,12 @@ public class Sybase11JoinFragment extends JoinFragment {
 			afterWhere.append('=');
 			if (joinType==JoinType.RIGHT_OUTER_JOIN ) afterWhere.append("*");
 
-			afterWhere.append (" ")
-				.append(alias)
-				.append('.')
-				.append( pkColumns[j] );
+			afterWhere.append( " " );
+			if ( !pkColumns[j].contains(".") ) {
+				afterWhere.append( alias )
+						  .append( '.' );
+			}
+			afterWhere.append( pkColumns[j] );
 		}
 
 	}

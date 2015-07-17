@@ -4991,6 +4991,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	public int determineTableNumberForColumn(String columnName) {
+		for (int ix = 0; ix < getSubclassColumnClosure().length; ix++) {
+			if (columnName.equals(getSubclassColumnClosure()[ix])) {
+				return getSubclassColumnTableNumberClosure()[ix];
+			}
+		}
 		return 0;
 	}
 

@@ -70,10 +70,12 @@ public class ANSIJoinFragment extends JoinFragment {
 				throw new AssertionFailure("missing alias");
 			}*/
 			buffer.append( fkColumns[j] )
-				.append('=')
-				.append(alias)
-				.append('.')
-				.append( pkColumns[j] );
+				  .append( '=' );
+			if ( !pkColumns[j].contains(".") ) {
+				buffer.append( alias )
+					  .append( '.' );
+			}
+			buffer.append( pkColumns[j] );
 			if ( j<fkColumns.length-1 ) buffer.append(" and ");
 		}
 

@@ -2539,7 +2539,54 @@ public final class HbmBinder {
 				throw new MappingException( "Association references unmapped class: " + assocClass );
 			}
 			oneToMany.setAssociatedClass( persistentClass );
-			collection.setCollectionTable( persistentClass.getTable() );
+
+			Table collectionTable = persistentClass.getTable();
+			if ( collection.isInverse() && persistentClass.getJoinClosureSpan() != 0 ) {
+				Element keyNode = node.element( "key" );
+				if ( keyNode != null ) {
+					// collect all column names that will be used to find the reverse property.
+
+					java.util.List keyColumnNames = new ArrayList();
+					Attribute columnAttribute = keyNode.attribute( "column" );
+					if ( columnAttribute != null ) {
+						keyColumnNames.add( columnAttribute.getValue() );
+					} else {
+						java.util.List keyColumns = keyNode.elements( "column" );
+						for ( Iterator keyColumnIterator = keyColumns.iterator(); keyColumnIterator.hasNext(); ) {
+							Element keyColumn = (Element)keyColumnIterator.next();
+							keyColumnNames.add( keyColumn.attribute( "name" ).getValue() );
+						}
+					}
+
+					for ( Iterator propertiesIterator = persistentClass.getPropertyIterator(); propertiesIterator.hasNext(); ) {
+						Property property = (Property) propertiesIterator.next();
+						if ( property.getColumnSpan() == keyColumnNames.size() && property.getPersistentClass().equals(persistentClass) ) {
+							boolean propertyMatch = true;
+
+							for ( Iterator propertyColumnIterator = property.getColumnIterator(); propertyColumnIterator.hasNext(); ) {
+								Object propertyColumn = propertyColumnIterator.next();
+								if ( propertyColumn instanceof Column ) {
+									String propertyColumnName = ( (Column) propertyColumn ).getName();
+									if ( !keyColumnNames.contains( "`" + propertyColumnName + "`" ) && !keyColumnNames.contains( propertyColumnName ) ) {
+										propertyMatch = false;
+										continue;
+									}
+								} else {
+									propertyMatch = false;
+									// we found Formula - skip the property
+									continue;
+								}
+							}
+
+							if ( propertyMatch && property.getValue() != null && property.getValue().getTable() != null ) {
+								collectionTable = property.getValue().getTable();
+								break;
+							}
+						}
+					}
+				}
+			}
+			collection.setCollectionTable( collectionTable );
 
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );

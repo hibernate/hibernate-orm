@@ -199,17 +199,34 @@ public class JoinSequence {
 			if ( withClauseFragment != null && !isManyToManyRoot( join.joinable )) {
 				condition += " and " + withClauseFragment;
 			}
-			joinFragment.addJoin(
-			        join.getJoinable().getTableName(),
-					join.getAlias(),
-					join.getLHSColumns(),
-					JoinHelper.getRHSColumnNames( join.getAssociationType(), factory ),
-					join.joinType,
-					condition
-			);
-			if (includeExtraJoins) { //TODO: not quite sure about the full implications of this!
-				addExtraJoins( joinFragment, join.getAlias(), join.getJoinable(), join.joinType == JoinType.INNER_JOIN );
+			String table = join.getJoinable().getTableName();
+			String[] rhsColumnNames;
+			String alias = join.getAlias();
+			if (includeExtraJoins) {
+				QueryJoinFragment subJoinFragment = new QueryJoinFragment(factory.getDialect(), useThetaStyle);
+				subJoinFragment.addCrossJoin(table, alias);
+				String filterCondition = join.getJoinable().filterFragment(alias, enabledFilters);
+				// JoinProcessor needs to know if the where clause fragment came from a dynamic filter or not so it
+				// can put the where clause fragment in the right place in the SQL AST.   'hasFilterCondition' keeps
+				// track
+				// of that fact.
+				subJoinFragment.setHasFilterCondition(subJoinFragment.addCondition(filterCondition));
+				if (addExtraJoins(subJoinFragment, alias, join.getJoinable(), join.joinType == JoinType.INNER_JOIN)) {
+					if (subJoinFragment.hasThetaJoins()) {
+						joinFragment.setHasThetaJoins(true);
+					}
+					table = processFromFragment(subJoinFragment.toFromFragmentString());
+					table = "(" + table + ")";
+					rhsColumnNames = JoinHelper.getRHSColumnNames(join.getAssociationType(), factory, alias);
+					alias = "";
+					condition += subJoinFragment.toWhereFragmentString();
+				} else {
+					rhsColumnNames = JoinHelper.getRHSColumnNames(join.getAssociationType(), factory);
+				}
+			} else {
+				rhsColumnNames = JoinHelper.getRHSColumnNames(join.getAssociationType(), factory);
 			}
+			joinFragment.addJoin( table, alias, join.getLHSColumns(), rhsColumnNames, join.joinType, condition );
 			last = join.getJoinable();
 		}
 		if ( next != null ) {
@@ -232,10 +249,21 @@ public class JoinSequence {
 		return selector != null && selector.includeSubclasses( alias );
 	}
 
-	private void addExtraJoins(JoinFragment joinFragment, String alias, Joinable joinable, boolean innerJoin) {
+	private boolean addExtraJoins(JoinFragment joinFragment, String alias, Joinable joinable, boolean innerJoin) {
 		boolean include = isIncluded( alias );
-		joinFragment.addJoins( joinable.fromJoinFragment( alias, innerJoin, include ),
-				joinable.whereJoinFragment( alias, innerJoin, include ) );
+		String from = joinable.fromJoinFragment(alias, innerJoin, include);
+		String where = joinable.whereJoinFragment(alias, innerJoin, include);
+		joinFragment.addJoins(from, where);
+		return !from.isEmpty() || !where.isEmpty();
+	}
+
+	private String processFromFragment(String frag) {
+		String fromFragment = frag.trim();
+		// The FROM fragment will probably begin with ', '.  Remove this if it is present.
+		if (fromFragment.startsWith(", ")) {
+			fromFragment = fromFragment.substring(2);
+		}
+		return fromFragment.trim();
 	}
 
 	public JoinSequence addCondition(String condition) {

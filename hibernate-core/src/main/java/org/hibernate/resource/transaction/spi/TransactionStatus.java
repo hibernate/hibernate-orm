@@ -46,5 +46,26 @@ public enum TransactionStatus {
 	 *  Status code indicating a transaction that is in the process of
 	 *  rolling back.
 	 */
-	ROLLING_BACK
+	ROLLING_BACK;
+
+	public boolean isOneOf(TransactionStatus... statuses) {
+		for ( TransactionStatus status : statuses ) {
+			if ( this == status ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isNotOneOf(TransactionStatus... statuses) {
+		return !isOneOf( statuses );
+	}
+
+	public boolean canRollback() {
+		return isOneOf(
+				TransactionStatus.ACTIVE,
+				TransactionStatus.FAILED_COMMIT,
+				TransactionStatus.MARKED_ROLLBACK
+		);
+	}
 }

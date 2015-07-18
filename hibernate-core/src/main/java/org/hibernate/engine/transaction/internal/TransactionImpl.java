@@ -8,14 +8,14 @@ package org.hibernate.engine.transaction.internal;
 
 import javax.transaction.Synchronization;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.resource.transaction.TransactionCoordinator.TransactionDriver;
 
@@ -71,8 +71,8 @@ public class TransactionImpl implements Transaction {
 	@Override
 	public void rollback() {
 		TransactionStatus status = transactionDriverControl.getStatus();
-		if ( status != TransactionStatus.ACTIVE && status != TransactionStatus.FAILED_COMMIT ) {
-			throw new TransactionException( "Transaction not successfully started" );
+		if ( !status.canRollback() ) {
+			throw new TransactionException( "Cannot rollback transaction in current status [" + status.name() + "]" );
 		}
 
 		LOG.debug( "rolling back" );

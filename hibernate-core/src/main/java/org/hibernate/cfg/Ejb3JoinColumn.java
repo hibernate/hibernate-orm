@@ -905,7 +905,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		if ( StringHelper.isNotEmpty( columnName ) ) {
 			if ( applyNamingStrategy ) {
 				getMappingColumn().setName(
-						getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy().toPhysicalTableName(
+						getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy().toPhysicalColumnName(
 								getBuildingContext().getMetadataCollector().getDatabase().toIdentifier( columnName ),
 								getBuildingContext().getMetadataCollector().getDatabase().getJdbcEnvironment()
 						).render()

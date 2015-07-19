@@ -648,6 +648,17 @@ public abstract class Dialect implements ConversionContext {
 		return result;
 	}
 
+    /**
+     * Whether or not the given type name has been registered for this dialect (including both regular type names and
+     * hibernate type names).
+     *
+     * @param typeName the type name.
+     * @return true if the given string has been registered either as a hibernate type or
+     */
+    public boolean isTypeNameRegistered(final String typeName) {
+        return this.typeNames.containsTypeName(typeName);
+    }
+
 	/**
 	 * Get the name of the Hibernate {@link org.hibernate.type.Type} associated
 	 * with the given {@link java.sql.Types} typecode with the given storage
@@ -1845,7 +1856,11 @@ public abstract class Dialect implements ConversionContext {
 	// keyword support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected void registerKeyword(String word) {
-		sqlKeywords.add( word );
+        // When tokens are checked for keywords, they are always compared against the lower-case version of the token.
+        // Ex: INTEGER is always compared as integer. This can lead to incorrect behaviour when registering custom keywords
+        // that are then used in formulas, as it is not made apparent that formula query generation always looks at
+        // the lower-case token.
+		sqlKeywords.add(word.toLowerCase());
 	}
 
 	/**

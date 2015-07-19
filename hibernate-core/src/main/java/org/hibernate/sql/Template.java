@@ -130,10 +130,10 @@ public final class Template {
 		//		identifier references.
 
 		String symbols = new StringBuilder()
-				.append( "=><!+-*/()',|&`" )
-				.append( StringHelper.WHITESPACE )
-				.append( dialect.openQuote() )
-				.append( dialect.closeQuote() )
+				.append("=><!+-*/()',|&`")
+				.append(StringHelper.WHITESPACE)
+				.append(dialect.openQuote())
+				.append(dialect.closeQuote())
 				.toString();
 		StringTokenizer tokens = new StringTokenizer( sqlWhereString, symbols, true );
 		StringBuilder result = new StringBuilder();
@@ -263,7 +263,7 @@ public final class Template {
 				}
 
 				result.append( renderWhereStringTemplate( trimOperands.trimSource, placeholder, dialect, functionRegistry ) )
-						.append( ')' );
+						.append(')');
 
 				hasMore = tokens.hasMoreTokens();
 				nextToken = hasMore ? tokens.nextToken() : null;
@@ -295,7 +295,7 @@ public final class Template {
 					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
 				result.append(placeholder)
 						.append('.')
-						.append( dialect.quote(token) );
+						.append(dialect.quote(token));
 			}
 			else {
 				if ( BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
@@ -717,11 +717,16 @@ public final class Template {
 
 	private static boolean isFunctionOrKeyword(String lcToken, String nextToken, Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		return "(".equals(nextToken) ||
-			KEYWORDS.contains(lcToken) ||
-			isFunction(lcToken, nextToken, functionRegistry ) ||
-			dialect.getKeywords().contains(lcToken) ||
-			FUNCTION_KEYWORDS.contains(lcToken);
+                KEYWORDS.contains(lcToken) ||
+                isColumnType(lcToken, dialect) ||
+                isFunction(lcToken, nextToken, functionRegistry ) ||
+                dialect.getKeywords().contains(lcToken) ||
+                FUNCTION_KEYWORDS.contains(lcToken);
 	}
+
+    private static boolean isColumnType(String lcToken, Dialect dialect) {
+        return dialect.isTypeNameRegistered(lcToken);
+    }
 
 	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
 		// checking for "(" is currently redundant because it is checked before getting here;

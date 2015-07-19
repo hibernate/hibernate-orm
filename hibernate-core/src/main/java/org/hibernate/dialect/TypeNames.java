@@ -133,4 +133,15 @@ public class TypeNames {
 	public void put(int typeCode, String value) {
 		defaults.put( typeCode, value );
 	}
+
+	/**
+	 * Check whether or not the provided typeName exists.
+	 *
+	 * @param typeName the type name.
+	 *
+	 * @return true if the given string has been registered as a type.
+	 */
+	public boolean containsTypeName(final String typeName) {
+		return this.defaults.containsValue( typeName );
+	}
 }

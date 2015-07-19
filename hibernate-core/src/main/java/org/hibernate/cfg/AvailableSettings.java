@@ -768,8 +768,15 @@ public interface AvailableSettings {
 	 */
 	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
 
-
-
+	/**
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be used by
+	 * create, drop, migrate and validate operations on the database schema.  SchemaFilterProvider
+	 * provides filters that can be used to limit the scope of these operations to specific namespaces,
+	 * tables and sequences. All objects are included by default.
+	 * 
+	 * @since 5.1
+	 */
+	String SCHEMA_FILTER_PROVIDER = "hibernate.schema.filter.provider";
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
@@ -960,7 +967,7 @@ public interface AvailableSettings {
 	 * @since 5.0
 	 */
 	String EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2dll.extra_physical_table_types";
-	
+
 	/**
 	 * Unique columns and unique keys both use unique constraints in most dialects.
 	 * SchemaUpdate needs to create these constraints, but DB's
@@ -1012,7 +1019,7 @@ public interface AvailableSettings {
 
 	/*
 	 * Enable instantiation of composite/embedded objects when all of its attribute values are {@code null}.
-	 * The default (and historical) behavior is that a {@code null} reference will be used to represent the 
+	 * The default (and historical) behavior is that a {@code null} reference will be used to represent the
 	 * composite when all of its attributes are {@code null}
 	 *
 	 * @since 5.1

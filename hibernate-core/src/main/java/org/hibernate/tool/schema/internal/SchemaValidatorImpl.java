@@ -21,6 +21,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
@@ -30,16 +31,25 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
  */
 public class SchemaValidatorImpl implements SchemaValidator {
 	
+	private final SchemaFilter schemaFilter;
 	private final Dialect dialect;
 	
-	public SchemaValidatorImpl(Dialect dialect) {
+	public SchemaValidatorImpl(SchemaFilter schemaFilter, Dialect dialect) {
+		this.schemaFilter = schemaFilter;
 		this.dialect = dialect;
 	}
 	
 	@Override
 	public void doValidation(Metadata metadata, DatabaseInformation databaseInformation) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			if ( !schemaFilter.includeNamespace( namespace )) {
+				continue;
+			}
+			
 			for ( Table table : namespace.getTables() ) {
+				if ( !schemaFilter.includeTable( table )) {
+					continue;
+				}
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -52,7 +62,15 @@ public class SchemaValidatorImpl implements SchemaValidator {
 		}
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			if ( !schemaFilter.includeNamespace( namespace )) {
+				continue;
+			}
+			
 			for ( Sequence sequence : namespace.getSequences() ) {
+				if ( !schemaFilter.includeSequence( sequence )) {
+					continue;
+				}
+				
 				final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
 						sequence.getName()
 				);

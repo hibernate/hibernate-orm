@@ -6,10 +6,12 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+@TestForIssues( jiraKey = "HHH-9952" )
 public class AssociationFormulaTest extends BaseCoreFunctionalTestCase {
 	
 	public AssociationFormulaTest() {

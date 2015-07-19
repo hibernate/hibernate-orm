@@ -143,4 +143,11 @@ public interface DeprecationLogger {
 			id = 90000011
 	)
 	void logDeprecationOfTemporaryTableBulkIdStrategy();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead.  Support for obsolete DTD/XSD namespaces may be removed at any time.",
+			id = 90000012)
+	void recognizedObsoleteHibernateNamespace(
+			String oldHibernateNamespace,
+			String hibernateNamespace);
 }

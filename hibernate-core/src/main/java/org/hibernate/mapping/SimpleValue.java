@@ -183,6 +183,8 @@ public class SimpleValue implements KeyValue {
 		}
 	}
 
+	private IdentifierGenerator identifierGenerator;
+
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
@@ -190,7 +192,11 @@ public class SimpleValue implements KeyValue {
 			String defaultCatalog, 
 			String defaultSchema, 
 			RootClass rootClass) throws MappingException {
-		
+
+		if ( identifierGenerator != null ) {
+			return identifierGenerator;
+		}
+
 		Properties params = new Properties();
 		
 		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
@@ -250,7 +256,9 @@ public class SimpleValue implements KeyValue {
 		);
 
 		identifierGeneratorFactory.setDialect( dialect );
-		return identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );
+		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );
+
+		return identifierGenerator;
 	}
 
 	public boolean isUpdateable() {

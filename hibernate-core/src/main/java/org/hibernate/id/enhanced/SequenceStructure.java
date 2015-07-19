@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -81,6 +82,10 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public AccessCallback buildCallback(final SessionImplementor session) {
+		if ( sql == null ) {
+			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
+		}
+
 		return new AccessCallback() {
 			@Override
 			public IntegralDataTypeHolder getNextValue() {

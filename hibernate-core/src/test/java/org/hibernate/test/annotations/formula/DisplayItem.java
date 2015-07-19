@@ -12,7 +12,8 @@ import java.io.Serializable;
 /**
  * Test entity for formulas.
  *
- * INTEGER is normally registered as a hibernate type.
+ * INTEGER is registered as a keyword for testing lower-case sensitivity.
+ * FLOAT is registered as a valid column type with oracle dialects.
  *
  * Created by Michael Hum on 17/07/2015.
  */

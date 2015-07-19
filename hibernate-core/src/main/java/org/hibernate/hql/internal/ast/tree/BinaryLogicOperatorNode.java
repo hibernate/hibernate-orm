@@ -23,8 +23,11 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.Arrays;
+
 import antlr.SemanticException;
 import antlr.collections.AST;
+
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -35,8 +38,6 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
-import java.util.Arrays;
 
 /**
  * Contract for nodes representing binary operators.

@@ -5,6 +5,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -26,6 +27,7 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    @TestForIssue(jiraKey = "HHH-9951")
     public void testFormulaAnnotationWithTypeNames() {
 
         Session session = openSession();

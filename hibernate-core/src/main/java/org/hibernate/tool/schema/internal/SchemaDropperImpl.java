@@ -25,6 +25,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.SchemaDropper;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.Target;
 
@@ -35,6 +36,16 @@ import org.hibernate.tool.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class SchemaDropperImpl implements SchemaDropper {
+
+	private final SchemaFilter filter;
+	
+	public SchemaDropperImpl( SchemaFilter filter ) {
+		this.filter = filter;
+	}
+	
+	public SchemaDropperImpl() {
+		this( DefaultSchemaFilter.INSTANCE );
+	}
 
 	/**
 	 * Intended for use from JPA schema export code.
@@ -141,12 +152,20 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		for ( Namespace namespace : database.getNamespaces() ) {
+
+			if ( !filter.includeNamespace( namespace ) ) {
+				continue;
+			}
+
 			// we need to drop all constraints/indexes prior to dropping the tables
 			applyConstraintDropping( targets, namespace, metadata );
 
 			// now it's safe to drop the tables
 			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
+					continue;
+				}
+				if ( !filter.includeTable( table ) ) {
 					continue;
 				}
 				checkExportIdentifier( table, exportIdentifiers );
@@ -197,7 +216,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 						);
 						exportedCatalogs.add( catalogLogicalName );
 					}
-				}
 			}
 		}
 
@@ -215,6 +233,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		for ( Table table : namespace.getTables() ) {
 			if ( !table.isPhysicalTable() ) {
+				continue;
+			}
+			if ( !filter.includeTable( table ) ) {
 				continue;
 			}
 

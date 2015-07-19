@@ -36,6 +36,7 @@ import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.Target;
@@ -45,6 +46,17 @@ import org.hibernate.tool.schema.spi.Target;
  * @author Steve Ebersole
  */
 public class SchemaMigratorImpl implements SchemaMigrator {
+	
+	private final SchemaFilter filter;
+
+	public SchemaMigratorImpl( SchemaFilter filter ) {
+		this.filter = filter;
+	}
+	
+	public SchemaMigratorImpl() {
+		this( DefaultSchemaFilter.INSTANCE );
+	}
+
 	@Override
 	public void doMigration(
 			Metadata metadata,
@@ -86,6 +98,9 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 		Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 		for ( Namespace namespace : database.getNamespaces() ) {
+			if ( !filter.includeNamespace( namespace ) ) {
+				continue;
+			}
 			if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 				if ( tryToCreateCatalogs ) {
 					final Identifier catalogLogicalName = namespace.getName().getCatalog();
@@ -125,6 +140,9 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
+				if ( !filter.includeTable( table ) ) {
+					continue;
+				}
 				checkExportIdentifier( table, exportIdentifiers );
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
 				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
@@ -140,6 +158,9 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 
 			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
+					continue;
+				}
+				if ( !filter.includeTable( table ) ) {
 					continue;
 				}
 

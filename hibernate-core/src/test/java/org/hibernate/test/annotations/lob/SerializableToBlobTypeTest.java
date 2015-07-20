@@ -75,6 +75,7 @@ public class SerializableToBlobTypeTest extends BaseNonConfigCoreFunctionalTestC
 		session.close();
 
 		session = openSession();
+		session.beginTransaction();
 
 		EntitySerialize persistedSerialize = (EntitySerialize) session.get( EntitySerialize.class, entitySerialize.id );
 		assertEquals( "explicitLob", persistedSerialize.explicitLob.value );
@@ -84,6 +85,9 @@ public class SerializableToBlobTypeTest extends BaseNonConfigCoreFunctionalTestC
 
 		assertEquals( "defaultExplicitLob", persistedSerialize.explicitLob.defaultValue );
 
+		session.delete( persistedSerialize );
+
+		session.getTransaction().commit();
 		session.close();
 	}
 

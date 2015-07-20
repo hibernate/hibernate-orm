@@ -158,4 +158,11 @@ abstract public class DialectChecks {
 			return dialect.supportsLockTimeouts();
 		}
 	}
+
+	public static class DoubleQuoteQuoting implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return '\"' == dialect.openQuote() && '\"' == dialect.closeQuote();
+		}
+	}
 }

@@ -9,7 +9,7 @@ package org.hibernate.test.subselect;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
@@ -37,6 +37,8 @@ public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCompositeTypeBinding() {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// prepare test data
 		Session session = openSession();
 		session.beginTransaction();
 
@@ -45,18 +47,18 @@ public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 		employeegroup.addEmployee( new Employee( "david" ) );
 		session.save( employeegroup );
 
-
 		employeegroup = new EmployeeGroup( new EmployeeGroupId( "c", "d" ) );
 		employeegroup.addEmployee( new Employee( "gail" ) );
 		employeegroup.addEmployee( new Employee( "steve" ) );
 		session.save( employeegroup );
 
-
 		session.getTransaction().commit();
-
 		session.close();
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Perform the test
 		session = openSession();
+		session.beginTransaction();
 
 		List<EmployeeGroupId> parameters = new ArrayList<EmployeeGroupId>();
 		parameters.add( new EmployeeGroupId( "a", "b" ) );
@@ -73,6 +75,22 @@ public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 		Assert.assertEquals( "a", employeegroup.getId().getGroupName() );
 		Assert.assertNotNull( employeegroup.getEmployees() );
 		Assert.assertEquals( 2, employeegroup.getEmployees().size() );
+		session.getTransaction().commit();
+		session.close();
+
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// clean up test data
+		session = openSession();
+		session.beginTransaction();
+		List<EmployeeGroup> egs = session.createQuery( "from EmployeeGroup" ).list();
+		for ( EmployeeGroup eg : egs ) {
+			eg.getEmployees().clear();
+		}
+		session.flush();
+		session.createQuery( "delete from EmployeeGroup" ).executeUpdate();
+		session.createQuery( "delete from Employee" ).executeUpdate();
+		session.getTransaction().commit();
 		session.close();
 	}
 }

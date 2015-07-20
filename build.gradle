@@ -137,6 +137,8 @@ subprojects { subProject ->
 		testRuntime( libraries.h2 )
 		testRuntime( libraries.woodstox )
 
+		testRuntime( 'org.mariadb.jdbc:mariadb-java-client:1.1.7' )
+
 		// 6.6 gave me some NPE problems from within checkstyle...
 		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
 	}
@@ -189,9 +191,9 @@ subprojects { subProject ->
 		systemProperties['hibernate.test.validatefailureexpected'] = true
 		systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
 
-//		beforeTest { descriptor ->
-//			println "Starting test: " + descriptor
-//		}
+		beforeTest { descriptor ->
+			println "Starting test: " + descriptor
+		}
 
 //		afterTest { descriptor ->
 //			println "Completed test: " + descriptor

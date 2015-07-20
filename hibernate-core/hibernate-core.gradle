@@ -134,3 +134,10 @@ xjc {
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
 //sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource
 tasks.compile.dependsOn generateGrammarSource
+
+
+tasks."matrix_mariadb" {
+    beforeTest { descriptor ->
+        println "Starting test: " + descriptor
+    }
+}

@@ -17,6 +17,9 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -200,6 +203,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
+	@RequiresDialectFeature( DialectChecks.DoubleQuoteQuoting.class )
 	public void testSQLQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

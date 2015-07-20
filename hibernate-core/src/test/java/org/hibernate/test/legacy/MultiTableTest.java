@@ -552,23 +552,44 @@ public class MultiTableTest extends LegacyTestCase {
 			if ( o instanceof Top ) foundSimple++;
 			if ( o instanceof Multi ) foundMulti++;
 		}
-		assertTrue( foundSimple==2 && foundMulti==1 );
-		assertEquals( 3, doDelete( s, "from Top" ) );
+		assertTrue( foundSimple == 2 && foundMulti == 1 );
 		t.commit();
 		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			// MySQL does not like deleting rows that refer to itself without first
+			// null'ing out the FK.  Ugh...
+			ls = s.load( Lower.class, id );
+			ls.setOther( null );
+			ls.setAnother( null );
+			ls.setYetanother( null );
+			for ( Object o : ls.getSet() ) {
+				s.delete( o );
+			}
+			ls.getSet().clear();
+			s.flush();
+			s.delete( ls );
+			t.commit();
+		}
+		catch (Exception e) {
+			t.rollback();
+			throw e;
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test
 	public void testMultiTableManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		assertTrue( s.createQuery( "from Top" ).list().size()==0 );
+		assertTrue( s.createQuery( "from Top" ).list().size() == 0 );
 		Multi multi = new Multi();
-		multi.setExtraProp("extra");
+		multi.setExtraProp( "extra" );
 		multi.setName("name");
-		Top simp = new Top();
-		simp.setDate( new Date() );
-		simp.setName("simp");
 		s.save(multi);
 		Lower ls = new Lower();
 		ls.setOther(ls);
@@ -582,13 +603,28 @@ public class MultiTableTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		ls = (Lower) s.load(Lower.class, id);
-		assertTrue( ls.getOther()==ls && ls.getYetanother()==ls );
-		assertTrue( ls.getAnother().getName().equals("name") && ls.getAnother() instanceof Multi );
-		s.delete(ls);
-		s.delete( ls.getAnother() );
-		t.commit();
-		s.close();
+		try {
+			// MySQL does not like deleting rows that refer to itself without first
+			// null'ing out the FK.  Ugh...
+			ls = s.load( Lower.class, id );
+			assertTrue( ls.getOther() == ls && ls.getYetanother() == ls );
+			assertTrue( ls.getAnother().getName().equals( "name" ) && ls.getAnother() instanceof Multi );
+			s.delete( ls.getAnother() );
+			ls.setOther( null );
+			ls.setAnother( null );
+			ls.setYetanother( null );
+			ls.getSet().clear();
+			s.flush();
+			s.delete( ls );
+			t.commit();
+		}
+		catch (Exception e) {
+			t.rollback();
+			throw e;
+		}
+		finally {
+			s.close();
+		}
 	}
 
 	@Test

@@ -33,6 +33,8 @@ Working list of changes for 5.0
 * Valid `hibernate.cache.default_cache_concurrency_strategy` setting values are now defined via
     `org.hibernate.cache.spi.access.AccessType#getExternalName` rather than the `org.hibernate.cache.spi.access.AccessType`
     enum names; this is more consistent with other Hibernate settings
+* For ids defined as UUID with generation, for some databases it is required to explicitly set the `@Column( length=16 )`
+    in order to generate BINARY(16) so that comparisons properly work.
 
 TODOs
 =====

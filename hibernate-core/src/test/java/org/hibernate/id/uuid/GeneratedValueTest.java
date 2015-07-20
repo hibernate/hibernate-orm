@@ -7,6 +7,7 @@
 package org.hibernate.id.uuid;
 
 import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class GeneratedValueTest extends BaseUnitTestCase {
 	@Test
-	public void testGeneratedUuidId() {
+	public void testGeneratedUuidId() throws Exception {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
@@ -73,9 +74,17 @@ public class GeneratedValueTest extends BaseUnitTestCase {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				s.delete( theEntity );
-				s.getTransaction().commit();
-				s.close();
+				try {
+					s.delete( theEntity );
+					s.getTransaction().commit();
+				}
+				catch (Exception e) {
+					s.getTransaction().rollback();
+					throw e;
+				}
+				finally {
+					s.close();
+				}
 			}
 			finally {
 				try {
@@ -94,6 +103,7 @@ public class GeneratedValueTest extends BaseUnitTestCase {
 	@Table(name = "TheEntity")
 	public static class TheEntity {
 		@Id
+		@Column( length = 16 )
 		@GeneratedValue
 		public UUID id;
 	}

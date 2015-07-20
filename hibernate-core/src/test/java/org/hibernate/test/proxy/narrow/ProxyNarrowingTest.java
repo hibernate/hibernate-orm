@@ -54,9 +54,11 @@ public class ProxyNarrowingTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 
 		try {
+			session.beginTransaction();
+
 			// load a proxified version of the entity into the session: the proxy is based on the AbstractEntity class
 			// as the reference class property is of type AbstractEntity.
-			LazyAbstractEntityReference reference = (LazyAbstractEntityReference) session.get( LazyAbstractEntityReference.class, entityReferenceId );
+			LazyAbstractEntityReference reference = session.get( LazyAbstractEntityReference.class, entityReferenceId );
 			AbstractEntity abstractEntityProxy = reference.getEntity();
 
 			assertTrue( ( abstractEntityProxy instanceof HibernateProxy ) && !Hibernate.isInitialized( abstractEntityProxy ) );
@@ -64,11 +66,18 @@ public class ProxyNarrowingTest extends BaseCoreFunctionalTestCase {
 			assertTrue( Hibernate.isInitialized( abstractEntityProxy ) );
 
 			// load the concrete class via session.load to trigger the StatefulPersistenceContext.narrowProxy code
-			ConcreteEntity concreteEntityProxy = (ConcreteEntity) session.load( ConcreteEntity.class, abstractEntityProxy.getId() );
+			ConcreteEntity concreteEntityProxy = session.load( ConcreteEntity.class, abstractEntityProxy.getId() );
 
 			// the new proxy created should be initialized
 			assertTrue( Hibernate.isInitialized( concreteEntityProxy ) );
 			assertTrue( session.contains( concreteEntityProxy ) );
+
+
+			// clean up
+			session.delete( reference );
+			session.delete( concreteEntityProxy );
+
+			session.getTransaction().commit();
 		}
 		finally {
 			session.close();

@@ -19,6 +19,8 @@ import org.hibernate.loader.Loader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
+ * No longer used, see {@link org.hibernate.loader.entity.plan.LegacyBatchingEntityLoaderBuilder} instead.
+ *
  * @author Steve Ebersole
  */
 public class LegacyBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuilder {

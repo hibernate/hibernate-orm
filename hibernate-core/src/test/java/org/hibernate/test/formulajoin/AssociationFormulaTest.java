@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@TestForIssues( jiraKey = "HHH-9952" )
+@TestForIssue( jiraKey = "HHH-9952" )
 public class AssociationFormulaTest extends BaseCoreFunctionalTestCase {
 	
 	public AssociationFormulaTest() {

@@ -96,7 +96,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		g.getUsers().put("turin", turin);
 		s.persist(g);
 		gavin.getSession().put( "foo", new SessionAttribute("foo", "foo bar baz") );
-		gavin.getSession().put("bar", new SessionAttribute("bar", "foo bar baz 2"));
+		gavin.getSession().put( "bar", new SessionAttribute("bar", "foo bar baz 2") );
 		t.commit();
 		s.close();
 
@@ -108,11 +108,11 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		assertNotNull(gavin);
 		assertNotNull(turin);
 		assertNull( g.getUsers().get("emmanuel") );
-		assertFalse(Hibernate.isInitialized(g.getUsers()));
-		assertNotNull(gavin.getSession().get("foo"));
-		assertNull(turin.getSession().get("foo"));
+		assertFalse( Hibernate.isInitialized( g.getUsers() ) );
+		assertNotNull( gavin.getSession().get("foo") );
+		assertNull( turin.getSession().get("foo") );
 		assertFalse( Hibernate.isInitialized( gavin.getSession() ) );
-		assertFalse(Hibernate.isInitialized(turin.getSession()));
+		assertFalse( Hibernate.isInitialized( turin.getSession() ) );
 		s.delete(gavin);
 		s.delete(turin);
 		s.delete(g);
@@ -140,7 +140,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		g = (Group) s.get(Group.class, "developers");
 		gavin = (User) g.getUsers().get("gavin");
 		turin = (User) g.getUsers().get("turin");
-		assertFalse(Hibernate.isInitialized(g.getUsers()));
+		assertFalse( Hibernate.isInitialized( g.getUsers() ) );
 		g.getUsers().clear();
 		gavin.getSession().remove("foo");
 		assertTrue( Hibernate.isInitialized( g.getUsers() ) );
@@ -151,8 +151,8 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
-		assertTrue(g.getUsers().isEmpty());
-		assertFalse(Hibernate.isInitialized(g.getUsers()));
+		assertTrue( g.getUsers().isEmpty() );
+		assertFalse( Hibernate.isInitialized( g.getUsers() ) );
 		gavin = (User) s.get(User.class, "gavin");
 		assertFalse( gavin.getSession().containsKey("foo") );
 		assertFalse( Hibernate.isInitialized( gavin.getSession() ) );
@@ -181,7 +181,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
-		assertEquals(g.getUsers().size(), 2);
+		assertEquals( g.getUsers().size(), 2 );
 		g.getUsers().remove("turin");
 		Map smap = ( (User) g.getUsers().get("gavin") ).getSession();
 		assertEquals(smap.size(), 2);
@@ -197,21 +197,21 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		assertEquals(smap.size(), 1);
 		gavin = (User) g.getUsers().put("gavin", turin);
 		s.delete(gavin);
-		assertEquals(s.createQuery("select count(*) from SessionAttribute").uniqueResult(), new Long(0));
+		assertEquals( s.createQuery("select count(*) from SessionAttribute").uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
 		g = (Group) s.get(Group.class, "developers");
-		assertEquals(g.getUsers().size(), 1);
+		assertEquals( g.getUsers().size(), 1 );
 		turin = (User) g.getUsers().get("turin");
 		smap = turin.getSession();
 		assertEquals(smap.size(), 0);
-		assertEquals(s.createQuery("select count(*) from User").uniqueResult(), new Long(1));
+		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), new Long(1) );
 		s.delete(g);
 		s.delete(turin);
-		assertEquals(s.createQuery("select count(*) from User").uniqueResult(), new Long(0));
+		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -263,6 +263,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetSize() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -282,6 +283,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetIterator() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -301,6 +303,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetIsEmpty() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -320,6 +323,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetContains() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -339,6 +343,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetAdd() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -362,6 +367,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetRemove() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -381,6 +387,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetToArray() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();
@@ -400,6 +407,7 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey="HHH-9933")
 	public void testSetToArrayTyped() {
 		Session session1 = openSession();
 		Transaction tx1 = session1.beginTransaction();

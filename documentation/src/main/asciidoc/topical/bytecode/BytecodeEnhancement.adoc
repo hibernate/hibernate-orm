@@ -78,13 +78,16 @@ hibernate {
 ----
 ====
 
-Currently the "enhance" extension supports 3 properties:
+Currently the "enhance" extension supports 4 properties:
 
     * `enableLazyInitialization`
     * `enableDirtyTracking`
     * `enableAssociationManagement`
+    * `enableFieldAccessEnhancement`
 
-Once enhancement overall is enabled, the default for these 3 properties is `true`.
+Once enhancement overall is enabled, the default for the first 3 properties is `true`. Field access is not enhanced by
+default, as it can potentially trigger enhancement of code outside the entities, and also because it assumes that all
+the target entities are enhanced, which may not always be the case.
 
 
 === Ant Task

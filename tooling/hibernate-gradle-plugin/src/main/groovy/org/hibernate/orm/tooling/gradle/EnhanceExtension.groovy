@@ -16,8 +16,9 @@ class EnhanceExtension {
 	def boolean enableLazyInitialization = true
 	def boolean enableDirtyTracking = true
 	def boolean enableAssociationManagement = true
+	def boolean enableFieldAccessEnhancement = false
 
 	boolean shouldApply() {
-		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement;
+		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableFieldAccessEnhancement;
 	}
 }

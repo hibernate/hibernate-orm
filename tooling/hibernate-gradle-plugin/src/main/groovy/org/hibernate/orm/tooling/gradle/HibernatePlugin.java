@@ -110,6 +110,11 @@ public class HibernatePlugin implements Plugin<Project> {
 								public boolean isLazyLoadable(CtField field) {
 									return hibernateExtension.enhance.getEnableLazyInitialization();
 								}
+
+								@Override
+								public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+									return  hibernateExtension.enhance.getEnableFieldAccessEnhancement();
+								}
 							};
 
 							final Enhancer enhancer = new Enhancer( enhancementContext );

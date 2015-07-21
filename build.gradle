@@ -137,8 +137,6 @@ subprojects { subProject ->
 		testRuntime( libraries.h2 )
 		testRuntime( libraries.woodstox )
 
-		testRuntime( 'org.apache.derby:derby:10.10.2.0' )
-
 		// 6.6 gave me some NPE problems from within checkstyle...
 		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
 	}

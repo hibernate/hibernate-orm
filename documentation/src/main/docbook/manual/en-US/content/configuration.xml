@@ -197,7 +197,8 @@
     Hibernate in the <filename>lib</filename> directory. Hibernate will use
     its <classname>org.hibernate.connection.C3P0ConnectionProvider</classname>
     for connection pooling if you set <property>hibernate.c3p0.*</property>
-    properties. If you would like to use Proxool, refer to the packaged
+    properties and add the appropriate hibernate-c3p0 dependency or JAR file
+    to your project. If you would like to use Proxool, refer to the packaged
     <filename>hibernate.properties</filename> and the Hibernate web site for
     more information.</para>
 

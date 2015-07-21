@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
@@ -49,6 +50,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
@@ -358,7 +360,13 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		QueryParameters queryParametersToUse;
 		if ( hasLimit && containsCollectionFetches() ) {
-			LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			boolean raiseException = ConfigurationHelper.getBoolean(Environment.RAISE_EXCEPTION_ON_IGNORED_FIRST_RESULT_MAX_RESULTS,
+					factory.getProperties());
+			if(raiseException){
+				throw new HibernateException("firstResult/maxResults specified with collection fetch");
+			} else{
+				LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
+			}
 			RowSelection selection = new RowSelection();
 			selection.setFetchSize( queryParameters.getRowSelection().getFetchSize() );
 			selection.setTimeout( queryParameters.getRowSelection().getTimeout() );

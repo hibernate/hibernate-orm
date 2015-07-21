@@ -99,9 +99,14 @@ on the plugin are:
     * `enableLazyInitialization`
     * `enableDirtyTracking`
     * `enableAssociationManagement`
+    * `enableFieldAccessEnhancement`
 
-These are all enabled by default. Even if the plugin is enabled, the bytecode enhancement can be bypassed by disabling
-all the capabilities.
+Field access is not enhanced by default, because it can potentially trigger enhancement of code outside the entities.
+Other capabilities are enabled by default. Even if the plugin is enabled, the bytecode enhancement can be bypassed by
+disabling all the capabilities.
+
+There is also a parameter `failOnError` that controls what happens in case of error. Default behavior is to fail the
+build, but it can be set so that only a warning is issued.
 
 To use the Hibernate Maven plugin on a build it must added to the model (pom.xml) along with other plugins that may be
 already in use. The XML snippet below is an example of how to declare and configure the plugin.
@@ -121,9 +126,11 @@ already in use. The XML snippet below is an example of how to declare and config
             <executions>
                 <execution>
                     <configuration>
+                        <failOnError>true</failOnError>
                         <enableLazyInitialization>true</enableLazyInitialization>
                         <enableDirtyTracking>true</enableDirtyTracking>
                         <enableAssociationManagement>true</enableAssociationManagement>
+                        <enableFieldAccessEnhancement>false</enableFieldAccessEnhancement>
                     </configuration>
                     <goals>
                         <goal>enhance</goal>

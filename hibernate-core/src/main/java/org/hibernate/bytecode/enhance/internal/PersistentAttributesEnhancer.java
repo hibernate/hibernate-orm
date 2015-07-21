@@ -63,8 +63,13 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			);
 		}
 
-		// lastly, find all references to the transformed fields and replace with calls to the added reader/writer methods
+		// find all references to the transformed fields and replace with calls to the added reader/writer methods
 		enhanceAttributesAccess( managedCtClass, attrDescriptorMap );
+
+		// same thing for direct access to fields of other entities
+		if ( this.enhancementContext.doFieldAccessEnhancement( managedCtClass ) ) {
+			enhanceFieldAccess( managedCtClass );
+		}
 	}
 
 	private CtField[] collectPersistentFields(CtClass managedCtClass) {
@@ -72,6 +77,10 @@ public class PersistentAttributesEnhancer extends Enhancer {
 		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
 			// skip static fields and skip fields added by enhancement
 			if ( Modifier.isStatic( ctField.getModifiers() ) || ctField.getName().startsWith( "$$_hibernate_" ) ) {
+				continue;
+			}
+			// skip outer reference in inner classes
+			if ( "this$0".equals( ctField.getName() ) ) {
 				continue;
 			}
 			if ( enhancementContext.isPersistentField( ctField ) ) {
@@ -114,7 +123,6 @@ public class PersistentAttributesEnhancer extends Enhancer {
 			return MethodWriter.addGetter( managedCtClass, fieldName, readerName );
 		}
 
-		// TODO: temporary solution...
 		try {
 			return MethodWriter.write(
 					managedCtClass, "public %s %s() {%n  %s%n  return this.%s;%n}",
@@ -517,6 +525,86 @@ public class PersistentAttributesEnhancer extends Enhancer {
 
 		private CtMethod getWriter() {
 			return writer;
+		}
+	}
+
+	/**
+	 * Replace access to fields of entities (for example, entity.field) with a call to the enhanced getter / setter
+	 * (in this example, entity.$$_hibernate_read_field()). It's assumed that the target entity is enhanced as well.
+	 *
+	 * @param managedCtClass Class to enhance
+	 */
+	public void enhanceFieldAccess(CtClass managedCtClass) {
+		final ConstPool constPool = managedCtClass.getClassFile().getConstPool();
+
+		for ( Object oMethod : managedCtClass.getClassFile().getMethods() ) {
+			final MethodInfo methodInfo = (MethodInfo) oMethod;
+			final String methodName = methodInfo.getName();
+
+			// skip methods added by enhancement and abstract methods (methods without any code)
+			if ( methodName.startsWith( "$$_hibernate_" ) || methodInfo.getCodeAttribute() == null ) {
+				continue;
+			}
+
+			try {
+				final CodeIterator itr = methodInfo.getCodeAttribute().iterator();
+				while ( itr.hasNext() ) {
+					int index = itr.next();
+					int op = itr.byteAt( index );
+					if ( op != Opcode.PUTFIELD && op != Opcode.GETFIELD ) {
+						continue;
+					}
+					String fieldName = constPool.getFieldrefName( itr.u16bitAt( index + 1 ) );
+					String fieldClassName = constPool.getClassInfo( constPool.getFieldrefClass( itr.u16bitAt( index + 1 ) ) );
+					CtClass targetCtClass = this.classPool.getCtClass( fieldClassName );
+
+					if ( !enhancementContext.isEntityClass( targetCtClass ) && !enhancementContext.isCompositeClass( targetCtClass ) ) {
+						continue;
+					}
+					if ( targetCtClass == managedCtClass
+							|| !enhancementContext.isPersistentField( targetCtClass.getField( fieldName ) )
+							|| "this$0".equals( fieldName ) ) {
+						continue;
+					}
+
+					log.debugf( "Transforming access to field [%s] from method [%s]", fieldName, methodName );
+
+					if ( op == Opcode.GETFIELD ) {
+						int fieldReaderMethodIndex = constPool.addMethodrefInfo(
+								constPool.addClassInfo( fieldClassName ),
+								EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + fieldName,
+								"()" + constPool.getFieldrefType( itr.u16bitAt( index + 1 ) )
+						);
+						itr.writeByte( Opcode.INVOKEVIRTUAL, index );
+						itr.write16bit( fieldReaderMethodIndex, index + 1 );
+					}
+					else {
+						int fieldWriterMethodIndex = constPool.addMethodrefInfo(
+								constPool.addClassInfo( fieldClassName ),
+								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + fieldName,
+								"(" + constPool.getFieldrefType( itr.u16bitAt( index + 1 ) ) + ")V"
+						);
+						itr.writeByte( Opcode.INVOKEVIRTUAL, index );
+						itr.write16bit( fieldWriterMethodIndex, index + 1 );
+					}
+
+				}
+				methodInfo.getCodeAttribute().setAttribute( MapMaker.make( classPool, methodInfo ) );
+			}
+			catch (BadBytecode bb) {
+				final String msg = String.format(
+						"Unable to perform field access transformation in method [%s]",
+						methodName
+				);
+				throw new EnhancementException( msg, bb );
+			}
+			catch (NotFoundException nfe) {
+				final String msg = String.format(
+						"Unable to perform field access transformation in method [%s]",
+						methodName
+				);
+				throw new EnhancementException( msg, nfe );
+			}
 		}
 	}
 

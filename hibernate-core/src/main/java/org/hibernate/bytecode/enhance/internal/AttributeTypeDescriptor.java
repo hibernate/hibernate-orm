@@ -6,15 +6,17 @@
  */
 package org.hibernate.bytecode.enhance.internal;
 
+import java.util.Collection;
+import java.util.Locale;
+import javax.persistence.Id;
+
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.NotFoundException;
+
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-
-import javax.persistence.Id;
-import java.util.Collection;
-import java.util.Locale;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * utility class to generate interceptor methods
@@ -40,7 +42,7 @@ public abstract class AttributeTypeDescriptor {
 
 			// primitives || enums
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
-				builder.append( String.format( "if (%s != $1)", currentValue.getName()) );
+				builder.append( String.format( "if (%s != $1)", currentValue.getName() ) );
 			}
 			// simple data types
 			else if ( currentValue.getType().getName().startsWith( "java.lang" )
@@ -62,10 +64,11 @@ public abstract class AttributeTypeDescriptor {
 						}
 					}
 				}
-				// TODO: for now just call equals, should probably do something else here
-				builder.append( String.format( "if (%s == null || !%<s.equals($1))", currentValue.getName() ) );
+				builder.append( String.format( "if (%1$s == null || !%2$s.equals(%1$s, $1))",
+												currentValue.getName(),
+												EqualsHelper.class.getName() ) );
 			}
-			builder.append( String.format( " { %s(\"%s\"); }", EnhancerConstants.TRACKER_CHANGER_NAME, currentValue.getName() ) );
+			builder.append( String.format( "  {  %s(\"%s\");  }", EnhancerConstants.TRACKER_CHANGER_NAME, currentValue.getName() ) );
 		}
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -131,7 +134,7 @@ public abstract class AttributeTypeDescriptor {
 							"}",
 					fieldName,
 					type,
-					EnhancerConstants.INTERCEPTOR_GETTER_NAME);
+					EnhancerConstants.INTERCEPTOR_GETTER_NAME );
 		}
 
 		public String buildWriteInterceptionBodyFragment(String fieldName) {
@@ -143,7 +146,7 @@ public abstract class AttributeTypeDescriptor {
 							"this.%1$s = localVar;",
 					fieldName,
 					type,
-					EnhancerConstants.INTERCEPTOR_GETTER_NAME);
+					EnhancerConstants.INTERCEPTOR_GETTER_NAME );
 		}
 	}
 
@@ -159,7 +162,7 @@ public abstract class AttributeTypeDescriptor {
 				throw new IllegalArgumentException( "Primitive attribute type descriptor can only be used on primitive types" );
 			}
 			// capitalize first letter
-			this.type = primitiveType.getSimpleName().substring( 0, 1 ).toUpperCase(Locale.ROOT) + primitiveType.getSimpleName().substring( 1 );
+			this.type = primitiveType.getSimpleName().substring( 0, 1 ).toUpperCase( Locale.ROOT ) + primitiveType.getSimpleName().substring( 1 );
 		}
 
 		public String buildReadInterceptionBodyFragment(String fieldName) {
@@ -180,7 +183,7 @@ public abstract class AttributeTypeDescriptor {
 							"}%n" +
 							"this.%1$s = localVar;",
 					fieldName,
-					type.toLowerCase(Locale.ROOT ),
+					type.toLowerCase( Locale.ROOT ),
 					type,
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME
 			);

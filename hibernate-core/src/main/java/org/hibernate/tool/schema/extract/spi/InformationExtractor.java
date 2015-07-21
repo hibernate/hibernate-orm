@@ -23,6 +23,23 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  */
 public interface InformationExtractor {
 
+	/**
+	 * Does the given catalog exist yet?
+	 *
+	 * @param catalog The name of the catalog to look for.
+	 *
+	 * @return {@code true} if the catalog does exist; {@code false} otherwise
+	 */
+	boolean catalogExists(Identifier catalog);
+
+	/**
+	 * The the given schema exist yet?
+	 *
+	 * @param catalog The name of the catalog to look in.
+	 * @param schema The name of the schema to look for.
+	 *
+	 * @return {@code true} if the schema does exist; {@code false} otherwise
+	 */
 	boolean schemaExists(Identifier catalog, Identifier schema);
 
 	/**

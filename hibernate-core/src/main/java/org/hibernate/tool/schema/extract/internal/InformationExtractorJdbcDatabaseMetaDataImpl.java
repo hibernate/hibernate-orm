@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -68,6 +69,42 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	protected JDBCException convertSQLException(SQLException sqlException, String message) {
 		return extractionContext.getJdbcEnvironment().getSqlExceptionHelper().convert( sqlException, message );
+	}
+
+	protected String toMetaDataObjectName(Identifier identifier) {
+		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataObjectName( identifier );
+	}
+
+	@Override
+	public boolean catalogExists(Identifier catalog) {
+		try {
+			final ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getCatalogs();
+
+			try {
+				while ( resultSet.next() ) {
+					final String existingCatalogName = resultSet.getString( "TABLE_CAT" );
+
+					// todo : hmm.. case sensitive or insensitive match...
+					// for now, match any case...
+
+					if ( catalog.getText().equalsIgnoreCase( existingCatalogName ) ) {
+						return true;
+					}
+				}
+
+				return false;
+			}
+			finally {
+				try {
+					resultSet.close();
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+		catch (SQLException sqlException) {
+			throw convertSQLException( sqlException, "Unable to query DatabaseMetaData for existing catalogs" );
+		}
 	}
 
 	@Override
@@ -150,46 +187,174 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName) {
-		try {
-			final String catalogFilter = determineCatalogFilter( catalog );
-			final String schemaFilter = determineSchemaFilter( schema );
+		if ( catalog != null || schema != null ) {
+			// The table defined an explicit namespace.  In such cases we only ever want to look
+			// in the identified namespace
 
+			return locateTableInNamespace( catalog, schema, tableName );
+		}
+		else {
+			// The table did not define an explicit namespace:
+			// 		1) look in current namespace
+			//		2) look in default namespace
+			//		3) look in all namespaces - multiple hits is considered an error
+
+			TableInformation tableInfo = null;
+
+			// 1) look in current namespace
+			if ( extractionContext.getJdbcEnvironment().getCurrentCatalog() != null
+					|| extractionContext.getJdbcEnvironment().getCurrentSchema() != null ) {
+				tableInfo = locateTableInNamespace(
+						extractionContext.getJdbcEnvironment().getCurrentCatalog(),
+						extractionContext.getJdbcEnvironment().getCurrentSchema(),
+						tableName
+				);
+
+				if ( tableInfo != null ) {
+					return tableInfo;
+				}
+			}
+
+
+			// 2) look in default namespace
+			if ( extractionContext.getDefaultCatalog() != null || extractionContext.getDefaultSchema() != null ) {
+				tableInfo = locateTableInNamespace(
+						extractionContext.getJdbcEnvironment().getCurrentCatalog(),
+						extractionContext.getJdbcEnvironment().getCurrentSchema(),
+						tableName
+				);
+
+				if ( tableInfo != null ) {
+					return tableInfo;
+				}
+			}
+
+
+			// 3) look in all namespaces
+			try {
+				final String tableNameFilter = toMetaDataObjectName( tableName );
+
+				final ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getTables(
+						null,
+						null,
+						tableNameFilter,
+						tableTypes
+				);
+
+				try {
+					return processGetTableResults(
+							null,
+							null,
+							tableName,
+							resultSet
+					);
+				}
+				finally {
+					try {
+						resultSet.close();
+					}
+					catch (SQLException ignore) {
+					}
+				}
+			}
+			catch (SQLException sqlException) {
+				throw convertSQLException( sqlException, "Error accessing table metadata" );
+			}
+		}
+	}
+
+	private TableInformation locateTableInNamespace(
+			Identifier catalog,
+			Identifier schema,
+			Identifier tableName) {
+		final String catalogFilter;
+		final String schemaFilter;
+
+		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+			if ( catalog == null ) {
+				catalogFilter = "";
+			}
+			else {
+				catalogFilter = toMetaDataObjectName( catalog );
+			}
+		}
+		else {
+			catalogFilter = null;
+		}
+
+		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
+			if ( schema == null ) {
+				schemaFilter = "";
+			}
+			else {
+				schemaFilter = toMetaDataObjectName( schema );
+			}
+		}
+		else {
+			schemaFilter = null;
+		}
+
+		final String tableNameFilter = toMetaDataObjectName( tableName );
+
+		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getTables(
 					catalogFilter,
 					schemaFilter,
-					extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataObjectName( tableName ),
+					tableNameFilter,
 					tableTypes
 			);
 
-			try {
-				if ( !resultSet.next() ) {
-					log.tableNotFound( tableName.render() );
-					return null;
-				}
-
-				final TableInformation tableInformation = extractTableInformation(
-						catalog,
-						schema,
-						tableName,
-						resultSet
-				);
-
-				if ( resultSet.next() ) {
-					log.multipleTablesFound( tableName.render() );
-				}
-
-				return tableInformation;
-			}
-			finally {
-				try {
-					resultSet.close();
-				}
-				catch (SQLException ignore) {
-				}
-			}
+			return processGetTableResults(
+					catalog,
+					schema,
+					tableName,
+					resultSet
+			);
 		}
 		catch (SQLException sqlException) {
 			throw convertSQLException( sqlException, "Error accessing table metadata" );
+		}
+	}
+
+	private TableInformation processGetTableResults(
+			Identifier catalog,
+			Identifier schema,
+			Identifier tableName,
+			ResultSet resultSet) throws SQLException {
+		try {
+			if ( !resultSet.next() ) {
+				log.tableNotFound( tableName.render() );
+				return null;
+			}
+
+			final TableInformation tableInformation = extractTableInformation(
+					catalog,
+					schema,
+					tableName,
+					resultSet
+			);
+
+			if ( resultSet.next() ) {
+				log.multipleTablesFound( tableName.render() );
+				throw new SchemaExtractionException(
+						String.format(
+								Locale.ENGLISH,
+								"More than one table found in namespace (%s, %s) : %s",
+								catalog.render(),
+								schema.render(),
+								tableName.render()
+						)
+				);
+			}
+
+			return tableInformation;
+		}
+		finally {
+			try {
+				resultSet.close();
+			}
+			catch (SQLException ignore) {
+			}
 		}
 	}
 

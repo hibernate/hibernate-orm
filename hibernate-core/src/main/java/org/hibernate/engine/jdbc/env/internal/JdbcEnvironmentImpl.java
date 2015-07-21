@@ -53,6 +53,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
 	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
+	private final NameQualifierSupport nameQualifierSupport;
 
 	/**
 	 * Constructor form used when the JDBC {@link java.sql.DatabaseMetaData} is not available.
@@ -70,6 +71,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			// assume both catalogs and schemas are supported
 			nameQualifierSupport = NameQualifierSupport.BOTH;
 		}
+		this.nameQualifierSupport = nameQualifierSupport;
 
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this ).build();
@@ -138,6 +140,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		if ( nameQualifierSupport == null ) {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
+		this.nameQualifierSupport = nameQualifierSupport;
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
@@ -211,6 +214,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		if ( nameQualifierSupport == null ) {
 			nameQualifierSupport = determineNameQualifierSupport( databaseMetaData );
 		}
+		this.nameQualifierSupport = nameQualifierSupport;
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
@@ -321,6 +325,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public IdentifierHelper getIdentifierHelper() {
 		return identifierHelper;
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return nameQualifierSupport;
 	}
 
 	@Override

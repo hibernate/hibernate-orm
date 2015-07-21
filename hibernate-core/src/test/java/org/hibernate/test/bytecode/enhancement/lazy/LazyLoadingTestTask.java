@@ -62,15 +62,18 @@ public class LazyLoadingTestTask extends AbstractEnhancerTestTask {
 
 		Child loadedChild = s.load( Child.class, lastChildID );
 
-		Assert.assertNull( "Lazy field 'parent' is initialized", loadedChild.parent );
+		Object parentByReflection = EnhancerTestUtils.getFieldByReflection( loadedChild, "parent" );
+		Assert.assertNull( "Lazy field 'parent' is initialized", parentByReflection );
 		Assert.assertFalse( loadedChild instanceof HibernateProxy );
 
 		Parent loadedParent = loadedChild.getParent();
 
 		EnhancerTestUtils.checkDirtyTracking( loadedChild );
 
-		Assert.assertNotNull( "Lazy field 'parent' is not loaded", loadedChild.parent );
-		Assert.assertNull( "Lazy field 'children' is initialized", loadedParent.children );
+		parentByReflection = EnhancerTestUtils.getFieldByReflection( loadedChild, "parent" );
+		Object childrenByReflection = EnhancerTestUtils.getFieldByReflection( loadedParent, "children" );
+		Assert.assertNotNull( "Lazy field 'parent' is not loaded", parentByReflection );
+		Assert.assertNull( "Lazy field 'children' is initialized", childrenByReflection );
 		Assert.assertFalse( loadedParent instanceof HibernateProxy );
 		Assert.assertTrue( parentID.equals( loadedParent.id ) );
 
@@ -79,7 +82,8 @@ public class LazyLoadingTestTask extends AbstractEnhancerTestTask {
 		EnhancerTestUtils.checkDirtyTracking( loadedChild );
 		EnhancerTestUtils.checkDirtyTracking( loadedParent );
 
-		Assert.assertNotNull( "Lazy field 'children' is not loaded", loadedParent.children );
+		childrenByReflection = EnhancerTestUtils.getFieldByReflection( loadedParent, "children" );
+		Assert.assertNotNull( "Lazy field 'children' is not loaded", childrenByReflection );
 		Assert.assertFalse( loadedChildren instanceof HibernateProxy );
 		Assert.assertEquals( CHILDREN_SIZE, loadedChildren.size() );
 		Assert.assertTrue( loadedChildren.contains( loadedChild ) );

@@ -56,13 +56,15 @@ public class BasicEnhancementTestTask extends AbstractEnhancerTestTask {
 		interceptableEntity.$$_hibernate_setInterceptor( new ObjectAttributeMarkerInterceptor() );
 		assertNotNull( interceptableEntity.$$_hibernate_getInterceptor() );
 
-		assertNull( entity.anUnspecifiedObject );
-		entity.setAnObject( new Object() );
-		assertSame( entity.anUnspecifiedObject, ObjectAttributeMarkerInterceptor.WRITE_MARKER );
-		assertSame( entity.getAnObject(), ObjectAttributeMarkerInterceptor.READ_MARKER );
-		entity.setAnObject( null );
-		assertSame( entity.anUnspecifiedObject, ObjectAttributeMarkerInterceptor.WRITE_MARKER );
 
+		assertNull( EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ) );
+		entity.setAnObject( new Object() );
+
+		assertSame( EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ), ObjectAttributeMarkerInterceptor.WRITE_MARKER );
+		assertSame( entity.getAnObject(), ObjectAttributeMarkerInterceptor.READ_MARKER );
+
+		entity.setAnObject( null );
+		assertSame( EnhancerTestUtils.getFieldByReflection( entity, "anUnspecifiedObject" ), ObjectAttributeMarkerInterceptor.WRITE_MARKER );
 	}
 
 	protected void cleanup() {

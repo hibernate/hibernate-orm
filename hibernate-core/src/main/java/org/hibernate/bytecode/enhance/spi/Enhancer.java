@@ -20,6 +20,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.CompositeEnhancer;
 import org.hibernate.bytecode.enhance.internal.EntityEnhancer;
 import org.hibernate.bytecode.enhance.internal.FieldWriter;
+import org.hibernate.bytecode.enhance.internal.PersistentAttributesEnhancer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedComposite;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -142,6 +143,10 @@ public class Enhancer {
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 			new CompositeEnhancer( enhancementContext ).enhance( managedCtClass );
+		}
+		else if ( enhancementContext.doFieldAccessEnhancement( managedCtClass ) ) {
+			log.debugf( "Enhancing field access in [%s]", managedCtClass.getName() );
+			new PersistentAttributesEnhancer( enhancementContext ).enhanceFieldAccess( managedCtClass );
 		}
 		else {
 			log.debug( "Skipping enhancement: not entity or composite" );

@@ -9,15 +9,14 @@ package org.hibernate.test.bytecode.enhancement;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.tools.JavaFileObject;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -25,7 +24,6 @@ import javassist.LoaderClassPath;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
@@ -41,6 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * utility class to use in bytecode enhancement tests
@@ -49,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
-	private static EnhancementContext enhancementContext = new DefaultEnhancementContext();
+	private static EnhancementContext enhancementContext = new EnhancerTestContext();
 
 	private static String workingDir = System.getProperty( "java.io.tmpdir" );
 
@@ -82,13 +81,8 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	private static CtClass generateCtClassForAnEntity(Class<?> entityClassToEnhance) throws Exception {
 		ClassPool cp = new ClassPool( false );
 		ClassLoader cl = EnhancerTestUtils.class.getClassLoader();
-		return cp.makeClass( cl.getResourceAsStream( getFilenameForClassName( entityClassToEnhance.getName() ) ) );
+		return cp.makeClass( cl.getResourceAsStream( entityClassToEnhance.getName().replace( '.', '/' ) + ".class" ) );
 	}
-
-	private static String getFilenameForClassName(String className) {
-		return className.replace( '.', File.separatorChar ) + JavaFileObject.Kind.CLASS.extension;
-	}
-
 	/* --- */
 
 	@SuppressWarnings("unchecked")
@@ -145,7 +139,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 					return c;
 				}
 
-				final InputStream is = this.getResourceAsStream( getFilenameForClassName( name ) );
+				final InputStream is = this.getResourceAsStream(  name.replace( '.', '/' ) + ".class" );
 				if ( is == null ) {
 					throw new ClassNotFoundException( name + " not found" );
 				}
@@ -154,26 +148,40 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 					final byte[] original = new byte[is.available()];
 					new BufferedInputStream( is ).read( original );
 
-					// Only enhance classes annotated with Entity or Embeddable
-					final Class p = getParent().loadClass( name );
-					if ( p.getAnnotation( Entity.class ) != null || p.getAnnotation( Embeddable.class ) != null ) {
-						final byte[] enhanced = new Enhancer( enhancementContext ).enhance( name, original );
+					final byte[] enhanced = new Enhancer( enhancementContext ).enhance( name, original );
 
-						Path debugOutput = Paths.get( workingDir + File.separator + getFilenameForClassName( name ) );
-						Files.createDirectories( debugOutput.getParent() );
-						Files.write( debugOutput, enhanced, StandardOpenOption.CREATE );
+					Path debugOutput = Paths.get( workingDir + File.separator +  name.replace( '.', '/' ) + ".class" );
+					Files.createDirectories( debugOutput.getParent() );
+					Files.write( debugOutput, enhanced, StandardOpenOption.CREATE );
 
-						return defineClass( name, enhanced, 0, enhanced.length );
-					}
-					else {
-						return defineClass( name, original, 0, original.length );
-					}
+					return defineClass( name, enhanced, 0, enhanced.length );
 				}
 				catch (Throwable t) {
 					throw new ClassNotFoundException( name + " not found", t );
+				} finally {
+					try {
+						is.close();
+					}
+					catch (IOException e) { // ignore
+					}
 				}
 			}
 		};
+	}
+
+	public static Object getFieldByReflection(Object entity, String fieldName) {
+		try {
+			Field field =  entity.getClass().getDeclaredField( fieldName );
+			field.setAccessible( true );
+			return field.get( entity );
+		}
+		catch (NoSuchFieldException e) {
+			fail( "Fail to get field '" + fieldName + "' in entity " + entity );
+		}
+		catch (IllegalAccessException e) {
+			fail( "Fail to get field '" + fieldName + "' in entity " + entity );
+		}
+		return null;
 	}
 
 	/**

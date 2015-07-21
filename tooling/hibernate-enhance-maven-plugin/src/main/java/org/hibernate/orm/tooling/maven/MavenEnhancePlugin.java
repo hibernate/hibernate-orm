@@ -67,8 +67,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "enableAssociationManagement", defaultValue = "true")
 	private boolean enableAssociationManagement = true;
 
+	@Parameter(property = "enableFieldAccessEnhancement", defaultValue = "false")
+	private boolean enableFieldAccessEnhancement = false;
+
 	private boolean shouldApply() {
-		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement;
+		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableFieldAccessEnhancement;
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -109,6 +112,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			public boolean isLazyLoadable(CtField field) {
 				return enableLazyInitialization;
 			}
+
+			@Override
+			public boolean doFieldAccessEnhancement(CtClass classDescriptor) {
+				return enableFieldAccessEnhancement;
+			}
 		};
 
 		final Enhancer enhancer = new Enhancer( enhancementContext );
@@ -120,9 +128,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 				continue;
 			}
 
-			if ( !enhancementContext.isEntityClass( ctClass ) && !enhancementContext.isCompositeClass( ctClass ) ) {
-				getLog().info( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
-				continue;
+			if ( !enableLazyInitialization ) {
+				if ( !enhancementContext.isEntityClass( ctClass ) && !enhancementContext.isCompositeClass( ctClass ) ) {
+					getLog().info( "Skipping class file [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
+					continue;
+				}
 			}
 
 			final byte[] enhancedBytecode = doEnhancement( ctClass, enhancer );

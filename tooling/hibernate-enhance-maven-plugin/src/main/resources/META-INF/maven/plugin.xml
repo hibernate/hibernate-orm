@@ -68,6 +68,13 @@
           <editable>true</editable>
           <description>Enable enhancement for management of bi-direction associations</description>
         </parameter>
+        <parameter>
+          <name>enableFieldAccessEnhancement</name>
+          <type>java.lang.Boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>Enable enhancement of field access</description>
+        </parameter>
       </parameters>
       <configuration>
         <dir>${project.build.outputDirectory}</dir>

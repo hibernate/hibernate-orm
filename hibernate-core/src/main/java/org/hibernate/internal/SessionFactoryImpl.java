@@ -112,6 +112,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -142,6 +143,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import static org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
 
 
 /**
@@ -467,8 +469,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 
 
+		boolean createDropNamespaces = ConfigurationHelper.getBoolean( HBM2DLL_CREATE_NAMESPACES, properties, false );
+
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( serviceRegistry, metadata )
+
+			new SchemaExport( serviceRegistry, metadata, createDropNamespaces )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
 					.create( false, true );
 		}
@@ -479,7 +484,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			new SchemaValidator( serviceRegistry, metadata ).validate();
 		}
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( serviceRegistry, metadata )
+			schemaExport = new SchemaExport( serviceRegistry, metadata, createDropNamespaces )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
 		}
 

@@ -142,6 +142,11 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	}
 
 	@Override
+	public boolean catalogExists(Identifier catalog) {
+		return extractor.catalogExists( catalog );
+	}
+
+	@Override
 	public TableInformation locateTableInformation(QualifiedTableName tableName) {
 		return getTableInformation( tableName );
 	}

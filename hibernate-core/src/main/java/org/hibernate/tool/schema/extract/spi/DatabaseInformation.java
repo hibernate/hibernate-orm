@@ -92,4 +92,13 @@ public interface DatabaseInformation {
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
 	public SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName);
+
+	/**
+	 * Check to see if the given catalog already exists.
+	 *
+	 * @param catalog The catalog name
+	 *
+	 * @return {@code true} indicates a catalog with the given name already exists
+	 */
+	boolean catalogExists(Identifier catalog);
 }

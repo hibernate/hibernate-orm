@@ -21,42 +21,42 @@ public interface SchemaDropper {
 	 * Perform the drop to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropSchemas Should the schema(s) actually be dropped also ({@code DROP SCHEMA})?
+	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
 	 * @param targets The targets for drop
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
-	public void doDrop(Metadata metadata, boolean dropSchemas, Target... targets) throws SchemaManagementException;
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Target... targets) throws SchemaManagementException;
 	/**
 	 * Perform the drop to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropSchemas Should the schema(s) actually be dropped also ({@code DROP SCHEMA})?
+	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
 	 * @param targets The targets for drop
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
-	public void doDrop(Metadata metadata, boolean dropSchemas, Dialect dialect, Target... targets) throws SchemaManagementException;
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, Target... targets) throws SchemaManagementException;
 
 	/**
 	 * Perform the drop to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropSchemas Should the schema(s) actually be dropped also ({@code DROP SCHEMA})?
+	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
 	 * @param targets The targets for drop
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
-	public void doDrop(Metadata metadata, boolean dropSchemas, List<Target> targets) throws SchemaManagementException;
+	public void doDrop(Metadata metadata, boolean dropNamespaces, List<Target> targets) throws SchemaManagementException;
 
 	/**
 	 * Perform the drop to the specified targets
 	 *
 	 * @param metadata The "compiled" mapping metadata.
-	 * @param dropSchemas Should the schema(s) actually be dropped also ({@code DROP SCHEMA})?
+	 * @param dropNamespaces Should the schema(s)/catalog(s) actually be dropped also ({@code DROP SCHEMA})?
 	 * @param targets The targets for drop
 	 *
 	 * @throws SchemaManagementException Indicates a problem processing the creation
 	 */
-	public void doDrop(Metadata metadata, boolean dropSchemas, Dialect dialect, List<Target> targets) throws SchemaManagementException;
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, List<Target> targets) throws SchemaManagementException;
 }

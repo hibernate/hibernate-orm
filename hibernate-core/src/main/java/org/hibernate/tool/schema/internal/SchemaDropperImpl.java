@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
@@ -39,16 +40,19 @@ public class SchemaDropperImpl implements SchemaDropper {
 	 * Intended for use from JPA schema export code.
 	 *
 	 * @param metadata The metadata for which to generate drop commands
-	 * @param dropSchemas Should {@code DROP SCHEMA} command be generated?
+	 * @param dropNamespaces Should drop schema/catalog command be generated?
 	 * @param dialect Allow explicitly specifying the dialect.
 	 *
 	 * @return The commands
 	 */
-	public Iterable<String> generateDropCommands(MetadataImplementor metadata, boolean dropSchemas, Dialect dialect) {
+	public Iterable<String> generateDropCommands(
+			MetadataImplementor metadata,
+			boolean dropNamespaces,
+			Dialect dialect) {
 		final ArrayList<String> commands = new ArrayList<String>();
 		doDrop(
 				metadata,
-				dropSchemas,
+				dropNamespaces,
 				dialect,
 				new Target() {
 
@@ -75,20 +79,22 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, List<Target> targets) throws SchemaManagementException {
-		doDrop( metadata, dropSchemas, targets.toArray( new Target[ targets.size() ] ) );
+	public void doDrop(Metadata metadata, boolean dropNamespaces, List<Target> targets)
+			throws SchemaManagementException {
+		doDrop( metadata, dropNamespaces, targets.toArray( new Target[targets.size()] ) );
 	}
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, Dialect dialect, List<Target> targets) throws SchemaManagementException {
-		doDrop( metadata, dropSchemas, dialect, targets.toArray( new Target[ targets.size() ] ) );
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, List<Target> targets)
+			throws SchemaManagementException {
+		doDrop( metadata, dropNamespaces, dialect, targets.toArray( new Target[targets.size()] ) );
 	}
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, Target... targets) throws SchemaManagementException {
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Target... targets) throws SchemaManagementException {
 		doDrop(
 				metadata,
-				dropSchemas,
+				dropNamespaces,
 				metadata.getDatabase().getJdbcEnvironment().getDialect(),
 				targets
 		);
@@ -96,9 +102,21 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, Dialect dialect, Target... targets) throws SchemaManagementException {
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, Target... targets)
+			throws SchemaManagementException {
 		final Database database = metadata.getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+
+		boolean tryToDropCatalogs = false;
+		boolean tryToDropSchemas = false;
+		if ( dropNamespaces ) {
+			if ( dialect.canCreateSchema() ) {
+				tryToDropSchemas = true;
+			}
+			if ( dialect.canCreateCatalog() ) {
+				tryToDropCatalogs = true;
+			}
+		}
 
 		for ( Target target : targets ) {
 			target.prepare();
@@ -155,12 +173,31 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( dropSchemas ) {
-				if ( namespace.getName().getSchema() == null ) {
-					continue;
+		if ( tryToDropCatalogs || tryToDropSchemas ) {
+			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+
+			for ( Namespace namespace : database.getNamespaces() ) {
+				if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
+					applySqlStrings(
+							targets, dialect.getDropSchemaCommand(
+									namespace.getPhysicalName().getSchema().render( dialect )
+							)
+					);
 				}
-				applySqlStrings( targets, dialect.getDropSchemaCommand( namespace.getName().getSchema().render( dialect ) ) );
+				if ( tryToDropCatalogs ) {
+					final Identifier catalogLogicalName = namespace.getName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+						applySqlStrings(
+								targets,
+								dialect.getDropCatalogCommand(
+										catalogPhysicalName.render( dialect )
+								)
+						);
+						exportedCatalogs.add( catalogLogicalName );
+					}
+				}
 			}
 		}
 

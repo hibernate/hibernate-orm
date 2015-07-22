@@ -66,6 +66,11 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 		return locateSequenceInformation( sequenceName );
 	}
 
+	@Override
+	public boolean catalogExists(Identifier catalog) {
+		return false;
+	}
+
 
 	// RegisteredObjectAccess implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -35,6 +35,10 @@ Working list of changes for 5.0
     enum names; this is more consistent with other Hibernate settings
 * For ids defined as UUID with generation, for some databases it is required to explicitly set the `@Column( length=16 )`
     in order to generate BINARY(16) so that comparisons properly work.
+* For EnumType mappings defined in hbm.xml where the user wants name-mapping (`javax.persistence.EnumType#STRING`) 
+    the configuration must explicitly state that using either the `useNamed` (true) setting or by specifying the `type`
+    setting set to the value 12 (VARCHAR JDBC type code).
+    
 
 TODOs
 =====

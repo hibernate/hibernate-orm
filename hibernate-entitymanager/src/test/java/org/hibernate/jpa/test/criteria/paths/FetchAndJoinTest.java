@@ -33,11 +33,11 @@ import javax.persistence.criteria.Root;
 
 import org.junit.Test;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Entity1;
-import org.hibernate.jpa.test.metamodel.Entity1_;
-import org.hibernate.jpa.test.metamodel.Entity2;
-import org.hibernate.jpa.test.metamodel.Entity2_;
+import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.ejb.metamodel.Entity1;
+import org.hibernate.ejb.metamodel.Entity1_;
+import org.hibernate.ejb.metamodel.Entity2;
+import org.hibernate.ejb.metamodel.Entity2_;
 
 /**
  * @author Gail Badner

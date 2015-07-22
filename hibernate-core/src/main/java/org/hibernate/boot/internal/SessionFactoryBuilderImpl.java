@@ -68,6 +68,7 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
+import static org.hibernate.cfg.AvailableSettings.HBM2DLL_CREATE_NAMESPACES;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.JPAQL_STRICT_COMPLIANCE;
@@ -518,6 +519,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		// Schema tooling
 		private SchemaAutoTooling schemaAutoTooling;
+		private boolean createNamespace;
 
 		// JDBC Handling
 		private boolean getGeneratedKeysEnabled;
@@ -696,6 +698,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
 			this.preferUserTransaction = ConfigurationHelper.getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
+
+			this.createNamespace = ConfigurationHelper.getBoolean( HBM2DLL_CREATE_NAMESPACES, configurationSettings, false );
 		}
 
 		@Override
@@ -962,6 +966,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public boolean isPreferUserTransaction() {
 			return this.preferUserTransaction;
 		}
+
+		@Override
+		public boolean isCreateNamespaces() {
+			return this.createNamespace;
+		}
 	}
 
 	@Override
@@ -1227,5 +1236,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isPreferUserTransaction() {
 		return options.isPreferUserTransaction();
+	}
+
+	@Override
+	public boolean isCreateNamespaces() {
+		return options.isCreateNamespaces();
 	}
 }

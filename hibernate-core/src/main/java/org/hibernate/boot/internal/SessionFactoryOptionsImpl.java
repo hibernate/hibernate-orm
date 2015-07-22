@@ -100,6 +100,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 	// Schema tooling
 	private final SchemaAutoTooling schemaAutoTooling;
+	private final boolean createNamespaces;
+
 
 	// JDBC Handling
 	private final boolean getGeneratedKeysEnabled;
@@ -168,7 +170,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.autoEvictCollectionCache = state.isAutoEvictCollectionCache();
 
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
-
+		this.createNamespaces = state.isCreateNamespaces();
 		this.connectionReleaseMode = state.getConnectionReleaseMode();
 		this.getGeneratedKeysEnabled = state.isGetGeneratedKeysEnabled();
 		this.jdbcBatchSize = state.getJdbcBatchSize();
@@ -448,5 +450,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isPreferUserTransaction() {
 		return preferUserTransaction;
+	}
+
+	@Override
+	public boolean createNamespaces(){
+		return createNamespaces;
 	}
 }

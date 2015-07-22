@@ -1979,7 +1979,6 @@ public abstract class Dialect implements ConversionContext {
 		return auxiliaryObjectExporter;
 	}
 
-
 	/**
 	 * Does this dialect support catalog creation?
 	 *

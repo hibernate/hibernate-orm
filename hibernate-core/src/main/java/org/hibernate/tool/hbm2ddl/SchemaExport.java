@@ -107,8 +107,8 @@ public class SchemaExport {
 	 *
 	 * @param metadata The metadata object holding the mapping info to be exported
 	 */
-	public SchemaExport(MetadataImplementor metadata, boolean exportSchemas) {
-		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata, exportSchemas );
+	public SchemaExport(MetadataImplementor metadata, boolean createNamespaces) {
+		this( metadata.getMetadataBuildingOptions().getServiceRegistry(), metadata, createNamespaces );
 	}
 
 	/**
@@ -136,14 +136,14 @@ public class SchemaExport {
 	 * the JdbcServices service.
 	 * @param metadata The metadata object holding the mapping info to be exported
 	 */
-	public SchemaExport(ServiceRegistry serviceRegistry, MetadataImplementor metadata, boolean exportSchemas) {
+	public SchemaExport(ServiceRegistry serviceRegistry, MetadataImplementor metadata, boolean createNamespaces) {
 		this(
 				new SuppliedConnectionProviderConnectionHelper(
 						serviceRegistry.getService( ConnectionProvider.class )
 				),
 				serviceRegistry,
 				metadata,
-				exportSchemas
+				createNamespaces
 		);
 	}
 
@@ -151,7 +151,7 @@ public class SchemaExport {
 			ConnectionHelper connectionHelper,
 			ServiceRegistry serviceRegistry,
 			MetadataImplementor metadata,
-			boolean exportSchemas) {
+			boolean createNamespaces) {
 		this.connectionHelper = connectionHelper;
 		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
@@ -193,10 +193,10 @@ public class SchemaExport {
 
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 
-		schemaManagementTool.getSchemaDropper( settings ).doDrop( metadata, exportSchemas, target );
+		schemaManagementTool.getSchemaDropper( settings ).doDrop( metadata, createNamespaces, target );
 		this.dropSQL = commands.toArray( new String[commands.size()] );
 
-		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata, exportSchemas, target );
+		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata, createNamespaces, target );
 		this.createSQL = commands.toArray( new String[commands.size()] );
 	}
 

@@ -404,6 +404,14 @@ public interface AvailableSettings {
 	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
 
 	/**
+	 * Specifies whether to automatically create also the database schema/catalog.
+	 * The default is false.
+	 *
+	 * @since 5.0
+	 */
+	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
+
+	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.

@@ -1979,6 +1979,25 @@ public abstract class Dialect implements ConversionContext {
 		return auxiliaryObjectExporter;
 	}
 
+
+	/**
+	 * Does this dialect support catalog creation?
+	 *
+	 * @return True if the dialect supports catalog creation; false otherwise.
+	 */
+	public boolean canCreateCatalog() {
+		return true;
+	}
+
+	/**
+	 * Does this dialect support schema creation?
+	 *
+	 * @return True if the dialect supports schema creation; false otherwise.
+	 */
+	public boolean canCreateSchema() {
+		return true;
+	}
+
 	/**
 	 * Get the SQL command used to create the named schema
 	 *

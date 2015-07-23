@@ -171,4 +171,6 @@ public interface SessionFactoryOptions {
 	void setCheckNullability(boolean enabled);
 
 	public boolean isPreferUserTransaction();
+
+	public boolean createNamespaces();
 }

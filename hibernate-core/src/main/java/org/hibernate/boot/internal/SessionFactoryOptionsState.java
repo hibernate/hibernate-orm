@@ -140,4 +140,6 @@ public interface SessionFactoryOptionsState {
 	public Map<String, SQLFunction> getCustomSqlFunctionMap();
 
 	public boolean isPreferUserTransaction();
+
+	public boolean isCreateNamespaces();
 }

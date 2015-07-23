@@ -1980,6 +1980,46 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect support catalog creation?
+	 *
+	 * @return True if the dialect supports catalog creation; false otherwise.
+	 */
+	public boolean canCreateCatalog() {
+		return false;
+	}
+
+	/**
+	 * Get the SQL command used to create the named catalog
+	 *
+	 * @param catalogName The name of the catalog to be created.
+	 *
+	 * @return The creation command
+	 */
+	public String getCreateCatalogCommand(String catalogName) {
+		return "";
+	}
+
+	/**
+	 * Get the SQL command used to drop the named catalog
+	 *
+	 * @param catalogName The name of the catalog to be dropped.
+	 *
+	 * @return The drop command
+	 */
+	public String getDropCatalogCommand(String catalogName) {
+		return "";
+	}
+
+	/**
+	 * Does this dialect support schema creation?
+	 *
+	 * @return True if the dialect supports schema creation; false otherwise.
+	 */
+	public boolean canCreateSchema() {
+		return true;
+	}
+
+	/**
 	 * Get the SQL command used to create the named schema
 	 *
 	 * @param schemaName The name of the schema to be created.

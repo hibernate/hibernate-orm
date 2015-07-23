@@ -310,4 +310,9 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	public boolean isPreferUserTransaction() {
 		return delegate.isPreferUserTransaction();
 	}
+
+	@Override
+	public boolean createNamespaces() {
+		return delegate.createNamespaces();
+	}
 }

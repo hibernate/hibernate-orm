@@ -30,6 +30,7 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -326,11 +327,13 @@ public class MySQLDialect extends Dialect {
 			case Types.INTEGER:
 			case Types.BIGINT:
 			case Types.SMALLINT:
-				return "signed";
+				return smallIntegerCastTarget();
 			case Types.FLOAT:
+			case Types.REAL: {
+				return floatingPointNumberCastTarget();
+			}
 			case Types.NUMERIC:
-			case Types.REAL:
-				return "decimal";
+				return fixedPointNumberCastTarget();
 			case Types.VARCHAR:
 				return "char";
 			case Types.VARBINARY:
@@ -338,6 +341,37 @@ public class MySQLDialect extends Dialect {
 			default:
 				return super.getCastTypeName( code );
 		}
+	}
+
+	/**
+	 * Determine the cast target for {@link Types#INTEGER}, {@link Types#BIGINT} and {@link Types#SMALLINT}
+	 *
+	 * @return The proper cast target type.
+	 */
+	protected String smallIntegerCastTarget() {
+		return "signed";
+	}
+
+	/**
+	 * Determine the cast target for {@link Types#FLOAT} and {@link Types#REAL} (DOUBLE)
+	 *
+	 * @return The proper cast target type.
+	 */
+	protected String floatingPointNumberCastTarget() {
+		// MySQL does not allow casting to DOUBLE nor FLOAT, so we have to cast these as DECIMAL.
+		// MariaDB does allow casting to DOUBLE, although not FLOAT.
+		return fixedPointNumberCastTarget();
+	}
+
+	/**
+	 * Determine the cast target for {@link Types#NUMERIC}
+	 *
+	 * @return The proper cast target type.
+	 */
+	protected String fixedPointNumberCastTarget() {
+		// NOTE : the precision/scale are somewhat arbitrary choices, but MySQL/MariaDB
+		// effectively require *some* values
+		return "decimal(" + Column.DEFAULT_PRECISION + "," + Column.DEFAULT_SCALE + ")";
 	}
 
 	@Override

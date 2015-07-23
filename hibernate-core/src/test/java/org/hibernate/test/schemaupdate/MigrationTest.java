@@ -128,8 +128,8 @@ public class MigrationTest extends BaseUnitTestCase {
 				.addAnnotatedClass( EntityWithIndex.class )
 				.buildMetadata();
 
-		// export the schema
-		new SchemaExport( metadata ).execute( Target.EXPORT, SchemaExport.Type.CREATE );
+		// drop and then create the schema
+		new SchemaExport( metadata ).execute( Target.EXPORT, SchemaExport.Type.BOTH );
 
 		try {
 			// update the schema
@@ -157,8 +157,8 @@ public class MigrationTest extends BaseUnitTestCase {
 				.addAnnotatedClass( PersonInfo.class )
 				.buildMetadata();
 
-		// export the schema
-		new SchemaExport( metadata, true ).execute( Target.EXPORT, SchemaExport.Type.CREATE );
+		// drop and then create the schema
+		new SchemaExport( metadata, true ).execute( Target.EXPORT, SchemaExport.Type.BOTH );
 
 		try {
 			// update the schema

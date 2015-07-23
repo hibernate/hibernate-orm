@@ -110,9 +110,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 	@Override
 	public boolean schemaExists(Identifier catalog, Identifier schema) {
 		try {
+			final String catalogFilter = determineCatalogFilter( catalog );
+			final String schemaFilter = determineSchemaFilter( schema );
+
 			final ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getSchemas(
-					determineCatalogFilter( catalog ),
-					determineSchemaFilter( schema )
+					catalogFilter,
+					schemaFilter
 			);
 
 			try {
@@ -267,6 +270,9 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			Identifier catalog,
 			Identifier schema,
 			Identifier tableName) {
+		Identifier catalogToUse = null;
+		Identifier schemaToUse = null;
+
 		final String catalogFilter;
 		final String schemaFilter;
 
@@ -275,6 +281,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				catalogFilter = "";
 			}
 			else {
+				catalogToUse = catalog;
 				catalogFilter = toMetaDataObjectName( catalog );
 			}
 		}
@@ -287,6 +294,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				schemaFilter = "";
 			}
 			else {
+				schemaToUse = schema;
 				schemaFilter = toMetaDataObjectName( schema );
 			}
 		}
@@ -305,8 +313,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			);
 
 			return processGetTableResults(
-					catalog,
-					schema,
+					catalogToUse,
+					schemaToUse,
 					tableName,
 					resultSet
 			);
@@ -364,14 +372,44 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier) {
+		final Identifier catalog = tableInformation.getName().getCatalogName();
+		final Identifier schema = tableInformation.getName().getSchemaName();
+
+		final String catalogFilter;
+		final String schemaFilter;
+
+		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+			if ( catalog == null ) {
+				catalogFilter = "";
+			}
+			else {
+				catalogFilter = toMetaDataObjectName( catalog );
+			}
+		}
+		else {
+			catalogFilter = null;
+		}
+
+		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
+			if ( schema == null ) {
+				schemaFilter = "";
+			}
+			else {
+				schemaFilter = toMetaDataObjectName( schema );
+			}
+		}
+		else {
+			schemaFilter = null;
+		}
+
+		final String tableFilter = toMetaDataObjectName( tableInformation.getName().getTableName() );
+		final String columnFilter = toMetaDataObjectName( columnIdentifier );
 		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getColumns(
-					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalogName() ),
-					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchemaName() ),
-					identifierHelper().toMetaDataObjectName( tableInformation.getName().getTableName() ),
-					extractionContext.getJdbcEnvironment()
-							.getIdentifierHelper()
-							.toMetaDataObjectName( columnIdentifier )
+					catalogFilter,
+					schemaFilter,
+					tableFilter,
+					columnFilter
 			);
 
 			try {

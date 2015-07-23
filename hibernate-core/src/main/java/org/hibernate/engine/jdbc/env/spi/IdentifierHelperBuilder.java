@@ -35,7 +35,7 @@ public class IdentifierHelperBuilder {
 	private Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean autoQuoteKeywords = true;
-	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
 	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {

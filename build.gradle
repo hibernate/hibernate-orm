@@ -189,9 +189,9 @@ subprojects { subProject ->
 		systemProperties['hibernate.test.validatefailureexpected'] = true
 		systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
 
-		beforeTest { descriptor ->
-			println "Starting test: " + descriptor
-		}
+//		beforeTest { descriptor ->
+//			println "Starting test: " + descriptor
+//		}
 
 //		afterTest { descriptor ->
 //			println "Completed test: " + descriptor

@@ -12,6 +12,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.Target;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -43,6 +44,7 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
         metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
                 .addResource( "org/hibernate/test/schemaupdate/mapping.hbm.xml" )
                 .buildMetadata();
+        metadata.validate();
 
 		SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
 		schemaExport.drop( true, true );
@@ -59,20 +61,15 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
         final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
 
         // create w/o dropping first; (OK because tables don't exist yet
-        schemaExport.execute( false, true, false, true );
-//        if ( doesDialectSupportDropTableIfExist() ) {
-            assertEquals( 0, schemaExport.getExceptions().size() );
-//        }
-//        else {
-//            assertEquals( 2, schemaExport.getExceptions().size() );
-//        }
-        // create w/o dropping again; should be an exception for each table
-        // (2 total) because the tables exist already
-//        assertEquals( 0, schemaExport.getExceptions().size() );
-        schemaExport.execute( false, true, false, true );
-        assertEquals( 2, schemaExport.getExceptions().size() );
+        schemaExport.execute( Target.EXPORT, SchemaExport.Type.CREATE );
+        assertEquals( 0, schemaExport.getExceptions().size() );
+
+        // create w/o dropping again; should cause an exception because the tables exist already
+        schemaExport.execute( Target.EXPORT, SchemaExport.Type.CREATE );
+        assertEquals( 1, schemaExport.getExceptions().size() );
+
         // drop tables only
-        schemaExport.execute( false, true, true, false );
+        schemaExport.execute( Target.EXPORT, SchemaExport.Type.DROP );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
 
@@ -86,11 +83,13 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
             assertEquals( 0, schemaExport.getExceptions().size() );
         }
         else {
-            assertEquals( 2, schemaExport.getExceptions().size() );
+            assertEquals( 1, schemaExport.getExceptions().size() );
         }
+
         // drop before crete again (this time drops the tables before re-creating)
         schemaExport.execute( false, true, false, false );
         assertEquals( 0, schemaExport.getExceptions().size() );
+
         // drop tables
         schemaExport.execute( false, true, true, false );
         assertEquals( 0, schemaExport.getExceptions().size() );
@@ -101,14 +100,15 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
         final SchemaExport schemaExport = createSchemaExport( metadata, serviceRegistry );
 
         java.io.File outFile = new java.io.File("schema.ddl");
-        schemaExport.setOutputFile(outFile.getPath());
+        schemaExport.setOutputFile( outFile.getPath() );
+
         // do not script to console or export to database
         schemaExport.execute( false, false, false, true );
-        if ( doesDialectSupportDropTableIfExist()
-        		&& schemaExport.getExceptions().size() > 0 ) {
+        if ( doesDialectSupportDropTableIfExist() && schemaExport.getExceptions().size() > 0 ) {
             assertEquals( 2, schemaExport.getExceptions().size() );
         }
         assertTrue( outFile.exists() );
+
         //check file is not empty
         assertTrue( outFile.length() > 0 );
         outFile.delete();

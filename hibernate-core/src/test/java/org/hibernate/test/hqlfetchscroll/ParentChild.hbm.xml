@@ -15,7 +15,7 @@
 		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
         require identifier columns in order to support scrollable results. -->
 		<id name="id">
-		    <generator class="identity"/>
+		    <generator class="increment"/>
 		</id>
 		
 		<property name="name"/>
@@ -31,7 +31,7 @@
 		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
         require identifier columns in order to support scrollable results. -->
         <id name="id">
-            <generator class="identity"/>
+            <generator class="increment"/>
         </id>
         
         <property name="name"/>

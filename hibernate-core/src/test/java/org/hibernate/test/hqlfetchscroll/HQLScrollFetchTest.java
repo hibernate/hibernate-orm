@@ -10,14 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
@@ -36,8 +29,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@SkipForDialect( value = { Oracle8iDialect.class, AbstractHANADialect.class },
-		comment = "Oracle/HANA do not support the identity column used in the mapping. Extended by NoIdentityHQLScrollFetchTest" )
 public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	private static final String QUERY = "select p from Parent p join fetch p.children c";
 
@@ -52,8 +43,6 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( { SQLServerDialect.class,  Oracle8iDialect.class, DB2Dialect.class,
-            AbstractHANADialect.class, TeradataDialect.class } )
 	public void testScroll() {
 		Session s = openSession();
 		s.beginTransaction();

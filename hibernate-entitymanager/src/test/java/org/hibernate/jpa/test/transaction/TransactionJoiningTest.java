@@ -8,6 +8,7 @@ package org.hibernate.jpa.test.transaction;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
+import javax.persistence.TransactionRequiredException;
 import javax.transaction.Status;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -29,6 +30,7 @@ import org.hibernate.testing.junit4.ExtraAssertions;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Largely a copy of {@link org.hibernate.test.jpa.txn.JtaTransactionJoiningTest}
@@ -176,6 +178,21 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
 		em.close();
+	}
+
+	@Test
+	public void testTransactionRequiredException() throws Exception {
+
+		assertFalse("setup problem", JtaStatusHelper.isActive(TestingJtaPlatformImpl.INSTANCE.getTransactionManager()));
+
+		EntityManager entityManager = entityManagerFactory().createEntityManager();
+		try {
+			entityManager.joinTransaction();
+			fail( "Expected joinTransaction() to fail since there is no active JTA transaction" );
+		}
+		catch (TransactionRequiredException expected) {
+
+		}
 	}
 
 	@Override

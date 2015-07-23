@@ -17,7 +17,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
-import org.hibernate.usertype.DynamicParameterizedType;
 
 import org.dom4j.Element;
 
@@ -109,14 +108,10 @@ public final class BasicMetadataGenerator {
 					)
 			);
 		}
-		else if ( parameters.get( DynamicParameterizedType.XPROPERTY ) != null ) {
-			// Case of annotations.
+		else {
 			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED )
 					.setText( "" + !((EnumType) ((CustomType) type).getUserType()).isOrdinal() );
 		}
-		// Otherwise we assume that the choice between ordinal and named representation has been omitted.
-		// Call to EnumType#isOrdinal() would always return the default Types.INTEGER. We let Hibernate
-		// to choose the proper strategy during runtime.
 	}
 
 	@SuppressWarnings({"unchecked"})

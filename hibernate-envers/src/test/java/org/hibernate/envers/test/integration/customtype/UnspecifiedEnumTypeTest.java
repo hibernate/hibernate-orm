@@ -68,11 +68,11 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	private void createSchema(Session session) {
 		executeUpdateSafety(
 				session,
-				"create table ENUM_ENTITY (ID bigint not null, enum1 varchar(255), enum2 integer, primary key (ID))"
+				"create table ENUM_ENTITY (ID bigint not null, enum1 integer, enum2 integer, primary key (ID))"
 		);
 		executeUpdateSafety(
 				session,
-				"create table ENUM_ENTITY_AUD (ID bigint not null, REV integer not null, REVTYPE tinyint, enum1 varchar(255), enum2 integer, primary key (ID, REV))"
+				"create table ENUM_ENTITY_AUD (ID bigint not null, REV integer not null, REVTYPE tinyint, enum1 integer, enum2 integer, primary key (ID, REV))"
 		);
 		executeUpdateSafety(
 				session,
@@ -159,7 +159,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		Assert.assertNotNull( values );
 		Assert.assertEquals( 2, values.size() );
-		Assert.assertArrayEquals( new Object[] {"X", 0}, values.get( 0 ) );
-		Assert.assertArrayEquals( new Object[] {"Y", 1}, values.get( 1 ) );
+		Assert.assertArrayEquals( new Object[] {0, 0}, values.get( 0 ) );
+		Assert.assertArrayEquals( new Object[] {1, 1}, values.get( 1 ) );
 	}
 }

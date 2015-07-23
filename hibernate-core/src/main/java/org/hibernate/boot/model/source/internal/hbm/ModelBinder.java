@@ -38,7 +38,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
@@ -786,16 +786,16 @@ public class ModelBinder {
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
 
-			if ( database.getDefaultSchema().getPhysicalName().getSchema() != null ) {
+			if ( database.getDefaultNamespace().getPhysicalName().getSchema() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.SCHEMA,
-						database.getDefaultSchema().getPhysicalName().getSchema().render( database.getDialect() )
+						database.getDefaultNamespace().getPhysicalName().getSchema().render( database.getDialect() )
 				);
 			}
-			if ( database.getDefaultSchema().getPhysicalName().getCatalog() != null ) {
+			if ( database.getDefaultNamespace().getPhysicalName().getCatalog() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.CATALOG,
-						database.getDefaultSchema().getPhysicalName().getCatalog().render( database.getDialect() )
+						database.getDefaultNamespace().getPhysicalName().getCatalog().render( database.getDialect() )
 				);
 			}
 
@@ -1756,7 +1756,7 @@ public class ModelBinder {
 
 		final Identifier catalogName = determineCatalogName( secondaryTableSource.getTableSource() );
 		final Identifier schemaName = determineSchemaName( secondaryTableSource.getTableSource() );
-		final Schema schema = database.locateSchema( catalogName, schemaName );
+		final Namespace namespace = database.locateNamespace( catalogName, schemaName );
 
 		Table secondaryTable;
 		final Identifier logicalTableName;
@@ -1764,9 +1764,9 @@ public class ModelBinder {
 		if ( TableSource.class.isInstance( secondaryTableSource.getTableSource() ) ) {
 			final TableSource tableSource = (TableSource) secondaryTableSource.getTableSource();
 			logicalTableName = database.toIdentifier( tableSource.getExplicitTableName() );
-			secondaryTable = schema.locateTable( logicalTableName );
+			secondaryTable = namespace.locateTable( logicalTableName );
 			if ( secondaryTable == null ) {
-				secondaryTable = schema.createTable( logicalTableName, false );
+				secondaryTable = namespace.createTable( logicalTableName, false );
 			}
 			else {
 				secondaryTable.setAbstract( false );
@@ -1777,7 +1777,7 @@ public class ModelBinder {
 		else {
 			final InLineViewSource inLineViewSource = (InLineViewSource) secondaryTableSource.getTableSource();
 			secondaryTable = new Table(
-					schema,
+					namespace,
 					inLineViewSource.getSelectStatement(),
 					false
 			);
@@ -2872,7 +2872,7 @@ public class ModelBinder {
 			Table denormalizedSuperTable,
 			final EntitySource entitySource,
 			PersistentClass entityDescriptor) {
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				determineCatalogName( tableSpecSource ),
 				determineSchemaName( tableSpecSource )
 		);
@@ -2906,10 +2906,10 @@ public class ModelBinder {
 			}
 
 			if ( denormalizedSuperTable == null ) {
-				table = schema.createTable( logicalTableName, isAbstract );
+				table = namespace.createTable( logicalTableName, isAbstract );
 			}
 			else {
-				table = schema.createDenormalizedTable(
+				table = namespace.createDenormalizedTable(
 						logicalTableName,
 						isAbstract,
 						denormalizedSuperTable
@@ -2921,10 +2921,10 @@ public class ModelBinder {
 			subselect = inLineViewSource.getSelectStatement();
 			logicalTableName = database.toIdentifier( inLineViewSource.getLogicalName() );
 			if ( denormalizedSuperTable == null ) {
-				table = new Table( schema, subselect, isAbstract );
+				table = new Table( namespace, subselect, isAbstract );
 			}
 			else {
-				table = new DenormalizedTable( schema, subselect, isAbstract, denormalizedSuperTable );
+				table = new DenormalizedTable( namespace, subselect, isAbstract, denormalizedSuperTable );
 			}
 			table.setName( logicalTableName.render() );
 		}
@@ -2975,7 +2975,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitCatalogName() );
 		}
 		else {
-			return database.getDefaultSchema().getName().getCatalog();
+			return database.getDefaultNamespace().getName().getCatalog();
 		}
 	}
 
@@ -2984,7 +2984,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitSchemaName() );
 		}
 		else {
-			return database.getDefaultSchema().getName().getSchema();
+			return database.getDefaultNamespace().getName().getSchema();
 		}
 	}
 
@@ -3220,7 +3220,7 @@ public class ModelBinder {
 				final TableSpecificationSource tableSpecSource = pluralAttributeSource.getCollectionTableSpecificationSource();
 				final Identifier logicalCatalogName = determineCatalogName( tableSpecSource );
 				final Identifier logicalSchemaName = determineSchemaName( tableSpecSource );
-				final Schema schema = database.locateSchema( logicalCatalogName, logicalSchemaName );
+				final Namespace namespace = database.locateNamespace( logicalCatalogName, logicalSchemaName );
 
 				final Table collectionTable;
 
@@ -3266,11 +3266,11 @@ public class ModelBinder {
 								.determineCollectionTableName( implicitNamingSource );
 					}
 
-					collectionTable = schema.createTable( logicalName, false );
+					collectionTable = namespace.createTable( logicalName, false );
 				}
 				else {
 					collectionTable = new Table(
-							schema,
+							namespace,
 							( (InLineViewSource) tableSpecSource ).getSelectStatement(),
 							false
 					);

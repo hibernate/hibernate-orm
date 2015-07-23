@@ -15,7 +15,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -73,13 +73,13 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 		
 		final Database database = metadata.getDatabase();
 
-		for ( Schema schema : database.getSchemas() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( createSchemas ) {
-				if ( schema.getName().getSchema() != null ) {
-					if ( !existingDatabase.schemaExists( schema.getName() ) ) {
+				if ( namespace.getName().getSchema() != null ) {
+					if ( !existingDatabase.schemaExists( namespace.getName() ) ) {
 						applySqlString(
 								database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
-										schema.getName().getSchema().render( database.getJdbcEnvironment().getDialect() )
+										namespace.getName().getSchema().render( database.getJdbcEnvironment().getDialect() )
 								),
 								targets,
 								false
@@ -88,7 +88,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 			}
 
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -102,7 +102,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 			}
 
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -118,7 +118,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				applyForeignKeys( table, tableInformation, metadata, targets );
 			}
 
-			for ( Sequence sequence : schema.getSequences() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
 				checkExportIdentifier( sequence, exportIdentifiers );
 				final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getName() );
 				if ( sequenceInformation != null ) {
@@ -352,12 +352,12 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	}
 
 	private String getDefaultCatalogName(Database database) {
-		final Identifier identifier = database.getDefaultSchema().getPhysicalName().getCatalog();
+		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getCatalog();
 		return identifier == null ? null : identifier.render( database.getJdbcEnvironment().getDialect() );
 	}
 
 	private String getDefaultSchemaName(Database database) {
-		final Identifier identifier = database.getDefaultSchema().getPhysicalName().getSchema();
+		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
 		return identifier == null ? null : identifier.render( database.getJdbcEnvironment().getDialect() );
 	}
 }

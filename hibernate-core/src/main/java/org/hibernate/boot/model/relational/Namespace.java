@@ -19,30 +19,36 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Table;
 
 /**
- * Represents a named schema/catalog pair and manages objects defined within.
+ * Represents a namespace (named schema/catalog pair) with a Database and manages objects defined within.
  *
  * @author Steve Ebersole
  */
-public class Schema {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Schema.class );
+public class Namespace {
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( Namespace.class );
 
 	private final Database database;
 	private final Name name;
-
 	private final Name physicalName;
 
 	private Map<Identifier, Table> tables = new TreeMap<Identifier, Table>();
 	private Map<Identifier, Sequence> sequences = new TreeMap<Identifier, Sequence>();
 
-	public Schema(Database database, Name name) {
+	public Namespace(Database database, Name name) {
 		this.database = database;
 		this.name = name;
 
-		final Identifier physicalCatalogIdentifier = database.getPhysicalNamingStrategy()
-				.toPhysicalCatalogName( name.getCatalog(), database.getJdbcEnvironment() );
-		final Identifier physicalSchemaIdentifier = database.getPhysicalNamingStrategy()
-				.toPhysicalCatalogName( name.getSchema(), database.getJdbcEnvironment() );
-		this.physicalName = new Name( physicalCatalogIdentifier, physicalSchemaIdentifier );
+		this.physicalName = new Name(
+				database.getPhysicalNamingStrategy()
+						.toPhysicalCatalogName( name.getCatalog(), database.getJdbcEnvironment() ),
+				database.getPhysicalNamingStrategy()
+						.toPhysicalCatalogName( name.getSchema(), database.getJdbcEnvironment() )
+		);
+
+		log.debugf(
+				"Created database namespace [logicalName=%s, physicalName=%s]",
+				name.toString(),
+				physicalName.toString()
+		);
 	}
 
 	public Name getName() {
@@ -138,7 +144,7 @@ public class Schema {
 			return false;
 		}
 
-		final Schema that = (Schema) o;
+		final Namespace that = (Namespace) o;
 		return EqualsHelper.equals( this.name, that.name );
 	}
 

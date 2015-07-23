@@ -115,8 +115,8 @@ public class SchemaUpdate {
 					serviceRegistry,
 					serviceRegistry.getService( JdbcEnvironment.class ),
 					jdbcConnectionAccess,
-					metadata.getDatabase().getDefaultSchema().getPhysicalName().getCatalog(),
-					metadata.getDatabase().getDefaultSchema().getPhysicalName().getSchema()
+					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getCatalog(),
+					metadata.getDatabase().getDefaultNamespace().getPhysicalName().getSchema()
 			);
 		}
 		catch (SQLException e) {

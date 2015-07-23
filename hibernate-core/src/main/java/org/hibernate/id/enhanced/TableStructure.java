@@ -18,8 +18,8 @@ import org.hibernate.LockMode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -251,14 +251,14 @@ public class TableStructure implements DatabaseStructure {
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				logicalQualifiedTableName.getCatalogName(),
 				logicalQualifiedTableName.getSchemaName()
 		);
 
-		Table table = schema.locateTable( logicalQualifiedTableName.getObjectName() );
+		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
 		if ( table == null ) {
-			table = schema.createTable( logicalQualifiedTableName.getObjectName(), false );
+			table = namespace.createTable( logicalQualifiedTableName.getObjectName(), false );
 		}
 
 		this.tableNameText = jdbcEnvironment.getQualifiedObjectNameFormatter().format(

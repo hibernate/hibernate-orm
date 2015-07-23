@@ -17,9 +17,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -167,14 +167,14 @@ public class SequenceGenerator
 		// we cannot register a proper Sequence object here because of the free-form
 		//'parameters' as opposed to specific initialValue/increment values
 
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				qualifiedSequenceName.getCatalogName(),
 				qualifiedSequenceName.getSchemaName()
 		);
 
 		database.addAuxiliaryDatabaseObject(
 				new SimpleAuxiliaryDatabaseObject(
-						schema,
+						namespace,
 						sqlCreateStrings( database.getDialect() ),
 						sqlDropStrings( database.getDialect() ),
 						Collections.<String>emptySet()

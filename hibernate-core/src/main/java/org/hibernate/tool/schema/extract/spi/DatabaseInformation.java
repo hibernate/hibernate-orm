@@ -7,9 +7,9 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.relational.Schema;
 
 /**
  * Provides access to information about existing schema objects (tables, sequences etc) of existing database.
@@ -26,7 +26,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return {@code true} indicates a schema with the given name already exists
 	 */
-	boolean schemaExists(Schema.Name schema);
+	boolean schemaExists(Namespace.Name schema);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -47,7 +47,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	public TableInformation getTableInformation(Schema.Name schemaName, Identifier tableName);
+	public TableInformation getTableInformation(Namespace.Name schemaName, Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -82,7 +82,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	public SequenceInformation getSequenceInformation(Schema.Name schemaName, Identifier sequenceName);
+	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation

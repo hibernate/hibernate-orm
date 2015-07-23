@@ -19,9 +19,9 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -306,12 +306,12 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	@Override
 	public void registerExportables(Database database) {
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
 
-		final Table table = schema.createTable( qualifiedTableName.getObjectName(), false );
+		final Table table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 		table.setPrimaryKey( new PrimaryKey() );
 
 		final Column pkColumn = new ExportableColumn(

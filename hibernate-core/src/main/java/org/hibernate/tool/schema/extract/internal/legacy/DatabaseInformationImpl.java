@@ -11,9 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
@@ -85,7 +85,7 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	}
 
 	@Override
-	public boolean schemaExists(Schema.Name schema) {
+	public boolean schemaExists(Namespace.Name schema) {
 		return extractor.schemaExists( schema.getCatalog(), schema.getSchema() );
 	}
 
@@ -99,7 +99,7 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 
 	@Override
 	public TableInformation getTableInformation(
-			Schema.Name schemaName,
+			Namespace.Name schemaName,
 			Identifier tableName) {
 		return getTableInformation( new QualifiedTableName( schemaName, tableName ) );
 	}
@@ -131,7 +131,7 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 
 	@Override
 	public SequenceInformation getSequenceInformation(
-			Schema.Name schemaName,
+			Namespace.Name schemaName,
 			Identifier sequenceName) {
 		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
 	}

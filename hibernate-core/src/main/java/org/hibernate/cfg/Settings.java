@@ -19,8 +19,8 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -49,8 +49,8 @@ public final class Settings {
 	public Settings(SessionFactoryOptions sessionFactoryOptions, Metadata metadata) {
 		this(
 				sessionFactoryOptions,
-				extractName( metadata.getDatabase().getDefaultSchema().getName().getCatalog() ),
-				extractName( metadata.getDatabase().getDefaultSchema().getName().getSchema() )
+				extractName( metadata.getDatabase().getDefaultNamespace().getName().getCatalog() ),
+				extractName( metadata.getDatabase().getDefaultNamespace().getName().getSchema() )
 		);
 	}
 

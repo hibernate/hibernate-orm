@@ -10,7 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -82,7 +82,7 @@ public class DatabaseInformationBuilder {
 		return this;
 	}
 
-	public DatabaseInformationBuilder prepareCatalogAndSchema(Schema.Name schemaName) {
+	public DatabaseInformationBuilder prepareCatalogAndSchema(Namespace.Name schemaName) {
 //		final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
 //		return prepare(
 //				identifierHelper.toMetaDataCatalogName( schemaName.getCatalog() ),

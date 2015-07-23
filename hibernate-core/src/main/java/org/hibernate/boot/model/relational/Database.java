@@ -29,9 +29,9 @@ public class Database {
 	private final MetadataBuildingOptions buildingOptions;
 	private final JdbcEnvironment jdbcEnvironment;
 
-	private Schema implicitSchema;
+	private Namespace implicitNamespace;
 
-	private final Map<Schema.Name,Schema> schemaMap = new TreeMap<Schema.Name, Schema>();
+	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<Namespace.Name, Namespace>();
 
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
 	private List<InitCommand> initCommands;
@@ -47,8 +47,8 @@ public class Database {
 
 		this.dialect = determineDialect( buildingOptions );
 
-		this.implicitSchema = makeSchema(
-				new Schema.Name(
+		this.implicitNamespace = makeNamespace(
+				new Namespace.Name(
 						toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
 						toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
 				)
@@ -65,11 +65,11 @@ public class Database {
 		return new H2Dialect();
 	}
 
-	private Schema makeSchema(Schema.Name name) {
-		Schema schema;
-		schema = new Schema( this, name );
-		schemaMap.put( name, schema );
-		return schema;
+	private Namespace makeNamespace(Namespace.Name name) {
+		Namespace namespace;
+		namespace = new Namespace( this, name );
+		namespaceMap.put( name, namespace );
+		return namespace;
 	}
 
 	public MetadataBuildingOptions getBuildingOptions() {
@@ -107,43 +107,43 @@ public class Database {
 		return getBuildingOptions().getPhysicalNamingStrategy();
 	}
 
-	public Iterable<Schema> getSchemas() {
-		return schemaMap.values();
+	public Iterable<Namespace> getNamespaces() {
+		return namespaceMap.values();
 	}
 
-	public Schema getDefaultSchema() {
-		return implicitSchema;
+	public Namespace getDefaultNamespace() {
+		return implicitNamespace;
 	}
 
-	public Schema locateSchema(Identifier catalogName, Identifier schemaName) {
+	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
 		if ( catalogName == null && schemaName == null ) {
-			return getDefaultSchema();
+			return getDefaultNamespace();
 		}
 
-		final Schema.Name name = new Schema.Name( catalogName, schemaName );
-		Schema schema = schemaMap.get( name );
-		if ( schema == null ) {
-			schema = makeSchema( name );
+		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
+		Namespace namespace = namespaceMap.get( name );
+		if ( namespace == null ) {
+			namespace = makeNamespace( name );
 		}
-		return schema;
+		return namespace;
 	}
 
-	public Schema adjustDefaultSchema(Identifier catalogName, Identifier schemaName) {
-		final Schema.Name name = new Schema.Name( catalogName, schemaName );
-		if ( implicitSchema.getName().equals( name ) ) {
-			return implicitSchema;
+	public Namespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
+		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
+		if ( implicitNamespace.getName().equals( name ) ) {
+			return implicitNamespace;
 		}
 
-		Schema schema = schemaMap.get( name );
-		if ( schema == null ) {
-			schema = makeSchema( name );
+		Namespace namespace = namespaceMap.get( name );
+		if ( namespace == null ) {
+			namespace = makeNamespace( name );
 		}
-		implicitSchema = schema;
-		return implicitSchema;
+		implicitNamespace = namespace;
+		return implicitNamespace;
 	}
 
-	public Schema adjustDefaultSchema(String implicitCatalogName, String implicitSchemaName) {
-		return adjustDefaultSchema( toIdentifier( implicitCatalogName ), toIdentifier( implicitSchemaName ) );
+	public Namespace adjustDefaultNamespace(String implicitCatalogName, String implicitSchemaName) {
+		return adjustDefaultNamespace( toIdentifier( implicitCatalogName ), toIdentifier( implicitSchemaName ) );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {

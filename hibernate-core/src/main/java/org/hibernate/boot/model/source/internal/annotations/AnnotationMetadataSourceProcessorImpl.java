@@ -176,7 +176,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				}
 		);
 
-		rootMetadataBuildingContext.getMetadataCollector().getDatabase().adjustDefaultSchema(
+		rootMetadataBuildingContext.getMetadataCollector().getDatabase().adjustDefaultNamespace(
 				rootMetadataBuildingContext.getBuildingOptions().getMappingDefaults().getImplicitCatalogName(),
 				rootMetadataBuildingContext.getBuildingOptions().getMappingDefaults().getImplicitSchemaName()
 		);

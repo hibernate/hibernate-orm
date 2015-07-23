@@ -16,7 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
@@ -122,12 +122,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		for ( Schema schema : database.getSchemas() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 			// we need to drop all constraints/indexes prior to dropping the tables
-			applyConstraintDropping( targets, schema, metadata );
+			applyConstraintDropping( targets, namespace, metadata );
 
 			// now it's safe to drop the tables
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -135,7 +135,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				applySqlStrings( targets, dialect.getTableExporter().getSqlDropStrings( table, metadata ) );
 			}
 
-			for ( Sequence sequence : schema.getSequences() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings( targets, dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata ) );
 			}
@@ -155,12 +155,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		for ( Schema schema : database.getSchemas() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( dropSchemas ) {
-				if ( schema.getName().getSchema() == null ) {
+				if ( namespace.getName().getSchema() == null ) {
 					continue;
 				}
-				applySqlStrings( targets, dialect.getDropSchemaCommand( schema.getName().getSchema().render( dialect ) ) );
+				applySqlStrings( targets, dialect.getDropSchemaCommand( namespace.getName().getSchema().render( dialect ) ) );
 			}
 		}
 
@@ -169,14 +169,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private void applyConstraintDropping(Target[] targets, Schema schema, Metadata metadata) {
+	private void applyConstraintDropping(Target[] targets, Namespace namespace, Metadata metadata) {
 		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
 
 		if ( !dialect.dropConstraints() ) {
 			return;
 		}
 
-		for ( Table table : schema.getTables() ) {
+		for ( Table table : namespace.getTables() ) {
 			if ( !table.isPhysicalTable() ) {
 				continue;
 			}

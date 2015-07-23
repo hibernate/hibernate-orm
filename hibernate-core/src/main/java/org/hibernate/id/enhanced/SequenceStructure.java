@@ -13,8 +13,8 @@ import java.sql.SQLException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.Schema;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -144,16 +144,16 @@ public class SequenceStructure implements DatabaseStructure {
 		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
 
 
-		final Schema schema = database.locateSchema(
+		final Namespace namespace = database.locateNamespace(
 				logicalQualifiedSequenceName.getCatalogName(),
 				logicalQualifiedSequenceName.getSchemaName()
 		);
-		Sequence sequence = schema.locateSequence( logicalQualifiedSequenceName.getObjectName() );
+		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
 		if ( sequence != null ) {
 			sequence.validate( initialValue, sourceIncrementSize );
 		}
 		else {
-			sequence = schema.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
+			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
 		}
 
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();

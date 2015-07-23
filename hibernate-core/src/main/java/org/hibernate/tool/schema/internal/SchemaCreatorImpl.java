@@ -17,7 +17,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -145,12 +145,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
 		// first, create each schema
-		for ( Schema schema : database.getSchemas() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( createSchemas ) {
-				if ( schema.getName().getSchema() == null ) {
+				if ( namespace.getName().getSchema() == null ) {
 					continue;
 				}
-				applySqlStrings( targets, dialect.getCreateSchemaCommand( schema.getName().getSchema().render( dialect ) ) );
+				applySqlStrings( targets, dialect.getCreateSchemaCommand( namespace.getName().getSchema().render( dialect ) ) );
 			}
 		}
 
@@ -172,10 +172,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
-		for ( Schema schema : database.getSchemas() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 
 			// sequences
-			for ( Sequence sequence : schema.getSequences() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
 				checkExportIdentifier( sequence, exportIdentifiers );
 				applySqlStrings(
 						targets,
@@ -188,7 +188,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			// tables
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 				if( !table.isPhysicalTable() ){
 					continue;
 				}
@@ -201,7 +201,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 
-			for ( Table table : schema.getTables() ) {
+			for ( Table table : namespace.getTables() ) {
 
 				// NOTE : Foreign keys must be created *after* unique keys for numerous DBs.  See HHH-8390
 

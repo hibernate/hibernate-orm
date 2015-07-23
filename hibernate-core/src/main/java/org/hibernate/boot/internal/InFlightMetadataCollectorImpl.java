@@ -44,7 +44,7 @@ import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ConstraintSecondPass;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
@@ -461,8 +461,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
 		ArrayList<Table> tables = new ArrayList<Table>();
-		for ( Schema schema : getDatabase().getSchemas() ) {
-			tables.addAll( schema.getTables() );
+		for ( Namespace namespace : getDatabase().getNamespaces() ) {
+			tables.addAll( namespace.getTables() );
 		}
 		return tables;
 	}
@@ -723,7 +723,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			String name,
 			String subselectFragment,
 			boolean isAbstract) {
-		final Schema schema = getDatabase().locateSchema(
+		final Namespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
 		);
@@ -739,17 +739,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( subselectFragment != null ) {
-			return new Table( schema, logicalName, subselectFragment, isAbstract );
+			return new Table( namespace, logicalName, subselectFragment, isAbstract );
 		}
 		else {
-			Table table = schema.locateTable( logicalName );
+			Table table = namespace.locateTable( logicalName );
 			if ( table != null ) {
 				if ( !isAbstract ) {
 					table.setAbstract( false );
 				}
 				return table;
 			}
-			return schema.createTable( logicalName, isAbstract );
+			return namespace.createTable( logicalName, isAbstract );
 		}
 	}
 
@@ -761,7 +761,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			boolean isAbstract,
 			String subselectFragment,
 			Table includedTable) throws DuplicateMappingException {
-		final Schema schema = getDatabase().locateSchema(
+		final Namespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
 		);
@@ -777,15 +777,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( subselectFragment != null ) {
-			return new DenormalizedTable( schema, logicalName, subselectFragment, isAbstract, includedTable );
+			return new DenormalizedTable( namespace, logicalName, subselectFragment, isAbstract, includedTable );
 		}
 		else {
-			Table table = schema.locateTable( logicalName );
+			Table table = namespace.locateTable( logicalName );
 			if ( table != null ) {
 				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
 			}
 			else {
-				table = schema.createDenormalizedTable( logicalName, isAbstract, includedTable );
+				table = namespace.createDenormalizedTable( logicalName, isAbstract, includedTable );
 			}
 			return table;
 		}
@@ -2191,8 +2191,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		// for now we only handle id generators as ExportableProducers
 
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
-		final String defaultCatalog = extractName( getDatabase().getDefaultSchema().getName().getCatalog(), dialect );
-		final String defaultSchema = extractName( getDatabase().getDefaultSchema().getName().getSchema(), dialect );
+		final String defaultCatalog = extractName( getDatabase().getDefaultNamespace().getName().getCatalog(), dialect );
+		final String defaultSchema = extractName( getDatabase().getDefaultNamespace().getName().getSchema(), dialect );
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
 			if ( entityBinding.isInherited() ) {

@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Schema;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
@@ -38,8 +38,8 @@ public class SchemaValidatorImpl implements SchemaValidator {
 	
 	@Override
 	public void doValidation(Metadata metadata, DatabaseInformation databaseInformation) {
-		for ( Schema schema : metadata.getDatabase().getSchemas() ) {
-			for ( Table table : schema.getTables() ) {
+		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( Table table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -51,8 +51,8 @@ public class SchemaValidatorImpl implements SchemaValidator {
 			}
 		}
 
-		for ( Schema schema : metadata.getDatabase().getSchemas() ) {
-			for ( Sequence sequence : schema.getSequences() ) {
+		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( Sequence sequence : namespace.getSequences() ) {
 				final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
 						sequence.getName()
 				);

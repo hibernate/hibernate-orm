@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
@@ -100,6 +101,17 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final Database database = metadata.getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
+		boolean tryToDropCatalogs = false;
+		boolean tryToDropSchemas = false;
+		if ( dropSchemas ) {
+			if ( dialect.canCreateSchema() ) {
+				tryToDropSchemas = true;
+			}
+			if(dialect.canCreateCatalog()){
+				tryToDropCatalogs = true;
+			}
+		}
+
 		for ( Target target : targets ) {
 			target.prepare();
 		}
@@ -155,12 +167,36 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( dropSchemas ) {
-				if ( namespace.getName().getSchema() == null ) {
-					continue;
+		if ( tryToDropCatalogs || tryToDropSchemas ) {
+			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+
+			for ( Namespace namespace : database.getNamespaces() ) {
+				if ( tryToDropCatalogs ) {
+					final Identifier catalogLogicalName = namespace.getName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+						applySqlStrings(
+								targets, dialect.getDropCatalogCommand(
+										catalogPhysicalName.render(
+												dialect
+										)
+								)
+						);
+						exportedCatalogs.add( catalogLogicalName );
+					}
 				}
-				applySqlStrings( targets, dialect.getDropSchemaCommand( namespace.getName().getSchema().render( dialect ) ) );
+
+				if ( tryToDropSchemas && namespace.getPhysicalName()
+						.getSchema() != null ) {
+					applySqlStrings(
+							targets, dialect.getDropSchemaCommand(
+									namespace.getPhysicalName()
+											.getSchema()
+											.render( dialect )
+							)
+					);
+				}
 			}
 		}
 

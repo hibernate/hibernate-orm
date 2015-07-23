@@ -21,13 +21,13 @@ import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl.JpaOrmXmlPersistenceUnitDefaults;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
+import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPersistenceUnitDefaults;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.InheritanceState;
@@ -154,7 +154,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	@Override
 	public void prepare() {
 		// use any persistence-unit-defaults defined in orm.xml
-		( ( MetadataBuildingOptionsImpl ) rootMetadataBuildingContext.getBuildingOptions() ).apply(
+		( (JpaOrmXmlPersistenceUnitDefaultAware) rootMetadataBuildingContext.getBuildingOptions() ).apply(
 				new JpaOrmXmlPersistenceUnitDefaults() {
 					final Map persistenceUnitDefaults = reflectionManager.getDefaults();
 

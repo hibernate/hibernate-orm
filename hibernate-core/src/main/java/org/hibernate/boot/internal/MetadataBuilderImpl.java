@@ -50,6 +50,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
@@ -517,7 +518,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 	}
 
-	public static class MetadataBuildingOptionsImpl implements MetadataBuildingOptions {
+	public static class MetadataBuildingOptionsImpl
+			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 
@@ -883,12 +885,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						)
 				);
 			}
-		}
-
-		public static interface JpaOrmXmlPersistenceUnitDefaults {
-			public String getDefaultSchemaName();
-			public String getDefaultCatalogName();
-			public boolean shouldImplicitlyQuoteIdentifiers();
 		}
 
 		/**

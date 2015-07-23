@@ -11,6 +11,7 @@ import java.util.Map;
 
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -33,8 +34,10 @@ import org.jboss.jandex.IndexView;
  * Convenience base class for custom implementors of {@link MetadataBuildingOptions} using delegation.
  *
  * @author Gunnar Morling
+ * @author Steve Ebersole
  */
-public abstract class AbstractDelegatingMetadataBuildingOptions implements MetadataBuildingOptions {
+@SuppressWarnings("unused")
+public abstract class AbstractDelegatingMetadataBuildingOptions implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 
 	private final MetadataBuildingOptions delegate;
 
@@ -170,5 +173,19 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public List<AttributeConverterDefinition> getAttributeConverters() {
 		return delegate.getAttributeConverters();
+	}
+
+	@Override
+	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
+			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		}
+		else {
+			throw new HibernateException(
+					"AbstractDelegatingMetadataBuildingOptions delegate did not " +
+							"implement JpaOrmXmlPersistenceUnitDefaultAware; " +
+							"cannot delegate JpaOrmXmlPersistenceUnitDefaultAware#apply"
+			);
+		}
 	}
 }

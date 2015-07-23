@@ -92,7 +92,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
 
 					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) && !existingDatabase
-							.schemaExists( namespace.getName() ) ) {
+							.catalogExists( catalogLogicalName ) ) {
 						applySqlString(
 								database.getJdbcEnvironment().getDialect().getCreateCatalogCommand(
 										catalogPhysicalName.render(

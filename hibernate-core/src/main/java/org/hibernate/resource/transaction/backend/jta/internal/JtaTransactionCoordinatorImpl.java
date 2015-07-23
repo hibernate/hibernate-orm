@@ -6,14 +6,12 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.jboss.logging.Logger;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -26,6 +24,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.SynchronizationRegistry;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.RegisteredSynchronization;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinator;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorNonTrackingImpl;
@@ -34,6 +33,8 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.S
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.CoreLogging.logger;
 
@@ -168,7 +169,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 
 		if ( getTransactionDriverControl().getStatus() != TransactionStatus.ACTIVE ) {
-			return;
+			throw new TransactionRequiredForJoinException(
+					"Explicitly joining a JTA transaction requires a JTA transaction be currently active"
+			);
 		}
 
 		joinJtaTransaction();

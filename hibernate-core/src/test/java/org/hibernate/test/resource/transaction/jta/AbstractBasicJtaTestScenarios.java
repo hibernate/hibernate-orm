@@ -10,6 +10,7 @@ import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorTrackingImpl;
@@ -22,6 +23,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -297,6 +299,26 @@ public abstract class AbstractBasicJtaTestScenarios {
 		assertEquals( 1, localSync.getBeforeCompletionCount() );
 		assertEquals( 1, localSync.getSuccessfulCompletionCount() );
 		assertEquals( 0, localSync.getFailedCompletionCount() );
+	}
+
+	@Test
+	@SuppressWarnings("EmptyCatchBlock")
+	public void explicitJoinOutsideTxnTest() throws Exception {
+		// pre conditions
+		final TransactionManager tm = JtaPlatformStandardTestingImpl.INSTANCE.transactionManager();
+		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );
+
+		final JtaTransactionCoordinatorImpl transactionCoordinator = buildTransactionCoordinator( false );
+
+		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );
+
+		// try to force a join, should fail...
+		try {
+			transactionCoordinator.explicitJoin();
+			fail( "Expecting explicitJoin() call outside of transaction to fail" );
+		}
+		catch (TransactionRequiredForJoinException expected) {
+		}
 	}
 
 	@Test

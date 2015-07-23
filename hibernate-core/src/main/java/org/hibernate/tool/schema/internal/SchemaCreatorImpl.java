@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
@@ -155,22 +156,40 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
-		// first, create each schema
-		if ( tryToCreateSchemas ) {
-			for ( Namespace schema : database.getNamespaces() ) {
+		// first, create each catalog/schema
+		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
+			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			for ( Namespace namespace : database.getNamespaces() ) {
 
-				if ( schema.getName().getSchema() == null ) {
-					continue;
+				if ( tryToCreateCatalogs ) {
+					final Identifier catalogLogicalName = namespace.getName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+						applySqlStrings(
+								targets, dialect.getCreateCatalogCommand(
+										catalogPhysicalName.render(
+												dialect
+										)
+								)
+						);
+						exportedCatalogs.add( catalogLogicalName );
+					}
 				}
-				applySqlStrings(
-						targets, dialect.getCreateSchemaCommand(
-								schema.getName()
-										.getSchema()
-										.render( dialect )
-						)
-				);
+
+				if ( tryToCreateSchemas && namespace.getPhysicalName()
+						.getSchema() != null ) {
+					applySqlStrings(
+							targets, dialect.getCreateSchemaCommand(
+									namespace.getPhysicalName()
+											.getSchema()
+											.render( dialect )
+							)
+					);
+				}
 			}
 		}
+
 		// next, create all "before table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {

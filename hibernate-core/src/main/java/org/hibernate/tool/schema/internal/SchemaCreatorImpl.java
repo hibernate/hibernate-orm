@@ -142,7 +142,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			if ( dialect.canCreateSchema() ) {
 				tryToCreateSchemas = true;
 			}
-			if(dialect.canCreateCatalog()){
+			if ( dialect.canCreateCatalog() ) {
 				tryToCreateCatalogs = true;
 			}
 		}

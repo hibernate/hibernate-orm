@@ -49,14 +49,14 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	public void doMigration(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
-			boolean createSchemas,
+			boolean createNamespaces,
 			List<Target> targets) throws SchemaManagementException {
 
 		for ( Target target : targets ) {
 			target.prepare();
 		}
 
-		doMigrationToTargets( metadata, existingDatabase, createSchemas, targets );
+		doMigrationToTargets( metadata, existingDatabase, createNamespaces, targets );
 
 		for ( Target target : targets ) {
 			target.release();
@@ -67,24 +67,55 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	protected void doMigrationToTargets(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
-			boolean createSchemas,
+			boolean createNamespaces,
 			List<Target> targets) {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
-		
-		final Database database = metadata.getDatabase();
 
+		final Database database = metadata.getDatabase();
+		boolean tryToCreateCatalogs = false;
+		boolean tryToCreateSchemas = false;
+
+		if ( createNamespaces ) {
+			if ( database.getJdbcEnvironment().getDialect().canCreateSchema() ) {
+				tryToCreateSchemas = true;
+			}
+			if ( database.getJdbcEnvironment().getDialect().canCreateCatalog() ) {
+				tryToCreateCatalogs = true;
+			}
+		}
+
+		Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( createSchemas ) {
-				if ( namespace.getName().getSchema() != null ) {
-					if ( !existingDatabase.schemaExists( namespace.getName() ) ) {
+			if ( tryToCreateCatalogs || tryToCreateSchemas ) {
+				if ( tryToCreateCatalogs ) {
+					final Identifier catalogLogicalName = namespace.getName().getCatalog();
+					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+
+					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) && !existingDatabase
+							.schemaExists( namespace.getName() ) ) {
 						applySqlString(
-								database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
-										namespace.getName().getSchema().render( database.getJdbcEnvironment().getDialect() )
-								),
-								targets,
-								false
+								database.getJdbcEnvironment().getDialect().getCreateCatalogCommand(
+										catalogPhysicalName.render(
+												database.getJdbcEnvironment().getDialect()
+										)
+								), targets, false
 						);
+						exportedCatalogs.add( catalogLogicalName );
 					}
+				}
+
+				if ( tryToCreateSchemas && namespace.getPhysicalName()
+						.getSchema() != null && !existingDatabase.schemaExists( namespace.getName() ) ) {
+
+					applySqlString(
+							database.getJdbcEnvironment().getDialect().getCreateSchemaCommand(
+									namespace.getPhysicalName()
+											.getSchema()
+											.render( database.getJdbcEnvironment().getDialect() )
+							),
+							targets, false
+
+					);
 				}
 			}
 
@@ -240,7 +271,7 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 	}
 
 	private UniqueConstraintSchemaUpdateStrategy determineUniqueConstraintSchemaUpdateStrategy(Metadata metadata) {
-		final ConfigurationService cfgService = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+		final ConfigurationService cfgService = ((MetadataImplementor) metadata).getMetadataBuildingOptions()
 				.getServiceRegistry()
 				.getService( ConfigurationService.class );
 

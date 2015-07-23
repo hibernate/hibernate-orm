@@ -40,16 +40,16 @@ public class SchemaDropperImpl implements SchemaDropper {
 	 * Intended for use from JPA schema export code.
 	 *
 	 * @param metadata The metadata for which to generate drop commands
-	 * @param dropSchemas Should {@code DROP SCHEMA} command be generated?
+	 * @param dropNamespaces Should drop schema/catalog command be generated?
 	 * @param dialect Allow explicitly specifying the dialect.
 	 *
 	 * @return The commands
 	 */
-	public Iterable<String> generateDropCommands(MetadataImplementor metadata, boolean dropSchemas, Dialect dialect) {
+	public Iterable<String> generateDropCommands(MetadataImplementor metadata, boolean dropNamespaces, Dialect dialect) {
 		final ArrayList<String> commands = new ArrayList<String>();
 		doDrop(
 				metadata,
-				dropSchemas,
+				dropNamespaces,
 				dialect,
 				new Target() {
 
@@ -76,20 +76,20 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, List<Target> targets) throws SchemaManagementException {
-		doDrop( metadata, dropSchemas, targets.toArray( new Target[ targets.size() ] ) );
+	public void doDrop(Metadata metadata, boolean dropNamespaces, List<Target> targets) throws SchemaManagementException {
+		doDrop( metadata, dropNamespaces, targets.toArray( new Target[ targets.size() ] ) );
 	}
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, Dialect dialect, List<Target> targets) throws SchemaManagementException {
-		doDrop( metadata, dropSchemas, dialect, targets.toArray( new Target[ targets.size() ] ) );
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, List<Target> targets) throws SchemaManagementException {
+		doDrop( metadata, dropNamespaces, dialect, targets.toArray( new Target[ targets.size() ] ) );
 	}
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, Target... targets) throws SchemaManagementException {
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Target... targets) throws SchemaManagementException {
 		doDrop(
 				metadata,
-				dropSchemas,
+				dropNamespaces,
 				metadata.getDatabase().getJdbcEnvironment().getDialect(),
 				targets
 		);
@@ -97,17 +97,17 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 
 	@Override
-	public void doDrop(Metadata metadata, boolean dropSchemas, Dialect dialect, Target... targets) throws SchemaManagementException {
+	public void doDrop(Metadata metadata, boolean dropNamespaces, Dialect dialect, Target... targets) throws SchemaManagementException {
 		final Database database = metadata.getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		boolean tryToDropCatalogs = false;
 		boolean tryToDropSchemas = false;
-		if ( dropSchemas ) {
+		if ( dropNamespaces ) {
 			if ( dialect.canCreateSchema() ) {
 				tryToDropSchemas = true;
 			}
-			if(dialect.canCreateCatalog()){
+			if ( dialect.canCreateCatalog() ) {
 				tryToDropCatalogs = true;
 			}
 		}

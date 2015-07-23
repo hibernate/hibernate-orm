@@ -16,16 +16,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Subgraph;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+
 import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -184,6 +185,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Entity
+	@Table(name = "customerOrder")
 	public static class CustomerOrder {
 		@Id
 		@GeneratedValue
@@ -200,6 +202,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Entity
+	@Table(name = "address")
 	public static class Address {
 		@Id
 		@GeneratedValue
@@ -209,6 +212,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Entity
+	@Table(name = "orderPosition")
 	public static class OrderPosition {
 		@Id
 		@GeneratedValue
@@ -222,6 +226,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Entity
+	@Table(name = "product")
 	public static class Product {
 		@Id
 		@GeneratedValue

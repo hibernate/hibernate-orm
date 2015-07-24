@@ -74,7 +74,8 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				model.isVersioned()
 						? ( (VersionType) model.getVersion().getType() ).getComparator()
 						: null,
-				model.getIdentifierProperty().getType());
+				model.getIdentifier().getType()
+		);
 	}
 
 	/**
@@ -91,7 +92,8 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				model.getOwner().isVersioned()
 						? ( (VersionType) model.getOwner().getVersion().getType() ).getComparator()
 						: null,
-				model.getKey().getType());
+				model.getKey().getType()
+		);
 	}
 
 }

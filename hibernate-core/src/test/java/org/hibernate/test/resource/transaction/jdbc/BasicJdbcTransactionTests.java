@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.resource.transaction.jdbc;
 
+import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
@@ -49,5 +50,34 @@ public class BasicJdbcTransactionTests {
 		assertEquals( 1, sync.getSuccessfulCompletionCount() );
 		assertEquals( 0, sync.getFailedCompletionCount() );
 
+	}
+
+	@Test
+	@SuppressWarnings("EmptyCatchBlock")
+	public void testMarkRollbackOnly() {
+		final TransactionCoordinatorOwnerTestingImpl owner = new TransactionCoordinatorOwnerTestingImpl();
+		final JdbcResourceLocalTransactionCoordinatorBuilderImpl transactionCoordinatorBuilder =
+				new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
+
+		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
+				owner,
+				new TransactionCoordinatorBuilder.TransactionCoordinatorOptions() {
+					@Override
+					public boolean shouldAutoJoinTransaction() {
+						return false;
+					}
+				}
+		);
+
+		transactionCoordinator.getTransactionDriverControl().begin();
+		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+		try {
+			transactionCoordinator.getTransactionDriverControl().commit();
+		}
+		catch (TransactionException expected) {
+		}
+		finally {
+			transactionCoordinator.getTransactionDriverControl().rollback();
+		}
 	}
 }

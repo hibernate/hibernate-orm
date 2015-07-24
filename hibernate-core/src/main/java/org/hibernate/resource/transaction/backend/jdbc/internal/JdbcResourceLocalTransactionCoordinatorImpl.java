@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.transaction.Status;
 
+import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
@@ -185,6 +186,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	public class TransactionDriverControlImpl implements TransactionDriver {
 		private final JdbcResourceTransaction jdbcResourceTransaction;
 		private boolean invalid;
+		private boolean rollbackOnly = false;
 
 		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
 			super();
@@ -211,6 +213,10 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void commit() {
+			if ( rollbackOnly ) {
+				throw new TransactionException( "Transaction was marked for rollback only; cannot commit" );
+			}
+
 			JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
 			jdbcResourceTransaction.commit();
 			JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
@@ -229,7 +235,14 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void markRollbackOnly() {
+			if ( log.isDebugEnabled() ) {
+				log.debug(
+						"JDBC transaction marked for rollback-only (exception provided for stack trace)",
+						new Exception( "exception just for purpose of providing stack trace" )
+				);
+			}
 
+			rollbackOnly = true;
 		}
 	}
 }

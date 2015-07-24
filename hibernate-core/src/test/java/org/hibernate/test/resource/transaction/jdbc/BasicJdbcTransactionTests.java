@@ -10,6 +10,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.test.resource.common.SynchronizationCollectorImpl;
 import org.junit.Test;
@@ -69,14 +70,21 @@ public class BasicJdbcTransactionTests {
 				}
 		);
 
+		assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
 		transactionCoordinator.getTransactionDriverControl().begin();
+		assertEquals( TransactionStatus.ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
 		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+		assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
 		try {
 			transactionCoordinator.getTransactionDriverControl().commit();
 		}
 		catch (TransactionException expected) {
 		}
 		finally {
+			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
 			transactionCoordinator.getTransactionDriverControl().rollback();
 		}
 	}

@@ -230,7 +230,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public TransactionStatus getStatus() {
-			return jdbcResourceTransaction.getStatus();
+			return rollbackOnly ? TransactionStatus.MARKED_ROLLBACK : jdbcResourceTransaction.getStatus();
 		}
 
 		@Override

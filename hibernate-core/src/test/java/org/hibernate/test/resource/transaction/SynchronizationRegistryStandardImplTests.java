@@ -89,7 +89,7 @@ public class SynchronizationRegistryStandardImplTests {
 	public void testUserSynchronizationExceptions() {
 		// exception in beforeCompletion
 		SynchronizationRegistryStandardImpl registry = new SynchronizationRegistryStandardImpl();
-		Synchronization synchronization = new SynchronizationErrorImpl( true, false );
+		Synchronization synchronization = SynchronizationErrorImpl.forBefore();
 		registry.registerSynchronization( synchronization );
 		try {
 			registry.notifySynchronizationsBeforeTransactionCompletion();

@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.resource.transaction.jdbc;
 
+import javax.transaction.Synchronization;
+
+import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
@@ -13,6 +16,7 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.test.resource.common.SynchronizationCollectorImpl;
+import org.hibernate.test.resource.common.SynchronizationErrorImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -82,6 +86,40 @@ public class BasicJdbcTransactionTests {
 			transactionCoordinator.getTransactionDriverControl().commit();
 		}
 		catch (TransactionException expected) {
+		}
+		finally {
+			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
+			transactionCoordinator.getTransactionDriverControl().rollback();
+		}
+	}
+
+	@Test
+	@SuppressWarnings("EmptyCatchBlock")
+	public void testSynchronizationFailureMarksTransactionForRollbackOnly() {
+		final TransactionCoordinatorOwnerTestingImpl owner = new TransactionCoordinatorOwnerTestingImpl();
+		final JdbcResourceLocalTransactionCoordinatorBuilderImpl transactionCoordinatorBuilder =
+				new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
+
+		final TransactionCoordinator transactionCoordinator = transactionCoordinatorBuilder.buildTransactionCoordinator(
+				owner,
+				new TransactionCoordinatorBuilder.TransactionCoordinatorOptions() {
+					@Override
+					public boolean shouldAutoJoinTransaction() {
+						return false;
+					}
+				}
+		);
+
+		assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+		transactionCoordinator.getLocalSynchronizations().registerSynchronization( SynchronizationErrorImpl.forBefore() );
+
+		transactionCoordinator.getTransactionDriverControl().begin();
+		assertEquals( TransactionStatus.ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
+		try {
+			transactionCoordinator.getTransactionDriverControl().commit();
+		}
+		catch (Exception expected) {
 		}
 		finally {
 			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );

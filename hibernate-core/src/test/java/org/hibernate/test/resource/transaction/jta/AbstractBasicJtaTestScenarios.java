@@ -7,15 +7,23 @@
 package org.hibernate.test.resource.transaction.jta;
 
 import javax.transaction.Status;
+import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.HibernateException;
+import org.hibernate.TransactionException;
+import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
+import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorTrackingImpl;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.test.resource.common.SynchronizationCollectorImpl;
+import org.hibernate.test.resource.common.SynchronizationErrorImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -358,5 +366,76 @@ public abstract class AbstractBasicJtaTestScenarios {
 		);
 
 		tm.rollback();
+	}
+
+	@Test
+	@SuppressWarnings("EmptyCatchBlock")
+	public void testMarkRollbackOnly() throws Exception {
+		JtaTransactionCoordinatorImpl transactionCoordinator = new JtaTransactionCoordinatorImpl(
+				transactionCoordinatorBuilder,
+				owner,
+				true,
+				JtaPlatformStandardTestingImpl.INSTANCE,
+				preferUserTransactions(),
+				true
+		);
+
+		// pre conditions
+		final TransactionManager tm = JtaPlatformStandardTestingImpl.INSTANCE.transactionManager();
+		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );
+
+		assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
+		transactionCoordinator.getTransactionDriverControl().begin();
+		assertEquals( TransactionStatus.ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
+		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+		assertEquals(
+				TransactionStatus.MARKED_ROLLBACK,
+				transactionCoordinator.getTransactionDriverControl().getStatus()
+		);
+
+		try {
+			transactionCoordinator.getTransactionDriverControl().commit();
+		}
+		catch (TransactionException expected) {
+		}
+		finally {
+			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
+			transactionCoordinator.getTransactionDriverControl().rollback();
+		}
+	}
+
+	@Test
+	@SuppressWarnings("EmptyCatchBlock")
+	public void testSynchronizationFailureMarksTransactionForRollbackOnly() throws Exception {
+		JtaTransactionCoordinatorImpl transactionCoordinator = new JtaTransactionCoordinatorImpl(
+				transactionCoordinatorBuilder,
+				owner,
+				true,
+				JtaPlatformStandardTestingImpl.INSTANCE,
+				preferUserTransactions(),
+				true
+		);
+
+		// pre conditions
+		final TransactionManager tm = JtaPlatformStandardTestingImpl.INSTANCE.transactionManager();
+		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );
+
+		assertEquals( TransactionStatus.NOT_ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+		transactionCoordinator.getLocalSynchronizations().registerSynchronization( SynchronizationErrorImpl.forBefore() );
+
+		transactionCoordinator.getTransactionDriverControl().begin();
+		assertEquals( TransactionStatus.ACTIVE, transactionCoordinator.getTransactionDriverControl().getStatus() );
+
+		try {
+			transactionCoordinator.getTransactionDriverControl().commit();
+		}
+		catch (Exception expected) {
+		}
+		finally {
+			assertEquals( TransactionStatus.MARKED_ROLLBACK, transactionCoordinator.getTransactionDriverControl().getStatus() );
+			transactionCoordinator.getTransactionDriverControl().rollback();
+		}
 	}
 }

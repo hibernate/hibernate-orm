@@ -1980,14 +1980,54 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect support catalog creation?
+	 *
+	 * @return True if the dialect supports catalog creation; false otherwise.
+	 */
+	public boolean canCreateCatalog() {
+		return false;
+	}
+
+	/**
+	 * Get the SQL command used to create the named catalog
+	 *
+	 * @param catalogName The name of the catalog to be created.
+	 *
+	 * @return The creation commands
+	 */
+	public String[] getCreateCatalogCommand(String catalogName) {
+		throw new UnsupportedOperationException( "No create catalog syntax supported by " + getClass().getName() );
+	}
+
+	/**
+	 * Get the SQL command used to drop the named catalog
+	 *
+	 * @param catalogName The name of the catalog to be dropped.
+	 *
+	 * @return The drop commands
+	 */
+	public String[] getDropCatalogCommand(String catalogName) {
+		throw new UnsupportedOperationException( "No drop catalog syntax supported by " + getClass().getName() );
+	}
+
+	/**
+	 * Does this dialect support schema creation?
+	 *
+	 * @return True if the dialect supports schema creation; false otherwise.
+	 */
+	public boolean canCreateSchema() {
+		return true;
+	}
+
+	/**
 	 * Get the SQL command used to create the named schema
 	 *
 	 * @param schemaName The name of the schema to be created.
 	 *
-	 * @return The creation command
+	 * @return The creation commands
 	 */
-	public String getCreateSchemaCommand(String schemaName) {
-		return "create schema " + schemaName;
+	public String[] getCreateSchemaCommand(String schemaName) {
+		return new String[] {"create schema " + schemaName};
 	}
 
 	/**
@@ -1995,10 +2035,10 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param schemaName The name of the schema to be dropped.
 	 *
-	 * @return The drop command
+	 * @return The drop commands
 	 */
-	public String getDropSchemaCommand(String schemaName) {
-		return "drop schema " + schemaName;
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] {"drop schema " + schemaName};
 	}
 
 	/**

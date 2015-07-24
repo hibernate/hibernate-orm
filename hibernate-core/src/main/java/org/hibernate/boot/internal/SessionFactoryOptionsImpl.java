@@ -168,7 +168,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.autoEvictCollectionCache = state.isAutoEvictCollectionCache();
 
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
-
 		this.connectionReleaseMode = state.getConnectionReleaseMode();
 		this.getGeneratedKeysEnabled = state.isGetGeneratedKeysEnabled();
 		this.jdbcBatchSize = state.getJdbcBatchSize();

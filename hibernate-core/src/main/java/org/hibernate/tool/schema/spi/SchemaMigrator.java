@@ -22,7 +22,7 @@ public interface SchemaMigrator {
 	 *
 	 * @param metadata The "compiled" mapping metadata.
 	 * @param existingDatabase Access to the information about the existing database.
-	 * @param createSchemas Should the schema(s) actually be created as well ({@code CREATE SCHEMA})?
+	 * @param createNamespaces Should the schema(s)/catalog(s) actually be created?
 	 * @param targets The migration targets
 	 *
 	 * @throws SchemaManagementException
@@ -30,6 +30,6 @@ public interface SchemaMigrator {
 	public void doMigration(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
-			boolean createSchemas,
+			boolean createNamespaces,
 			List<Target> targets) throws SchemaManagementException;
 }

@@ -30,7 +30,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.schema.extract.internal.legacy.DatabaseInformationImpl;
+import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 

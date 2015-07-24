@@ -5,6 +5,15 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.20 (2015.07.24)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-2851] - ParameterTranslationsImpl fails to correctly determine parameter type
+    [HHH-9250] - BigIntegerSequenceGeneratorTest.testBasics fails on MS SQL Server 2012
+    [HHH-9637] - Join is reused when 2 explicit joins are used for the same ToOne association
+    [HHH-9758] - Broken SQL generated for dynamic batch fetching entities with a composite ID
+
 Changes in version 4.2.19 (2015.04.15)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -21,11 +21,11 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  *
  * @author Gunnar Morling
  */
-public class ForwardingSessionBuilder implements SessionBuilder {
+public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder {
 
 	private final SessionBuilder delegate;
 
-	public ForwardingSessionBuilder(SessionBuilder delegate) {
+	public AbstractDelegatingSessionBuilder(SessionBuilder delegate) {
 		this.delegate = delegate;
 	}
 
@@ -36,57 +36,67 @@ public class ForwardingSessionBuilder implements SessionBuilder {
 
 	@Override
 	public SessionBuilder interceptor(Interceptor interceptor) {
-		return delegate.interceptor(interceptor);
+		delegate.interceptor( interceptor );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder noInterceptor() {
-		return delegate.noInterceptor();
+		delegate.noInterceptor();
+		return this;
 	}
 
 	@Override
 	public SessionBuilder statementInspector(StatementInspector statementInspector) {
-		return delegate.statementInspector( statementInspector );
+		delegate.statementInspector( statementInspector );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder connection(Connection connection) {
-		return delegate.connection(connection);
+		delegate.connection( connection );
+		return this;
 	}
 
 	@Override
-	public SessionBuilder connectionReleaseMode(
-			ConnectionReleaseMode connectionReleaseMode) {
-		return delegate.connectionReleaseMode(connectionReleaseMode);
+	public SessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
+		delegate.connectionReleaseMode( connectionReleaseMode );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
-		return delegate.autoJoinTransactions(autoJoinTransactions);
+		delegate.autoJoinTransactions( autoJoinTransactions );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder autoClose(boolean autoClose) {
-		return delegate.autoClose(autoClose);
+		delegate.autoClose( autoClose );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
-		return delegate.flushBeforeCompletion(flushBeforeCompletion);
+		delegate.flushBeforeCompletion( flushBeforeCompletion );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder tenantIdentifier(String tenantIdentifier) {
-		return delegate.tenantIdentifier(tenantIdentifier);
+		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder eventListeners(SessionEventListener... listeners) {
-		return delegate.eventListeners(listeners);
+		delegate.eventListeners( listeners );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder clearEventListeners() {
-		return delegate.clearEventListeners();
+		delegate.clearEventListeners();
+		return this;
 	}
 }

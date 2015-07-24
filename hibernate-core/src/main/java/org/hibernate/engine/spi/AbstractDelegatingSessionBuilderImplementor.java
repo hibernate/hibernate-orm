@@ -14,17 +14,21 @@ import org.hibernate.SessionBuilder;
  *
  * @author Gunnar Morling
  */
-public class ForwardingSessionBuilderImplementor extends ForwardingSessionBuilder implements SessionBuilderImplementor {
+@SuppressWarnings("unused")
+public abstract class AbstractDelegatingSessionBuilderImplementor
+		extends AbstractDelegatingSessionBuilder
+		implements SessionBuilderImplementor {
 
 	private final SessionBuilderImplementor delegate;
 
-	public ForwardingSessionBuilderImplementor(SessionBuilderImplementor delegate) {
+	public AbstractDelegatingSessionBuilderImplementor(SessionBuilderImplementor delegate) {
 		super( delegate );
 		this.delegate = delegate;
 	}
 
 	@Override
 	public SessionBuilder owner(SessionOwner sessionOwner) {
-		return delegate.owner(sessionOwner);
+		delegate.owner( sessionOwner );
+		return this;
 	}
 }

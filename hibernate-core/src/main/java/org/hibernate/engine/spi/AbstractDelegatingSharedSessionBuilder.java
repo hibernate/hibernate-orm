@@ -22,11 +22,12 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  *
  * @author Gunnar Morling
  */
-public class ForwardingSharedSessionBuilder implements SharedSessionBuilder {
+@SuppressWarnings("unused")
+public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSessionBuilder {
 
 	private final SharedSessionBuilder delegate;
 
-	public ForwardingSharedSessionBuilder(SharedSessionBuilder delegate) {
+	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder delegate) {
 		this.delegate = delegate;
 	}
 
@@ -37,94 +38,109 @@ public class ForwardingSharedSessionBuilder implements SharedSessionBuilder {
 
 	@Override
 	public SharedSessionBuilder interceptor() {
-		return delegate.interceptor();
+		delegate.interceptor();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder connection() {
-		return delegate.connection();
+		delegate.connection();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder connectionReleaseMode() {
-		return delegate.connectionReleaseMode();
+		delegate.connectionReleaseMode();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder autoJoinTransactions() {
-		return delegate.autoJoinTransactions();
+		delegate.autoJoinTransactions();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder autoClose() {
-		return delegate.autoClose();
+		delegate.autoClose();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder flushBeforeCompletion() {
-		return delegate.flushBeforeCompletion();
+		delegate.flushBeforeCompletion();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder transactionContext() {
-		return delegate.transactionContext();
+		delegate.transactionContext();
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder interceptor(Interceptor interceptor) {
-		return delegate.interceptor(interceptor);
+		delegate.interceptor( interceptor );
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder noInterceptor() {
-		return delegate.noInterceptor();
+		delegate.noInterceptor();
+		return this;
 	}
 
 	@Override
 	public SessionBuilder statementInspector(StatementInspector statementInspector) {
-		return delegate.statementInspector( statementInspector );
+		delegate.statementInspector( statementInspector );
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder connection(Connection connection) {
-		return delegate.connection(connection);
+		delegate.connection( connection );
+		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder connectionReleaseMode(
-			ConnectionReleaseMode connectionReleaseMode) {
-		return delegate.connectionReleaseMode(connectionReleaseMode);
+	public SharedSessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
+		delegate.connectionReleaseMode( connectionReleaseMode );
+		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder autoJoinTransactions(
-			boolean autoJoinTransactions) {
-		return delegate.autoJoinTransactions(autoJoinTransactions);
+	public SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
+		delegate.autoJoinTransactions( autoJoinTransactions );
+		return this;
 	}
 
 	@Override
 	public SharedSessionBuilder autoClose(boolean autoClose) {
-		return delegate.autoClose(autoClose);
+		delegate.autoClose( autoClose );
+		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder flushBeforeCompletion(
-			boolean flushBeforeCompletion) {
-		return delegate.flushBeforeCompletion(flushBeforeCompletion);
+	public SharedSessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
+		delegate.flushBeforeCompletion( flushBeforeCompletion );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder tenantIdentifier(String tenantIdentifier) {
-		return delegate.tenantIdentifier(tenantIdentifier);
+		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder eventListeners(SessionEventListener... listeners) {
-		return delegate.eventListeners(listeners);
+		delegate.eventListeners( listeners );
+		return this;
 	}
 
 	@Override
 	public SessionBuilder clearEventListeners() {
-		return delegate.clearEventListeners();
+		delegate.clearEventListeners();
+		return this;
 	}
 }

@@ -39,7 +39,7 @@ public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
+		entity = s.get( LongByteArrayHolder.class, entity.getId() );
 		assertNull( entity.getLongByteArray() );
 		entity.setLongByteArray( original );
 		s.getTransaction().commit();
@@ -47,7 +47,7 @@ public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
+		entity = s.get( LongByteArrayHolder.class, entity.getId() );
 		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals( original, entity.getLongByteArray() );
 		entity.setLongByteArray( changed );
@@ -56,7 +56,7 @@ public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
+		entity = s.get( LongByteArrayHolder.class, entity.getId() );
 		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals( changed, entity.getLongByteArray() );
 		entity.setLongByteArray( null );
@@ -65,7 +65,7 @@ public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
+		entity = s.get( LongByteArrayHolder.class, entity.getId() );
 		assertNull( entity.getLongByteArray() );
 		entity.setLongByteArray( empty );
 		s.getTransaction().commit();
@@ -73,7 +73,7 @@ public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
+		entity = s.get( LongByteArrayHolder.class, entity.getId() );
 		if ( entity.getLongByteArray() != null ) {
 			Assert.assertEquals( empty.length, entity.getLongByteArray().length );
 			assertEquals( empty, entity.getLongByteArray() );

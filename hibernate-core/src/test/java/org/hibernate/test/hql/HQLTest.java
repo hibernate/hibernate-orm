@@ -348,6 +348,12 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// ...al0_7_.mammal where [abs(cast(1 as float(19))-cast(? as float(19)))=1.0]
 			return;
 		}
+		if ( getDialect() instanceof MySQLDialect ) {
+			// MySQL dialects are smarter now wrt cast targets.  For example, float (as a db type) is not
+			// valid as a cast target for MySQL.  The new parser uses the dialect handling for casts, the old
+			// parser does not; so the outputs do not match here...
+			return;
+		}
 		assertTranslation("from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0");
 	}
 

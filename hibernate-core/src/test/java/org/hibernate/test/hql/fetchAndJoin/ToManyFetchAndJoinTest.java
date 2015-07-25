@@ -31,6 +31,8 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.dialect.MySQLDialect;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -73,6 +75,8 @@ public class ToManyFetchAndJoinTest extends BaseCoreFunctionalTestCase {
 	public void cleanupData() {
 		Session s = openSession();
 		s.getTransaction().begin();
+		s.createQuery( "delete GrandChild" ).executeUpdate();
+		s.createQuery( "delete Child" ).executeUpdate();
 		s.createQuery( "delete Parent" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();

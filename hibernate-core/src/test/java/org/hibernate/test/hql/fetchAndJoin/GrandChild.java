@@ -24,15 +24,12 @@
 package org.hibernate.test.hql.fetchAndJoin;
 
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "entity1")
+@Table(name = "grandchild")
 public class GrandChild {
 	@Id
 	@GeneratedValue

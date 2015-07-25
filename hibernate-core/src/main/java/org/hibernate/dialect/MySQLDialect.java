@@ -278,6 +278,36 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean canCreateCatalog() {
+		return true;
+	}
+
+	@Override
+	public String[] getCreateCatalogCommand(String catalogName) {
+		return new String[] { "create database " + catalogName };
+	}
+
+	@Override
+	public String[] getDropCatalogCommand(String catalogName) {
+		return new String[] { "drop database " + catalogName };
+	}
+
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
+
+	@Override
+	public String[] getCreateSchemaCommand(String schemaName) {
+		throw new UnsupportedOperationException( "MySQL does not support dropping creating/dropping schemas in the JDBC sense" );
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		throw new UnsupportedOperationException( "MySQL does not support dropping creating/dropping schemas in the JDBC sense" );
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return true;
 	}

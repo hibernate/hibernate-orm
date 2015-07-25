@@ -35,7 +35,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "entity1")
+@Table(name = "parent")
 public class Parent {
 	@Id
 	@GeneratedValue

@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
+import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldNotInitializedTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -72,4 +73,10 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( HHH3949TestTask4.class );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-9937")
+	@FailureExpected( jiraKey = "HHH-9937")
+	public void testLazyBasicFieldNotInitialized() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldNotInitializedTestTask.class );
+	}
 }

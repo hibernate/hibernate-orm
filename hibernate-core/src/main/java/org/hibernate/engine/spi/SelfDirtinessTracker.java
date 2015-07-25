@@ -33,6 +33,11 @@ public interface SelfDirtinessTracker {
 	String[] $$_hibernate_getDirtyAttributes();
 
 	/**
+	 * Adds persistent attribute to the set of values that have changed
+	 */
+	void $$_hibernate_trackChange(String attributes);
+
+	/**
 	 * Clear the stored dirty attributes
 	 */
 	void $$_hibernate_clearDirtyAttributes();

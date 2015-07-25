@@ -98,6 +98,7 @@ public abstract class DecompileUtils {
 					}
 					if ( interfaceNames.contains( SelfDirtinessTracker.class.getName() ) ) {
 						assertTrue( fieldNames.contains( EnhancerConstants.TRACKER_FIELD_NAME ) );
+						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_CHANGER_NAME ) );
 						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_GET_NAME ) );
 						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_CLEAR_NAME ) );
 						assertTrue( methodNames.contains( EnhancerConstants.TRACKER_HAS_CHANGED_NAME ) );

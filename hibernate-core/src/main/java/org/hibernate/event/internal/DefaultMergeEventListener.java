@@ -15,6 +15,7 @@ import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.internal.Cascade;
@@ -23,6 +24,9 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
@@ -339,6 +343,27 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			FieldInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( target );
 			if ( interceptor != null ) {
 				interceptor.dirty();
+			}
+		}
+
+		// for enhanced entities, copy over the dirty attributes and the lazy/loaded fields in the interceptor
+		if ( entity instanceof SelfDirtinessTracker && target instanceof SelfDirtinessTracker ) {
+			for ( String fieldName : ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() ) {
+				( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( fieldName );
+			}
+		}
+		if ( entity instanceof PersistentAttributeInterceptable
+				&& target instanceof PersistentAttributeInterceptable
+				&& ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor() != null
+				&& ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor() != null ) {
+
+			PersistentAttributeInterceptor entityInterceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			PersistentAttributeInterceptor targetInterceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
+
+			if ( entityInterceptor instanceof LazyAttributeLoader && targetInterceptor instanceof LazyAttributeLoader ) {
+				for ( String fieldName : ( (LazyAttributeLoader) entityInterceptor ).getiInitializedFields() ) {
+					( (LazyAttributeLoader) targetInterceptor ).setLoaded( fieldName );
+				}
 			}
 		}
 	}

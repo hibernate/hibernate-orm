@@ -10,7 +10,7 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 import java.util.Set;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.bytecode.enhance.internal.tracker.SimpleDirtyTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -26,7 +26,7 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 	private final Set<String> lazyFields;
 	private final String entityName;
 
-	private final SimpleDirtyTracker initializedFields = new SimpleDirtyTracker();
+	private final SimpleFieldTracker initializedFields = new SimpleFieldTracker();
 
 	public LazyAttributeLoader(SessionImplementor session, Set<String> lazyFields, String entityName) {
 		this.session = session;
@@ -56,6 +56,14 @@ public class LazyAttributeLoader implements PersistentAttributeInterceptor {
 		else {
 			return value;
 		}
+	}
+
+	public void setLoaded(String attributeName) {
+		initializedFields.add( attributeName );
+	}
+
+	public String[] getiInitializedFields() {
+		return initializedFields.get();
 	}
 
 	@Override

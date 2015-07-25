@@ -13,14 +13,15 @@ package org.hibernate.bytecode.enhance.internal.tracker;
  *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
-public final class SortedDirtyTracker {
+public final class SortedFieldTracker implements DirtyTracker {
 
 	private String[] names;
 
-	public SortedDirtyTracker() {
+	public SortedFieldTracker() {
 		names = new String[0];
 	}
 
+	@Override
 	public void add(String name) {
 		// we do a binary search: even if we don't find the name at least we get the position to insert into the array
 		int insert = 0;
@@ -41,12 +42,13 @@ public final class SortedDirtyTracker {
 			}
 		}
 		final String[] newNames = new String[names.length + 1];
-		System.arraycopy( names, 0, newNames, 0, insert);
-		System.arraycopy( names, insert, newNames, insert + 1, names.length - insert);
+		System.arraycopy( names, 0, newNames, 0, insert );
+		System.arraycopy( names, insert, newNames, insert + 1, names.length - insert );
 		newNames[insert] = name;
 		names = newNames;
 	}
 
+	@Override
 	public boolean contains(String name) {
 		for ( int low = 0, high = names.length - 1; low <= high; ) {
 			final int middle = low + ( ( high - low ) / 2 );
@@ -66,14 +68,17 @@ public final class SortedDirtyTracker {
 		return false;
 	}
 
+	@Override
 	public void clear() {
 		names = new String[0];
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return names.length == 0;
 	}
 
+	@Override
 	public String[] get() {
 		return names;
 	}

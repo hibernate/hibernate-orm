@@ -287,7 +287,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		}
 
 		if( entity instanceof SelfDirtinessTracker ) {
-			((SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
+			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
 
 		persistenceContext.getSession()
@@ -342,7 +342,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	private boolean isUnequivocallyNonDirty(Object entity) {
 
 		if(entity instanceof SelfDirtinessTracker) {
-			return ((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes();
+			return ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =

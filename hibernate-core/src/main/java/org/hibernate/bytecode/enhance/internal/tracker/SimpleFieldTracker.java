@@ -16,14 +16,15 @@ import java.util.Arrays;
  *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */
-public final class SimpleDirtyTracker {
+public final class SimpleFieldTracker implements DirtyTracker {
 
 	private String[] names;
 
-	public SimpleDirtyTracker() {
+	public SimpleFieldTracker() {
 		names = new String[0];
 	}
 
+	@Override
 	public void add(String name) {
 		if ( !contains( name ) ) {
 			names = Arrays.copyOf( names, names.length + 1 );
@@ -31,6 +32,7 @@ public final class SimpleDirtyTracker {
 		}
 	}
 
+	@Override
 	public boolean contains(String name) {
 		for ( String existing : names ) {
 			if ( existing.equals( name ) ) {
@@ -40,14 +42,17 @@ public final class SimpleDirtyTracker {
 		return false;
 	}
 
+	@Override
 	public void clear() {
 		names = new String[0];
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return names.length == 0;
 	}
 
+	@Override
 	public String[] get() {
 		return names;
 	}

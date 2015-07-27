@@ -150,4 +150,13 @@ public interface DeprecationLogger {
 	void recognizedObsoleteHibernateNamespace(
 			String oldHibernateNamespace,
 			String hibernateNamespace);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000013,
+			value = "Named ConnectionProvider [%s] has been deprecated in favor of %s; that provider will be used instead.  Update your settings"
+	)
+	void connectionProviderClassDeprecated(
+			String providerClassName,
+			String actualProviderClassName);
 }

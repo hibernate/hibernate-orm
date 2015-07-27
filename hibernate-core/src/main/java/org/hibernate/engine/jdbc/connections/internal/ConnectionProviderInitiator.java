@@ -23,6 +23,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -55,6 +56,11 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 * The strategy for proxool connection pooling
 	 */
 	public static final String PROXOOL_STRATEGY = "proxool";
+
+	/**
+	 * The strategy for proxool connection pooling
+	 */
+	public static final String HIKARI_STRATEGY = "hikari";
 
 	/**
 	 * No idea.  Is this even still used?
@@ -119,6 +125,12 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		if ( connectionProvider == null ) {
+			if ( hikariConfigDefined( configurationValues ) ) {
+				connectionProvider = instantiateHikariProvider( strategySelector );
+			}
+		}
+
+		if ( connectionProvider == null ) {
 			if ( configurationValues.get( Environment.URL ) != null ) {
 				connectionProvider = new DriverManagerConnectionProviderImpl();
 			}
@@ -160,7 +172,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		String providerName = (String) configurationValues.get( Environment.CONNECTION_PROVIDER );
 		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
 			final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
-			LOG.providerClassDeprecated( providerName, actualProviderName );
+			DeprecationLogger.DEPRECATION_LOGGER.connectionProviderClassDeprecated( providerName, actualProviderName );
 			providerName = actualProviderName;
 		}
 		return providerName;
@@ -181,6 +193,16 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 	}
 
+	private static boolean c3p0ConfigDefined(Map configValues) {
+		for ( Object key : configValues.keySet() ) {
+			if ( String.class.isInstance( key )
+					&& ( (String) key ).startsWith( AvailableSettings.C3P0_CONFIG_PREFIX ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private ConnectionProvider instantiateC3p0Provider(StrategySelector strategySelector) {
 		try {
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, C3P0_STRATEGY ).newInstance();
@@ -191,10 +213,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 	}
 
-	private static boolean c3p0ConfigDefined(Map configValues) {
+	private static boolean proxoolConfigDefined(Map configValues) {
 		for ( Object key : configValues.keySet() ) {
 			if ( String.class.isInstance( key )
-					&& ( (String) key ).startsWith( AvailableSettings.C3P0_CONFIG_PREFIX ) ) {
+					&& ( (String) key ).startsWith( AvailableSettings.PROXOOL_CONFIG_PREFIX ) ) {
 				return true;
 			}
 		}
@@ -211,14 +233,27 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 	}
 
-	private static boolean proxoolConfigDefined(Map configValues) {
+	private boolean hikariConfigDefined(Map configValues) {
 		for ( Object key : configValues.keySet() ) {
-			if ( String.class.isInstance( key )
-					&& ( (String) key ).startsWith( AvailableSettings.PROXOOL_CONFIG_PREFIX ) ) {
+			if ( !String.class.isInstance( key ) ) {
+				continue;
+			}
+
+			if ( ( (String) key ).startsWith( "hibernate.hikari." ) ) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private ConnectionProvider instantiateHikariProvider(StrategySelector strategySelector) {
+		try {
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, HIKARI_STRATEGY ).newInstance();
+		}
+		catch ( Exception e ) {
+			LOG.hikariProviderClassNotFound();
+			return null;
+		}
 	}
 
 	/**

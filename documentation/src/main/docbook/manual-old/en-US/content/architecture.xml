@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="architecture"  xmlns="http://docbook.org/ns/docbook">
+
+    <title>Architecture</title>
+
+    <section xml:id="architecture-overview">
+        <title>Overview</title>
+        
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata fileref="images/overview.svg" format="SVG" align="center"/>
+            </imageobject>
+            <imageobject role="html">
+                <imagedata fileref="images/overview.png" format="PNG" align="center"/>
+            </imageobject>
+        </mediaobject>
+
+        <para>
+            Hibernate, as an ORM solution, effectively "sits between" the Java application and the Relational
+            Database, as can be seen in the diagram above.  The Java application makes use of the Hibernate APIs
+            to load, store, query, etc its domain data.  Here we will introduce the essential Hibernate APIs.
+            This will be a brief introduction; we will discuss these contracts in detail later.
+
+            <variablelist spacing="compact">
+                <varlistentry>
+                    <term>SessionFactory (<interfacename>org.hibernate.SessionFactory</interfacename>)</term>
+                    <listitem>
+                        <para>
+                            A thread-safe (and immutable) representation of the mapping of the application
+                            domain model to a database.  Acts as a factory for
+                            <interfacename>org.hibernate.Session</interfacename> instances.
+                        </para>
+                        <para>
+                            A SessionFactory is very expensive to create; there should be only
+                            one SessionFactory for an application for a given database.  Maintains
+                            services that Hibernate uses across all Sessions such as second level caches,
+                            connection pools, transaction system integrations, etc.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Session (<interfacename>org.hibernate.Session</interfacename>)</term>
+                    <listitem>
+                        <para>
+                            A single-threaded, short-lived object conceptually modeling a
+                            "Unit of Work"<citation>PoEAA</citation>.
+                        </para>
+                        <para>
+                            Wraps a JDBC <interfacename>java.sql.Connection</interfacename>.  Acts as a factory for
+                            <interfacename>org.hibernate.Transaction</interfacename> instances.  Maintains a
+                            generally "repeatable read" persistence context (first level cache) of the application's
+                            domain model.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Transaction (<interfacename>org.hibernate.Transaction</interfacename>)</term>
+                    <listitem>
+                        <para>
+                            A single-threaded, short-lived object used by the application to demarcate individual
+                            physical transaction boundaries.  It acts as an abstraction API to isolate the application
+                            from the underling transaction system in use (JDBC, JTA, CORBA, etc).
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </para>
+    </section>
+
+    <section xml:id="architecture-current-session" revision="2">
+        <title>Contextual sessions</title>
+        <para>
+            Most applications using Hibernate need some form of "contextual" session, where a given
+            session is in effect throughout the scope of a given context. However, across applications
+            the definition of what constitutes a context is typically different; different contexts
+            define different scopes to the notion of current. Applications using Hibernate prior
+            to version 3.0 tended to utilize either home-grown <literal>ThreadLocal</literal>-based
+            contextual sessions, helper classes such as <literal>HibernateUtil</literal>, or utilized
+            third-party frameworks, such as Spring or Pico, which provided proxy/interception-based contextual sessions.
+        </para>
+        <para>
+            Starting with version 3.0.1, Hibernate added the <literal>SessionFactory.getCurrentSession()</literal>
+            method. Initially, this assumed usage of <literal>JTA</literal> transactions, where the
+            <literal>JTA</literal> transaction defined both the scope and context of a current session.
+            Given the maturity of the numerous stand-alone
+            <literal>JTA TransactionManager</literal> implementations, most, if not all,
+            applications should be using <literal>JTA</literal> transaction management, whether or not
+            they are deployed into a <literal>J2EE</literal> container.  Based on that, the
+            <literal>JTA</literal>-based contextual sessions are all you need to use.
+        </para>
+        <para>
+            However, as of version 3.1, the processing behind
+            <literal>SessionFactory.getCurrentSession()</literal> is now pluggable.  To that
+            end, a new extension interface, <literal>org.hibernate.context.spi.CurrentSessionContext</literal>,
+            and a new configuration parameter, <literal>hibernate.current_session_context_class</literal>,
+            have been added to allow pluggability of the scope and context of defining current sessions.
+        </para>
+        <para>
+            See the Javadocs for the <literal>org.hibernate.context.spi.CurrentSessionContext</literal>
+            interface for a detailed discussion of its contract.  It defines a single method,
+            <literal>currentSession()</literal>, by which the implementation is responsible for
+            tracking the current contextual session.  Out-of-the-box, Hibernate comes with three
+            implementations of this interface:
+        </para>
+
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.internal.JTASessionContext</literal>: current sessions
+                    are tracked and scoped by a <literal>JTA</literal> transaction.  The processing
+                    here is exactly the same as in the older JTA-only approach.  See the Javadocs
+                    for details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.internal.ThreadLocalSessionContext</literal>:current
+                    sessions are tracked by thread of execution. See the Javadocs for details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <literal>org.hibernate.context.internal.ManagedSessionContext</literal>: current
+                    sessions are tracked by thread of execution. However, you are responsible to
+                    bind and unbind a <literal>Session</literal> instance with static methods
+                    on this class: it does not open, flush, or close a <literal>Session</literal>.
+                </para>
+            </listitem>
+        </itemizedlist>
+
+        <para>
+            Typically, the value of this parameter would just name the implementation class to
+            use. For the three out-of-the-box implementations, however, there are three corresponding
+            short names: "jta", "thread", and "managed".
+        </para>
+
+        <para>
+            The first two implementations provide a "one session - one database transaction" programming
+            model. This is also known and used as <emphasis>session-per-request</emphasis>. The beginning
+            and end of a Hibernate session is defined by the duration of a database transaction.
+            If you use programmatic transaction demarcation in plain JSE without JTA, you are advised to
+            use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system
+            from your code. If you use JTA, you can utilize the JTA interfaces to demarcate transactions. If you
+            execute in an EJB container that supports CMT, transaction boundaries are defined declaratively
+            and you do not need any transaction or session demarcation operations in your code.
+            Refer to <xref linkend="transactions"/> for more information and code examples.
+        </para>
+
+        <para>
+            The <literal>hibernate.current_session_context_class</literal> configuration parameter
+            defines which <literal>org.hibernate.context.spi.CurrentSessionContext</literal> implementation
+            should be used.  For backwards compatibility, if this configuration parameter is not set
+            but a <literal>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</literal> is configured,
+            Hibernate will use the <literal>org.hibernate.context.internal.JTASessionContext</literal>.
+        </para>
+        
+    </section>
+
+</chapter>
+

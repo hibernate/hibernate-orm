@@ -170,7 +170,7 @@ jdocbook {
     }
 
     manual {
-        masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
+        masterSourceDocumentName = 'Hibernate_Manual.xml'
     }
 }
 

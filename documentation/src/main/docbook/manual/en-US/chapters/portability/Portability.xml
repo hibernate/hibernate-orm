@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<chapter xml:id="portability" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Database Portability Considerations</title>
+
+    <section xml:id="portability-basics">
+        <title>Portability Basics</title>
+
+        <para>
+            One of the selling points of Hibernate (and really Object/Relational Mapping as a whole) is
+            the notion of database portability.  This could mean an internal IT user migrating from one
+            database vendor to another, or it could mean a framework or deployable application consuming
+            Hibernate to simultaneously target multiple database products by their users.  Regardless of
+            the exact scenario, the basic idea is that you want Hibernate to help you run against any number
+            of databases without changes to your code, and ideally without any changes to the mapping metadata.
+        </para>
+    </section>
+
+    <section xml:id="portability-dialect">
+        <title>Dialect</title>
+
+        <para>
+            The first line of portability for Hibernate is the dialect, which is a specialization of the
+            <classname>org.hibernate.dialect.Dialect</classname> contract.  A dialect encapsulates all
+            the differences in how Hibernate must communicate with a particular database to accomplish some
+            task like getting a sequence value or structuring a SELECT query.  Hibernate bundles a wide range
+            of dialects for many of the most popular databases.  If you find that your particular database is
+            not among them, it is not terribly difficult to write your own.
+        </para>
+    </section>
+
+    <section xml:id="portability-dialectresolver">
+        <title>Dialect resolution</title>
+
+        <para>
+            Originally, Hibernate would always require that users specify which dialect to use.  In the case
+            of users looking to simultaneously target multiple databases with their build that was problematic.
+            Generally this required their users to configure the Hibernate dialect or defining their own method
+            of setting that value.
+        </para>
+
+        <para>
+            Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect
+            to use based on the <interfacename>java.sql.DatabaseMetaData</interfacename> obtained from a
+            <interfacename>java.sql.Connection</interfacename> to that database.  This was much better, expect
+            that this resolution was limited to databases Hibernate know about ahead of time and was in no way
+            configurable or overrideable.
+        </para>
+
+        <para>
+            Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine
+            which dialect to should be used by relying on a series of delegates which implement the
+            <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> which defines only a
+            single method:
+        </para>
+        <programlisting role="JAVA"><![CDATA[public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException]]></programlisting>
+        <para>
+            The basic contract here is that if the resolver 'understands' the given database metadata then
+            it returns the corresponding Dialect; if not it returns null and the process continues to the next
+            resolver.  The signature also identifies <exceptionname>org.hibernate.exception.JDBCConnectionException</exceptionname>
+            as possibly being thrown.  A JDBCConnectionException here is interpreted to imply a "non transient"
+            (aka non-recoverable) connection problem and is used to indicate an immediate stop to resolution
+            attempts.  All other exceptions result in a warning and continuing on to the next resolver.
+        </para>
+
+        <para>
+            The cool part about these resolvers is that users can also register their own custom resolvers
+            which will be processed ahead of the built-in Hibernate ones.  This might be useful in a number of
+            different situations: it allows easy integration for auto-detection of dialects beyond those
+            shipped with HIbernate itself; it allows you to specify to use a custom dialect when a particular
+            database is recognized; etc.  To register one or more resolvers, simply specify them (seperated by
+            commas, tabs or spaces) using the 'hibernate.dialect_resolvers' configuration setting (see the
+            <constant>DIALECT_RESOLVERS</constant> constant on
+            <classname>org.hibernate.cfg.Environment</classname>).
+        </para>
+    </section>
+
+    <section xml:id="portability-idgen">
+        <title>Identifier generation</title>
+
+        <para>
+            When considering portability between databases, another important decision is selecting the
+            identifier generation stratagy you want to use.  Originally Hibernate provided the
+            <emphasis>native</emphasis> generator for this purpose, which was intended to select between
+            a <emphasis>sequence</emphasis>, <emphasis>identity</emphasis>, or <emphasis>table</emphasis>
+            strategy depending on the capability of the underlying database.  However, an insidious implication
+            of this approach comes about when targtetting some databases which support <emphasis>identity</emphasis>
+            generation and some which do not.  <emphasis>identity</emphasis> generation relies on the SQL
+            definition of an IDENTITY (or auto-increment) column to manage the identifier value; it is what is
+            known as a post-insert generation strategy becauase the insert must actually happen before we can
+            know the identifier value.  Because Hibernate relies on this identifier value to uniquely reference
+            entities within a persistence context it must then issue the insert
+            immediately when the users requests the entitiy be associated with the session (like via
+            save() e.g.) regardless of current transactional semantics.
+
+            <note>
+                <para>
+                    Hibernate was changed slightly once the implication of this was better understood so that
+                    the insert is delayed in cases where that is feasible.
+                </para>
+            </note>
+
+            The underlying issue is that the actual semanctics of the application itself changes in these cases.
+        </para>
+
+        <para>
+            Starting with version 3.2.3, Hibernate comes with a set of
+            <link xlink:href="http://in.relation.to/2082.lace">enhanced</link>
+            identifier generators targetting
+            portability in a much different way.
+            <note>
+                <para>
+                    There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <classname>org.hibernate.id.enhanced.TableGenerator</classname>
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </note>
+            The idea behind these generators is to port the actual semantics of the identifer value
+            generation to the different databases.  For example, the
+            <classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> mimics the behavior of
+            a sequence on databases which do not support sequences by using a table.
+        </para>
+    </section>
+
+    <section xml:id="portability-functions">
+        <title>Database functions</title>
+
+        <warning>
+            <para>
+                This is an area in Hibernate in need of improvement.  In terms of portability concerns,
+                this function handling currently works pretty well from HQL; however, it is quite lacking
+                in all other aspects.
+            </para>
+        </warning>
+
+        <para>
+            SQL functions can be referenced in many ways by users.  However, not all databases
+            support the same set of functions.  Hibernate, provides a means of mapping a
+            <emphasis>logical</emphasis> function name to a delegate which knows how to render
+            that particular function, perhaps even using a totally different physical function call.
+            <important>
+                <para>
+                    Technically this function registration is handled through the
+                    <classname>org.hibernate.dialect.function.SQLFunctionRegistry</classname> class
+                    which is intended to allow users to provide custom function definitions without
+                    having to provide a custom dialect.  This specific behavior is not fully completed
+                    as of yet.
+                </para>
+                <para>
+                    It is sort of implemented such that users can programatically register functions
+                    with the <classname>org.hibernate.cfg.Configuration</classname> and those functions
+                    will be recognized for HQL.
+                </para>
+            </important>
+        </para>
+    </section>
+
+    <section xml:id="portability-types">
+        <title>Type mappings</title>
+
+        <para>
+            This section scheduled for completion at a later date...
+        </para>
+
+        <!--
+            todo :
+        <section xml:id="portability-types-lobs">
+            <title>BLOB/CLOB mappings</title>
+        </section>
+
+        <section xml:id="portability-types-bool">
+            <title>Boolean mappings</title>
+        </section>
+        -->
+    </section>
+</chapter>

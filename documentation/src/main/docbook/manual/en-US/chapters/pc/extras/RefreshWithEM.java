@@ -1,0 +1,3 @@
+Cat cat = entityManager.find( Cat.class, catId );
+...
+entityManager.refresh( cat );

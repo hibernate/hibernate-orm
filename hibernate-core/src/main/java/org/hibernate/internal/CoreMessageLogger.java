@@ -665,11 +665,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Property %s not found in class but described in <mapping-file/> (possible typo error)", id = 207)
 	void propertyNotFound(String property);
 
-	@LogMessage(level = WARN)
-	@Message(value = "%s has been deprecated in favor of %s; that provider will be used instead.", id = 208)
-	void providerClassDeprecated(
-			String providerClassName,
-			String actualProviderClassName);
+//	@LogMessage(level = WARN)
+//	@Message(value = "%s has been deprecated in favor of %s; that provider will be used instead.", id = 208)
+//	void providerClassDeprecated(
+//			String providerClassName,
+//			String actualProviderClassName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "proxool properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored.",
@@ -1742,4 +1742,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Cannot unset session in a collection because an unexpected session is defined. A persistent collection may only be associated with one session at a time. %s", id = 471 )
 	void logCannotUnsetUnexpectedSessionInCollection(String msg);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Hikari properties were encountered, but the Hikari ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
+			id = 472)
+	void hikariProviderClassNotFound();
 }

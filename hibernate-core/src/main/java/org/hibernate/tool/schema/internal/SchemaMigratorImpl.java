@@ -127,6 +127,9 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				}
 				checkExportIdentifier( table, exportIdentifiers );
 				final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+				if ( tableInformation != null && !tableInformation.isPhysicalTable() ) {
+					continue;
+				}
 				if ( tableInformation == null ) {
 					createTable( table, metadata, targets );
 				}
@@ -144,6 +147,9 @@ public class SchemaMigratorImpl implements SchemaMigrator {
 				if ( tableInformation == null ) {
 					// big problem...
 					throw new SchemaManagementException( "BIG PROBLEM" );
+				}
+				if ( !tableInformation.isPhysicalTable() ) {
+					continue;
 				}
 
 				applyIndexes( table, tableInformation, metadata, targets );

@@ -13,6 +13,7 @@ import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 
@@ -70,7 +71,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	}
 
 	@Override
-	public Object get(Object key) throws CacheException {
+	public Object get(SessionImplementor session, Object key) throws CacheException {
 		// If the region is not valid, skip cache store to avoid going remote to retrieve the query.
 		// The aim of this is to maintain same logic/semantics as when state transfer was configured.
 		// TODO: Once https://issues.jboss.org/browse/ISPN-835 has been resolved, revert to state transfer and remove workaround
@@ -98,7 +99,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void put(Object key, Object value) throws CacheException {
+	public void put(SessionImplementor session, Object key, Object value) throws CacheException {
 		if ( checkValid() ) {
 			// Here we don't want to suspend the tx. If we do:
 			// 1) We might be caching query results that reflect uncommitted

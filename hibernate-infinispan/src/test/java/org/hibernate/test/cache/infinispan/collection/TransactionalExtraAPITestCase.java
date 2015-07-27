@@ -80,7 +80,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Test
 	public void testLockItem() {
-		assertNull( getCollectionAccessStrategy().lockItem( KEY, new Integer( 1 ) ) );
+		assertNull( getCollectionAccessStrategy().lockItem(null, KEY, new Integer( 1 ) ) );
 	}
 
 	@Test
@@ -90,12 +90,12 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Test
 	public void testUnlockItem() {
-		getCollectionAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+		getCollectionAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
 	}
 
 	@Test
 	public void testUnlockRegion() {
-		getCollectionAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+		getCollectionAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
 	}
 
 	public static class MockSoftLock implements SoftLock {

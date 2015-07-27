@@ -27,9 +27,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
  * <p/>
  * IMPORTANT : NaturalIds are not versioned so {@code null} will always be passed to the version parameter to:<ul>
- *     <li>{@link #putFromLoad(Object, Object, long, Object)}</li>
- *     <li>{@link #putFromLoad(Object, Object, long, Object, boolean)}</li>
- *     <li>{@link #lockItem(Object, Object)}</li>
+ *     <li>{@link RegionAccessStrategy#putFromLoad(SessionImplementor, Object, Object, long, Object)}</li>
+ *     <li>{@link RegionAccessStrategy#putFromLoad(SessionImplementor, Object, Object, long, Object, boolean)}</li>
+ *     <li>{@link RegionAccessStrategy#lockItem(SessionImplementor, Object, Object)}</li>
  * </ul>
  *
  * @author Gavin King
@@ -68,47 +68,51 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	 * instead of calling evict().
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean insert(Object key, Object value) throws CacheException;
+	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Called after an item has been inserted (after the transaction completes),
 	 * instead of calling release().
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterInsert(Object key, Object value) throws CacheException;
+	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (before the transaction completes),
 	 * instead of calling evict(). This method is used by "synchronous" concurrency
 	 * strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean update(Object key, Object value) throws CacheException;
+	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (after the transaction completes),
 	 * instead of calling release().  This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @param lock The lock previously obtained from {@link #lockItem}
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException;
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException;
 }

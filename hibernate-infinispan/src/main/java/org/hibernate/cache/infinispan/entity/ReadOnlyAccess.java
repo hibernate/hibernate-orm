@@ -8,6 +8,7 @@ package org.hibernate.cache.infinispan.entity;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A specialization of {@link TransactionalAccess} that ensures we never update data. Infinispan
@@ -25,14 +26,14 @@ class ReadOnlyAccess extends TransactionalAccess {
 
 	@Override
 	public boolean update(
-			Object key, Object value, Object currentVersion,
+			SessionImplementor session, Object key, Object value, Object currentVersion,
 			Object previousVersion) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}
 
 	@Override
 	public boolean afterUpdate(
-			Object key, Object value, Object currentVersion,
+			SessionImplementor session, Object key, Object value, Object currentVersion,
 			Object previousVersion, SoftLock lock) throws CacheException {
 		throw new UnsupportedOperationException( "Illegal attempt to edit read only item" );
 	}

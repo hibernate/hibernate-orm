@@ -18,6 +18,7 @@ import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExcepti
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.GeneralDataRegion;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.jboss.logging.Logger;
 
 /**
@@ -52,7 +53,7 @@ abstract class EhcacheGeneralDataRegion extends EhcacheDataRegion implements Gen
 	}
 
 	@Override
-	public Object get(Object key) throws CacheException {
+	public Object get(SessionImplementor session, Object key) throws CacheException {
 		try {
 			LOG.debugf( "key: %s", key );
 			if ( key == null ) {
@@ -82,7 +83,7 @@ abstract class EhcacheGeneralDataRegion extends EhcacheDataRegion implements Gen
 	}
 
 	@Override
-	public void put(Object key, Object value) throws CacheException {
+	public void put(SessionImplementor session, Object key, Object value) throws CacheException {
 		LOG.debugf( "key: %s value: %s", key, value );
 		try {
 			final Element element = new Element( key, value );

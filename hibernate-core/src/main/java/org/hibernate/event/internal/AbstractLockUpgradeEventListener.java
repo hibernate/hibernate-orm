@@ -68,7 +68,7 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 				if ( cachingEnabled ) {
 					EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 					ck = cache.generateCacheKey( entry.getId(), persister, source.getFactory(), source.getTenantIdentifier() );
-					lock = cache.lockItem( ck, entry.getVersion() );
+					lock = cache.lockItem( source, ck, entry.getVersion() );
 				}
 
 				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE  ) {
@@ -87,7 +87,7 @@ public abstract class AbstractLockUpgradeEventListener extends AbstractReassocia
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
 				if ( cachingEnabled ) {
-					persister.getCacheAccessStrategy().unlockItem( ck, lock );
+					persister.getCacheAccessStrategy().unlockItem( source, ck, lock );
 				}
 			}
 

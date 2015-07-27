@@ -135,7 +135,7 @@ public final class EntityUpdateAction extends EntityAction {
 					factory,
 					session.getTenantIdentifier()
 			);
-			lock = cache.lockItem( ck, previousVersion );
+			lock = cache.lockItem( session, ck, previousVersion );
 		}
 		else {
 			ck = null;
@@ -186,7 +186,7 @@ public final class EntityUpdateAction extends EntityAction {
 
 		if ( persister.hasCache() ) {
 			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( ck );
+				persister.getCacheAccessStrategy().remove( session, ck);
 			}
 			else {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
@@ -216,12 +216,13 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
+		final SessionImplementor session = getSession();
 		try {
-			getSession().getEventListenerManager().cachePutStart();
-			return persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
+			session.getEventListenerManager().cachePutStart();
+			return persister.getCacheAccessStrategy().update( session, ck, cacheEntry, nextVersion, previousVersion );
 		}
 		finally {
-			getSession().getEventListenerManager().cachePutEnd();
+			session.getEventListenerManager().cachePutEnd();
 		}
 	}
 
@@ -327,17 +328,18 @@ public final class EntityUpdateAction extends EntityAction {
 				}
 			}
 			else {
-				cache.unlockItem( ck, lock );
+				cache.unlockItem(session, ck, lock );
 			}
 		}
 		postCommitUpdate( success );
 	}
 
 	private boolean cacheAfterUpdate(EntityRegionAccessStrategy cache, Object ck) {
-		SessionEventListenerManager eventListenerManager = getSession().getEventListenerManager();
+		final SessionImplementor session = getSession();
+		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {
 			eventListenerManager.cachePutStart();
-			return cache.afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
+			return cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {
 			eventListenerManager.cachePutEnd();

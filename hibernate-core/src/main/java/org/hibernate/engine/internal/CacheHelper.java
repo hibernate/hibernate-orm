@@ -29,7 +29,7 @@ public final class CacheHelper {
 		Serializable cachedValue = null;
 		eventListenerManager.cacheGetStart();
 		try {
-			cachedValue = (Serializable) cacheAccessStrategy.get( cacheKey, session.getTimestamp() );
+			cachedValue = (Serializable) cacheAccessStrategy.get( session, cacheKey, session.getTimestamp() );
 		}
 		finally {
 			eventListenerManager.cacheGetEnd( cachedValue != null );

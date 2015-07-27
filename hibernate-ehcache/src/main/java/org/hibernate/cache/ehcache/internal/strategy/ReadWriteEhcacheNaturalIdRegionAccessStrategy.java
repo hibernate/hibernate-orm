@@ -47,7 +47,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean insert(Object key, Object value) throws CacheException {
+	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
@@ -57,7 +57,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * Inserts will only succeed if there is no existing value mapped to this key.
 	 */
 	@Override
-	public boolean afterInsert(Object key, Object value) throws CacheException {
+	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -80,7 +80,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
 	@Override
-	public boolean update(Object key, Object value) throws CacheException {
+	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
@@ -92,7 +92,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * the course of this transaction.
 	 */
 	@Override
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
 		//what should we do with previousVersion here?
 		region().writeLock( key );
 		try {

@@ -354,6 +354,7 @@ public class CollectionLoadContext {
 			try {
 				session.getEventListenerManager().cachePutStart();
 				final boolean put = cache.putFromLoad(
+						session,
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
 						session.getTimestamp(),

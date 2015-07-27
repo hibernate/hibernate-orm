@@ -9,6 +9,7 @@ package org.hibernate.cache.spi.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -60,32 +61,36 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	 * instead of calling evict().
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @param version The item's version value
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean insert(Object key, Object value, Object version) throws CacheException;
+	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException;
 
 	/**
 	 * Called after an item has been inserted (after the transaction completes),
 	 * instead of calling release().
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @param version The item's version value
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException;
+	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (before the transaction completes),
 	 * instead of calling evict(). This method is used by "synchronous" concurrency
 	 * strategies.
 	 *
+	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @param currentVersion The item's current version value
@@ -93,13 +98,14 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException;
+	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException;
 
 	/**
 	 * Called after an item has been updated (after the transaction completes),
 	 * instead of calling release().  This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *
+	 * @param session Current session
 	 * @param key The item key
 	 * @param value The item
 	 * @param currentVersion The item's current version value
@@ -108,5 +114,5 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) throws CacheException;
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) throws CacheException;
 }

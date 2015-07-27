@@ -49,12 +49,12 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
 
    @Override
    protected void putInRegion(Region region, Object key, Object value) {
-      ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).insert(key, value, 1);
+      ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).insert(null, key, value, 1);
    }
 
    @Override
    protected void removeFromRegion(Region region, Object key) {
-      ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(key);
+      ((EntityRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(null, key);
    }
 
    @Override

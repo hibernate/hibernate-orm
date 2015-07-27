@@ -45,26 +45,26 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
 
       long txTimestamp = System.currentTimeMillis();
       BatchModeTransactionManager.getInstance().begin();
-      assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
+      assertNull(localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
       if (minimal)
-         localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, 1, true);
+         localAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, 1, true);
       else
-         localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, 1);
+         localAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, 1);
 
       sleep(250);
       Object expected = isUsingInvalidation() ? null : VALUE1;
-      assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+      assertEquals(expected, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
 
       BatchModeTransactionManager.getInstance().commit();
-      assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
-      assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+      assertEquals(VALUE1, localAccessStrategy.get(null, KEY, System.currentTimeMillis()));
+      assertEquals(expected, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis()));
    }
 
    @Test(expected = UnsupportedOperationException.class)
    @Override
    public void testUpdate() throws Exception {
       final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
-      localAccessStrategy.update( KEY, VALUE2, 2, 1);
+      localAccessStrategy.update(null, KEY, VALUE2, 2, 1);
    }
 
 }

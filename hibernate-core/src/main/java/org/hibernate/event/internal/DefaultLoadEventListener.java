@@ -366,7 +366,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			lock = persister.getCacheAccessStrategy().lockItem( ck, null );
+			lock = persister.getCacheAccessStrategy().lockItem( source, ck, null );
 		}
 		else {
 			ck = null;
@@ -378,7 +378,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 		finally {
 			if ( persister.hasCache() ) {
-				cache.unlockItem( ck, lock );
+				cache.unlockItem( source, ck, lock );
 			}
 		}
 

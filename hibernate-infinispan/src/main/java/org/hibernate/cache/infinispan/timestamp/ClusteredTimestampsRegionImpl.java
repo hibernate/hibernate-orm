@@ -15,6 +15,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.RegionFactory;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
@@ -62,7 +63,7 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object get(Object key) throws CacheException {
+	public Object get(SessionImplementor session, Object key) throws CacheException {
 		Object value = localCache.get( key );
 
 		// If the region is not valid, skip cache store to avoid going remote to retrieve the query.
@@ -122,7 +123,7 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	private void populateLocalCache() {
 		final Set children = cache.keySet();
 		for ( Object key : children ) {
-			get( key );
+			get( null, key );
 		}
 	}
 

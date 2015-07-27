@@ -36,7 +36,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 
         final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
-        localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+        localAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 
         final CountDownLatch pferLatch = new CountDownLatch(1);
         final CountDownLatch pferCompletionLatch = new CountDownLatch(1);
@@ -52,9 +52,9 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
                     long txTimestamp = System.currentTimeMillis();
                     BatchModeTransactionManager.getInstance().begin();
 
-                    assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(KEY, txTimestamp));
+                    assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(null, KEY, txTimestamp));
 
-                    localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
+                    localAccessStrategy.update(null, KEY, VALUE2, new Integer(2), new Integer(1));
 
                     pferLatch.countDown();
                     commitLatch.await();
@@ -82,7 +82,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
                     long txTimestamp = System.currentTimeMillis();
                     BatchModeTransactionManager.getInstance().begin();
 
-                    localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
+                    localAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer(1));
 
                     BatchModeTransactionManager.getInstance().commit();
                 } catch (Exception e) {
@@ -110,7 +110,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
         assertThreadsRanCleanly();
 
         long txTimestamp = System.currentTimeMillis();
-        assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
+        assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(null, KEY, txTimestamp));
     }
 
 }

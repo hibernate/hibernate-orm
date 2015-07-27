@@ -132,7 +132,7 @@ public class StandardQueryCache implements QueryCache {
 
 		try {
 			session.getEventListenerManager().cachePutStart();
-			cacheRegion.put( key, cacheable );
+			cacheRegion.put( session, key, cacheable );
 		}
 		finally {
 			session.getEventListenerManager().cachePutEnd();
@@ -221,7 +221,7 @@ public class StandardQueryCache implements QueryCache {
 		List cacheable = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			cacheable = (List) cacheRegion.get( key );
+			cacheable = (List) cacheRegion.get( session, key );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( cacheable != null );

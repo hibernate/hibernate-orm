@@ -9,7 +9,12 @@ package org.hibernate.cache.infinispan.util;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandInitializer;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.context.Flag;
+import org.infinispan.factories.annotations.Inject;
+import org.infinispan.notifications.cachelistener.CacheNotifier;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,6 +27,14 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 
 	private final ConcurrentHashMap<String, PutFromLoadValidator> putFromLoadValidators
 			= new ConcurrentHashMap<String, PutFromLoadValidator>();
+	private CacheNotifier notifier;
+	private Configuration configuration;
+
+	@Inject
+	public void injectDependencies(CacheNotifier notifier, Configuration configuration) {
+		this.notifier = notifier;
+		this.configuration = configuration;
+	}
 
 	public void addPutFromLoadValidator(String cacheName, PutFromLoadValidator putFromLoadValidator) {
 		// there could be two instances of PutFromLoadValidator bound to the same cache when
@@ -49,6 +62,10 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 		return new EvictAllCommand( regionName );
 	}
 
+	public BeginInvalidationCommand buildBeginInvalidationCommand(Set<Flag> flags, Object[] keys, Object lockOwner) {
+		return new BeginInvalidationCommand(notifier, flags, keys, lockOwner);
+	}
+
 	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object lockOwner) {
 		return new EndInvalidationCommand( cacheName, keys, lockOwner );
 	}
@@ -59,6 +76,10 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 			case CacheCommandIds.END_INVALIDATION:
 				EndInvalidationCommand endInvalidationCommand = (EndInvalidationCommand) c;
 				endInvalidationCommand.setPutFromLoadValidator(putFromLoadValidators.get(endInvalidationCommand.getCacheName()));
+				break;
+			case CacheCommandIds.BEGIN_INVALIDATION:
+				BeginInvalidationCommand beginInvalidationCommand = (BeginInvalidationCommand) c;
+				beginInvalidationCommand.init(notifier, configuration);
 				break;
 		}
 	}

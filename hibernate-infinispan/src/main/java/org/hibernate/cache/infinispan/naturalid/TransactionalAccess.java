@@ -28,12 +28,12 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
-		return delegate.insert( key, value, null );
+		return delegate.insert( session, key, value, null );
 	}
 
 	@Override
 	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException {
-		return delegate.update( key, value, null, null );
+		return delegate.update( session, key, value, null, null );
 	}
 
 	@Override
@@ -58,18 +58,18 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return delegate.putFromLoad( key, value, txTimestamp, version );
+		return delegate.putFromLoad( session, key, value, txTimestamp, version );
 	}
 
 	@Override
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
-		return delegate.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
+		return delegate.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
 	}
 
 	@Override
 	public void remove(SessionImplementor session, Object key) throws CacheException {
-		delegate.remove( key );
+		delegate.remove( session, key );
 	}
 
 	@Override
@@ -98,12 +98,12 @@ class TransactionalAccess implements NaturalIdRegionAccessStrategy {
 
 	@Override
 	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
-		return false;
+		return delegate.afterInsert(key, value, null);
 	}
 
 	@Override
 	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
-		return false;
+		return delegate.afterUpdate(key, value, null, null, lock);
 	}
 
 	@Override

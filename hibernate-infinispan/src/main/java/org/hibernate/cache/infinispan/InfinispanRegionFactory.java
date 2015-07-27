@@ -34,6 +34,7 @@ import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.Externalizers;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
@@ -475,6 +476,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 										.globalJmxStatistics()
 										.enabled( Boolean.parseBoolean( globalStats ) );
 							}
+							holder.getGlobalConfigurationBuilder().serialization().addAdvancedExternalizer(Externalizers.ALL_EXTERNALIZERS);
 
 							return createCacheManager( holder );
 						}

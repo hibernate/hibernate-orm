@@ -9,6 +9,8 @@ package org.hibernate.cache.infinispan.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.infinispan.AdvancedCache;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -69,21 +71,23 @@ public class TransactionalAccessDelegate {
    /**
     * Attempt to cache an object, after loading from the database.
     *
-    * @param key The item key
+	 * @param session Current session
+	 * @param key The item key
     * @param value The item
     * @param txTimestamp a timestamp prior to the transaction start time
     * @param version the item version number
     * @return <tt>true</tt> if the object was successfully cached
     */
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) {
-		return putFromLoad( key, value, txTimestamp, version, false );
+	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) {
+		return putFromLoad(session, key, value, txTimestamp, version, false );
 	}
 
    /**
     * Attempt to cache an object, after loading from the database, explicitly
     * specifying the minimalPut behavior.
     *
-    * @param key The item key
+	 * @param session Current session
+	 * @param key The item key
     * @param value The item
     * @param txTimestamp a timestamp prior to the transaction start time
     * @param version the item version number
@@ -92,7 +96,7 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if storing the object failed
     */
 	@SuppressWarnings("UnusedParameters")
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( !region.checkValid() ) {
 			if ( TRACE_ENABLED ) {
@@ -118,6 +122,7 @@ public class TransactionalAccessDelegate {
 			return false;
 		}
 
+		putValidator.setCurrentSession(session);
 		try {
 			// Conditional put/putForExternalRead. If the region has been
 			// evicted in the current transaction, do a put instead of a
@@ -131,6 +136,7 @@ public class TransactionalAccessDelegate {
 			}
 		}
 		finally {
+			putValidator.resetCurrentSession();
 			putValidator.releasePutFromLoadLock( key, lock);
 		}
 
@@ -141,19 +147,34 @@ public class TransactionalAccessDelegate {
     * Called after an item has been inserted (before the transaction completes),
     * instead of calling evict().
     *
-    * @param key The item key
+	 * @param session Current session
+	 * @param key The item key
     * @param value The item
     * @param version The item's version value
     * @return Were the contents of the cache actual changed by this operation?
     * @throws CacheException if the insert fails
     */
 	@SuppressWarnings("UnusedParameters")
-	public boolean insert(Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
 		if ( !region.checkValid() ) {
 			return false;
 		}
 
-		writeCache.put( key, value );
+		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
+		// (or any other invalidation), naked put that was started after the eviction ended but before this insert
+		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
+		if ( !putValidator.beginInvalidatingKey(key)) {
+			throw new CacheException(
+					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
+			);
+		}
+		putValidator.setCurrentSession(session);
+		try {
+			writeCache.put(key, value);
+		}
+		finally {
+			putValidator.resetCurrentSession();
+		}
 		return true;
 	}
 
@@ -161,7 +182,8 @@ public class TransactionalAccessDelegate {
     * Called after an item has been updated (before the transaction completes),
     * instead of calling evict().
     *
-    * @param key The item key
+	 * @param session Current session
+	 * @param key The item key
     * @param value The item
     * @param currentVersion The item's current version value
     * @param previousVersion The item's previous version value
@@ -169,31 +191,53 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if the update fails
     */
 	@SuppressWarnings("UnusedParameters")
-	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		// We update whether or not the region is valid. Other nodes
 		// may have already restored the region so they need to
 		// be informed of the change.
-		writeCache.put( key, value );
+
+		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
+		// (or any other invalidation), naked put that was started after the eviction ended but before this update
+		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
+		if ( !putValidator.beginInvalidatingKey(key)) {
+			throw new CacheException(
+					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
+			);
+		}
+		putValidator.setCurrentSession(session);
+		try {
+			writeCache.put(key, value);
+		}
+		finally {
+			putValidator.resetCurrentSession();
+		}
 		return true;
 	}
 
    /**
     * Called after an item has become stale (before the transaction completes).
     *
-    * @param key The key of the item to remove
+	 * @param session Current session
+	 * @param key The key of the item to remove
     * @throws CacheException if removing the cached item fails
     */
-	public void remove(Object key) throws CacheException {
+	public void remove(SessionImplementor session, Object key) throws CacheException {
 		if ( !putValidator.beginInvalidatingKey(key)) {
 			throw new CacheException(
 					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
 			);
 		}
-		// We update whether or not the region is valid. Other nodes
-		// may have already restored the region so they need to
-		// be informed of the change.
-		writeCache.remove( key );
+		putValidator.setCurrentSession(session);
+		try {
+			// We update whether or not the region is valid. Other nodes
+			// may have already restored the region so they need to
+			// be informed of the change.
+			writeCache.remove(key);
+		}
+		finally {
+			putValidator.resetCurrentSession();
+		}
 	}
 
    /**
@@ -221,11 +265,6 @@ public class TransactionalAccessDelegate {
     * @throws CacheException if evicting the item fails
     */
 	public void evict(Object key) throws CacheException {
-		if ( !putValidator.beginInvalidatingKey(key)) {
-			throw new CacheException(
-					"Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName()
-			);
-		}
 		writeCache.remove( key );
 	}
 
@@ -262,7 +301,49 @@ public class TransactionalAccessDelegate {
 		if ( !putValidator.endInvalidatingKey(key) ) {
 			// TODO: localization
 			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
-					+ region.getName() + "; the key won't be cached in the future.");
+					+ region.getName() + "; the key won't be cached until invalidation expires.");
 		}
+	}
+
+	/**
+	 * Called after an item has been inserted (after the transaction completes),
+	 * instead of calling release().
+	 * This method is used by "asynchronous" concurrency strategies.
+	 *
+	 * @param key The item key
+	 * @param value The item
+	 * @param version The item's version value
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public boolean afterInsert(Object key, Object value, Object version) {
+		if ( !putValidator.endInvalidatingKey(key) ) {
+			// TODO: localization
+			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
+					+ region.getName() + "; the key won't be cached until invalidation expires.");
+		}
+		return false;
+	}
+
+	/**
+	 * Called after an item has been updated (after the transaction completes),
+	 * instead of calling release().  This method is used by "asynchronous"
+	 * concurrency strategies.
+	 *
+	 * @param key The item key
+	 * @param value The item
+	 * @param currentVersion The item's current version value
+	 * @param previousVersion The item's previous version value
+	 * @param lock The lock previously obtained from {@link #lockItem}
+	 * @return Were the contents of the cache actual changed by this operation?
+	 * @throws CacheException Propagated from underlying {@link org.hibernate.cache.spi.Region}
+	 */
+	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+		if ( !putValidator.endInvalidatingKey(key) ) {
+			// TODO: localization
+			log.warn("Failed to end invalidating pending putFromLoad calls for key " + key + " from region "
+					+ region.getName() + "; the key won't be cached until invalidation expires.");
+		}
+		return false;
 	}
 }

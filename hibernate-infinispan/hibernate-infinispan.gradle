@@ -36,6 +36,18 @@ def osgiDescription() {
 	return mavenPom.description
 }
 
+classes.doLast {
+    javaexec {
+        classpath = project.sourceSets.main.runtimeClasspath
+        main = "org.infinispan.factories.components.ComponentMetadataPersister"
+	args = [
+            project.sourceSets.main.output.classesDir,
+            project.sourceSets.main.output.resourcesDir.toPath().resolve("hibernate-infinispan-component-metadata.dat").toString()
+        ].toList()
+	standardOutput = { def f = File.createTempFile('metadata-log', null ); f.deleteOnExit(); f.newOutputStream() }() 
+    }
+}
+
 test {
    systemProperties['java.net.preferIPv4Stack'] = true
    systemProperties['jgroups.ping.timeout'] = 500

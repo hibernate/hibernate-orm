@@ -50,20 +50,20 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 	}
 
 	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
-		return delegate.insert( key, value, version );
+		return delegate.insert( session, key, value, version );
 	}
 
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return delegate.putFromLoad( key, value, txTimestamp, version );
+		return delegate.putFromLoad( session, key, value, txTimestamp, version );
 	}
 
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
-		return delegate.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
+		return delegate.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
 	}
 
 	public void remove(SessionImplementor session, Object key) throws CacheException {
-		delegate.remove( key );
+		delegate.remove ( session, key );
 	}
 
 	public void removeAll() throws CacheException {
@@ -72,7 +72,7 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 
 	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
-		return delegate.update( key, value, currentVersion, previousVersion );
+		return delegate.update( session, key, value, currentVersion, previousVersion );
 	}
 
 	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
@@ -91,12 +91,12 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 	}
 
 	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
-		return false;
+		return delegate.afterInsert(key, value, version);
 	}
 
 	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
-		return false;
+		return delegate.afterUpdate(key, value, currentVersion, previousVersion, lock);
 	}
 
 	@Override

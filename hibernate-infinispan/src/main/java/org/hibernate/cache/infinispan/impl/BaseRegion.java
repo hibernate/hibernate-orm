@@ -149,9 +149,11 @@ public abstract class BaseRegion implements Region {
 			synchronized (invalidationMutex) {
 				if ( invalidateState.compareAndSet( InvalidateState.INVALID, InvalidateState.CLEARING ) ) {
 					try {
-						// Even if no transactions are running, a new transaction
-						// needs to be started to do clear the region
-						// (without forcing autoCommit cache configuration).
+						// If we're running inside a transaction, we need to remove elements one-by-one
+						// to clean the context as well (cache.clear() does not do that).
+						// When we don't have transaction, we can do a clear operation (since we don't
+						// case about context) and can't do the one-by-one remove: remove() on tx cache
+						// requires transactional context.
 						Transaction tx = getCurrentTransaction();
 						if ( tx != null ) {
 							log.tracef( "Transaction, clearing one element at the time" );

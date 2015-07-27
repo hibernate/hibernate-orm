@@ -556,4 +556,9 @@ public class PostgreSQL81Dialect extends Dialect {
 	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
 		throw new UnsupportedOperationException( "PostgreSQL only supports accessing REF_CURSOR parameters by name" );
 	}
+
+	@Override
+	public boolean qualifyIndexName() {
+		return false;
+	}
 }

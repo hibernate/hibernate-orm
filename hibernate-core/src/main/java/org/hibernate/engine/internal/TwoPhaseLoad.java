@@ -194,6 +194,7 @@ public final class TwoPhaseLoad {
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
 			if ( session.getPersistenceContext().wasInsertedDuringTransaction( persister, id ) ) {
 				cache.update(
+						session,
 						cacheKey,
 						persister.getCacheEntryStructure().structure( entry ),
 						version,
@@ -205,6 +206,7 @@ public final class TwoPhaseLoad {
 				try {
 					eventListenerManager.cachePutStart();
 					final boolean put = cache.putFromLoad(
+							session,
 							cacheKey,
 							persister.getCacheEntryStructure().structure( entry ),
 							session.getTimestamp(),

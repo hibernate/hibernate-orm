@@ -7,6 +7,7 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * @author Eric Dalquist
@@ -17,7 +18,7 @@ class TransactionalNaturalIdRegionAccessStrategy extends BaseNaturalIdRegionAcce
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(SessionImplementor session, Object key) throws CacheException {
 		evict( key );
 	}
 

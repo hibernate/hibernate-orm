@@ -52,7 +52,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 	@Override
 	protected void putInRegion(Region region, Object key, Object value) {
-		((GeneralDataRegion) region).put( key, value );
+		((GeneralDataRegion) region).put(null, key, value );
 	}
 
 	@Override
@@ -100,21 +100,21 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 					properties,
 					null
 			);
-			assertNull( "local is clean", localRegion.get( KEY ) );
-			assertNull( "remote is clean", remoteRegion.get( KEY ) );
+			assertNull( "local is clean", localRegion.get(null, KEY ) );
+			assertNull( "remote is clean", remoteRegion.get(null, KEY ) );
 
 			regionPut( localRegion );
 
 			Callable<Object> getFromLocalRegion = new Callable<Object>() {
 				@Override
 				public Object call() throws Exception {
-					return localRegion.get(KEY);
+					return localRegion.get(null, KEY);
 				}
 			};
 			Callable<Object> getFromRemoteRegion = new Callable<Object>() {
 				@Override
 				public Object call() throws Exception {
-					return remoteRegion.get(KEY);
+					return remoteRegion.get(null, KEY);
 				}
 			};
 
@@ -137,7 +137,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
    }
 
    protected void regionPut(GeneralDataRegion region) throws Exception {
-	  region.put(KEY, VALUE1);
+	  region.put(null, KEY, VALUE1);
    }
 
    protected abstract String getStandardRegionName(String regionPrefix);
@@ -198,17 +198,17 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 			keys = remoteCache.keySet();
 			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
 
-			assertNull( "local is clean", localRegion.get( KEY ) );
-			assertNull( "remote is clean", remoteRegion.get( KEY ) );
+			assertNull( "local is clean", localRegion.get(null, KEY ) );
+			assertNull( "remote is clean", remoteRegion.get(null, KEY ) );
 
 			regionPut(localRegion);
-			assertEquals( VALUE1, localRegion.get( KEY ) );
+			assertEquals( VALUE1, localRegion.get(null, KEY ) );
 
 			// Allow async propagation
 			sleep( 250 );
 
 			regionPut(remoteRegion);
-			assertEquals( VALUE1, remoteRegion.get( KEY ) );
+			assertEquals( VALUE1, remoteRegion.get(null, KEY ) );
 
 			// Allow async propagation
 			sleep( 250 );
@@ -218,17 +218,17 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 			// allow async propagation
 			sleep( 250 );
 			// This should re-establish the region root node in the optimistic case
-			assertNull( localRegion.get( KEY ) );
+			assertNull( localRegion.get(null, KEY ) );
 			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( localCache.keySet() ) );
 
 			// Re-establishing the region root on the local node doesn't
 			// propagate it to other nodes. Do a get on the remote node to re-establish
 			// This only adds a node in the case of optimistic locking
-			assertEquals( null, remoteRegion.get( KEY ) );
+			assertEquals( null, remoteRegion.get(null, KEY ) );
 			assertEquals( "No valid children in " + keys, 0, getValidKeyCount( remoteCache.keySet() ) );
 
-			assertEquals( "local is clean", null, localRegion.get( KEY ) );
-			assertEquals( "remote is clean", null, remoteRegion.get( KEY ) );
+			assertEquals( "local is clean", null, localRegion.get(null, KEY ) );
+			assertEquals( "remote is clean", null, remoteRegion.get(null, KEY ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( registry1 );

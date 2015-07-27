@@ -92,7 +92,7 @@ public class UpdateTimestampsCache {
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				region.put( space, ts );
+				region.put( session, space, ts );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -128,7 +128,7 @@ public class UpdateTimestampsCache {
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				region.put( space, ts );
+				region.put( session, space, ts );
 			}
 			finally {
 				session.getEventListenerManager().cachePutEnd();
@@ -189,7 +189,7 @@ public class UpdateTimestampsCache {
 		Long ts = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			ts = (Long) region.get( space );
+			ts = (Long) region.get( session, space );
 		}
 		finally {
 			session.getEventListenerManager().cacheGetEnd( ts != null );

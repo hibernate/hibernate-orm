@@ -138,12 +138,13 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private boolean cacheInsert(EntityPersister persister, Object ck) {
+		SessionImplementor session = getSession();
 		try {
-			getSession().getEventListenerManager().cachePutStart();
-			return persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
+			session.getEventListenerManager().cachePutStart();
+			return persister.getCacheAccessStrategy().insert( session, ck, cacheEntry, version);
 		}
 		finally {
-			getSession().getEventListenerManager().cachePutEnd();
+			session.getEventListenerManager().cachePutEnd();
 		}
 	}
 
@@ -224,10 +225,11 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private boolean cacheAfterInsert(EntityRegionAccessStrategy cache, Object ck) {
-		final SessionEventListenerManager eventListenerManager = getSession().getEventListenerManager();
+		SessionImplementor session = getSession();
+		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {
 			eventListenerManager.cachePutStart();
-			return cache.afterInsert( ck, cacheEntry, version );
+			return cache.afterInsert( session, ck, cacheEntry, version );
 		}
 		finally {
 			eventListenerManager.cachePutEnd();

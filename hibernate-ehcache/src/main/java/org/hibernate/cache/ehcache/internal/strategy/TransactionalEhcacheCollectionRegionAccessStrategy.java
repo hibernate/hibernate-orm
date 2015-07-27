@@ -16,6 +16,7 @@ import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -47,7 +48,7 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public Object get(Object key, long txTimestamp) throws CacheException {
+	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
 		try {
 			final Element element = ehcache.get( key );
 			return element == null ? null : element.getObjectValue();
@@ -63,12 +64,13 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
 		return null;
 	}
 
 	@Override
 	public boolean putFromLoad(
+			SessionImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -88,7 +90,7 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public void remove(Object key) throws CacheException {
+	public void remove(SessionImplementor session, Object key) throws CacheException {
 		try {
 			ehcache.remove( key );
 		}
@@ -98,7 +100,7 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
 		// no-op
 	}
 

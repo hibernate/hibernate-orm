@@ -7,6 +7,7 @@
 package org.hibernate.cache.spi;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Contract for general-purpose cache regions.
@@ -18,20 +19,24 @@ public interface GeneralDataRegion extends Region {
 	/**
 	 * Get an item from the cache.
 	 *
+	 *
+	 * @param session
 	 * @param key The key of the item to be retrieved.
 	 * @return the cached object or <tt>null</tt>
 	 * @throws org.hibernate.cache.CacheException Indicates a problem accessing the item or region.
 	 */
-	public Object get(Object key) throws CacheException;
+	public Object get(SessionImplementor session, Object key) throws CacheException;
 
 	/**
 	 * Put an item into the cache.
 	 *
+	 *
+	 * @param session
 	 * @param key The key under which to cache the item.
 	 * @param value The item to cache.
 	 * @throws CacheException Indicates a problem accessing the region.
 	 */
-	public void put(Object key, Object value) throws CacheException;
+	public void put(SessionImplementor session, Object key, Object value) throws CacheException;
 
 	/**
 	 * Evict an item from the cache immediately (without regard for transaction

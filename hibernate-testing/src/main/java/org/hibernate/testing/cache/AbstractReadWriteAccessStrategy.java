@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.jboss.logging.Logger;
 
 /**
@@ -34,11 +35,11 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * after the start of this transaction.
 	 */
 	@Override
-	public final Object get(Object key, long txTimestamp) throws CacheException {
+	public final Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
 		LOG.debugf( "getting key[%s] from region[%s]", key, getInternalRegion().getName() );
 		try {
 			readLock.lock();
-			Lockable item = (Lockable) getInternalRegion().get( key );
+			Lockable item = (Lockable) getInternalRegion().get( session, key );
 
 			boolean readable = item != null && item.isReadable( txTimestamp );
 			if ( readable ) {
@@ -68,6 +69,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 */
 	@Override
 	public final boolean putFromLoad(
+			SessionImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -77,7 +79,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 		try {
 			LOG.debugf( "putting key[%s] -> value[%s] into region[%s]", key, value, getInternalRegion().getName() );
 			writeLock.lock();
-			Lockable item = (Lockable) getInternalRegion().get( key );
+			Lockable item = (Lockable) getInternalRegion().get( session, key );
 			boolean writeable = item == null || item.isWriteable( txTimestamp, version, getVersionComparator() );
 			if ( writeable ) {
 				LOG.debugf(
@@ -86,7 +88,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 						value,
 						getInternalRegion().getName()
 				);
-				getInternalRegion().put( key, new Item( value, version, getInternalRegion().nextTimestamp() ) );
+				getInternalRegion().put( session, key, new Item( value, version, getInternalRegion().nextTimestamp() ) );
 				return true;
 			}
 			else {
@@ -108,19 +110,19 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * Soft-lock a cache item.
 	 */
 	@Override
-	public final SoftLock lockItem(Object key, Object version) throws CacheException {
+	public final SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
 
 		try {
 			LOG.debugf( "locking key[%s] in region[%s]", key, getInternalRegion().getName() );
 			writeLock.lock();
-			Lockable item = (Lockable) getInternalRegion().get( key );
+			Lockable item = (Lockable) getInternalRegion().get( session, key );
 			long timeout = getInternalRegion().nextTimestamp() + getInternalRegion().getTimeout();
 			final Lock lock = ( item == null ) ? new Lock( timeout, uuid, nextLockId(), version ) : item.lock(
 					timeout,
 					uuid,
 					nextLockId()
 			);
-			getInternalRegion().put( key, lock );
+			getInternalRegion().put( session, key, lock );
 			return lock;
 		}
 		finally {
@@ -132,18 +134,18 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	 * Soft-unlock a cache item.
 	 */
 	@Override
-	public final void unlockItem(Object key, SoftLock lock) throws CacheException {
+	public final void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
 
 		try {
 			LOG.debugf( "unlocking key[%s] in region[%s]", key, getInternalRegion().getName() );
 			writeLock.lock();
-			Lockable item = (Lockable) getInternalRegion().get( key );
+			Lockable item = (Lockable) getInternalRegion().get( session, key );
 
 			if ( ( item != null ) && item.isUnlockable( lock ) ) {
-				decrementLock( key, (Lock) item );
+				decrementLock(session, key, (Lock) item );
 			}
 			else {
-				handleLockExpiry( key, item );
+				handleLockExpiry(session, key, item );
 			}
 		}
 		finally {
@@ -158,22 +160,22 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Unlock and re-put the given key, lock combination.
 	 */
-	protected void decrementLock(Object key, Lock lock) {
+	protected void decrementLock(SessionImplementor session, Object key, Lock lock) {
 		lock.unlock( getInternalRegion().nextTimestamp() );
-		getInternalRegion().put( key, lock );
+		getInternalRegion().put( session, key, lock );
 	}
 
 	/**
 	 * Handle the timeout of a previous lock mapped to this key
 	 */
-	protected void handleLockExpiry(Object key, Lockable lock) {
+	protected void handleLockExpiry(SessionImplementor session, Object key, Lockable lock) {
 		LOG.info( "Cached entry expired : " + key );
 
 		long ts = getInternalRegion().nextTimestamp() + getInternalRegion().getTimeout();
 		// create new lock that times out immediately
 		Lock newLock = new Lock( ts, uuid, nextLockId.getAndIncrement(), null );
 		newLock.unlock( ts );
-		getInternalRegion().put( key, newLock );
+		getInternalRegion().put( session, key, newLock );
 	}
 
 	/**

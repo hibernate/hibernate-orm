@@ -107,7 +107,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 				sessionFactory(),
 				session.getTenantIdentifier()
 		);
-		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) cache.get( cacheKey, ts );
+		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) cache.get( ( SessionImplementor ) session, cacheKey, ts );
 		assertNotNull( "collection was not in cache", cachedData );
 
 		session.close();
@@ -126,7 +126,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 				sessionFactory(),
 				session.getTenantIdentifier()
 		);
-		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( cacheKey2, ts );
+		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy().get( ( SessionImplementor ) session, cacheKey2, ts );
 		assertNotNull( "collection no longer in cache!", cachedData2 );
 		assertSame( "Different cache values!", cachedData, cachedData2 );
 

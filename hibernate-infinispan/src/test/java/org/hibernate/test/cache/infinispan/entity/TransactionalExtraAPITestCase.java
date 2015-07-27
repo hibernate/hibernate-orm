@@ -89,7 +89,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testLockItem() {
-		assertNull( getEntityAccessStrategy().lockItem( KEY, Integer.valueOf( 1 ) ) );
+		assertNull( getEntityAccessStrategy().lockItem(null, KEY, Integer.valueOf( 1 ) ) );
 	}
 
 	@Test
@@ -99,12 +99,12 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 
 	@Test
 	public void testUnlockItem() {
-		getEntityAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+		getEntityAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
 	}
 
 	@Test
 	public void testUnlockRegion() {
-		getEntityAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+		getEntityAccessStrategy().unlockItem(null, KEY, new MockSoftLock() );
 	}
 
 	@Test
@@ -112,7 +112,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public void testAfterInsert() {
 		assertFalse(
 				"afterInsert always returns false",
-				getEntityAccessStrategy().afterInsert(
+				getEntityAccessStrategy().afterInsert(null,
 						KEY,
 						VALUE1,
 						Integer.valueOf( 1 )
@@ -125,7 +125,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	public void testAfterUpdate() {
 		assertFalse(
 				"afterInsert always returns false",
-				getEntityAccessStrategy().afterUpdate(
+				getEntityAccessStrategy().afterUpdate(null,
 						KEY,
 						VALUE2,
 						Integer.valueOf( 1 ),

@@ -28,6 +28,6 @@ public class ReadOnlyExtraAPITestCase extends TransactionalExtraAPITestCase {
 	@Test(expected = UnsupportedOperationException.class)
 	@Override
 	public void testAfterUpdate() {
-		getEntityAccessStrategy().afterUpdate(KEY, VALUE2, 1, 2, new MockSoftLock());
+		getEntityAccessStrategy().afterUpdate(null, KEY, VALUE2, 1, 2, new MockSoftLock());
 	}
 }

@@ -29,23 +29,23 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 	}
 
 	@Override
-	public boolean insert(Object key, Object value) throws CacheException {
+	public boolean insert(SessionImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(Object key, Object value) throws CacheException {
+	public boolean update(SessionImplementor session, Object key, Object value) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(Object key, Object value) throws CacheException {
+	public boolean afterInsert(SessionImplementor session, Object key, Object value) throws CacheException {
 
 		try {
 			writeLock.lock();
-			Lockable item = (Lockable) region.get( key );
+			Lockable item = (Lockable) region.get( session, key );
 			if ( item == null ) {
-				region.put( key, new Item( value, null, region.nextTimestamp() ) );
+				region.put( session, key, new Item( value, null, region.nextTimestamp() ) );
 				return true;
 			}
 			else {
@@ -59,24 +59,24 @@ class ReadWriteNaturalIdRegionAccessStrategy extends AbstractReadWriteAccessStra
 
 
 	@Override
-	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
+	public boolean afterUpdate(SessionImplementor session, Object key, Object value, SoftLock lock) throws CacheException {
 		try {
 			writeLock.lock();
-			Lockable item = (Lockable) region.get( key );
+			Lockable item = (Lockable) region.get( session, key );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
 				Lock lockItem = (Lock) item;
 				if ( lockItem.wasLockedConcurrently() ) {
-					decrementLock( key, lockItem );
+					decrementLock( session, key, lockItem );
 					return false;
 				}
 				else {
-					region.put( key, new Item( value, null, region.nextTimestamp() ) );
+					region.put( session, key, new Item( value, null, region.nextTimestamp() ) );
 					return true;
 				}
 			}
 			else {
-				handleLockExpiry( key, item );
+				handleLockExpiry( session, key, item );
 				return false;
 			}
 		}

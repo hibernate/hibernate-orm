@@ -83,7 +83,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( ck, null );
+			final SoftLock lock = cache.lockItem( session, ck, null );
 			// the old behavior used key as opposed to getKey()
 			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
 		}
@@ -136,7 +136,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.remove( ck );
+			cache.remove( session, ck);
 		}
 	}
 
@@ -180,7 +180,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.unlockItem( ck, lock );
+			cache.unlockItem( session, ck, lock );
 		}
 	}
 

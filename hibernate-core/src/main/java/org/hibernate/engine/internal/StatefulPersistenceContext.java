@@ -1757,6 +1757,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						return;
 					}
 					final boolean put = naturalIdCacheAccessStrategy.putFromLoad(
+							session,
 							naturalIdCacheKey,
 							id,
 							session.getTimestamp(),
@@ -1773,7 +1774,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					break;
 				}
 				case INSERT: {
-					final boolean put = naturalIdCacheAccessStrategy.insert( naturalIdCacheKey, id );
+					final boolean put = naturalIdCacheAccessStrategy.insert( session, naturalIdCacheKey, id );
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor()
 								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
@@ -1784,7 +1785,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 									if (success) {
-										final boolean put = naturalIdCacheAccessStrategy.afterInsert( naturalIdCacheKey, id );
+										final boolean put = naturalIdCacheAccessStrategy.afterInsert( session, naturalIdCacheKey, id );
 
 										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 											factory.getStatisticsImplementor()
@@ -1806,11 +1807,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 						// prevent identical re-caching, solves HHH-7309
 						return;
 					}
-					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( previousCacheKey, null );
-					naturalIdCacheAccessStrategy.remove( previousCacheKey );
+					final SoftLock removalLock = naturalIdCacheAccessStrategy.lockItem( session, previousCacheKey, null );
+					naturalIdCacheAccessStrategy.remove( session, previousCacheKey);
 
-					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( naturalIdCacheKey, null );
-					final boolean put = naturalIdCacheAccessStrategy.update( naturalIdCacheKey, id );
+					final SoftLock lock = naturalIdCacheAccessStrategy.lockItem( session, naturalIdCacheKey, null );
+					final boolean put = naturalIdCacheAccessStrategy.update( session, naturalIdCacheKey, id );
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor()
 								.naturalIdCachePut( naturalIdCacheAccessStrategy.getRegion().getName() );
@@ -1820,9 +1821,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							new AfterTransactionCompletionProcess() {
 								@Override
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-									naturalIdCacheAccessStrategy.unlockItem( previousCacheKey, removalLock );
+									naturalIdCacheAccessStrategy.unlockItem( session, previousCacheKey, removalLock );
 									if (success) {
 										final boolean put = naturalIdCacheAccessStrategy.afterUpdate(
+												session,
 												naturalIdCacheKey,
 												id,
 												lock
@@ -1834,7 +1836,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 										}
 									}
 									else {
-										naturalIdCacheAccessStrategy.unlockItem( naturalIdCacheKey, lock );
+										naturalIdCacheAccessStrategy.unlockItem( session, naturalIdCacheKey, lock );
 									}
 								}
 							}

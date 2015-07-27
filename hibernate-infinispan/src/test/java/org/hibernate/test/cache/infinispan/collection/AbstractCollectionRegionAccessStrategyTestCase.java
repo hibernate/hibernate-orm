@@ -241,15 +241,15 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 					long txTimestamp = System.currentTimeMillis();
 					BatchModeTransactionManager.getInstance().begin();
 
-					assertEquals( "node1 starts clean", null, localAccessStrategy.get( KEY, txTimestamp ) );
+					assertEquals( "node1 starts clean", null, localAccessStrategy.get(null, KEY, txTimestamp ) );
 
 					writeLatch1.await();
 
 					if ( useMinimalAPI ) {
-						localAccessStrategy.putFromLoad( KEY, VALUE2, txTimestamp, new Integer( 2 ), true );
+						localAccessStrategy.putFromLoad(null, KEY, VALUE2, txTimestamp, new Integer( 2 ), true );
 					}
 					else {
-						localAccessStrategy.putFromLoad( KEY, VALUE2, txTimestamp, new Integer( 2 ) );
+						localAccessStrategy.putFromLoad(null, KEY, VALUE2, txTimestamp, new Integer( 2 ) );
 					}
 
 					BatchModeTransactionManager.getInstance().commit();
@@ -279,7 +279,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 					long txTimestamp = System.currentTimeMillis();
 					BatchModeTransactionManager.getInstance().begin();
 
-					assertNull( "node2 starts clean", remoteAccessStrategy.get( KEY, txTimestamp ) );
+					assertNull( "node2 starts clean", remoteAccessStrategy.get(null, KEY, txTimestamp ) );
 
 					// Let node1 write
 					writeLatch1.countDown();
@@ -290,10 +290,10 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 					sleep( 200 );
 
 					if ( useMinimalAPI ) {
-						remoteAccessStrategy.putFromLoad( KEY, VALUE1, txTimestamp, new Integer( 1 ), true );
+						remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer( 1 ), true );
 					}
 					else {
-						remoteAccessStrategy.putFromLoad( KEY, VALUE1, txTimestamp, new Integer( 1 ) );
+						remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, txTimestamp, new Integer( 1 ) );
 					}
 
 					BatchModeTransactionManager.getInstance().commit();
@@ -353,8 +353,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 			expected2 = VALUE2;
 		}
 
-		assertEquals( msg1, expected1, localAccessStrategy.get( KEY, txTimestamp ) );
-		assertEquals( msg2, expected2, remoteAccessStrategy.get( KEY, txTimestamp ) );
+		assertEquals( msg1, expected1, localAccessStrategy.get(null, KEY, txTimestamp ) );
+		assertEquals( msg2, expected2, remoteAccessStrategy.get(null, KEY, txTimestamp ) );
 	}
 
 	@Test
@@ -381,13 +381,13 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 		final Object KEY = TestingKeyFactory.generateCollectionCacheKey( KEY_BASE + testCount++ );
 
-		assertNull( "local is clean", localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		assertNull( "remote is clean", remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertNull( "local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
+		assertNull( "remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
-		localAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
-		assertEquals( VALUE1, localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		remoteAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
-		assertEquals( VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		localAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
+		assertEquals( VALUE1, localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
+		remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
+		assertEquals( VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
 		// Wait for async propagation
 		sleep( 250 );
@@ -398,14 +398,14 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             if (evict)
                localAccessStrategy.evict(KEY);
             else
-               localAccessStrategy.remove(KEY);
+               localAccessStrategy.remove(null, KEY);
             return null;
          }
       });
 
-		assertEquals( null, localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertEquals( null, localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
-		assertEquals( null, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertEquals( null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 	}
 
 	private void evictOrRemoveAllTest(final boolean evict) throws Exception {
@@ -416,13 +416,13 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
 
-		assertNull( "local is clean", localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		assertNull( "remote is clean", remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertNull( "local is clean", localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
+		assertNull( "remote is clean", remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
-		localAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
-		assertEquals( VALUE1, localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
-		remoteAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
-		assertEquals( VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		localAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
+		assertEquals( VALUE1, localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
+		remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
+		assertEquals( VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
 		// Wait for async propagation
 		sleep( 250 );
@@ -439,19 +439,19 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       });
 
 		// This should re-establish the region root node
-		assertNull( localAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertNull( localAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
 		assertEquals( 0, getValidKeyCount( localCollectionRegion.getCache().keySet() ) );
 
 		// Re-establishing the region root on the local node doesn't
 		// propagate it to other nodes. Do a get on the remote node to re-establish
-		assertEquals( null, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertEquals( null, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
 		assertEquals( 0, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
 
 		// Test whether the get above messes up the optimistic version
-		remoteAccessStrategy.putFromLoad( KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
-		assertEquals( VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		remoteAccessStrategy.putFromLoad(null, KEY, VALUE1, System.currentTimeMillis(), new Integer( 1 ) );
+		assertEquals( VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 
 		assertEquals( 1, getValidKeyCount( remoteCollectionRegion.getCache().keySet() ) );
 
@@ -460,11 +460,11 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
 		assertEquals(
 				"local is correct", (isUsingInvalidation() ? null : VALUE1), localAccessStrategy.get(
-				KEY, System
+						null, KEY, System
 				.currentTimeMillis()
 		)
 		);
-		assertEquals( "remote is correct", VALUE1, remoteAccessStrategy.get( KEY, System.currentTimeMillis() ) );
+		assertEquals( "remote is correct", VALUE1, remoteAccessStrategy.get(null, KEY, System.currentTimeMillis() ) );
 	}
 
 	private void rollback() {

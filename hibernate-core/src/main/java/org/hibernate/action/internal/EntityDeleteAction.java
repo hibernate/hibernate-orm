@@ -88,7 +88,7 @@ public class EntityDeleteAction extends EntityAction {
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey( id, persister, session.getFactory(), session.getTenantIdentifier() );
-			lock = cache.lockItem( ck, version );
+			lock = cache.lockItem( session, ck, version );
 		}
 		else {
 			ck = null;
@@ -113,7 +113,7 @@ public class EntityDeleteAction extends EntityAction {
 		persistenceContext.removeProxy( entry.getEntityKey() );
 		
 		if ( persister.hasCache() ) {
-			persister.getCacheAccessStrategy().remove( ck );
+			persister.getCacheAccessStrategy().remove( session, ck);
 		}
 
 		persistenceContext.getNaturalIdHelper().removeSharedNaturalIdCrossReference( persister, id, naturalIdValues );
@@ -194,7 +194,7 @@ public class EntityDeleteAction extends EntityAction {
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.unlockItem( ck, lock );
+			cache.unlockItem( session, ck, lock );
 		}
 		postCommitDelete( success );
 	}

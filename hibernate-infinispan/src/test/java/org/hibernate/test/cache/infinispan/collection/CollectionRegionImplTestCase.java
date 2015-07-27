@@ -59,12 +59,12 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
    @Override
    protected void putInRegion(Region region, Object key, Object value) {
       CollectionRegionAccessStrategy strategy = ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL);
-      strategy.putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
+      strategy.putFromLoad(null, key, value, System.currentTimeMillis(), new Integer(1));
    }
 
    @Override
    protected void removeFromRegion(Region region, Object key) {
-      ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(key);
+      ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).remove(null, key);
    }
 
 }

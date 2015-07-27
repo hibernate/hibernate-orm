@@ -415,6 +415,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final Object[] copiedValues = TypeHelper.replace(
 				persister.getPropertyValues( entity ),
 				persister.getPropertyValues( target ),
+				persister.getPropertyNames(),
 				persister.getPropertyTypes(),
 				source,
 				target,
@@ -452,6 +453,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			copiedValues = TypeHelper.replace(
 					persister.getPropertyValues( entity ),
 					persister.getPropertyValues( target ),
+					persister.getPropertyNames(),
 					persister.getPropertyTypes(),
 					source,
 					target,

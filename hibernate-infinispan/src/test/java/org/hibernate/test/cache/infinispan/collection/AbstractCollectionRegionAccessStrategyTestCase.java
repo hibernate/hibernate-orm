@@ -169,7 +169,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
             Callable<Void> pferCallable = new Callable<Void>() {
                public Void call() throws Exception {
-                  delegate.putFromLoad( "k1", "v1", 0, null );
+                  delegate.putFromLoad(null, "k1", "v1", 0, null );
                   return null;
                }
             };
@@ -180,7 +180,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                   Caches.withinTx(localTm, new Callable<Void>() {
                      @Override
                      public Void call() throws Exception {
-                        delegate.remove("k1");
+                        delegate.remove(null, "k1");
                         return null;
                      }
                   });

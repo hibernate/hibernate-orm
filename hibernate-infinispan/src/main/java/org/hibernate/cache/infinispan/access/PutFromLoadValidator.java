@@ -6,15 +6,20 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -22,30 +27,23 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
-import org.hibernate.cache.infinispan.util.EndInvalidationCommand;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.infinispan.AdvancedCache;
-import org.infinispan.commands.tx.CommitCommand;
-import org.infinispan.commands.tx.PrepareCommand;
-import org.infinispan.commands.write.InvalidateCommand;
-import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.interceptors.EntryWrappingInterceptor;
-import org.infinispan.interceptors.base.BaseRpcInterceptor;
+import org.infinispan.interceptors.InvalidationInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.remoting.inboundhandler.DeliverOrder;
-import org.infinispan.remoting.rpc.RpcManager;
-import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.concurrent.ConcurrentHashSet;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
  * Encapsulates logic to allow a {@link TransactionalAccessDelegate} to determine
- * whether a {@link TransactionalAccessDelegate#putFromLoad(Object, Object, long, Object, boolean)}
+ * whether a {@link TransactionalAccessDelegate#putFromLoad(org.hibernate.engine.spi.SessionImplementor, Object, Object, long, Object, boolean)}
  * call should be allowed to update the cache. A <code>putFromLoad</code> has
  * the potential to store stale data, since the data may have been removed from the
  * database and the cache between the time when the data was read from the database
@@ -118,6 +116,11 @@ public class PutFromLoadValidator {
 	private final AdvancedCache cache;
 
 	/**
+	 * Injected interceptor
+	 */
+	private final NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor;
+
+	/**
 	 * The time of the last call to {@link #endInvalidatingRegion()}. Puts from transactions started after
 	 * this timestamp are denied.
 	 */
@@ -133,6 +136,8 @@ public class PutFromLoadValidator {
 	 */
 	private final ConcurrentHashSet<Transaction> regionInvalidators = new ConcurrentHashSet<Transaction>();
 
+	private final ThreadLocal<SessionImplementor> currentSession = new ThreadLocal<SessionImplementor>();
+
 
 	/**
 	 * Creates a new put from load validator instance.
@@ -144,8 +149,8 @@ public class PutFromLoadValidator {
 		this( cache, cache.getCacheManager(), transactionManager);
 	}
 
-   /**
-    * Creates a new put from load validator instance.
+	/**
+	 * Creates a new put from load validator instance.
 	*
 	* @param cache Cache instance on which to store pending put information.
 	* @param cacheManager where to find a cache to store pending put information
@@ -171,19 +176,52 @@ public class PutFromLoadValidator {
 
 		// Since we need to intercept both invalidations of entries that are in the cache and those
 		// that are not, we need to use custom interceptor, not listeners (which fire only for present entries).
+		NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor = null;
 		if (cacheConfiguration.clustering().cacheMode().isClustered()) {
-			RpcManager rpcManager = cache.getComponentRegistry().getComponent(RpcManager.class);
+			List<CommandInterceptor> interceptorChain = cache.getInterceptorChain();
+			log.debug("Interceptor chain was: " + interceptorChain);
+			int position = 0;
+			// add interceptor before uses exact match, not instanceof match
+			int invalidationPosition = 0;
+			int entryWrappingPosition = 0;
+			for (CommandInterceptor ci : interceptorChain) {
+				if (ci instanceof InvalidationInterceptor) {
+					invalidationPosition = position;
+				}
+				if (ci instanceof EntryWrappingInterceptor) {
+					entryWrappingPosition = position;
+				}
+				position++;
+			}
+			boolean transactional = cache.getCacheConfiguration().transaction().transactionMode().isTransactional();
+			if (transactional) {
+				// Note that invalidation does *NOT* acquire locks; therefore, we have to start invalidating before
+				// wrapping the entry, since if putFromLoad was invoked between wrap and beginInvalidatingKey, the invalidation
+				// would not commit the entry removal (as during wrap the entry was not in cache)
+				TxPutFromLoadInterceptor txPutFromLoadInterceptor = new TxPutFromLoadInterceptor(this, cache.getName());
+				cache.getComponentRegistry().registerComponent(txPutFromLoadInterceptor, TxPutFromLoadInterceptor.class);
+				cache.addInterceptor(txPutFromLoadInterceptor, entryWrappingPosition);
+			}
+			else {
+				cache.removeInterceptor(invalidationPosition);
+				NonTxInvalidationInterceptor nonTxInvalidationInterceptor = new NonTxInvalidationInterceptor(this);
+				cache.getComponentRegistry().registerComponent(nonTxInvalidationInterceptor, NonTxInvalidationInterceptor.class);
+				cache.addInterceptor(nonTxInvalidationInterceptor, invalidationPosition);
+
+				nonTxPutFromLoadInterceptor = new NonTxPutFromLoadInterceptor(this, cache.getName());
+				cache.getComponentRegistry().registerComponent(nonTxPutFromLoadInterceptor, NonTxPutFromLoadInterceptor.class);
+				cache.addInterceptor(nonTxPutFromLoadInterceptor, entryWrappingPosition);
+			}
+			log.debug("New interceptor chain is: " + cache.getInterceptorChain());
+
 			CacheCommandInitializer cacheCommandInitializer = cache.getComponentRegistry().getComponent(CacheCommandInitializer.class);
-			// Note that invalidation does *NOT* acquire locks; therefore, we have to start invalidating before
-			// wrapping the entry, since if putFromLoad was invoked between wrap and beginInvalidatingKey, the invalidation
-			// would not commit the entry removal (as during wrap the entry was not in cache)
-			cache.addInterceptorBefore(new PutFromLoadInterceptor(cache.getName(), rpcManager, cacheCommandInitializer), EntryWrappingInterceptor.class);
 			cacheCommandInitializer.addPutFromLoadValidator(cache.getName(), this);
 		}
 
 		this.cache = cache;
 		this.pendingPuts = cacheManager.getCache(pendingPutsName);
 		this.transactionManager = tm;
+		this.nonTxPutFromLoadInterceptor = nonTxPutFromLoadInterceptor;
 	}
 
 	/**
@@ -191,13 +229,16 @@ public class PutFromLoadValidator {
 	 * in order to replace it with new one.
 	 *
 	 * @param cache
-    */
+	 */
 	public static void removeFromCache(AdvancedCache cache) {
-		List<CommandInterceptor> interceptorChain = cache.getInterceptorChain();
-		int index = 0;
-		for (; index < interceptorChain.size(); ++index) {
-			if (interceptorChain.get(index).getClass().getName().startsWith(PutFromLoadValidator.class.getName())) {
-				cache.removeInterceptor(index);
+		cache.removeInterceptor(TxPutFromLoadInterceptor.class);
+		cache.removeInterceptor(NonTxPutFromLoadInterceptor.class);
+		for (Object i : cache.getInterceptorChain()) {
+			if (i instanceof NonTxInvalidationInterceptor) {
+				InvalidationInterceptor invalidationInterceptor = new InvalidationInterceptor();
+				cache.getComponentRegistry().registerComponent(invalidationInterceptor, InvalidationInterceptor.class);
+				cache.addInterceptorBefore(invalidationInterceptor, NonTxInvalidationInterceptor.class);
+				cache.removeInterceptor(NonTxInvalidationInterceptor.class);
 				break;
 			}
 		}
@@ -205,7 +246,18 @@ public class PutFromLoadValidator {
 		cci.removePutFromLoadValidator(cache.getName());
 	}
 
-	// ----------------------------------------------------------------- Public
+	public void setCurrentSession(SessionImplementor session) {
+		// we register synchronizations directly on JTA transactions, let's make this noop with TM
+		if (transactionManager == null) {
+			currentSession.set(session);
+		}
+	}
+
+	public void resetCurrentSession() {
+		if (transactionManager == null) {
+			currentSession.remove();
+		}
+	}
 
 	/**
 	 * Marker for lock acquired in {@link #acquirePutFromLoadLock(Object, long)}
@@ -232,7 +284,6 @@ public class PutFromLoadValidator {
 		if (trace) {
 			log.tracef("acquirePutFromLoadLock(%s#%s, %d)", cache.getName(), key, txTimestamp);
 		}
-		boolean valid = false;
 		boolean locked = false;
 
 		PendingPutMap pending = pendingPuts.get( key );
@@ -241,8 +292,20 @@ public class PutFromLoadValidator {
 				if (pending != null) {
 					locked = pending.acquireLock(100, TimeUnit.MILLISECONDS);
 					if (locked) {
+						boolean valid = false;
 						try {
-							final PendingPut toCancel = pending.remove(getOwnerForPut());
+							if (pending.isRemoved()) {
+								// this deals with a race between retrieving the map from cache vs. removing that
+								// and locking the map
+								pending.releaseLock();
+								locked = false;
+								pending = null;
+								if (trace) {
+									log.tracef("Record removed when waiting for the lock.");
+								}
+								continue;
+							}
+							final PendingPut toCancel = pending.remove(getLocalLockOwner());
 							if (toCancel != null) {
 								valid = !toCancel.completed;
 								toCancel.completed = true;
@@ -252,20 +315,25 @@ public class PutFromLoadValidator {
 								if (pending.hasInvalidator()) {
 									valid = false;
 								}
-								else {
+								// we need this check since registerPendingPut (creating new pp) can get between invalidation
+								// and naked put caused by the invalidation
+								else if (pending.lastInvalidationEnd != Long.MIN_VALUE) {
 									// if this transaction started after last invalidation we can continue
 									valid = txTimestamp > pending.lastInvalidationEnd;
+								}
+								else {
+									valid = txTimestamp > regionInvalidationTimestamp;
 								}
 							}
 							return valid ? pending : null;
 						}
 						finally {
-							if (!valid) {
+							if (!valid && pending != null) {
 								pending.releaseLock();
 								locked = false;
 							}
 							if (trace) {
-								log.tracef("acquirePutFromLoadLock(%s#%s, %d) ended with %s", cache.getName(), key, txTimestamp, pending);
+								log.tracef("acquirePutFromLoadLock(%s#%s, %d) ended with %s, valid: %s", cache.getName(), key, txTimestamp, pending, valid);
 							}
 						}
 					}
@@ -278,14 +346,20 @@ public class PutFromLoadValidator {
 					}
 				}
 				else {
+					long regionInvalidationTimestamp = this.regionInvalidationTimestamp;
 					if (txTimestamp <= regionInvalidationTimestamp) {
 						if (trace) {
-							log.tracef("acquirePutFromLoadLock(%s#%s, %d) failed due to invalidated region", cache.getName(), key, txTimestamp);
+							log.tracef("acquirePutFromLoadLock(%s#%s, %d) failed due to region invalidated at %d", cache.getName(), key, txTimestamp, regionInvalidationTimestamp);
 						}
 						return null;
 					}
+					else {
+						if (trace) {
+							log.tracef("Region invalidated at %d, this transaction started at %d", regionInvalidationTimestamp, txTimestamp);
+						}
+					}
 
-					PendingPut pendingPut = new PendingPut(getOwnerForPut());
+					PendingPut pendingPut = new PendingPut(getLocalLockOwner());
 					pending = new PendingPutMap(pendingPut);
 					PendingPutMap existing = pendingPuts.putIfAbsent(key, pending);
 					if (existing != null) {
@@ -325,6 +399,7 @@ public class PutFromLoadValidator {
 		final PendingPutMap pending = (PendingPutMap) lock;
 		if ( pending != null ) {
 			if ( pending.canRemove() ) {
+				pending.setRemoved();
 				pendingPuts.remove( key, pending );
 			}
 			pending.releaseLock();
@@ -386,6 +461,9 @@ public class PutFromLoadValidator {
 		try {
 			// Acquire the lock for each entry to ensure any ongoing
 			// work associated with it is completed before we return
+			// We cannot erase the map: if there was ongoing invalidation and we removed it, registerPendingPut
+			// started after that would have no way of finding out that the entity *is* invalidated (it was
+			// removed from the cache and now the DB is about to be updated).
 			for (Iterator<PendingPutMap> it = pendingPuts.values().iterator(); it.hasNext(); ) {
 				PendingPutMap entry = it.next();
 				if (entry.acquireLock(60, TimeUnit.SECONDS)) {
@@ -395,7 +473,6 @@ public class PutFromLoadValidator {
 					finally {
 						entry.releaseLock();
 					}
-					it.remove();
 				}
 				else {
 					ok = false;
@@ -415,10 +492,15 @@ public class PutFromLoadValidator {
 		synchronized (this) {
 			if (--regionInvalidations == 0) {
 				regionInvalidationTimestamp = System.currentTimeMillis();
+				if (trace) {
+					log.tracef("Finished invalidating region %s at %d", cache.getName(), regionInvalidationTimestamp);
+				}
 			}
-		}
-		if (trace) {
-			log.trace("Finished invalidating region " + cache.getName());
+			else {
+				if (trace) {
+					log.tracef("Finished invalidating region %s, but there are %d ongoing invalidations", cache.getName(), regionInvalidations);
+				}
+			}
 		}
 	}
 
@@ -461,35 +543,44 @@ public class PutFromLoadValidator {
 			}
 		}
 
-		final PendingPut pendingPut = new PendingPut( getOwnerForPut() );
+		final PendingPut pendingPut = new PendingPut( getLocalLockOwner() );
 		final PendingPutMap pendingForKey = new PendingPutMap( pendingPut );
 
-		final PendingPutMap existing = pendingPuts.putIfAbsent( key, pendingForKey );
-		if ( existing != null ) {
-			if ( existing.acquireLock( 10, TimeUnit.SECONDS ) ) {
-				try {
-					if ( !existing.hasInvalidator() ) {
-						existing.put(pendingPut);
+		for (;;) {
+			final PendingPutMap existing = pendingPuts.putIfAbsent(key, pendingForKey);
+			if (existing != null) {
+				if (existing.acquireLock(10, TimeUnit.SECONDS)) {
+					try {
+						if (existing.isRemoved()) {
+							if (trace) {
+								log.tracef("Record removed when waiting for the lock.");
+							}
+							continue;
+						}
+						if (!existing.hasInvalidator()) {
+							existing.put(pendingPut);
+						}
+					}
+					finally {
+						existing.releaseLock();
+					}
+					if (trace) {
+						log.tracef("registerPendingPut(%s#%s, %d) ended with %s", cache.getName(), key, txTimestamp, existing);
 					}
 				}
-				finally {
-					existing.releaseLock();
-				}
-				if (trace) {
-					log.tracef("registerPendingPut(%s#%s, %d) ended with %s", cache.getName(), key, txTimestamp, existing);
+				else {
+					if (trace) {
+						log.tracef("registerPendingPut(%s#%s, %d) failed to acquire lock", cache.getName(), key, txTimestamp);
+					}
+					// Can't get the lock; when we come back we'll be a "naked put"
 				}
 			}
 			else {
 				if (trace) {
-					log.tracef("registerPendingPut(%s#%s, %d) failed to acquire lock", cache.getName(), key, txTimestamp);
+					log.tracef("registerPendingPut(%s#%s, %d) registered using putIfAbsent: %s", cache.getName(), key, txTimestamp, pendingForKey);
 				}
-				// Can't get the lock; when we come back we'll be a "naked put"
 			}
-		}
-		else {
-			if (trace) {
-				log.tracef("registerPendingPut(%s#%s, %d) registered using putIfAbsent: %s", cache.getName(), key, txTimestamp, pendingForKey);
-			}
+			return;
 		}
 	}
 
@@ -497,9 +588,9 @@ public class PutFromLoadValidator {
 	 * Calls {@link #beginInvalidatingKey(Object, Object)} with current transaction or thread.
 	 * @param key
 	 * @return
-    */
+	 */
 	public boolean beginInvalidatingKey(Object key) {
-		return beginInvalidatingKey(key, getOwnerForPut());
+		return beginInvalidatingKey(key, getLocalLockOwner());
 	}
 
 	/**
@@ -517,28 +608,36 @@ public class PutFromLoadValidator {
 	 *         caller should treat as an exception condition)
 	 */
 	public boolean beginInvalidatingKey(Object key, Object lockOwner) {
-		PendingPutMap pending = new PendingPutMap(null);
-		PendingPutMap prev = pendingPuts.putIfAbsent(key, pending);
-		if (prev != null) {
-			pending = prev;
-		}
-		if (pending.acquireLock(60, TimeUnit.SECONDS)) {
-			try {
-				long now = System.currentTimeMillis();
-				pending.invalidate(now, expirationPeriod);
-				pending.addInvalidator(lockOwner, now, expirationPeriod);
+		for (;;) {
+			PendingPutMap pending = new PendingPutMap(null);
+			PendingPutMap prev = pendingPuts.putIfAbsent(key, pending);
+			if (prev != null) {
+				pending = prev;
 			}
-			finally {
-				pending.releaseLock();
+			if (pending.acquireLock(60, TimeUnit.SECONDS)) {
+				try {
+					if (pending.isRemoved()) {
+						if (trace) {
+							log.tracef("Record removed when waiting for the lock.");
+						}
+						continue;
+					}
+					long now = System.currentTimeMillis();
+					pending.invalidate(now, expirationPeriod);
+					pending.addInvalidator(lockOwner, now, expirationPeriod);
+				}
+				finally {
+					pending.releaseLock();
+				}
+				if (trace) {
+					log.tracef("beginInvalidatingKey(%s#%s, %s) ends with %s", cache.getName(), key, lockOwner, pending);
+				}
+				return true;
 			}
-			if (trace) {
-				log.tracef("beginInvalidatingKey(%s#%s, %s) ends with %s", cache.getName(), key, lockOwner, pending);
+			else {
+				log.tracef("beginInvalidatingKey(%s#%s, %s) failed to acquire lock", cache.getName(), key);
+				return false;
 			}
-			return true;
-		}
-		else {
-			log.tracef("beginInvalidatingKey(%s#%s, %s) failed to acquire lock", cache.getName(), key);
-			return false;
 		}
 	}
 
@@ -546,9 +645,9 @@ public class PutFromLoadValidator {
 	 * Calls {@link #endInvalidatingKey(Object, Object)} with current transaction or thread.
 	 * @param key
 	 * @return
-    */
+	 */
 	public boolean endInvalidatingKey(Object key) {
-		return endInvalidatingKey(key, getOwnerForPut());
+		return endInvalidatingKey(key, getLocalLockOwner());
 	}
 
 	/**
@@ -558,7 +657,7 @@ public class PutFromLoadValidator {
 	 * @param key
 	 * @param lockOwner owner of the invalidation - transaction or thread
 	 * @return
-    */
+	 */
 	public boolean endInvalidatingKey(Object key, Object lockOwner) {
 		PendingPutMap pending = pendingPuts.get(key);
 		if (pending == null) {
@@ -590,10 +689,49 @@ public class PutFromLoadValidator {
 		}
 	}
 
+	public Object registerRemoteInvalidations(Object[] keys) {
+		Transaction tx = null;
+		try {
+			if ( transactionManager != null ) {
+				tx = transactionManager.getTransaction();
+			}
+		}
+		catch (SystemException se) {
+			throw new CacheException( "Could not obtain transaction", se );
+		}
+		if (tx != null) {
+			if (trace) {
+				log.tracef("Registering lock owner %s for %s: %s", tx, cache.getName(), Arrays.toString(keys));
+			}
+			try {
+				Synchronization sync = new Synchronization(nonTxPutFromLoadInterceptor, keys);
+				tx.registerSynchronization(sync);
+				return sync.uuid;
+			}
+			catch (SystemException se) {
+				throw new CacheException("Cannot register synchronization", se);
+			}
+			catch (RollbackException e) {
+				return null;
+			}
+		}
+		SessionImplementor session = currentSession.get();
+		TransactionCoordinator transactionCoordinator = session == null ? null : session.getTransactionCoordinator();
+		if (transactionCoordinator != null) {
+			if (trace) {
+				log.tracef("Registering lock owner %s for %s: %s", session, cache.getName(), Arrays.toString(keys));
+			}
+			Synchronization sync = new Synchronization(nonTxPutFromLoadInterceptor, keys);
+			transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
+			return sync.uuid;
+		}
+		// evict() command is not executed in session context
+		return null;
+	}
 
 	// ---------------------------------------------------------------- Private
 
-	private Object getOwnerForPut() {
+	private Object getLocalLockOwner() {
 		Transaction tx = null;
 		try {
 			if ( transactionManager != null ) {
@@ -620,6 +758,7 @@ public class PutFromLoadValidator {
 		private Invalidator singleInvalidator;
 		private Map<Object, Invalidator> invalidators;
 		private long lastInvalidationEnd = Long.MIN_VALUE;
+		private boolean removed = false;
 
 		PendingPutMap(PendingPut singleItem) {
 			this.singlePendingPut = singleItem;
@@ -661,7 +800,7 @@ public class PutFromLoadValidator {
 					else {
 						sb.append(lastInvalidationEnd);
 					}
-					return sb.append("}").toString();
+					return sb.append(", Removed=").append(removed).append("}").toString();
 				}
 				finally {
 					lock.unlock();
@@ -774,6 +913,25 @@ public class PutFromLoadValidator {
 			return singleInvalidator != null || (invalidators != null && !invalidators.isEmpty());
 		}
 
+		// Debug introspection method, do not use in production code!
+		public Collection<Invalidator> getInvalidators() {
+			lock.lock();
+			try {
+				if (singleInvalidator != null) {
+					return Collections.singleton(singleInvalidator);
+				}
+				else if (invalidators != null) {
+					return new ArrayList<Invalidator>(invalidators.values());
+				}
+				else {
+					return Collections.EMPTY_LIST;
+				}
+			}
+			finally {
+				lock.unlock();
+			}
+		}
+
 		public void removeInvalidator(Object owner, long now) {
 			if (invalidators == null) {
 				if (singleInvalidator != null && singleInvalidator.owner.equals(owner)) {
@@ -788,6 +946,14 @@ public class PutFromLoadValidator {
 
 		public boolean canRemove() {
 			return size() == 0 && !hasInvalidator() && lastInvalidationEnd == Long.MIN_VALUE;
+		}
+
+		public void setRemoved() {
+			removed = true;
+		}
+
+		public boolean isRemoved() {
+			return removed;
 		}
 	}
 
@@ -833,59 +999,6 @@ public class PutFromLoadValidator {
 			sb.append(", Timestamp=").append(registeredTimestamp);
 			sb.append('}');
 			return sb.toString();
-		}
-	}
-
-	private class PutFromLoadInterceptor extends BaseRpcInterceptor {
-		private final String cacheName;
-		private final RpcManager rpcManager;
-		private final CacheCommandInitializer cacheCommandInitializer;
-
-		public PutFromLoadInterceptor(String cacheName, RpcManager rpcManager, CacheCommandInitializer cacheCommandInitializer) {
-			this.cacheName = cacheName;
-			this.rpcManager = rpcManager;
-			this.cacheCommandInitializer = cacheCommandInitializer;
-		}
-
-		// We need to intercept PrepareCommand, not InvalidateCommand since the interception takes
-		// place before EntryWrappingInterceptor and the PrepareCommand is multiplexed into InvalidateCommands
-		// as part of EntryWrappingInterceptor
-		@Override
-		public Object visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {
-			if (!ctx.isOriginLocal()) {
-				for (WriteCommand wc : command.getModifications()) {
-					if (wc instanceof InvalidateCommand) {
-						// InvalidateCommand does not correctly implement getAffectedKeys()
-						for (Object key : ((InvalidateCommand) wc).getKeys()) {
-							beginInvalidatingKey(key, ctx.getLockOwner());
-						}
-					}
-					else {
-						for (Object key : wc.getAffectedKeys()) {
-							beginInvalidatingKey(key, ctx.getLockOwner());
-						}
-					}
-				}
-			}
-			return invokeNextInterceptor(ctx, command);
-		}
-
-		@Override
-		public Object visitCommitCommand(TxInvocationContext ctx, CommitCommand command) throws Throwable {
-			try {
-				if (ctx.isOriginLocal()) {
-					// send async Commit
-					Set<Object> affectedKeys = ctx.getAffectedKeys();
-					if (!affectedKeys.isEmpty()) {
-						EndInvalidationCommand commitCommand = cacheCommandInitializer.buildEndInvalidationCommand(
-								cacheName, affectedKeys.toArray(), ctx.getGlobalTransaction());
-						rpcManager.invokeRemotely(null, commitCommand, rpcManager.getDefaultRpcOptions(false, DeliverOrder.NONE));
-					}
-				}
-			}
-			finally {
-				return invokeNextInterceptor(ctx, command);
-			}
 		}
 	}
 }

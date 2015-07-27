@@ -59,6 +59,7 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
 		final Map<Byte, Class<? extends ReplicableCommand>> map = new HashMap<Byte, Class<? extends ReplicableCommand>>( 3 );
 		map.put( CacheCommandIds.EVICT_ALL, EvictAllCommand.class );
 		map.put( CacheCommandIds.END_INVALIDATION, EndInvalidationCommand.class );
+		map.put( CacheCommandIds.BEGIN_INVALIDATION, BeginInvalidationCommand.class );
 		return map;
 	}
 
@@ -81,9 +82,16 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
 
 	@Override
 	public ReplicableCommand fromStream(byte commandId, Object[] args) {
-		// Should not be called while this factory only
-		// provides cache specific replicable commands.
-		return null;
+		ReplicableCommand c;
+		switch ( commandId ) {
+			case CacheCommandIds.BEGIN_INVALIDATION:
+				c = new BeginInvalidationCommand();
+				break;
+			default:
+				throw new IllegalArgumentException( "Not registered to handle command id " + commandId );
+		}
+		c.setParameters( commandId, args );
+		return c;
 	}
 
 }

@@ -46,16 +46,16 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 	}
 
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) throws CacheException {
-		return delegate.putFromLoad( key, value, txTimestamp, version );
+		return delegate.putFromLoad( session, key, value, txTimestamp, version );
 	}
 
 	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
-		return delegate.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
+		return delegate.putFromLoad( session, key, value, txTimestamp, version, minimalPutOverride );
 	}
 
 	public void remove(SessionImplementor session, Object key) throws CacheException {
-		delegate.remove( key );
+		delegate.remove( session, key );
 	}
 
 	public void removeAll() throws CacheException {

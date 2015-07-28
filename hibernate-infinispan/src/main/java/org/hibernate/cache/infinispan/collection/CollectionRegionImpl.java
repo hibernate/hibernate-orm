@@ -17,6 +17,8 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.infinispan.AdvancedCache;
 
+import javax.transaction.TransactionManager;
+
 /**
  * Collection region implementation
  *
@@ -31,14 +33,15 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
     *
     * @param cache instance to store collection instances
     * @param name of collection type
+	 * @param transactionManager
     * @param metadata for the collection type
     * @param factory for the region
 	* @param cacheKeysFactory factory for cache keys
     */
 	public CollectionRegionImpl(
-			AdvancedCache cache, String name,
+			AdvancedCache cache, String name, TransactionManager transactionManager,
 			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
-		super( cache, name, metadata, factory, cacheKeysFactory );
+		super( cache, name, transactionManager, metadata, factory, cacheKeysFactory );
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
 	}
 
 	public PutFromLoadValidator getPutFromLoadValidator() {
-		return new PutFromLoadValidator( cache );
+		return new PutFromLoadValidator( cache, getTransactionManager() );
 	}
 
 }

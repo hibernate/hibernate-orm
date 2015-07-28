@@ -34,7 +34,7 @@ public abstract class BaseGeneralDataRegion extends BaseRegion implements Genera
 	public BaseGeneralDataRegion(
 			AdvancedCache cache, String name,
 			RegionFactory factory) {
-		super( cache, name, factory );
+		super( cache, name, null, factory );
 		this.putCache = Caches.ignoreReturnValuesCache( cache );
 	}
 

@@ -13,6 +13,8 @@ import org.hibernate.cache.spi.TransactionalDataRegion;
 
 import org.infinispan.AdvancedCache;
 
+import javax.transaction.TransactionManager;
+
 /**
  * Support for Inifinispan {@link org.hibernate.cache.spi.TransactionalDataRegion} implementors.
  *
@@ -31,14 +33,15 @@ public abstract class BaseTransactionalDataRegion
     *
     * @param cache instance to store transactional data
     * @param name of the transactional region
+	 * @param transactionManager
     * @param metadata for the transactional region
     * @param factory for the transactional region
 	* @param cacheKeysFactory factory for cache keys
     */
 	public BaseTransactionalDataRegion(
-			AdvancedCache cache, String name,
+			AdvancedCache cache, String name, TransactionManager transactionManager,
 			CacheDataDescription metadata, RegionFactory factory, CacheKeysFactory cacheKeysFactory) {
-		super( cache, name, factory);
+		super( cache, name, transactionManager, factory);
 		this.metadata = metadata;
 		this.cacheKeysFactory = cacheKeysFactory;
 	}

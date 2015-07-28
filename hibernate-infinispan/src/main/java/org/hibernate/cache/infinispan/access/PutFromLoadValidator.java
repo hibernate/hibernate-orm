@@ -114,24 +114,26 @@ public class PutFromLoadValidator {
 	 * Creates a new put from load validator instance.
     *
     * @param cache Cache instance on which to store pending put information.
+	 * @param transactionManager Transaction manager
 	 */
-	public PutFromLoadValidator(AdvancedCache cache) {
-		this( cache, NAKED_PUT_INVALIDATION_PERIOD );
+	public PutFromLoadValidator(AdvancedCache cache, TransactionManager transactionManager) {
+		this( cache, transactionManager, NAKED_PUT_INVALIDATION_PERIOD );
 	}
 
    /**
     * Constructor variant for use by unit tests; allows control of various timeouts by the test.
     *
     * @param cache Cache instance on which to store pending put information.
+	 * @param transactionManager Transaction manager
     * @param nakedPutInvalidationPeriod Period (in ms) after a removal during which a call to
     *                                   {@link #acquirePutFromLoadLock(Object)} that hasn't been
     *                                   {@link #registerPendingPut(Object) pre-registered} (aka a "naked put")
     *                                   will return false.
     */
 	public PutFromLoadValidator(
-			AdvancedCache cache,
+			AdvancedCache cache, TransactionManager transactionManager,
 			long nakedPutInvalidationPeriod) {
-		this(cache, cache.getCacheManager(), cache.getTransactionManager(),
+		this(cache, cache.getCacheManager(), transactionManager,
 				nakedPutInvalidationPeriod
 		);
 	}
